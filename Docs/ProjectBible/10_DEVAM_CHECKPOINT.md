@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 11 Ağustos 2026  
-**Durum:** Tamamlanmış ve kurtarılabilir checkpoint; yarım çalışan işlem yok  
+**Durum:** Private GitHub collaboration/devir checkpoint'i tamamlandı; yarım gameplay işi yok<br>
 **Son kullanıcı bildirimi:** Yaklaşık %30 kalan Plus kullanımı
 
 ## Kullanım güvenliği protokolü
@@ -22,6 +22,9 @@
 - Windows x64 Mono cross-build: geçti; gerçek Windows runtime/IL2CPP/Steam/DirectX testi hâlâ dış bağımlılık.
 - Legacy canonical kaynak: 26/26 yol, boyut ve SHA-256 eşleşiyor.
 - UVCS: private repo var; ilk check-in yok, `.plastic` workspace yok; bağlantı reseti nedeniyle beklemede.
+- Authoritative remote: private `https://github.com/cixanla/PC-Shop-Empire-3D`, default branch `main`.
+- GitHub yürütme: private Project #2 ve 22 epic; ayrıntılı tasarım gerçeği repository belgelerinde.
+- Codex Project: `Game`, `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git repository algısı `true`.
 
 ## Yerel Git checkpoint
 
@@ -34,7 +37,7 @@
 - Generated/cache/build yolu: 0.
 - `git fsck --full`: geçti.
 - Çalışma ağacı: temiz.
-- Remote: yok.
+- Remote: `origin = https://github.com/cixanla/PC-Shop-Empire-3D.git`; private, `main` upstream senkron.
 - Git LFS: kurulmadı; mevcut küçük ve metin ağırlıklı kaynak için henüz gerekli değil.
 
 Stage B bounded checkpointleri:
@@ -52,6 +55,9 @@ Stage B bounded checkpointleri:
 - Son tree: `566c1884e681feb8fbf0f68e0fb0a7594b560012`
 - Üçüncü paket: integer simulation timestamp/duration, açık-adımlı pause destekli clock, event ID/type/sequence ve immutable domain event envelope; 18 yeni davranış testi ve ADR-0005.
 - Toplam test: 42/42 geçti; çalışma ağacı temiz. Önceki commitler ve Stage A etiketi korunur.
+- Repository migration commit'i: `2ee421193833111f76c85dabb33910240c36db03`; yaşayan Bible, governance/handoff, repo guard/workflow, issue/PR şablonları ve 26/26 byte-exact legacy snapshot.
+- Fresh-clone ile doğrulanmış collaboration commit'i: `dbed0e7df3880854fb92d407feac50660bdcba92`; 188 tracked dosya, repository guard başarılı, çalışma ağacı temiz.
+- Remote Repository Guard hem `2ee4211` hem `dbed0e7` pushlarında `success` verdi.
 
 ## USB güvenlik katmanı
 
@@ -61,12 +67,18 @@ USB milestone hedefi:
 
 Snapshot yalnız yeniden üretilemeyen Unity kaynaklarını ve yaşayan plan belgelerini içerir. `.git`, `.plastic`, credential, `Library`, cache, log ve build çıktıları alınmaz. Kesin dosya/bayt/hash değerleri snapshot içindeki `MANIFEST.tsv` ve `MANIFEST.sha256` ile belirlenir; her milestone kapanışında kaynakla yeniden doğrulanır.
 
+GitHub collaboration kapanışı için Stage A snapshot'ı üzerine yazılmaz. Ayrı hedef kullanılır:
+
+`/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
+
+Bu snapshot Git'te tracked bütün authoritative kaynakları ve güncel `outputs/*.md` devir belgelerini kapsar. `.git`, cache, build, log, token ve credential içermez; exact kapsam kendi `MANIFEST.tsv`/`MANIFEST.sha256` dosyalarıyla belirlenir.
+
 ## Devam sırası
 
 1. Kalan kullanımı panel veya kullanıcı bildiriminden kontrol et.
-2. `git status`, `git fsck` ve baseline tag doğrulamasını yap.
-3. USB `MANIFEST.sha256` ve kaynak checksum dry-run kontrolünü yap.
-4. Sıradaki bounded Stage B paketi olarak kayıtlı seed ve olay bağlamından yeniden üretilebilir sonuç sağlayan deterministik RNG sözleşmesini testleriyle ekle; gameplay kapsamını aynı pakete alma.
+2. `git status`, remote `main`, repository guard ve baseline tag doğrulamasını yap.
+3. `2026-08-11_GITHUB_HANDOFF/MANIFEST.sha256` ve kaynak checksum dry-run kontrolünü yap.
+4. [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) kapsamında kayıtlı seed ve olay bağlamından yeniden üretilebilir sonuç sağlayan deterministik RNG sözleşmesini testleriyle ekle; gameplay kapsamını aynı pakete alma.
 5. Her paketi ayrı commit ve kabul testiyle kapat.
 6. Büyük binary asset gelmeden önce Git remote + Git LFS kararını kesinleştir.
 

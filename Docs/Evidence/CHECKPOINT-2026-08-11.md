@@ -15,6 +15,8 @@ Bu dosya ham build/test loglarını Git'e taşımadan devredilebilir kanıt öze
 - Roadmap: [private GitHub Project #2](https://github.com/users/cixanla/projects/2), 22 epic.
 - Codex local Project: `Game`, `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git repository algısı `true`.
 - İlk remote Repository Guard: [Actions run 31486867850](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31486867850), commit `2ee4211`, sonuç `success`.
+- Fresh private HTTPS clone doğrulaması: commit `dbed0e7df3880854fb92d407feac50660bdcba92`, 188 tracked dosya, repository guard başarılı ve çalışma ağacı temiz.
+- Collaboration checkpoint Repository Guard: [Actions run 31487613288](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31487613288), commit `dbed0e7`, sonuç `success`.
 
 ## Unity ve test
 
