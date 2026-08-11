@@ -1,0 +1,56 @@
+PC SHOP EMPIRE PROPRIETARY LICENSE
+Version 1.1.6 — July 22, 2026
+
+Copyright © 2026 cixanla. All rights reserved.
+
+1. SCOPE
+
+This license applies only to the original PC Shop Empire source code, game data,
+text, interface design, brand material, and other content for which cixanla owns
+or lawfully controls the relevant rights (the "Game Materials"). Third-party
+components and materials are excluded and remain subject to their respective
+licenses and terms. See THIRD_PARTY_NOTICES.txt.
+
+2. LIMITED END-USER PERMISSION
+
+A person who lawfully obtains an officially compiled copy may install and run
+that copy for personal use or another use separately authorized by the rights
+holder. This permission is non-exclusive, non-transferable, and revocable upon
+breach of this license.
+
+3. RESERVED RIGHTS
+
+Except for the limited permission above or a separate written agreement signed
+by the rights holder, no permission is granted to copy, modify, adapt, publish,
+redistribute, sublicense, sell, rent, host, decompile, reverse engineer, extract
+assets from, or create derivative works from the Game Materials. Mandatory
+exceptions under applicable law remain unaffected.
+
+4. TRADEMARKS
+
+"PC Shop Empire", "cixanla", related logos, and visual identifiers may be
+trademarks or trade identifiers of their respective owner. This license grants
+no trademark rights.
+
+5. DISCLAIMER
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE GAME MATERIALS ARE
+PROVIDED "AS IS" WITHOUT WARRANTY. THE RIGHTS HOLDER SHALL NOT BE LIABLE FOR
+INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGE ARISING FROM USE OF THE
+GAME MATERIALS. NON-WAIVABLE CONSUMER RIGHTS ARE NOT AFFECTED.
+
+6. EARLIER DISTRIBUTIONS
+
+This license governs version 1.1.6 materials distributed with it. If an earlier
+copy was validly distributed under a different license, rights already granted
+for that specific copy remain governed by the earlier license and are not
+retroactively revoked.
+
+7. CONTACT AND COMMERCIAL LICENSING
+
+Rights holder / publisher display name: cixanla
+
+Before public commercial distribution, add the verified legal name, postal
+address, and contact email required by the target market to the distribution
+agreement or store page. The display name "cixanla" does not replace legally
+required identity or consumer-information disclosures.

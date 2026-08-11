@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="
+            default-src 'self';
+            style-src 'self' 'unsafe-inline';
+            script-src 'self';
+            img-src 'self' data:;
+        "
+    >
+
+    <meta name="author" content="cixanla">
+    <meta name="application-name" content="PC Shop Empire 1.1.6">
+    <meta name="copyright" content="Copyright © 2026 cixanla. All rights reserved.">
+
+    <title>PC Shop Empire 1.1.6</title>
+
+    <link
+        rel="stylesheet"
+        href="styles.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="styles/release-1.1.6.css"
+    >
+
+    <script
+        src="game.js"
+        defer
+    ></script>
+
+    <script src="src/release-data.js" defer></script>
+    <script src="src/release-systems.js" defer></script>
+    <script src="src/release-settings.js" defer></script>
+    <script src="src/release-bootstrap.js" defer></script>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- ==========================================
+             START MENU
+        =========================================== -->
+
+        <section
+            id="start-screen"
+            class="screen start-screen"
+        >
+            <div class="start-background">
+
+                <div class="background-grid"></div>
+
+                <div class="floating-part part-cpu">
+                    <span>CPU</span>
+                </div>
+
+                <div class="floating-part part-gpu">
+                    <span>GPU</span>
+                </div>
+
+                <div class="floating-part part-ram">
+                    <span>RAM</span>
+                </div>
+
+                <div class="floating-part part-ssd">
+                    <span>SSD</span>
+                </div>
+
+            </div>
+
+            <div class="start-card">
+
+                <div class="game-logo">
+                    <div class="logo-chip">
+                        <div class="logo-chip-core">
+                            PC
+                        </div>
+                    </div>
+
+                    <div class="logo-text">
+                        <span class="logo-small">
+                            PC SHOP
+                        </span>
+
+                        <strong>
+                            EMPIRE
+                        </strong>
+                    </div>
+                </div>
+
+                <p
+                    id="start-description"
+                    class="start-description"
+                >
+                    Build your computer store, assemble systems,
+                    manage your staff, and create a technology
+                    empire.
+                </p>
+
+                <div class="start-actions">
+
+                    <button
+                        id="continue-button"
+                        class="game-button primary large"
+                        type="button"
+                    >
+                        <span class="button-icon">
+                            ▶
+                        </span>
+
+                        <span data-i18n="continueGame">
+                            Continue
+                        </span>
+                    </button>
+
+                    <button
+                        id="new-game-button"
+                        class="game-button secondary large"
+                        type="button"
+                    >
+                        <span class="button-icon">
+                            ＋
+                        </span>
+
+                        <span data-i18n="newGame">
+                            New Game
+                        </span>
+                    </button>
+
+                    <button
+                        id="load-slot-button"
+                        class="game-button secondary large"
+                        type="button"
+                    >
+                        <span class="button-icon">
+                            ▣
+                        </span>
+
+                        <span data-i18n="saveSlots">
+                            Save Slots
+                        </span>
+                    </button>
+
+                    <button
+                        id="start-settings-button"
+                        class="game-button ghost large"
+                        type="button"
+                    >
+                        <span class="button-icon">
+                            ⚙
+                        </span>
+
+                        <span data-i18n="settings">
+                            Settings
+                        </span>
+                    </button>
+
+                    <button
+                        id="exit-game-button"
+                        class="game-button danger large"
+                        type="button"
+                    >
+                        <span class="button-icon">
+                            ⏻
+                        </span>
+
+                        <span data-i18n="exitGame">
+                            Exit Game
+                        </span>
+                    </button>
+
+                </div>
+
+                <div class="language-selector">
+
+                    <span data-i18n="language">
+                        Language
+                    </span>
+
+                    <div class="language-buttons">
+
+                        <button
+                            class="language-button"
+                            data-language="tr"
+                            type="button"
+                        >
+                            TR
+                        </button>
+
+                        <button
+                            class="language-button active"
+                            data-language="en"
+                            type="button"
+                        >
+                            EN
+                        </button>
+
+                        <button
+                            class="language-button"
+                            data-language="de"
+                            type="button"
+                        >
+                            DE
+                        </button>
+
+                    </div>
+                </div>
+
+                <div
+                    id="save-status"
+                    class="save-status"
+                >
+                    <span class="save-indicator"></span>
+
+                    <span data-i18n="autoSaveEnabled">
+                        Autosave enabled
+                    </span>
+                </div>
+
+                <div class="release-signature" aria-label="Version and publisher information">
+                    <span>PC Shop Empire <b>v<span data-release-version>1.1.6</span></b></span>
+                    <span class="signature-divider"></span>
+                    <span><span data-release-text="ownerSignature">Developed and published by</span> <strong data-release-owner>cixanla</strong></span>
+                    <small>© 2026 cixanla · <span data-release-text="allRightsReserved">All rights reserved.</span></small>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             MAIN GAME SCREEN
+        =========================================== -->
+
+        <section
+            id="game-screen"
+            class="screen game-screen hidden"
+        >
+
+            <!-- Top information bar -->
+
+            <header class="top-bar">
+
+                <div class="top-brand">
+
+                    <div class="mini-logo">
+                        PC
+                    </div>
+
+                    <div>
+                        <strong>
+                            PC Shop Empire
+                        </strong>
+
+                        <span id="store-stage-label">
+                            Garage Store
+                        </span>
+
+                        <small class="top-version">v<span data-release-version>1.1.6</span> · <span data-release-owner>cixanla</span></small>
+                    </div>
+
+                </div>
+
+                <div class="top-stat-group">
+
+                    <div class="top-stat">
+                        <span
+                            class="top-stat-label"
+                            data-i18n="money"
+                        >
+                            Cash
+                        </span>
+
+                        <strong id="top-money">
+                            €0
+                        </strong>
+                    </div>
+
+                    <div class="top-stat">
+                        <span
+                            class="top-stat-label"
+                            data-i18n="reputation"
+                        >
+                            Reputation
+                        </span>
+
+                        <strong id="top-reputation">
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="top-stat">
+                        <span
+                            class="top-stat-label"
+                            data-i18n="level"
+                        >
+                            Level
+                        </span>
+
+                        <strong id="top-level">
+                            1
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="calendar-panel">
+
+                    <div class="calendar-icon">
+                        <span id="calendar-day-number">
+                            1
+                        </span>
+                    </div>
+
+                    <div class="calendar-information">
+
+                        <strong id="calendar-date">
+                            January 1, 2026
+                        </strong>
+
+                        <span id="calendar-time">
+                            09:00
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="time-controls">
+
+                    <button
+                        id="pause-button"
+                        class="time-button"
+                        type="button"
+                        title="Pause"
+                    >
+                        ‖
+                    </button>
+
+                    <button
+                        class="time-button speed-button active"
+                        data-speed="1"
+                        type="button"
+                    >
+                        1×
+                    </button>
+
+                    <button
+                        class="time-button speed-button"
+                        data-speed="2"
+                        type="button"
+                    >
+                        2×
+                    </button>
+
+                    <button
+                        class="time-button speed-button"
+                        data-speed="4"
+                        type="button"
+                    >
+                        4×
+                    </button>
+
+                </div>
+
+                <div class="top-actions">
+
+                    <div
+                        id="auto-save-state"
+                        class="auto-save-state"
+                    >
+                        <span class="save-dot"></span>
+                        <span data-i18n="saved">
+                            Saved
+                        </span>
+                    </div>
+
+                    <button
+                        id="top-settings-button"
+                        class="icon-button"
+                        type="button"
+                        title="Settings"
+                    >
+                        ⚙
+                    </button>
+
+                    <button
+                        id="return-menu-button"
+                        class="icon-button"
+                        type="button"
+                        title="Main Menu"
+                    >
+                        ☰
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- Side navigation -->
+
+            <aside class="side-bar">
+
+                <div class="side-section-title">
+                    <span data-i18n="management">
+                        Management
+                    </span>
+                </div>
+
+                <nav class="navigation">
+
+                    <button
+                        class="nav-button active"
+                        data-page="dashboard"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ◫
+                        </span>
+
+                        <span data-i18n="dashboard">
+                            Dashboard
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="market"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ◆
+                        </span>
+
+                        <span data-i18n="market">
+                            Component Market
+                        </span>
+
+                        <span
+                            id="market-badge"
+                            class="nav-badge"
+                        >
+                            0
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="inventory"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ▦
+                        </span>
+
+                        <span data-i18n="inventory">
+                            Inventory
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="workshop"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ⚒
+                        </span>
+
+                        <span data-i18n="workshop">
+                            Assembly Workshop
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="customers"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ♙
+                        </span>
+
+                        <span data-i18n="customers">
+                            Customers
+                        </span>
+
+                        <span
+                            id="customer-badge"
+                            class="nav-badge"
+                        >
+                            0
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="staff"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ♟
+                        </span>
+
+                        <span data-i18n="staff">
+                            Staff
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button release-nav"
+                        data-page="service"
+                        type="button"
+                    >
+                        <span class="nav-icon">⌁</span>
+                        <span class="nav-label">Service Center</span>
+                        <span class="nav-badge release-badge" aria-label="Open service job">+</span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="properties"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ▰
+                        </span>
+
+                        <span data-i18n="properties">
+                            Store & Rent
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="finance"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            €
+                        </span>
+
+                        <span data-i18n="finance">
+                            Finance
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button release-nav"
+                        data-page="brand"
+                        type="button"
+                    >
+                        <span class="nav-icon">◎</span>
+                        <span class="nav-label">Brand & Market</span>
+                    </button>
+
+                    <button
+                        class="nav-button release-nav"
+                        data-page="intelligence"
+                        type="button"
+                    >
+                        <span class="nav-icon">▥</span>
+                        <span class="nav-label">Business Intelligence</span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="upgrades"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ▲
+                        </span>
+
+                        <span data-i18n="upgrades">
+                            Upgrades
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-page="activity"
+                        type="button"
+                    >
+                        <span class="nav-icon">
+                            ≡
+                        </span>
+
+                        <span data-i18n="activity">
+                            Activity Log
+                        </span>
+                    </button>
+
+                    <button
+                        class="nav-button release-nav"
+                        data-page="career"
+                        type="button"
+                    >
+                        <span class="nav-icon">★</span>
+                        <span class="nav-label">Career</span>
+                    </button>
+
+                </nav>
+
+                <div class="side-bottom">
+
+                    <div class="day-progress-container">
+
+                        <div class="day-progress-information">
+
+                            <span data-i18n="workingDay">
+                                Working day
+                            </span>
+
+                            <span id="day-progress-text">
+                                %0
+                            </span>
+
+                        </div>
+
+                        <div class="progress-track">
+                            <div
+                                id="day-progress-bar"
+                                class="progress-fill"
+                            ></div>
+                        </div>
+
+                    </div>
+
+                    <button
+                        id="end-day-button"
+                        class="game-button danger"
+                        type="button"
+                    >
+                        <span>
+                            ☾
+                        </span>
+
+                        <span data-i18n="endDay">
+                            End Day
+                        </span>
+                    </button>
+
+                </div>
+
+            </aside>
+
+
+            <!-- Main content -->
+
+            <main
+                id="page-content"
+                class="page-content"
+            >
+                <!-- Pages are rendered by JavaScript -->
+            </main>
+
+
+            <!-- Staff automation panel -->
+
+            <aside
+                id="automation-panel"
+                class="automation-panel"
+            >
+                <div class="automation-header">
+
+                    <div>
+                        <span
+                            class="automation-label"
+                            data-i18n="staffAutomation"
+                        >
+                            Staff Automation
+                        </span>
+
+                        <strong id="automation-status">
+                            Active
+                        </strong>
+                    </div>
+
+                    <button
+                        id="automation-toggle"
+                        class="switch-button active"
+                        type="button"
+                        role="switch"
+                        aria-checked="true"
+                        aria-label="Toggle staff automation"
+                    >
+                        <span></span>
+                    </button>
+
+                </div>
+
+                <div
+                    id="automation-list"
+                    class="automation-list"
+                >
+                    <div class="empty-automation">
+                        <span>⚙</span>
+
+                        <p data-i18n="noStaff">
+                            No staff members have been hired yet.
+                        </p>
+                    </div>
+                </div>
+
+            </aside>
+
+        </section>
+
+
+        <!-- ==========================================
+             IN-GAME DIALOG
+        =========================================== -->
+
+        <div
+            id="game-modal"
+            class="modal-overlay hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+            <div class="game-modal">
+
+                <div
+                    id="modal-icon"
+                    class="modal-icon"
+                >
+                    ?
+                </div>
+
+                <h2 id="modal-title">
+                    Confirmation
+                </h2>
+
+                <div
+                    id="modal-message"
+                    class="modal-message"
+                >
+                    Continue with this action?
+                </div>
+
+                <div
+                    id="modal-extra-content"
+                    class="modal-extra-content"
+                ></div>
+
+                <div class="modal-actions">
+
+                    <button
+                        id="modal-cancel-button"
+                        class="game-button secondary"
+                        type="button"
+                    >
+                        No
+                    </button>
+
+                    <button
+                        id="modal-confirm-button"
+                        class="game-button primary"
+                        type="button"
+                    >
+                        Yes
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             NOTIFICATIONS
+        =========================================== -->
+
+        <div
+            id="toast-container"
+            class="toast-container"
+            aria-live="polite"
+        ></div>
+
+
+        <!-- ==========================================
+             END-OF-DAY REPORT
+        =========================================== -->
+
+        <div
+            id="day-report-overlay"
+            class="day-report-overlay hidden"
+        >
+            <div class="day-report-card">
+
+                <div class="report-sun">
+                    ☾
+                </div>
+
+                <span
+                    class="report-subtitle"
+                    data-i18n="dayCompleted"
+                >
+                    Working day completed
+                </span>
+
+                <h2 id="report-date">
+                    January 1, 2026
+                </h2>
+
+                <div
+                    id="report-statistics"
+                    class="report-statistics"
+                ></div>
+
+                <div
+                    id="report-events"
+                    class="report-events"
+                ></div>
+
+                <button
+                    id="next-day-button"
+                    class="game-button primary large"
+                    type="button"
+                >
+                    <span data-i18n="startNextDay">
+                        Start Next Day
+                    </span>
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

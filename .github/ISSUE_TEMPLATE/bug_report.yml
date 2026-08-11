@@ -1,0 +1,69 @@
+name: Bug / invariant ihlali
+description: Yeniden üretilebilir oyun, save, ekonomi, AI veya araç hatası
+title: "[Bug] "
+labels:
+  - "type:bug"
+body:
+  - type: markdown
+    attributes:
+      value: "Gerçek kullanıcı verisi, token veya özel crash raporu eklemeyin. Güvenlik sorunları SECURITY.md yolunu kullanır."
+  - type: input
+    id: build
+    attributes:
+      label: Commit / build
+      description: Tam Git SHA veya build fingerprint
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS Editor
+        - Windows Editor
+        - Windows Player
+        - macOS Player
+        - Repository / tooling
+        - Bilinmiyor
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Yeniden üretme adımları
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Beklenen sonuç
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Gerçek sonuç ve neden zinciri
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Güvenli kanıt
+      description: Kişisel veri temizlenmiş log parçası, test veya ekran görüntüsü
+  - type: textarea
+    id: impact
+    attributes:
+      label: Etki ve invariant
+      description: Stok, para, save, fizik, AI, performans veya ilerleme etkisi
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Kontrol
+      options:
+        - label: Bu issue credential veya gerçek oyuncu verisi içermiyor.
+          required: true
+        - label: Aynı hata için açık issue aradım.
+          required: true

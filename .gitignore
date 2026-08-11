@@ -12,6 +12,7 @@
 .gradle/
 .vs/
 .vscode/
+[Nn]ode_modules/
 
 # Unity ve IDE tarafından üretilen proje dosyaları
 *.csproj
@@ -42,3 +43,19 @@ Desktop.ini
 sysinfo.txt
 .plastic/
 plastic.workspace
+
+# Credential, imzalama ve yerel ortam dosyaları
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.pem
+*.key
+*.mobileprovision
+
+# Dağıtım paketleri GitHub Releases/yerel build alanında tutulur
+*.dmg
+*.exe
+*.msi
+*.app.zip

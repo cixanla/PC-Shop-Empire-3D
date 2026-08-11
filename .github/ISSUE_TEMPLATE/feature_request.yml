@@ -1,0 +1,55 @@
+name: Özellik / teknik paket
+description: Kabul ölçütlü yeni oyun sistemi, içerik veya mimari iş
+title: "[Feature] "
+labels:
+  - "type:feature"
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Oyuncu/proje sonucu
+      description: Çözüm ayrıntısından önce ulaşılması gereken sonucu yazın.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Bağlam ve bağlı karar
+      description: Project Bible, ADR, faz ve önceki issue bağlantıları
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Dahil
+      placeholder: "- ..."
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Kapsam dışı
+      placeholder: "- ..."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Kabul ölçütleri
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Bağımlılıklar ve riskler
+      description: Ekonomi, save, AI, performans, içerik, lisans, platform ve maliyet
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Doğrulama planı
+      description: Otomatik test, manuel senaryo, metrik ve hedef platform
+    validations:
+      required: true

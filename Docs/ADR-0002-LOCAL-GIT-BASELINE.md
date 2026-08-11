@@ -12,7 +12,7 @@ Unity Cloud içindeki private UVCS repo oluşturuldu; ancak ilk repository prefl
 - Mevcut Apple Git 2.50.1 ile Unity proje kökünde yerel Git deposu oluşturulur.
 - İlk commit, doğrulanmış Stage A kaynak temelidir.
 - UVCS şimdilik beklemeye alınır; Git ve UVCS aynı anda iki authoritative sistem olarak işletilmez.
-- Git deposunun henüz uzak remote'u yoktur. Off-device güvenlik katmanı SHA-256 doğrulamalı USB milestone snapshot'ıdır.
+- Bu ADR tarihinde Git deposunun uzak remote'u yoktu; off-device güvenlik katmanı SHA-256 doğrulamalı USB milestone snapshot'ıydı. 11 Ağustos 2026 tarihli ADR-0006, private GitHub remote'u yeni canonical iş birliği katmanı olarak ekler.
 - Kaynak henüz küçük ve metin ağırlıklı olduğundan Git LFS kurulmaz. Büyük binary asset kabulünden önce Git LFS ve remote seçimi ayrı kapıda kesinleştirilir.
 - Git kimliği yalnız bu depoda `Cixanla <cixanla@users.noreply.local>` olarak tutulur; global Git ayarı değiştirilmez.
 
@@ -20,4 +20,4 @@ Unity Cloud içindeki private UVCS repo oluşturuldu; ancak ilk repository prefl
 
 - `Library`, `Temp`, log/cache, IDE çıktıları, buildler, credential ve canlı UVCS metadata commit edilmez.
 - Her commit öncesi staged dosya listesi, boyutu ve bilinen secret kalıpları kontrol edilir.
-- Remote ekleme, GitHub hesabı bağlantısı, Git LFS kurulumu veya UVCS'ye geri dönüş ayrı karar ve doğrulama gerektirir.
+- Remote ekleme kararı ADR-0006 ile onaylanmıştır. Git LFS kurulumu veya UVCS'ye geri dönüş hâlâ ayrı karar ve doğrulama gerektirir.

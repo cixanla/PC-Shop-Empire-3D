@@ -17,3 +17,13 @@ Bu proje çalışma ağacı, projeye giren her paket, asset, model, doku, ses, f
 | Unity Version Control integration | 2.13.6 | packages.unity.com | Resmî Unity paketi | 2026-08-11 |
 
 Stage A'da üçüncü taraf oyun asset'i, font, ses, model veya oynanış kodu eklenmedi.
+
+## GitHub devir paketi
+
+| Öğe | Kaynak | Hak / kullanım notu | Tarih |
+|---|---|---|---|
+| Legacy PC Shop Empire 1.1.6 kaynak snapshot'ı | Canonical USB `KAYNAK_KODU`; 26/26 SHA-256 doğrulaması | cixanla proprietary materyalleri `GAME_LICENSE.txt`; Electron/Chromium/Node ve diğer üçüncü taraflar `THIRD_PARTY_NOTICES.txt` koşullarını korur | 2026-08-11 |
+| Project Bible araştırma/tasarım belgeleri | Bu projenin yaşayan Codex çalışma çıktıları; kaynak defteri `Docs/ProjectBible/07_KAYNAKLAR.md` | Rakip içerikleri kopyalanmaz; olgu, kaynak ve tasarım çıkarımı ayrılır | 2026-08-11 |
+| Repository governance/handoff metinleri | Proje için özgün hazırlanmış belgeler | cixanla proje materyali | 2026-08-11 |
+
+Legacy snapshot içindeki `assets/` dosyaları yalnız private tarihsel kanıt/refereans bağlamında tutulur. Yeni oyunun production asset'i sayılmaz ve yeni Unity sahnelerinde kullanılmaz.

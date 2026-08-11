@@ -1,0 +1,26 @@
+name: Repository Guard
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify source, documentation and legacy manifest
+        shell: bash
+        run: ./Tools/verify-repository.sh
+
+      - name: Explain Unity CI boundary
+        shell: bash
+        run: echo "Unity compile/tests remain local until the separate license and runner gate is approved."

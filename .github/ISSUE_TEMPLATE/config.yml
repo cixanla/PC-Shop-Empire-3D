@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Güvenlik politikası
+    url: https://github.com/cixanla/PC-Shop-Empire-3D/blob/main/SECURITY.md
+    about: Güvenlik ve gizlilik sorunlarını public issue olarak açmayın.
