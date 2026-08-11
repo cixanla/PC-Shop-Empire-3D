@@ -1,0 +1,44 @@
+# Unity tarafından yeniden üretilen klasörler
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emory[Cc]aptures/
+
+# Yerel build çıktıları ve önbellekler
+[Bb]uild/
+[Bb]uilds/
+.gradle/
+.vs/
+.vscode/
+
+# Unity ve IDE tarafından üretilen proje dosyaları
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# İşletim sistemi geçici dosyaları
+.DS_Store*
+._*
+Thumbs.db
+Desktop.ini
+
+# Paket, çökme ve canlı VCS çıktıları
+*.apk
+*.unitypackage
+sysinfo.txt
+.plastic/
+plastic.workspace
