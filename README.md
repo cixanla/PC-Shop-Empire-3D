@@ -11,6 +11,7 @@ Bu depo, eski Electron oyununun doğrudan portu değildir. Yeni oyun Unity 6000.
 3. [Docs/ProjectBible/00_OKU_BENI.md](Docs/ProjectBible/00_OKU_BENI.md) — ayrıntılı tasarım/araştırma paketinin dizini.
 4. [CONTRIBUTING.md](CONTRIBUTING.md) — çalışma, test, belge ve pull request kuralları.
 5. [Docs/REPOSITORY-GOVERNANCE.md](Docs/REPOSITORY-GOVERNANCE.md) — authoritative kaynak, yedek, branch ve erişim politikası.
+6. [Docs/Evidence/GITHUB-HANDOFF-2026-08-11.md](Docs/Evidence/GITHUB-HANDOFF-2026-08-11.md) — GitHub, Project, Codex ve farklı bilgisayardan devam kanıtı.
 
 ## Güncel teknik durum
 
