@@ -10,6 +10,11 @@ Bu dosya ham build/test loglarını Git'e taşımadan devredilebilir kanıt öze
 - Core assembly commit: `8ecb05df48257d22dc7f4549c8dbfe7b261772a9`.
 - Stable identity/result commit: `4cd2d928dbfda1886632bacce4a141c2a43161df`.
 - Deterministic time/event commit: `8af2ad3d05906839c4b607e4958650e723060465`.
+- Collaboration/devir migration commit: `2ee421193833111f76c85dabb33910240c36db03`.
+- Private remote: [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), default branch `main`.
+- Roadmap: [private GitHub Project #2](https://github.com/users/cixanla/projects/2), 22 epic.
+- Codex local Project: `Game`, `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git repository algısı `true`.
+- İlk remote Repository Guard: [Actions run 31486867850](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31486867850), commit `2ee4211`, sonuç `success`.
 
 ## Unity ve test
 
@@ -40,6 +45,7 @@ Bu dosya ham build/test loglarını Git'e taşımadan devredilebilir kanıt öze
 - Tek yeni dosya 10 MB üstünde: 0.
 - Legacy dosyaları normal executable mode taşımaz; yalnız `Tools/verify-repository.sh` executable'dır.
 - Git LFS henüz gerekmez; büyük binary asset öncesi ayrı kapıdır.
+- OAuth token değeri repository, rapor veya snapshot içine alınmadı; GitHub CLI keyring kimliği yalnız onaylı `repo`, `workflow`, `project`, `read:org` ve mevcut `gist` kapsamlarıyla kullanıldı.
 
 ## Yeniden doğrulama
 

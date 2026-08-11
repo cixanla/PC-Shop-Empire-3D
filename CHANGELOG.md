@@ -6,9 +6,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
-- Private GitHub collaboration/devir yapısı, living Project Bible, governance ve katkı şablonları hazırlanıyor.
+- Private GitHub collaboration/devir yapısı, living Project Bible, governance ve katkı şablonları tamamlandı.
 - Full design/research package repository içine taşındı.
 - Canonical PC Shop Empire 1.1.6 legacy kaynak snapshot'ı ve manifesti eklendi.
+- Private `cixanla/PC-Shop-Empire-3D` remote, repository guard workflow, 22 epic ve Development Roadmap Project oluşturuldu.
+- Gerçek Unity Git kökü Codex içinde ayrı `Game` Project olarak kaydedildi.
 
 ## 2026-08-11 — Stage B Core Foundation
 

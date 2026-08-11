@@ -1,6 +1,6 @@
 # ADR-0006 — Private GitHub canonical remote ve yaşayan devir paketi
 
-**Durum:** Kabul edildi; uygulanıyor  
+**Durum:** Uygulandı<br>
 **Tarih:** 11 Ağustos 2026
 
 ## Bağlam
@@ -26,5 +26,7 @@ Yerel Git ve USB snapshot geri alma sağlasa da farklı bilgisayardan veya yeni 
 - Unity lisansı gerektiren cloud CI bu kararla otomatik etkinleştirilmez. Hafif repository guard yalnız kaynak hijyeni ve belge/manifest bütünlüğünü kontrol eder.
 
 ## Sonuç
+
+Private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D) oluşturuldu; `main`, Stage A etiketi, yaşayan devir belgeleri, repository guard/workflow ve canonical legacy snapshot normal push ile gönderildi. [Development Roadmap Project #2](https://github.com/users/cixanla/projects/2), 22 epic ve Codex'te `Game` Project kaydı oluşturuldu. Eski public repository değiştirilmedi.
 
 Bu ADR, ADR-0002 içindeki “remote yok” durumunu ileriye dönük olarak değiştirir; Stage A root commit/tag ve UVCS bekleme kararı korunur.

@@ -5,7 +5,7 @@ Bu depo private ve proprietary bir projedir. Erişim verilmesi kaynak kodunu, be
 ## Başlamadan önce
 
 1. `PROJECT_BIBLE.md` ve `Docs/DEVELOPER-HANDOFF.md` dosyalarını okuyun.
-2. GitHub Project içindeki atanmış issue ve kabul ölçütünü doğrulayın.
+2. [GitHub Development Roadmap Project](https://github.com/users/cixanla/projects/2) içindeki atanmış issue ve kabul ölçütünü doğrulayın.
 3. Aynı alan üzerinde açık branch/PR olup olmadığını kontrol edin.
 4. `main` branch'te doğrudan deneysel çalışma yapmayın.
 

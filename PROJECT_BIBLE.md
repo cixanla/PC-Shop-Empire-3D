@@ -240,7 +240,7 @@ Monotonluğu azaltma ilkeleri:
 | Faz | Hedef | Durum |
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
-| A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; UVCS beklemede, Git authoritative |
+| A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core sözleşmeleri tamam, gameplay başlamadı |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
@@ -264,23 +264,24 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Legacy keşif | Electron + düz JS/HTML/CSS; 14 Dashboard alanı haritalandı |
 | Canonical legacy | USB ile yerel ayna 26/26 yol/boyut/SHA-256 eşleşti |
 | Unity Stage A | Unity 6000.3.21f1 URP, paket kilidi, macOS Universal smoke ve Windows x64 Mono cross-build |
-| VCS | Yerel `main`, Stage A root commit/tag; UVCS uzak reset nedeniyle ikinci authoritative sistem değil |
+| VCS | Private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), `main` ve Stage A etiketi; UVCS ikinci authoritative sistem değil |
+| İş birliği/devir | Yaşayan Bible, governance, issue/PR şablonları, repo guard, 22 epic ve [private Project](https://github.com/users/cixanla/projects/2) |
+| Legacy repository referansı | 26 canonical dosya private repoda byte-exact snapshot + SHA-256 manifest olarak korunuyor |
 | Core assembly | `PSE.Core` `noEngineReferences`; Unity/Editor bağımlılık testi |
 | Kimlik/sonuç | `StableId<TScope>`, `Failure.Code`, `OperationResult` |
 | Zaman/olay | Integer açık-adımlı `SimulationClock`, pause güvenliği, event ID/type/sequence/schema zarfı |
 | Son test | Edit Mode `42/42` geçti, başarısız/atlanan 0 |
 
-Son doğrulanmış teknik commit: `8af2ad3d05906839c4b607e4958650e723060465`.
+Son doğrulanmış gameplay/Core commit: `8af2ad3d05906839c4b607e4958650e723060465`. İş birliği/devir checkpoint'i: `2ee421193833111f76c85dabb33910240c36db03`.
 
 ## 16. Sıradaki uygulama sırası
 
-1. Özel GitHub remote, yaşayan belgeler, legacy snapshot ve proje panosunu canonical hâle getir.
-2. Kayıtlı seed + event bağlamı kullanan deterministik RNG sözleşmesini ekle.
-3. Domain event correlation/causation ve in-memory dispatcher sınırını küçük paketle kur.
-4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
-5. Input action map ve birinci şahıs graybox hareket kabul ölçütlerini kilitle.
-6. Görünür el + alma/bırakma prototipini tek test odasında doğrula.
-7. Hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
+1. [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) kapsamında kayıtlı seed + event bağlamı kullanan deterministik RNG sözleşmesini ekle.
+2. [Issue #3](https://github.com/cixanla/PC-Shop-Empire-3D/issues/3) kapsamında domain event correlation/causation ve in-memory dispatcher sınırını küçük paketle kur.
+3. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+4. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map ve birinci şahıs graybox hareket kabul ölçütlerini kilitle.
+5. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
+6. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -309,14 +310,14 @@ Riskler [`Docs/ProjectBible/06_PROJE_HAFIZASI.md`](Docs/ProjectBible/06_PROJE_HA
 
 ## 19. Repository gerçeği
 
-Authoritative çalışma kökü bu Unity Git deposudur. Kaynak türleri:
+Authoritative remote private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), authoritative dal `main`, yerel çalışma kökü ise bu Unity Git deposudur. Codex içinde yol `Game` adlı, Git algılanmış ayrı Project olarak kayıtlıdır. Kaynak türleri:
 
 - **Canlı:** Unity kaynakları, root `PROJECT_BIBLE.md`, `Docs/`, `SourceAssets/`, `Tools/`.
 - **Salt okunur geçmiş:** `LegacyReference/PC-Shop-Empire-1.1.6/Source/`; manifest değişmeden korunur.
 - **Yeniden üretilebilir ve Git dışı:** `Library`, `Temp`, `Logs`, `UserSettings`, IDE dosyaları, build çıktıları.
 - **Asla Git'e girmez:** token, credential, certificate/private key, kullanıcı telemetry ham verisi.
 
-GitHub Issues iş birimi, GitHub Project ise görünür durum panosudur. Tasarım gerçeği issue yorumlarında kaybolmaz; kalıcı karar root Bible, ilgili ayrıntılı belge veya ADR'ye işlenir.
+GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2) ise görünür durum panosudur. Tasarım gerçeği issue yorumlarında kaybolmaz; kalıcı karar root Bible, ilgili ayrıntılı belge veya ADR'ye işlenir. Eski public `cixanla/PC-Shop-Empire` repository'si yalnız legacy release/indirme geçmişidir ve bu migration sırasında değiştirilmemiştir.
 
 ## 20. Yeni geliştirici için 15 dakikalık devir
 

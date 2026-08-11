@@ -8,7 +8,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 2. `Docs/ProjectBible/00_OKU_BENI.md`.
 3. Çalışacağınız alanın ayrıntılı Game Design Bible/Yol Haritası bölümü.
 4. `CONTRIBUTING.md` ve `Docs/REPOSITORY-GOVERNANCE.md`.
-5. GitHub Project'teki atanmış issue ve kabul ölçütü.
+5. [GitHub Development Roadmap Project](https://github.com/users/cixanla/projects/2) içindeki atanmış issue ve kabul ölçütü.
 
 ## 2. Gereken temel araçlar
 
