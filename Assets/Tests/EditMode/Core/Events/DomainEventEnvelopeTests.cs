@@ -35,6 +35,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 DomainEventSequence.From(7),
                 SimulationTimestamp.Create(12, 5000),
                 1,
+                RootContext(),
                 payload);
 
             Assert.That(envelope.Id.Value, Is.EqualTo("event.0001"));
@@ -42,7 +43,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
             Assert.That(envelope.Sequence.Value, Is.EqualTo(7));
             Assert.That(envelope.OccurredAt, Is.EqualTo(SimulationTimestamp.Create(12, 5000)));
             Assert.That(envelope.SchemaVersion, Is.EqualTo(1));
+            Assert.That(envelope.Context, Is.EqualTo(RootContext()));
+            Assert.That(envelope.Context.IsRoot, Is.True);
             Assert.That(envelope.Payload, Is.SameAs(payload));
+            Assert.That(envelope.PayloadType, Is.EqualTo(typeof(StockReservedEvent)));
+
+            IDomainEventEnvelope untyped = envelope;
+            Assert.That(untyped.Payload, Is.SameAs(payload));
+            Assert.That(untyped.PayloadType, Is.EqualTo(typeof(StockReservedEvent)));
         }
 
         [Test]
@@ -54,6 +62,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 DomainEventSequence.From(1),
                 SimulationTimestamp.Origin,
                 1,
+                RootContext(),
                 new StockReservedEvent(1)));
         }
 
@@ -66,6 +75,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 DomainEventSequence.From(1),
                 SimulationTimestamp.Origin,
                 1,
+                RootContext(),
                 new StockReservedEvent(1)));
         }
 
@@ -78,6 +88,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 default,
                 SimulationTimestamp.Origin,
                 1,
+                RootContext(),
                 new StockReservedEvent(1)));
         }
 
@@ -90,6 +101,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 DomainEventSequence.From(1),
                 SimulationTimestamp.Origin,
                 0,
+                RootContext(),
                 new StockReservedEvent(1)));
         }
 
@@ -102,7 +114,67 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 DomainEventSequence.From(1),
                 SimulationTimestamp.Origin,
                 1,
+                RootContext(),
                 null));
+        }
+
+        [Test]
+        public void ChildContextInheritsCorrelationAndPointsToDirectParent()
+        {
+            var parent = new DomainEventEnvelope<StockReservedEvent>(
+                EventId(),
+                EventType(),
+                DomainEventSequence.From(1),
+                SimulationTimestamp.Origin,
+                1,
+                RootContext(),
+                new StockReservedEvent(1));
+            DomainEventContext childContext = DomainEventContext.CausedBy(parent);
+            var child = new DomainEventEnvelope<StockReservedEvent>(
+                StableId<DomainEventIdScope>.Parse("event.0002"),
+                EventType(),
+                DomainEventSequence.From(2),
+                SimulationTimestamp.Create(0, 1),
+                1,
+                childContext,
+                new StockReservedEvent(1));
+
+            Assert.That(child.Context.CorrelationId, Is.EqualTo(parent.Context.CorrelationId));
+            Assert.That(child.Context.CausationId, Is.EqualTo(parent.Id));
+            Assert.That(child.Context.IsRoot, Is.False);
+        }
+
+        [Test]
+        public void ContextRejectsEmptyCorrelationAndNullParent()
+        {
+            Assert.Throws<ArgumentException>(() => DomainEventContext.Root(default));
+            Assert.Throws<ArgumentException>(() => DomainEventContext.FromMetadata(default, EventId()));
+            Assert.Throws<ArgumentNullException>(() => DomainEventContext.CausedBy(null));
+        }
+
+        [Test]
+        public void EnvelopeRejectsDefaultContextAndSelfCausation()
+        {
+            Assert.Throws<ArgumentException>(() => new DomainEventEnvelope<StockReservedEvent>(
+                EventId(),
+                EventType(),
+                DomainEventSequence.From(1),
+                SimulationTimestamp.Origin,
+                1,
+                default,
+                new StockReservedEvent(1)));
+
+            DomainEventContext selfCausation = DomainEventContext.FromMetadata(
+                CorrelationId(),
+                EventId());
+            Assert.Throws<ArgumentException>(() => new DomainEventEnvelope<StockReservedEvent>(
+                EventId(),
+                EventType(),
+                DomainEventSequence.From(1),
+                SimulationTimestamp.Origin,
+                1,
+                selfCausation,
+                new StockReservedEvent(1)));
         }
 
         private static StableId<DomainEventIdScope> EventId()
@@ -113,6 +185,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
         private static StableId<DomainEventTypeScope> EventType()
         {
             return StableId<DomainEventTypeScope>.Parse("inventory.stock-reserved");
+        }
+
+        private static StableId<DomainCorrelationIdScope> CorrelationId()
+        {
+            return StableId<DomainCorrelationIdScope>.Parse("operation.sale-0001");
+        }
+
+        private static DomainEventContext RootContext()
+        {
+            return DomainEventContext.Root(CorrelationId());
         }
 
         private sealed class StockReservedEvent : IDomainEvent

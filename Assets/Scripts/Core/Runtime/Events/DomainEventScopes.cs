@@ -15,4 +15,11 @@ namespace PCShopEmpire3D.Core.Events
         {
         }
     }
+
+    public sealed class DomainCorrelationIdScope : IStableIdScope
+    {
+        private DomainCorrelationIdScope()
+        {
+        }
+    }
 }
