@@ -1,0 +1,18 @@
+{
+  "name": "PSE.Presentation",
+  "rootNamespace": "PCShopEmpire3D.Presentation",
+  "references": [
+    "PSE.Core",
+    "PSE.World",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

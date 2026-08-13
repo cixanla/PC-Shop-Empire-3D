@@ -1,18 +1,14 @@
 {
-  "name": "PCShopEmpire3D.EditModeTests",
-  "rootNamespace": "PCShopEmpire3D.Tests.EditMode",
+  "name": "PCShopEmpire3D.PlayModeTests",
+  "rootNamespace": "PCShopEmpire3D.Tests.PlayMode",
   "references": [
-    "PSE.Core",
-    "PSE.World",
     "PSE.Presentation",
-    "PSE.GaragePrototype.Editor",
+    "PSE.World",
     "Unity.InputSystem",
-    "UnityEngine.TestRunner",
-    "UnityEditor.TestRunner"
+    "Unity.InputSystem.TestFramework",
+    "UnityEngine.TestRunner"
   ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": true,

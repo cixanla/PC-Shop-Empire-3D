@@ -1,0 +1,16 @@
+{
+  "name": "PSE.World",
+  "rootNamespace": "PCShopEmpire3D.World",
+  "references": [
+    "PSE.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
