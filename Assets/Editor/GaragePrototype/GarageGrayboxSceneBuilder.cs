@@ -11,6 +11,10 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.ProBuilder;
+using UnityEngine.ProBuilder.MeshOperations;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 namespace PCShopEmpire3D.Editor.GaragePrototype
@@ -19,11 +23,22 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
     {
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
         private const string MaterialRoot = "Assets/Art/Prototype/Materials";
+        private const string TextureRoot = "Assets/Art/Prototype/Textures";
+        private const string LookdevProfilePath = "Assets/Art/Prototype/GarageLookdevProfile.asset";
         private const string PlayerPrefabPath = "Assets/Prefabs/Prototype/PlayerRig.prefab";
         private const string PlayerLayerName = "Player";
         private const string InteractableLayerName = "Interactable";
         private const string HeldItemLayerName = "HeldItem";
         private const string ViewModelLayerName = "ViewModel";
+
+        private enum SurfacePattern
+        {
+            Concrete,
+            PaintedWall,
+            BrushedMetal,
+            Cardboard,
+            WoodLaminate
+        }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
         public static void Build()
@@ -59,41 +74,102 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "GarageGraybox";
 
+            Texture2D concreteDetail = GetOrCreateSurfaceTexture(
+                "ConcreteDetail",
+                SurfacePattern.Concrete);
+            Texture2D wallDetail = GetOrCreateSurfaceTexture(
+                "PaintedWallDetail",
+                SurfacePattern.PaintedWall);
+            Texture2D metalDetail = GetOrCreateSurfaceTexture(
+                "BrushedMetalDetail",
+                SurfacePattern.BrushedMetal);
+            Texture2D cardboardDetail = GetOrCreateSurfaceTexture(
+                "CardboardFiberDetail",
+                SurfacePattern.Cardboard);
+            Texture2D woodDetail = GetOrCreateSurfaceTexture(
+                "WoodLaminateDetail",
+                SurfacePattern.WoodLaminate);
+
             Material concrete = GetOrCreateMaterial(
                 "Concrete",
-                new Color(0.23f, 0.25f, 0.27f),
+                new Color(0.34f, 0.35f, 0.36f),
                 0f,
-                0.25f);
+                0.16f,
+                concreteDetail,
+                new Vector2(5f, 6f));
             Material wall = GetOrCreateMaterial(
                 "WarmWall",
-                new Color(0.50f, 0.47f, 0.42f),
+                new Color(0.72f, 0.68f, 0.61f),
                 0f,
-                0.18f);
+                0.24f,
+                wallDetail,
+                new Vector2(4f, 3f));
             Material metal = GetOrCreateMaterial(
                 "DarkMetal",
-                new Color(0.11f, 0.14f, 0.17f),
-                0.65f,
-                0.45f);
+                new Color(0.25f, 0.28f, 0.31f),
+                0.08f,
+                0.34f,
+                metalDetail,
+                new Vector2(2f, 8f));
+            Material brushedSteel = GetOrCreateMaterial(
+                "BrushedSteel",
+                new Color(0.58f, 0.60f, 0.62f),
+                0.90f,
+                0.54f,
+                metalDetail,
+                new Vector2(2f, 10f));
             Material accent = GetOrCreateMaterial(
                 "SafetyAccent",
-                new Color(0.95f, 0.53f, 0.08f),
-                0.1f,
-                0.3f);
+                new Color(0.82f, 0.39f, 0.06f),
+                0.18f,
+                0.34f);
             Material cardboard = GetOrCreateMaterial(
                 "Cardboard",
-                new Color(0.52f, 0.32f, 0.16f),
+                new Color(0.57f, 0.36f, 0.19f),
                 0f,
-                0.12f);
+                0.09f,
+                cardboardDetail,
+                new Vector2(3f, 2f));
+            Material wood = GetOrCreateMaterial(
+                "WoodLaminate",
+                new Color(0.48f, 0.27f, 0.11f),
+                0f,
+                0.32f,
+                woodDetail,
+                new Vector2(3.5f, 1.2f));
+            Material rubber = GetOrCreateMaterial(
+                "WorkshopRubber",
+                new Color(0.035f, 0.045f, 0.05f),
+                0f,
+                0.24f);
+            Material labelPaper = GetOrCreateMaterial(
+                "LabelPaper",
+                new Color(0.82f, 0.79f, 0.68f),
+                0f,
+                0.18f);
+            Material screenGlass = GetOrCreateEmissiveMaterial(
+                "ScreenGlass",
+                new Color(0.018f, 0.045f, 0.055f),
+                0.08f,
+                0.84f,
+                new Color(0.04f, 0.42f, 0.56f) * 1.6f);
+            Material lightDiffuser = GetOrCreateEmissiveMaterial(
+                "WarmLightDiffuser",
+                new Color(0.82f, 0.76f, 0.65f),
+                0f,
+                0.62f,
+                new Color(1f, 0.70f, 0.40f) * 3.2f);
             Material hands = GetOrCreateMaterial(
                 "PrototypeHands",
-                new Color(0.15f, 0.36f, 0.55f),
-                0.05f,
-                0.35f);
+                new Color(0.10f, 0.25f, 0.31f),
+                0.02f,
+                0.29f);
             Material stockPlacement = GetOrCreateMaterial(
                 "StockPlacementSurface",
                 new Color(0.08f, 0.42f, 0.48f),
                 0.05f,
-                0.22f);
+                0.22f,
+                enableInstancing: false);
             Material placementValid = GetOrCreateGhostMaterial(
                 "PlacementGhostValid",
                 new Color(0.12f, 0.95f, 0.35f, 0.42f));
@@ -109,9 +185,22 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform debug = CreateRoot("Debug").transform;
             spawn.position = new Vector3(0f, 0.05f, -2.5f);
 
-            BuildRoom(environment, concrete, wall, metal, accent, cardboard, stockPlacement);
-            BuildStarterPickups(environment, cardboard, metal, accent);
-            BuildLighting(lighting);
+            BuildRoom(
+                environment,
+                concrete,
+                wall,
+                metal,
+                brushedSteel,
+                accent,
+                cardboard,
+                wood,
+                rubber,
+                labelPaper,
+                screenGlass,
+                lightDiffuser,
+                stockPlacement);
+            BuildStarterPickups(environment, cardboard, metal, accent, labelPaper, rubber);
+            BuildLighting(lighting, metal, lightDiffuser);
             FirstPersonMotor prefabSource = BuildPlayer(
                 gameplay,
                 inputActions,
@@ -151,8 +240,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 UnityEngine.Object.DestroyImmediate(debugCollider);
             }
 
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.30f, 0.32f, 0.35f);
+            BuildLookdevVolume(lighting);
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.39f, 0.43f, 0.48f);
+            RenderSettings.ambientEquatorColor = new Color(0.31f, 0.30f, 0.28f);
+            RenderSettings.ambientGroundColor = new Color(0.15f, 0.14f, 0.13f);
+            RenderSettings.ambientIntensity = 1.18f;
+            RenderSettings.reflectionIntensity = 0.90f;
             RenderSettings.fog = false;
 
             EditorSceneManager.SaveScene(scene, GaragePrototypeMarker.ScenePath);
@@ -174,8 +268,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material concrete,
             Material wall,
             Material metal,
+            Material brushedSteel,
             Material accent,
             Material cardboard,
+            Material wood,
+            Material rubber,
+            Material labelPaper,
+            Material screenGlass,
+            Material lightDiffuser,
             Material stockPlacement)
         {
             CreateCube("Floor", parent, new Vector3(0f, -0.1f, 0f), new Vector3(8f, 0.2f, 10f), concrete);
@@ -188,30 +288,83 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             CreateCube("Front_Right", parent, new Vector3(3.75f, 1.3f, -5.1f), new Vector3(0.9f, 2.6f, 0.2f), wall);
             CreateCube("GarageDoor", parent, new Vector3(0f, 1.25f, -5f), new Vector3(6.6f, 2.5f, 0.12f), metal);
 
-            Transform workshop = new GameObject("WorkshopCorner").transform;
-            workshop.SetParent(parent, false);
-            CreateCube("WorkbenchBase", workshop, new Vector3(0f, 0.45f, 4.35f), new Vector3(3.2f, 0.8f, 0.75f), metal);
-            CreateCube("WorkbenchTop", workshop, new Vector3(0f, 0.9f, 4.35f), new Vector3(3.5f, 0.12f, 0.95f), accent);
-            CreateCube("Backboard", workshop, new Vector3(0f, 1.75f, 4.72f), new Vector3(3.5f, 1.55f, 0.08f), metal);
+            CreateDetailCube(
+                "FloorJoint_Long",
+                parent,
+                new Vector3(0f, 0.006f, 0.2f),
+                new Vector3(0.018f, 0.008f, 9.5f),
+                rubber);
+            CreateDetailCube(
+                "FloorJoint_Cross",
+                parent,
+                new Vector3(0f, 0.007f, 1.8f),
+                new Vector3(7.7f, 0.009f, 0.018f),
+                rubber);
+            CreateDetailCube(
+                "BackBaseboard",
+                parent,
+                new Vector3(0f, 0.10f, 4.965f),
+                new Vector3(7.9f, 0.20f, 0.07f),
+                metal);
+            CreateDetailCube(
+                "LeftBaseboard",
+                parent,
+                new Vector3(-3.965f, 0.10f, 0f),
+                new Vector3(0.07f, 0.20f, 9.8f),
+                metal);
+            CreateDetailCube(
+                "RightBaseboard",
+                parent,
+                new Vector3(3.965f, 0.10f, 0f),
+                new Vector3(0.07f, 0.20f, 9.8f),
+                metal);
 
-            Transform shelf = new GameObject("StarterShelf").transform;
-            shelf.SetParent(parent, false);
-            shelf.position = new Vector3(3.15f, 0f, 1.4f);
-            CreateCube("Shelf_LeftPost", shelf, new Vector3(-0.65f, 1.1f, 0f), new Vector3(0.08f, 2.2f, 0.65f), metal);
-            CreateCube("Shelf_RightPost", shelf, new Vector3(0.65f, 1.1f, 0f), new Vector3(0.08f, 2.2f, 0.65f), metal);
-            for (int index = 0; index < 4; index++)
+            for (int panel = 1; panel < 5; panel++)
             {
-                CreateCube(
-                    $"Shelf_{index + 1}",
-                    shelf,
-                    new Vector3(0f, 0.25f + (index * 0.55f), 0f),
-                    new Vector3(1.4f, 0.08f, 0.72f),
-                    metal);
+                CreateDetailCube(
+                    $"GarageDoorSeam_{panel}",
+                    parent,
+                    new Vector3(0f, 0.02f + (panel * 0.49f), -4.932f),
+                    new Vector3(6.3f, 0.025f, 0.018f),
+                    rubber);
             }
 
-            CreateCube("StarterBox_A", parent, new Vector3(-2.8f, 0.3f, 2.8f), new Vector3(0.8f, 0.6f, 0.65f), cardboard);
-            CreateCube("StarterBox_B", parent, new Vector3(-2.55f, 0.85f, 2.85f), new Vector3(0.65f, 0.5f, 0.55f), cardboard);
-            CreateCube("DeliveryBox", parent, new Vector3(2.4f, 0.4f, -3.8f), new Vector3(1.1f, 0.8f, 0.9f), cardboard);
+            BuildVisualBenchmarkCorner(
+                parent,
+                metal,
+                brushedSteel,
+                accent,
+                cardboard,
+                wood,
+                rubber,
+                labelPaper,
+                screenGlass,
+                lightDiffuser);
+
+            BuildStaticShippingBox(
+                "StarterBox_A",
+                parent,
+                new Vector3(-2.8f, 0.3f, 2.8f),
+                new Vector3(0.8f, 0.6f, 0.65f),
+                cardboard,
+                labelPaper,
+                rubber);
+            BuildStaticShippingBox(
+                "StarterBox_B",
+                parent,
+                new Vector3(-2.55f, 0.85f, 2.85f),
+                new Vector3(0.65f, 0.5f, 0.55f),
+                cardboard,
+                labelPaper,
+                rubber);
+            BuildStaticShippingBox(
+                "DeliveryBox",
+                parent,
+                new Vector3(2.4f, 0.4f, -3.8f),
+                new Vector3(1.1f, 0.8f, 0.9f),
+                cardboard,
+                labelPaper,
+                rubber);
 
             for (int stripe = -3; stripe <= 3; stripe++)
             {
@@ -252,19 +405,405 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             placementBlocker.layer = RequireLayer(InteractableLayerName);
         }
 
-        private static void BuildLighting(Transform parent)
+        private static void BuildVisualBenchmarkCorner(
+            Transform parent,
+            Material metal,
+            Material brushedSteel,
+            Material accent,
+            Material cardboard,
+            Material wood,
+            Material rubber,
+            Material labelPaper,
+            Material screenGlass,
+            Material lightDiffuser)
+        {
+            Transform benchmark = new GameObject("VisualBenchmarkCorner").transform;
+            benchmark.SetParent(parent, false);
+
+            Transform workshop = new GameObject("WorkshopCorner").transform;
+            workshop.SetParent(benchmark, false);
+
+            CreateBeveledCube(
+                "WorkbenchTop",
+                workshop,
+                new Vector3(0f, 0.93f, 4.35f),
+                new Vector3(3.5f, 0.12f, 0.95f),
+                0.025f,
+                wood);
+            foreach (float x in new[] { -1.52f, 1.52f })
+            {
+                foreach (float z in new[] { 4.04f, 4.66f })
+                {
+                    CreateBeveledCube(
+                        $"WorkbenchLeg_{x:0.00}_{z:0.00}",
+                        workshop,
+                        new Vector3(x, 0.46f, z),
+                        new Vector3(0.09f, 0.86f, 0.09f),
+                        0.012f,
+                        brushedSteel);
+                    CreateBeveledCube(
+                        $"WorkbenchFoot_{x:0.00}_{z:0.00}",
+                        workshop,
+                        new Vector3(x, 0.035f, z),
+                        new Vector3(0.16f, 0.07f, 0.16f),
+                        0.018f,
+                        rubber);
+                }
+            }
+
+            CreateBeveledCube(
+                "WorkbenchBackRail",
+                workshop,
+                new Vector3(0f, 0.48f, 4.66f),
+                new Vector3(3.08f, 0.10f, 0.09f),
+                0.012f,
+                brushedSteel);
+            CreateBeveledCube(
+                "DrawerCabinet",
+                workshop,
+                new Vector3(-1.08f, 0.48f, 4.35f),
+                new Vector3(0.72f, 0.78f, 0.62f),
+                0.035f,
+                metal);
+            for (int drawer = 0; drawer < 3; drawer++)
+            {
+                float drawerY = 0.25f + (drawer * 0.24f);
+                CreateBeveledCube(
+                    $"DrawerFront_{drawer + 1}",
+                    workshop,
+                    new Vector3(-1.08f, drawerY, 4.025f),
+                    new Vector3(0.62f, 0.18f, 0.035f),
+                    0.012f,
+                    metal,
+                    false);
+                CreateDetailCube(
+                    $"DrawerHandle_{drawer + 1}",
+                    workshop,
+                    new Vector3(-1.08f, drawerY, 3.997f),
+                    new Vector3(0.26f, 0.025f, 0.025f),
+                    brushedSteel);
+            }
+
+            CreateBeveledCube(
+                "Pegboard",
+                workshop,
+                new Vector3(0f, 1.76f, 4.77f),
+                new Vector3(3.5f, 1.48f, 0.08f),
+                0.025f,
+                rubber);
+            CreateDetailCube(
+                "PegboardTopFrame",
+                workshop,
+                new Vector3(0f, 2.49f, 4.72f),
+                new Vector3(3.5f, 0.055f, 0.055f),
+                brushedSteel);
+            CreateDetailCube(
+                "PegboardBottomFrame",
+                workshop,
+                new Vector3(0f, 1.03f, 4.72f),
+                new Vector3(3.5f, 0.055f, 0.055f),
+                brushedSteel);
+            for (int column = 0; column < 13; column++)
+            {
+                for (int row = 0; row < 6; row++)
+                {
+                    CreateDetailCube(
+                        $"PegHole_{column:00}_{row:00}",
+                        workshop,
+                        new Vector3(-1.50f + (column * 0.25f), 1.16f + (row * 0.22f), 4.721f),
+                        new Vector3(0.027f, 0.027f, 0.012f),
+                        metal);
+                }
+            }
+
+            CreateDetailCube(
+                "BenchIdentityPlate",
+                workshop,
+                new Vector3(-0.23f, 2.25f, 4.708f),
+                new Vector3(0.72f, 0.18f, 0.018f),
+                labelPaper);
+            for (int bar = 0; bar < 4; bar++)
+            {
+                CreateDetailCube(
+                    $"BenchIdentityBar_{bar + 1}",
+                    workshop,
+                    new Vector3(-0.46f + (bar * 0.15f), 2.25f, 4.696f),
+                    new Vector3(0.07f, 0.065f + (bar * 0.012f), 0.008f),
+                    rubber);
+            }
+
+            CreateBeveledCube(
+                "DiagnosticMonitorBody",
+                workshop,
+                new Vector3(0.66f, 1.36f, 4.15f),
+                new Vector3(0.82f, 0.52f, 0.09f),
+                0.035f,
+                rubber,
+                false);
+            CreateDetailCube(
+                "DiagnosticMonitorScreen",
+                workshop,
+                new Vector3(0.66f, 1.36f, 4.098f),
+                new Vector3(0.72f, 0.42f, 0.018f),
+                screenGlass);
+            CreateBeveledCube(
+                "DiagnosticMonitorStand",
+                workshop,
+                new Vector3(0.66f, 1.09f, 4.20f),
+                new Vector3(0.09f, 0.18f, 0.09f),
+                0.015f,
+                brushedSteel,
+                false);
+            CreateBeveledCube(
+                "DiagnosticKeyboard",
+                workshop,
+                new Vector3(0.65f, 1.015f, 3.98f),
+                new Vector3(0.72f, 0.045f, 0.23f),
+                0.018f,
+                rubber,
+                false);
+
+            CreateBeveledCube(
+                "BenchPcCase",
+                workshop,
+                new Vector3(1.30f, 1.31f, 4.35f),
+                new Vector3(0.42f, 0.62f, 0.55f),
+                0.035f,
+                metal);
+            for (int vent = 0; vent < 5; vent++)
+            {
+                CreateDetailCube(
+                    $"BenchPcVent_{vent + 1}",
+                    workshop,
+                    new Vector3(1.30f, 1.16f + (vent * 0.075f), 4.064f),
+                    new Vector3(0.25f, 0.025f, 0.012f),
+                    rubber);
+            }
+
+            CreateDetailCube(
+                "WorkbenchLightHousing",
+                workshop,
+                new Vector3(0f, 2.43f, 4.63f),
+                new Vector3(1.95f, 0.10f, 0.18f),
+                brushedSteel);
+            CreateDetailCube(
+                "WorkbenchLightDiffuser",
+                workshop,
+                new Vector3(0f, 2.375f, 4.56f),
+                new Vector3(1.72f, 0.025f, 0.08f),
+                lightDiffuser);
+
+            Transform shelf = new GameObject("StarterShelf").transform;
+            shelf.SetParent(benchmark, false);
+            shelf.localPosition = new Vector3(3.15f, 0f, 1.4f);
+            foreach (float x in new[] { -0.65f, 0.65f })
+            {
+                CreateBeveledCube(
+                    x < 0f ? "Shelf_LeftPost" : "Shelf_RightPost",
+                    shelf,
+                    new Vector3(x, 1.1f, 0f),
+                    new Vector3(0.08f, 2.2f, 0.65f),
+                    0.012f,
+                    metal);
+                CreateBeveledCube(
+                    x < 0f ? "Shelf_LeftFoot" : "Shelf_RightFoot",
+                    shelf,
+                    new Vector3(x, 0.035f, -0.02f),
+                    new Vector3(0.16f, 0.07f, 0.72f),
+                    0.015f,
+                    rubber);
+            }
+
+            for (int index = 0; index < 4; index++)
+            {
+                CreateBeveledCube(
+                    $"Shelf_{index + 1}",
+                    shelf,
+                    new Vector3(0f, 0.25f + (index * 0.55f), 0f),
+                    new Vector3(1.4f, 0.08f, 0.72f),
+                    0.012f,
+                    metal);
+            }
+
+            BuildStaticShippingBox(
+                "ShelfPartsBox",
+                shelf,
+                new Vector3(-0.28f, 0.57f, 0f),
+                new Vector3(0.56f, 0.50f, 0.50f),
+                cardboard,
+                labelPaper,
+                rubber);
+            CreateBeveledCube(
+                "ShelfTechUnit",
+                shelf,
+                new Vector3(0.20f, 1.12f, 0f),
+                new Vector3(0.76f, 0.46f, 0.48f),
+                0.03f,
+                metal);
+            CreateDetailCube(
+                "ShelfTechDisplay",
+                shelf,
+                new Vector3(0.20f, 1.12f, -0.247f),
+                new Vector3(0.40f, 0.16f, 0.016f),
+                screenGlass);
+        }
+
+        private static void BuildStaticShippingBox(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 size,
+            Material cardboard,
+            Material labelPaper,
+            Material tape)
+        {
+            Transform root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            root.localPosition = localPosition;
+            CreateBeveledCube("Carton", root, Vector3.zero, size, 0.018f, cardboard);
+            CreateDetailCube(
+                "PackingTape",
+                root,
+                new Vector3(0f, (size.y * 0.5f) + 0.006f, 0f),
+                new Vector3(size.x * 0.18f, 0.012f, size.z * 0.96f),
+                tape);
+            CreateDetailCube(
+                "ShippingLabel",
+                root,
+                new Vector3(size.x * 0.20f, 0f, -(size.z * 0.5f) - 0.006f),
+                new Vector3(size.x * 0.34f, size.y * 0.34f, 0.012f),
+                labelPaper);
+            for (int bar = 0; bar < 3; bar++)
+            {
+                CreateDetailCube(
+                    $"LabelBar_{bar + 1}",
+                    root,
+                    new Vector3(
+                        size.x * 0.20f,
+                        (size.y * 0.065f) - (bar * size.y * 0.07f),
+                        -(size.z * 0.5f) - 0.013f),
+                    new Vector3(size.x * (0.22f - (bar * 0.035f)), size.y * 0.025f, 0.006f),
+                    tape);
+            }
+        }
+
+        private static void BuildLighting(
+            Transform parent,
+            Material metal,
+            Material lightDiffuser)
         {
             GameObject sun = new GameObject("Directional Light");
             sun.transform.SetParent(parent, false);
-            sun.transform.rotation = Quaternion.Euler(50f, -32f, 0f);
+            sun.transform.rotation = Quaternion.Euler(42f, -28f, 0f);
             Light sunlight = sun.AddComponent<Light>();
             sunlight.type = LightType.Directional;
-            sunlight.color = new Color(1f, 0.93f, 0.82f);
-            sunlight.intensity = 1.1f;
+            sunlight.color = new Color(0.84f, 0.91f, 1f);
+            sunlight.intensity = 0.92f;
             sunlight.shadows = LightShadows.Soft;
+            sunlight.shadowStrength = 0.82f;
 
-            CreatePointLight(parent, "CeilingLight_A", new Vector3(-2.2f, 2.72f, 0.8f));
-            CreatePointLight(parent, "CeilingLight_B", new Vector3(2.2f, 2.72f, -1.7f));
+            CreateCeilingFixture(
+                parent,
+                "CeilingFixture_A",
+                new Vector3(-2.15f, 2.98f, 0.8f),
+                metal,
+                lightDiffuser);
+            CreateCeilingFixture(
+                parent,
+                "CeilingFixture_B",
+                new Vector3(2.15f, 2.98f, -1.7f),
+                metal,
+                lightDiffuser);
+            CreatePointLight(
+                parent,
+                "CeilingBounce_A",
+                new Vector3(-2.15f, 2.66f, 0.8f),
+                new Color(1f, 0.79f, 0.60f),
+                1.45f,
+                6.5f);
+            CreatePointLight(
+                parent,
+                "CeilingBounce_B",
+                new Vector3(2.15f, 2.66f, -1.7f),
+                new Color(0.78f, 0.88f, 1f),
+                1.25f,
+                6.2f);
+            CreateSpotLight(
+                parent,
+                "WorkbenchTaskLight",
+                new Vector3(0f, 2.34f, 4.44f),
+                new Vector3(0f, 1.05f, 4.12f),
+                new Color(1f, 0.77f, 0.55f),
+                3.8f,
+                3.4f,
+                68f);
+
+            GameObject reflectionObject = new GameObject("GarageReflectionProbe");
+            reflectionObject.transform.SetParent(parent, false);
+            reflectionObject.transform.localPosition = new Vector3(0f, 1.45f, 0.5f);
+            ReflectionProbe reflectionProbe = reflectionObject.AddComponent<ReflectionProbe>();
+            reflectionProbe.mode = ReflectionProbeMode.Realtime;
+            reflectionProbe.refreshMode = ReflectionProbeRefreshMode.OnAwake;
+            reflectionProbe.timeSlicingMode = ReflectionProbeTimeSlicingMode.AllFacesAtOnce;
+            reflectionProbe.resolution = 128;
+            reflectionProbe.size = new Vector3(7.6f, 2.8f, 9.4f);
+            reflectionProbe.boxProjection = true;
+            reflectionProbe.intensity = 0.85f;
+        }
+
+        private static void BuildLookdevVolume(Transform parent)
+        {
+            VolumeProfile profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(LookdevProfilePath);
+            if (profile == null)
+            {
+                profile = ScriptableObject.CreateInstance<VolumeProfile>();
+                profile.name = "GarageLookdevProfile";
+                AssetDatabase.CreateAsset(profile, LookdevProfilePath);
+            }
+
+            Tonemapping tonemapping = GetOrAddVolumeComponent<Tonemapping>(profile);
+            tonemapping.mode.Override(TonemappingMode.ACES);
+
+            ColorAdjustments color = GetOrAddVolumeComponent<ColorAdjustments>(profile);
+            color.postExposure.Override(0.42f);
+            color.contrast.Override(6f);
+            color.saturation.Override(-3f);
+            color.colorFilter.Override(new Color(1f, 0.985f, 0.955f));
+
+            WhiteBalance whiteBalance = GetOrAddVolumeComponent<WhiteBalance>(profile);
+            whiteBalance.temperature.Override(-2f);
+            whiteBalance.tint.Override(1f);
+
+            Bloom bloom = GetOrAddVolumeComponent<Bloom>(profile);
+            bloom.intensity.Override(0.14f);
+            bloom.threshold.Override(1.05f);
+            bloom.scatter.Override(0.52f);
+
+            Vignette vignette = GetOrAddVolumeComponent<Vignette>(profile);
+            vignette.intensity.Override(0.08f);
+            vignette.smoothness.Override(0.34f);
+            vignette.rounded.Override(false);
+
+            EditorUtility.SetDirty(profile);
+            GameObject volumeObject = new GameObject("GlobalLookdevVolume");
+            volumeObject.transform.SetParent(parent, false);
+            Volume volume = volumeObject.AddComponent<Volume>();
+            volume.isGlobal = true;
+            volume.priority = 10f;
+            volume.sharedProfile = profile;
+        }
+
+        private static T GetOrAddVolumeComponent<T>(VolumeProfile profile)
+            where T : VolumeComponent
+        {
+            if (profile.TryGet(out T component))
+            {
+                return component;
+            }
+
+            component = profile.Add<T>(true);
+            AssetDatabase.AddObjectToAsset(component, profile);
+            return component;
         }
 
         private static FirstPersonMotor BuildPlayer(
@@ -301,6 +840,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             camera.farClipPlane = 150f;
             camera.fieldOfView = 72f;
             camera.clearFlags = CameraClearFlags.Skybox;
+            camera.allowHDR = true;
+            UniversalAdditionalCameraData cameraData = camera.GetUniversalAdditionalCameraData();
+            cameraData.renderPostProcessing = true;
+            cameraData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+            cameraData.antialiasingQuality = AntialiasingQuality.High;
             cameraObject.AddComponent<AudioListener>();
 
             Transform interactionOrigin = new GameObject("InteractionOrigin").transform;
@@ -394,7 +938,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform parent,
             Material cardboard,
             Material metal,
-            Material accent)
+            Material accent,
+            Material labelPaper,
+            Material tape)
         {
             int interactableLayer = RequireLayer(InteractableLayerName);
             CreateCube(
@@ -428,6 +974,19 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             {
                 UnityEngine.Object.DestroyImmediate(markerCollider);
             }
+
+            CreateDetailCube(
+                "SmallBoxPackingTape",
+                itemRoot.transform,
+                new Vector3(0f, 0.231f, 0f),
+                new Vector3(0.13f, 0.012f, 0.48f),
+                tape);
+            CreateDetailCube(
+                "SmallBoxShippingLabel",
+                itemRoot.transform,
+                new Vector3(0.17f, 0f, -0.256f),
+                new Vector3(0.24f, 0.14f, 0.012f),
+                labelPaper);
 
             Rigidbody body = itemRoot.AddComponent<Rigidbody>();
             body.mass = 2f;
@@ -479,6 +1038,19 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 }
             }
 
+            CreateDetailCube(
+                "HeavyShipmentPackingTape",
+                largeItemRoot.transform,
+                new Vector3(0f, 0.406f, 0f),
+                new Vector3(0.16f, 0.012f, 0.68f),
+                tape);
+            CreateDetailCube(
+                "HeavyShipmentLabel",
+                largeItemRoot.transform,
+                new Vector3(0f, 0.08f, -0.356f),
+                new Vector3(0.34f, 0.20f, 0.012f),
+                labelPaper);
+
             Rigidbody largeBody = largeItemRoot.AddComponent<Rigidbody>();
             largeBody.mass = 9f;
             largeBody.interpolation = RigidbodyInterpolation.Interpolate;
@@ -495,17 +1067,72 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PhysicalCarryProfile.LargeBox);
         }
 
-        private static void CreatePointLight(Transform parent, string name, Vector3 position)
+        private static void CreateCeilingFixture(
+            Transform parent,
+            string name,
+            Vector3 position,
+            Material housingMaterial,
+            Material diffuserMaterial)
+        {
+            Transform fixture = new GameObject(name).transform;
+            fixture.SetParent(parent, false);
+            fixture.localPosition = position;
+            CreateDetailCube(
+                "Housing",
+                fixture,
+                Vector3.zero,
+                new Vector3(1.55f, 0.10f, 0.32f),
+                housingMaterial);
+            CreateDetailCube(
+                "Diffuser",
+                fixture,
+                new Vector3(0f, -0.061f, 0f),
+                new Vector3(1.35f, 0.025f, 0.24f),
+                diffuserMaterial);
+        }
+
+        private static void CreatePointLight(
+            Transform parent,
+            string name,
+            Vector3 position,
+            Color color,
+            float intensity,
+            float range)
         {
             GameObject lightObject = new GameObject(name);
             lightObject.transform.SetParent(parent, false);
             lightObject.transform.localPosition = position;
             Light light = lightObject.AddComponent<Light>();
             light.type = LightType.Point;
-            light.color = new Color(1f, 0.86f, 0.70f);
-            light.range = 8f;
-            light.intensity = 1.6f;
+            light.color = color;
+            light.range = range;
+            light.intensity = intensity;
             light.shadows = LightShadows.None;
+        }
+
+        private static void CreateSpotLight(
+            Transform parent,
+            string name,
+            Vector3 position,
+            Vector3 target,
+            Color color,
+            float intensity,
+            float range,
+            float spotAngle)
+        {
+            GameObject lightObject = new GameObject(name);
+            lightObject.transform.SetParent(parent, false);
+            lightObject.transform.localPosition = position;
+            lightObject.transform.localRotation = Quaternion.LookRotation(target - position);
+            Light light = lightObject.AddComponent<Light>();
+            light.type = LightType.Spot;
+            light.color = color;
+            light.range = range;
+            light.intensity = intensity;
+            light.spotAngle = spotAngle;
+            light.innerSpotAngle = spotAngle * 0.62f;
+            light.shadows = LightShadows.Soft;
+            light.shadowStrength = 0.68f;
         }
 
         private static GameObject CreateRoot(string name)
@@ -545,11 +1172,64 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             return cube;
         }
 
+        private static GameObject CreateDetailCube(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Material material)
+        {
+            GameObject detail = CreateCube(name, parent, localPosition, localScale, material);
+            Collider collider = detail.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
+
+            return detail;
+        }
+
+        private static GameObject CreateBeveledCube(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 size,
+            float bevel,
+            Material material,
+            bool addCollider = true)
+        {
+            ProBuilderMesh mesh = ShapeGenerator.GenerateCube(PivotLocation.Center, size);
+            mesh.name = name;
+            mesh.transform.SetParent(parent, false);
+            mesh.transform.localPosition = localPosition;
+            List<Edge> edges = mesh.faces
+                .SelectMany(face => face.edges)
+                .Distinct()
+                .ToList();
+            Bevel.BevelEdges(mesh, edges, Mathf.Min(bevel, Mathf.Min(size.x, Mathf.Min(size.y, size.z)) * 0.35f));
+            mesh.ToMesh();
+            mesh.Refresh();
+            GameObject meshObject = mesh.gameObject;
+            meshObject.GetComponent<MeshRenderer>().sharedMaterial = material;
+            if (addCollider)
+            {
+                BoxCollider collider = meshObject.AddComponent<BoxCollider>();
+                collider.size = size;
+            }
+
+            mesh.preserveMeshAssetOnDestroy = true;
+            UnityEngine.Object.DestroyImmediate(mesh);
+            return meshObject;
+        }
+
         private static Material GetOrCreateMaterial(
             string name,
             Color color,
             float metallic,
-            float smoothness)
+            float smoothness,
+            Texture2D surfaceTexture = null,
+            Vector2? textureScale = null,
+            bool enableInstancing = true)
         {
             string path = $"{MaterialRoot}/{name}.mat";
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -561,7 +1241,19 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 AssetDatabase.CreateAsset(material, path);
             }
 
-            material.color = color;
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", color);
+                if (material.HasProperty("_Color"))
+                {
+                    material.SetColor("_Color", enableInstancing ? color : Color.white);
+                }
+            }
+            else
+            {
+                material.color = color;
+            }
+
             if (material.HasProperty("_Metallic"))
             {
                 material.SetFloat("_Metallic", metallic);
@@ -572,13 +1264,126 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 material.SetFloat("_Smoothness", smoothness);
             }
 
+            if (surfaceTexture != null && material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", surfaceTexture);
+                material.SetTextureScale("_BaseMap", textureScale ?? Vector2.one);
+            }
+
+            material.enableInstancing = enableInstancing;
+
             EditorUtility.SetDirty(material);
             return material;
         }
 
+        private static Material GetOrCreateEmissiveMaterial(
+            string name,
+            Color color,
+            float metallic,
+            float smoothness,
+            Color emission)
+        {
+            Material material = GetOrCreateMaterial(name, color, metallic, smoothness);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.SetColor("_EmissionColor", emission);
+                material.EnableKeyword("_EMISSION");
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static Texture2D GetOrCreateSurfaceTexture(
+            string name,
+            SurfacePattern pattern)
+        {
+            const int size = 64;
+            string path = $"{TextureRoot}/{name}.asset";
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texture == null)
+            {
+                texture = new Texture2D(size, size, TextureFormat.RGBA32, false, false)
+                {
+                    name = name
+                };
+                AssetDatabase.CreateAsset(texture, path);
+            }
+            else if (texture.width != size || texture.height != size)
+            {
+                texture.Reinitialize(size, size, TextureFormat.RGBA32, false);
+            }
+
+            var pixels = new Color[size * size];
+            int seed = 131 + ((int)pattern * 977);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float noise = Hash01(x, y, seed);
+                    float value = EvaluateSurfaceValue(pattern, x, y, noise);
+                    pixels[(y * size) + x] = new Color(value, value, value, 1f);
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply(false, false);
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.filterMode = FilterMode.Bilinear;
+            texture.anisoLevel = 2;
+            EditorUtility.SetDirty(texture);
+            return texture;
+        }
+
+        private static float EvaluateSurfaceValue(
+            SurfacePattern pattern,
+            int x,
+            int y,
+            float noise)
+        {
+            switch (pattern)
+            {
+                case SurfacePattern.Concrete:
+                    float aggregate = Hash01(x / 3, y / 3, 431) > 0.91f ? -0.13f : 0f;
+                    return Mathf.Clamp01(0.78f + ((noise - 0.5f) * 0.16f) + aggregate);
+                case SurfacePattern.PaintedWall:
+                    return Mathf.Clamp01(0.90f + ((noise - 0.5f) * 0.055f));
+                case SurfacePattern.BrushedMetal:
+                    return Mathf.Clamp01(
+                        0.72f + (Mathf.Sin((y * 2.1f) + (noise * 2f)) * 0.045f) +
+                        ((noise - 0.5f) * 0.035f));
+                case SurfacePattern.Cardboard:
+                    return Mathf.Clamp01(
+                        0.82f + (Mathf.Sin((x * 0.52f) + (noise * 3f)) * 0.025f) +
+                        ((noise - 0.5f) * 0.075f));
+                case SurfacePattern.WoodLaminate:
+                    float grain = Mathf.Sin((y * 0.36f) + (Mathf.Sin(x * 0.11f) * 1.8f));
+                    return Mathf.Clamp01(0.68f + (grain * 0.11f) + ((noise - 0.5f) * 0.05f));
+                default:
+                    return 1f;
+            }
+        }
+
+        private static float Hash01(int x, int y, int seed)
+        {
+            unchecked
+            {
+                uint hash = (uint)(x * 374761393) + (uint)(y * 668265263) + (uint)(seed * 69069);
+                hash = (hash ^ (hash >> 13)) * 1274126177u;
+                hash ^= hash >> 16;
+                return (hash & 0x00FFFFFFu) / 16777215f;
+            }
+        }
+
         private static Material GetOrCreateGhostMaterial(string name, Color color)
         {
-            Material material = GetOrCreateMaterial(name, color, 0f, 0.15f);
+            Material material = GetOrCreateMaterial(
+                name,
+                color,
+                0f,
+                0.15f,
+                enableInstancing: false);
             if (material.HasProperty("_BaseColor"))
             {
                 material.SetColor("_BaseColor", color);
@@ -601,6 +1406,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             }
 
+            if (material.HasProperty("_DstBlendAlpha"))
+            {
+                material.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.Zero);
+            }
+
             if (material.HasProperty("_ZWrite"))
             {
                 material.SetFloat("_ZWrite", 0f);
@@ -608,6 +1418,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
             material.SetOverrideTag("RenderType", "Transparent");
             material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.SetShaderPassEnabled("DepthOnly", true);
+            material.SetShaderPassEnabled("ShadowCaster", true);
             material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             EditorUtility.SetDirty(material);
             return material;
@@ -648,6 +1461,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             {
                 "Assets/Scenes/Prototypes",
                 MaterialRoot,
+                TextureRoot,
                 "Assets/Prefabs/Prototype"
             };
 

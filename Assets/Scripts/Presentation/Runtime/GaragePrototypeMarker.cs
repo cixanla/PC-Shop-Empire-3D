@@ -9,7 +9,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-small-box-rotation-g5-v1";
+        public const string Version = "garage-readable-lookdev-g6-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -59,6 +59,17 @@ namespace PCShopEmpire3D.Presentation
                 }
             }
 
+            Transform[] sceneTransforms = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            bool hasLookdevCorner = false;
+            bool hasLookdevVolume = false;
+            bool hasTaskLight = false;
+            foreach (Transform sceneTransform in sceneTransforms)
+            {
+                hasLookdevCorner |= sceneTransform.name == "VisualBenchmarkCorner";
+                hasLookdevVolume |= sceneTransform.name == "GlobalLookdevVolume";
+                hasTaskLight |= sceneTransform.name == "WorkbenchTaskLight";
+            }
+
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
                 $"scene={gameObject.scene.name} resolution={Screen.width}x{Screen.height} " +
@@ -67,7 +78,8 @@ namespace PCShopEmpire3D.Presentation
                 $"carry={(playerCarry != null ? "ok" : "missing")} " +
                 $"placement={(playerCarry != null && playerCarry.PlacementPreview != null ? "ok" : "missing")} " +
                 $"large-carry={(hasLargeBox ? "ok" : "missing")} " +
-                $"rotation={(hasRotationAction && hasRotationSurface ? "ok" : "missing")}");
+                $"rotation={(hasRotationAction && hasRotationSurface ? "ok" : "missing")} " +
+                $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
         }
     }
 }

@@ -10,6 +10,8 @@ using PCShopEmpire3D.Editor.GaragePrototype;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 namespace PCShopEmpire3D.Tests.EditMode.Gameplay
@@ -140,6 +142,97 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             Assert.That(composed[0].enabled, Is.True);
             Assert.That(composed.Single(scene => scene.path == disabledSample.path).enabled, Is.False);
             Assert.That(composed.Single(scene => scene.path == disabledFutureScene.path).enabled, Is.False);
+        }
+
+        [Test]
+        public void GarageSceneContainsReadableSemiRealisticBenchmarkContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
+                Assert.That(marker, Is.Not.Null);
+                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-readable-lookdev-g6-v1"));
+
+                Transform benchmark = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                    .Single(transform => transform.name == "VisualBenchmarkCorner");
+                Assert.That(benchmark.GetComponentsInChildren<Renderer>(true).Length, Is.GreaterThan(90));
+
+                string[] rendererNames = benchmark.GetComponentsInChildren<Renderer>(true)
+                    .Select(renderer => renderer.name)
+                    .ToArray();
+                Assert.That(rendererNames, Does.Contain("WorkbenchTop"));
+                Assert.That(rendererNames, Does.Contain("DiagnosticMonitorScreen"));
+                Assert.That(rendererNames, Does.Contain("ShelfTechUnit"));
+                Assert.That(
+                    benchmark.GetComponentsInChildren<Transform>(true)
+                        .Select(transform => transform.name),
+                    Does.Contain("ShelfPartsBox"));
+
+                Material concrete = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/Concrete.mat");
+                Material metal = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/DarkMetal.mat");
+                Material steel = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/BrushedSteel.mat");
+                Material wood = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/WoodLaminate.mat");
+                Material cardboard = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/Cardboard.mat");
+                Material screen = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/ScreenGlass.mat");
+                Assert.That(concrete, Is.Not.Null);
+                Assert.That(metal, Is.Not.Null);
+                Assert.That(steel, Is.Not.Null);
+                Assert.That(wood, Is.Not.Null);
+                Assert.That(cardboard, Is.Not.Null);
+                Assert.That(screen, Is.Not.Null);
+                Assert.That(concrete.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(metal.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(steel.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(wood.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(cardboard.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(metal.GetFloat("_Metallic"), Is.LessThan(0.2f));
+                Assert.That(steel.GetFloat("_Metallic"), Is.GreaterThan(0.8f));
+                Assert.That(screen.GetFloat("_Smoothness"), Is.GreaterThan(0.75f));
+                Assert.That(screen.IsKeywordEnabled("_EMISSION"), Is.True);
+
+                Volume volume = FindInScene<Volume>(scene);
+                Assert.That(volume, Is.Not.Null);
+                Assert.That(volume.isGlobal, Is.True);
+                Assert.That(volume.sharedProfile, Is.Not.Null);
+                Assert.That(volume.sharedProfile.TryGet(out Tonemapping tonemapping), Is.True);
+                Assert.That(tonemapping.mode.value, Is.EqualTo(TonemappingMode.ACES));
+                Assert.That(volume.sharedProfile.TryGet(out Bloom bloom), Is.True);
+                Assert.That(bloom.intensity.value, Is.InRange(0.05f, 0.25f));
+
+                Camera camera = marker.PlayerMotor.GetComponentInChildren<Camera>(true);
+                UniversalAdditionalCameraData cameraData = camera.GetUniversalAdditionalCameraData();
+                Assert.That(camera.allowHDR, Is.True);
+                Assert.That(cameraData.renderPostProcessing, Is.True);
+                Assert.That(
+                    cameraData.antialiasing,
+                    Is.EqualTo(AntialiasingMode.SubpixelMorphologicalAntiAliasing));
+
+                Light taskLight = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Light>(true))
+                    .Single(light => light.name == "WorkbenchTaskLight");
+                Assert.That(taskLight.type, Is.EqualTo(LightType.Spot));
+                Assert.That(taskLight.shadows, Is.EqualTo(LightShadows.Soft));
+
+                ReflectionProbe reflectionProbe = FindInScene<ReflectionProbe>(scene);
+                Assert.That(reflectionProbe, Is.Not.Null);
+                Assert.That(reflectionProbe.mode, Is.EqualTo(ReflectionProbeMode.Realtime));
+                Assert.That(reflectionProbe.refreshMode, Is.EqualTo(ReflectionProbeRefreshMode.OnAwake));
+                Assert.That(reflectionProbe.resolution, Is.EqualTo(128));
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         private static T FindInScene<T>(Scene scene)

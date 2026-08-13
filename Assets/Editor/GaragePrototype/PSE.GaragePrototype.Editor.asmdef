@@ -4,7 +4,10 @@
   "references": [
     "PSE.Presentation",
     "PSE.World",
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "Unity.ProBuilder",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [
     "Editor"
