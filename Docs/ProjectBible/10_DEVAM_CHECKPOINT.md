@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 13 Ağustos 2026<br>
-**Durum:** Sürümlü deterministik PRNG çekirdeği tamamlandı; sıradaki iş root-seed/context stream türetme<br>
+**Durum:** Deterministik PRNG ve root-seed/context derivation epic'i tamamlandı; sıradaki iş event dispatcher/correlation<br>
 **Son kullanıcı bildirimi:** Kalan kullanım %100; uzun fakat checkpoint'li geliştirme adımları onaylandı
 
 ## Kullanım güvenliği protokolü
@@ -16,8 +16,8 @@
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 - Unity: `6000.3.21f1`, URP `17.3.0`, C#.
 - Authoritative remote: private `https://github.com/cixanla/PC-Shop-Empire-3D`, default branch `main`.
-- Unity/Editor bağımsız `PSE.Core` içinde stable ID, result/failure, integer simulation clock, immutable event envelope ve sürümlü PCG32 akışı var.
-- Son Edit Mode sonucu: **62/62 geçti**, başarısız 0, atlanan 0 (`stage_b_rng_editmode_20260813.xml`).
+- Unity/Editor bağımsız `PSE.Core` içinde stable ID, result/failure, integer simulation clock, immutable event envelope, sürümlü PCG32 ve SHA-256 framed bağlamsal stream derivation var.
+- Son Edit Mode sonucu: **85/85 geçti**, başarısız 0, atlanan 0 (`stage_b_seed_derivation_editmode_20260813_final.xml`).
 - Repository Guard: geçti; Unity sürümü doğru, legacy snapshot 26/26, Project Bible 11 belge, secret/cache/build ihlali yok.
 - macOS Universal development build/headless smoke ve Windows x64 Mono cross-build önceki Stage A kanıtı olarak geçerli.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ ilk oynanabilir öncesi dış bağımlılıktır.
@@ -27,13 +27,14 @@
 ## Son feature checkpoint
 
 - Branch: `main`
-- Feature commit: `bbb3648c6e34eedd77e1bec948d5ee630f89679c`
-- Feature tree: `561eaeaf2bfa424ab075b42eeb084175efed01da`
-- Kapsam: `pcg32-xsh-rr-64-32-v1`, 63-bit benzersiz stream selector alanı, raw state+odd increment snapshot/restore, official golden vector ve modulo-bias üretmeyen bounded integer.
-- Güvenlik: `System.Random`, `UnityEngine.Random`, wall-clock/device entropy, global singleton ve kriptografik kullanım yok.
-- Resmî PCG 42/54 golden vector ve altı draw sonrası state/increment sabit testtir.
-- Bağımsız code review: PCG transition/output/rejection/snapshot doğru; explicit unchecked daraltma düzeltildi; kritik veya önemli açık bulgu yok.
-- `git fsck --full`: yapısal hata yok; staging sırasında oluşan erişilemeyen geçici bloblar zararsızdır ve commit geçmişine bağlı değildir.
+- Feature commit: `43e92174ca3866dfde436fb180785a615772a886`
+- Feature tree: `0ec21c6eb99d005ab4c33554c7b40c43f59de7e4`
+- Kapsam: 16-hex canonical `RandomRootSeed`, `sha256-framed-be-pcg32-v1`, typed stable domain/context ve save metadata sürüm doğrulaması.
+- Güvenlik: eksik/bozuk/bilinmeyen metadata için wall-clock/device entropy fallback yok; tüketilmiş uzun akış yalnız persisted `Pcg32State` ile devam eder.
+- İki digest/state/selector/altı-draw golden vector; çağrı sırası, kültür, save/load ve snapshot devam testleriyle sabittir.
+- Bağımsız code review ve ayrı Python SHA-256+PCG32 uygulaması iki vektörü birebir doğruladı; kritik veya önemli açık bulgu yok.
+- GitHub Issue #24 ve parent Epic #2 kapandı; Project #2 durumları `Done` oldu.
+- Remote Repository Guard run `31667925884` başarıyla tamamlandı.
 
 ## Test kanıtı
 
@@ -41,10 +42,10 @@ Ham test çıktıları repository dışında `../TestResults` altında tutulur:
 
 | Dosya | Boyut | SHA-256 |
 |---|---:|---|
-| `stage_b_rng_editmode_20260813.xml` | 54.074 bayt | `6d9105c24b88a2df463d9a6cfedb2a077c93c37489f265f31c500b7618ae9bce` |
-| `stage_b_rng_editmode_20260813.log` | 40.596 bayt | `f644d3cd2c377711112c328c735a19a6561d2c2f3f3d0049d610d5c9d7ba3c38` |
+| `stage_b_seed_derivation_editmode_20260813_final.xml` | 73.578 bayt | `0807daaa1800b77113141753701fff1aeb3032be355971b0c70c9cf48d2c96b6` |
+| `stage_b_seed_derivation_editmode_20260813_final.log` | 41.318 bayt | `26f35c42b4a8c393e52038dc375dac1296d3bad47a339cba48b76ab9af8aca62` |
 
-İlk RNG turu 61/62 geçti ve yalnız rejection testindeki yanlış bağımsız beklentiyi yakaladı. Test, iki threshold-altı draw'dan sonra üçüncü draw'ı doğrulayacak şekilde düzeltildi. Son iki tam Unity turu 62/62 geçti; üretim algoritmasında başarısızlık yoktur.
+Son iki seed-derivation Unity turu 85/85 geçti. Golden digest ve draw değerleri ayrıca bağımsız Python uygulamasıyla doğrulandı. Kalan platform kapısı, ilk Windows/macOS IL2CPP player testinde aynı golden vektörlerin yeniden çalıştırılmasıdır.
 
 ## Korunan geçmiş
 
@@ -53,6 +54,8 @@ Ham test çıktıları repository dışında `../TestResults` altında tutulur:
 - Core assembly: `8ecb05df48257d22dc7f4549c8dbfe7b261772a9`
 - Stable identity/result: `4cd2d928dbfda1886632bacce4a141c2a43161df`
 - Deterministic time/event: `8af2ad3d05906839c4b607e4958650e723060465`
+- PCG32 core: `bbb3648c6e34eedd77e1bec948d5ee630f89679c`
+- Root seed/context derivation: `43e92174ca3866dfde436fb180785a615772a886`
 - GitHub devir temeli: `d79f85b2b201483dc58ddfdb6929f8afb6179010`
 - Eski public `cixanla/PC-Shop-Empire` legacy release geçmişi olarak değiştirilmeden kalır.
 
@@ -76,9 +79,9 @@ RNG paketi ve checkpoint yeni, ayrı hedefe alındı:
 
 ## Devam sırası
 
-1. Issue #2 altında saved root seed + canonical context kimliği için sürümlü stable hashing/stream derivation child issue'sunu aç ve uygula; reload ile reroll edilemediğini test et.
-2. Issue #3 event correlation/causation + in-memory dispatcher paketini tamamla.
-3. Ardından Issue #4–#6 zinciriyle gerçek birinci şahıs garaj graybox, kamera/hareket, görünür eller, alma/bırakma ve kutu placement prototipine geç.
+1. Issue #3 event correlation/causation + deterministik in-memory dispatcher paketini tamamla.
+2. Issue #4 ile gerçek birinci şahıs garaj graybox, input, kamera ve hareket prototipini kur.
+3. Issue #5–#6 ile görünür eller, alma/bırakma, hibrit kutu taşıma ve güvenli placement akışına geç.
 
 ## Düşük kullanımda bırakılacak mesaj
 
