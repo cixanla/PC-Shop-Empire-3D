@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
+using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
+using PCShopEmpire3D.World.Interaction;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -18,6 +20,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
         private const string MaterialRoot = "Assets/Art/Prototype/Materials";
         private const string PlayerPrefabPath = "Assets/Prefabs/Prototype/PlayerRig.prefab";
+        private const string PlayerLayerName = "Player";
+        private const string InteractableLayerName = "Interactable";
+        private const string HeldItemLayerName = "HeldItem";
+        private const string ViewModelLayerName = "ViewModel";
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
         public static void Build()
@@ -93,6 +99,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             spawn.position = new Vector3(0f, 0.05f, -2.5f);
 
             BuildRoom(environment, concrete, wall, metal, accent, cardboard);
+            BuildStarterPickup(environment, cardboard, metal);
             BuildLighting(lighting);
             FirstPersonMotor prefabSource = BuildPlayer(gameplay, inputActions, hands);
             GameObject playerPrefab = PrefabUtility.SaveAsPrefabAsset(
@@ -108,11 +115,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             FirstPersonMotor motor = playerInstance.GetComponent<FirstPersonMotor>();
             Require(motor != null, "The PlayerRig prefab is missing FirstPersonMotor.");
             PlayerInputAdapter input = motor.GetComponent<PlayerInputAdapter>();
+            PlayerCarryController carry = motor.GetComponent<PlayerCarryController>();
+            Require(carry != null, "The PlayerRig prefab is missing PlayerCarryController.");
 
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
-            marker.Configure(motor, input);
+            marker.Configure(motor, input, carry);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
-            hud.Configure(motor);
+            hud.Configure(motor, carry);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",
@@ -226,6 +235,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         {
             GameObject rig = new GameObject("PlayerRig");
             rig.transform.SetParent(gameplay, false);
+            rig.layer = RequireLayer(PlayerLayerName);
 
             CharacterController controller = rig.AddComponent<CharacterController>();
             controller.height = 1.75f;
@@ -262,15 +272,50 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
             Transform viewModelHands = new GameObject("ViewModelHands").transform;
             viewModelHands.SetParent(cameraObject.transform, false);
-            CreateViewModelHand("LeftHand", viewModelHands, new Vector3(-0.23f, -0.30f, 0.55f), -8f, handsMaterial);
-            CreateViewModelHand("RightHand", viewModelHands, new Vector3(0.23f, -0.30f, 0.55f), 8f, handsMaterial);
+            Transform leftHand = CreateViewModelHand(
+                "LeftHand",
+                viewModelHands,
+                new Vector3(-0.23f, -0.30f, 0.55f),
+                -8f,
+                handsMaterial);
+            Transform rightHand = CreateViewModelHand(
+                "RightHand",
+                viewModelHands,
+                new Vector3(0.23f, -0.30f, 0.55f),
+                8f,
+                handsMaterial);
+            SetLayerRecursively(viewModelHands.gameObject, RequireLayer(ViewModelLayerName));
+
+            VisibleHandsPresenter handsPresenter = viewModelHands.gameObject.AddComponent<VisibleHandsPresenter>();
+            handsPresenter.Configure(leftHand, rightHand);
 
             FirstPersonMotor motor = rig.AddComponent<FirstPersonMotor>();
             motor.Configure(controller, input, pivotObject.transform, camera);
+
+            PhysicalInteractionResolver resolver = rig.AddComponent<PhysicalInteractionResolver>();
+            int interactableLayer = RequireLayer(InteractableLayerName);
+            int playerLayer = RequireLayer(PlayerLayerName);
+            resolver.Configure(
+                interactionOrigin,
+                rig.transform,
+                2f,
+                0.08f,
+                (1 << 0) | (1 << interactableLayer));
+
+            PlayerCarryController carryController = rig.AddComponent<PlayerCarryController>();
+            carryController.Configure(
+                input,
+                motor,
+                resolver,
+                carryAnchor,
+                handsPresenter,
+                1 << 0,
+                (1 << 0) | (1 << interactableLayer) | (1 << playerLayer),
+                RequireLayer(HeldItemLayerName));
             return motor;
         }
 
-        private static void CreateViewModelHand(
+        private static Transform CreateViewModelHand(
             string name,
             Transform parent,
             Vector3 position,
@@ -284,6 +329,45 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             {
                 UnityEngine.Object.DestroyImmediate(collider);
             }
+
+            return hand.transform;
+        }
+
+        private static void BuildStarterPickup(Transform parent, Material cardboard, Material metal)
+        {
+            int interactableLayer = RequireLayer(InteractableLayerName);
+            CreateCube(
+                "PickupPedestal",
+                parent,
+                new Vector3(0f, 0.6f, -0.65f),
+                new Vector3(0.75f, 1.2f, 0.75f),
+                metal);
+            GameObject itemRoot = new GameObject("StarterPickupBox");
+            itemRoot.transform.SetParent(parent, false);
+            itemRoot.transform.localPosition = new Vector3(0f, 1.5f, -0.65f);
+            itemRoot.layer = interactableLayer;
+
+            GameObject visual = CreateCube(
+                "BoxVisual",
+                itemRoot.transform,
+                Vector3.zero,
+                new Vector3(0.55f, 0.55f, 0.55f),
+                cardboard);
+            visual.layer = interactableLayer;
+
+            Rigidbody body = itemRoot.AddComponent<Rigidbody>();
+            body.mass = 2f;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            PhysicalItemProjection item = itemRoot.AddComponent<PhysicalItemProjection>();
+            item.Configure(
+                "prototype.garage-box-001",
+                "Parça Kutusu",
+                body,
+                new Vector3(0.275f, 0.275f, 0.275f),
+                Vector3.zero,
+                Vector3.zero);
         }
 
         private static void CreatePointLight(Transform parent, string name, Vector3 position)
@@ -302,6 +386,22 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         private static GameObject CreateRoot(string name)
         {
             return new GameObject(name);
+        }
+
+        private static int RequireLayer(string layerName)
+        {
+            int layer = LayerMask.NameToLayer(layerName);
+            Require(layer >= 0, $"Required layer is missing: {layerName}");
+            return layer;
+        }
+
+        private static void SetLayerRecursively(GameObject root, int layer)
+        {
+            root.layer = layer;
+            foreach (Transform child in root.transform)
+            {
+                SetLayerRecursively(child.gameObject, layer);
+            }
         }
 
         private static GameObject CreateCube(

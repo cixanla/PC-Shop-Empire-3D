@@ -1,7 +1,10 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
+using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -69,7 +72,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(keyboard.wKey.isPressed, Is.True);
             Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
             Assert.That(marker.PlayerInput.SprintHeld, Is.True);
-            marker.PlayerMotor.SendMessage("Update");
+            yield return null;
             Assert.That(player.position.z, Is.GreaterThan(keyboardStart.z));
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
@@ -92,9 +95,135 @@ namespace PCShopEmpire3D.Tests.PlayMode
             });
             InputSystem.Update();
             Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
-            marker.PlayerMotor.SendMessage("Update");
+            yield return null;
             Assert.That(Vector3.Distance(gamepadStart, player.position), Is.GreaterThan(0.001f));
             Assert.That(Mathf.DeltaAngle(yawBeforeGamepad, player.eulerAngles.y), Is.Not.EqualTo(0f).Within(0.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator KeyboardInteractAndDropCarryTheSamePhysicalItem()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            Assert.That(marker, Is.Not.Null);
+            Assert.That(marker.PlayerCarry, Is.Not.Null);
+            Assert.That(item, Is.Not.Null);
+            marker.PlayerMotor.SetPaused(false);
+            Physics.SyncTransforms();
+
+            string itemIdentity = item.ItemIdValue;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.IsCarried, Is.True);
+            Assert.That(item.Body.isKinematic, Is.True);
+            Assert.That(item.Body.detectCollisions, Is.False);
+            Assert.That(item.GetComponentsInChildren<Collider>(true).All(collider => !collider.enabled), Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(itemIdentity));
+            Assert.That(item.Body.isKinematic, Is.False);
+            Assert.That(item.Body.detectCollisions, Is.True);
+            Assert.That(item.GetComponentsInChildren<Collider>(true).Any(collider => collider.enabled), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PauseBlocksPickupAndGamepadCanPickupAndDrop()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            marker.PlayerMotor.SetPaused(true);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            marker.PlayerMotor.SetPaused(false);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Not.Null);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator DisablingCarryControllerRecoversHeldItemToItsSafeWorldPose()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            marker.PlayerMotor.SetPaused(false);
+            Vector3 safePosition = item.LastSafePosition;
+            string identity = item.ItemIdValue;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(item.IsCarried, Is.True);
+
+            marker.PlayerCarry.enabled = false;
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(Vector3.Distance(item.transform.position, safePosition), Is.LessThan(0.001f));
+            Assert.That(item.Body.detectCollisions, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator WorldItemBelowRecoveryFloorReturnsWithSameIdentity()
+        {
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+
+            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            string identity = item.ItemIdValue;
+            Vector3 safePosition = item.LastSafePosition;
+            item.transform.position = new Vector3(0f, -30f, 0f);
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.transform.position.y, Is.GreaterThan(-20f));
+            Assert.That(Vector3.Distance(item.transform.position, safePosition), Is.LessThan(0.05f));
         }
     }
 }

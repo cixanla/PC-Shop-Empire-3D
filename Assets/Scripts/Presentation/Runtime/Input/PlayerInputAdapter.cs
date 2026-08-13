@@ -39,6 +39,10 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public bool IsPointerLook => _look?.activeControl?.device is Pointer;
 
+        public string InteractBindingPrompt => GetBindingPrompt(_interact, "E", "A");
+
+        public string DropBindingPrompt => GetBindingPrompt(_drop, "G", "B");
+
         public void Configure(InputActionAsset inputActions)
         {
             actions = inputActions != null
@@ -98,6 +102,40 @@ namespace PCShopEmpire3D.Presentation.Input
             {
                 _playerMap.Enable();
             }
+        }
+
+        private static string GetBindingPrompt(
+            InputAction action,
+            string keyboardFallback,
+            string gamepadFallback)
+        {
+            if (action == null)
+            {
+                return $"{keyboardFallback} / {gamepadFallback}";
+            }
+
+            string keyboard = null;
+            string gamepad = null;
+            for (int index = 0; index < action.bindings.Count; index++)
+            {
+                InputBinding binding = action.bindings[index];
+                if (binding.isComposite || binding.isPartOfComposite || string.IsNullOrEmpty(binding.effectivePath))
+                {
+                    continue;
+                }
+
+                string display = action.GetBindingDisplayString(index);
+                if (binding.groups?.Contains(PlayerInputContract.KeyboardAndMouseScheme) == true)
+                {
+                    keyboard ??= display;
+                }
+                else if (binding.groups?.Contains(PlayerInputContract.GamepadScheme) == true)
+                {
+                    gamepad ??= display;
+                }
+            }
+
+            return $"{keyboard ?? keyboardFallback} / {gamepad ?? gamepadFallback}";
         }
     }
 }

@@ -1,3 +1,4 @@
+using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
 using UnityEngine;
 
@@ -6,17 +7,27 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeHud : MonoBehaviour
     {
         [SerializeField] private FirstPersonMotor motor;
+        [SerializeField] private PlayerCarryController carryController;
 
-        public void Configure(FirstPersonMotor playerMotor)
+        public void Configure(FirstPersonMotor playerMotor, PlayerCarryController playerCarryController)
         {
             motor = playerMotor;
+            carryController = playerCarryController;
         }
 
         private void OnGUI()
         {
             GUI.color = Color.white;
             GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
-            GUI.Label(new Rect(18f, 36f, 600f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
+            GUI.Label(new Rect(18f, 36f, 760f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
+
+            string prompt = carryController != null ? carryController.PromptText : string.Empty;
+            if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
+            {
+                GUI.Box(
+                    new Rect((Screen.width * 0.5f) - 170f, (Screen.height * 0.5f) + 34f, 340f, 34f),
+                    prompt);
+            }
 
             float centerX = Screen.width * 0.5f;
             float centerY = Screen.height * 0.5f;

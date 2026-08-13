@@ -160,7 +160,7 @@ GameObject:
   - component: {fileID: 8709734304003623819}
   - component: {fileID: 1454929285741517090}
   - component: {fileID: 1204814855372929781}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: LeftHand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -248,7 +248,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2511389007753690883}
-  m_Layer: 0
+  - component: {fileID: 7308969347253619572}
+  m_Layer: 9
   m_Name: ViewModelHands
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -272,6 +273,20 @@ Transform:
   - {fileID: 7955891087590954400}
   m_Father: {fileID: 1356046840004295581}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7308969347253619572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5045406569421373808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18f9ea402c0524ebc84240b8a2ee8cba, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.VisibleHandsPresenter
+  leftHand: {fileID: 8709734304003623819}
+  rightHand: {fileID: 7955891087590954400}
 --- !u!1 &5885487825971234400
 GameObject:
   m_ObjectHideFlags: 0
@@ -283,7 +298,7 @@ GameObject:
   - component: {fileID: 7955891087590954400}
   - component: {fileID: 8720865179452678186}
   - component: {fileID: 6129541872168775116}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: RightHand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -374,7 +389,9 @@ GameObject:
   - component: {fileID: 6869862230988054653}
   - component: {fileID: 6989539455285473086}
   - component: {fileID: 6726278083238686745}
-  m_Layer: 0
+  - component: {fileID: 1169140054239428907}
+  - component: {fileID: 7478888978523579544}
+  m_Layer: 6
   m_Name: PlayerRig
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -460,6 +477,49 @@ MonoBehaviour:
     gamepadLookSpeed: 160
     invertY: 0
     motionReduced: 1
+--- !u!114 &1169140054239428907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6537284722194244344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b661dc82a2aa4b01bf571fac70e57af, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PSE.World::PCShopEmpire3D.World.Interaction.PhysicalInteractionResolver
+  origin: {fileID: 6496056668668316011}
+  ignoredRoot: {fileID: 3357569959586912443}
+  maximumRange: 2
+  assistRadius: 0.08
+  queryMask:
+    serializedVersion: 2
+    m_Bits: 129
+--- !u!114 &7478888978523579544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6537284722194244344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddbea1589bbbf4050be6a6c5ca711466, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.PlayerCarryController
+  input: {fileID: 6989539455285473086}
+  motor: {fileID: 6726278083238686745}
+  resolver: {fileID: 1169140054239428907}
+  carryAnchor: {fileID: 3341718980112006147}
+  hands: {fileID: 7308969347253619572}
+  supportMask:
+    serializedVersion: 2
+    m_Bits: 1
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 193
+  heldItemLayer: 8
 --- !u!1 &7899630966080409983
 GameObject:
   m_ObjectHideFlags: 0

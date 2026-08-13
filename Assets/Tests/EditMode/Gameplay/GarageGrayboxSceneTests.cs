@@ -3,7 +3,9 @@ using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
+using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
+using PCShopEmpire3D.World.Interaction;
 using PCShopEmpire3D.Editor.GaragePrototype;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -48,6 +50,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.PlayerMotor, Is.Not.Null);
                 Assert.That(marker.PlayerInput, Is.Not.Null);
                 Assert.That(marker.PlayerInput.Actions, Is.Not.Null);
+                Assert.That(marker.PlayerCarry, Is.Not.Null);
                 Assert.That(marker.PlayerInput.Actions.name, Is.EqualTo("InputSystem_Actions"));
 
                 FirstPersonMotor motor = marker.PlayerMotor;
@@ -55,6 +58,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Camera camera = motor.GetComponentInChildren<Camera>(true);
                 Transform hands = motor.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "ViewModelHands");
+                VisibleHandsPresenter handsPresenter = hands.GetComponent<VisibleHandsPresenter>();
+                PhysicalItemProjection[] physicalItems = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<PhysicalItemProjection>(true))
+                    .ToArray();
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
                 Assert.That(controller.radius, Is.EqualTo(0.3f).Within(0.001f));
@@ -65,6 +72,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(camera.farClipPlane, Is.EqualTo(150f).Within(0.001f));
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
+                Assert.That(handsPresenter, Is.Not.Null);
+                Assert.That(physicalItems.Length, Is.EqualTo(1));
+                Assert.That(
+                    physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
+                    Is.EqualTo(physicalItems.Length));
+                Assert.That(physicalItems[0].ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
+                Assert.That(physicalItems[0].Body, Is.Not.Null);
+                Assert.That(physicalItems[0].GetComponentsInChildren<Collider>().Length, Is.GreaterThanOrEqualTo(1));
                 Assert.That(
                     PrefabUtility.GetPrefabInstanceStatus(motor.gameObject),
                     Is.EqualTo(PrefabInstanceStatus.Connected));
