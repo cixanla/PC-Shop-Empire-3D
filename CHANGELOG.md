@@ -20,7 +20,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Mouse-left/gamepad RT placement modunu açar; `G / Gamepad East` mod açıkken onaylar, kapalıyken önceki güvenli drop'u korur.
 - Büyük kutu için ayrı stable kimlik/boyut ve carry profili, turuncu bantlı graybox, geniş iki-el pozu, `0,65×` hareket, sprint kilidi ve motion-safe bounded FOV eklendi.
 - Büyük kutu placement moduna girmez; etkin `G / Gamepad East` promptu, gerçek boyutlu fail-closed drop, engelli geri bildirim ve disable recovery aynı item kimliğini korur.
-- Edit Mode baseline `126/126`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `large-carry=ok` gerçek player smoke geçti.
+- Küçük kutu placement moduna `R / Right Shoulder` ile deterministik 90° clockwise rotation, etkin binding/açı promptu ve döndürülmüş footprint güvenlik doğrulaması eklendi.
+- Dikdörtgen küçük kutu ve üst yön işareti GarageGraybox'ta rotation'ı görünür kılar; ghost ile onaylanan poz aynı solver sonucunu kullanır.
+- Okunaklı yarı gerçekçilik görsel yönü kabul edildi: gerçek oran/PBR yüzey/zemine oturan ışık/doğal ağırlık, hafif stilize okunabilirlik ve ölçülü performans bütçesi.
+- Edit Mode baseline `127/127`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok` gerçek player smoke geçti.
 
 ### Changed
 
@@ -55,4 +58,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma/placement ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, kullanıcı rotation inputu, istifleme ve taşıma arabası henüz tamamlanmadı.
+- Küçük kutu alma/bırakma/placement/rotation ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, istifleme, taşıma arabası ve final sanat henüz tamamlanmadı.

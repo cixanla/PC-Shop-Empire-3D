@@ -1,6 +1,6 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.11<br>
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.12<br>
 **Tarih:** 13 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
@@ -73,6 +73,8 @@ Yapıldı:
 - Sekizinci bounded paket tamamlandı: stable fiziksel ürün, 2 m range+LOS hedefleme, tek taşıma slotu, görünür el durumları, `E/A` pickup, `G/B` güvenli drop ve kayıp önleyici recovery eklendi; Edit Mode 120/120, gerçek girişli Play Mode 6/6 ve 1920×1080 Mac smoke geçti.
 - Dokuzuncu bounded paket tamamlandı: küçük kutu için işaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin ve stabil kinematic placement eklendi; Edit Mode 123/123, gerçek keyboard/mouse + gamepad Play Mode 8/8 ve Apple M4/Metal gerçek player smoke geçti.
 - Onuncu bounded paket tamamlandı: ayrı büyük-kutu boyut/taşıma profili, turuncu bantlı görünür graybox, iki-el durumu, 0,65× hareket, sprint kilidi, motion-safe bounded FOV ve gerçek boyutlu fail-closed drop eklendi; Edit Mode 126/126, gerçek keyboard/gamepad Play Mode 10/10 ve Apple M4/Metal `large-carry=ok` player smoke geçti.
+- On birinci bounded paket tamamlandı: küçük kutu placement moduna `R / Right Shoulder` ile deterministik 90° rotation, etkin binding/açı promptu, döndürülmüş footprint doğrulaması ve görünür yön işareti eklendi; Edit Mode 127/127, gerçek keyboard/gamepad Play Mode 10/10 ve Apple M4/Metal `rotation=ok` player smoke geçti.
+- Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
 - Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kullanıcı tarafından kaldırıldı; Unity kaynak klasörü, `.git` ve private GitHub remote'u değişmeden korundu. Çalışma mevcut ana `PC Shop Empire Similator` projesinde sürüyor.
@@ -118,6 +120,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemede, private GitHub `main` tek authoritative uzak geçmiştir. Oynanabilir garaj, [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) pickup/drop, [Issue #31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31) kontrollü küçük-kutu placement ve [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) güvenli büyük-kutu taşıma profiliyle ilerledi: Edit Mode 126/126, Play Mode 10/10, Universal Mac build ve runtime smoke geçti. Bir sonraki bounded iş [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) küçük-kutu placement rotation inputudur.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemede, private GitHub `main` tek authoritative uzak geçmiştir. Oynanabilir garaj; pickup/drop, kontrollü küçük-kutu placement/rotation ve güvenli büyük-kutu taşıma profiliyle ilerledi: Edit Mode 127/127, Play Mode 10/10, Universal Mac build ve `rotation=ok` runtime smoke geçti. Bir sonraki bounded iş [Issue #34](https://github.com/cixanla/PC-Shop-Empire-3D/issues/34) ile tek garaj köşesinde okunaklı yarı gerçekçi kalite benchmarkıdır; full final-art dönüşümü değildir.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

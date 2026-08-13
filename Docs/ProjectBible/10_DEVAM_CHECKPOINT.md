@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 13 Ağustos 2026<br>
-**Durum:** Issue #32 büyük kutu taşıma profili tamamlandı; Issue #6 küçük-kutu rotation dilimiyle sürecek<br>
+**Durum:** Issue #33 küçük-kutu placement rotation tamamlandı; sıradaki bounded paket Issue #34 görsel benchmark<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## Kullanım güvenliği protokolü
@@ -21,24 +21,26 @@
 - Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
 - Küçük kutu `E / Gamepad South` ile alınır; `Mouse Left / Gamepad RT` placement önizlemesini açar; `G / Gamepad East` yerleştirir veya mod kapalıyken güvenli bırakır.
 - Küçük kutu placement'ı işaretli stock surface üzerinde `0,25 m` grid/`90°` yaw snap, tam destek ve overlap doğrulaması kullanır; geçerli sonuç stabil kinematic pozdur.
+- Küçük kutu placement modunda `R / Right Shoulder` ile clockwise `90°` döner. Etkin binding ve mevcut açı prompt'ta görünür; ghost/confirm aynı pozu, döndürülmüş footprint aynı fail-closed güvenlik kontrolünü kullanır.
 - Turuncu bantlı büyük kutu ayrı stable kimlik/boyut ve carry profili taşır. Alındığında iki-el pozu, `0,65×` hareket ve sprint kilidi uygulanır.
 - Büyük kutunun istenen FOV bedeli `6°`, üst sınırı `8°`dir. Varsayılan `motionReduced` açıkken lens değişmez; görünür kutu/eller görüş maliyetini taşır. Ayar kapalıysa FOV yumuşak geçişle uygulanır.
 - Büyük kutu küçük-kutu placement moduna giremez. Etkin `G / Gamepad East` promptuyla gerçek yarı boyutlarına göre güvenli bırakılır; obstruction durumunda `BIRAKMA ENGELLİ` gösterir ve elde kalır.
 - Tek slot, stable item ID, physics snapshot, disable/world-floor recovery ve küçük-kutu davranışları korunur.
+- Görsel hedef okunaklı yarı gerçekçiliktir: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; mevcut primitive garaj/kutular/eller final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ dış platform kapısıdır.
 
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `e94419862b04f6f03f97ef2e43c9da393c5d30a9`
-- Tree: `da877668c89850e4d384c30aefe7e5cc175d317d`
-- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32)
-- Karar: `Docs/ADR-0011-LARGE-BOX-CARRY-PROFILE.md`.
-- Kanıt: `Docs/Evidence/LARGE-BOX-CARRY-CHECKPOINT-2026-08-13.md`.
-- Kapsam: ayrı carry profile, büyük kutu graybox'ı, iki-el durumu, bounded hız/FOV maliyeti, fail-closed drop, dinamik prompt, güncel PlayerRig/GarageGraybox ve gerçek input testleri.
+- Feature commit: `661f2dcc64246a8282fd63fbf303454ec856ea40`
+- Tree: `d841329fcc351db4c9053a43ce5403855ffb57a0`
+- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33)
+- Kararlar: `Docs/ADR-0012-CONTROLLED-SMALL-BOX-ROTATION.md` ve `Docs/ADR-0013-READABLE-SEMI-REALISTIC-VISUAL-DIRECTION.md`.
+- Kanıt: `Docs/Evidence/SMALL-BOX-ROTATION-CHECKPOINT-2026-08-13.md`.
+- Kapsam: küçük-kutu placement modunda ayrı `RotatePlacement`, clockwise 90° adım, etkin binding/açı promptu, döndürülmüş footprint doğrulaması, dikdörtgen kutu/yön işareti ve gerçek keyboard/gamepad testleri.
 - Builder güvenliği, connected prefab, build-scene sırası, stable item ID, tek slot ve pickup/drop/placement/recovery invariantları korundu.
-- Büyük-kutu placement/rotation/stacking, taşıma arabası ve authoritative Inventory bu checkpoint'in dışında kaldı.
-- Remote Repository Guard: [31680394879](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31680394879), başarılı.
+- Serbest rotation, büyük-kutu placement, stacking, taşıma arabası ve authoritative Inventory bu checkpoint'in dışında kaldı.
+- Remote Repository Guard: [31683991075](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31683991075), başarılı.
 
 ## Test ve build kanıtı
 
@@ -46,14 +48,14 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `large-box-editmode-final.xml` | 126/126 geçti | `aabf0920d0105fe78e1ea55275360e8d7a17b74c5d8d9c510a18995fb7562812` |
-| `large-box-playmode-final.xml` | 10/10 geçti | `d5be5ce304af1dc95c59b1b2ba44e068c819a00a02dfa3f692b5b6fb761cd5fb` |
-| `large-box-macos-build.log` | Universal development build, 326.157.117 bayt | `984122a4028f633667f76548917989421dbeb9659b570c5fb352785b803e4f0c` |
-| Player executable | Mach-O `x86_64 + arm64` | `571b84ed43da87f2bd0c348771f8ff97e10180e4e3bcc5a35fcf4a7a744ffe11` |
-| `large-box-macos-runtime.log` | Apple M4/Metal, 1280×720, `large-carry=ok` | `d4807fd9112a7f2c29774db0ca2f0b7d188876b99ab832b3f0f94d636c51bb41` |
-| `large-box-macos-runtime.png` | Gerçek player'da küçük ve büyük kutu görünür | `15da3b5de9078298368e8dd21711020cc32dc2199e59b1722df80190fcf89ec1` |
+| `rotation-editmode.xml` | 127/127 geçti | `8fd8c1245fcbf106bddf20a51196a58298619d19a36d0ed3e2cdded9501a569b` |
+| `rotation-playmode-final.xml` | 10/10 geçti | `e858cd0c42b7fa94a7a826d3823dc6c1d515fafe2f4fdc40228a2069d827e8a2` |
+| `rotation-macos-build.log` | Universal development build, 326.160.273 bayt | `33a4cd4e2ab11229be86e3b5587d6a708365bd51909e656ed0e57312d55aa2e7` |
+| Player executable | Mach-O `x86_64 + arm64` | `258483b14034f9043298ae07635f6f50ca629a923e82e65eeafd9fa1c741f743` |
+| `rotation-macos-runtime.log` | Apple M4/Metal, 1280×720, `rotation=ok` | `7ffbd6e3847c8df022a70983718359ef51f122dc3f6246b2a1eedcd308661e7a` |
+| `rotation-macos-runtime.png` | Dikdörtgen kutu, eller ve `R / RB ... [90°]` promptu | `6f07afe2daf4b9bb2543c0d719511490dc4d3811660d23842a9bc1310c1b67d1` |
 
-EditMode profil sınırlarını, motor hesabını, stable kimliği ve sahne sözleşmesini doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/gamepad büyük-kutu taşıma/bırakma zincirini, sprint/FOV/iki-el geri bildirimini, engelde fail-closed davranışı, büyük-kutu recovery'sini ve küçük-kutu regresyonlarını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
+EditMode rotation normalizasyonunu, action/binding sözleşmesini, stable kimliği ve sahne ölçüsünü doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/gamepad rotation, etkin prompt, ghost/confirm poz eşitliği, engelde fail-closed davranış ve pickup/drop/büyük-kutu/recovery regresyonlarını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -68,6 +70,7 @@ EditMode profil sınırlarını, motor hesabını, stable kimliği ve sahne söz
 - Safe physical pickup/drop: `44b816289f942e57fc176b26b203711090d0e61c`.
 - Controlled small-box placement: `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed`.
 - Safe large-box carry: `e94419862b04f6f03f97ef2e43c9da393c5d30a9`.
+- Controlled small-box rotation: `661f2dcc64246a8282fd63fbf303454ec856ea40`.
 
 ## USB güvenlik katmanı
 
@@ -82,7 +85,7 @@ Küçük kutu pickup/drop + placement snapshot'ı `7794e2ab82c3b26c1149af526ed58
 
 ## Devam sırası
 
-1. [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) ile küçük-kutu placement moduna kasıtlı clockwise `90°` rotation ve etkin binding promptu ekle.
+1. [Issue #34](https://github.com/cixanla/PC-Shop-Empire-3D/issues/34) ile yalnız tek referans garaj köşesinde okunaklı yarı gerçekçi PBR/ışık benchmarkı üret; gameplay collider ve interaction sözleşmelerini değiştirme.
 2. Küçük-kutu üstü istiflemeyi rotation'dan ayrı tam-destek/overlap acceptance paketi olarak ele al.
 3. Taşıma arabasını Issue #6'nın ayrı graybox dilimi olarak doğrula.
 4. Gerçek raf stoklama ve ekonomik Inventory authority'yi Issue #7/#8 bağımlılıklarına bağla; sahne projection'ını tek başına stok gerçeği sayma.

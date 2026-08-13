@@ -27,7 +27,7 @@ Oyuncu yalnız menülerde sayı yönetmez. Siparişi terminalden verir; teslimat
 | Kamera | Birinci şahıs; görünür eller ve fiziksel iş animasyonları |
 | İş modeli | Öncelik premium tek oyunculu Steam oyunu; manipülatif monetization yok |
 | Motor | Unity 6000.3.21f1 + URP başlangıç tabanı; alpha öncesi kontrollü LTS yükseltme kapısı |
-| Sanat yönü | Okunaklı, tutarlı, performans kontrollü yarı-gerçekçi teknoloji mağazası; gerçek marka/asset kopyası yok |
+| Sanat yönü | Okunaklı yarı gerçekçilik: gerçek oran/PBR malzeme/zemine oturan ışık/doğal ağırlık, hafif stilize okunabilirlik; fotogerçekçilik veya gerçek marka/asset kopyası yok ([ADR-0013](Docs/ADR-0013-READABLE-SEMI-REALISTIC-VISUAL-DIRECTION.md)) |
 | Araç bütçesi | Ücretsiz araçlar varsayılan; yalnız büyük ve ölçülebilir etki sağlayan düşük maliyetli araç ayrı onay kapısı |
 
 ## 3. Oyuncu fantezisi
@@ -242,7 +242,7 @@ Monotonluğu azaltma ilkeleri:
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
-| 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement ve güvenli büyük-kutu taşıma tamam |
+| 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/90° rotation ve güvenli büyük-kutu taşıma tamam |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
@@ -278,14 +278,16 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
 | Büyük kutu taşıma profili | Ayrı boyut/kimlik, iki-el pozu, 0,65× hareket, sprint kilidi, motion-safe bounded FOV, fail-closed drop ve recovery |
+| Kontrollü küçük kutu rotation | `R / Right Shoulder` ile deterministik 90° adım, etkin binding/açı promptu, döndürülmüş footprint doğrulaması ve ghost/confirm poz eşitliği |
+| Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Güncel USB milestone | Pickup/drop + placement kaynağı 336 tracked dosyada çift readback/checksum ile doğrulandı; cache/build/credential dışarıda |
-| Son test/build | Edit Mode `126/126`, Play Mode `10/10`; Universal macOS development build ve Apple M4/Metal 1280×720 `large-carry=ok` gerçek player smoke geçti |
+| Son test/build | Edit Mode `127/127`, Play Mode `10/10`; Universal macOS development build ve Apple M4/Metal 1280×720 `rotation=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) ile yalnız küçük-kutu placement moduna kasıtlı `90°` rotation inputu ekle.
+1. [Issue #34](https://github.com/cixanla/PC-Shop-Empire-3D/issues/34) ile tek garaj köşesinde okunaklı yarı gerçekçi görsel benchmark üret; bütün sahneyi final-art kapsamına büyütme.
 2. Kutu üstü istiflemeyi rotation'dan ayrı, tam destek/overlap acceptance paketi olarak doğrula.
 3. Taşıma arabasını Issue #6'nın ayrı graybox dilimi olarak ele al; büyük kutuya gizlice placement ekleme.
 4. Gerçek raf/Inventory authority sınırını [Issue #7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) ve [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) ile bağla.
@@ -297,7 +299,6 @@ Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset
 
 - Nihai ticari oyun adı ve marka araştırması.
 - Gerçek Windows x64 geliştirme/test cihazı ve erişim takvimi.
-- Vertical slice sanat yönünün referans board'u ve ölçülebilir kalite çubuğu.
 - Büyük binary asset öncesi Git LFS politikası.
 - Steamworks onboarding ve mağaza sayfası zamanlaması.
 - Online crash/telemetry sağlayıcısı kullanılıp kullanılmayacağı; gizlilik/opt-in sınırı.
@@ -333,7 +334,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 126/126 ve Play Mode 10/10 baseline testlerini doğrula.
+5. Edit Mode 127/127 ve Play Mode 10/10 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.
