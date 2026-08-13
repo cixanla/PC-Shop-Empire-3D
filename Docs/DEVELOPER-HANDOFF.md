@@ -48,7 +48,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- `101/101` passed.
+- `105/105` passed.
 - `0` failed.
 - `0` skipped.
 

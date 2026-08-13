@@ -21,6 +21,8 @@ namespace PCShopEmpire3D.Core.Events
 
         DomainEventContext Context { get; }
 
+        DomainEventPayloadFingerprint PayloadFingerprint { get; }
+
         System.Type PayloadType { get; }
 
         IDomainEvent Payload { get; }

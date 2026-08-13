@@ -14,7 +14,11 @@ namespace PCShopEmpire3D.Core.Events
         private static readonly Failure SequenceFailure = Failure.FromCode("events.enqueue.sequence");
         private static readonly Failure SequenceExhaustedFailure = Failure.FromCode("events.enqueue.sequence-exhausted");
         private static readonly Failure DuplicateConflictFailure = Failure.FromCode("events.enqueue.duplicate-conflict");
+        private static readonly Failure ReceiptCapacityFailure = Failure.FromCode("events.enqueue.receipt-capacity");
+        private static readonly Failure PayloadFingerprintFailure = Failure.FromCode("events.payload.fingerprint-mismatch");
         private static readonly Failure HandlerExceptionFailure = Failure.FromCode("events.handler.exception");
+        private static readonly StableId<DomainEventHandlerIdScope> PayloadIntegrityHandlerId =
+            StableId<DomainEventHandlerIdScope>.Parse("dispatcher.payload-integrity");
 
         private readonly Dictionary<Type, List<IHandlerAdapter>> _handlersByPayloadType =
             new Dictionary<Type, List<IHandlerAdapter>>();
@@ -27,8 +31,9 @@ namespace PCShopEmpire3D.Core.Events
         private DomainEventSequence _lastConsumedSequence;
         private bool _registrationLocked;
         private bool _isDraining;
+        private readonly int _receiptCapacity;
 
-        public InMemoryDomainEventDispatcher(long lastCommittedSequence = 0)
+        public InMemoryDomainEventDispatcher(long lastCommittedSequence = 0, int receiptCapacity = 65536)
         {
             if (lastCommittedSequence < 0)
             {
@@ -38,7 +43,16 @@ namespace PCShopEmpire3D.Core.Events
                     "The last committed event sequence cannot be negative.");
             }
 
+            if (receiptCapacity <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(receiptCapacity),
+                    receiptCapacity,
+                    "The receipt capacity must be positive.");
+            }
+
             _lastAcceptedSequence = lastCommittedSequence;
+            _receiptCapacity = receiptCapacity;
             _lastConsumedSequence = lastCommittedSequence == 0
                 ? default
                 : DomainEventSequence.From(lastCommittedSequence);
@@ -49,6 +63,10 @@ namespace PCShopEmpire3D.Core.Events
         public long LastAcceptedSequence => _lastAcceptedSequence;
 
         public DomainEventSequence LastConsumedSequence => _lastConsumedSequence;
+
+        public int ReceiptCount => _receipts.Count;
+
+        public int ReceiptCapacity => _receiptCapacity;
 
         public OperationResult Register<TEvent>(
             StableId<DomainEventHandlerIdScope> handlerId,
@@ -94,6 +112,11 @@ namespace PCShopEmpire3D.Core.Events
                 throw new ArgumentNullException(nameof(envelope));
             }
 
+            if (!PayloadMatchesFingerprint(envelope))
+            {
+                return DomainEventEnqueueResult.Rejected(PayloadFingerprintFailure);
+            }
+
             string eventId = envelope.Id.Value;
             var receipt = new EventReceipt(envelope);
             if (_receipts.TryGetValue(eventId, out EventReceipt existingReceipt))
@@ -106,6 +129,11 @@ namespace PCShopEmpire3D.Core.Events
             if (_lastAcceptedSequence == long.MaxValue)
             {
                 return DomainEventEnqueueResult.Rejected(SequenceExhaustedFailure);
+            }
+
+            if (_receipts.Count >= _receiptCapacity)
+            {
+                return DomainEventEnqueueResult.Rejected(ReceiptCapacityFailure);
             }
 
             long expectedSequence = _lastAcceptedSequence + 1;
@@ -148,6 +176,17 @@ namespace PCShopEmpire3D.Core.Events
                     IDomainEventEnvelope envelope = _queue.Dequeue();
                     processedEventCount++;
 
+                    if (!PayloadMatchesFingerprint(envelope))
+                    {
+                        failures.Add(new DomainEventDispatchFailure(
+                            PayloadIntegrityHandlerId,
+                            envelope,
+                            PayloadFingerprintFailure,
+                            string.Empty));
+                        _lastConsumedSequence = envelope.Sequence;
+                        continue;
+                    }
+
                     if (_handlersByPayloadType.TryGetValue(
                         envelope.PayloadType,
                         out List<IHandlerAdapter> handlers))
@@ -175,6 +214,16 @@ namespace PCShopEmpire3D.Core.Events
                                     envelope,
                                     HandlerExceptionFailure,
                                     exception.GetType().FullName));
+                            }
+
+                            if (!PayloadMatchesFingerprint(envelope))
+                            {
+                                failures.Add(new DomainEventDispatchFailure(
+                                    PayloadIntegrityHandlerId,
+                                    envelope,
+                                    PayloadFingerprintFailure,
+                                    string.Empty));
+                                break;
                             }
                         }
                     }
@@ -204,6 +253,18 @@ namespace PCShopEmpire3D.Core.Events
                    exception is BadImageFormatException ||
                    exception is CannotUnloadAppDomainException ||
                    exception is InvalidProgramException;
+        }
+
+        private static bool PayloadMatchesFingerprint(IDomainEventEnvelope envelope)
+        {
+            try
+            {
+                return DomainEventPayloadFingerprint.Compute(envelope.Payload) == envelope.PayloadFingerprint;
+            }
+            catch (Exception exception) when (!IsFatal(exception))
+            {
+                return false;
+            }
         }
 
         private interface IHandlerAdapter
@@ -244,6 +305,7 @@ namespace PCShopEmpire3D.Core.Events
                 SchemaVersion = envelope.SchemaVersion;
                 Context = envelope.Context;
                 PayloadType = envelope.PayloadType;
+                PayloadFingerprint = envelope.PayloadFingerprint;
             }
 
             private StableId<DomainEventTypeScope> Type { get; }
@@ -258,6 +320,8 @@ namespace PCShopEmpire3D.Core.Events
 
             private Type PayloadType { get; }
 
+            private DomainEventPayloadFingerprint PayloadFingerprint { get; }
+
             public bool Equals(EventReceipt other)
             {
                 return Type.Equals(other.Type) &&
@@ -265,7 +329,8 @@ namespace PCShopEmpire3D.Core.Events
                        OccurredAt.Equals(other.OccurredAt) &&
                        SchemaVersion == other.SchemaVersion &&
                        Context.Equals(other.Context) &&
-                       PayloadType == other.PayloadType;
+                       PayloadType == other.PayloadType &&
+                       PayloadFingerprint.Equals(other.PayloadFingerprint);
             }
 
             public override bool Equals(object obj)
@@ -283,6 +348,7 @@ namespace PCShopEmpire3D.Core.Events
                     hashCode = (hashCode * 397) ^ SchemaVersion;
                     hashCode = (hashCode * 397) ^ Context.GetHashCode();
                     hashCode = (hashCode * 397) ^ PayloadType.GetHashCode();
+                    hashCode = (hashCode * 397) ^ PayloadFingerprint.GetHashCode();
                     return hashCode;
                 }
             }

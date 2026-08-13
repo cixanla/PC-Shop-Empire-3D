@@ -137,7 +137,7 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** İlk altı iş paketinin altyapı bölümü tamamlandı; `PSE.Core` Unity bağımlılığı olmadan derleniyor. Tür kapsamlı stable ID, güvenli sonuç/failure, açık-adımlı monotonik oyun zamanı, sürümlü PCG32, root-seed/context derivation ve correlation/causation taşıyan deterministik dispatcher eklendi; Edit Mode toplamı 101/101 geçiyor. Sıradaki bounded paket gerçek birinci şahıs garaj graybox, input, kamera ve harekettir.
+**Güncel teknik kanıt:** İlk altı iş paketinin altyapı bölümü tamamlandı; `PSE.Core` Unity bağımlılığı olmadan derleniyor. Tür kapsamlı stable ID, güvenli sonuç/failure, açık-adımlı monotonik oyun zamanı, sürümlü PCG32, root-seed/context derivation ve canonical payload fingerprint/correlation/causation taşıyan deterministik dispatcher eklendi; Edit Mode toplamı 105/105 geçiyor. Sıradaki bounded paket gerçek birinci şahıs garaj graybox, input, kamera ve harekettir.
 
 ### Kapsam dışı
 

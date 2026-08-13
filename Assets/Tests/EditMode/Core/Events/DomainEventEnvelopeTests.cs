@@ -45,6 +45,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
             Assert.That(envelope.SchemaVersion, Is.EqualTo(1));
             Assert.That(envelope.Context, Is.EqualTo(RootContext()));
             Assert.That(envelope.Context.IsRoot, Is.True);
+            Assert.That(
+                envelope.PayloadFingerprint.Value,
+                Is.EqualTo("88185d128d9922e0e6bcd32b07b6c7f20f27968eab447a1d8d1cdf250f79f7d3"));
             Assert.That(envelope.Payload, Is.SameAs(payload));
             Assert.That(envelope.PayloadType, Is.EqualTo(typeof(StockReservedEvent)));
 
@@ -177,6 +180,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 new StockReservedEvent(1)));
         }
 
+        [Test]
+        public void PayloadFingerprintParserIsStrict()
+        {
+            Assert.That(DomainEventPayloadFingerprint.TryParse(new string('a', 64), out _), Is.True);
+            Assert.That(DomainEventPayloadFingerprint.TryParse(new string('A', 64), out _), Is.False);
+            Assert.That(DomainEventPayloadFingerprint.TryParse(new string('a', 63), out _), Is.False);
+            Assert.Throws<FormatException>(() => DomainEventPayloadFingerprint.Parse(null));
+        }
+
         private static StableId<DomainEventIdScope> EventId()
         {
             return StableId<DomainEventIdScope>.Parse("event.0001");
@@ -205,6 +217,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
             }
 
             public int Quantity { get; }
+
+            public void WriteCanonicalPayload(DomainEventPayloadWriter writer)
+            {
+                writer.WriteInt32(Quantity);
+            }
         }
     }
 }

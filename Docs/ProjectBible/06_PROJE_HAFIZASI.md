@@ -261,7 +261,7 @@
 | D-157 | Günlük yürütme GitHub Issues + private Development Roadmap Project ile izlenir; Codex'te çalışma mevcut ana proje içinde sürer. | Revize edildi — 13 Ağustos 2026 | 22 epic ve Status/Phase/Priority/Risk alanları korunur. Yanlışlıkla oluşturulan ayrı `Game` kaydı kaldırıldı; `/Users/cixanla/Developer/PCShopEmpire3D/Game`, `.git` ve GitHub remote'u değişmedi. Kalıcı karar gerçeği repository belgeleridir. |
 | D-158 | Temel simülasyon rastgeleliği `pcg32-xsh-rr-64-32-v1` ile sürümlenir; raw state+odd increment snapshot'tır ve bounded integer modulo bias üretmez. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Initial state bütün `ulong` aralığını kabul eder; benzersiz stream için selector `0..2^63-1` ile sınırlıdır ve high-bit alias reddedilir. Global/System/Unity RNG fallback yoktur; kriptografik kullanım yasaktır. Edit Mode toplamı 62/62 geçti; root-seed/context derivation sonraki pakettir. |
 | D-159 | Kayıtlı root seed ve kalıcı domain/context kimliği `sha256-framed-be-pcg32-v1` ile çağrı sırasından bağımsız PCG32 initialization üretir. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Root seed 16 lowercase hex; framed big-endian preimage ve iki golden vector sürümlüdür. Eksik/bozuk/bilinmeyen metadata fallback yapmaz. Aynı occurrence reload ile reroll olmaz; değişken-draw devamı ayrıca `Pcg32State` saklar. Edit Mode toplamı 85/85 geçti. |
-| D-160 | Domain eventler zorunlu correlation/direct-causation taşır; in-memory dispatcher tek simulation thread'inde global FIFO, registration sırası ve breadth-first nested enqueue uygular. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Exact metadata duplicate idempotent, conflict açık failure; handler failure/exception izole, no-retry; drain budget zorunlu ve rapor raw payload/stack içermez. Kalıcı receipt ledger save paketine ertelendi. Edit Mode toplamı 101/101 geçti. |
+| D-160 | Domain eventler zarf tarafından canonical payload'dan hesaplanan fingerprint/correlation/direct-causation taşır; in-memory dispatcher tek simulation thread'inde global FIFO, registration sırası ve breadth-first nested enqueue uygular. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Mutation enqueue'da reddedilir veya dispatch'te karantinaya alınır; exact metadata+fingerprint duplicate idempotent, conflict açık failure; handler failure/exception izole, no-retry; receipt/drain kapasitesi zorunlu ve rapor raw payload/stack içermez. Kalıcı receipt ledger save paketine ertelendi. Edit Mode toplamı 105/105 geçti. |
 
 ## Vertical slice kilidi
 
@@ -373,7 +373,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, iki development build, yerel Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı, sürümlü PCG32, root-seed/context derivation ve event dispatcher sözleşmeleri 101/101 testle ayrı paketlerde kapatıldı. Bir sonraki bounded iş gerçek birinci şahıs garaj graybox, input, kamera ve harekettir.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, iki development build, yerel Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı, sürümlü PCG32, root-seed/context derivation ve event dispatcher sözleşmeleri 105/105 testle ayrı paketlerde kapatıldı. Bir sonraki bounded iş gerçek birinci şahıs garaj graybox, input, kamera ve harekettir.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -423,5 +423,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - GitHub'da 22 epic ile private Project #2 oluşturuldu. Sonradan gereksiz olduğu belirlenen ayrı Codex `Game` kaydı 13 Ağustos'ta kaldırıldı; kaynak ve GitHub bağlantısı korundu.
 - Dördüncü Stage B paketi sürümlü PCG32 akışını, raw snapshot/restore'u ve bias'sız bounded integerı ekledi; toplam 62/62 Edit Mode testi geçti.
 - Beşinci Stage B paketi canonical root seed ve sürümlü SHA-256 framed domain/context stream derivation'ı ekledi; toplam 85/85 Edit Mode testi geçti.
-- Altıncı Stage B paketi correlation/causation ve deterministik event dispatcher'ı ekledi; toplam 101/101 Edit Mode testi geçti.
+- Altıncı Stage B paketi canonical payload fingerprint/mutation karantinası/correlation/causation ve bounded deterministik event dispatcher'ı ekledi; toplam 105/105 Edit Mode testi geçti.
 - Sıradaki paket Issue #4 gerçek birinci şahıs garaj graybox; ardından görünür eller ve kutu etkileşimi gelir.

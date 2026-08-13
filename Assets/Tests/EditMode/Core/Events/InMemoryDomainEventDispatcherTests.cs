@@ -161,7 +161,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
         }
 
         [Test]
-        public void ReusedIdWithDifferentMetadataIsAConflict()
+        public void ReusedIdWithDifferentPayloadFingerprintIsAConflict()
         {
             var dispatcher = new InMemoryDomainEventDispatcher();
             DomainEventEnvelope<AlphaEvent> first = Alpha(1);
@@ -170,7 +170,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 first.Type,
                 first.Sequence,
                 first.OccurredAt,
-                2,
+                1,
                 first.Context,
                 new AlphaEvent("changed"));
 
@@ -296,6 +296,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
         public void InvalidArgumentsAndExhaustedSequenceFailExplicitly()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new InMemoryDomainEventDispatcher(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new InMemoryDomainEventDispatcher(0, 0));
             var dispatcher = new InMemoryDomainEventDispatcher();
             Assert.Throws<ArgumentOutOfRangeException>(() => dispatcher.Drain(0));
             Assert.Throws<ArgumentNullException>(() => dispatcher.Enqueue<AlphaEvent>(null));
@@ -310,6 +311,70 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
             DomainEventEnqueueResult result = exhausted.Enqueue(Alpha(long.MaxValue, "event.maximum"));
             Assert.That(result.IsRejected, Is.True);
             Assert.That(result.Error.Code, Is.EqualTo("events.enqueue.sequence-exhausted"));
+        }
+
+        [Test]
+        public void ReceiptCapacityStopsSafelyWithoutEvictingDeduplicationHistory()
+        {
+            var dispatcher = new InMemoryDomainEventDispatcher(0, 2);
+            DomainEventEnvelope<AlphaEvent> first = Alpha(1);
+            DomainEventEnvelope<AlphaEvent> second = Alpha(2, "event.0002");
+
+            Assert.That(dispatcher.Enqueue(first).IsAccepted, Is.True);
+            Assert.That(dispatcher.Enqueue(second).IsAccepted, Is.True);
+            dispatcher.Drain(10);
+
+            DomainEventEnqueueResult full = dispatcher.Enqueue(Alpha(3, "event.0003"));
+            DomainEventEnqueueResult priorDuplicate = dispatcher.Enqueue(first);
+
+            Assert.That(full.IsRejected, Is.True);
+            Assert.That(full.Error.Code, Is.EqualTo("events.enqueue.receipt-capacity"));
+            Assert.That(priorDuplicate.IsDuplicate, Is.True);
+            Assert.That(dispatcher.ReceiptCount, Is.EqualTo(2));
+            Assert.That(dispatcher.ReceiptCapacity, Is.EqualTo(2));
+            Assert.That(dispatcher.LastAcceptedSequence, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void PayloadMutationBeforeEnqueueIsRejectedWithoutConsumingSequence()
+        {
+            var dispatcher = new InMemoryDomainEventDispatcher();
+            var payload = new MutableEvent("original");
+            DomainEventEnvelope<MutableEvent> envelope = MutableEnvelope(1, payload);
+            payload.Value = "changed-before-enqueue";
+
+            DomainEventEnqueueResult result = dispatcher.Enqueue(envelope);
+
+            Assert.That(result.IsRejected, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo("events.payload.fingerprint-mismatch"));
+            Assert.That(dispatcher.LastAcceptedSequence, Is.Zero);
+            Assert.That(dispatcher.PendingCount, Is.Zero);
+            Assert.That(dispatcher.ReceiptCount, Is.Zero);
+        }
+
+        [Test]
+        public void PayloadMutationAfterEnqueueIsQuarantinedBeforeHandlersRun()
+        {
+            int handlerCalls = 0;
+            var dispatcher = new InMemoryDomainEventDispatcher();
+            dispatcher.Register(HandlerId("handler.mutable"), Handler<MutableEvent>(_ =>
+            {
+                handlerCalls++;
+                return OperationResult.Success();
+            }));
+            var payload = new MutableEvent("original");
+            DomainEventEnvelope<MutableEvent> envelope = MutableEnvelope(1, payload);
+            Assert.That(dispatcher.Enqueue(envelope).IsAccepted, Is.True);
+            payload.Value = "changed-after-enqueue";
+
+            DomainEventDispatchReport report = dispatcher.Drain(1);
+
+            Assert.That(handlerCalls, Is.Zero);
+            Assert.That(report.ProcessedEventCount, Is.EqualTo(1));
+            Assert.That(report.Failures.Count, Is.EqualTo(1));
+            Assert.That(report.Failures[0].HandlerId.Value, Is.EqualTo("dispatcher.payload-integrity"));
+            Assert.That(report.Failures[0].Failure.Code, Is.EqualTo("events.payload.fingerprint-mismatch"));
+            Assert.That(report.LastConsumedSequence.Value, Is.EqualTo(1));
         }
 
         [Test]
@@ -376,6 +441,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
                 new BetaEvent());
         }
 
+        private static DomainEventEnvelope<MutableEvent> MutableEnvelope(
+            long sequence,
+            MutableEvent payload)
+        {
+            return new DomainEventEnvelope<MutableEvent>(
+                StableId<DomainEventIdScope>.Parse($"event.mutable.{sequence:0000}"),
+                StableId<DomainEventTypeScope>.Parse("tests.mutable"),
+                DomainEventSequence.From(sequence),
+                SimulationTimestamp.Origin,
+                1,
+                RootContext(),
+                payload);
+        }
+
         private static DomainEventContext RootContext()
         {
             return DomainEventContext.Root(
@@ -418,10 +497,34 @@ namespace PCShopEmpire3D.Tests.EditMode.Core.Events
             }
 
             public string Value { get; }
+
+            public void WriteCanonicalPayload(DomainEventPayloadWriter writer)
+            {
+                writer.WriteString(Value);
+            }
         }
 
         private sealed class BetaEvent : IDomainEvent
         {
+            public void WriteCanonicalPayload(DomainEventPayloadWriter writer)
+            {
+                writer.WriteString("tests.beta.v1");
+            }
+        }
+
+        private sealed class MutableEvent : IDomainEvent
+        {
+            public MutableEvent(string value)
+            {
+                Value = value;
+            }
+
+            public string Value { get; set; }
+
+            public void WriteCanonicalPayload(DomainEventPayloadWriter writer)
+            {
+                writer.WriteString(Value);
+            }
         }
 
         private sealed class RunSnapshot

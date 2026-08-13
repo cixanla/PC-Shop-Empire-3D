@@ -73,6 +73,7 @@ namespace PCShopEmpire3D.Core.Events
             SchemaVersion = schemaVersion;
             Context = context;
             Payload = payload;
+            PayloadFingerprint = DomainEventPayloadFingerprint.Compute(payload);
         }
 
         public StableId<DomainEventIdScope> Id { get; }
@@ -86,6 +87,8 @@ namespace PCShopEmpire3D.Core.Events
         public int SchemaVersion { get; }
 
         public DomainEventContext Context { get; }
+
+        public DomainEventPayloadFingerprint PayloadFingerprint { get; }
 
         public Type PayloadType => typeof(TEvent);
 
