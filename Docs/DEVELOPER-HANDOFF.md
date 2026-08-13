@@ -46,9 +46,10 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 ## 5. Test baseline
 
-Unity Test Runner ile Edit Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
+Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- `105/105` passed.
+- Edit Mode `114/114` passed.
+- Play Mode `2/2` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -77,17 +78,19 @@ Tamamlanan saf Core sözleşmeleri:
 - `pcg32-xsh-rr-64-32-v1`, official golden vector, raw state snapshot/restore ve bias'sız bounded integer.
 - `sha256-framed-be-pcg32-v1`, canonical root seed, stable domain/context stream derivation ve reload-reroll engeli.
 - Event correlation/direct-causation, global FIFO ve breadth-first nested enqueue uygulayan bounded in-memory dispatcher.
+- `PSE.World` ve `PSE.Presentation` assembly sınırları.
+- GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
+- Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
+- FOV/hassasiyet/invert/motion-reduce ayarları, görünür prototip eller, pause/cursor ve runtime-ready tanısı.
 
 Henüz yapılmayanlar:
 
-- Oynanabilir karakter ve kamera.
-- Görünür eller/taşıma.
-- Mağaza graybox/sahne.
+- Eller için animasyonlu etkileşim ve fiziksel alma/bırakma/taşıma.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: gerçek birinci şahıs garaj graybox, Input System sözleşmesi, kamera ve hareket.
+Sıradaki bounded teknik paket: Issue #5 görünür el durumu ile güvenli alma/bırakma; ardından Issue #6 hibrit kutu taşıma ve placement.
 
 ## 7. Çalışma akışı
 
@@ -141,7 +144,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard ve 62 baseline testi geçti.
+2. Repo guard, 114 Edit Mode ve 2 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

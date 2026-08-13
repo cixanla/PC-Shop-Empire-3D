@@ -13,7 +13,8 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Sürümlü `pcg32-xsh-rr-64-32-v1` deterministik rastgele akışı, raw state snapshot/restore, official golden vector ve modulo-bias üretmeyen bounded integer eklendi.
 - Save-safe canonical root seed ve sürümlü SHA-256 framed domain/context stream derivation eklendi; reload-reroll ve çağrı sırası bağımsızlığı golden testlerle kilitlendi.
 - Domain event correlation/causation ve deterministik FIFO dispatcher; duplicate/conflict politikası, breadth-first nested enqueue, bounded drain ve handler hata izolasyonuyla eklendi.
-- Edit Mode baseline `105/105` teste yükseldi.
+- `PSE.World`/`PSE.Presentation`, oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind store ve görünür prototip eller eklendi.
+- Edit Mode baseline `114/114`, Play Mode baseline `2/2` teste yükseldi; Universal macOS build ve runtime-ready smoke geçti.
 
 ### Changed
 
@@ -47,4 +48,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Gameplay, graybox, eller ve mağaza sahnesi henüz başlamadı.
+- Fiziksel alma/bırakma, el animasyonları, kutu taşıma ve placement henüz tamamlanmadı.

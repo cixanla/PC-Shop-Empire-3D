@@ -69,13 +69,14 @@ Yapıldı:
 - Dördüncü bounded paket tamamlandı: sürümlü PCG32 akışı, benzersiz 63-bit stream selector alanı, raw snapshot/restore, official golden vector ve bias'sız bounded integer eklendi; Edit Mode toplamı 62/62 geçti.
 - Beşinci bounded paket tamamlandı: canonical root seed ile sürümlü SHA-256 framed domain/context stream derivation eklendi; çağrı sırası bağımsızlığı, save metadata doğrulaması ve reload-reroll engeliyle Edit Mode toplamı 85/85 geçti.
 - Altıncı bounded paket tamamlandı: event correlation/direct-causation ve deterministik in-memory dispatcher; zarfın kendisinin ürettiği payload fingerprint, mutation karantinası, global FIFO, breadth-first nested enqueue, duplicate/conflict, bounded receipt/drain ve handler hata izolasyonuyla Edit Mode toplamı 105/105 geçti.
+- Yedinci bounded paket tamamlandı: `PSE.World`/`PSE.Presentation`, yeni GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind temeli ve görünür prototip eller eklendi; Edit Mode 114/114, gerçek girişli Play Mode 2/2 geçti, Universal macOS build ve runtime-ready smoke doğrulandı.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
 - Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kullanıcı tarafından kaldırıldı; Unity kaynak klasörü, `.git` ve private GitHub remote'u değişmeden korundu. Çalışma mevcut ana `PC Shop Empire Similator` projesinde sürüyor.
 
 Yapılmadı:
 
-- Oynanabilir gameplay, Guardian runtime, 3D model veya ticari içerik üretimi başlatılmadı; yalnız saf çekirdek assembly iskeleti oluşturuldu.
+- Guardian runtime, final 3D sanat, fiziksel ürün etkileşimi veya ticari içerik üretimi başlatılmadı; oynanabilir garaj yalnız lisanssız graybox/prototip varlıklarla kuruldu.
 - Blender, Steamworks SDK, Xcode, ücretli araç veya üçüncü taraf oyun asset'i kurulmadı.
 - Eski proje, kayıtlar ve USB'deki legacy klasörler değiştirilmedi; yalnız onaylı yeni `90_BACKUPS/PCShopEmpire3D` hedefi yazıldı.
 - Ücretli araç veya lisans satın alınmadı.
@@ -114,6 +115,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemeye alınmış, private GitHub `main` tek authoritative uzak geçmiş olarak seçilmiştir. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı, sürümlü PRNG, root-seed/context derivation ve event dispatcher 105/105 testle tamamlandı. Bir sonraki bounded iş [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) gerçek birinci şahıs garaj graybox, kamera ve harekettir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemede, private GitHub `main` tek authoritative uzak geçmiştir. Core altyapısı ile [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) oynanabilir garaj tamamlandı: Edit Mode 114/114, Play Mode 2/2, Universal Mac build ve runtime smoke geçti. Bir sonraki bounded iş [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) görünür el + alma/bırakmadır.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

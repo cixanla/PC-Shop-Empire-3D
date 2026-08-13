@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Başladı; Unity/URP sürümü, yerel Git güvenlik temeli ve Unity bağımsız `PSE.Core` assembly sınırı tamamlandı. Oynanabilir graybox henüz başlamadı.  
+**Durum:** Devam ediyor; teknik temel ve oynanabilir birinci şahıs garaj graybox tamamlandı, fiziksel etkileşim/taşıma sırada.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,7 +137,7 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** İlk altı iş paketinin altyapı bölümü tamamlandı; `PSE.Core` Unity bağımlılığı olmadan derleniyor. Tür kapsamlı stable ID, güvenli sonuç/failure, açık-adımlı monotonik oyun zamanı, sürümlü PCG32, root-seed/context derivation ve canonical payload fingerprint/correlation/causation taşıyan deterministik dispatcher eklendi; Edit Mode toplamı 105/105 geçiyor. Sıradaki bounded paket gerçek birinci şahıs garaj graybox, input, kamera ve harekettir.
+**Güncel teknik kanıt:** `PSE.Core` Unity bağımlılığı olmadan derlenir; stable ID, result, zaman, RNG ve event dispatcher sözleşmeleri tamamdır. `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind store, konfor ayarları ve görünür prototip eller eklendi. Edit Mode 114/114, gerçek cihaz-state girişli Play Mode 2/2, Universal macOS development build ve runtime-ready smoke geçer. Sıradaki bounded paket görünür el + alma/bırakmadır.
 
 ### Kapsam dışı
 

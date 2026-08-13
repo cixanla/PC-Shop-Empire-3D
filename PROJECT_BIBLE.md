@@ -242,7 +242,7 @@ Monotonluğu azaltma ilkeleri:
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
-| 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core ve event dispatcher tamam, sıradaki paket gerçek oynanabilir garaj graybox |
+| 1 | Proje temeli ve graybox etkileşim | Devam ediyor; oynanabilir birinci şahıs garaj tamam, sıradaki paket alma/bırakma |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
@@ -274,16 +274,16 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Rastgelelik | Sürümlü PCG32, 63-bit benzersiz stream selector, snapshot/restore, official golden vector ve bias'sız bounded integer |
 | Bağlamsal stream | Canonical root seed, SHA-256 framed domain/context derivation, iki golden vector ve reload-reroll engeli |
 | Event dispatch | Correlation/causation, global FIFO, breadth-first nested enqueue, duplicate/conflict, bounded drain ve handler hata izolasyonu |
-| Son test | Edit Mode `105/105` geçti, başarısız/atlanan 0 |
+| Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
+| Son test/build | Edit Mode `114/114`, Play Mode `2/2`; Universal macOS development build ve runtime-ready smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map, birinci şahıs graybox hareket ve gerçek garaj prototipi kabul ölçütlerini uygula.
-2. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
-3. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
-4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el durumu + güvenli alma/bırakma prototipini garajda doğrula.
+2. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
+3. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -327,7 +327,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode testlerini çalıştır ve 62 baseline testi doğrula.
+5. Edit Mode 114/114 ve Play Mode 2/2 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.
