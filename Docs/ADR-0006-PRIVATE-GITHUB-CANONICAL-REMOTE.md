@@ -1,6 +1,6 @@
 # ADR-0006 — Private GitHub canonical remote ve yaşayan devir paketi
 
-**Durum:** Uygulandı<br>
+**Durum:** Uygulandı; Codex proje kaydı maddesi 13 Ağustos 2026'da D-157 ile revize edildi<br>
 **Tarih:** 11 Ağustos 2026
 
 ## Bağlam
@@ -16,7 +16,7 @@ Yerel Git ve USB snapshot geri alma sağlasa da farklı bilgisayardan veya yeni 
 - Canonical legacy 1.1.6 kaynak snapshot'ı, hak/third-party notice dosyaları ve SHA-256 manifesti private repo içine salt okunur referans olarak alınır.
 - GitHub Issues görev gerçeği; GitHub Project görünür yol haritasıdır. Kalıcı kararlar repository belgelerine geri yazılır.
 - Her material PR Project Bible/checkpoint güncelliğini doğrular.
-- Codex'te gerçek Unity Git kökü ayrı Project olarak erişilebilir hâle getirilir.
+- Codex'te gerçek Unity Git kökü ayrı Project olarak erişilebilir hâle getirilir. **Sonraki revizyon:** Ayrı kayıt gereksiz bulundu ve 13 Ağustos 2026'da kaldırıldı; çalışma mevcut ana Codex projesinde sürer.
 
 ## Güvenlik ve maliyet
 
@@ -28,5 +28,7 @@ Yerel Git ve USB snapshot geri alma sağlasa da farklı bilgisayardan veya yeni 
 ## Sonuç
 
 Private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D) oluşturuldu; `main`, Stage A etiketi, yaşayan devir belgeleri, repository guard/workflow ve canonical legacy snapshot normal push ile gönderildi. [Development Roadmap Project #2](https://github.com/users/cixanla/projects/2), 22 epic ve Codex'te `Game` Project kaydı oluşturuldu. Eski public repository değiştirilmedi.
+
+`Game` Codex kaydı 13 Ağustos 2026'da kaldırıldı. Bu, yalnız Codex uygulama kaydı değişikliğidir; Unity klasörü, Git geçmişi, private remote, Issues ve Project #2 bu revizyondan etkilenmedi.
 
 Bu ADR, ADR-0002 içindeki “remote yok” durumunu ileriye dönük olarak değiştirir; Stage A root commit/tag ve UVCS bekleme kararı korunur.

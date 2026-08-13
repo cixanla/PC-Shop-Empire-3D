@@ -14,6 +14,8 @@ Bu dosya ham build/test loglarını Git'e taşımadan devredilebilir kanıt öze
 - Private remote: [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), default branch `main`.
 - Roadmap: [private GitHub Project #2](https://github.com/users/cixanla/projects/2), 22 epic.
 - Codex local Project: `Game`, `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git repository algısı `true`.
+
+> **13 Ağustos 2026 güncellik notu:** Ayrı `Game` Codex kaydı kaldırıldı; kaynak klasörü, Git ve GitHub remote'u korundu. Bu dosyadaki 42-test sonucu tarihli kanıttır; güncel baseline `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
 - İlk remote Repository Guard: [Actions run 31486867850](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31486867850), commit `2ee4211`, sonuç `success`.
 - Fresh private HTTPS clone doğrulaması: commit `dbed0e7df3880854fb92d407feac50660bdcba92`, 188 tracked dosya, repository guard başarılı ve çalışma ağacı temiz.
 - Collaboration checkpoint Repository Guard: [Actions run 31487613288](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31487613288), commit `dbed0e7`, sonuç `success`.

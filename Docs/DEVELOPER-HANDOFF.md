@@ -48,7 +48,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- `42/42` passed.
+- `62/62` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -74,6 +74,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `Failure` ve `OperationResult`.
 - `SimulationDuration`, `SimulationTimestamp`, pause destekli `SimulationClock`.
 - `IDomainEvent`, stable type/ID, one-based sequence ve immutable envelope.
+- `pcg32-xsh-rr-64-32-v1`, official golden vector, raw state snapshot/restore ve bias'sız bounded integer.
 
 Henüz yapılmayanlar:
 
@@ -84,7 +85,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: kayıtlı seed ve event bağlamından yeniden üretilebilir deterministik RNG sözleşmesi.
+Sıradaki bounded teknik paket: saved root seed + canonical event/context kimliğinden sürümlü stable hashing ile bağımsız stream türetme ve reload-reroll engeli.
 
 ## 7. Çalışma akışı
 
@@ -138,7 +139,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard ve 42 baseline testi geçti.
+2. Repo guard ve 62 baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

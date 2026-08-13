@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Yaşayan Proje Bible ve Ana Handoff
 
 **Belge rolü:** Projenin ana fikrini, güncel durumunu, teknik sınırlarını, yapılmış ve yapılacak işleri tek giriş noktasında tutar.  
-**Son kapsam güncellemesi:** 11 Ağustos 2026  
+**Son kapsam güncellemesi:** 13 Ağustos 2026
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
@@ -185,7 +185,7 @@ Alan mantığı Unity nesnelerinden ayrıdır. Unity; input, fizik, animasyon, s
 
 | Modül | Sorumluluk |
 |---|---|
-| `PSE.Core` | Stable ID, sonuç/failure, deterministik zaman, event sözleşmeleri, temel invariant |
+| `PSE.Core` | Stable ID, sonuç/failure, deterministik zaman, sürümlü PRNG, event sözleşmeleri, temel invariant |
 | `PSE.Catalog` | Ürün tanımı, teknik özellik, kalite, garanti |
 | `PSE.Inventory` | Instance/batch, konteyner, konum, rezervasyon, kondisyon |
 | `PSE.Orders` | Satın alma, satış, özel PC, servis ve kurumsal iş emirleri |
@@ -207,7 +207,8 @@ Bağımlılık yönü sunumdan alana doğrudur; `PSE.Core` Unity/Editor referans
 
 - Oyun zamanı integer ve açık fixed-step clock üzerinden ilerler; pause sırasında ilerlemez.
 - Eventler stable ID/type, one-based sequence, schema ve simulation timestamp taşır.
-- RNG seed save'de saklanır; event bağlamıyla yeniden üretilebilir sonuç hedeflenir.
+- Temel PRNG `pcg32-xsh-rr-64-32-v1` kimliğiyle sürümlüdür; raw state+odd increment snapshot/restore ve bias üretmeyen bounded integer davranışı testlidir.
+- Root RNG seed save'de saklanacak; stable event/context kimliğinden bağımsız stream türetme ve reload-reroll engeli sıradaki ayrı pakettir.
 - Save; sürümlü snapshot, sınırlı journal, checksum, katalog fingerprint ve döner sağlam kopyalar kullanır.
 - Yazma geçici dosya → flush/doğrulama → atomik replace yaklaşımıyla yapılır; gerçek platform fault-injection testi olmadan “kayıp olmaz” iddiası kurulmaz.
 - Steam Cloud çatışması kullanıcıdan habersiz son-yazan-kazan yapmaz.
@@ -241,7 +242,7 @@ Monotonluğu azaltma ilkeleri:
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
-| 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core sözleşmeleri tamam, gameplay başlamadı |
+| 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core kimlik/sonuç/zaman/event/PRNG sözleşmeleri tamam, gameplay başlamadı |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
@@ -270,18 +271,19 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Core assembly | `PSE.Core` `noEngineReferences`; Unity/Editor bağımlılık testi |
 | Kimlik/sonuç | `StableId<TScope>`, `Failure.Code`, `OperationResult` |
 | Zaman/olay | Integer açık-adımlı `SimulationClock`, pause güvenliği, event ID/type/sequence/schema zarfı |
-| Son test | Edit Mode `42/42` geçti, başarısız/atlanan 0 |
+| Rastgelelik | Sürümlü PCG32, 63-bit benzersiz stream selector, snapshot/restore, official golden vector ve bias'sız bounded integer |
+| Son test | Edit Mode `62/62` geçti, başarısız/atlanan 0 |
 
-Son doğrulanmış gameplay/Core commit: `8af2ad3d05906839c4b607e4958650e723060465`. İş birliği/devir checkpoint'i: `2ee421193833111f76c85dabb33910240c36db03`.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) kapsamında kayıtlı seed + event bağlamı kullanan deterministik RNG sözleşmesini ekle.
+1. [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) altında root seed + canonical context kimliği için sürümlü stable hashing/stream derivation paketini tamamla; reload-reroll engelini çekirdek düzeyinde kanıtla.
 2. [Issue #3](https://github.com/cixanla/PC-Shop-Empire-3D/issues/3) kapsamında domain event correlation/causation ve in-memory dispatcher sınırını küçük paketle kur.
-3. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
-4. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map ve birinci şahıs graybox hareket kabul ölçütlerini kilitle.
-5. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
-6. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
+3. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map, birinci şahıs graybox hareket ve gerçek garaj prototipi kabul ölçütlerini uygula.
+4. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
+5. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
+6. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -310,7 +312,7 @@ Riskler [`Docs/ProjectBible/06_PROJE_HAFIZASI.md`](Docs/ProjectBible/06_PROJE_HA
 
 ## 19. Repository gerçeği
 
-Authoritative remote private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), authoritative dal `main`, yerel çalışma kökü ise bu Unity Git deposudur. Codex içinde yol `Game` adlı, Git algılanmış ayrı Project olarak kayıtlıdır. Kaynak türleri:
+Authoritative remote private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D), authoritative dal `main`, yerel çalışma kökü ise bu Unity Git deposudur. Codex'te yanlışlıkla oluşturulan ayrı `Game` proje kaydı 13 Ağustos 2026'da kaldırıldı; kaynak klasörü, `.git` ve GitHub remote'u değişmedi. Günlük konuşma mevcut ana `PC Shop Empire Similator` projesinde sürer. Kaynak türleri:
 
 - **Canlı:** Unity kaynakları, root `PROJECT_BIBLE.md`, `Docs/`, `SourceAssets/`, `Tools/`.
 - **Salt okunur geçmiş:** `LegacyReference/PC-Shop-Empire-1.1.6/Source/`; manifest değişmeden korunur.
@@ -325,7 +327,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode testlerini çalıştır ve 42 baseline testi doğrula.
+5. Edit Mode testlerini çalıştır ve 62 baseline testi doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

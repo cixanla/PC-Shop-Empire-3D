@@ -13,6 +13,8 @@
 - Epicler: [Issues #1–#22](https://github.com/cixanla/PC-Shop-Empire-3D/issues)
 - Codex local Project: `Game`, `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git repository algısı `true`
 
+> **13 Ağustos 2026 güncellik notu:** Bu ayrı Codex kaydı daha sonra gereksiz bulundu ve kullanıcı tarafından kaldırıldı. Unity klasörü, `.git`, private GitHub remote'u ve bu tarihli handoff kanıtı silinmedi; çalışma mevcut ana Codex projesinde sürüyor.
+
 Mevcut public `cixanla/PC-Shop-Empire` repository'si legacy release/indirme geçmişi olarak bırakıldı; silinmedi, force-push edilmedi ve yeni oyunun kaynağı yapılmadı. Daha önceden var olan boş/isimsiz GitHub Project #1 de sahipliği belirsiz olduğu için değiştirilmedi; yeni oyun için ayrılmış Project #2 oluşturuldu.
 
 ## Repository içeriği
@@ -64,4 +66,4 @@ git switch main
 ./Tools/verify-repository.sh
 ```
 
-Ardından tam `6000.3.21f1` Unity Editor sürümüyle proje açılır ve `Docs/DEVELOPER-HANDOFF.md` içindeki 42 testlik baseline çalıştırılır. İlk uygulama işi [Issue #2 — Deterministik RNG ve event bağlamı](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) olmalıdır; gameplay, asset, Steam/Apple ödemesi veya büyük binary migration aynı pakete alınmaz.
+Ardından tam `6000.3.21f1` Unity Editor sürümüyle proje açılır ve güncel `Docs/DEVELOPER-HANDOFF.md` baseline'ı çalıştırılır. Bu 11 Ağustos raporundaki 42-test/ilk-RNG durumu tarihseldir; güncel teknik devam noktası `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.

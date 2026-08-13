@@ -27,3 +27,9 @@ Stage A'da üçüncü taraf oyun asset'i, font, ses, model veya oynanış kodu e
 | Repository governance/handoff metinleri | Proje için özgün hazırlanmış belgeler | cixanla proje materyali | 2026-08-11 |
 
 Legacy snapshot içindeki `assets/` dosyaları yalnız private tarihsel kanıt/refereans bağlamında tutulur. Yeni oyunun production asset'i sayılmaz ve yeni Unity sahnelerinde kullanılmaz.
+
+## Stage B algoritma referansları
+
+| Öğe | Kaynak | Hak / kullanım notu | Tarih |
+|---|---|---|---|
+| PCG XSH-RR 64/32 set-sequence algoritması ve golden vector | <https://www.pcg-random.org/using-pcg-c-basic.html>, <https://www.pcg-random.org/download.html> | Resmî minimal C referansı Apache License 2.0; C# uygulaması proje için özgün yazıldı, davranış `ADR-0007` ile sürümlendi | 2026-08-13 |

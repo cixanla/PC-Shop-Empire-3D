@@ -3,7 +3,7 @@
 **Project:** [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2)<br>
 **Owner:** `cixanla`  
 **Repository:** private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D)<br>
-**Codex Project:** `Game` — `/Users/cixanla/Developer/PCShopEmpire3D/Game`
+**Codex çalışma alanı:** mevcut ana `PC Shop Empire Similator`; authoritative Unity Git kökü `/Users/cixanla/Developer/PCShopEmpire3D/Game` (ayrı `Game` kaydı 13 Ağustos 2026'da kaldırıldı)
 
 GitHub Project günlük görünür görev durumudur; ayrıntılı kapsam gerçeği `PROJECT_BIBLE.md` ve `Docs/ProjectBible/05_GELISTIRME_YOL_HARITASI.md` içinde kalır.
 

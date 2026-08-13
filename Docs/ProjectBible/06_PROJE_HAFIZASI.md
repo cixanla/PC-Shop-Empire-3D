@@ -258,7 +258,8 @@
 | D-154 | Oyun zamanı yalnız açık adımlarla ilerleyen integer `SimulationClock` kaynağından akar; kalıcı alan olayları stable ID/type, one-based sequence, simulation timestamp ve schema taşıyan immutable zarf kullanır. | Proje lideri kararı — uygulandı 11 Ağustos 2026 | Pause veya hatalı/taşan adım zamanı değiştirmez; core `DateTime`, OS saati veya Unity frame zamanı okumaz. Event zarfı replay/duplicate/journal kanıtı sağlar; event bus ve persistence henüz eklenmedi. Toplam 42/42 test geçti; commit `8af2ad3d05906839c4b607e4958650e723060465`. |
 | D-155 | Yeni oyunun authoritative remote'u private `cixanla/PC-Shop-Empire-3D`, dalı `main` olur; eski public `cixanla/PC-Shop-Empire` yalnız legacy release geçmişi olarak değişmeden kalır. | Kullanıcı onayı — uygulandı 11 Ağustos 2026 | Yerel history ve Stage A etiketi normal push ile taşındı; force-push/history rewrite yapılmadı. Repository private kalır; public dönüşüm ayrı secret/lisans/marka incelemesidir. |
 | D-156 | Repository kendi kendini açıklayan yaşayan devir paketi taşır. | Kullanıcı talimatı — uygulandı 11 Ağustos 2026 | Root `PROJECT_BIBLE.md`, ayrıntılı `Docs/ProjectBible`, handoff/governance, ADR, changelog, issue/PR şablonları ve repo guard her material değişiklikte güncellenir. Canonical legacy 26 dosya byte-exact snapshot + SHA-256 manifest olarak private repodadır. |
-| D-157 | Günlük yürütme GitHub Issues + private Development Roadmap Project ile izlenir; gerçek Unity Git kökü Codex'te ayrı Project olur. | Kullanıcı onayı — uygulandı 11 Ağustos 2026 | 22 epic ve Status/Phase/Priority/Risk alanları oluşturuldu. Codex Project etiketi `Game`, yolu `/Users/cixanla/Developer/PCShopEmpire3D/Game`, Git algısı `true`; kalıcı karar gerçeği yine repository belgeleridir. |
+| D-157 | Günlük yürütme GitHub Issues + private Development Roadmap Project ile izlenir; Codex'te çalışma mevcut ana proje içinde sürer. | Revize edildi — 13 Ağustos 2026 | 22 epic ve Status/Phase/Priority/Risk alanları korunur. Yanlışlıkla oluşturulan ayrı `Game` kaydı kaldırıldı; `/Users/cixanla/Developer/PCShopEmpire3D/Game`, `.git` ve GitHub remote'u değişmedi. Kalıcı karar gerçeği repository belgeleridir. |
+| D-158 | Temel simülasyon rastgeleliği `pcg32-xsh-rr-64-32-v1` ile sürümlenir; raw state+odd increment snapshot'tır ve bounded integer modulo bias üretmez. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Initial state bütün `ulong` aralığını kabul eder; benzersiz stream için selector `0..2^63-1` ile sınırlıdır ve high-bit alias reddedilir. Global/System/Unity RNG fallback yoktur; kriptografik kullanım yasaktır. Edit Mode toplamı 62/62 geçti; root-seed/context derivation sonraki pakettir. |
 
 ## Vertical slice kilidi
 
@@ -370,7 +371,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, iki development build, yerel Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B'nin saf `PSE.Core` sınırı; kararlı kimlik/sonuç ve deterministik zaman/alan olayı sözleşmeleri 42/42 testle ayrı commitlerde kapatıldı. Bir sonraki bounded iş deterministik RNG sözleşmesidir; remote/LFS büyük binary asset öncesi çözülecektir.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, iki development build, yerel Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı ve sürümlü PCG32 sözleşmeleri 62/62 testle ayrı paketlerde kapatıldı. Bir sonraki bounded iş saved root seed + canonical context kimliğinden stable stream türetme ve reload-reroll engelidir; remote/LFS büyük binary asset öncesi çözülecektir.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -417,5 +418,6 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Üçüncü Stage B paketi açık-adımlı monotonik oyun zamanı ile stable metadata taşıyan immutable alan olayı zarfını ekledi; toplam 42/42 Edit Mode testi geçti.
 - Güncel HEAD `8af2ad3d05906839c4b607e4958650e723060465`, tree `566c1884e681feb8fbf0f68e0fb0a7594b560012`; çalışma ağacı temizdir. Önceki commitler ve Stage A etiketi korunur.
 - İş birliği/devir paketi `2ee421193833111f76c85dabb33910240c36db03` commit'iyle private remote'a gönderildi: yaşayan Bible, governance/handoff, workflow, issue/PR şablonları, 26/26 legacy snapshot ve manifest.
-- GitHub'da 22 epic ile private Project #2 oluşturuldu; gerçek Unity kökü Codex'te `Game` Project olarak kaydedildi.
-- Sıradaki küçük paket Issue #2 deterministik RNG sözleşmesidir; gameplay, asset veya uzun build henüz başlamadı.
+- GitHub'da 22 epic ile private Project #2 oluşturuldu. Sonradan gereksiz olduğu belirlenen ayrı Codex `Game` kaydı 13 Ağustos'ta kaldırıldı; kaynak ve GitHub bağlantısı korundu.
+- Dördüncü Stage B paketi sürümlü PCG32 akışını, raw snapshot/restore'u ve bias'sız bounded integerı ekledi; toplam 62/62 Edit Mode testi geçti.
+- Sıradaki paket Issue #2 altında root-seed/context stream derivation'dır; ardından event dispatcher ve gerçek birinci şahıs garaj prototipi gelir.

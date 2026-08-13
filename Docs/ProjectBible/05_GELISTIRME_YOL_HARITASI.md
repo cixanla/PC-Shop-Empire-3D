@@ -137,7 +137,7 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** İlk üç iş paketinin altyapı bölümü kısmen tamamlandı; `PSE.Core` Unity bağımlılığı olmadan derleniyor. Tür kapsamlı stable ID, güvenli sonuç/failure, açık-adımlı monotonik oyun zamanı ve immutable alan olayı zarfı eklendi; Edit Mode toplamı 42/42 geçiyor. Sıradaki bounded paket kayıtlı seed ve olay bağlamına dayalı deterministik RNG sözleşmesidir.
+**Güncel teknik kanıt:** İlk dört iş paketinin altyapı bölümü tamamlandı; `PSE.Core` Unity bağımlılığı olmadan derleniyor. Tür kapsamlı stable ID, güvenli sonuç/failure, açık-adımlı monotonik oyun zamanı, immutable alan olayı zarfı ve sürümlü PCG32 akışı eklendi; Edit Mode toplamı 62/62 geçiyor. Sıradaki bounded paket saved root seed + canonical context kimliğinden stable hashing/stream derivation ve reload-reroll engelidir; ardından event dispatcher ve gerçek birinci şahıs garaj prototipi gelir.
 
 ### Kapsam dışı
 

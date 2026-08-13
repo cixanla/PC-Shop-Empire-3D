@@ -1,7 +1,7 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core temeli ve private collaboration checkpoint'i 0.8<br>
-**Tarih:** 11 Ağustos 2026  
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core temeli ve private collaboration checkpoint'i 0.9<br>
+**Tarih:** 13 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
 ## Sonuç
@@ -66,9 +66,10 @@ Yapıldı:
 - Stage B'nin ilk bounded paketi tamamlandı: Unity bağımlılığı taşımayan `PSE.Core` assembly sınırı, test iskeleti ve mimari karar kaydı eklendi; Edit Mode toplamı 6/6 geçti ve paket `8ecb05df48257d22dc7f4549c8dbfe7b261772a9` commit'iyle kapatıldı.
 - İkinci bounded paket tamamlandı: tür kapsamlı canonical `StableId<TScope>`, oyuncuya gösterilmeyen makine-okunur failure kodu ve güvenli `OperationResult` sözleşmeleri eklendi; toplam Edit Mode sonucu 24/24 geçti ve paket `4cd2d928dbfda1886632bacce4a141c2a43161df` commit'iyle kapatıldı.
 - Üçüncü bounded paket tamamlandı: işletim sistemi/Unity saatini okumayan açık-adımlı `SimulationClock` ile sıralama, replay ve duplicate tespiti için immutable alan olayı zarfı eklendi; toplam Edit Mode sonucu 42/42 geçti ve paket `8af2ad3d05906839c4b607e4958650e723060465` commit'iyle kapatıldı.
+- Dördüncü bounded paket tamamlandı: sürümlü PCG32 akışı, benzersiz 63-bit stream selector alanı, raw snapshot/restore, official golden vector ve bias'sız bounded integer eklendi; Edit Mode toplamı 62/62 geçti.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
-- Gerçek Unity Git kökü Codex içinde `Game` adlı, Git repository olarak algılanan ayrı Project şeklinde kaydedildi.
+- Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kullanıcı tarafından kaldırıldı; Unity kaynak klasörü, `.git` ve private GitHub remote'u değişmeden korundu. Çalışma mevcut ana `PC Shop Empire Similator` projesinde sürüyor.
 
 Yapılmadı:
 
@@ -111,6 +112,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemeye alınmış, private GitHub `main` tek authoritative uzak geçmiş olarak seçilmiştir. Stage B'nin saf `PSE.Core` sınırı; kararlı kimlik/sonuç ile deterministik zaman/alan olayı sözleşmeleri 42/42 testle tamamlandı. Bir sonraki bounded iş, [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) kapsamındaki kayıtlı seed ve olay bağlamından yeniden üretilebilir sonuç veren deterministik RNG sözleşmesidir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemeye alınmış, private GitHub `main` tek authoritative uzak geçmiş olarak seçilmiştir. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı ve sürümlü PRNG çekirdeği 62/62 testle tamamlandı. Bir sonraki bounded iş, [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) altında saved root seed + canonical context kimliğinden stable hashing ile bağımsız stream türetme ve reload-reroll engelidir.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.
