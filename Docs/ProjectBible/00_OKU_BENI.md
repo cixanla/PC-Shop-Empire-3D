@@ -1,6 +1,6 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.10<br>
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.11<br>
 **Tarih:** 13 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
@@ -72,13 +72,14 @@ Yapıldı:
 - Yedinci bounded paket tamamlandı: `PSE.World`/`PSE.Presentation`, yeni GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind temeli ve görünür prototip eller eklendi; Edit Mode 114/114, gerçek girişli Play Mode 2/2 geçti, Universal macOS build ve runtime-ready smoke doğrulandı.
 - Sekizinci bounded paket tamamlandı: stable fiziksel ürün, 2 m range+LOS hedefleme, tek taşıma slotu, görünür el durumları, `E/A` pickup, `G/B` güvenli drop ve kayıp önleyici recovery eklendi; Edit Mode 120/120, gerçek girişli Play Mode 6/6 ve 1920×1080 Mac smoke geçti.
 - Dokuzuncu bounded paket tamamlandı: küçük kutu için işaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin ve stabil kinematic placement eklendi; Edit Mode 123/123, gerçek keyboard/mouse + gamepad Play Mode 8/8 ve Apple M4/Metal gerçek player smoke geçti.
+- Onuncu bounded paket tamamlandı: ayrı büyük-kutu boyut/taşıma profili, turuncu bantlı görünür graybox, iki-el durumu, 0,65× hareket, sprint kilidi, motion-safe bounded FOV ve gerçek boyutlu fail-closed drop eklendi; Edit Mode 126/126, gerçek keyboard/gamepad Play Mode 10/10 ve Apple M4/Metal `large-carry=ok` player smoke geçti.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
 - Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kullanıcı tarafından kaldırıldı; Unity kaynak klasörü, `.git` ve private GitHub remote'u değişmeden korundu. Çalışma mevcut ana `PC Shop Empire Similator` projesinde sürüyor.
 
 Yapılmadı:
 
-- Guardian runtime, final 3D sanat, ürün kataloğu/mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; çalışan pickup/drop/placement yalnız lisanssız graybox/prototip varlıklarla kuruldu.
+- Guardian runtime, final 3D sanat, ürün kataloğu/mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; çalışan küçük/büyük kutu etkileşimi yalnız lisanssız graybox/prototip varlıklarla kuruldu.
 - Blender, Steamworks SDK, Xcode, ücretli araç veya üçüncü taraf oyun asset'i kurulmadı.
 - Eski proje, kayıtlar ve USB'deki legacy klasörler değiştirilmedi; yalnız onaylı yeni `90_BACKUPS/PCShopEmpire3D` hedefi yazıldı.
 - Ücretli araç veya lisans satın alınmadı.
@@ -117,6 +118,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemede, private GitHub `main` tek authoritative uzak geçmiştir. Oynanabilir garaj, [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) güvenli fiziksel pickup/drop ve [Issue #31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31) kontrollü küçük-kutu stock placement tamamlandı: Edit Mode 123/123, Play Mode 8/8, Universal Mac build ve runtime smoke geçti. Bir sonraki bounded iş [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemede, private GitHub `main` tek authoritative uzak geçmiştir. Oynanabilir garaj, [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) pickup/drop, [Issue #31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31) kontrollü küçük-kutu placement ve [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) güvenli büyük-kutu taşıma profiliyle ilerledi: Edit Mode 126/126, Play Mode 10/10, Universal Mac build ve runtime smoke geçti. Bir sonraki bounded iş [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) küçük-kutu placement rotation inputudur.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

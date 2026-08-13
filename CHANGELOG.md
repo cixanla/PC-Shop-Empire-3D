@@ -18,7 +18,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Engelli/zeminsiz drop fail-closed kaldı; player disable ve dünya-altı düşüş aynı nesneyi son güvenli pozuna kurtarıyor.
 - Küçük kutu için işaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, renk + metin ghost ve stabil kinematic placement eklendi.
 - Mouse-left/gamepad RT placement modunu açar; `G / Gamepad East` mod açıkken onaylar, kapalıyken önceki güvenli drop'u korur.
-- Edit Mode baseline `123/123`, Play Mode baseline `8/8` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 gerçek player smoke geçti.
+- Büyük kutu için ayrı stable kimlik/boyut ve carry profili, turuncu bantlı graybox, geniş iki-el pozu, `0,65×` hareket, sprint kilidi ve motion-safe bounded FOV eklendi.
+- Büyük kutu placement moduna girmez; etkin `G / Gamepad East` promptu, gerçek boyutlu fail-closed drop, engelli geri bildirim ve disable recovery aynı item kimliğini korur.
+- Edit Mode baseline `126/126`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `large-carry=ok` gerçek player smoke geçti.
 
 ### Changed
 
@@ -53,4 +55,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma ve kontrollü stock placement çalışıyor; gelişmiş el animasyonu, büyük kutu, kullanıcı rotation inputu, istifleme ve taşıma arabası henüz tamamlanmadı.
+- Küçük kutu alma/bırakma/placement ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, kullanıcı rotation inputu, istifleme ve taşıma arabası henüz tamamlanmadı.

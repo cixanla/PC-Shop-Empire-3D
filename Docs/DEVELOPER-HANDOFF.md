@@ -48,8 +48,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `123/123` passed.
-- Play Mode `8/8` passed.
+- Edit Mode `126/126` passed.
+- Play Mode `10/10` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -86,16 +86,19 @@ Tamamlanan saf Core sözleşmeleri:
 - `E / Gamepad South` ile alma, `G / Gamepad East` ile bırakma ve effective binding'i gösteren HUD prompt'u.
 - `Mouse Left / Gamepad RT` ile kontrollü küçük-kutu placement modu; `G / Gamepad East` ile onay.
 - İşaretli `PlacementSurface`, 0,25 m grid/90° yaw snap, tam taban/overlap doğrulaması, yeşil-kırmızı ghost + metin ve stabil kinematic placement.
+- Ayrı büyük-kutu carry profili: turuncu bantlı graybox, iki-el pozu, `0,65×` hareket, sprint kilidi ve motion-safe `6°` istenen FOV bedeli.
+- Büyük kutu `G / Gamepad East` ile gerçek boyutuna göre fail-closed güvenli bırakılır; etkin binding, ağır-yük ve engelli-drop durumu HUD prompt'unda görünür.
+- Büyük-kutu placement girişi kapalıdır; stable ID, tek slot, physics snapshot ve disable/world-floor recovery korunur.
 - USB milestone `2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`: source commit `7794e2ab82c3b26c1149af526ed582f1cc406acb`, 336 dosya / 5.928.850 bayt, manifest SHA-256 `b4df8efde544cbe3557bf67f67c13034733949821bdc7848ce612af1129be0fb`; çift readback/checksum geçti.
 
 Henüz yapılmayanlar:
 
-- Gelişmiş el animasyonu, büyük kutu hız/görüş profili, kullanıcı rotation inputu, raf/istifleme ve taşıma arabası.
+- Gelişmiş el animasyonu, kullanıcı rotation inputu, raf/istifleme ve taşıma arabası.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: Issue #32 büyük kutu hız/görüş bedeli ve güvenli taşıma profili. Gerçek raf stoklama/Inventory authority, Issue #7/#8 öncesinde world projection'a eklenmez.
+Sıradaki bounded teknik paket: [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) küçük-kutu placement modunda kasıtlı `90°` rotation inputu. İstifleme ve taşıma arabası ayrı acceptance paketleridir; gerçek raf stoklama/Inventory authority, Issue #7/#8 öncesinde world projection'a eklenmez.
 
 ## 7. Çalışma akışı
 
@@ -149,7 +152,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 123 Edit Mode ve 8 Play Mode baseline testi geçti.
+2. Repo guard, 126 Edit Mode ve 10 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

@@ -1,6 +1,6 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
-**Sürüm:** 0.8 — Stage B oynanabilir garaj, pickup/drop ve küçük kutu placement'a ilerledi<br>
+**Sürüm:** 0.9 — Stage B küçük-kutu placement ve güvenli büyük-kutu taşımaya ilerledi<br>
 **Son güncelleme:** 13 Ağustos 2026<br>
 **Kural:** Bu dosya konuşmalardaki kalıcı kararların tek özetidir. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
@@ -266,6 +266,7 @@
 | D-162 | İlk fiziksel ürün etkileşimi joint/spring fiziği değil, tek slotlu kinematic carry ve doğrulanmış safe-drop kullanır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `E/A` pickup, `G/B` drop; range+LOS, stable ID, collider/body snapshot, visible hands, dynamic prompt, blocked/no-support fail-closed ve disable/world-floor recovery eklendi. Küçük ürün root scale=1 invariant'ı zorunludur. Edit Mode 120/120, Play Mode 6/6 ve Mac player smoke geçti. |
 | D-163 | Küçük kutu stock placement'ı yalnız işaretli yüzeyde, deterministik grid/yaw snap ve fail-closed ghost doğrulamasıyla yapılır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `PrimaryAction` (`Mouse Left/RT`) modu açar; `G/B` mod açıkken onaylar, kapalıyken safe-drop'u korur. İlk yüzey 0,25 m grid/90° yaw snap, beş noktalı taban desteği ve world/interactable/player overlap kontrolü kullanır. Geçerli placement gravity-off kinematic sabitlenir; stable ID/recovery korunur. Edit Mode 123/123, gerçek input Play Mode 8/8 ve Mac player smoke geçti. Serbest rotation, istifleme, büyük kutu ve Inventory authority kapsam dışıdır. |
 | D-164 | Pickup/drop ve kontrollü küçük-kutu placement kaynakları ayrı tarihli USB milestone olarak korunur. | Uygulandı — 13 Ağustos 2026 | `2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`, source commit `7794e2a`; 336 tracked dosya / 5.928.850 bayt, manifest SHA-256 `b4df8efd...e0fb`. Çift manifest readback ve checksum dry-run geçti; cache/build/log/credential dışarıda bırakıldı. |
+| D-165 | Büyük kutu ayrı, bounded bir carry profili kullanır; küçük-kutu placement sözleşmesini genişletmez. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `LargeBox`: `0,65×` hareket, sprint kapalı, en çok `8°` içinde ilk `6°` FOV isteği ve geniş iki-el pozu. `motionReduced` açıkken lens cezası uygulanmaz; görünür kutu/eller geri bildirimi korur. Gerçek yarı boyutla safe-drop fail-closed, effective prompt, stable ID/tek slot/recovery geçerlidir. Placement/rotation/stacking ve taşıma arabası kapsam dışıdır. Edit Mode 126/126, gerçek Input System Play Mode 10/10 ve Mac `large-carry=ok` smoke geçti; commit `e944198`. |
 
 ## Vertical slice kilidi
 
@@ -377,7 +378,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop ve kontrollü küçük-kutu stock placement ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 123/123 ve Play Mode 8/8'dir; sıradaki bounded iş Issue #32 büyük kutu taşıma profilidir.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop, kontrollü küçük-kutu stock placement ve güvenli büyük-kutu taşıma ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 126/126 ve Play Mode 10/10'dur; sıradaki bounded iş Issue #33 küçük-kutu placement rotation inputudur.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -432,4 +433,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Sekizinci Stage B paketi `44b816289f942e57fc176b26b203711090d0e61c` commit'iyle stable fiziksel ürün, hedefleme, görünür el durumları, güvenli pickup/drop ve recovery ekledi; Edit Mode 120/120, Play Mode 6/6 ve Universal macOS runtime smoke geçti.
 - Dokuzuncu Stage B paketi `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed` commit'iyle işaretli stock surface, deterministik snap, geçerli/geçersiz ghost, stabil placement ve gerçek keyboard/mouse + gamepad testlerini ekledi; Edit Mode 123/123, Play Mode 8/8 ve Universal macOS runtime smoke geçti.
 - Pickup/drop + placement kaynağı `7794e2ab82c3b26c1149af526ed582f1cc406acb` commit'inden ayrı USB milestone'a alındı; 336 dosyalık manifest çift readback/checksum ile doğrulandı.
-- Sıradaki paket Issue #32 büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir; Inventory authority Issue #7/#8'e bırakılır.
+- Onuncu Stage B paketi `e94419862b04f6f03f97ef2e43c9da393c5d30a9` commit'iyle ayrı büyük-kutu graybox/carry profili, iki-el durumu, bounded hız/FOV maliyeti, sprint kilidi, fail-closed drop ve gerçek keyboard/gamepad testlerini ekledi; Edit Mode 126/126, Play Mode 10/10 ve Universal macOS `large-carry=ok` runtime smoke geçti.
+- Sıradaki paket Issue #33 küçük-kutu placement rotation inputudur; istifleme ve taşıma arabası ayrı acceptance paketleri, Inventory authority Issue #7/#8 bağımlılığıdır.

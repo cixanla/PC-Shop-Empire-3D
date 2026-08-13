@@ -242,7 +242,7 @@ Monotonluğu azaltma ilkeleri:
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
-| 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük ürün pickup/drop ve kontrollü stock placement tamam |
+| 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement ve güvenli büyük-kutu taşıma tamam |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
@@ -277,17 +277,19 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
+| Büyük kutu taşıma profili | Ayrı boyut/kimlik, iki-el pozu, 0,65× hareket, sprint kilidi, motion-safe bounded FOV, fail-closed drop ve recovery |
 | Güncel USB milestone | Pickup/drop + placement kaynağı 336 tracked dosyada çift readback/checksum ile doğrulandı; cache/build/credential dışarıda |
-| Son test/build | Edit Mode `123/123`, Play Mode `8/8`; Universal macOS development build ve Apple M4/Metal 1280×720 gerçek player smoke geçti |
+| Son test/build | Edit Mode `126/126`, Play Mode `10/10`; Universal macOS development build ve Apple M4/Metal 1280×720 `large-carry=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) ile büyük kutu hız/görüş bedeli ve güvenli taşıma profilini ayrı bounded dilim olarak uygula.
-2. Kullanıcı rotation inputu ve istiflemeyi büyük kutudan ayrı acceptance paketlerinde doğrula.
-3. Gerçek raf/Inventory authority sınırını [Issue #7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) ve [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) ile bağla.
-4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. [Issue #33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) ile yalnız küçük-kutu placement moduna kasıtlı `90°` rotation inputu ekle.
+2. Kutu üstü istiflemeyi rotation'dan ayrı, tam destek/overlap acceptance paketi olarak doğrula.
+3. Taşıma arabasını Issue #6'nın ayrı graybox dilimi olarak ele al; büyük kutuya gizlice placement ekleme.
+4. Gerçek raf/Inventory authority sınırını [Issue #7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) ve [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) ile bağla.
+5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -331,7 +333,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 123/123 ve Play Mode 8/8 baseline testlerini doğrula.
+5. Edit Mode 126/126 ve Play Mode 10/10 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

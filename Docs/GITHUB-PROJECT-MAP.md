@@ -50,4 +50,5 @@ Issue numaraları ve kalıcı URL'ler yukarıda kayıtlıdır. Project item ID'l
 | Epic | Alt issue | Sonuç |
 |---|---|---|
 | [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) | [#31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31) — Küçük kutu kontrollü placement ve ghost | 0,25 m grid/90° yaw snap, valid/invalid ghost, güvenli overlap ve gerçek input testleri tamamlandı |
-| [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) | [#32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) — Büyük kutu taşıma profili ve güvenli bırakma | Todo; hız/görüş bedeli, iki-el durumu ve fail-closed büyük-kutu drop |
+| [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) | [#32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) — Büyük kutu taşıma profili ve güvenli bırakma | Tamamlandı; 0,65× hız, sprint kilidi, motion-safe FOV, iki-el durumu, fail-closed drop ve gerçek input testleri |
+| [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) | [#33](https://github.com/cixanla/PC-Shop-Empire-3D/issues/33) — Küçük kutu placement rotation inputu | Todo; kasıtlı 90° clockwise input, effective prompt ve döndürülmüş footprint doğrulaması |
