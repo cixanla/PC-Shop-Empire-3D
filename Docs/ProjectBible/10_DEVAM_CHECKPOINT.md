@@ -63,16 +63,22 @@ Korunan mevcut milestone'lar:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_STAGE_A_BASELINE`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
 
-RNG paketi ve bu checkpoint push/CI sonrasında yeni, ayrı `2026-08-13_STAGE_B_RNG` hedefine alınacaktır. Eski snapshot'ların üzerine yazılmaz. `.git`, `Library`, `Temp`, build, log, credential ve token snapshot'a girmez; tracked authoritative kaynaklar SHA-256 manifest ve readback ile doğrulanır.
+RNG paketi ve checkpoint yeni, ayrı hedefe alındı:
+
+`/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
+
+- Snapshot source commit: `29522445a69a6869b1ce3de3fe9a00e93b40a2e9`
+- Payload: 202 dosya, 5.504.984 bayt.
+- `MANIFEST.tsv` SHA-256: `85a2a80927bf4bbab51645ce86564fcc69e970843a6841597a8810fd0f2312a5`
+- 201 tracked dosyanın source→USB hash/size karşılaştırması ve bütün manifest readback kontrolü geçti.
+- ExFAT üzerinde oluşan 246 yeniden üretilebilir `._*` AppleDouble metadata yan dosyası temizlendi; payload veya eski snapshot silinmedi.
+- `.git`, `Library`, `Temp`, build, log, credential ve token snapshot'a girmedi.
 
 ## Devam sırası
 
-1. Bu checkpoint commitini oluştur, feature+checkpoint commitlerini private `origin/main`e push et.
-2. Remote Repository Guard sonucunu doğrula; Issue #23'ü kanıt yorumuyla kapat ve Project durumunu Done yap.
-3. `2026-08-13_STAGE_B_RNG` USB milestone'unu tracked kaynaklardan oluştur; readback manifestini doğrula.
-4. Issue #2 altında saved root seed + canonical context kimliği için sürümlü stable hashing/stream derivation child issue'sunu aç ve uygula; reload ile reroll edilemediğini test et.
-5. Issue #3 event correlation/causation + in-memory dispatcher paketini tamamla.
-6. Ardından Issue #4–#6 zinciriyle gerçek birinci şahıs garaj graybox, kamera/hareket, görünür eller, alma/bırakma ve kutu placement prototipine geç.
+1. Issue #2 altında saved root seed + canonical context kimliği için sürümlü stable hashing/stream derivation child issue'sunu aç ve uygula; reload ile reroll edilemediğini test et.
+2. Issue #3 event correlation/causation + in-memory dispatcher paketini tamamla.
+3. Ardından Issue #4–#6 zinciriyle gerçek birinci şahıs garaj graybox, kamera/hareket, görünür eller, alma/bırakma ve kutu placement prototipine geç.
 
 ## Düşük kullanımda bırakılacak mesaj
 

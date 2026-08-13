@@ -26,8 +26,17 @@
 - `./Tools/verify-repository.sh`: başarılı.
 - `git diff --check`: başarılı.
 - Bağımsız code review: kritik/önemli açık bulgu yok.
+- Remote Repository Guard: [Actions run 31666694036](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31666694036), başarılı.
 
 Ham Unity test XML/log dosyaları Git dışında tutulur; kesin boyut ve SHA-256 değerleri yaşayan `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
+
+## USB milestone
+
+- Hedef: `90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
+- Snapshot source commit: `29522445a69a6869b1ce3de3fe9a00e93b40a2e9`
+- Payload: 202 dosya / 5.504.984 bayt.
+- Manifest SHA-256: `85a2a80927bf4bbab51645ce86564fcc69e970843a6841597a8810fd0f2312a5`.
+- Source→USB ve manifest readback doğrulaması geçti; `.git`, cache, build, log ve credential dahil edilmedi.
 
 ## Sınır
 
