@@ -89,6 +89,17 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Color(0.15f, 0.36f, 0.55f),
                 0.05f,
                 0.35f);
+            Material stockPlacement = GetOrCreateMaterial(
+                "StockPlacementSurface",
+                new Color(0.08f, 0.42f, 0.48f),
+                0.05f,
+                0.22f);
+            Material placementValid = GetOrCreateGhostMaterial(
+                "PlacementGhostValid",
+                new Color(0.12f, 0.95f, 0.35f, 0.42f));
+            Material placementInvalid = GetOrCreateGhostMaterial(
+                "PlacementGhostInvalid",
+                new Color(1f, 0.16f, 0.10f, 0.48f));
 
             Transform systems = CreateRoot("__Systems").transform;
             Transform environment = CreateRoot("Environment").transform;
@@ -98,10 +109,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform debug = CreateRoot("Debug").transform;
             spawn.position = new Vector3(0f, 0.05f, -2.5f);
 
-            BuildRoom(environment, concrete, wall, metal, accent, cardboard);
+            BuildRoom(environment, concrete, wall, metal, accent, cardboard, stockPlacement);
             BuildStarterPickup(environment, cardboard, metal);
             BuildLighting(lighting);
-            FirstPersonMotor prefabSource = BuildPlayer(gameplay, inputActions, hands);
+            FirstPersonMotor prefabSource = BuildPlayer(
+                gameplay,
+                inputActions,
+                hands,
+                placementValid,
+                placementInvalid);
             GameObject playerPrefab = PrefabUtility.SaveAsPrefabAsset(
                 prefabSource.gameObject,
                 PlayerPrefabPath);
@@ -159,7 +175,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material wall,
             Material metal,
             Material accent,
-            Material cardboard)
+            Material cardboard,
+            Material stockPlacement)
         {
             CreateCube("Floor", parent, new Vector3(0f, -0.1f, 0f), new Vector3(8f, 0.2f, 10f), concrete);
             CreateCube("Ceiling", parent, new Vector3(0f, 3.1f, 0f), new Vector3(8.4f, 0.15f, 10.2f), wall);
@@ -211,6 +228,28 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     UnityEngine.Object.DestroyImmediate(collider);
                 }
             }
+
+            GameObject stockSurfaceObject = CreateCube(
+                "SmallBoxStockPlacementSurface",
+                parent,
+                new Vector3(2.15f, 0.03f, -1.1f),
+                new Vector3(2.3f, 0.06f, 1.7f),
+                stockPlacement);
+            BoxCollider stockSurfaceCollider = stockSurfaceObject.GetComponent<BoxCollider>();
+            PlacementSurface stockSurface = stockSurfaceObject.AddComponent<PlacementSurface>();
+            stockSurface.Configure(
+                "prototype.stock-floor-small-box-a",
+                stockSurfaceCollider,
+                0.25f,
+                90f);
+
+            GameObject placementBlocker = CreateCube(
+                "StockPlacementBlocker",
+                parent,
+                new Vector3(2.92f, 0.24f, -1.1f),
+                new Vector3(0.35f, 0.42f, 0.65f),
+                metal);
+            placementBlocker.layer = RequireLayer(InteractableLayerName);
         }
 
         private static void BuildLighting(Transform parent)
@@ -231,7 +270,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         private static FirstPersonMotor BuildPlayer(
             Transform gameplay,
             InputActionAsset inputActions,
-            Material handsMaterial)
+            Material handsMaterial,
+            Material placementValidMaterial,
+            Material placementInvalidMaterial)
         {
             GameObject rig = new GameObject("PlayerRig");
             rig.transform.SetParent(gameplay, false);
@@ -289,6 +330,21 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             VisibleHandsPresenter handsPresenter = viewModelHands.gameObject.AddComponent<VisibleHandsPresenter>();
             handsPresenter.Configure(leftHand, rightHand);
 
+            GameObject placementPreviewObject = CreateCube(
+                "PlacementPreview",
+                rig.transform,
+                Vector3.zero,
+                Vector3.one,
+                placementValidMaterial);
+            Collider placementPreviewCollider = placementPreviewObject.GetComponent<Collider>();
+            if (placementPreviewCollider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(placementPreviewCollider);
+            }
+
+            PlacementPreview placementPreview = placementPreviewObject.AddComponent<PlacementPreview>();
+            placementPreview.Configure(placementValidMaterial, placementInvalidMaterial);
+
             FirstPersonMotor motor = rig.AddComponent<FirstPersonMotor>();
             motor.Configure(controller, input, pivotObject.transform, camera);
 
@@ -309,6 +365,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 resolver,
                 carryAnchor,
                 handsPresenter,
+                placementPreview,
                 1 << 0,
                 (1 << 0) | (1 << interactableLayer) | (1 << playerLayer),
                 RequireLayer(HeldItemLayerName));
@@ -447,6 +504,43 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 material.SetFloat("_Smoothness", smoothness);
             }
 
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static Material GetOrCreateGhostMaterial(string name, Color color)
+        {
+            Material material = GetOrCreateMaterial(name, color, 0f, 0.15f);
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", color);
+            }
+
+            if (material.HasProperty("_Surface"))
+            {
+                material.SetFloat("_Surface", 1f);
+            }
+
+            if (material.HasProperty("_SrcBlend"))
+            {
+                material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            }
+
+            if (material.HasProperty("_DstBlend"))
+            {
+                material.SetFloat(
+                    "_DstBlend",
+                    (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            }
+
+            if (material.HasProperty("_ZWrite"))
+            {
+                material.SetFloat("_ZWrite", 0f);
+            }
+
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             EditorUtility.SetDirty(material);
             return material;
         }

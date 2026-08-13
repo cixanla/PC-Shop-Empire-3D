@@ -57,6 +57,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             Assert.That(
                 player.FindAction(PlayerInputContract.Interact, true).id.ToString(),
                 Is.EqualTo("852140f2-7766-474d-8707-702459ba45f3"));
+            AssertBinding(player, PlayerInputContract.PrimaryAction, "<Mouse>/leftButton");
+            AssertBinding(player, PlayerInputContract.PrimaryAction, "<Gamepad>/rightTrigger");
             AssertBinding(player, PlayerInputContract.Interact, "<Keyboard>/e");
             AssertBinding(player, PlayerInputContract.Interact, "<Gamepad>/buttonSouth");
             AssertBinding(player, PlayerInputContract.Drop, "<Keyboard>/g");

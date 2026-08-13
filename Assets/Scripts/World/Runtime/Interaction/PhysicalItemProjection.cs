@@ -118,6 +118,16 @@ namespace PCShopEmpire3D.World.Interaction
 
         public OperationResult ReleaseTo(Pose worldPose)
         {
+            return ReleaseInternal(worldPose, stabilizePlacement: false);
+        }
+
+        public OperationResult PlaceAt(Pose worldPose)
+        {
+            return ReleaseInternal(worldPose, stabilizePlacement: true);
+        }
+
+        private OperationResult ReleaseInternal(Pose worldPose, bool stabilizePlacement)
+        {
             if (Ownership != PhysicalItemOwnership.PlayerHands || !_hasCarrySnapshot)
             {
                 return OperationResult.Fail(Failure.FromCode("drop.item-not-held"));
@@ -126,6 +136,14 @@ namespace PCShopEmpire3D.World.Interaction
             transform.SetParent(_worldParent, true);
             transform.SetPositionAndRotation(worldPose.position, worldPose.rotation);
             RestoreWorldState();
+            if (stabilizePlacement)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                body.useGravity = false;
+                body.isKinematic = true;
+            }
+
             Ownership = PhysicalItemOwnership.World;
             _hasCarrySnapshot = false;
             RecordSafePose();

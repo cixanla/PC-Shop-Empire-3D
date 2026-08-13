@@ -15,6 +15,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private PhysicalInteractionResolver resolver;
         [SerializeField] private Transform carryAnchor;
         [SerializeField] private VisibleHandsPresenter hands;
+        [SerializeField] private PlacementPreview placementPreview;
         [SerializeField] private LayerMask supportMask;
         [SerializeField] private LayerMask obstructionMask;
         [SerializeField] private int heldItemLayer;
@@ -30,13 +31,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsCarrying => HeldItem != null;
 
+        public bool IsPlacementMode { get; private set; }
+
+        public bool PlacementValid { get; private set; }
+
+        public PlacementStatus CurrentPlacementStatus { get; private set; } = PlacementStatus.ContextMissing;
+
+        public PlacementPreview PlacementPreview => placementPreview;
+
         public string PromptText
         {
             get
             {
                 if (HeldItem != null)
                 {
-                    return $"{(input != null ? input.DropBindingPrompt : "G / B")}: {HeldItem.DisplayName} bırak";
+                    string placement = input != null
+                        ? input.PrimaryBindingPrompt
+                        : "Mouse Left / RT";
+                    string drop = input != null ? input.DropBindingPrompt : "G / B";
+                    return IsPlacementMode
+                        ? $"{drop}: yerleştir   |   {placement}: iptal   |   " +
+                          (PlacementValid ? "GEÇERLİ" : "ENGELLİ")
+                        : $"{placement}: yerleştirme önizlemesi   |   {drop}: güvenli bırak";
                 }
 
                 return FocusedItem != null
@@ -51,6 +67,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PhysicalInteractionResolver interactionResolver,
             Transform itemCarryAnchor,
             VisibleHandsPresenter handsPresenter,
+            PlacementPreview preview,
             LayerMask groundLayers,
             LayerMask blockingLayers,
             int heldLayer)
@@ -66,6 +83,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             hands = handsPresenter != null
                 ? handsPresenter
                 : throw new ArgumentNullException(nameof(handsPresenter));
+            placementPreview = preview != null ? preview : throw new ArgumentNullException(nameof(preview));
             supportMask = groundLayers;
             obstructionMask = blockingLayers;
             heldItemLayer = heldLayer;
@@ -92,6 +110,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HeldItem = item;
             _heldItemId = item.ItemIdValue;
             FocusedItem = null;
+            ResetPlacementState();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.CarryingSmallItem);
             return result;
@@ -111,24 +130,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 obstructionMask);
             if (pose.IsFailure)
             {
-                LastFailureCode = pose.Error.Code;
                 SetHandsState(VisibleHandsState.DropBlocked);
-                return OperationResult.Fail(pose.Error);
+                return Remember(OperationResult.Fail(pose.Error));
             }
 
-            PhysicalItemProjection releasedItem = HeldItem;
-            OperationResult result = releasedItem.ReleaseTo(pose.Value);
-            if (result.IsFailure)
+            return ReleaseHeldItem(pose.Value, stabilizePlacement: false);
+        }
+
+        public OperationResult TryConfirmPlacement()
+        {
+            if (HeldItem == null)
             {
-                return Remember(result);
+                return Remember(OperationResult.Fail(Failure.FromCode("placement.nothing-held")));
             }
 
-            Physics.SyncTransforms();
-            HeldItem = null;
-            _heldItemId = string.Empty;
-            LastFailureCode = string.Empty;
-            SetHandsState(VisibleHandsState.Empty);
-            return result;
+            if (!IsPlacementMode)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("placement.mode-inactive")));
+            }
+
+            PlacementEvaluation evaluation = PlacementSolver.Evaluate(
+                transform,
+                HeldItem,
+                supportMask,
+                obstructionMask);
+            ApplyPlacementEvaluation(evaluation);
+            if (!evaluation.IsValid)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode(evaluation.FailureCode)));
+            }
+
+            return ReleaseHeldItem(evaluation.Pose, stabilizePlacement: true);
         }
 
         public void ProcessInputFrame()
@@ -137,6 +169,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 LastFailureCode = "carry.projection-missing";
                 _heldItemId = string.Empty;
+                ResetPlacementState();
                 SetHandsState(VisibleHandsState.Recovering);
                 Debug.LogError("CARRY_RECOVERY_FAILED code=carry.projection-missing");
                 return;
@@ -150,15 +183,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (input == null || motor == null || resolver == null || motor.IsPaused)
             {
+                placementPreview?.Hide();
                 return;
             }
 
-            bool wasCarryingAtFrameStart = HeldItem != null;
-            if (wasCarryingAtFrameStart)
+            if (HeldItem != null)
             {
+                if (input.PrimaryActionPressedThisFrame)
+                {
+                    SetPlacementMode(!IsPlacementMode);
+                }
+
+                UpdatePlacementPreview();
                 if (input.DropPressedThisFrame)
                 {
-                    TryDrop();
+                    if (IsPlacementMode)
+                    {
+                        TryConfirmPlacement();
+                    }
+                    else
+                    {
+                        TryDrop();
+                    }
                 }
 
                 return;
@@ -174,11 +220,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 TryPickup(FocusedItem);
             }
-        }
-
-        private void LateUpdate()
-        {
-            ProcessInputFrame();
         }
 
         public OperationResult TryRecoverHeldItem()
@@ -208,13 +249,89 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             HeldItem = null;
             _heldItemId = string.Empty;
+            ResetPlacementState();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.Empty);
             return result;
         }
 
+        private void LateUpdate()
+        {
+            ProcessInputFrame();
+        }
+
+        private OperationResult ReleaseHeldItem(Pose pose, bool stabilizePlacement)
+        {
+            PhysicalItemProjection releasedItem = HeldItem;
+            OperationResult result = stabilizePlacement
+                ? releasedItem.PlaceAt(pose)
+                : releasedItem.ReleaseTo(pose);
+            if (result.IsFailure)
+            {
+                return Remember(result);
+            }
+
+            Physics.SyncTransforms();
+            HeldItem = null;
+            _heldItemId = string.Empty;
+            ResetPlacementState();
+            LastFailureCode = string.Empty;
+            SetHandsState(VisibleHandsState.Empty);
+            return result;
+        }
+
+        private void SetPlacementMode(bool enabled)
+        {
+            IsPlacementMode = enabled && HeldItem != null;
+            PlacementValid = false;
+            CurrentPlacementStatus = PlacementStatus.ContextMissing;
+            LastFailureCode = string.Empty;
+            if (!IsPlacementMode)
+            {
+                placementPreview?.Hide();
+                SetHandsState(VisibleHandsState.CarryingSmallItem);
+            }
+        }
+
+        private void UpdatePlacementPreview()
+        {
+            if (!IsPlacementMode || HeldItem == null)
+            {
+                PlacementValid = false;
+                placementPreview?.Hide();
+                return;
+            }
+
+            PlacementEvaluation evaluation = PlacementSolver.Evaluate(
+                transform,
+                HeldItem,
+                supportMask,
+                obstructionMask);
+            ApplyPlacementEvaluation(evaluation);
+        }
+
+        private void ApplyPlacementEvaluation(PlacementEvaluation evaluation)
+        {
+            CurrentPlacementStatus = evaluation.Status;
+            PlacementValid = evaluation.IsValid;
+            LastFailureCode = evaluation.IsValid ? string.Empty : evaluation.FailureCode;
+            placementPreview?.Show(HeldItem, evaluation);
+            SetHandsState(evaluation.IsValid
+                ? VisibleHandsState.CarryingSmallItem
+                : VisibleHandsState.DropBlocked);
+        }
+
+        private void ResetPlacementState()
+        {
+            IsPlacementMode = false;
+            PlacementValid = false;
+            CurrentPlacementStatus = PlacementStatus.ContextMissing;
+            placementPreview?.Hide();
+        }
+
         private void OnDisable()
         {
+            placementPreview?.Hide();
             if (Application.isPlaying && !_applicationQuitting && HeldItem != null)
             {
                 TryRecoverHeldItem();

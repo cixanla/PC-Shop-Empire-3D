@@ -25,7 +25,7 @@ namespace PCShopEmpire3D.Presentation
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
                 GUI.Box(
-                    new Rect((Screen.width * 0.5f) - 170f, (Screen.height * 0.5f) + 34f, 340f, 34f),
+                    new Rect((Screen.width * 0.5f) - 310f, (Screen.height * 0.5f) + 34f, 620f, 34f),
                     prompt);
             }
 

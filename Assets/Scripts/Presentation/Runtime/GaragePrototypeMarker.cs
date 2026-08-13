@@ -8,7 +8,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-pickup-drop-g2-v1";
+        public const string Version = "garage-small-box-placement-g3-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -37,7 +37,8 @@ namespace PCShopEmpire3D.Presentation
                 $"scene={gameObject.scene.name} resolution={Screen.width}x{Screen.height} " +
                 $"motor={(playerMotor != null ? "ok" : "missing")} " +
                 $"input={(playerInput != null && playerInput.Actions != null ? "ok" : "missing")} " +
-                $"carry={(playerCarry != null ? "ok" : "missing")}");
+                $"carry={(playerCarry != null ? "ok" : "missing")} " +
+                $"placement={(playerCarry != null && playerCarry.PlacementPreview != null ? "ok" : "missing")}");
         }
     }
 }

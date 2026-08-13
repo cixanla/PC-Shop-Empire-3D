@@ -62,6 +62,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection[] physicalItems = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<PhysicalItemProjection>(true))
                     .ToArray();
+                PlacementSurface[] placementSurfaces = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<PlacementSurface>(true))
+                    .ToArray();
+                PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
                 Assert.That(controller.radius, Is.EqualTo(0.3f).Within(0.001f));
@@ -80,6 +84,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(physicalItems[0].ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(physicalItems[0].Body, Is.Not.Null);
                 Assert.That(physicalItems[0].GetComponentsInChildren<Collider>().Length, Is.GreaterThanOrEqualTo(1));
+                Assert.That(placementSurfaces.Length, Is.EqualTo(1));
+                Assert.That(placementSurfaces[0].SurfaceId, Is.EqualTo("prototype.stock-floor-small-box-a"));
+                Assert.That(placementSurfaces[0].GridSize, Is.EqualTo(0.25f).Within(0.001f));
+                Assert.That(placementSurfaces[0].YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
+                Assert.That(placementPreview, Is.Not.Null);
+                Assert.That(placementPreview.IsVisible, Is.False);
+                Assert.That(marker.PlayerCarry.PlacementPreview, Is.SameAs(placementPreview));
                 Assert.That(
                     PrefabUtility.GetPrefabInstanceStatus(motor.gameObject),
                     Is.EqualTo(PrefabInstanceStatus.Connected));

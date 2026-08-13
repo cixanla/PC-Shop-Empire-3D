@@ -42,6 +42,7 @@ namespace PCShopEmpire3D.Presentation.Input
         public string InteractBindingPrompt => GetBindingPrompt(_interact, "E", "A");
 
         public string DropBindingPrompt => GetBindingPrompt(_drop, "G", "B");
+        public string PrimaryBindingPrompt => GetBindingPrompt(_primaryAction, "Mouse Left", "RT");
 
         public void Configure(InputActionAsset inputActions)
         {

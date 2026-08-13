@@ -179,6 +179,133 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardMousePlacementShowsBlockedGhostThenPlacesSameItem()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            marker.PlayerMotor.SetPaused(false);
+            string identity = item.ItemIdValue;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToStockSurface(marker);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.True);
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("GEÇERLİ"));
+            Pose validPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = "PlacementTestBlocker";
+            blocker.layer = LayerMask.NameToLayer("Interactable");
+            blocker.transform.SetPositionAndRotation(validPose.position, validPose.rotation);
+            blocker.transform.localScale = Vector3.one * 0.75f;
+            Physics.SyncTransforms();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.False);
+            Assert.That(marker.PlayerCarry.CurrentPlacementStatus, Is.EqualTo(PlacementStatus.Blocked));
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.False);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("ENGELLİ"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(marker.PlayerCarry.LastFailureCode, Is.EqualTo("placement.blocked"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            Object.Destroy(blocker);
+            yield return null;
+            Physics.SyncTransforms();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+
+            validPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(Vector3.Distance(item.transform.position, validPose.position), Is.LessThan(0.001f));
+            Assert.That(Mathf.DeltaAngle(item.transform.eulerAngles.y, 0f), Is.EqualTo(0f).Within(0.01f));
+            Assert.That(item.Body.isKinematic, Is.True);
+            Assert.That(item.Body.useGravity, Is.False);
+            Vector3 stablePosition = item.transform.position;
+            yield return new WaitForFixedUpdate();
+            Assert.That(Vector3.Distance(item.transform.position, stablePosition), Is.LessThan(0.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadTriggerPlacementAndEastConfirmUseLiveInputActions()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            marker.PlayerMotor.SetPaused(false);
+            string identity = item.ItemIdValue;
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToStockSurface(marker);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.Body.isKinematic, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator DisablingCarryControllerRecoversHeldItemToItsSafeWorldPose()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -224,6 +351,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.ItemIdValue, Is.EqualTo(identity));
             Assert.That(item.transform.position.y, Is.GreaterThan(-20f));
             Assert.That(Vector3.Distance(item.transform.position, safePosition), Is.LessThan(0.05f));
+        }
+
+        private static void MovePlayerToStockSurface(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(2.15f, 0.05f, -2.55f),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
         }
     }
 }
