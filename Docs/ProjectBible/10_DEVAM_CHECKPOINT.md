@@ -77,7 +77,7 @@ Bu çalışma sırasında USB volume bağlı olmadığı için yeni pickup/drop 
 
 ## Devam sırası
 
-1. Issue #6 altında büyük kutu için hız/görüş bedeli ve güvenli taşıma profilini bounded alt issue'ya ayır.
+1. [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) ile büyük kutu hız/görüş bedeli ve güvenli taşıma profilini uygula.
 2. Büyük kutu doğrulamasından sonra kullanıcı rotation inputu ve istiflemeyi ayrı acceptance dilimlerinde ele al.
 3. Gerçek raf stoklama ve ekonomik Inventory authority'yi Issue #7/#8 bağımlılıklarına bağla; sahne projection'ını tek başına stok gerçeği sayma.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.

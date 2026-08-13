@@ -283,7 +283,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) altında büyük kutu hız/görüş bedeli ve güvenli taşıma profilini ayrı bounded dilim olarak uygula.
+1. [Issue #32](https://github.com/cixanla/PC-Shop-Empire-3D/issues/32) ile büyük kutu hız/görüş bedeli ve güvenli taşıma profilini ayrı bounded dilim olarak uygula.
 2. Kullanıcı rotation inputu ve istiflemeyi büyük kutudan ayrı acceptance paketlerinde doğrula.
 3. Gerçek raf/Inventory authority sınırını [Issue #7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) ve [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) ile bağla.
 4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.

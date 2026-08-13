@@ -376,7 +376,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop ve kontrollü küçük-kutu stock placement ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 123/123 ve Play Mode 8/8'dir; sıradaki bounded iş Issue #6 büyük kutu taşıma profilidir.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop ve kontrollü küçük-kutu stock placement ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 123/123 ve Play Mode 8/8'dir; sıradaki bounded iş Issue #32 büyük kutu taşıma profilidir.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -430,4 +430,4 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Yedinci Stage B paketi `c7a3a26075998252d9ae8b88824d8285e5067069` commit'iyle oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind temeli ve görünür prototip elleri ekledi; Edit Mode 114/114, Play Mode 2/2, Universal macOS build ve runtime-ready smoke geçti.
 - Sekizinci Stage B paketi `44b816289f942e57fc176b26b203711090d0e61c` commit'iyle stable fiziksel ürün, hedefleme, görünür el durumları, güvenli pickup/drop ve recovery ekledi; Edit Mode 120/120, Play Mode 6/6 ve Universal macOS runtime smoke geçti.
 - Dokuzuncu Stage B paketi `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed` commit'iyle işaretli stock surface, deterministik snap, geçerli/geçersiz ghost, stabil placement ve gerçek keyboard/mouse + gamepad testlerini ekledi; Edit Mode 123/123, Play Mode 8/8 ve Universal macOS runtime smoke geçti.
-- Sıradaki paket Issue #6 altında büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir; Inventory authority Issue #7/#8'e bırakılır.
+- Sıradaki paket Issue #32 büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir; Inventory authority Issue #7/#8'e bırakılır.

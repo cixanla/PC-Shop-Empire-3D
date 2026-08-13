@@ -94,7 +94,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: Issue #6 altında büyük kutu hız/görüş bedeli ve güvenli taşıma profili. Gerçek raf stoklama/Inventory authority, Issue #7/#8 öncesinde world projection'a eklenmez.
+Sıradaki bounded teknik paket: Issue #32 büyük kutu hız/görüş bedeli ve güvenli taşıma profili. Gerçek raf stoklama/Inventory authority, Issue #7/#8 öncesinde world projection'a eklenmez.
 
 ## 7. Çalışma akışı
 
