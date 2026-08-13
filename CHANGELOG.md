@@ -23,7 +23,8 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Küçük kutu placement moduna `R / Right Shoulder` ile deterministik 90° clockwise rotation, etkin binding/açı promptu ve döndürülmüş footprint güvenlik doğrulaması eklendi.
 - Dikdörtgen küçük kutu ve üst yön işareti GarageGraybox'ta rotation'ı görünür kılar; ghost ile onaylanan poz aynı solver sonucunu kullanır.
 - Okunaklı yarı gerçekçilik görsel yönü kabul edildi: gerçek oran/PBR yüzey/zemine oturan ışık/doğal ağırlık, hafif stilize okunabilirlik ve ölçülü performans bütçesi.
-- Edit Mode baseline `127/127`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok` gerçek player smoke geçti.
+- GarageGraybox tek-köşe benchmarkına bevel'lı tezgâh/raf, prosedürel beton/duvar/metal/karton/ahşap yüzeyler, etiket detayları, görev ışığı, ACES, ölçülü bloom ve reflection probe eklendi.
+- Edit Mode baseline `128/128`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok lookdev=ok` gerçek player smoke geçti.
 
 ### Changed
 

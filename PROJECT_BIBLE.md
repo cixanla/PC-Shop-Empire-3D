@@ -280,15 +280,16 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Büyük kutu taşıma profili | Ayrı boyut/kimlik, iki-el pozu, 0,65× hareket, sprint kilidi, motion-safe bounded FOV, fail-closed drop ve recovery |
 | Kontrollü küçük kutu rotation | `R / Right Shoulder` ile deterministik 90° adım, etkin binding/açı promptu, döndürülmüş footprint doğrulaması ve ghost/confirm poz eşitliği |
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
+| Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
 | Güncel USB milestone | Pickup/drop + placement kaynağı 336 tracked dosyada çift readback/checksum ile doğrulandı; cache/build/credential dışarıda |
-| Son test/build | Edit Mode `127/127`, Play Mode `10/10`; Universal macOS development build ve Apple M4/Metal 1280×720 `rotation=ok` gerçek player smoke geçti |
+| Son test/build | Edit Mode `128/128`, Play Mode `10/10`; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok lookdev=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #34](https://github.com/cixanla/PC-Shop-Empire-3D/issues/34) ile tek garaj köşesinde okunaklı yarı gerçekçi görsel benchmark üret; bütün sahneyi final-art kapsamına büyütme.
-2. Kutu üstü istiflemeyi rotation'dan ayrı, tam destek/overlap acceptance paketi olarak doğrula.
+1. Kutu üstü istiflemeyi rotation'dan ayrı, tam destek/overlap acceptance paketi olarak doğrula.
+2. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yay; bütün sahneyi henüz final art sayma.
 3. Taşıma arabasını Issue #6'nın ayrı graybox dilimi olarak ele al; büyük kutuya gizlice placement ekleme.
 4. Gerçek raf/Inventory authority sınırını [Issue #7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) ve [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) ile bağla.
 5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
@@ -334,7 +335,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 127/127 ve Play Mode 10/10 baseline testlerini doğrula.
+5. Edit Mode 128/128 ve Play Mode 10/10 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

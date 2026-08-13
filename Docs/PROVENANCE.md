@@ -40,3 +40,4 @@ Legacy snapshot içindeki `assets/` dosyaları yalnız private tarihsel kanıt/r
 | Öğe | Kaynak | Hak / kullanım notu | Tarih |
 |---|---|---|---|
 | Stock placement yüzeyi, blocker ve yeşil/kırmızı ghost | Unity primitive mesh + proje içinde üretilen URP materyalleri | Proje için özgün graybox/prototip; üçüncü taraf model, doku, font veya marka içeriği yok | 2026-08-13 |
+| Garaj yarı gerçekçi benchmark köşesi | Unity primitive/ProBuilder üretimi ve repository builder'ının deterministik ürettiği 64×64 yüzey asset'leri | Proje için özgün geometri/materyal/doku; üçüncü taraf model/doku/marka veya ücretli asset yok | 2026-08-13 |

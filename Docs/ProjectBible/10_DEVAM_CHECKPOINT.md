@@ -1,8 +1,17 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 13 Ağustos 2026<br>
-**Durum:** Issue #33 küçük-kutu placement rotation tamamlandı; sıradaki bounded paket Issue #34 görsel benchmark<br>
+**Durum:** Issue #34 okunaklı yarı gerçekçi tek-köşe benchmarkı tamamlandı; düşük kullanım nedeniyle yeni uzun paket başlatılmadı<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
+
+## En yeni checkpoint — Issue #34
+
+- Feature commit `c7214afab81a360a3ca10a88cbdd29f67e741994`, tree `cb734bdc31069f584999558c8d8bdb78e2c968cc`.
+- Tek referans köşesinde bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe çalışır; bütün garajın final sanatı değildir.
+- EditMode `128/128`, gerçek Input System PlayMode `10/10`, Universal macOS build ve Apple M4/Metal `rotation=ok lookdev=ok` player smoke geçti.
+- Pickup/drop/placement/rotation/recovery ve collider/stable-ID invariantları korundu.
+- Kanıt: `Docs/Evidence/READABLE-LOOKDEV-CHECKPOINT-2026-08-13.md`; Repository Guard [31688852779](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31688852779) başarılı.
+- Sıradaki bounded iş küçük-kutu üstü tam destek/overlap doğrulamalı istiflemedir.
 
 ## Kullanım güvenliği protokolü
 
