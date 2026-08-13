@@ -67,6 +67,7 @@ Yapıldı:
 - İkinci bounded paket tamamlandı: tür kapsamlı canonical `StableId<TScope>`, oyuncuya gösterilmeyen makine-okunur failure kodu ve güvenli `OperationResult` sözleşmeleri eklendi; toplam Edit Mode sonucu 24/24 geçti ve paket `4cd2d928dbfda1886632bacce4a141c2a43161df` commit'iyle kapatıldı.
 - Üçüncü bounded paket tamamlandı: işletim sistemi/Unity saatini okumayan açık-adımlı `SimulationClock` ile sıralama, replay ve duplicate tespiti için immutable alan olayı zarfı eklendi; toplam Edit Mode sonucu 42/42 geçti ve paket `8af2ad3d05906839c4b607e4958650e723060465` commit'iyle kapatıldı.
 - Dördüncü bounded paket tamamlandı: sürümlü PCG32 akışı, benzersiz 63-bit stream selector alanı, raw snapshot/restore, official golden vector ve bias'sız bounded integer eklendi; Edit Mode toplamı 62/62 geçti.
+- Beşinci bounded paket tamamlandı: canonical root seed ile sürümlü SHA-256 framed domain/context stream derivation eklendi; çağrı sırası bağımsızlığı, save metadata doğrulaması ve reload-reroll engeliyle Edit Mode toplamı 85/85 geçti.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
 - Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kullanıcı tarafından kaldırıldı; Unity kaynak klasörü, `.git` ve private GitHub remote'u değişmeden korundu. Çalışma mevcut ana `PC Shop Empire Similator` projesinde sürüyor.
@@ -112,6 +113,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemeye alınmış, private GitHub `main` tek authoritative uzak geçmiş olarak seçilmiştir. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı ve sürümlü PRNG çekirdeği 62/62 testle tamamlandı. Bir sonraki bounded iş, [Issue #2](https://github.com/cixanla/PC-Shop-Empire-3D/issues/2) altında saved root seed + canonical context kimliğinden stable hashing ile bağımsız stream türetme ve reload-reroll engelidir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. UVCS ilk check-in'i dış bağlantı reseti nedeniyle beklemeye alınmış, private GitHub `main` tek authoritative uzak geçmiş olarak seçilmiştir. Stage B'nin saf `PSE.Core` sınırında kararlı kimlik/sonuç, deterministik zaman/alan olayı, sürümlü PRNG ve root-seed/context stream derivation 85/85 testle tamamlandı. Bir sonraki bounded iş [Issue #3](https://github.com/cixanla/PC-Shop-Empire-3D/issues/3) event dispatcher/correlation paketidir; hemen ardından gerçek birinci şahıs garaj graybox gelir.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.
