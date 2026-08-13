@@ -206,7 +206,7 @@ Bağımlılık yönü sunumdan alana doğrudur; `PSE.Core` Unity/Editor referans
 ## 12. Determinizm, kayıt ve güvenlik
 
 - Oyun zamanı integer ve açık fixed-step clock üzerinden ilerler; pause sırasında ilerlemez.
-- Eventler stable ID/type, one-based sequence, schema ve simulation timestamp taşır.
+- Eventler stable ID/type, one-based sequence, schema, simulation timestamp ve zorunlu correlation/direct-causation bağlamı taşır; in-memory dispatcher global FIFO, breadth-first nested enqueue, duplicate/conflict ve handler hata izolasyonu uygular.
 - Temel PRNG `pcg32-xsh-rr-64-32-v1` kimliğiyle sürümlüdür; raw state+odd increment snapshot/restore ve bias üretmeyen bounded integer davranışı testlidir.
 - Root RNG seed save-safe canonical hex taşır; sürümlü SHA-256 framed domain/context türetmesi çağrı sırasından bağımsız PCG32 akışı üretir. Eksik veya bilinmeyen save metadata'sı sessiz fallback yapmaz; reload-reroll çekirdek testleriyle engellenir.
 - Save; sürümlü snapshot, sınırlı journal, checksum, katalog fingerprint ve döner sağlam kopyalar kullanır.
@@ -242,7 +242,7 @@ Monotonluğu azaltma ilkeleri:
 |---:|---|---|
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
-| 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core kimlik/sonuç/zaman/event/PRNG+derivation sözleşmeleri tamam, event dispatcher ardından oynanabilir graybox geliyor |
+| 1 | Proje temeli ve graybox etkileşim | Başladı; saf Core ve event dispatcher tamam, sıradaki paket gerçek oynanabilir garaj graybox |
 | 2 | Temel mağaza döngüsü | Planlandı |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
@@ -273,17 +273,17 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Zaman/olay | Integer açık-adımlı `SimulationClock`, pause güvenliği, event ID/type/sequence/schema zarfı |
 | Rastgelelik | Sürümlü PCG32, 63-bit benzersiz stream selector, snapshot/restore, official golden vector ve bias'sız bounded integer |
 | Bağlamsal stream | Canonical root seed, SHA-256 framed domain/context derivation, iki golden vector ve reload-reroll engeli |
-| Son test | Edit Mode `85/85` geçti, başarısız/atlanan 0 |
+| Event dispatch | Correlation/causation, global FIFO, breadth-first nested enqueue, duplicate/conflict, bounded drain ve handler hata izolasyonu |
+| Son test | Edit Mode `101/101` geçti, başarısız/atlanan 0 |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #3](https://github.com/cixanla/PC-Shop-Empire-3D/issues/3) kapsamında domain event correlation/causation ve in-memory dispatcher sınırını küçük paketle kur.
-2. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map, birinci şahıs graybox hareket ve gerçek garaj prototipi kabul ölçütlerini uygula.
-3. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
-4. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
-5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. [Issue #4](https://github.com/cixanla/PC-Shop-Empire-3D/issues/4) için input action map, birinci şahıs graybox hareket ve gerçek garaj prototipi kabul ölçütlerini uygula.
+2. [Issue #5](https://github.com/cixanla/PC-Shop-Empire-3D/issues/5) ile görünür el + alma/bırakma prototipini tek test odasında doğrula.
+3. [Issue #6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) ile hibrit kutu taşıma ve güvenli placement çekirdeğine geç.
+4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 

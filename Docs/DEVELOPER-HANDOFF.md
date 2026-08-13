@@ -48,7 +48,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- `85/85` passed.
+- `101/101` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -76,6 +76,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `IDomainEvent`, stable type/ID, one-based sequence ve immutable envelope.
 - `pcg32-xsh-rr-64-32-v1`, official golden vector, raw state snapshot/restore ve bias'sız bounded integer.
 - `sha256-framed-be-pcg32-v1`, canonical root seed, stable domain/context stream derivation ve reload-reroll engeli.
+- Event correlation/direct-causation, global FIFO ve breadth-first nested enqueue uygulayan bounded in-memory dispatcher.
 
 Henüz yapılmayanlar:
 
@@ -86,7 +87,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: domain event correlation/causation ve deterministik in-memory dispatcher; ardından gerçek birinci şahıs garaj graybox.
+Sıradaki bounded teknik paket: gerçek birinci şahıs garaj graybox, Input System sözleşmesi, kamera ve hareket.
 
 ## 7. Çalışma akışı
 

@@ -19,7 +19,7 @@ Bu depo, eski Electron oyununun doğrudan portu değildir. Yeni oyun Unity 6000.
 - Hedef: önce Windows x64 + Steam 1.0; bütçe uygunsa daha sonra ayrı macOS port/QA turu.
 - Stage A: proje, paket, macOS/Windows Mono smoke build ve private GitHub temeli tamamlandı.
 - Stage B: saf `PSE.Core`; stable ID, sonuç/failure, deterministik zaman, domain event ve sürümlü PCG32 sözleşmeleri tamamlandı.
-- Son doğrulanmış Edit Mode sonucu: `85/85` geçti.
+- Son doğrulanmış Edit Mode sonucu: `101/101` geçti.
 - Yürütme panosu: [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2), 22 epic.
 - Oynanabilir karakter, eller, mağaza graybox'ı ve gameplay henüz başlamadı.
 
