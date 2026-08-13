@@ -44,3 +44,9 @@ GitHub Project günlük görünür görev durumudur; ayrıntılı kapsam gerçe�
 | 22 | [#22](https://github.com/cixanla/PC-Shop-Empire-3D/issues/22) | macOS port, signing ve notarization | P2 | Windows 1.0 + bütçe | Universal/native performans, Apple QA ve notarization |
 
 Issue numaraları ve kalıcı URL'ler yukarıda kayıtlıdır. Project item ID'leri GitHub'ın iç uygulama detayıdır ve yaşayan belgelere sabitlenmez. Büyük epicler uygulama başlamadan daha küçük acceptance-odaklı issue'lara bölünür.
+
+## Aktif epic alt işleri
+
+| Epic | Alt issue | Sonuç |
+|---|---|---|
+| [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) | [#31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31) — Küçük kutu kontrollü placement ve ghost | 0,25 m grid/90° yaw snap, valid/invalid ghost, güvenli overlap ve gerçek input testleri tamamlandı |

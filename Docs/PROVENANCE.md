@@ -34,3 +34,9 @@ Legacy snapshot içindeki `assets/` dosyaları yalnız private tarihsel kanıt/r
 |---|---|---|---|
 | PCG XSH-RR 64/32 set-sequence algoritması ve golden vector | <https://www.pcg-random.org/using-pcg-c-basic.html>, <https://www.pcg-random.org/download.html> | Resmî minimal C referansı Apache License 2.0; C# uygulaması proje için özgün yazıldı, davranış `ADR-0007` ile sürümlendi | 2026-08-13 |
 | SHA-256 bağlamsal stream derivation | NIST FIPS 180-4 ve .NET `System.Security.Cryptography.SHA256` API | .NET BCL uygulaması kullanıldı; repository'ye üçüncü taraf hash kodu/paketi kopyalanmadı, binary sözleşme `ADR-0008` ile sürümlendi | 2026-08-13 |
+
+## Stage B prototip görsel kayıtları
+
+| Öğe | Kaynak | Hak / kullanım notu | Tarih |
+|---|---|---|---|
+| Stock placement yüzeyi, blocker ve yeşil/kırmızı ghost | Unity primitive mesh + proje içinde üretilen URP materyalleri | Proje için özgün graybox/prototip; üçüncü taraf model, doku, font veya marka içeriği yok | 2026-08-13 |

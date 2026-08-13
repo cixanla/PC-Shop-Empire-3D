@@ -48,8 +48,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `120/120` passed.
-- Play Mode `6/6` passed.
+- Edit Mode `123/123` passed.
+- Play Mode `8/8` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -84,15 +84,17 @@ Tamamlanan saf Core sözleşmeleri:
 - FOV/hassasiyet/invert/motion-reduce ayarları, görünür prototip eller, pause/cursor ve runtime-ready tanısı.
 - Canonical fiziksel ürün kimliği, 2 m hedef çözümleme, tek taşıma slotu, kinematic carry ve güvenli drop/recovery.
 - `E / Gamepad South` ile alma, `G / Gamepad East` ile bırakma ve effective binding'i gösteren HUD prompt'u.
+- `Mouse Left / Gamepad RT` ile kontrollü küçük-kutu placement modu; `G / Gamepad East` ile onay.
+- İşaretli `PlacementSurface`, 0,25 m grid/90° yaw snap, tam taban/overlap doğrulaması, yeşil-kırmızı ghost + metin ve stabil kinematic placement.
 
 Henüz yapılmayanlar:
 
-- Gelişmiş el animasyonu, büyük kutu, döndürme, raf/yüzey snap placement ve istifleme.
+- Gelişmiş el animasyonu, büyük kutu hız/görüş profili, kullanıcı rotation inputu, raf/istifleme ve taşıma arabası.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: Issue #6 hibrit kutu taşıma ve placement.
+Sıradaki bounded teknik paket: Issue #6 altında büyük kutu hız/görüş bedeli ve güvenli taşıma profili. Gerçek raf stoklama/Inventory authority, Issue #7/#8 öncesinde world projection'a eklenmez.
 
 ## 7. Çalışma akışı
 
@@ -146,7 +148,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 114 Edit Mode ve 2 Play Mode baseline testi geçti.
+2. Repo guard, 123 Edit Mode ve 8 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 13 Ağustos 2026<br>
-**Durum:** İlk fiziksel ürün pickup/drop tamamlandı; sıradaki iş hibrit kutu placement<br>
+**Durum:** Issue #31 küçük kutu kontrollü placement tamamlandı; Issue #6 büyük kutu dilimiyle sürecek<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## Kullanım güvenliği protokolü
@@ -19,26 +19,24 @@
 - Gameplay sınırları: `PSE.World` ve `PSE.Presentation`.
 - İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`.
 - Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
-- Kontroller: Keyboard&Mouse ve Gamepad; Move/Look/PrimaryAction/Interact/Sprint/Drop/Pause.
-- FOV, mouse/gamepad hassasiyeti, invert-Y, motion-reduce, cursor/pause ve rebind override store var.
-- Görünür eller lisanssız geometrik placeholder'dır; boş/hedef/tutuyor/engelli/recovery pozları çalışır.
-- Garajdaki `prototype.garage-box-001`, `E / Gamepad South` ile alınır; `G / Gamepad East` ile güvenli yüzeye bırakılır.
-- Stable ID, range+LOS, tek slot, physics snapshot/restore, blocked/no-support fail-closed ve son güvenli poz recovery çalışır.
+- `E / Gamepad South` küçük kutuyu alır; `G / Gamepad East` placement modu kapalıyken mevcut güvenli drop'u korur.
+- `Mouse Left / Gamepad RT` kontrollü placement önizlemesini açıp kapatır; mod açıkken `G / Gamepad East` geçerli pozu onaylar.
+- İşaretli stock surface `0,25 m` grid ve yüzeye göre `90°` yaw snap kullanır. Tam taban desteği, eğim ve world/interactable/player overlap doğrulanmadan placement gerçekleşmez.
+- Yeşil/kırmızı ghost yanında `GEÇERLİ/ENGELLİ` metni vardır. Geçersiz durumda aynı stable ID'li kutu elde kalır.
+- Onaylı placement collider'ı aktif, gravity-off kinematic sabit dünya pozu üretir; normal drop özgün physics snapshot'ını geri yükler.
+- Disable/world-floor recovery ve son güvenli poz davranışı korunur.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ dış platform kapısıdır.
 
 ## Feature checkpoint
 
 - Branch: `main`
-- Commit: `44b816289f942e57fc176b26b203711090d0e61c`
-- Tree: `56a08053037817158c6293fe235760105c2dd811`
-- Kapsam: PhysicalItemProjection, resolver, carry controller, safe-drop, hand presenter, updated GarageGraybox/PlayerRig ve testler.
-- Builder güvenliği: kaydedilmemiş sahne çalışması onaysız kaybolmaz; önceki scene setup geri yüklenir.
-- Prefab bütünlüğü: PlayerRig origin'de tek kaynak prefab, garajda connected instance ve spawn override'dır.
-- Build settings: önceki sahnelerin enabled/disabled durumu korunur.
-- Input bütünlüğü: her runtime oyuncusu kendi Input Action kopyasını kullanır; prompt effective binding'den üretilir.
-- Fizik bütünlüğü: carry sırasında collider kapalı/kinematic; drop'ta özgün parent/layer/body/collider durumu geri gelir.
-- Recovery: player disable veya `y < -20` aynı nesneyi/kimliği son güvenli poza döndürür; engelli drop nesneyi elde tutar.
-- Bağımsız inceleme sonrasında kritik/önemli bulgu kalmadı.
+- Feature commit: `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed`
+- Tree: `27652c274c849a127a20b1f52960f435760111eb`
+- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#31](https://github.com/cixanla/PC-Shop-Empire-3D/issues/31)
+- Karar: `Docs/ADR-0010-CONTROLLED-SMALL-BOX-PLACEMENT.md`.
+- Kapsam: `PlacementSurface`, deterministik solver/evaluation, collider taşımayan ghost, carry-controller mod akışı, stabil `PlaceAt`, güncel PlayerRig/GarageGraybox ve gerçek input testleri.
+- Builder güvenliği, connected prefab, build-scene sırası, runtime Input Action kopyası, stable item ID ve pickup/drop/recovery invariantları korundu.
+- Büyük kutu, kullanıcı rotation inputu, istifleme, taşıma arabası ve authoritative Inventory bu checkpoint'in dışında kaldı.
 
 ## Test ve build kanıtı
 
@@ -46,12 +44,13 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `pickup-editmode-final2.xml` | 120/120 geçti | `14d2a91e8e38ce528225f9cda3ea172c7f9d80a2ddb1bb3090f2f6e6a6fb7c6a` |
-| `pickup-playmode-final2.xml` | 6/6 geçti | `361a171b8c8741b88754824a8dc4850aa327bdf2191793acc4dabc9fc948052f` |
-| `pickup-macos-build-checkpoint.log` | başarılı, 325.963.160 bayt | `0ee40752c4637e0dd6c9f88f869cb4715b7ae2a699f9603f54480c31bbab1474` |
-| `pickup-macos-runtime-checkpoint.log` | Metal, 1920×1080, `carry=ok`, hata yok | `fd9ac367f6a8fdb51909d52d4275c0b3d774303fd9843c08de21b7f7d0f2ddb2` |
+| `placement-editmode-final.xml` | 123/123 geçti | `694d5f139e019c83de36d6d3981965cd784f144738319060e7d1d075536aa8d6` |
+| `placement-playmode-final.xml` | 8/8 geçti | `fb9ce67ddc62f6d603bd707c300de9c3c618dfed63eedaf37d0b0909181b1674` |
+| `placement-macos-build-final.log` | Universal development build, 326.147.564 bayt | `5bab0c612bd756db2dba8f5183479aac3e08c00f75007b91ae17b15077351097` |
+| `placement-macos-runtime-final.log` | Apple M4/Metal, 1280×720, `placement=ok` | `a669109c6638a428f89e1d7c87f743c711aac5aaa566624cd6b844e14d61bf4f` |
+| `placement-macos-runtime-final.png` | Gerçek player'da kırmızı `ENGELLİ` ghost ve dinamik prompt | `c4208a2ea1227591ffa407f64ef0b6a3e5c12915648dc2dfe8389fad55a39122` |
 
-Play Mode; gerçek Input System device-state olaylarıyla hareket/kamera yanında keyboard `E/G`, gamepad South/East, pause engeli, disable recovery ve dünya-altı recovery'yi doğrular. macOS development player Universal `arm64+x86_64` üretildi; Apple M4/Metal üzerinde pencereli 1920×1080 smoke çalıştı. Bu Mac kanıtı Windows native doğrulamasının yerine geçmez.
+EditMode; grid/yaw snap, işaretsiz yüzey ve obstruction sonuçlarını doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/mouse ve gamepad placement zincirini, engelde fail-closed davranışı, stable ID'yi, eski doğrudan drop'u, recovery'yi ve fixed-step poz kararlılığını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -64,22 +63,23 @@ Play Mode; gerçek Input System device-state olaylarıyla hareket/kamera yanınd
 - Event dispatcher hardening: `3d819e533fd3635bc9b32787730d6dd9be110875`.
 - First playable garage: `c7a3a26075998252d9ae8b88824d8285e5067069`.
 - Safe physical pickup/drop: `44b816289f942e57fc176b26b203711090d0e61c`.
+- Controlled small-box placement: `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed`.
 
 ## USB güvenlik katmanı
 
-Korunan milestone'lar:
+Korunan milestone kayıtları:
 
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_STAGE_A_BASELINE`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
 
-Pickup/drop checkpoint'i private GitHub'da tamamlanır. Ayrı USB milestone, pickup/drop + placement ile ilk anlamlı fiziksel etkileşim zinciri kapandığında alınacaktır; cache/build/credential dahil edilmeyecektir.
+Bu çalışma sırasında USB volume bağlı olmadığı için yeni pickup/drop + placement snapshot'ı yazılmadı. Kaynak private GitHub push/CI ile off-device korunur; USB yeniden bağlandığında cache/build/credential içermeyen tarihli snapshot ayrı doğrulama işi olarak alınabilir.
 
 ## Devam sırası
 
-1. Issue #6'yı küçük kutu placement, döndürme/snap ve büyük kutu taşıma olarak bounded alt işlere böl.
-2. Önce küçük kutuyu işaretli teslimat/stok alanına güvenli yerleştiren zinciri testle.
-3. Ardından büyük kutu için hız/görüş bedeli ve taşıma profiline geç.
+1. Issue #6 altında büyük kutu için hız/görüş bedeli ve güvenli taşıma profilini bounded alt issue'ya ayır.
+2. Büyük kutu doğrulamasından sonra kullanıcı rotation inputu ve istiflemeyi ayrı acceptance dilimlerinde ele al.
+3. Gerçek raf stoklama ve ekonomik Inventory authority'yi Issue #7/#8 bağımlılıklarına bağla; sahne projection'ını tek başına stok gerçeği sayma.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
 
 ## Düşük kullanımda bırakılacak mesaj

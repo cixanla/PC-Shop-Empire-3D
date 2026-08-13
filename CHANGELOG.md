@@ -16,7 +16,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - `PSE.World`/`PSE.Presentation`, oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind store ve görünür prototip eller eklendi.
 - Stable fiziksel ürün kimliği, menzil/görüş hattı hedefleme, tek taşıma slotu, görünür el pozları, dinamik binding prompt'u ve güvenli pickup/drop eklendi.
 - Engelli/zeminsiz drop fail-closed kaldı; player disable ve dünya-altı düşüş aynı nesneyi son güvenli pozuna kurtarıyor.
-- Edit Mode baseline `120/120`, Play Mode baseline `6/6` teste yükseldi; Universal macOS build ve 1920×1080 runtime-ready smoke geçti.
+- Küçük kutu için işaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, renk + metin ghost ve stabil kinematic placement eklendi.
+- Mouse-left/gamepad RT placement modunu açar; `G / Gamepad East` mod açıkken onaylar, kapalıyken önceki güvenli drop'u korur.
+- Edit Mode baseline `123/123`, Play Mode baseline `8/8` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 gerçek player smoke geçti.
 
 ### Changed
 
@@ -50,4 +52,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma çalışıyor; gelişmiş el animasyonu, büyük kutu, döndürme/snap placement ve istifleme henüz tamamlanmadı.
+- Küçük kutu alma/bırakma ve kontrollü stock placement çalışıyor; gelişmiş el animasyonu, büyük kutu, kullanıcı rotation inputu, istifleme ve taşıma arabası henüz tamamlanmadı.

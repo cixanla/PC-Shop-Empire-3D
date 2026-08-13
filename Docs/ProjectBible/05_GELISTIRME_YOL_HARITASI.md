@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Devam ediyor; teknik temel ve oynanabilir birinci şahıs garaj graybox tamamlandı, fiziksel etkileşim/taşıma sırada.<br>
+**Durum:** Devam ediyor; teknik temel, oynanabilir garaj, küçük kutu pickup/drop ve kontrollü stock placement tamamlandı; büyük kutu taşıma profili sırada.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,7 +137,7 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** `PSE.Core` Unity bağımlılığı olmadan derlenir; stable ID, result, zaman, RNG ve event dispatcher sözleşmeleri tamamdır. `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind store, konfor ayarları ve görünür prototip eller eklendi. Edit Mode 114/114, gerçek cihaz-state girişli Play Mode 2/2, Universal macOS development build ve runtime-ready smoke geçer. Sıradaki bounded paket görünür el + alma/bırakmadır.
+**Güncel teknik kanıt:** `PSE.Core` Unity bağımlılığı olmadan derlenir; stable ID, result, zaman, RNG ve event dispatcher sözleşmeleri tamamdır. `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, görünür eller, stable pickup/drop/recovery ve işaretli yüzeyde deterministik küçük-kutu placement eklendi. Edit Mode 123/123, gerçek device-state Play Mode 8/8, Universal macOS development build ve Apple M4/Metal runtime smoke geçer. Sıradaki bounded paket büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir.
 
 ### Kapsam dışı
 

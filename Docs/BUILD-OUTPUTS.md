@@ -20,3 +20,15 @@ Tüm dosyaların `SHA-256 + mantıksal boyut + göreli yol` satırlarının sır
 - Windows: `c4cbdb8b391a5130e4da383bfd031d7da1a584f4e84771a33cdb660a2ae5e949`
 
 Windows çıktısı yalnız erken taşınabilirlik kanıtıdır. Final Windows sürümü gerçek Windows x64 makinede IL2CPP, DirectX/GPU, sürücü ve Steam testlerinden geçmeden yayın adayı sayılmaz. macOS çıktısı imzalı/notarize edilmiş dağıtım paketi değildir.
+
+## Stage B küçük kutu placement doğrulaması — 13 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app` güncel kaynakla yeniden üretildi:
+
+- Tür: Development Player, Universal Mach-O (`arm64` + `x86_64`).
+- Unity build raporu: 326.147.564 bayt.
+- Ana executable SHA-256: `f338b7479b28766ffe965548e1b0167a31af42cc72dc3d366e481a3c761476bb`.
+- Runtime: Apple M4/Metal, pencereli 1280×720; `motor=ok input=ok carry=ok placement=ok`.
+- Görsel smoke: gerçek player'da pickup, dinamik placement prompt'u ve kırmızı `ENGELLİ` ghost doğrulandı.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır; imzalı/notarize yayın paketi veya Windows native doğrulaması değildir.

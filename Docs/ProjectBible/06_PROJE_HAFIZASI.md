@@ -1,7 +1,7 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
-**Sürüm:** 0.7 — Stage A tamamlandı; Stage B çekirdek zaman/olay sözleşmelerine ilerledi  
-**Son güncelleme:** 11 Ağustos 2026  
+**Sürüm:** 0.8 — Stage B oynanabilir garaj, pickup/drop ve küçük kutu placement'a ilerledi<br>
+**Son güncelleme:** 13 Ağustos 2026<br>
 **Kural:** Bu dosya konuşmalardaki kalıcı kararların tek özetidir. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
 ## Durum işaretleri
@@ -264,6 +264,7 @@
 | D-160 | Domain eventler zarf tarafından canonical payload'dan hesaplanan fingerprint/correlation/direct-causation taşır; in-memory dispatcher tek simulation thread'inde global FIFO, registration sırası ve breadth-first nested enqueue uygular. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Mutation enqueue'da reddedilir veya dispatch'te karantinaya alınır; exact metadata+fingerprint duplicate idempotent, conflict açık failure; handler failure/exception izole, no-retry; receipt/drain kapasitesi zorunlu ve rapor raw payload/stack içermez. Kalıcı receipt ledger save paketine ertelendi. Edit Mode toplamı 105/105 geçti. |
 | D-161 | İlk oynanabilir hareket tabanı CharacterController, izole runtime Input Action kopyası ve connected PlayerRig prefabı kullanan GarageGraybox olur. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Klavye/fare + gamepad Move/Look/PrimaryAction/Interact/Sprint/Drop/Pause sözleşmesi, rebind override store, FOV/hassasiyet/invert/motion-reduce ve görünür prototip eller eklendi. Head-bob/sprint FOV/jump kapsam dışıdır. Edit Mode 114/114, gerçek device-state Play Mode 2/2, Universal macOS build ve runtime-ready smoke geçti; Windows native kapısı açıktır. |
 | D-162 | İlk fiziksel ürün etkileşimi joint/spring fiziği değil, tek slotlu kinematic carry ve doğrulanmış safe-drop kullanır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `E/A` pickup, `G/B` drop; range+LOS, stable ID, collider/body snapshot, visible hands, dynamic prompt, blocked/no-support fail-closed ve disable/world-floor recovery eklendi. Küçük ürün root scale=1 invariant'ı zorunludur. Edit Mode 120/120, Play Mode 6/6 ve Mac player smoke geçti. |
+| D-163 | Küçük kutu stock placement'ı yalnız işaretli yüzeyde, deterministik grid/yaw snap ve fail-closed ghost doğrulamasıyla yapılır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `PrimaryAction` (`Mouse Left/RT`) modu açar; `G/B` mod açıkken onaylar, kapalıyken safe-drop'u korur. İlk yüzey 0,25 m grid/90° yaw snap, beş noktalı taban desteği ve world/interactable/player overlap kontrolü kullanır. Geçerli placement gravity-off kinematic sabitlenir; stable ID/recovery korunur. Edit Mode 123/123, gerçek input Play Mode 8/8 ve Mac player smoke geçti. Serbest rotation, istifleme, büyük kutu ve Inventory authority kapsam dışıdır. |
 
 ## Vertical slice kilidi
 
@@ -375,7 +376,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox ve ilk fiziksel pickup/drop ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 120/120 ve Play Mode 6/6'dır; sıradaki bounded iş hibrit kutu taşıma ve placement'tır.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop ve kontrollü küçük-kutu stock placement ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 123/123 ve Play Mode 8/8'dir; sıradaki bounded iş Issue #6 büyük kutu taşıma profilidir.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -428,4 +429,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Altıncı Stage B paketi canonical payload fingerprint/mutation karantinası/correlation/causation ve bounded deterministik event dispatcher'ı ekledi; toplam 105/105 Edit Mode testi geçti.
 - Yedinci Stage B paketi `c7a3a26075998252d9ae8b88824d8285e5067069` commit'iyle oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind temeli ve görünür prototip elleri ekledi; Edit Mode 114/114, Play Mode 2/2, Universal macOS build ve runtime-ready smoke geçti.
 - Sekizinci Stage B paketi `44b816289f942e57fc176b26b203711090d0e61c` commit'iyle stable fiziksel ürün, hedefleme, görünür el durumları, güvenli pickup/drop ve recovery ekledi; Edit Mode 120/120, Play Mode 6/6 ve Universal macOS runtime smoke geçti.
-- Sıradaki paket Issue #6 hibrit kutu taşıma ve placement'tır.
+- Dokuzuncu Stage B paketi `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed` commit'iyle işaretli stock surface, deterministik snap, geçerli/geçersiz ghost, stabil placement ve gerçek keyboard/mouse + gamepad testlerini ekledi; Edit Mode 123/123, Play Mode 8/8 ve Universal macOS runtime smoke geçti.
+- Sıradaki paket Issue #6 altında büyük kutu hız/görüş bedeli ve güvenli taşıma profilidir; Inventory authority Issue #7/#8'e bırakılır.
