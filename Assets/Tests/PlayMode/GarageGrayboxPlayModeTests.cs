@@ -15,6 +15,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
 {
     public sealed class GarageGrayboxPlayModeTests : InputTestFixture
     {
+        private const string SmallBoxId = "prototype.garage-box-001";
+        private const string LargeBoxId = "prototype.garage-large-box-001";
+
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
         {
@@ -112,7 +115,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return null;
 
             GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
-            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.PlayerCarry, Is.Not.Null);
             Assert.That(item, Is.Not.Null);
@@ -190,7 +193,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return null;
 
             GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
-            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
             marker.PlayerMotor.SetPaused(false);
             string identity = item.ItemIdValue;
 
@@ -271,7 +274,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return null;
 
             GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
-            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
             marker.PlayerMotor.SetPaused(false);
             string identity = item.ItemIdValue;
 
@@ -306,6 +309,142 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardLargeBoxCarryAppliesLoadAndBlockedDropFailsClosed()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(LargeBoxId);
+            VisibleHandsPresenter hands = marker.PlayerMotor.GetComponentInChildren<VisibleHandsPresenter>(true);
+            Camera camera = marker.PlayerMotor.GetComponentInChildren<Camera>(true);
+            marker.PlayerMotor.SetPaused(false);
+            marker.PlayerMotor.ViewSettings.Set(72f, 0.08f, 160f, false, false);
+            marker.PlayerMotor.ApplyViewSettings();
+            MovePlayerToLargeBox(marker);
+
+            string identity = item.ItemIdValue;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.IsCarried, Is.True);
+            Assert.That(item.CarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+            Assert.That(marker.PlayerMotor.CarryAllowsSprint, Is.False);
+            Assert.That(marker.PlayerMotor.TargetFieldOfView, Is.EqualTo(66f).Within(0.001f));
+            Assert.That(hands.State, Is.EqualTo(VisibleHandsState.CarryingLargeItem));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.DropBindingPrompt));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("AĞIR YÜK"));
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.False);
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.False);
+            Assert.That(
+                GeometryUtility.TestPlanesAABB(
+                    GeometryUtility.CalculateFrustumPlanes(camera),
+                    item.GetComponentInChildren<Renderer>().bounds),
+                Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.LeftShift));
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.SprintHeld, Is.True);
+            Assert.That(marker.PlayerMotor.CurrentHorizontalSpeed, Is.EqualTo(2.275f).Within(0.001f));
+            Vector3 movementStart = marker.PlayerMotor.transform.position;
+            yield return null;
+            Assert.That(
+                Vector3.Distance(movementStart, marker.PlayerMotor.transform.position),
+                Is.GreaterThan(0.001f));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return new WaitForSecondsRealtime(0.30f);
+            Assert.That(camera.fieldOfView, Is.EqualTo(66f).Within(0.25f));
+
+            GameObject blocker = CreateLargeDropBlocker(marker);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(marker.PlayerCarry.LastFailureCode, Is.EqualTo("drop.blocked"));
+            Assert.That(hands.State, Is.EqualTo(VisibleHandsState.LargeDropBlocked));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("BIRAKMA ENGELLİ"));
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            Object.Destroy(blocker);
+            yield return null;
+            Physics.SyncTransforms();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.Body.isKinematic, Is.False);
+            Assert.That(item.Body.detectCollisions, Is.True);
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.Null);
+            Assert.That(marker.PlayerMotor.TargetFieldOfView, Is.EqualTo(72f).Within(0.001f));
+            yield return new WaitForSecondsRealtime(0.30f);
+            Assert.That(camera.fieldOfView, Is.EqualTo(72f).Within(0.25f));
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadLargeBoxUsesEffectivePromptAndCannotEnterSmallPlacementMode()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(LargeBoxId);
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToLargeBox(marker);
+            string identity = item.ItemIdValue;
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.DropBindingPrompt));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("Büyük Kargo Kutusu"));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.False);
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.False);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.IsCarried, Is.False);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.Null);
+        }
+
+        [UnityTest]
         public IEnumerator DisablingCarryControllerRecoversHeldItemToItsSafeWorldPose()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -316,8 +455,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return null;
 
             GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
-            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            PhysicalItemProjection item = FindPhysicalItem(LargeBoxId);
             marker.PlayerMotor.SetPaused(false);
+            MovePlayerToLargeBox(marker);
             Vector3 safePosition = item.LastSafePosition;
             string identity = item.ItemIdValue;
 
@@ -331,6 +471,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.ItemIdValue, Is.EqualTo(identity));
             Assert.That(Vector3.Distance(item.transform.position, safePosition), Is.LessThan(0.001f));
             Assert.That(item.Body.detectCollisions, Is.True);
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.Null);
         }
 
         [UnityTest]
@@ -341,7 +482,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return load;
             yield return new WaitForFixedUpdate();
 
-            PhysicalItemProjection item = Object.FindFirstObjectByType<PhysicalItemProjection>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
             string identity = item.ItemIdValue;
             Vector3 safePosition = item.LastSafePosition;
             item.transform.position = new Vector3(0f, -30f, 0f);
@@ -362,6 +503,36 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Quaternion.identity);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToLargeBox(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(-1.5f, 0.05f, -2.5f),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static PhysicalItemProjection FindPhysicalItem(string itemId)
+        {
+            return Object.FindObjectsByType<PhysicalItemProjection>(FindObjectsSortMode.None)
+                .Single(item => item.ItemIdValue == itemId);
+        }
+
+        private static GameObject CreateLargeDropBlocker(GaragePrototypeMarker marker)
+        {
+            GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = "LargeDropTestBlocker";
+            blocker.layer = LayerMask.NameToLayer("Interactable");
+            blocker.transform.position = marker.PlayerMotor.transform.position +
+                                         (marker.PlayerMotor.transform.forward * 0.92f) +
+                                         (Vector3.up * 0.55f);
+            blocker.transform.localScale = new Vector3(1.6f, 1.1f, 1.8f);
+            Physics.SyncTransforms();
+            return blocker;
         }
     }
 }

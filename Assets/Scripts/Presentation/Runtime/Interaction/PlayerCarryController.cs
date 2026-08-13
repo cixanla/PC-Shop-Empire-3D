@@ -49,6 +49,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ? input.PrimaryBindingPrompt
                         : "Mouse Left / RT";
                     string drop = input != null ? input.DropBindingPrompt : "G / B";
+                    if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
+                    {
+                        string blocked = LastFailureCode.StartsWith(
+                            "drop.",
+                            StringComparison.Ordinal)
+                            ? "   |   BIRAKMA ENGELLİ"
+                            : string.Empty;
+                        return $"{drop}: {HeldItem.DisplayName} güvenli bırak   |   " +
+                               $"AĞIR YÜK — sprint kapalı{blocked}";
+                    }
+
                     return IsPlacementMode
                         ? $"{drop}: yerleştir   |   {placement}: iptal   |   " +
                           (PlacementValid ? "GEÇERLİ" : "ENGELLİ")
@@ -112,7 +123,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             FocusedItem = null;
             ResetPlacementState();
             LastFailureCode = string.Empty;
-            SetHandsState(VisibleHandsState.CarryingSmallItem);
+            motor.ApplyCarryProfile(item.CarryProfile);
+            SetCarryHandsState(blocked: false);
             return result;
         }
 
@@ -130,7 +142,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 obstructionMask);
             if (pose.IsFailure)
             {
-                SetHandsState(VisibleHandsState.DropBlocked);
+                SetCarryHandsState(blocked: true);
                 return Remember(OperationResult.Fail(pose.Error));
             }
 
@@ -142,6 +154,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (HeldItem == null)
             {
                 return Remember(OperationResult.Fail(Failure.FromCode("placement.nothing-held")));
+            }
+
+            if (!HeldItem.SupportsPlacement)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("placement.profile-unsupported")));
             }
 
             if (!IsPlacementMode)
@@ -170,6 +187,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 LastFailureCode = "carry.projection-missing";
                 _heldItemId = string.Empty;
                 ResetPlacementState();
+                motor?.ClearCarryProfile();
                 SetHandsState(VisibleHandsState.Recovering);
                 Debug.LogError("CARRY_RECOVERY_FAILED code=carry.projection-missing");
                 return;
@@ -189,7 +207,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HeldItem != null)
             {
-                if (input.PrimaryActionPressedThisFrame)
+                if (HeldItem.SupportsPlacement && input.PrimaryActionPressedThisFrame)
                 {
                     SetPlacementMode(!IsPlacementMode);
                 }
@@ -250,6 +268,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HeldItem = null;
             _heldItemId = string.Empty;
             ResetPlacementState();
+            motor?.ClearCarryProfile();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.Empty);
             return result;
@@ -275,6 +294,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HeldItem = null;
             _heldItemId = string.Empty;
             ResetPlacementState();
+            motor?.ClearCarryProfile();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.Empty);
             return result;
@@ -282,14 +302,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetPlacementMode(bool enabled)
         {
-            IsPlacementMode = enabled && HeldItem != null;
+            IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             PlacementValid = false;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             LastFailureCode = string.Empty;
             if (!IsPlacementMode)
             {
                 placementPreview?.Hide();
-                SetHandsState(VisibleHandsState.CarryingSmallItem);
+                SetCarryHandsState(blocked: false);
             }
         }
 
@@ -316,9 +336,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PlacementValid = evaluation.IsValid;
             LastFailureCode = evaluation.IsValid ? string.Empty : evaluation.FailureCode;
             placementPreview?.Show(HeldItem, evaluation);
-            SetHandsState(evaluation.IsValid
-                ? VisibleHandsState.CarryingSmallItem
-                : VisibleHandsState.DropBlocked);
+            SetCarryHandsState(blocked: !evaluation.IsValid);
         }
 
         private void ResetPlacementState()
@@ -335,6 +353,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (Application.isPlaying && !_applicationQuitting && HeldItem != null)
             {
                 TryRecoverHeldItem();
+            }
+            else if (Application.isPlaying && !_applicationQuitting)
+            {
+                motor?.ClearCarryProfile();
             }
         }
 
@@ -355,6 +377,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 hands.SetState(state);
             }
+        }
+
+        private void SetCarryHandsState(bool blocked)
+        {
+            bool carryingLarge = HeldItem != null &&
+                                 HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox;
+            SetHandsState(carryingLarge
+                ? (blocked ? VisibleHandsState.LargeDropBlocked : VisibleHandsState.CarryingLargeItem)
+                : (blocked ? VisibleHandsState.DropBlocked : VisibleHandsState.CarryingSmallItem));
         }
     }
 }

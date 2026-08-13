@@ -22,6 +22,7 @@ namespace PCShopEmpire3D.World.Interaction
     {
         [SerializeField] private string itemId = "prototype.item";
         [SerializeField] private string displayName = "Package";
+        [SerializeField] private PhysicalCarryProfile carryProfile = PhysicalCarryProfile.SmallBox;
         [SerializeField] private Rigidbody body;
         [SerializeField] private Vector3 carryHalfExtents = new Vector3(0.275f, 0.25f, 0.275f);
         [SerializeField] private Vector3 carryLocalPosition;
@@ -48,6 +49,13 @@ namespace PCShopEmpire3D.World.Interaction
 
         public string DisplayName => displayName;
 
+        public PhysicalCarryProfile CarryProfile => carryProfile;
+
+        public PhysicalCarryProfileDefinition CarryProfileDefinition =>
+            PhysicalCarryProfileRules.Resolve(carryProfile);
+
+        public bool SupportsPlacement => CarryProfileDefinition.SupportsPlacement;
+
         public Rigidbody Body => body;
 
         public Vector3 CarryHalfExtents => carryHalfExtents;
@@ -68,13 +76,16 @@ namespace PCShopEmpire3D.World.Interaction
             Rigidbody rigidbody,
             Vector3 halfExtents,
             Vector3 localCarryPosition,
-            Vector3 localCarryEulerAngles)
+            Vector3 localCarryEulerAngles,
+            PhysicalCarryProfile physicalCarryProfile = PhysicalCarryProfile.SmallBox)
         {
             itemId = StableId<PhysicalItemIdScope>.Parse(stableItemId).Value;
             displayName = string.IsNullOrWhiteSpace(playerFacingName)
                 ? throw new ArgumentException("A display name is required.", nameof(playerFacingName))
                 : playerFacingName;
             body = rigidbody != null ? rigidbody : throw new ArgumentNullException(nameof(rigidbody));
+            PhysicalCarryProfileRules.Resolve(physicalCarryProfile);
+            carryProfile = physicalCarryProfile;
             carryHalfExtents = ClampHalfExtents(halfExtents);
             carryLocalPosition = localCarryPosition;
             carryLocalEulerAngles = localCarryEulerAngles;
@@ -195,6 +206,7 @@ namespace PCShopEmpire3D.World.Interaction
         {
             EnsureRuntimeReferences();
             StableId<PhysicalItemIdScope>.Parse(itemId);
+            PhysicalCarryProfileRules.Resolve(carryProfile);
             carryHalfExtents = ClampHalfExtents(carryHalfExtents);
             CacheColliders();
             RecordSafePose();

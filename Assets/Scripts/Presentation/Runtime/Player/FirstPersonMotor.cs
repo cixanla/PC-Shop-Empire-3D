@@ -1,5 +1,6 @@
 using System;
 using PCShopEmpire3D.Presentation.Input;
+using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation.Player
@@ -21,9 +22,12 @@ namespace PCShopEmpire3D.Presentation.Player
 
         [Header("View")]
         [SerializeField] private FirstPersonViewSettings viewSettings = new FirstPersonViewSettings();
+        [SerializeField, Min(1f)] private float fieldOfViewTransitionSpeed = 24f;
 
         private float _verticalVelocity;
         private float _pitch;
+        private PhysicalCarryProfileDefinition _carryProfileDefinition =
+            PhysicalCarryProfileRules.Resolve(PhysicalCarryProfile.SmallBox);
 
         public bool IsPaused { get; private set; }
 
@@ -32,6 +36,28 @@ namespace PCShopEmpire3D.Presentation.Player
         public float WalkSpeed => walkSpeed;
 
         public float SprintSpeed => sprintSpeed;
+
+        public PhysicalCarryProfile? ActiveCarryProfile { get; private set; }
+
+        public float CarryMovementSpeedMultiplier =>
+            ActiveCarryProfile.HasValue ? _carryProfileDefinition.MovementSpeedMultiplier : 1f;
+
+        public float RequestedCarryFieldOfViewPenalty =>
+            ActiveCarryProfile.HasValue ? _carryProfileDefinition.FieldOfViewPenalty : 0f;
+
+        public float AppliedCarryFieldOfViewPenalty => viewSettings.MotionReduced
+            ? 0f
+            : RequestedCarryFieldOfViewPenalty;
+
+        public bool CarryAllowsSprint =>
+            !ActiveCarryProfile.HasValue || _carryProfileDefinition.AllowsSprint;
+
+        public float TargetFieldOfView => Mathf.Clamp(
+            viewSettings.FieldOfView - AppliedCarryFieldOfViewPenalty,
+            FirstPersonViewSettings.MinimumFieldOfView,
+            FirstPersonViewSettings.MaximumFieldOfView);
+
+        public float CurrentHorizontalSpeed => ResolveHorizontalSpeed(input?.SprintHeld ?? false);
 
         public void Configure(
             CharacterController controller,
@@ -59,8 +85,35 @@ namespace PCShopEmpire3D.Presentation.Player
             viewSettings.ClampToSupportedRange();
             if (playerCamera != null)
             {
-                playerCamera.fieldOfView = viewSettings.FieldOfView;
+                playerCamera.fieldOfView = TargetFieldOfView;
             }
+        }
+
+        public void ApplyCarryProfile(PhysicalCarryProfile profile)
+        {
+            _carryProfileDefinition = PhysicalCarryProfileRules.Resolve(profile);
+            ActiveCarryProfile = profile;
+            if (viewSettings.MotionReduced && playerCamera != null)
+            {
+                playerCamera.fieldOfView = TargetFieldOfView;
+            }
+        }
+
+        public void ClearCarryProfile()
+        {
+            _carryProfileDefinition = PhysicalCarryProfileRules.Resolve(PhysicalCarryProfile.SmallBox);
+            ActiveCarryProfile = null;
+            if (viewSettings.MotionReduced && playerCamera != null)
+            {
+                playerCamera.fieldOfView = TargetFieldOfView;
+            }
+        }
+
+        public float ResolveHorizontalSpeed(bool sprintRequested)
+        {
+            bool sprint = sprintRequested && CarryAllowsSprint;
+            float baseSpeed = sprint ? sprintSpeed : walkSpeed;
+            return baseSpeed * CarryMovementSpeedMultiplier;
         }
 
         public void SetPaused(bool paused)
@@ -77,6 +130,7 @@ namespace PCShopEmpire3D.Presentation.Player
             walkSpeed = Mathf.Max(0.1f, walkSpeed);
             sprintSpeed = Mathf.Max(walkSpeed, sprintSpeed);
             gravity = Mathf.Min(-0.1f, gravity);
+            fieldOfViewTransitionSpeed = Mathf.Max(1f, fieldOfViewTransitionSpeed);
             ApplyViewSettings();
         }
 
@@ -102,6 +156,7 @@ namespace PCShopEmpire3D.Presentation.Player
                 return;
             }
 
+            UpdateFieldOfView(Time.unscaledDeltaTime);
             UpdateLook(Time.unscaledDeltaTime);
             UpdateMovement(Time.deltaTime);
         }
@@ -122,7 +177,7 @@ namespace PCShopEmpire3D.Presentation.Player
         {
             Vector2 inputVector = FirstPersonMath.ClampMoveInput(input.Move);
             Vector3 horizontal = (transform.right * inputVector.x) + (transform.forward * inputVector.y);
-            float speed = input.SprintHeld ? sprintSpeed : walkSpeed;
+            float speed = ResolveHorizontalSpeed(input.SprintHeld);
 
             if (characterController.isGrounded && _verticalVelocity < 0f)
             {
@@ -132,6 +187,22 @@ namespace PCShopEmpire3D.Presentation.Player
             _verticalVelocity += gravity * deltaTime;
             Vector3 velocity = (horizontal * speed) + (Vector3.up * _verticalVelocity);
             characterController.Move(velocity * deltaTime);
+        }
+
+        private void UpdateFieldOfView(float unscaledDeltaTime)
+        {
+            if (playerCamera == null)
+            {
+                return;
+            }
+
+            float target = TargetFieldOfView;
+            playerCamera.fieldOfView = viewSettings.MotionReduced
+                ? target
+                : Mathf.MoveTowards(
+                    playerCamera.fieldOfView,
+                    target,
+                    fieldOfViewTransitionSpeed * Mathf.Max(0f, unscaledDeltaTime));
         }
 
         private void OnApplicationFocus(bool hasFocus)
@@ -149,6 +220,11 @@ namespace PCShopEmpire3D.Presentation.Player
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
+
+            if (playerCamera != null)
+            {
+                playerCamera.fieldOfView = viewSettings.FieldOfView;
+            }
         }
 
         private void OnValidate()
@@ -157,6 +233,7 @@ namespace PCShopEmpire3D.Presentation.Player
             walkSpeed = Mathf.Max(0.1f, walkSpeed);
             sprintSpeed = Mathf.Max(walkSpeed, sprintSpeed);
             gravity = Mathf.Min(-0.1f, gravity);
+            fieldOfViewTransitionSpeed = Mathf.Max(1f, fieldOfViewTransitionSpeed);
             ApplyViewSettings();
         }
     }

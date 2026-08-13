@@ -87,6 +87,56 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void CarryProfilesKeepSmallBoxUnrestrictedAndBoundLargeBoxCost()
+        {
+            PhysicalCarryProfileDefinition small = PhysicalCarryProfileRules.Resolve(
+                PhysicalCarryProfile.SmallBox);
+            PhysicalCarryProfileDefinition large = PhysicalCarryProfileRules.Resolve(
+                PhysicalCarryProfile.LargeBox);
+
+            Assert.That(small.MovementSpeedMultiplier, Is.EqualTo(1f));
+            Assert.That(small.FieldOfViewPenalty, Is.Zero);
+            Assert.That(small.AllowsSprint, Is.True);
+            Assert.That(small.SupportsPlacement, Is.True);
+
+            Assert.That(
+                large.MovementSpeedMultiplier,
+                Is.EqualTo(PhysicalCarryProfileRules.LargeBoxMovementSpeedMultiplier));
+            Assert.That(
+                large.MovementSpeedMultiplier,
+                Is.InRange(
+                    PhysicalCarryProfileRules.MinimumMovementSpeedMultiplier,
+                    PhysicalCarryProfileRules.MaximumMovementSpeedMultiplier));
+            Assert.That(
+                large.FieldOfViewPenalty,
+                Is.EqualTo(PhysicalCarryProfileRules.LargeBoxFieldOfViewPenalty));
+            Assert.That(
+                large.FieldOfViewPenalty,
+                Is.InRange(0f, PhysicalCarryProfileRules.MaximumFieldOfViewPenalty));
+            Assert.That(large.AllowsSprint, Is.False);
+            Assert.That(large.SupportsPlacement, Is.False);
+        }
+
+        [Test]
+        public void LargeBoxProfileAndIdentitySurviveCarryAndSafeRelease()
+        {
+            PhysicalItemProjection item = CreateItem(
+                "tests.large-item",
+                new Vector3(0f, 1f, 0f),
+                PhysicalCarryProfile.LargeBox);
+            Transform anchor = new GameObject("Anchor").transform;
+            anchor.SetParent(_root.transform);
+            string identity = item.ItemIdValue;
+
+            Assert.That(item.BeginCarry(anchor, 8).IsSuccess, Is.True);
+            Assert.That(item.CarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+            Assert.That(item.SupportsPlacement, Is.False);
+            Assert.That(item.ReleaseTo(new Pose(Vector3.up, Quaternion.identity)).IsSuccess, Is.True);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.CarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+        }
+
+        [Test]
         public void NonUnitScaleIsRejectedBeforePhysicsStateChanges()
         {
             PhysicalItemProjection item = CreateItem("tests.item-scaled", Vector3.zero);
@@ -185,7 +235,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(resolver.Resolve().Error.Code, Is.EqualTo("interaction.no-target"));
         }
 
-        private PhysicalItemProjection CreateItem(string identity, Vector3 position)
+        private PhysicalItemProjection CreateItem(
+            string identity,
+            Vector3 position,
+            PhysicalCarryProfile carryProfile = PhysicalCarryProfile.SmallBox)
         {
             _root ??= new GameObject("TestRoot");
             GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -199,7 +252,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 body,
                 Vector3.one * 0.5f,
                 Vector3.zero,
-                Vector3.zero);
+                Vector3.zero,
+                carryProfile);
             return item;
         }
     }

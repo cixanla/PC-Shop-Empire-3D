@@ -77,13 +77,26 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(1));
+                Assert.That(physicalItems.Length, Is.EqualTo(2));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
-                Assert.That(physicalItems[0].ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
-                Assert.That(physicalItems[0].Body, Is.Not.Null);
-                Assert.That(physicalItems[0].GetComponentsInChildren<Collider>().Length, Is.GreaterThanOrEqualTo(1));
+                PhysicalItemProjection smallBox = physicalItems.Single(
+                    item => item.CarryProfile == PhysicalCarryProfile.SmallBox);
+                PhysicalItemProjection largeBox = physicalItems.Single(
+                    item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
+                Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
+                Assert.That(smallBox.SupportsPlacement, Is.True);
+                Assert.That(largeBox.ItemIdValue, Is.EqualTo("prototype.garage-large-box-001"));
+                Assert.That(largeBox.DisplayName, Is.EqualTo("Büyük Kargo Kutusu"));
+                Assert.That(largeBox.SupportsPlacement, Is.False);
+                Assert.That(largeBox.Body.mass, Is.EqualTo(9f).Within(0.001f));
+                Assert.That(largeBox.DropHalfExtents, Is.EqualTo(new Vector3(0.55f, 0.4f, 0.35f)));
+                Assert.That(physicalItems.All(item => item.Body != null), Is.True);
+                Assert.That(
+                    physicalItems.All(item =>
+                        item.GetComponentsInChildren<Collider>().Length >= 1),
+                    Is.True);
                 Assert.That(placementSurfaces.Length, Is.EqualTo(1));
                 Assert.That(placementSurfaces[0].SurfaceId, Is.EqualTo("prototype.stock-floor-small-box-a"));
                 Assert.That(placementSurfaces[0].GridSize, Is.EqualTo(0.25f).Within(0.001f));

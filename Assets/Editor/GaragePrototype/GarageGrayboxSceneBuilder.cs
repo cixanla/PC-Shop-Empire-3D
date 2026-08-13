@@ -110,7 +110,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             spawn.position = new Vector3(0f, 0.05f, -2.5f);
 
             BuildRoom(environment, concrete, wall, metal, accent, cardboard, stockPlacement);
-            BuildStarterPickup(environment, cardboard, metal);
+            BuildStarterPickups(environment, cardboard, metal, accent);
             BuildLighting(lighting);
             FirstPersonMotor prefabSource = BuildPlayer(
                 gameplay,
@@ -390,11 +390,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             return hand.transform;
         }
 
-        private static void BuildStarterPickup(Transform parent, Material cardboard, Material metal)
+        private static void BuildStarterPickups(
+            Transform parent,
+            Material cardboard,
+            Material metal,
+            Material accent)
         {
             int interactableLayer = RequireLayer(InteractableLayerName);
             CreateCube(
-                "PickupPedestal",
+                "SmallBoxPickupPedestal",
                 parent,
                 new Vector3(0f, 0.6f, -0.65f),
                 new Vector3(0.75f, 1.2f, 0.75f),
@@ -424,7 +428,58 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 body,
                 new Vector3(0.275f, 0.275f, 0.275f),
                 Vector3.zero,
-                Vector3.zero);
+                Vector3.zero,
+                PhysicalCarryProfile.SmallBox);
+
+            CreateCube(
+                "LargeBoxPickupPedestal",
+                parent,
+                new Vector3(-1.5f, 0.55f, -0.65f),
+                new Vector3(1.25f, 1.1f, 0.9f),
+                metal);
+            GameObject largeItemRoot = new GameObject("HeavyShipmentBox");
+            largeItemRoot.transform.SetParent(parent, false);
+            largeItemRoot.transform.localPosition = new Vector3(-1.5f, 1.5f, -0.65f);
+            largeItemRoot.layer = interactableLayer;
+
+            GameObject largeVisual = CreateCube(
+                "LargeBoxVisual",
+                largeItemRoot.transform,
+                Vector3.zero,
+                new Vector3(1.1f, 0.8f, 0.7f),
+                cardboard);
+            largeVisual.layer = interactableLayer;
+
+            for (int band = -1; band <= 1; band += 2)
+            {
+                GameObject warningBand = CreateCube(
+                    $"HeavyLoadBand_{(band < 0 ? "Left" : "Right")}",
+                    largeItemRoot.transform,
+                    new Vector3(band * 0.28f, 0f, -0.356f),
+                    new Vector3(0.12f, 0.72f, 0.02f),
+                    accent);
+                warningBand.layer = interactableLayer;
+                Collider bandCollider = warningBand.GetComponent<Collider>();
+                if (bandCollider != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(bandCollider);
+                }
+            }
+
+            Rigidbody largeBody = largeItemRoot.AddComponent<Rigidbody>();
+            largeBody.mass = 9f;
+            largeBody.interpolation = RigidbodyInterpolation.Interpolate;
+            largeBody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            PhysicalItemProjection largeItem = largeItemRoot.AddComponent<PhysicalItemProjection>();
+            largeItem.Configure(
+                "prototype.garage-large-box-001",
+                "Büyük Kargo Kutusu",
+                largeBody,
+                new Vector3(0.55f, 0.4f, 0.35f),
+                new Vector3(0f, -0.30f, -0.32f),
+                Vector3.zero,
+                PhysicalCarryProfile.LargeBox);
         }
 
         private static void CreatePointLight(Transform parent, string name, Vector3 position)

@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Player;
+using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
 
@@ -61,6 +63,50 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             Assert.That(FirstPersonMath.ClampPitch(500f), Is.EqualTo(FirstPersonMath.MaximumPitch));
             Assert.That(FirstPersonMath.ClampPitch(-500f), Is.EqualTo(FirstPersonMath.MinimumPitch));
             Assert.That(move.magnitude, Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
+        public void LargeCarrySuppressesSprintAndMotionReductionDisablesLensPenalty()
+        {
+            GameObject rig = new GameObject("MotorTestRig");
+            try
+            {
+                CharacterController controller = rig.AddComponent<CharacterController>();
+                PlayerInputAdapter input = rig.AddComponent<PlayerInputAdapter>();
+                Transform pivot = new GameObject("CameraPivot").transform;
+                pivot.SetParent(rig.transform, false);
+                Camera camera = new GameObject("Camera").AddComponent<Camera>();
+                camera.transform.SetParent(pivot, false);
+                FirstPersonMotor motor = rig.AddComponent<FirstPersonMotor>();
+                motor.Configure(controller, input, pivot, camera);
+                motor.ViewSettings.Set(72f, 0.08f, 160f, false, false);
+                motor.ApplyViewSettings();
+
+                motor.ApplyCarryProfile(PhysicalCarryProfile.LargeBox);
+
+                Assert.That(motor.ActiveCarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+                Assert.That(motor.CarryAllowsSprint, Is.False);
+                Assert.That(motor.CarryMovementSpeedMultiplier, Is.EqualTo(0.65f).Within(0.001f));
+                Assert.That(motor.ResolveHorizontalSpeed(false), Is.EqualTo(2.275f).Within(0.001f));
+                Assert.That(motor.ResolveHorizontalSpeed(true), Is.EqualTo(2.275f).Within(0.001f));
+                Assert.That(motor.RequestedCarryFieldOfViewPenalty, Is.EqualTo(6f).Within(0.001f));
+                Assert.That(motor.AppliedCarryFieldOfViewPenalty, Is.EqualTo(6f).Within(0.001f));
+                Assert.That(motor.TargetFieldOfView, Is.EqualTo(66f).Within(0.001f));
+
+                motor.ViewSettings.Set(72f, 0.08f, 160f, false, true);
+                motor.ApplyViewSettings();
+                Assert.That(motor.AppliedCarryFieldOfViewPenalty, Is.Zero);
+                Assert.That(motor.TargetFieldOfView, Is.EqualTo(72f).Within(0.001f));
+                Assert.That(camera.fieldOfView, Is.EqualTo(72f).Within(0.001f));
+
+                motor.ClearCarryProfile();
+                Assert.That(motor.ActiveCarryProfile, Is.Null);
+                Assert.That(motor.ResolveHorizontalSpeed(true), Is.EqualTo(5.2f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(rig);
+            }
         }
     }
 }
