@@ -27,6 +27,14 @@
 
 Ham test/build/runtime dosyaları Git dışındaki `../TestResults` klasöründedir. `./Tools/verify-repository.sh` ve `git diff --check` geçti. Windows native/IL2CPP/DirectX/Steam doğrulaması bu Mac kanıtının dışında kalır.
 
+## USB milestone
+
+- Hedef: `90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`
+- Snapshot source commit: `7794e2ab82c3b26c1149af526ed582f1cc406acb`
+- Payload: 336 tracked dosya / 5.928.850 mantıksal bayt.
+- Manifest SHA-256: `b4df8efde544cbe3557bf67f67c13034733949821bdc7848ce612af1129be0fb`.
+- İki source→USB checksum dry-run ve iki tam manifest readback doğrulaması geçti. exFAT zaman damgası çözünürlüğü dışında fark yoktur; `.git`, cache, build, log ve credential dahil edilmedi.
+
 ## Kapsam sınırı
 
 Bu checkpoint küçük kutunun kontrollü stok placement'ını tamamlar. Büyük kutu hız/görüş bedeli, kullanıcı rotation inputu, istifleme, taşıma arabası ve authoritative Inventory sonraki bağımlı dilimlerdir.

@@ -86,6 +86,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `E / Gamepad South` ile alma, `G / Gamepad East` ile bırakma ve effective binding'i gösteren HUD prompt'u.
 - `Mouse Left / Gamepad RT` ile kontrollü küçük-kutu placement modu; `G / Gamepad East` ile onay.
 - İşaretli `PlacementSurface`, 0,25 m grid/90° yaw snap, tam taban/overlap doğrulaması, yeşil-kırmızı ghost + metin ve stabil kinematic placement.
+- USB milestone `2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`: source commit `7794e2ab82c3b26c1149af526ed582f1cc406acb`, 336 dosya / 5.928.850 bayt, manifest SHA-256 `b4df8efde544cbe3557bf67f67c13034733949821bdc7848ce612af1129be0fb`; çift readback/checksum geçti.
 
 Henüz yapılmayanlar:
 

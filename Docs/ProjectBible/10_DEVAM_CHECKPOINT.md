@@ -72,8 +72,9 @@ Korunan milestone kayıtları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_STAGE_A_BASELINE`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`
 
-Bu çalışma sırasında USB volume bağlı olmadığı için yeni pickup/drop + placement snapshot'ı yazılmadı. Kaynak private GitHub push/CI ile off-device korunur; USB yeniden bağlandığında cache/build/credential içermeyen tarihli snapshot ayrı doğrulama işi olarak alınabilir.
+Küçük kutu pickup/drop + placement snapshot'ı `7794e2ab82c3b26c1149af526ed582f1cc406acb` source commit'inden alındı: 336 tracked dosya, 5.928.850 mantıksal bayt ve `b4df8efde544cbe3557bf67f67c13034733949821bdc7848ce612af1129be0fb` manifest SHA-256. İki tam manifest readback ve iki source→USB checksum dry-run geçti; `.git`, cache, build, log ve credential kapsam dışıdır. USB yeniden bağlanmadan önceki “snapshot bekliyor” notu kapanmıştır.
 
 ## Devam sırası
 
