@@ -24,8 +24,13 @@ namespace PCShopEmpire3D.Presentation
             string prompt = carryController != null ? carryController.PromptText : string.Empty;
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
+                float promptWidth = Mathf.Min(900f, Screen.width - 24f);
                 GUI.Box(
-                    new Rect((Screen.width * 0.5f) - 310f, (Screen.height * 0.5f) + 34f, 620f, 34f),
+                    new Rect(
+                        (Screen.width - promptWidth) * 0.5f,
+                        (Screen.height * 0.5f) + 34f,
+                        promptWidth,
+                        34f),
                     prompt);
             }
 

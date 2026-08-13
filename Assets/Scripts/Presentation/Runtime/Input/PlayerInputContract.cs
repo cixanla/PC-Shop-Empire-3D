@@ -11,6 +11,7 @@ namespace PCShopEmpire3D.Presentation.Input
         public const string Interact = "Interact";
         public const string Sprint = "Sprint";
         public const string Drop = "Drop";
+        public const string RotatePlacement = "RotatePlacement";
         public const string Pause = "Pause";
         public const string KeyboardAndMouseScheme = "Keyboard&Mouse";
         public const string GamepadScheme = "Gamepad";

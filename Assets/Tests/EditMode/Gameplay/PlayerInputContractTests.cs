@@ -24,6 +24,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PlayerInputContract.Interact,
                 PlayerInputContract.Sprint,
                 PlayerInputContract.Drop,
+                PlayerInputContract.RotatePlacement,
                 PlayerInputContract.Pause
             };
 
@@ -57,12 +58,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             Assert.That(
                 player.FindAction(PlayerInputContract.Interact, true).id.ToString(),
                 Is.EqualTo("852140f2-7766-474d-8707-702459ba45f3"));
+            Assert.That(
+                player.FindAction(PlayerInputContract.RotatePlacement, true).id.ToString(),
+                Is.EqualTo("5f12e88e-e731-4a18-be94-3526bb3c570e"));
             AssertBinding(player, PlayerInputContract.PrimaryAction, "<Mouse>/leftButton");
             AssertBinding(player, PlayerInputContract.PrimaryAction, "<Gamepad>/rightTrigger");
             AssertBinding(player, PlayerInputContract.Interact, "<Keyboard>/e");
             AssertBinding(player, PlayerInputContract.Interact, "<Gamepad>/buttonSouth");
             AssertBinding(player, PlayerInputContract.Drop, "<Keyboard>/g");
             AssertBinding(player, PlayerInputContract.Drop, "<Gamepad>/buttonEast");
+            AssertBinding(player, PlayerInputContract.RotatePlacement, "<Keyboard>/r");
+            AssertBinding(player, PlayerInputContract.RotatePlacement, "<Gamepad>/rightShoulder");
             AssertBinding(player, PlayerInputContract.Pause, "<Keyboard>/escape");
             AssertBinding(player, PlayerInputContract.Pause, "<Gamepad>/start");
             AssertBinding(player, PlayerInputContract.Look, "<Mouse>/delta");

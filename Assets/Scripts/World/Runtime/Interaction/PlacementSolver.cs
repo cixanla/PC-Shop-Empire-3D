@@ -49,13 +49,15 @@ namespace PCShopEmpire3D.World.Interaction
         private const float MinimumUpDot = 0.92f;
         private const float ProbeHeight = 0.45f;
         private const float ProbeDistance = 3f;
+        private const float ClockwiseRotationStepDegrees = 90f;
         private static readonly float[] CandidateDistances = { 1.15f, 0.9f, 0.7f };
 
         public static PlacementEvaluation Evaluate(
             Transform origin,
             PhysicalItemProjection item,
             LayerMask supportMask,
-            LayerMask obstructionMask)
+            LayerMask obstructionMask,
+            int clockwiseQuarterTurns = 0)
         {
             if (origin == null || item == null)
             {
@@ -69,9 +71,13 @@ namespace PCShopEmpire3D.World.Interaction
             }
 
             Vector3 halfExtents = item.DropHalfExtents;
+            int normalizedQuarterTurns = ((clockwiseQuarterTurns % 4) + 4) % 4;
+            float requestedYaw = origin.eulerAngles.y +
+                                 (normalizedQuarterTurns * ClockwiseRotationStepDegrees);
+            Quaternion requestedRotation = Quaternion.Euler(0f, requestedYaw, 0f);
             Pose fallbackPose = new Pose(
                 origin.position + (forward * CandidateDistances[0]) + (Vector3.up * halfExtents.y),
-                Quaternion.Euler(0f, origin.eulerAngles.y, 0f));
+                requestedRotation);
             PlacementEvaluation? firstInvalid = null;
 
             foreach (float distance in CandidateDistances)
@@ -89,10 +95,9 @@ namespace PCShopEmpire3D.World.Interaction
                 }
 
                 PlacementSurface surface = support.collider.GetComponentInParent<PlacementSurface>();
-                Quaternion unsnappedRotation = Quaternion.Euler(0f, origin.eulerAngles.y, 0f);
                 Pose unsnappedPose = new Pose(
                     support.point + (Vector3.up * (halfExtents.y + SurfaceClearance)),
-                    unsnappedRotation);
+                    requestedRotation);
 
                 if (Vector3.Dot(support.normal, Vector3.up) < MinimumUpDot)
                 {
@@ -113,7 +118,7 @@ namespace PCShopEmpire3D.World.Interaction
                 }
 
                 Vector3 snappedSurfacePoint = surface.SnapPoint(support.point);
-                Quaternion snappedRotation = surface.SnapRotation(unsnappedRotation);
+                Quaternion snappedRotation = surface.SnapRotation(requestedRotation);
                 Pose snappedPose = new Pose(
                     snappedSurfacePoint + (Vector3.up * (halfExtents.y + SurfaceClearance)),
                     snappedRotation);
@@ -154,9 +159,15 @@ namespace PCShopEmpire3D.World.Interaction
             Transform origin,
             PhysicalItemProjection item,
             LayerMask supportMask,
-            LayerMask obstructionMask)
+            LayerMask obstructionMask,
+            int clockwiseQuarterTurns = 0)
         {
-            PlacementEvaluation evaluation = Evaluate(origin, item, supportMask, obstructionMask);
+            PlacementEvaluation evaluation = Evaluate(
+                origin,
+                item,
+                supportMask,
+                obstructionMask,
+                clockwiseQuarterTurns);
             return evaluation.IsValid
                 ? OperationResult<Pose>.Success(evaluation.Pose)
                 : OperationResult<Pose>.Fail(Failure.FromCode(evaluation.FailureCode));

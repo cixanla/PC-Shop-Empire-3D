@@ -43,6 +43,45 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void ClockwiseQuarterTurnsAreDeterministicAndNormalizeAfterFourSteps()
+        {
+            Transform origin = CreateOrigin(0f);
+            PlacementSurface surface = CreateSurface();
+            PhysicalItemProjection item = CreateCarriedItem();
+            Physics.SyncTransforms();
+
+            PlacementEvaluation initial = PlacementSolver.Evaluate(
+                origin,
+                item,
+                1 << surface.gameObject.layer,
+                0,
+                0);
+            PlacementEvaluation clockwise = PlacementSolver.Evaluate(
+                origin,
+                item,
+                1 << surface.gameObject.layer,
+                0,
+                1);
+            PlacementEvaluation wrapped = PlacementSolver.Evaluate(
+                origin,
+                item,
+                1 << surface.gameObject.layer,
+                0,
+                5);
+
+            Assert.That(initial.IsValid, Is.True);
+            Assert.That(clockwise.IsValid, Is.True);
+            Assert.That(wrapped.IsValid, Is.True);
+            Assert.That(
+                Mathf.DeltaAngle(initial.Pose.rotation.eulerAngles.y, clockwise.Pose.rotation.eulerAngles.y),
+                Is.EqualTo(90f).Within(0.01f));
+            Assert.That(
+                Quaternion.Angle(clockwise.Pose.rotation, wrapped.Pose.rotation),
+                Is.LessThan(0.01f));
+            Assert.That(Vector3.Distance(clockwise.Pose.position, wrapped.Pose.position), Is.LessThan(0.001f));
+        }
+
+        [Test]
         public void UnmarkedFloorIsRejectedWithVisibleCandidatePose()
         {
             Transform origin = CreateOrigin(0f);
@@ -123,7 +162,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 "tests.placement-item",
                 "Placement Box",
                 body,
-                new Vector3(0.25f, 0.25f, 0.25f),
+                new Vector3(0.35f, 0.225f, 0.25f),
                 Vector3.zero,
                 Vector3.zero);
             GameObject anchor = Track(new GameObject("CarryAnchor"));

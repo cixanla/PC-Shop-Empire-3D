@@ -22,6 +22,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool _applicationQuitting;
         private string _heldItemId = string.Empty;
+        private int _placementRotationQuarterTurns;
 
         public PhysicalItemProjection FocusedItem { get; private set; }
 
@@ -39,6 +40,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public PlacementPreview PlacementPreview => placementPreview;
 
+        public int PlacementRotationQuarterTurns => _placementRotationQuarterTurns;
+
+        public float PlacementRotationDegrees => _placementRotationQuarterTurns * 90f;
+
         public string PromptText
         {
             get
@@ -49,6 +54,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ? input.PrimaryBindingPrompt
                         : "Mouse Left / RT";
                     string drop = input != null ? input.DropBindingPrompt : "G / B";
+                    string rotate = input != null
+                        ? input.RotatePlacementBindingPrompt
+                        : "R / Right Shoulder";
                     if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
                     {
                         string blocked = LastFailureCode.StartsWith(
@@ -61,7 +69,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
 
                     return IsPlacementMode
-                        ? $"{drop}: yerleştir   |   {placement}: iptal   |   " +
+                        ? $"{drop}: yerleştir   |   {rotate}: 90° döndür " +
+                          $"[{PlacementRotationDegrees:0}°]   |   {placement}: iptal   |   " +
                           (PlacementValid ? "GEÇERLİ" : "ENGELLİ")
                         : $"{placement}: yerleştirme önizlemesi   |   {drop}: güvenli bırak";
                 }
@@ -170,7 +179,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 transform,
                 HeldItem,
                 supportMask,
-                obstructionMask);
+                obstructionMask,
+                _placementRotationQuarterTurns);
             ApplyPlacementEvaluation(evaluation);
             if (!evaluation.IsValid)
             {
@@ -210,6 +220,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (HeldItem.SupportsPlacement && input.PrimaryActionPressedThisFrame)
                 {
                     SetPlacementMode(!IsPlacementMode);
+                }
+
+                if (IsPlacementMode && input.RotatePlacementPressedThisFrame)
+                {
+                    _placementRotationQuarterTurns = (_placementRotationQuarterTurns + 1) % 4;
+                    LastFailureCode = string.Empty;
                 }
 
                 UpdatePlacementPreview();
@@ -308,6 +324,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             LastFailureCode = string.Empty;
             if (!IsPlacementMode)
             {
+                _placementRotationQuarterTurns = 0;
                 placementPreview?.Hide();
                 SetCarryHandsState(blocked: false);
             }
@@ -326,7 +343,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 transform,
                 HeldItem,
                 supportMask,
-                obstructionMask);
+                obstructionMask,
+                _placementRotationQuarterTurns);
             ApplyPlacementEvaluation(evaluation);
         }
 
@@ -342,6 +360,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void ResetPlacementState()
         {
             IsPlacementMode = false;
+            _placementRotationQuarterTurns = 0;
             PlacementValid = false;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             placementPreview?.Hide();

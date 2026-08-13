@@ -87,6 +87,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
+                Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
                 Assert.That(largeBox.ItemIdValue, Is.EqualTo("prototype.garage-large-box-001"));
                 Assert.That(largeBox.DisplayName, Is.EqualTo("Büyük Kargo Kutusu"));
                 Assert.That(largeBox.SupportsPlacement, Is.False);

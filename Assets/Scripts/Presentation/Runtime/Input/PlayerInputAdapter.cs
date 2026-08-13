@@ -18,6 +18,7 @@ namespace PCShopEmpire3D.Presentation.Input
         private InputAction _interact;
         private InputAction _sprint;
         private InputAction _drop;
+        private InputAction _rotatePlacement;
         private InputAction _pause;
         private bool _ownsRuntimeActions;
 
@@ -35,6 +36,9 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public bool DropPressedThisFrame => _drop?.WasPressedThisFrame() ?? false;
 
+        public bool RotatePlacementPressedThisFrame =>
+            _rotatePlacement?.WasPressedThisFrame() ?? false;
+
         public bool PausePressedThisFrame => _pause?.WasPressedThisFrame() ?? false;
 
         public bool IsPointerLook => _look?.activeControl?.device is Pointer;
@@ -42,6 +46,10 @@ namespace PCShopEmpire3D.Presentation.Input
         public string InteractBindingPrompt => GetBindingPrompt(_interact, "E", "A");
 
         public string DropBindingPrompt => GetBindingPrompt(_drop, "G", "B");
+
+        public string RotatePlacementBindingPrompt =>
+            GetBindingPrompt(_rotatePlacement, "R", "Right Shoulder");
+
         public string PrimaryBindingPrompt => GetBindingPrompt(_primaryAction, "Mouse Left", "RT");
 
         public void Configure(InputActionAsset inputActions)
@@ -98,6 +106,7 @@ namespace PCShopEmpire3D.Presentation.Input
             _interact = _playerMap.FindAction(PlayerInputContract.Interact, true);
             _sprint = _playerMap.FindAction(PlayerInputContract.Sprint, true);
             _drop = _playerMap.FindAction(PlayerInputContract.Drop, true);
+            _rotatePlacement = _playerMap.FindAction(PlayerInputContract.RotatePlacement, true);
             _pause = _playerMap.FindAction(PlayerInputContract.Pause, true);
             if (isActiveAndEnabled)
             {

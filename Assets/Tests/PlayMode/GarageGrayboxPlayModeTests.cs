@@ -214,9 +214,26 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.True);
             Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.True);
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("GEÇERLİ"));
+            Pose initialPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.EqualTo(1));
+            Assert.That(marker.PlayerCarry.PlacementRotationDegrees, Is.EqualTo(90f));
+            Assert.That(
+                marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.RotatePlacementBindingPrompt));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("[90°]"));
             Pose validPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+            Assert.That(
+                Mathf.DeltaAngle(initialPose.rotation.eulerAngles.y, validPose.rotation.eulerAngles.y),
+                Is.EqualTo(90f).Within(0.01f));
+            Assert.That(Vector3.Distance(initialPose.position, validPose.position), Is.LessThan(0.001f));
 
             InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
             blocker.name = "PlacementTestBlocker";
@@ -255,9 +272,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.IsCarried, Is.False);
             Assert.That(item.ItemIdValue, Is.EqualTo(identity));
             Assert.That(Vector3.Distance(item.transform.position, validPose.position), Is.LessThan(0.001f));
-            Assert.That(Mathf.DeltaAngle(item.transform.eulerAngles.y, 0f), Is.EqualTo(0f).Within(0.01f));
+            Assert.That(Mathf.DeltaAngle(item.transform.eulerAngles.y, 90f), Is.EqualTo(0f).Within(0.01f));
             Assert.That(item.Body.isKinematic, Is.True);
             Assert.That(item.Body.useGravity, Is.False);
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
             Vector3 stablePosition = item.transform.position;
             yield return new WaitForFixedUpdate();
             Assert.That(Vector3.Distance(item.transform.position, stablePosition), Is.LessThan(0.001f));
@@ -294,6 +312,24 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
             Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
 
+            Pose initialPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.RightShoulder });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.EqualTo(1));
+            Assert.That(
+                marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.RotatePlacementBindingPrompt));
+            Pose rotatedPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+            Assert.That(
+                Mathf.DeltaAngle(initialPose.rotation.eulerAngles.y, rotatedPose.rotation.eulerAngles.y),
+                Is.EqualTo(90f).Within(0.01f));
+
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
             InputSystem.QueueStateEvent(
@@ -306,6 +342,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.IsCarried, Is.False);
             Assert.That(item.ItemIdValue, Is.EqualTo(identity));
             Assert.That(item.Body.isKinematic, Is.True);
+            Assert.That(Mathf.DeltaAngle(item.transform.eulerAngles.y, 90f), Is.EqualTo(0f).Within(0.01f));
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
         }
 
         [UnityTest]
@@ -429,6 +467,16 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.IsPlacementMode, Is.False);
             Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.False);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.RightShoulder });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.False);
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();

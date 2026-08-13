@@ -405,16 +405,29 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 metal);
             GameObject itemRoot = new GameObject("StarterPickupBox");
             itemRoot.transform.SetParent(parent, false);
-            itemRoot.transform.localPosition = new Vector3(0f, 1.5f, -0.65f);
+            itemRoot.transform.localPosition = new Vector3(0f, 1.45f, -0.65f);
             itemRoot.layer = interactableLayer;
 
             GameObject visual = CreateCube(
                 "BoxVisual",
                 itemRoot.transform,
                 Vector3.zero,
-                new Vector3(0.55f, 0.55f, 0.55f),
+                new Vector3(0.7f, 0.45f, 0.5f),
                 cardboard);
             visual.layer = interactableLayer;
+
+            GameObject orientationMarker = CreateCube(
+                "SmallBoxOrientationMarker",
+                itemRoot.transform,
+                new Vector3(0f, 0.231f, 0.12f),
+                new Vector3(0.12f, 0.012f, 0.18f),
+                accent);
+            orientationMarker.layer = interactableLayer;
+            Collider markerCollider = orientationMarker.GetComponent<Collider>();
+            if (markerCollider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(markerCollider);
+            }
 
             Rigidbody body = itemRoot.AddComponent<Rigidbody>();
             body.mass = 2f;
@@ -426,7 +439,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 "prototype.garage-box-001",
                 "Parça Kutusu",
                 body,
-                new Vector3(0.275f, 0.275f, 0.275f),
+                new Vector3(0.35f, 0.225f, 0.25f),
                 Vector3.zero,
                 Vector3.zero,
                 PhysicalCarryProfile.SmallBox);
@@ -660,6 +673,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PlayerInputContract.Interact,
                 PlayerInputContract.Sprint,
                 PlayerInputContract.Drop,
+                PlayerInputContract.RotatePlacement,
                 PlayerInputContract.Pause
             };
             foreach (string actionName in requiredActions)
