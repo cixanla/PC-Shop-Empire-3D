@@ -48,8 +48,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `114/114` passed.
-- Play Mode `2/2` passed.
+- Edit Mode `120/120` passed.
+- Play Mode `6/6` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -82,15 +82,17 @@ Tamamlanan saf Core sözleşmeleri:
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
 - FOV/hassasiyet/invert/motion-reduce ayarları, görünür prototip eller, pause/cursor ve runtime-ready tanısı.
+- Canonical fiziksel ürün kimliği, 2 m hedef çözümleme, tek taşıma slotu, kinematic carry ve güvenli drop/recovery.
+- `E / Gamepad South` ile alma, `G / Gamepad East` ile bırakma ve effective binding'i gösteren HUD prompt'u.
 
 Henüz yapılmayanlar:
 
-- Eller için animasyonlu etkileşim ve fiziksel alma/bırakma/taşıma.
+- Gelişmiş el animasyonu, büyük kutu, döndürme, raf/yüzey snap placement ve istifleme.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded teknik paket: Issue #5 görünür el durumu ile güvenli alma/bırakma; ardından Issue #6 hibrit kutu taşıma ve placement.
+Sıradaki bounded teknik paket: Issue #6 hibrit kutu taşıma ve placement.
 
 ## 7. Çalışma akışı
 

@@ -18,10 +18,10 @@ Bu depo, eski Electron oyununun doğrudan portu değildir. Yeni oyun Unity 6000.
 - Unity: `6000.3.21f1` ARM64 editör, URP `17.3.0`.
 - Hedef: önce Windows x64 + Steam 1.0; bütçe uygunsa daha sonra ayrı macOS port/QA turu.
 - Stage A: proje, paket, macOS/Windows Mono smoke build ve private GitHub temeli tamamlandı.
-- Stage B: saf `PSE.Core` sözleşmeleri ile ilk oynanabilir birinci şahıs garaj graybox'ı tamamlandı.
-- Son doğrulama: Edit Mode `114/114`, Play Mode `2/2`; başarısız/atlanan test yok.
+- Stage B: saf `PSE.Core` sözleşmeleri, ilk oynanabilir garaj ve ilk fiziksel ürün alma/bırakma zinciri tamamlandı.
+- Son doğrulama: Edit Mode `120/120`, Play Mode `6/6`; başarısız/atlanan test yok.
 - Yürütme panosu: [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2), 22 epic.
-- GarageGraybox sahnesinde klavye/fare ve gamepad hareketi, kamera, sprint, pause, görünür prototip eller ve Mac development player çalışıyor; sıradaki iş fiziksel alma/bırakmadır.
+- GarageGraybox sahnesinde hareket, kamera, görünür eller, dinamik tuş bildirimi ve klavye/gamepad ile `E/A` alma + `G/B` güvenli bırakma çalışıyor; sıradaki iş kontrollü kutu placement'tır.
 
 ## Dizinler
 

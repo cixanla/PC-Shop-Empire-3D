@@ -14,7 +14,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Save-safe canonical root seed ve sürümlü SHA-256 framed domain/context stream derivation eklendi; reload-reroll ve çağrı sırası bağımsızlığı golden testlerle kilitlendi.
 - Domain event correlation/causation ve deterministik FIFO dispatcher; duplicate/conflict politikası, breadth-first nested enqueue, bounded drain ve handler hata izolasyonuyla eklendi.
 - `PSE.World`/`PSE.Presentation`, oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind store ve görünür prototip eller eklendi.
-- Edit Mode baseline `114/114`, Play Mode baseline `2/2` teste yükseldi; Universal macOS build ve runtime-ready smoke geçti.
+- Stable fiziksel ürün kimliği, menzil/görüş hattı hedefleme, tek taşıma slotu, görünür el pozları, dinamik binding prompt'u ve güvenli pickup/drop eklendi.
+- Engelli/zeminsiz drop fail-closed kaldı; player disable ve dünya-altı düşüş aynı nesneyi son güvenli pozuna kurtarıyor.
+- Edit Mode baseline `120/120`, Play Mode baseline `6/6` teste yükseldi; Universal macOS build ve 1920×1080 runtime-ready smoke geçti.
 
 ### Changed
 
@@ -48,4 +50,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Fiziksel alma/bırakma, el animasyonları, kutu taşıma ve placement henüz tamamlanmadı.
+- Küçük kutu alma/bırakma çalışıyor; gelişmiş el animasyonu, büyük kutu, döndürme/snap placement ve istifleme henüz tamamlanmadı.

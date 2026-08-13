@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 13 Ağustos 2026<br>
-**Durum:** İlk oynanabilir birinci şahıs garaj graybox tamamlandı; sıradaki iş görünür el + alma/bırakma<br>
+**Durum:** İlk fiziksel ürün pickup/drop tamamlandı; sıradaki iş hibrit kutu placement<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## Kullanım güvenliği protokolü
@@ -21,20 +21,24 @@
 - Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
 - Kontroller: Keyboard&Mouse ve Gamepad; Move/Look/PrimaryAction/Interact/Sprint/Drop/Pause.
 - FOV, mouse/gamepad hassasiyeti, invert-Y, motion-reduce, cursor/pause ve rebind override store var.
-- Görünür eller şimdilik lisanssız geometrik placeholder'dır; animasyon ve fiziksel etkileşim sıradadır.
+- Görünür eller lisanssız geometrik placeholder'dır; boş/hedef/tutuyor/engelli/recovery pozları çalışır.
+- Garajdaki `prototype.garage-box-001`, `E / Gamepad South` ile alınır; `G / Gamepad East` ile güvenli yüzeye bırakılır.
+- Stable ID, range+LOS, tek slot, physics snapshot/restore, blocked/no-support fail-closed ve son güvenli poz recovery çalışır.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ dış platform kapısıdır.
 
 ## Feature checkpoint
 
 - Branch: `main`
-- Commit: `c7a3a26075998252d9ae8b88824d8285e5067069`
-- Tree: `6d63d724e40b18efdc29269c5b5d305ccf5a4373`
-- Kapsam: 72 dosya; GarageGraybox, PlayerRig, input/motor/view, prototype materials/hands, scene builder ve testler.
+- Commit: `44b816289f942e57fc176b26b203711090d0e61c`
+- Tree: `56a08053037817158c6293fe235760105c2dd811`
+- Kapsam: PhysicalItemProjection, resolver, carry controller, safe-drop, hand presenter, updated GarageGraybox/PlayerRig ve testler.
 - Builder güvenliği: kaydedilmemiş sahne çalışması onaysız kaybolmaz; önceki scene setup geri yüklenir.
 - Prefab bütünlüğü: PlayerRig origin'de tek kaynak prefab, garajda connected instance ve spawn override'dır.
 - Build settings: önceki sahnelerin enabled/disabled durumu korunur.
-- Input bütünlüğü: her runtime oyuncusu kendi Input Action kopyasını kullanır; mouse binding `<Mouse>/delta` ile masaüstüne sınırlıdır.
-- Bağımsız iki inceleme sonrasında kritik/önemli bulgu kalmadı.
+- Input bütünlüğü: her runtime oyuncusu kendi Input Action kopyasını kullanır; prompt effective binding'den üretilir.
+- Fizik bütünlüğü: carry sırasında collider kapalı/kinematic; drop'ta özgün parent/layer/body/collider durumu geri gelir.
+- Recovery: player disable veya `y < -20` aynı nesneyi/kimliği son güvenli poza döndürür; engelli drop nesneyi elde tutar.
+- Bağımsız inceleme sonrasında kritik/önemli bulgu kalmadı.
 
 ## Test ve build kanıtı
 
@@ -42,12 +46,12 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `editmode_garage_checkpoint_20260813.xml` | 114/114 geçti | `88b966dfabd0c6d8fa749d3eb08299498270130e0d082eac1cef28e64b9d625a` |
-| `playmode_garage_input_final2_20260813.xml` | 2/2 geçti | `f8e918b408c16bb8a6a6a0a2dcbe4544af77e52b68c184a3a9b516a2f6da0a00` |
-| `garage_mac_build_final_20260813.log` | başarılı, 325.932.692 bayt | `a0bcd99f43d34468b7de119bf7c7875f0e98f0c9674fc9b5f8d9f8eb00a57766` |
-| `garage_mac_smoke_graphical_1080p_20260813.log` | Metal, 1920×1080 `GARAGE_GRAYBOX_RUNTIME_READY`, hata yok | `213b23b02b782d54d3e8a094d36e10e384ed03cf862847a2ec50b0e164c1bded` |
+| `pickup-editmode-final2.xml` | 120/120 geçti | `14d2a91e8e38ce528225f9cda3ea172c7f9d80a2ddb1bb3090f2f6e6a6fb7c6a` |
+| `pickup-playmode-final2.xml` | 6/6 geçti | `361a171b8c8741b88754824a8dc4850aa327bdf2191793acc4dabc9fc948052f` |
+| `pickup-macos-build-checkpoint.log` | başarılı, 325.963.160 bayt | `0ee40752c4637e0dd6c9f88f869cb4715b7ae2a699f9603f54480c31bbab1474` |
+| `pickup-macos-runtime-checkpoint.log` | Metal, 1920×1080, `carry=ok`, hata yok | `fd9ac367f6a8fdb51909d52d4275c0b3d774303fd9843c08de21b7f7d0f2ddb2` |
 
-Play Mode; sanal fakat gerçek Input System device-state olaylarıyla W+Shift, mouse delta, gamepad left/right stick, hareket mesafesi ve yaw/pitch değişimini doğrular. macOS development player Universal `arm64+x86_64` üretildi; Apple M4/Metal üzerinde pencereli 1920×1080 smoke çalıştı. Bu Mac kanıtı Windows native doğrulamasının yerine geçmez.
+Play Mode; gerçek Input System device-state olaylarıyla hareket/kamera yanında keyboard `E/G`, gamepad South/East, pause engeli, disable recovery ve dünya-altı recovery'yi doğrular. macOS development player Universal `arm64+x86_64` üretildi; Apple M4/Metal üzerinde pencereli 1920×1080 smoke çalıştı. Bu Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -59,6 +63,7 @@ Play Mode; sanal fakat gerçek Input System device-state olaylarıyla W+Shift, m
 - Seed derivation: `43e92174ca3866dfde436fb180785a615772a886`.
 - Event dispatcher hardening: `3d819e533fd3635bc9b32787730d6dd9be110875`.
 - First playable garage: `c7a3a26075998252d9ae8b88824d8285e5067069`.
+- Safe physical pickup/drop: `44b816289f942e57fc176b26b203711090d0e61c`.
 
 ## USB güvenlik katmanı
 
@@ -68,13 +73,13 @@ Korunan milestone'lar:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
 
-Garaj checkpoint'i önce private GitHub'da tamamlanır. Ayrı USB milestone, alma/bırakma + placement ile ilk anlamlı fiziksel etkileşim zinciri kapandığında alınacaktır; cache/build/credential dahil edilmeyecektir.
+Pickup/drop checkpoint'i private GitHub'da tamamlanır. Ayrı USB milestone, pickup/drop + placement ile ilk anlamlı fiziksel etkileşim zinciri kapandığında alınacaktır; cache/build/credential dahil edilmeyecektir.
 
 ## Devam sırası
 
-1. Issue #5'i bounded alt işlere böl: interactable sözleşmesi, hedef çözümleme, görünür el durumu, pickup/drop.
-2. Erişim mesafesi, line-of-sight, tek taşıma slotu, collider/rigidbody sahipliği ve güvenli drop fallback'ini testle.
-3. Issue #6 ile küçük/büyük kutu taşıma, hız/görüş bedeli ve snap placement'a geç.
+1. Issue #6'yı küçük kutu placement, döndürme/snap ve büyük kutu taşıma olarak bounded alt işlere böl.
+2. Önce küçük kutuyu işaretli teslimat/stok alanına güvenli yerleştiren zinciri testle.
+3. Ardından büyük kutu için hız/görüş bedeli ve taşıma profiline geç.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
 
 ## Düşük kullanımda bırakılacak mesaj

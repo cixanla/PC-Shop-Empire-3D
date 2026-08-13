@@ -263,6 +263,7 @@
 | D-159 | Kayıtlı root seed ve kalıcı domain/context kimliği `sha256-framed-be-pcg32-v1` ile çağrı sırasından bağımsız PCG32 initialization üretir. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Root seed 16 lowercase hex; framed big-endian preimage ve iki golden vector sürümlüdür. Eksik/bozuk/bilinmeyen metadata fallback yapmaz. Aynı occurrence reload ile reroll olmaz; değişken-draw devamı ayrıca `Pcg32State` saklar. Edit Mode toplamı 85/85 geçti. |
 | D-160 | Domain eventler zarf tarafından canonical payload'dan hesaplanan fingerprint/correlation/direct-causation taşır; in-memory dispatcher tek simulation thread'inde global FIFO, registration sırası ve breadth-first nested enqueue uygular. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Mutation enqueue'da reddedilir veya dispatch'te karantinaya alınır; exact metadata+fingerprint duplicate idempotent, conflict açık failure; handler failure/exception izole, no-retry; receipt/drain kapasitesi zorunlu ve rapor raw payload/stack içermez. Kalıcı receipt ledger save paketine ertelendi. Edit Mode toplamı 105/105 geçti. |
 | D-161 | İlk oynanabilir hareket tabanı CharacterController, izole runtime Input Action kopyası ve connected PlayerRig prefabı kullanan GarageGraybox olur. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | Klavye/fare + gamepad Move/Look/PrimaryAction/Interact/Sprint/Drop/Pause sözleşmesi, rebind override store, FOV/hassasiyet/invert/motion-reduce ve görünür prototip eller eklendi. Head-bob/sprint FOV/jump kapsam dışıdır. Edit Mode 114/114, gerçek device-state Play Mode 2/2, Universal macOS build ve runtime-ready smoke geçti; Windows native kapısı açıktır. |
+| D-162 | İlk fiziksel ürün etkileşimi joint/spring fiziği değil, tek slotlu kinematic carry ve doğrulanmış safe-drop kullanır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `E/A` pickup, `G/B` drop; range+LOS, stable ID, collider/body snapshot, visible hands, dynamic prompt, blocked/no-support fail-closed ve disable/world-floor recovery eklendi. Küçük ürün root scale=1 invariant'ı zorunludur. Edit Mode 120/120, Play Mode 6/6 ve Mac player smoke geçti. |
 
 ## Vertical slice kilidi
 
@@ -374,7 +375,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core sözleşmeleri ile ilk oynanabilir GarageGraybox ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 114/114 ve Play Mode 2/2'dir; sıradaki bounded iş görünür el durumu ile güvenli alma/bırakmadır.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox ve ilk fiziksel pickup/drop ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 120/120 ve Play Mode 6/6'dır; sıradaki bounded iş hibrit kutu taşıma ve placement'tır.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -426,4 +427,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Beşinci Stage B paketi canonical root seed ve sürümlü SHA-256 framed domain/context stream derivation'ı ekledi; toplam 85/85 Edit Mode testi geçti.
 - Altıncı Stage B paketi canonical payload fingerprint/mutation karantinası/correlation/causation ve bounded deterministik event dispatcher'ı ekledi; toplam 105/105 Edit Mode testi geçti.
 - Yedinci Stage B paketi `c7a3a26075998252d9ae8b88824d8285e5067069` commit'iyle oynanabilir GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, rebind temeli ve görünür prototip elleri ekledi; Edit Mode 114/114, Play Mode 2/2, Universal macOS build ve runtime-ready smoke geçti.
-- Sıradaki paket Issue #5 görünür el + güvenli alma/bırakma; ardından Issue #6 kutu taşıma ve placement gelir.
+- Sekizinci Stage B paketi `44b816289f942e57fc176b26b203711090d0e61c` commit'iyle stable fiziksel ürün, hedefleme, görünür el durumları, güvenli pickup/drop ve recovery ekledi; Edit Mode 120/120, Play Mode 6/6 ve Universal macOS runtime smoke geçti.
+- Sıradaki paket Issue #6 hibrit kutu taşıma ve placement'tır.
