@@ -25,7 +25,7 @@ PC Shop Empire 3D artık yalnız teknik çekirdek değildir. Yeni `GarageGraybox
 
 - macOS Universal development build: başarılı, 325.932.692 bayt.
 - Mimari: `arm64 + x86_64`.
-- Headless smoke: `GARAGE_GRAYBOX_RUNTIME_READY version=garage-graybox-g1-v1 scene=GarageGraybox ... motor=ok input=ok`.
+- Headless smoke ve Apple M4/Metal üzerinde pencereli 1920×1080 smoke: `GARAGE_GRAYBOX_RUNTIME_READY version=garage-graybox-g1-v1 scene=GarageGraybox ... motor=ok input=ok`.
 - Smoke sırasında crash, missing script veya NullReference görülmedi.
 
 ## Bilinen sınırlar

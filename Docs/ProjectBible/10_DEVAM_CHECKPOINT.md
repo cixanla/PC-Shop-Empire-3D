@@ -45,9 +45,9 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 | `editmode_garage_checkpoint_20260813.xml` | 114/114 geçti | `88b966dfabd0c6d8fa749d3eb08299498270130e0d082eac1cef28e64b9d625a` |
 | `playmode_garage_input_final2_20260813.xml` | 2/2 geçti | `f8e918b408c16bb8a6a6a0a2dcbe4544af77e52b68c184a3a9b516a2f6da0a00` |
 | `garage_mac_build_final_20260813.log` | başarılı, 325.932.692 bayt | `a0bcd99f43d34468b7de119bf7c7875f0e98f0c9674fc9b5f8d9f8eb00a57766` |
-| `garage_mac_smoke_final_20260813.log` | `GARAGE_GRAYBOX_RUNTIME_READY`, hata yok | `0238e45c613148f97c325362df00c5b3090151c03c839d8402f379c78daa9595` |
+| `garage_mac_smoke_graphical_1080p_20260813.log` | Metal, 1920×1080 `GARAGE_GRAYBOX_RUNTIME_READY`, hata yok | `213b23b02b782d54d3e8a094d36e10e384ed03cf862847a2ec50b0e164c1bded` |
 
-Play Mode; sanal fakat gerçek Input System device-state olaylarıyla W+Shift, mouse delta, gamepad left/right stick, hareket mesafesi ve yaw/pitch değişimini doğrular. macOS development player Universal `arm64+x86_64` üretildi. Bu Mac kanıtı Windows native doğrulamasının yerine geçmez.
+Play Mode; sanal fakat gerçek Input System device-state olaylarıyla W+Shift, mouse delta, gamepad left/right stick, hareket mesafesi ve yaw/pitch değişimini doğrular. macOS development player Universal `arm64+x86_64` üretildi; Apple M4/Metal üzerinde pencereli 1920×1080 smoke çalıştı. Bu Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
