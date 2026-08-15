@@ -143,21 +143,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `9d75573a86e395d2fa74f3808d43310e4d65f760`.
-- Issue #40 tamamlandı; Epic #8 fiziksel koli açma, fiyat/etiket ve satış alt işleriyle sürüyor.
-- EditMode `188/188`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
-- Universal macOS development build `327.462.869` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok carry=ok world-floor=ok stable=ok quantity=1` geçti.
-- Exact serialized item görünür teslimat → Receiving → ActorHands → RAF A Shelf/WorldFloor zincirinde açık Presentation adaptörüyle taşınır.
-- Domain transferi world mutation'dan önce gelir; domain failure fiziksel sahipliği değiştirmez, fiziksel failure domain rollback yapar, recovery iki projection'ı birlikte son güvenli duruma döndürür.
+- Son doğrulanmış kaynak feature: `3766f3f06df624093f4774ef8fa4e7f1286d1c01`.
+- Issue #41 tamamlandı; Epic #8 authoritative fiyat/etiket ve satış alt işleriyle sürüyor.
+- EditMode `192/192`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
+- Universal macOS development build `327.475.393` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok stable=ok quantity=1` geçti.
+- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor zincirinde taşınır.
+- Opening domain quantity/revision değiştirmez; repeated open duplicate üretmez, invalid state/identity/location no-reveal kalır. Domain-first transfer/rollback/recovery sonraki fiziksel sahiplik geçişlerinde korunur.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8 altında fiziksel teslimat kolisini açma eylemini ve dinamik promptu kur.
-2. Exact manifest içeriğini birim birim, deterministik ve duplicate üretmeden Receiving world projection'ına çıkar.
-3. Açma/çıkarma failure'ında order, Inventory ve dünya nesnelerini no-mutation bırak; yarım projection üretme.
-4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula; fiyat/para ve müşteri AI ekleme.
+1. Issue #8 altında Unity-bağımsız authoritative shelf offer/fiyat etiketi sözleşmesini kur.
+2. Product/shelf offer kimliği, para birimi, pozitif minor-unit değer, revision ve failure no-mutation invariantlarını doğrula.
+3. RAF A label projection'ını yalnız başarılı offer komutuna bağla; Inventory/world quantity fiyat authority'si olmasın.
+4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula; dinamik ekonomi, vergi, indirim, ledger ve müşteri AI ekleme.
 
 Sonraki ana geliştirme sırası:
 
@@ -171,7 +171,7 @@ Sonraki ana geliştirme sırası:
 
 Henüz tamamlanmayan önemli alanlar:
 
-- Çok satırlı teslimat kolisi açma ve Receiving birim projection'ı.
+- Çok satırlı/çok adetli delivery parcel unpack layout'u ve claim akışı.
 - Çoklu slot/palet taşıma arabası ve lojistik ekipmanı.
 - Çok katlı veya palet istifi.
 - Gelişmiş el modeli/animasyonu.
@@ -232,4 +232,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Authoritative stock-flow checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket fiziksel teslimat kolisini açıp exact manifest item'larını duplicate üretmeden Receiving world projection'ına çıkarmaktır. Domain/world işlemleri fail-closed ve rollback'li kalsın. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Delivery parcel unpacking checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket RAF A için Unity-bağımsız authoritative shelf offer/fiyat etiketi ve görünür label projection'ıdır. Inventory/world quantity fiyat authority'si olmasın; failure no-mutation kalsın. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
