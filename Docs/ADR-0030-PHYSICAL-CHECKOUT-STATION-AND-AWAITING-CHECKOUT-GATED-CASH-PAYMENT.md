@@ -1,7 +1,7 @@
 # ADR-0030 — Physical Checkout Station and AwaitingCheckout-Gated Cash Payment
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Kabul edildi ve uygulandı; Issue #52 kaynak/test/build/runtime kapıları geçti, source/docs + USB + GitHub kapanışı sıradaki güvenli kapılardır<br>
+**Durum:** Kabul edildi ve tamamlandı; Issue #52 kapalı/Done, parent Epic #9 kapalı/Done<br>
 **Bağlam:** Epic #9 — immutable checkout ve exact-cash Economy settlement'ını görünür, kasıtlı ve fiziksel bir kasa etkileşimine bağlamak
 
 ## Bağlam
@@ -46,11 +46,13 @@ Issue #46–#51 zinciri deterministic müşteri ziyareti, consultation-gated `Bu
 - Feature commit: `92a0f7b814ad5e597d8d4ca033f2e533f618f719`
 - Feature tree: `4150bd36fa65d4043061e5979e08efb502338fc6`
 - Feature Repository Guard: [31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515), başarılı
+- Source/docs commit: `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`; tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650), başarılı
 - Marker: `garage-physical-checkout-station-r21-v1`
 - EditMode: `352/352`; failed/skipped `0`; `editmode-issue52-r3.xml`
 - PlayMode: `24/24`; failed/skipped `0`; `playmode-issue52-r3.xml`
 - Universal macOS build: `327864494` bayt; `build-macos-issue52-r4.log`; Mach-O `x86_64 + arm64`
 - Scene SHA-256: `509e6c256a9a66850dfd3cdb22b04b53596c5080ff25e7b14d29000b289bd3fe`
 - Runtime: Apple M4/Metal, `1280×720`; stock r4 ve customer r6/r7/r8 smoke'ları başarılı
+- Issue #52 acceptance `17/17`; Issue kapalı ve Roadmap `Done`. Parent Epic #9 ana kabul kapısı doğrulandı; kapalı/Done.
+- USB milestone: `2026-08-15_STAGE_B_PHYSICAL_CHECKOUT_STATION_AND_AWAITING_CHECKOUT_GATED_CASH_PAYMENT`; manifest SHA-256 `7fbb5f0ce2bdd0aa32f0baa943e12d1dcf331b4ea05a85c81e0215c969531fbd`; 584/584 readback, 576/576 exact Git source ve 7/7 evidence eşliği
 - Ayrıntı: `Docs/Evidence/PHYSICAL-CHECKOUT-STATION-AND-AWAITING-CHECKOUT-GATED-CASH-PAYMENT-CHECKPOINT-2026-08-15.md`
-

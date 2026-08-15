@@ -127,7 +127,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
 - Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6` ve [Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) ile doğrulandı. EditMode `352/352`, PlayMode `24/24`, failed/skipped `0`; Universal macOS build `327864494` bayt ve Mach-O `x86_64 + arm64`tır.
 - Apple M4/Metal 1280×720 `garage-physical-checkout-station-r21-v1` stock r4 ve art arda üç customer r6/r7/r8 smoke; station access, shelf bypass, release/repress checkout+cash, receipt, Economy/ledger, authority isolation, stock projection ve safe customer exit kapılarını geçti. Scene ve final kanıt SHA-256 değerleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
-- Issue #52 source/docs, USB ve GitHub closure kapıları şu anda tamamlanmaktadır. Önceki Issue #51 source/docs `f9bc38d`, başarılı Guard `31888842125`, doğrulanmış USB ve acceptance `16/16` ile kapalı/Done tarihsel checkpoint olarak korunur.
+- Issue #52 source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496` ve [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) ile kapandı. USB milestone 584/584 manifest, 576/576 exact Git source ve 7/7 evidence kapısını geçti; acceptance `17/17`, Issue kapalı/Done ve parent Epic #9 kapalı/Done'dır.
 - Önceki Issue #50 feature `547cf97`, source/docs `aea6e2b`, iki başarılı Guard ve doğrulanmış `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT` USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur.
 
 Henüz yapılmayanlar:
@@ -140,7 +140,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate kapı Issue #52 source/docs → Guard → exact USB snapshot/readback → GitHub acceptance/Done/close ve parent Epic #9 denetimidir. Ardından Epic #10 altında ayrı issue ile ilk fiziksel PC assembly dilimi açılır: tek açık kasa, tek component ve tek doğru slot; kasıtlı al/tak/sök, stable identity ve no-mutation yanlış-slot/replay sözleşmesi. Tam PC kataloğu, Save veya final sanat kapsamını gizlice büyütme.
+Sıradaki immediate iş Epic #10 altında ayrı issue ile ilk fiziksel PC assembly dilimidir: tek açık kasa, tek component ve tek doğru slot; kasıtlı al/tak/sök, stable identity/provenance ve no-mutation yanlış-slot/engel/replay sözleşmesi. Tam PC kataloğu, Inventory authority genişlemesi, Save veya final sanat kapsamını gizlice büyütme.
 
 ## 7. Çalışma akışı
 

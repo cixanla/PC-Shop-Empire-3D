@@ -79,6 +79,8 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Canonical payment receipt artık exact settlement/transaction/completion/checkout/customer/payment/currency/amount/COGS, `Buy` action, line ve ledger provenance'ını kapılar; ürün projection'ı ile customer fulfillment yalnız matching receipt sonrasında ilerler.
 - Customer focus collider'ı station çevresinde oyuncuyu fiziksel olarak sıkıştırmayan trigger'a çevrildi; consultation raycast'i trigger hedefini korur ve üç ardışık final customer runtime smoke güvenli çıkışı doğruladı.
 - Issue #52 feature checkpoint'i `92a0f7b`, tree `4150bd3` ve başarılı [Repository Guard `31892420515`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) ile doğrulandı: 352/352 EditMode, 24/24 gerçek Input System PlayMode, 327864494 bayt Universal macOS build ve Apple M4/Metal 1280×720 `garage-physical-checkout-station-r21-v1 checkout-station=ok shelf-bypass-blocked=ok checkout-start=ok cash-payment=ok authority-isolated=ok customer-hidden=ok` smoke.
+- Issue #52 source/docs `d6cd203`, tree `6d73d5a` ve başarılı [Repository Guard `31892875650`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) ile kapatıldı; 576 tracked source + 7 final evidence + source kaydı, 584 satırlı `7fbb5f0c…31fbd` USB manifest/readback, acceptance `17/17`, Roadmap `Done` ve Issue kapalıdır.
+- Parent Epic #9; path fallback, ihtiyaca göre bounded öneri, danışmanlık, patience, stale-safe Buy/Leave, exact-cash Economy settlement ve fiziksel checkout doğruluğu kanıtlarıyla kapatıldı; Roadmap `Done`dur.
 
 ### Changed
 

@@ -21,7 +21,9 @@ Issue [#52](https://github.com/cixanla/PC-Shop-Empire-3D/issues/52), Epic [#9](h
 - Feature tree: `4150bd36fa65d4043061e5979e08efb502338fc6`
 - Marker: `garage-physical-checkout-station-r21-v1`
 - Feature Repository Guard: [31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515), başarılı
-- Source/docs checkpoint, doğrulanmış USB snapshotı ve Issue/Project kapanışı bu feature kanıtından sonraki güvenli kapılardır.
+- Source/docs commit: `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`
+- Source/docs tree: `6d73d5ac6d675733c939f181d087da3aef90f496`
+- Source/docs Repository Guard: [31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650), başarılı
 
 ## Otomatik doğrulama
 
@@ -66,10 +68,13 @@ Final EditMode ve PlayMode sonuçlarında failed/skipped test yoktur. Stock r4 v
 - İade/garanti, çalışan kasiyer, Save/journal/Guardian ve gerçek Windows/IL2CPP doğrulaması.
 - Sıradaki bounded geliştirme Epic #10 altında ilk fiziksel PC assembly dilimidir; kapsam ayrı issue/acceptance ile açılacaktır.
 
-## Kapanış sırası
+## Uzak ve USB kapanışı
 
-1. Bu ADR/evidence ile yaşayan proje hafızasını source/docs checkpoint commit'inde kilitle.
-2. Commit'i private `origin/main`e push et ve Repository Guard sonucunu doğrula.
-3. Exact source/docs commit + final kanıtları ayrı USB milestone'ına yaz; manifest/readback/Git-blob/güvenlik kontrollerini geçir.
-4. Issue #52 acceptance `17/17`, Roadmap `Done` ve kapanış yorumunu güncelle; Epic #9'un geniş kabulünü ayrıca doğrula.
-5. Closure metadata commit'ini push et, final Guard'ı ve temiz çalışma ağacını doğrula.
+- Feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719` ve source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc` private `origin/main`e ulaştı; Repository Guard `31892420515` ve `31892875650` başarılıdır.
+- Issue #52 acceptance `17/17` işaretlendi; Issue kapatıldı ve Development Roadmap durumu `Done` yapıldı.
+- Parent Epic #9 path fallback, ihtiyaç/öneri, danışmanlık, patience, stale-safe Buy/Leave, exact-cash settlement ve fiziksel checkout doğruluğu kanıtlarıyla kapatıldı; Roadmap `Done`dur.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_PHYSICAL_CHECKOUT_STATION_AND_AWAITING_CHECKOUT_GATED_CASH_PAYMENT`.
+- Snapshot exact source/docs `d6cd203` arşivinden 576 tracked `SOURCE`, 7 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt` içerir; 584 manifest payload satırı, toplam 586 dosya ve 10.485.924 payload baytı vardır.
+- `MANIFEST.tsv` SHA-256 `7fbb5f0ce2bdd0aa32f0baa943e12d1dcf331b4ea05a85c81e0215c969531fbd`dir. Tam geri okuma 584/584 hash+boyut+path, 576/576 exact Git source ve 7/7 evidence eşliğiyle geçti; forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
+- USB source exact `d6cd203` arşividir; bu closure metadata commit'i snapshot kaynak kimliğini değiştirmez.
+- Sıradaki bounded geliştirme Epic #10 altında ilk fiziksel PC assembly dilimidir.

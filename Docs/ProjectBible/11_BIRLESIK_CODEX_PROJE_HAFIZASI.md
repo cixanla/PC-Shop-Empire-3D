@@ -162,11 +162,11 @@ Tamamlanan oynanabilir sistemler:
 - Universal macOS development build `327864494` bayt, Mach-O `x86_64 + arm64`; build log SHA-256 `c9a0780e…69c`, executable SHA-256 `cf66c67f…79b2`dir.
 - Apple M4/Metal 1280×720 runtime markerı `garage-physical-checkout-station-r21-v1`dir. Stock r4 ve customer r6/r7/r8 smoke station access, shelf bypass, checkout-start, cash-payment, receipt/Economy/ledger, authority isolation, stock projection ve customer safe-exit kapılarını geçti.
 - `GarageGraybox.unity` `1397931` bayt, SHA-256 `509e6c25…d3fe`dir. Primitive checkout terminali, müşteri ve büyük diagnostic/status textleri final POS/karakter/UI değildir.
-- Source/docs, USB ve GitHub closure kapıları şu anda tamamlanmaktadır. Önceki Issue #51 feature `846eb5d`, source/docs `f9bc38d`, iki başarılı Guard ve doğrulanmış USB ile acceptance `16/16`, kapalı/Done tarihsel checkpoint olarak korunur.
+- Source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496` ve [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılıdır. USB 584/584 manifest, 576/576 exact Git source ve 7/7 evidence kapısını geçti. Issue #52 acceptance `17/17`, kapalı/Done; parent Epic #9 kapalı/Done'dır.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
-Issue #52 kaynak/test/build/runtime ve feature CI zinciri tamamlandı. Sıradaki güvenli kapılar source/docs + Guard → exact USB snapshot/readback → acceptance `17/17` + Roadmap `Done` + Issue close → parent Epic #9 geniş kabul denetimidir. Bundan sonraki bounded geliştirme Epic #10 altında ilk fiziksel PC assembly dilimidir; tek açık kasa/tek component/tek slot dışına, tam katalog/Save/final sanat kapsamına gizlice büyütülmez.
+Issue #52 kaynak/test/build/runtime/CI/USB ve Issue metadata zinciri tamamlandı; acceptance `17/17`, kapalı/Done. Parent Epic #9 geniş kabulü de kapalı/Done'dır. Bundan sonraki bounded geliştirme Epic #10 altında ilk fiziksel PC assembly dilimidir; tek açık kasa/tek component/tek slot dışına, tam katalog/Inventory genişlemesi/Save/final sanat kapsamına gizlice büyütülmez.
 
 Sonraki ana geliştirme sırası:
 
@@ -252,4 +252,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`, başarılı feature Guard `31892420515`, EditMode 352/352, PlayMode 24/24, Universal Mac `327864494` bayt ve `garage-physical-checkout-station-r21-v1` stock r4/customer r6-r8 smoke ile kaynak/test/build/runtime olarak tamamlandı. Source/docs + Guard, exact USB snapshot ve GitHub kapanışından sonra sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
+> Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, başarılı Guard `31892420515` + `31892875650`, EditMode 352/352, PlayMode 24/24, Universal Mac `327864494` bayt, `garage-physical-checkout-station-r21-v1` smoke ve `7fbb5f0c…31fbd` manifestli USB checkpointiyle tamamlandı; acceptance 17/17, Issue #52 ve parent Epic #9 kapalı/Done. Sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.

@@ -1,12 +1,14 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #52 fiziksel checkout station ve `AwaitingCheckout`-gated exact-cash ödeme kaynak, test, build, runtime ve feature CI kapılarıyla tamamlandı; source/docs + USB + GitHub kapanışı sürüyor<br>
+**Durum:** Issue #52 fiziksel checkout station ve `AwaitingCheckout`-gated exact-cash ödeme kaynak, test, build, runtime, CI, USB ve GitHub kapılarıyla tamamlandı; Issue #52 ile parent Epic #9 kapalı/Roadmap `Done`<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #52 / Epic #9
 
 - Feature commit `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`; [feature Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) başarılıdır.
+- Source/docs commit `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılıdır.
+- Issue #52 acceptance `17/17` doğrulandı; Issue kapatıldı ve Development Roadmap durumu `Done` yapıldı. Parent Epic #9 ana kabul kapısı da doğrulanarak kapatıldı/Done yapıldı.
 - Stable `world.checkout-station.garage-001` kimlikli görünür checkout station yalnız pause kapalı, `2,75 m` range, `24°` focus ve raycast LOS içinde çalışır. RAF A primary checkout/payment bypass'ı kapalıdır ve oyuncuya `KASA İSTASYONUNA GİT` yönlendirmesi gösterilir.
 - Yalnız exact matching current customer/visit/basket/offer/item/reservation/action provenance'ı taşıyan `AwaitingCheckout` ziyareti station'ı yetkilendirir. Stale, foreign, historical, forged/value-equal veya yanlış-state zinciri bütün gameplay/economy authority'lerinde no-mutation fail-closed olur.
 - İlk `Mouse Left / Gamepad RT` edge'i immutable checkout snapshotını bir kez başlatır. Fiyat, currency ve acquisition unit cost donar. Held/same-frame/replay ödeme değildir; release/repress sonrasındaki ikinci edge exact-cash settlement'ı bir kez üretir.
@@ -15,7 +17,7 @@
 - EditMode `352/352` (`editmode-issue52-r3.xml`), gerçek Input System PlayMode `24/24` (`playmode-issue52-r3.xml`); failed/skipped `0`.
 - Universal macOS development build `327864494` bayttır; Apple M4/Metal 1280×720 stock r4 ile customer r6/r7/r8 koşuları `garage-physical-checkout-station-r21-v1` markerıyla başarılıdır.
 - Stock smoke mevcut order→stock→offer→checkout→exact-cash settlement zincirini korudu; customer smoke `awaiting-checkout-gate=ok checkout-station=ok station-focus=ok station-los=ok shelf-bypass-blocked=ok checkout-start=ok cash-payment=ok authority-isolated=ok customer-hidden=ok` verdi.
-- Source/docs checkpoint commit'i, onun Repository Guard'ı, doğrulanmış USB snapshotı ve Issue/Project kapanışı sıradaki güvenli kapılardır.
+- Doğrulanmış USB milestone'u 584/584 readback, 576/576 exact Git source, 7/7 evidence ve sıfır güvenlik/AppleDouble mismatch ile kapandı.
 
 ## Kullanım güvenliği protokolü
 
@@ -28,7 +30,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; doğrulanmış feature checkpoint'i `92a0f7b814ad5e597d8d4ca033f2e533f618f719` üzerinde yerel/remote eşittir.
+- Branch: `main`; closure metadata commitinden önceki doğrulanmış source/docs checkpoint'i `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc` üzerinde yerel/remote eşittir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
@@ -45,6 +47,8 @@
 - Feature commit: `92a0f7b814ad5e597d8d4ca033f2e533f618f719`.
 - Feature tree: `4150bd36fa65d4043061e5979e08efb502338fc6`.
 - Feature Repository Guard: [31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515), başarılı.
+- Source/docs commit: `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`; tree `6d73d5ac6d675733c939f181d087da3aef90f496`.
+- Source/docs Repository Guard: [31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650), başarılı.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-issue52-r3.xml`; `352/352`, failed/skipped `0`; `295494` bayt; SHA-256 `c6bd6e4fdbe7d06e5d986a23f7dbf7bd1da9b765d2df63c2136ed37d95e0ac6d`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-issue52-r3.xml`; `24/24`, failed/skipped `0`; `39375` bayt; SHA-256 `8c05afec6b0a91345d52a61482c922346f14b6a7f71addfcfb959f09ab4a9230`.
 - Universal macOS build: `327864494` bayt. Build log `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-macos-issue52-r4.log`; `579886` bayt; SHA-256 `c9a0780e1a40cc432dbf78568a72d470082319922431bd2797a514565209c69c`.
@@ -80,14 +84,18 @@
 - Source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`; 572 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 578 manifest payload satırı, toplam 580 dosya ve 10.366.388 payload baytı.
 - `MANIFEST.tsv` SHA-256: `f8d3ce98e7daa5a014d3d4c79b9a247ac5e15f737914746bd130c191289ccf20`.
 - Tam geri okuma 578/578 hash+boyut+path, 572/572 Git-blob ve 5/5 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
+- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_PHYSICAL_CHECKOUT_STATION_AND_AWAITING_CHECKOUT_GATED_CASH_PAYMENT`.
+- Source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`; 576 tracked `SOURCE`, 7 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 584 manifest payload satırı, toplam 586 dosya ve 10.485.924 payload baytı.
+- `MANIFEST.tsv` SHA-256: `7fbb5f0ce2bdd0aa32f0baa943e12d1dcf331b4ea05a85c81e0215c969531fbd`.
+- Tam geri okuma 584/584 hash+boyut+path, 576/576 exact Git source ve 7/7 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #52 source/docs commit + Guard, exact USB snapshot/readback ve GitHub acceptance/Project kapanışını tamamlamak; parent Epic #9 geniş kabulünü ayrıca doğrulamak.
-2. Epic #10 altında ilk fiziksel PC assembly dilimini ayrı bounded issue olarak açmak: tek açık kasa, tek component ve tek doğru slotla kasıtlı al/tak/sök akışı.
-3. Assembly authority'sini Inventory/checkout state'inden ayırmak; yanlış slot/engel/replay yollarını no-mutation kapatmak ve pickup/drop/placement/cart/customer regresyonlarını korumak.
+1. Epic #10 altında ilk fiziksel PC assembly dilimini ayrı bounded issue olarak açmak: tek açık kasa, tek component ve tek doğru slotla kasıtlı al/tak/sök akışı.
+2. Assembly authority'sini Inventory/checkout state'inden ayırmak; stable component/case/slot/operation provenance'ını ve attach/detach replay sözleşmesini kilitlemek.
+3. Yanlış slot, engel, range/focus/LOS, pause, held/same-frame ve stale identity yollarını no-mutation kapatmak; pickup/drop/placement/cart/customer/checkout regresyonlarını korumak.
 4. EditMode/gerçek Input System PlayMode, Universal Mac build, 1280×720 runtime smoke, Guard ve USB checkpoint zincirini yine aynı bounded pakette kapatmak.
 
 ## Güvenli devam komutu
 
-Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`, başarılı feature Guard `31892420515`, EditMode `352/352`, PlayMode `24/24`, Universal Mac `327864494` bayt ve `garage-physical-checkout-station-r21-v1` stock r4/customer r6-r8 smoke ile kaynak/test/build/runtime olarak tamamlandı. Sıradaki kapı source/docs + Guard → exact USB snapshot/readback → Issue #52 acceptance/Done/close → parent Epic #9 denetimi; sonraki geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
+Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, başarılı Guard `31892420515` + `31892875650`, EditMode `352/352`, PlayMode `24/24`, Universal Mac `327864494` bayt, `garage-physical-checkout-station-r21-v1` stock r4/customer r6-r8 smoke ve `7fbb5f0c…31fbd` manifestli USB checkpointiyle tamamlandı; acceptance `17/17`, Issue kapalı/Done ve parent Epic #9 kapalı/Done. Sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
