@@ -1,21 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #46 tamamlandı/kapatıldı ve Roadmap'te Done; deterministik tek-müşteri ziyaret + runtime NavMesh graybox dilimi source/docs/CI/USB checkpointiyle kapandı<br>
+**Durum:** Issue #47 feature commit/push/CI tamamlandı; açıklanabilir tek-offer `Buy/Leave` kararı için source/docs ve USB kapanışı sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #46 / Epic #9
+## En yeni checkpoint — Issue #47 / Epic #9
 
-- Feature commit `b37b056271fac317e99ec47df0833b8ef219cf83`, tree `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
-- `PSE.Actors`, kararlı müşteri/intent/visit kimliklerini, immutable ziyaret state'ini ve en fazla sekiz kayıt taşıyan bounded command receipt ledger'ını Unity'den bağımsız tutar.
-- Lifecycle yalnız `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited` yönünde ilerler; terminal ve exact replay davranışı deterministiktir.
-- Route denemeleri ikiyle sınırlıdır. NavMesh route bulunamazsa `RouteUnavailable`; sabır veya çıkış süresi dolarsa açıklanabilir timeout fallback'i üretilir. Hiçbir fallback stok, sepet, checkout, sipariş veya para uydurmaz.
-- Receipt doğrulaması route provenance/window, aktif state route sayısı, fulfilled çıkış başlangıcı ve normal `Exited` varış kanıtını fail-closed denetler.
-- Garaj runtime'ı görünür müşteri projection'ını explicit giriş, RAF A göz atma, checkout bekleme ve çıkış noktalarına bağlar. Domain state NPC transformundan yönetilmez.
-- Pause sırasında `SimulationClock` ve müşteri akışı ilerlemez. Runtime smoke hem normal authored-route akışını hem de route/timeout fallback'lerini ve diğer authority revision'larının izolasyonunu doğrular.
-- EditMode `255/255`, gerçek Input System PlayMode `18/18`; failed/skipped `0`.
-- Universal macOS development build ve Apple M4/Metal 1280×720 native runtime smoke başarılıdır.
-- Karar: `Docs/ADR-0024-DETERMINISTIC-CUSTOMER-VISIT-AND-BOUNDED-ROUTE-FALLBACK.md`; kanıt: `Docs/Evidence/DETERMINISTIC-CUSTOMER-VISIT-CHECKPOINT-2026-08-15.md`.
+- Feature commit `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`, tree `e8cddbc13166b35a081786fed895417cf6270c16`.
+- `PSE.Retail`, tek yönlü `PSE.Actors` referansıyla immutable `CustomerVisitRecord`, `ShelfOfferRecord` ve integer minor-unit accepted-price limitini saf/stateless biçimde değerlendirir. `PSE.Actors` bağımlılıkları değişmez.
+- Validation sırası structural input → `Browsing` → supported need → currency → product → fiyat olarak sabittir. Geçerli mismatch/above-limit `Leave`, exact product equal/below-limit `Buy` üretir.
+- Immutable karar exact customer/visit/intent/offer/price provenance ve stable reason code taşır. Exact replay value-equal; eski offer ve Browsing snapshot replay'i güncel action yetkisi değildir.
+- Evaluator authority, cache, revision, receipt, clock, RNG, Inventory, Basket, Checkout, NavMesh veya Unity nesnesi kabul etmez; bütün gameplay authority'lerinde no-mutation kalır.
+- Garage yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve reason code gösterir. Okuma reservation, checkout veya visit transition başlatmaz; mevcut explicit input akışı ayrı kalır.
+- EditMode `267/267`, gerçek Input System PlayMode `18/18`; failed/skipped `0`.
+- Universal macOS development build ve Apple M4/Metal 1280×720 native runtime `garage-offer-decision-r16-v1`, `offer-decision=ok authority-isolated=ok` ile başarılıdır.
+- Karar: `Docs/ADR-0025-EXPLAINABLE-SINGLE-OFFER-CUSTOMER-DECISION.md`; kanıt: `Docs/Evidence/EXPLAINABLE-SINGLE-OFFER-CUSTOMER-DECISION-CHECKPOINT-2026-08-15.md`.
 
 ## Kullanım güvenliği protokolü
 
@@ -30,35 +29,34 @@
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
 - Branch: `main`; source/docs checkpointte yerel HEAD ile `origin/main` eşittir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
-- Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, parcel açma, shelf offer, basket reservation, checkout snapshot ve atomik fulfillment katmanlarını içerir.
+- Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, parcel açma, shelf offer, basket reservation, checkout snapshot, atomik fulfillment ve saf tek-offer müşteri kararı katmanlarını içerir.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback ve receipt ledger'ını içerir.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-customer-visit-r15-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-offer-decision-r16-v1`.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
 
 ## Feature checkpoint ve doğrulama kanıtı
 
-- Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#46](https://github.com/cixanla/PC-Shop-Empire-3D/issues/46).
-- Feature commit: `b37b056271fac317e99ec47df0833b8ef219cf83`.
-- Feature tree: `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
-- Feature Repository Guard: [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147), başarılı.
-- Source/docs checkpoint: `d163328be3df4f2cf8b3314d39cf3ab122ff6300`; tree `47ad5f925bea0e55c0b4e95f9f69fab3b10f522a`.
-- Source/docs Repository Guard: [31875627062](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875627062), başarılı.
-- Issue #46 kapalı/Done; Epic #9 açık/In Progress.
-- EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-customer46-r17-final.xml`; `255/255`; SHA-256 `8e4e8ab5f628214f07ccd7955e31788c95a64d3a031433df746b1eeaa7d6c6a8`.
-- PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-customer46-r17-final.xml`; `18/18`; SHA-256 `3787c37f5871866b1e4926fcaa070a65a79e31bcf2fc3bd3abf9c49edfe9c811`.
-- Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-customer46-macos-r17-final.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327697921`; SHA-256 `3b6b2338469bf2b1957fff74b7826579bd55fcb60f64383d08d2f3344ebd6378`.
-- Universal app executable: Mach-O `x86_64 + arm64`; SHA-256 `f62879d166ed6359ee3a0df80a771aaf52d9c93efe2ceb456960ca256a4302aa`.
-- Normal runtime log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/runtime-customer46-macos-r17-final.log`; Apple M4/Metal 1280×720; SHA-256 `83fa744459883cb5b871254f583171d132888d7fa3d455d1796ceeda38482514`.
-- Leak diagnostic runtime log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/runtime-customer46-macos-r16-leakdiag.log`; SHA-256 `e254918c22650d719ad915f7156c535b8fb0c6acb8cb0c044cc69de426e26ba4`.
+- Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#47](https://github.com/cixanla/PC-Shop-Empire-3D/issues/47).
+- Feature commit: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`.
+- Feature tree: `e8cddbc13166b35a081786fed895417cf6270c16`.
+- Feature Repository Guard: [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251), başarılı.
+- Source/docs checkpoint ve Guard: bu yaşayan belge turundaki commit/push sonrasında eklenecek.
+- Issue #47 açık/In Progress; doğrulanmış USB snapshot sonrasında Done/close yapılacak. Epic #9 açık/In Progress kalır.
+- EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-offer47-r3-final.xml`; `267/267`; SHA-256 `06847e5696aa29a73d99672bb00e894205c4e840a950256398d91a81b9446129`.
+- PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-offer47-r2-final.xml`; `18/18`; SHA-256 `133c26469fa0c074b365be265567326bff1f84fcd25b04e71f0ccadfb960677c`.
+- Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-offer47-macos-r1.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327708376`; SHA-256 `b2c109d4232c97e6ff17229057eb207e10299c60105611e1d3341b5555c95522`.
+- Universal app executable: Mach-O `x86_64 + arm64`; SHA-256 `68fd897fafc53d2560bd3a1261767ff3a91a09c7a41df6da2df0b61493cd67de`.
+- Runtime log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/runtime-offer47-macos-r1.log`; Apple M4/Metal 1280×720; SHA-256 `d28254dc7e74a2723215fe20d0b82c84c4fd688e864840ef2ba92e0c2a023195`.
 - Sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; SHA-256 `16376412909b92e06eceae83e412111770ca06a6503c9cbd975427d8d25ed685`.
-- Runtime ready: `customer-visit=ready customer-navmesh=ready lookdev=ok`.
-- Runtime smoke: `customer-visit=ok runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok customer-hidden=ok`.
-- Normal ve leakdiag loglarında exception, smoke failure veya `JobTempAlloc` sızıntısı yoktur.
+- Runtime ready: `garage-offer-decision-r16-v1 customer-visit=ready customer-navmesh=ready lookdev=ok`.
+- Runtime smoke: `customer-visit=ok runtime-route=ok pause=ok offer-decision=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok customer-hidden=ok`.
+- Final loglarda assertion, unhandled exception, smoke failure veya `JobTempAlloc` sızıntısı yoktur.
 
 ## Bilinçli kapsam dışı
 
+- Kararı basket/lifecycle action'a uygulama, stale/current snapshot revalidation ve Actors↔Retail customer ID köprüsü.
 - Utility scoring, çoklu ürün/offer seçimi, çoklu müşteri ve sıra kapasitesi.
 - Ödeme yöntemi, Economy ledger, nakit, gelir, COGS, vergi, indirim ve fiş/fatura.
 - Memnuniyet/itibar, çalışan AI, Save/Guardian, final model/animasyon/ses ve gerçek Windows doğrulaması.
@@ -70,16 +68,17 @@
 - `MANIFEST.tsv` SHA-256: `c82fc76dcf7b12f60e5106fb9dc78cf7f942824777b5a0db3902144125bb2cfd`.
 - Hash/boyut/path readback, 535/535 Git-blob eşliği geçti; forbidden/credential/AppleDouble `0`.
 - `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
+- Issue #47 için yeni `EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION` milestone'ı source/docs commit ve Guard sonrasında oluşturulacak; tamamlanmadan #47 kapatılmayacak.
 
 ## Sıradaki bounded paket
 
-Issue #9 altında tek müşterinin tek shelf offer için deterministik ve açıklanabilir `buy/leave` kararı:
+Issue #9 altında `Buy/Leave` kararını güvenli eyleme dönüştüren ayrı bounded paket:
 
-1. Stable intent/visit ile immutable offer/product snapshot'ını revision-aware değerlendirmek.
-2. Sonucu stable reason code ve idempotent receipt ile üretmek; stok, sepet, Economy veya Save'i doğrudan mutate etmemek.
-3. Garajda mevcut reservation/checkout zincirine yalnız açık adapter üzerinden bağlamak.
-4. Çoklu ürün/müşteri, fiyat optimizasyonu, Economy, memnuniyet ve final karakter sanatını sonraki bounded paketlerde tutmak.
+1. Kararın visit last-updated ve offer revision provenance'ını current authority snapshotlarıyla fail-closed yeniden doğrulamak.
+2. Actors↔Retail customer kimlik eşlemesini explicit yapmak; stale kararın reservation/checkout/exit action'ı başlatmasını engellemek.
+3. `Buy` reservation/checkout-navigation ve `Leave` güvenli exit davranışlarını atomic/no-mutation preflight ile birbirinden ayırmak.
+4. Ödeme/Economy, çoklu offer/customer, memnuniyet, Save ve final karakter sanatını kapsam dışında tutmak.
 
 ## Güvenli devam komutu
 
-Issue #46 kapanışı tamamdır. Önce temiz `main`/`origin/main` ve açık Epic #9'u doğrula; ardından tek-offer `buy/leave` issue'sunu oluşturup domain-first küçük paket olarak uygula. Inventory/Retail/Economy/Save sınırlarını karıştırma.
+Issue #47 feature `f97ded3` ve Guard `31876993251` başarılıdır. Önce source/docs Guard ve USB milestone kapanışını tamamla, #47'yi Done/close yap ve temiz `main` bırak; ardından Epic #9 altındaki stale-safe karar action paketini aç. Inventory/Retail/Economy/Save sınırlarını karıştırma.

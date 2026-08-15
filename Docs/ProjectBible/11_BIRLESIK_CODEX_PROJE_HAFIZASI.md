@@ -148,22 +148,23 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `b37b056271fac317e99ec47df0833b8ef219cf83`, tree `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
-- Issue #46 kapsamındaki ilk deterministic customer visit ve runtime NavMesh graybox dilimi tamamlandı; Issue kapalı, Roadmap item'ı Done; Epic #9 açık/In Progress kalır.
-- Feature Repository Guard [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147) ve source/docs checkpoint `d163328` Guard'ı [31875627062](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875627062) başarılıdır.
-- EditMode `255/255`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
-- Universal macOS development build `327.697.921` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `customer-visit=ok runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` geçti.
+- Son doğrulanmış kaynak feature: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`, tree `e8cddbc13166b35a081786fed895417cf6270c16`.
+- Issue #47 kapsamındaki açıklanabilir tek-offer `Buy/Leave` domain + Garage graybox dilimi feature olarak tamamlandı; source/docs/USB kapanışı sürüyor. Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251) başarılıdır; source/docs Guard bu yaşayan belge commitinden sonra kaydedilecektir.
+- EditMode `267/267`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
+- Universal macOS development build `327.708.376` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-offer-decision-r16-v1 offer-decision=ok authority-isolated=ok` ile geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
 - Customer visit lifecycle yalnız ileri ilerler; route başarısızlığı iki denemeyle sınırlıdır. `RouteUnavailable`, patience ve exit timeout sonuçları açıklanabilir ve no-mutation'dır; exact terminal replay ve receipt ledger invariantları testlidir.
+- Tek-offer evaluator yalnız immutable visit/offer/accepted-price provenance tüketir; exact replay value-equal, historical snapshot action yetkisi değildir. `Buy/Leave` okuması Actors/Inventory/Orders/Offer/Basket/Checkout state'ini değiştirmez.
 - Mevcut primitive müşteri, büyük durum panoları ve debug HUD final sanat/UI değildir. Okunaklı yarı gerçekçi görsel yön ve bağlamsal/diegetic UI ayrı bounded presentation paketlerinde geliştirilecektir.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #9 altında tek müşterinin tek immutable shelf offer/product snapshot'ını deterministic ve revision-aware değerlendiren küçük bir `buy/leave` sözleşmesi kur.
-2. Kararı stable reason code ve idempotent receipt ile açıkla; stok, sepet, checkout, Economy veya Save'i değerlendirme authority'sinden doğrudan mutate etme.
-3. Garaj presentation'ını yalnız explicit adapter üzerinden mevcut reservation/checkout zincirine bağla; çoklu ürün/müşteri, price optimization, memnuniyet ve final sanat ayrı bounded paketler olarak kalsın.
+1. Önce Issue #47 source/docs Guard, USB milestone ve GitHub Done/close kapanışını tamamla.
+2. Sonra Issue #9 altında `Buy/Leave` provenanceını current visit/offer revisionlarıyla fail-closed yeniden doğrulayan explicit action sözleşmesi kur.
+3. Actors↔Retail customer ID mapping olmadan reservation/checkout/exit başlatma; çoklu ürün/müşteri, ödeme/Economy, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -244,4 +245,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Deterministik customer visit checkpointi kapandı: feature `b37b056`, source/docs `d163328`, Issue #46 Done ve doğrulanmış USB milestone kayıtlıdır. Sonraki bounded paket Epic #9 altında tek müşteri + tek shelf offer için açıklanabilir `buy/leave` değerlendirmesidir; Inventory/Retail/Economy/Save authority sınırlarını karıştırma. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Explainable single-offer feature `f97ded3` ve Guard `31876993251` başarılıdır; EditMode 267/267, PlayMode 18/18 ve Mac `offer-decision=ok` geçti. Önce source/docs + USB + Issue #47 kapanışını tamamla; sonra Epic #9 altında stale-safe decision-action sınırına geç. Inventory/Retail/Economy/Save authority sınırlarını karıştırma ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

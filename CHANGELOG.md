@@ -51,7 +51,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Müşteri yaşam döngüsü `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited`; state başına iki route denemesi, `RouteUnavailable`, patience/exit timeout ve güvenli terminal fallback ile sınırlandı.
 - GarageGraybox'a runtime `NavMeshSurface`, explicit giriş/RAF A/checkout/çıkış anchor'ları, görünür graybox müşteri ve checkout köşesi eklendi. Offer, reservation ve fulfillment mevcut authority sonuçlarından projection transition'ı tetikliyor; NPC transformu stok/checkout authority'sini değiştirmiyor.
 - Customer runtime smoke transient state yarışına karşı bounded başlangıç pause'u/diagnostic hız penceresi kullanıyor; normal ve leakdiag player koşuları canlı route, pause, fulfillment, route/timeout fallback, authority isolation ve güvenli despawn sonucunu doğruluyor.
-- Edit Mode baseline `255/255`, Play Mode baseline `18/18` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` gerçek player smoke geçti.
+- Tek yönlü `PSE.Retail → PSE.Actors` bağımlılığıyla pure/stateless `CustomerOfferDecisionEvaluator`, immutable/equatable exact provenance, deterministic `Buy/Leave` reasonları ve stable invalid-input failure kodları eklendi.
+- Exact replay, historical offer/Browsing snapshot, literal public code, validation precedence ve aynı outcome taşıyan farklı accepted-price provenance testleri eklendi; evaluator hiçbir authority/cache/revision/receipt/action taşımaz.
+- Garage müşteri status'u yalnız `Browsing` sırasında renge bağımlı kalmadan `KARAR: SATIN AL / AYRIL` ve stable reason code gösteriyor; gerçek keyboard/gamepad akışında karar okuması Actors/Inventory/Orders/Offer/Basket/Checkout state'ini değiştirmiyor.
+- Edit Mode baseline `267/267`, Play Mode baseline `18/18` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-offer-decision-r16-v1 offer-decision=ok authority-isolated=ok` gerçek player smoke geçti.
 
 ### Changed
 
