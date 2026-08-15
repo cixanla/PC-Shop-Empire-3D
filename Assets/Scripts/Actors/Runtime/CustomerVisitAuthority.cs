@@ -4,6 +4,9 @@ using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Retail")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.EditModeTests")]
+
 namespace PCShopEmpire3D.Actors
 {
     /// <summary>
@@ -325,6 +328,159 @@ namespace PCShopEmpire3D.Actors
             {
                 return OperationResult.Fail(
                     CustomerVisitFailures.CheckoutNavigationPlanStale);
+            }
+
+            _visits[plan.VisitId] = plan.ReplacementVisit;
+            Revision++;
+            ObserveTime(plan.At);
+            return OperationResult.Success();
+        }
+
+        internal OperationResult BeginOfferDeclinedExit(
+            StableId<CustomerVisitIdScope> visitId,
+            SimulationTimestamp at)
+        {
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> prepared =
+                PrepareOfferDeclinedExit(visitId, at);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedOfferDeclinedExit(prepared.Value);
+        }
+
+        internal OperationResult<CustomerVisitOfferDeclinedExitPlan>
+            PrepareOfferDeclinedExit(
+                StableId<CustomerVisitIdScope> visitId,
+                SimulationTimestamp at)
+        {
+            if (!_visits.TryGetValue(visitId, out CustomerVisitRecord visit))
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.UnknownVisit);
+            }
+
+            if (visit.CommandReceipts.ContainsExact(
+                CustomerVisitCommandKind.BeginOfferDeclinedExit,
+                at,
+                CustomerVisitExitReason.OfferDeclined))
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Success(
+                    new CustomerVisitOfferDeclinedExitPlan(
+                        this,
+                        Revision,
+                        visit,
+                        null,
+                        at,
+                        _hasObservedTime,
+                        _lastObservedAt,
+                        true));
+            }
+
+            if (IsBeforeObservedTime(at))
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.NonMonotonicTimestamp);
+            }
+
+            if (visit.State != CustomerVisitState.Browsing)
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.InvalidTransition);
+            }
+
+            if (!IsStrictlyAfter(at, visit.LastUpdatedAt))
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.NonMonotonicTimestamp);
+            }
+
+            Failure deadlineFailure = TryCreateDeadline(at, out SimulationTimestamp deadline);
+            if (!deadlineFailure.IsNone)
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    deadlineFailure);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.RevisionOverflow);
+            }
+
+            var receipt = new CustomerVisitCommandReceipt(
+                CustomerVisitCommandKind.BeginOfferDeclinedExit,
+                at,
+                CustomerVisitExitReason.OfferDeclined,
+                visit.State);
+            if (!visit.CommandReceipts.TryAppend(
+                receipt,
+                out CustomerVisitCommandReceipts replacementReceipts))
+            {
+                return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Fail(
+                    CustomerVisitFailures.InvariantViolation);
+            }
+
+            var replacement = new CustomerVisitRecord(
+                visit.Id,
+                visit.Intent,
+                CustomerVisitState.Exiting,
+                visit.StartedAt,
+                at,
+                at,
+                deadline,
+                0,
+                visit.TotalRouteFailureCount,
+                visit.LastRouteFailureAt,
+                visit.HasRouteFailureReport,
+                CustomerVisitExitReason.OfferDeclined,
+                false,
+                replacementReceipts);
+            return OperationResult<CustomerVisitOfferDeclinedExitPlan>.Success(
+                new CustomerVisitOfferDeclinedExitPlan(
+                    this,
+                    Revision,
+                    visit,
+                    replacement,
+                    at,
+                    _hasObservedTime,
+                    _lastObservedAt,
+                    false));
+        }
+
+        internal OperationResult CommitPreparedOfferDeclinedExit(
+            CustomerVisitOfferDeclinedExitPlan plan)
+        {
+            if (plan == null || !ReferenceEquals(plan.Owner, this))
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.OfferDeclinedExitPlanInvalid);
+            }
+
+            if (_visits.TryGetValue(plan.VisitId, out CustomerVisitRecord replayVisit) &&
+                replayVisit.CommandReceipts.ContainsExact(
+                    CustomerVisitCommandKind.BeginOfferDeclinedExit,
+                    plan.At,
+                    CustomerVisitExitReason.OfferDeclined))
+            {
+                return OperationResult.Success();
+            }
+
+            if (plan.IsReplay)
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.OfferDeclinedExitPlanStale);
+            }
+
+            bool observedTimeMatches =
+                _hasObservedTime == plan.ExpectedHasObservedTime &&
+                (!_hasObservedTime || _lastObservedAt == plan.ExpectedLastObservedAt);
+            if (Revision != plan.ExpectedRevision ||
+                !observedTimeMatches ||
+                !_visits.TryGetValue(plan.VisitId, out CustomerVisitRecord current) ||
+                !ReferenceEquals(current, plan.ExpectedVisit) ||
+                plan.ReplacementVisit == null)
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.OfferDeclinedExitPlanStale);
             }
 
             _visits[plan.VisitId] = plan.ReplacementVisit;
@@ -893,6 +1049,7 @@ namespace PCShopEmpire3D.Actors
             bool hasCheckoutNavigation = false;
             bool hasCheckoutArrival = false;
             bool hasBeginExit = false;
+            bool hasOfferDeclinedExit = false;
             bool hasExitArrival = false;
             bool hasExitingActivity = false;
             bool hasPrevious = false;
@@ -962,9 +1119,21 @@ namespace PCShopEmpire3D.Actors
                         hasBeginExit = true;
                         hasExitingActivity = true;
                         break;
+                    case CustomerVisitCommandKind.BeginOfferDeclinedExit:
+                        if (hasOfferDeclinedExit || hasCheckoutNavigation ||
+                            !hasBrowseArrival || hasExitingActivity ||
+                            receipt.ExitReason != CustomerVisitExitReason.OfferDeclined ||
+                            receipt.AcceptedFromState != CustomerVisitState.Browsing)
+                        {
+                            return CustomerVisitFailures.InvariantViolation;
+                        }
+
+                        hasOfferDeclinedExit = true;
+                        hasExitingActivity = true;
+                        break;
                     case CustomerVisitCommandKind.MarkExitArrival:
                         if (hasExitArrival || exitRouteFailures >= _routeAttemptLimit ||
-                            (!hasBeginExit &&
+                            (!hasBeginExit && !hasOfferDeclinedExit &&
                              enteringRouteFailures < _routeAttemptLimit &&
                              checkoutRouteFailures < _routeAttemptLimit &&
                              visit.ExitReason != CustomerVisitExitReason.PatienceExpired) ||
@@ -1015,7 +1184,7 @@ namespace PCShopEmpire3D.Actors
                         else
                         {
                             if (hasExitArrival || exitRouteFailures >= _routeAttemptLimit ||
-                                (!hasBeginExit &&
+                                (!hasBeginExit && !hasOfferDeclinedExit &&
                                  enteringRouteFailures < _routeAttemptLimit &&
                                  checkoutRouteFailures < _routeAttemptLimit &&
                                  visit.ExitReason != CustomerVisitExitReason.PatienceExpired))
@@ -1036,8 +1205,13 @@ namespace PCShopEmpire3D.Actors
                 hasPrevious = true;
             }
 
-            if ((hasBeginExit && visit.ExitReason != CustomerVisitExitReason.Fulfilled) ||
-                (visit.ExitReason == CustomerVisitExitReason.Fulfilled && !hasBeginExit))
+            if ((hasBeginExit && hasOfferDeclinedExit) ||
+                (hasBeginExit && visit.ExitReason != CustomerVisitExitReason.Fulfilled) ||
+                (visit.ExitReason == CustomerVisitExitReason.Fulfilled && !hasBeginExit) ||
+                (hasOfferDeclinedExit &&
+                 visit.ExitReason != CustomerVisitExitReason.OfferDeclined) ||
+                (visit.ExitReason == CustomerVisitExitReason.OfferDeclined &&
+                 !hasOfferDeclinedExit))
             {
                 return CustomerVisitFailures.InvariantViolation;
             }
@@ -1151,7 +1325,8 @@ namespace PCShopEmpire3D.Actors
         {
             return reason == CustomerVisitExitReason.Fulfilled ||
                    reason == CustomerVisitExitReason.PatienceExpired ||
-                   reason == CustomerVisitExitReason.RouteUnavailable;
+                   reason == CustomerVisitExitReason.RouteUnavailable ||
+                   reason == CustomerVisitExitReason.OfferDeclined;
         }
 
         private static bool IsValidState(CustomerVisitState state)

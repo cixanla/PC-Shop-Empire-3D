@@ -16,7 +16,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-buy-action-r17-v1";
+        public const string Version = "garage-leave-action-r18-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -117,6 +117,10 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerBuyActionAuthority = hasArrivedStockFlow &&
                                                  stockFlow.Session.CustomerOfferActions != null &&
                                                  stockFlow.Session.CustomerOfferActions.Count == 0;
+            bool hasCustomerLeaveActionAuthority = hasCustomerBuyActionAuthority &&
+                                                   !stockFlow.Session.PrototypeCustomerLeaveActionId.IsEmpty &&
+                                                   stockFlow.Session.PrototypeCustomerLeaveActionId !=
+                                                   stockFlow.Session.PrototypeCustomerBuyActionId;
             bool hasCustomerNavigation = customerFlow != null &&
                                          customerFlow.NavigationReady &&
                                          customerFlow.CustomerAgent != null;
@@ -140,6 +144,7 @@ namespace PCShopEmpire3D.Presentation
                 $"checkout-completion={(hasCheckoutCompletionAuthority ? "ready" : "missing")} " +
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
+                $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -805,6 +810,159 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            GarageStockFlowSession leaveSession = GarageStockFlowSession.CreateArrived();
+            OperationResult leaveAccept = leaveSession.AcceptArrivedDelivery();
+            OperationResult leaveShelf = leaveSession.TransferItem(
+                leaveSession.ShelfContainerId);
+            OperationResult leavePublish = leaveSession.PublishShelfOffer();
+            OperationResult leavePrice = leaveSession.RetailOffers.SetOffer(
+                leaveSession.ShelfOfferId,
+                leaveSession.ProductId,
+                leaveSession.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1);
+            OperationResult leaveStart = leaveSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult leaveBrowse = leaveSession.MarkPrototypeCustomerBrowseArrival(
+                SimulationTimestamp.Create(2, 40));
+            OperationResult<CustomerOfferDecision> leaveDecision =
+                leaveSession.EvaluatePrototypeCustomerOffer();
+            long leaveActionRevision = leaveSession.CustomerOfferActions.Revision;
+            long leaveActorRevision = leaveSession.CustomerVisits.Revision;
+            long leaveInventoryRevision = leaveSession.Inventory.Revision;
+            long leaveBasketRevision = leaveSession.RetailBaskets.Revision;
+            long leaveOfferRevision = leaveSession.RetailOffers.Revision;
+            long leaveCheckoutRevision = leaveSession.RetailCheckouts.Revision;
+            long leaveOrderRevision = leaveSession.Orders.Revision;
+            OperationResult leaveApply = leaveDecision.IsSuccess
+                ? leaveSession.ApplyPrototypeCustomerLeave(
+                    leaveDecision.Value,
+                    SimulationTimestamp.Create(3, 60))
+                : OperationResult.Fail(leaveDecision.Error);
+            OperationResult leaveExit = leaveApply.IsSuccess
+                ? leaveSession.MarkPrototypeCustomerExitArrival(
+                    SimulationTimestamp.Create(4, 80))
+                : OperationResult.Fail(leaveApply.Error);
+            bool leaveAction = leaveAccept.IsSuccess &&
+                               leaveShelf.IsSuccess &&
+                               leavePublish.IsSuccess &&
+                               leavePrice.IsSuccess &&
+                               leaveStart.IsSuccess &&
+                               leaveBrowse.IsSuccess &&
+                               leaveDecision.IsSuccess &&
+                               leaveDecision.Value.DecisionKind ==
+                                   CustomerOfferDecisionKind.Leave &&
+                               leaveApply.IsSuccess &&
+                               leaveExit.IsSuccess &&
+                               leaveSession.CustomerOfferActions.Revision ==
+                                   leaveActionRevision + 1 &&
+                               leaveSession.CustomerVisits.Revision ==
+                                   leaveActorRevision + 2 &&
+                               leaveSession.Inventory.Revision == leaveInventoryRevision &&
+                               leaveSession.RetailBaskets.Revision == leaveBasketRevision &&
+                               leaveSession.RetailOffers.Revision == leaveOfferRevision &&
+                               leaveSession.RetailCheckouts.Revision == leaveCheckoutRevision &&
+                               leaveSession.Orders.Revision == leaveOrderRevision &&
+                               leaveSession.TryGetPrototypeCustomerLeaveAction(
+                                   out CustomerOfferDecisionActionRecord leaveRecord) &&
+                               leaveRecord.IsLeave &&
+                               !leaveRecord.HasReservation &&
+                               leaveSession.TryGetPrototypeCustomerVisit(
+                                   out CustomerVisitRecord declinedVisit) &&
+                               declinedVisit.State == CustomerVisitState.Exited &&
+                               declinedVisit.ExitReason ==
+                                   CustomerVisitExitReason.OfferDeclined &&
+                               leaveSession.RetailBaskets.Count == 0 &&
+                               leaveSession.Inventory.ReservationCount == 0 &&
+                               leaveSession.ValidateInvariants().IsSuccess;
+            if (!leaveAction)
+            {
+                LogCustomerFlowSmokeFailure(
+                    leaveApply.IsFailure
+                        ? leaveApply.Error.Code
+                        : leaveExit.IsFailure
+                            ? leaveExit.Error.Code
+                            : "smoke.leave-action-mismatch");
+                yield break;
+            }
+
+            GarageStockFlowSession staleLeaveSession = GarageStockFlowSession.CreateArrived();
+            OperationResult staleLeaveAccept = staleLeaveSession.AcceptArrivedDelivery();
+            OperationResult staleLeaveShelf = staleLeaveSession.TransferItem(
+                staleLeaveSession.ShelfContainerId);
+            OperationResult staleLeavePublish = staleLeaveSession.PublishShelfOffer();
+            OperationResult staleLeavePrice = staleLeaveSession.RetailOffers.SetOffer(
+                staleLeaveSession.ShelfOfferId,
+                staleLeaveSession.ProductId,
+                staleLeaveSession.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1);
+            OperationResult staleLeaveStart = staleLeaveSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult staleLeaveBrowse =
+                staleLeaveSession.MarkPrototypeCustomerBrowseArrival(
+                    SimulationTimestamp.Create(2, 40));
+            OperationResult<CustomerOfferDecision> staleLeaveDecision =
+                staleLeaveSession.EvaluatePrototypeCustomerOffer();
+            OperationResult staleLeaveDrift = staleLeaveSession.RetailOffers.SetOffer(
+                staleLeaveSession.ShelfOfferId,
+                staleLeaveSession.ProductId,
+                staleLeaveSession.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits);
+            long staleLeaveActionRevision = staleLeaveSession.CustomerOfferActions.Revision;
+            long staleLeaveActorRevision = staleLeaveSession.CustomerVisits.Revision;
+            long staleLeaveInventoryRevision = staleLeaveSession.Inventory.Revision;
+            long staleLeaveBasketRevision = staleLeaveSession.RetailBaskets.Revision;
+            long staleLeaveOfferRevision = staleLeaveSession.RetailOffers.Revision;
+            long staleLeaveCheckoutRevision = staleLeaveSession.RetailCheckouts.Revision;
+            long staleLeaveOrderRevision = staleLeaveSession.Orders.Revision;
+            OperationResult staleLeaveApply = staleLeaveDecision.IsSuccess
+                ? staleLeaveSession.ApplyPrototypeCustomerLeave(
+                    staleLeaveDecision.Value,
+                    SimulationTimestamp.Create(3, 60))
+                : OperationResult.Fail(staleLeaveDecision.Error);
+            bool staleLeaveBlocked = staleLeaveAccept.IsSuccess &&
+                                     staleLeaveShelf.IsSuccess &&
+                                     staleLeavePublish.IsSuccess &&
+                                     staleLeavePrice.IsSuccess &&
+                                     staleLeaveStart.IsSuccess &&
+                                     staleLeaveBrowse.IsSuccess &&
+                                     staleLeaveDecision.IsSuccess &&
+                                     staleLeaveDecision.Value.DecisionKind ==
+                                         CustomerOfferDecisionKind.Leave &&
+                                     staleLeaveDrift.IsSuccess &&
+                                     staleLeaveApply.Error ==
+                                         CustomerOfferDecisionActionFailures.DecisionStale &&
+                                     staleLeaveSession.CustomerOfferActions.Revision ==
+                                         staleLeaveActionRevision &&
+                                     staleLeaveSession.CustomerVisits.Revision ==
+                                         staleLeaveActorRevision &&
+                                     staleLeaveSession.Inventory.Revision ==
+                                         staleLeaveInventoryRevision &&
+                                     staleLeaveSession.RetailBaskets.Revision ==
+                                         staleLeaveBasketRevision &&
+                                     staleLeaveSession.RetailOffers.Revision ==
+                                         staleLeaveOfferRevision &&
+                                     staleLeaveSession.RetailCheckouts.Revision ==
+                                         staleLeaveCheckoutRevision &&
+                                     staleLeaveSession.Orders.Revision == staleLeaveOrderRevision &&
+                                     staleLeaveSession.CustomerOfferActions.Count == 0 &&
+                                     staleLeaveSession.RetailBaskets.Count == 0 &&
+                                     staleLeaveSession.Inventory.ReservationCount == 0 &&
+                                     staleLeaveSession.TryGetPrototypeCustomerVisit(
+                                         out CustomerVisitRecord staleLeaveVisit) &&
+                                     staleLeaveVisit.State == CustomerVisitState.Browsing &&
+                                     staleLeaveSession.ValidateInvariants().IsSuccess;
+            if (!staleLeaveBlocked)
+            {
+                LogCustomerFlowSmokeFailure(
+                    staleLeaveApply.IsFailure
+                        ? staleLeaveApply.Error.Code
+                        : "smoke.stale-leave-mutated-authority");
+                yield break;
+            }
+
             GarageStockFlowSession routeFallbackSession = GarageStockFlowSession.CreateArrived();
             long fallbackInventoryRevision = routeFallbackSession.Inventory.Revision;
             long fallbackOrderRevision = routeFallbackSession.Orders.Revision;
@@ -879,6 +1037,7 @@ namespace PCShopEmpire3D.Presentation
             Debug.Log(
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
                 "pause=ok offer-decision=ok buy-action=ok stale-blocked=ok fulfilled=ok " +
+                "leave-action=ok stale-leave-blocked=ok " +
                 "domain-route-fallback=ok domain-timeout-fallback=ok " +
                 "authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok " +
                 "customer-hidden=ok");

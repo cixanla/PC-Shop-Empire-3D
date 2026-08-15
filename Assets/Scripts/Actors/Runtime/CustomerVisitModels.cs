@@ -25,7 +25,8 @@ namespace PCShopEmpire3D.Actors
         None = 0,
         Fulfilled = 1,
         PatienceExpired = 2,
-        RouteUnavailable = 3
+        RouteUnavailable = 3,
+        OfferDeclined = 4
     }
 
     internal enum CustomerVisitCommandKind
@@ -35,7 +36,8 @@ namespace PCShopEmpire3D.Actors
         MarkCheckoutArrival = 3,
         BeginExit = 4,
         MarkExitArrival = 5,
-        ReportRouteFailure = 6
+        ReportRouteFailure = 6,
+        BeginOfferDeclinedExit = 7
     }
 
     internal readonly struct CustomerVisitCommandReceipt
@@ -258,6 +260,52 @@ namespace PCShopEmpire3D.Actors
         public bool IsReplay { get; }
     }
 
+    /// <summary>
+    /// Side-effect-free, revision-bound transition from Browsing to an OfferDeclined exit.
+    /// Only the authority that prepared the plan can commit it; exact historical command
+    /// replays remain no-op after the customer has left the store.
+    /// </summary>
+    internal sealed class CustomerVisitOfferDeclinedExitPlan
+    {
+        internal CustomerVisitOfferDeclinedExitPlan(
+            CustomerVisitAuthority owner,
+            long expectedRevision,
+            CustomerVisitRecord expectedVisit,
+            CustomerVisitRecord replacementVisit,
+            SimulationTimestamp at,
+            bool expectedHasObservedTime,
+            SimulationTimestamp expectedLastObservedAt,
+            bool isReplay)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            ExpectedVisit = expectedVisit;
+            ReplacementVisit = replacementVisit;
+            At = at;
+            ExpectedHasObservedTime = expectedHasObservedTime;
+            ExpectedLastObservedAt = expectedLastObservedAt;
+            IsReplay = isReplay;
+        }
+
+        internal CustomerVisitAuthority Owner { get; }
+
+        internal CustomerVisitRecord ExpectedVisit { get; }
+
+        internal CustomerVisitRecord ReplacementVisit { get; }
+
+        internal bool ExpectedHasObservedTime { get; }
+
+        internal SimulationTimestamp ExpectedLastObservedAt { get; }
+
+        public long ExpectedRevision { get; }
+
+        public StableId<CustomerVisitIdScope> VisitId => ExpectedVisit.Id;
+
+        public SimulationTimestamp At { get; }
+
+        public bool IsReplay { get; }
+    }
+
     public static class CustomerVisitFailures
     {
         public static readonly Failure MissingCatalog =
@@ -302,6 +350,10 @@ namespace PCShopEmpire3D.Actors
             Failure.FromCode("actors.customer-visit.checkout-plan-invalid");
         public static readonly Failure CheckoutNavigationPlanStale =
             Failure.FromCode("actors.customer-visit.checkout-plan-stale");
+        public static readonly Failure OfferDeclinedExitPlanInvalid =
+            Failure.FromCode("actors.customer-visit.offer-declined-plan-invalid");
+        public static readonly Failure OfferDeclinedExitPlanStale =
+            Failure.FromCode("actors.customer-visit.offer-declined-plan-stale");
         public static readonly Failure InvariantViolation =
             Failure.FromCode("actors.customer-visit.invariant-violation");
     }

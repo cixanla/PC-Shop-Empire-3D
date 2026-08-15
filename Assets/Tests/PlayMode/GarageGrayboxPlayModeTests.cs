@@ -1768,6 +1768,264 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardDisplayedLeaveSendsCustomerOutWithoutCommerceMutation()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            GarageCustomerFlowRuntime customerFlow = marker.CustomerFlow;
+            InventoryItemWorldBinding binding = stockFlow.ItemBinding;
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            marker.PlayerMotor.SetPaused(false);
+
+            Assert.That(stockFlow.Session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.TransferItem(
+                stockFlow.Session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.RetailOffers.SetOffer(
+                stockFlow.Session.ShelfOfferId,
+                stockFlow.Session.ProductId,
+                stockFlow.Session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1).IsSuccess,
+                Is.True);
+            stockFlow.RefreshPresentation();
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+
+            CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
+            customerFlow.RefreshPresentation();
+            Assert.That(displayedDecision, Is.Not.Null);
+            Assert.That(displayedDecision.DecisionKind,
+                Is.EqualTo(CustomerOfferDecisionKind.Leave));
+            Assert.That(customerFlow.StateText, Does.Contain("KARAR: AYRIL"));
+
+            long actorRevision = stockFlow.Session.CustomerVisits.Revision;
+            long inventoryRevision = stockFlow.Session.Inventory.Revision;
+            long basketRevision = stockFlow.Session.RetailBaskets.Revision;
+            long actionRevision = stockFlow.Session.CustomerOfferActions.Revision;
+            long offerRevision = stockFlow.Session.RetailOffers.Revision;
+            long checkoutRevision = stockFlow.Session.RetailCheckouts.Revision;
+            long orderRevision = stockFlow.Session.Orders.Revision;
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
+            Assert.That(binding.RequiresCustomerDeparture, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("müşteriyi teklifi reddederek uğurla"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.DropBindingPrompt));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode, Is.Empty);
+            Assert.That(binding.IsCustomerReserved, Is.False);
+            Assert.That(stockFlow.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(actionRevision + 1));
+            Assert.That(stockFlow.Session.CustomerVisits.Revision,
+                Is.EqualTo(actorRevision + 1));
+            Assert.That(stockFlow.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(stockFlow.Session.TryGetPrototypeCustomerLeaveAction(
+                out CustomerOfferDecisionActionRecord action), Is.True);
+            Assert.That(action.IsLeave, Is.True);
+            Assert.That(action.HasReservation, Is.False);
+            Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Exiting));
+            Assert.That(customerFlow.CurrentVisit.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(customerFlow.StatusText, Does.Contain("TEKLİF REDDEDİLDİ"));
+            Assert.That(customerFlow.CustomerStatusText.text,
+                Does.Contain("TEKLİF REDDEDİLDİ"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Exited);
+            Assert.That(customerFlow.CurrentVisit.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(customerFlow.CustomerVisible, Is.False);
+            Assert.That(stockFlow.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(actionRevision + 1));
+            Assert.That(stockFlow.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadDisplayedLeaveUsesEastAndPreservesShelfStock()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            GarageCustomerFlowRuntime customerFlow = marker.CustomerFlow;
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            marker.PlayerMotor.SetPaused(false);
+
+            Assert.That(stockFlow.Session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.TransferItem(
+                stockFlow.Session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.RetailOffers.SetOffer(
+                stockFlow.Session.ShelfOfferId,
+                stockFlow.Session.ProductId,
+                stockFlow.Session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1).IsSuccess,
+                Is.True);
+            stockFlow.RefreshPresentation();
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            Assert.That(customerFlow.CurrentOfferDecision.DecisionKind,
+                Is.EqualTo(CustomerOfferDecisionKind.Leave));
+
+            long actorRevision = stockFlow.Session.CustomerVisits.Revision;
+            long inventoryRevision = stockFlow.Session.Inventory.Revision;
+            long basketRevision = stockFlow.Session.RetailBaskets.Revision;
+            long actionRevision = stockFlow.Session.CustomerOfferActions.Revision;
+            long offerRevision = stockFlow.Session.RetailOffers.Revision;
+            long checkoutRevision = stockFlow.Session.RetailCheckouts.Revision;
+            long orderRevision = stockFlow.Session.Orders.Revision;
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.DropBindingPrompt));
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode, Is.Empty);
+            Assert.That(stockFlow.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(actionRevision + 1));
+            Assert.That(stockFlow.Session.CustomerVisits.Revision,
+                Is.EqualTo(actorRevision + 1));
+            Assert.That(stockFlow.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.TryGetPrototypeCustomerLeaveAction(out _), Is.True);
+            Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Exiting));
+            Assert.That(customerFlow.CurrentVisit.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator KeyboardDisplayedLeaveRejectsStaleOfferWithoutAuthorityMutation()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            GarageCustomerFlowRuntime customerFlow = marker.CustomerFlow;
+            InventoryItemWorldBinding binding = stockFlow.ItemBinding;
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            marker.PlayerMotor.SetPaused(false);
+
+            Assert.That(stockFlow.Session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.TransferItem(
+                stockFlow.Session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(stockFlow.Session.RetailOffers.SetOffer(
+                stockFlow.Session.ShelfOfferId,
+                stockFlow.Session.ProductId,
+                stockFlow.Session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1).IsSuccess,
+                Is.True);
+            stockFlow.RefreshPresentation();
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+
+            CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
+            Assert.That(displayedDecision, Is.Not.Null);
+            Assert.That(displayedDecision.DecisionKind,
+                Is.EqualTo(CustomerOfferDecisionKind.Leave));
+            Assert.That(stockFlow.Session.RetailOffers.SetOffer(
+                stockFlow.Session.ShelfOfferId,
+                stockFlow.Session.ProductId,
+                stockFlow.Session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits).IsSuccess,
+                Is.True);
+
+            long actorRevision = stockFlow.Session.CustomerVisits.Revision;
+            long inventoryRevision = stockFlow.Session.Inventory.Revision;
+            long basketRevision = stockFlow.Session.RetailBaskets.Revision;
+            long actionRevision = stockFlow.Session.CustomerOfferActions.Revision;
+            long offerRevision = stockFlow.Session.RetailOffers.Revision;
+            long checkoutRevision = stockFlow.Session.RetailCheckouts.Revision;
+            long orderRevision = stockFlow.Session.Orders.Revision;
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(binding.RequiresCustomerDeparture, Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.DecisionStale.Code));
+            Assert.That(stockFlow.Session.CustomerOfferActions.Count, Is.Zero);
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(stockFlow.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(actionRevision));
+            Assert.That(stockFlow.Session.CustomerVisits.Revision, Is.EqualTo(actorRevision));
+            Assert.That(stockFlow.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Browsing));
+            Assert.That(customerFlow.LastOfferActionFailureCode,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.DecisionStale.Code));
+            Assert.That(customerFlow.CustomerStatusText.text,
+                Does.Contain("AYRILMA ENGELLİ"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("AYRILMA ENGELLİ"));
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator FullHandsAuthorityRejectsPickupBeforePhysicalOwnershipChanges()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();

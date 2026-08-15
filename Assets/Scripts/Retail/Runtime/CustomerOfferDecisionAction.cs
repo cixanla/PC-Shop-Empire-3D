@@ -77,8 +77,9 @@ namespace PCShopEmpire3D.Retail
     }
 
     /// <summary>
-    /// Immutable historical receipt for one accepted Buy action. It deliberately keeps no
-    /// requirement that its reservation or visit state must still be live after fulfillment.
+    /// Immutable historical receipt for one accepted Buy or Leave action. It deliberately keeps
+    /// no requirement that its reservation or visit state must still be live after fulfillment
+    /// or exit. Leave receipts carry empty reservation identities by contract.
     /// </summary>
     public sealed class CustomerOfferDecisionActionRecord
     {
@@ -122,6 +123,17 @@ namespace PCShopEmpire3D.Retail
 
         public SimulationTimestamp AppliedAt { get; }
 
+        public bool IsBuy => SourceDecision.DecisionKind == CustomerOfferDecisionKind.Buy;
+
+        public bool IsLeave => SourceDecision.DecisionKind == CustomerOfferDecisionKind.Leave;
+
+        public bool HasReservation =>
+            !LineId.IsEmpty &&
+            !BasketId.IsEmpty &&
+            !ItemId.IsEmpty &&
+            !ReservationId.IsEmpty &&
+            !ClaimId.IsEmpty;
+
         internal bool Matches(
             CustomerRetailIdentityBinding customerBinding,
             CustomerOfferDecision sourceDecision,
@@ -132,7 +144,9 @@ namespace PCShopEmpire3D.Retail
             StableId<InventoryClaimIdScope> claimId,
             SimulationTimestamp appliedAt)
         {
-            return CustomerBinding.Equals(customerBinding) &&
+            return IsBuy &&
+                   HasReservation &&
+                   CustomerBinding.Equals(customerBinding) &&
                    SourceDecision.Equals(sourceDecision) &&
                    LineId == lineId &&
                    BasketId == basketId &&
@@ -141,11 +155,28 @@ namespace PCShopEmpire3D.Retail
                    ClaimId == claimId &&
                    AppliedAt == appliedAt;
         }
+
+        internal bool MatchesLeave(
+            CustomerRetailIdentityBinding customerBinding,
+            CustomerOfferDecision sourceDecision,
+            SimulationTimestamp appliedAt)
+        {
+            return IsLeave &&
+                   CustomerBinding.Equals(customerBinding) &&
+                   SourceDecision.Equals(sourceDecision) &&
+                   LineId.IsEmpty &&
+                   BasketId.IsEmpty &&
+                   ItemId.IsEmpty &&
+                   ReservationId.IsEmpty &&
+                   ClaimId.IsEmpty &&
+                   AppliedAt == appliedAt;
+        }
     }
 
     /// <summary>
-    /// Revalidates one immutable Buy decision against current Actors and ShelfOffer state,
-    /// then commits an exact Basket/Inventory reservation and checkout navigation together.
+    /// Revalidates one immutable Buy/Leave decision against current Actors and ShelfOffer state.
+    /// Buy commits an exact reservation plus checkout navigation; Leave commits only the
+    /// prepared OfferDeclined customer exit while all commerce authorities remain untouched.
     /// </summary>
     public sealed class CustomerOfferDecisionActionAuthority
     {
@@ -352,6 +383,128 @@ namespace PCShopEmpire3D.Retail
             return OperationResult.Success();
         }
 
+        public OperationResult ApplyLeave(
+            StableId<CustomerOfferDecisionActionIdScope> actionId,
+            CustomerRetailIdentityBinding customerBinding,
+            CustomerOfferDecision sourceDecision,
+            SimulationTimestamp appliedAt)
+        {
+            if (actionId.IsEmpty)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.InputInvalid);
+            }
+
+            if (_actions.TryGetValue(
+                actionId,
+                out CustomerOfferDecisionActionRecord existingAction))
+            {
+                return existingAction.MatchesLeave(
+                    customerBinding,
+                    sourceDecision,
+                    appliedAt)
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(
+                        CustomerOfferDecisionActionFailures.ActionIdentityConflict);
+            }
+
+            if (!HasValidCommonInput(customerBinding, sourceDecision))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.InputInvalid);
+            }
+
+            if (sourceDecision.DecisionKind != CustomerOfferDecisionKind.Leave)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.KindNotLeave);
+            }
+
+            if (sourceDecision.CustomerId != customerBinding.ActorCustomerId)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.CustomerBindingMismatch);
+            }
+
+            if (_actionsByVisit.ContainsKey(sourceDecision.VisitId))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.VisitAlreadyActioned);
+            }
+
+            if (!_visits.TryGetVisit(
+                sourceDecision.VisitId,
+                out CustomerVisitRecord currentVisit))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.DecisionStale);
+            }
+
+            if (currentVisit.Intent.CustomerId != customerBinding.ActorCustomerId)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.CustomerBindingMismatch);
+            }
+
+            if (!_offers.TryGetOffer(
+                sourceDecision.OfferId,
+                out ShelfOfferRecord currentOffer))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.DecisionStale);
+            }
+
+            OperationResult<CustomerOfferDecision> currentDecision =
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    currentVisit,
+                    currentOffer,
+                    sourceDecision.MaximumAcceptedPrice);
+            if (currentDecision.IsFailure ||
+                !currentDecision.Value.Equals(sourceDecision) ||
+                currentDecision.Value.DecisionKind != CustomerOfferDecisionKind.Leave)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.DecisionStale);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.RevisionOverflow);
+            }
+
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> visitPlan =
+                _visits.PrepareOfferDeclinedExit(
+                    sourceDecision.VisitId,
+                    appliedAt);
+            if (visitPlan.IsFailure)
+            {
+                return OperationResult.Fail(visitPlan.Error);
+            }
+
+            OperationResult visitCommit =
+                _visits.CommitPreparedOfferDeclinedExit(visitPlan.Value);
+            if (visitCommit.IsFailure)
+            {
+                return visitCommit;
+            }
+
+            var record = new CustomerOfferDecisionActionRecord(
+                actionId,
+                customerBinding,
+                sourceDecision,
+                default,
+                default,
+                default,
+                default,
+                default,
+                appliedAt);
+            _actions.Add(actionId, record);
+            _actionsByVisit.Add(sourceDecision.VisitId, record);
+            Revision++;
+            return OperationResult.Success();
+        }
+
         public bool TryGetAction(
             StableId<CustomerOfferDecisionActionIdScope> actionId,
             out CustomerOfferDecisionActionRecord action)
@@ -381,15 +534,7 @@ namespace PCShopEmpire3D.Retail
                 if (action == null ||
                     entry.Key.IsEmpty ||
                     entry.Key != action.Id ||
-                    !HasValidInput(
-                        action.CustomerBinding,
-                        action.SourceDecision,
-                        action.LineId,
-                        action.BasketId,
-                        action.ItemId,
-                        action.ReservationId,
-                        action.ClaimId) ||
-                    action.SourceDecision.DecisionKind != CustomerOfferDecisionKind.Buy ||
+                    !HasValidActionPayload(action) ||
                     action.SourceDecision.CustomerId !=
                         action.CustomerBinding.ActorCustomerId ||
                     !IsStrictlyAfter(
@@ -408,6 +553,33 @@ namespace PCShopEmpire3D.Retail
             return OperationResult.Success();
         }
 
+        private static bool HasValidActionPayload(CustomerOfferDecisionActionRecord action)
+        {
+            if (!HasValidCommonInput(action.CustomerBinding, action.SourceDecision))
+            {
+                return false;
+            }
+
+            if (action.SourceDecision.DecisionKind == CustomerOfferDecisionKind.Buy)
+            {
+                return HasValidInput(
+                    action.CustomerBinding,
+                    action.SourceDecision,
+                    action.LineId,
+                    action.BasketId,
+                    action.ItemId,
+                    action.ReservationId,
+                    action.ClaimId);
+            }
+
+            return action.SourceDecision.DecisionKind == CustomerOfferDecisionKind.Leave &&
+                   action.LineId.IsEmpty &&
+                   action.BasketId.IsEmpty &&
+                   action.ItemId.IsEmpty &&
+                   action.ReservationId.IsEmpty &&
+                   action.ClaimId.IsEmpty;
+        }
+
         private static bool HasValidInput(
             CustomerRetailIdentityBinding customerBinding,
             CustomerOfferDecision sourceDecision,
@@ -417,6 +589,18 @@ namespace PCShopEmpire3D.Retail
             StableId<ReservationIdScope> reservationId,
             StableId<InventoryClaimIdScope> claimId)
         {
+            return HasValidCommonInput(customerBinding, sourceDecision) &&
+                   !lineId.IsEmpty &&
+                   !basketId.IsEmpty &&
+                   !itemId.IsEmpty &&
+                   !reservationId.IsEmpty &&
+                   !claimId.IsEmpty;
+        }
+
+        private static bool HasValidCommonInput(
+            CustomerRetailIdentityBinding customerBinding,
+            CustomerOfferDecision sourceDecision)
+        {
             return customerBinding != null &&
                    !customerBinding.Id.IsEmpty &&
                    !customerBinding.ActorCustomerId.IsEmpty &&
@@ -425,12 +609,7 @@ namespace PCShopEmpire3D.Retail
                    !sourceDecision.CustomerId.IsEmpty &&
                    !sourceDecision.VisitId.IsEmpty &&
                    !sourceDecision.IntentId.IsEmpty &&
-                   !sourceDecision.OfferId.IsEmpty &&
-                   !lineId.IsEmpty &&
-                   !basketId.IsEmpty &&
-                   !itemId.IsEmpty &&
-                   !reservationId.IsEmpty &&
-                   !claimId.IsEmpty;
+                   !sourceDecision.OfferId.IsEmpty;
         }
 
         private static bool IsStrictlyAfter(
@@ -447,6 +626,8 @@ namespace PCShopEmpire3D.Retail
             Failure.FromCode("retail.offer-action.input-invalid");
         public static readonly Failure KindNotBuy =
             Failure.FromCode("retail.offer-action.kind-not-buy");
+        public static readonly Failure KindNotLeave =
+            Failure.FromCode("retail.offer-action.kind-not-leave");
         public static readonly Failure CustomerBindingMismatch =
             Failure.FromCode("retail.offer-action.customer-binding-mismatch");
         public static readonly Failure DecisionStale =

@@ -87,6 +87,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool RequiresCustomerDeparture
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                CustomerOfferDecision decision = CurrentDisplayedOfferDecision;
+                return session != null &&
+                       session.TryGetItem(out InventoryItemRecord item) &&
+                       item.Id == InventoryItemId &&
+                       item.ProductId == session.ProductId &&
+                       item.ContainerId == session.ShelfContainerId &&
+                       session.TryGetShelfOffer(out _) &&
+                       decision != null &&
+                       decision.DecisionKind == CustomerOfferDecisionKind.Leave &&
+                       !IsCustomerReserved;
+            }
+        }
+
+        public bool RequiresCustomerDecisionAction =>
+            RequiresCustomerReservation || RequiresCustomerDeparture;
+
         public bool IsCustomerReserved
         {
             get
@@ -194,11 +215,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private GarageCustomerFlowRuntime CustomerFlow =>
             runtime != null ? runtime.CustomerFlow : null;
 
+        private CustomerOfferDecision CurrentDisplayedOfferDecision =>
+            CustomerFlow?.CurrentOfferDecision;
+
         private CustomerOfferDecision CurrentDisplayedBuyDecision
         {
             get
             {
-                CustomerOfferDecision decision = CustomerFlow?.CurrentOfferDecision;
+                CustomerOfferDecision decision = CurrentDisplayedOfferDecision;
                 return decision != null &&
                        decision.DecisionKind == CustomerOfferDecisionKind.Buy
                     ? decision
@@ -377,6 +401,68 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CustomerFlow.RecordOfferActionResult(result);
             runtime.RefreshPresentation();
 
+            return result;
+        }
+
+        public OperationResult TryApplyCurrentCustomerDecision()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            GarageStockFlowSession session = Session;
+            if (!session.TryGetItem(out InventoryItemRecord item))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ItemNotAccepted);
+            }
+
+            if (item.Id != InventoryItemId || item.ProductId != session.ProductId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.IdentityMismatch);
+            }
+
+            if (item.ContainerId != session.ShelfContainerId)
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CustomerReservationLocationMismatch);
+            }
+
+            if (!session.TryGetShelfOffer(out _))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ShelfOfferRequired);
+            }
+
+            CustomerOfferDecision decision = CurrentDisplayedOfferDecision;
+            GarageCustomerFlowRuntime customerFlow = CustomerFlow;
+            if (decision == null || customerFlow == null)
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.InputInvalid);
+            }
+
+            OperationResult result;
+            switch (decision.DecisionKind)
+            {
+                case CustomerOfferDecisionKind.Buy:
+                    result = session.ApplyPrototypeCustomerBuy(
+                        decision,
+                        customerFlow.CurrentOfferActionTime);
+                    break;
+                case CustomerOfferDecisionKind.Leave:
+                    result = session.ApplyPrototypeCustomerLeave(
+                        decision,
+                        customerFlow.CurrentOfferActionTime);
+                    break;
+                default:
+                    result = OperationResult.Fail(
+                        CustomerOfferDecisionActionFailures.InputInvalid);
+                    break;
+            }
+
+            customerFlow.RecordOfferActionResult(result);
+            runtime.RefreshPresentation();
             return result;
         }
 

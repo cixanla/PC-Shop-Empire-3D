@@ -183,6 +183,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool LeaveActionSucceeded
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
+                    : null;
+                return session != null &&
+                       session.TryGetPrototypeCustomerLeaveAction(out _);
+            }
+        }
+
         public string OfferActionStatusText
         {
             get
@@ -190,11 +202,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 string failureCode = LastOfferActionFailureCode;
                 if (!string.IsNullOrEmpty(failureCode))
                 {
-                    return $"SATIN ALMA ENGELLİ • {failureCode}";
+                    return CurrentOfferDecision?.DecisionKind ==
+                           CustomerOfferDecisionKind.Leave
+                        ? $"AYRILMA ENGELLİ • {failureCode}"
+                        : $"SATIN ALMA ENGELLİ • {failureCode}";
                 }
 
-                return BuyActionSucceeded
-                    ? "SATIN ALMA ONAYLANDI • REZERVASYON KİLİTLİ"
+                if (BuyActionSucceeded)
+                {
+                    return "SATIN ALMA ONAYLANDI • REZERVASYON KİLİTLİ";
+                }
+
+                return LeaveActionSucceeded
+                    ? "AYRILMA ONAYLANDI • TEKLİF REDDEDİLDİ"
                     : string.Empty;
             }
         }
@@ -241,8 +261,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     case CustomerVisitState.AwaitingCheckout:
                         return "KASADA BEKLİYOR";
                     case CustomerVisitState.Exiting:
-                        return visit.ExitReason == CustomerVisitExitReason.Fulfilled
-                            ? "SATIŞ TAMAM • ÇIKIYOR"
+                        if (visit.ExitReason == CustomerVisitExitReason.Fulfilled)
+                        {
+                            return "SATIŞ TAMAM • ÇIKIYOR";
+                        }
+
+                        return visit.ExitReason == CustomerVisitExitReason.OfferDeclined
+                            ? "TEKLİF REDDEDİLDİ • ÇIKIYOR"
                             : $"GÜVENLİ ÇIKIŞ • {FormatExitReason(visit.ExitReason)}";
                     case CustomerVisitState.Exited:
                         return $"AYRILDI • {FormatExitReason(visit.ExitReason)}";
@@ -355,6 +380,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 _navigationReady = sampled &&
                                    HasCompletePath(_entrancePoint, _browsePoint) &&
                                    HasCompletePath(_browsePoint, _checkoutPoint) &&
+                                   HasCompletePath(_browsePoint, _exitPoint) &&
                                    HasCompletePath(_checkoutPoint, _exitPoint);
                 if (!_navigationReady)
                 {
@@ -817,6 +843,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return "SABIR SÜRESİ DOLDU";
                 case CustomerVisitExitReason.RouteUnavailable:
                     return "ROTA BULUNAMADI";
+                case CustomerVisitExitReason.OfferDeclined:
+                    return "TEKLİF REDDEDİLDİ";
                 default:
                     return "SONUÇ BEKLENİYOR";
             }

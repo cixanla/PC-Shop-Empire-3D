@@ -157,6 +157,176 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
         }
 
         [Test]
+        public void CurrentLeaveBeginsOfferDeclinedExitWithoutMutatingCommerceAuthorities()
+        {
+            Fixture fixture = CreateBrowsingLeaveFixture();
+            AuthoritySnapshot before = Snapshot(fixture.Session);
+
+            OperationResult result = ApplyLeaveDefault(fixture);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(fixture.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(before.ActionRevision + 1));
+            Assert.That(fixture.Session.CustomerVisits.Revision,
+                Is.EqualTo(before.VisitRevision + 1));
+            Assert.That(fixture.Session.Inventory.Revision,
+                Is.EqualTo(before.InventoryRevision));
+            Assert.That(fixture.Session.RetailBaskets.Revision,
+                Is.EqualTo(before.BasketRevision));
+            Assert.That(fixture.Session.RetailOffers.Revision,
+                Is.EqualTo(before.OfferRevision));
+            Assert.That(fixture.Session.RetailCheckouts.Revision,
+                Is.EqualTo(before.CheckoutRevision));
+            Assert.That(fixture.Session.Orders.Revision,
+                Is.EqualTo(before.OrderRevision));
+            Assert.That(fixture.Session.Inventory.ReservationCount,
+                Is.EqualTo(before.ReservationCount));
+            Assert.That(fixture.Session.RetailBaskets.Count,
+                Is.EqualTo(before.BasketCount));
+            Assert.That(fixture.Session.RetailCheckouts.Count,
+                Is.EqualTo(before.CheckoutCount));
+            Assert.That(fixture.Session.TryGetPrototypeCustomerVisit(out var visit), Is.True);
+            Assert.That(visit.State, Is.EqualTo(CustomerVisitState.Exiting));
+            Assert.That(visit.ExitReason, Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(fixture.Session.TryGetPrototypeCustomerLeaveAction(out var action),
+                Is.True);
+            Assert.That(action.SourceDecision, Is.EqualTo(fixture.Decision));
+            Assert.That(action.IsLeave, Is.True);
+            Assert.That(action.IsBuy, Is.False);
+            Assert.That(action.HasReservation, Is.False);
+            Assert.That(fixture.Session.CustomerOfferActions.ValidateInvariants().IsSuccess,
+                Is.True);
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void StaleLeaveDecisionFailsWithoutAnyFurtherMutation()
+        {
+            Fixture fixture = CreateBrowsingLeaveFixture();
+            Assert.That(fixture.Session.RetailOffers.SetOffer(
+                fixture.Session.ShelfOfferId,
+                fixture.Session.ProductId,
+                fixture.Session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 2).IsSuccess,
+                Is.True);
+            AuthoritySnapshot before = Snapshot(fixture.Session);
+
+            OperationResult result = ApplyLeaveDefault(fixture);
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.DecisionStale));
+            AssertSnapshot(fixture.Session, before);
+            Assert.That(fixture.Session.CustomerOfferActions.Count, Is.Zero);
+            Assert.That(fixture.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(fixture.Session.TryGetPrototypeCustomerVisit(out var visit), Is.True);
+            Assert.That(visit.State, Is.EqualTo(CustomerVisitState.Browsing));
+            Assert.That(visit.ExitReason, Is.EqualTo(CustomerVisitExitReason.None));
+        }
+
+        [Test]
+        public void LeaveReplayIsIdempotentAndConflictOrSecondActionFailsClosed()
+        {
+            Fixture fixture = CreateBrowsingLeaveFixture();
+            Assert.That(ApplyLeaveDefault(fixture).IsSuccess, Is.True);
+            AuthoritySnapshot afterFirst = Snapshot(fixture.Session);
+
+            OperationResult exact = ApplyLeaveDefault(fixture);
+            OperationResult conflict = fixture.Session.CustomerOfferActions.ApplyLeave(
+                fixture.Session.PrototypeCustomerLeaveActionId,
+                fixture.Session.PrototypeCustomerBinding,
+                fixture.Decision,
+                Time(13));
+            OperationResult second = fixture.Session.CustomerOfferActions.ApplyLeave(
+                StableId<CustomerOfferDecisionActionIdScope>.Parse(
+                    "retail.offer-action.demo-walk-in-leave-002"),
+                fixture.Session.PrototypeCustomerBinding,
+                fixture.Decision,
+                Time(12));
+
+            Assert.That(exact.IsSuccess, Is.True);
+            Assert.That(conflict.Error,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.ActionIdentityConflict));
+            Assert.That(second.Error,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.VisitAlreadyActioned));
+            AssertSnapshot(fixture.Session, afterFirst);
+            Assert.That(fixture.Session.CustomerOfferActions.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LeaveReceiptCannotReplayThroughBuyCommandWithEmptyReservationIds()
+        {
+            Fixture fixture = CreateBrowsingLeaveFixture();
+            Assert.That(ApplyLeaveDefault(fixture).IsSuccess, Is.True);
+            AuthoritySnapshot afterLeave = Snapshot(fixture.Session);
+
+            OperationResult crossKind = fixture.Session.CustomerOfferActions.ApplyBuy(
+                fixture.Session.PrototypeCustomerLeaveActionId,
+                fixture.Session.PrototypeCustomerBinding,
+                fixture.Decision,
+                default,
+                default,
+                default,
+                default,
+                default,
+                Time(12));
+
+            Assert.That(crossKind.Error,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.ActionIdentityConflict));
+            AssertSnapshot(fixture.Session, afterLeave);
+            Assert.That(fixture.Session.CustomerOfferActions.Count, Is.EqualTo(1));
+            Assert.That(fixture.Session.CustomerOfferActions.ValidateInvariants().IsSuccess,
+                Is.True);
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void LeaveActionRecordRemainsAvailableAfterOfferDeclinedExit()
+        {
+            Fixture fixture = CreateBrowsingLeaveFixture();
+            Assert.That(ApplyLeaveDefault(fixture).IsSuccess, Is.True);
+            Assert.That(fixture.Session.MarkPrototypeCustomerExitArrival(Time(13)).IsSuccess,
+                Is.True);
+
+            Assert.That(fixture.Session.TryGetPrototypeCustomerVisit(out var visit), Is.True);
+            Assert.That(visit.State, Is.EqualTo(CustomerVisitState.Exited));
+            Assert.That(visit.ExitReason, Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(fixture.Session.TryGetPrototypeCustomerLeaveAction(out var action),
+                Is.True);
+            Assert.That(action.SourceDecision, Is.EqualTo(fixture.Decision));
+            Assert.That(action.IsLeave, Is.True);
+            Assert.That(action.HasReservation, Is.False);
+            Assert.That(fixture.Session.CustomerOfferActions.TryGetActionForVisit(
+                fixture.Decision.VisitId,
+                out var actionByVisit), Is.True);
+            Assert.That(actionByVisit, Is.SameAs(action));
+            Assert.That(fixture.Session.CustomerOfferActions.ValidateInvariants().IsSuccess,
+                Is.True);
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+
+            AuthoritySnapshot afterExit = Snapshot(fixture.Session);
+            Assert.That(ApplyLeaveDefault(fixture).IsSuccess, Is.True);
+            AssertSnapshot(fixture.Session, afterExit);
+        }
+
+        [Test]
+        public void ValidBuyIsRejectedAsKindNotLeaveWithoutAnyMutation()
+        {
+            Fixture fixture = CreateBrowsingFixture();
+            AuthoritySnapshot before = Snapshot(fixture.Session);
+
+            OperationResult result = ApplyLeaveDefault(fixture);
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionActionFailures.KindNotLeave));
+            AssertSnapshot(fixture.Session, before);
+            Assert.That(fixture.Session.CustomerOfferActions.Count, Is.Zero);
+            Assert.That(fixture.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Session.RetailBaskets.Count, Is.Zero);
+        }
+
+        [Test]
         public void ActorRetailBindingMismatchFailsWithoutMutation()
         {
             Fixture fixture = CreateBrowsingFixture();
@@ -349,6 +519,24 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             return new Fixture(session, session.EvaluatePrototypeCustomerOffer().Value);
         }
 
+        private static Fixture CreateBrowsingLeaveFixture()
+        {
+            GarageStockFlowSession session = CreateBrowsingSession();
+            Assert.That(session.RetailOffers.SetOffer(
+                session.ShelfOfferId,
+                session.ProductId,
+                session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits + 1).IsSuccess,
+                Is.True);
+            OperationResult<CustomerOfferDecision> evaluated =
+                session.EvaluatePrototypeCustomerOffer();
+            Assert.That(evaluated.IsSuccess, Is.True);
+            Assert.That(evaluated.Value.DecisionKind,
+                Is.EqualTo(CustomerOfferDecisionKind.Leave));
+            return new Fixture(session, evaluated.Value);
+        }
+
         private static GarageStockFlowSession CreateBrowsingSession()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
@@ -365,6 +553,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             SimulationTimestamp? at = null)
         {
             return fixture.Session.ApplyPrototypeCustomerBuy(
+                fixture.Decision,
+                at ?? Time(12));
+        }
+
+        private static OperationResult ApplyLeaveDefault(
+            Fixture fixture,
+            SimulationTimestamp? at = null)
+        {
+            return fixture.Session.ApplyPrototypeCustomerLeave(
                 fixture.Decision,
                 at ?? Time(12));
         }

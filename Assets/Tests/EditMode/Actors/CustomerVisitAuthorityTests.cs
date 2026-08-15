@@ -427,6 +427,154 @@ namespace PCShopEmpire3D.Tests.EditMode.Actors
             Assert.That(after.State, Is.EqualTo(CustomerVisitState.Browsing));
         }
 
+        [Test]
+        public void PreparedOfferDeclinedExitIsSideEffectFreeAndCommitIsInvariantSafe()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord before), Is.True);
+            long revision = authority.Revision;
+
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> prepared =
+                authority.PrepareOfferDeclinedExit(VisitId, Time(3));
+
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(prepared.Value.IsReplay, Is.False);
+            Assert.That(prepared.Value.ExpectedRevision, Is.EqualTo(revision));
+            Assert.That(prepared.Value.VisitId, Is.EqualTo(VisitId));
+            Assert.That(prepared.Value.At, Is.EqualTo(Time(3)));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord afterPrepare), Is.True);
+            Assert.That(afterPrepare, Is.SameAs(before));
+            Assert.That(afterPrepare.State, Is.EqualTo(CustomerVisitState.Browsing));
+            Assert.That(afterPrepare.ExitReason, Is.EqualTo(CustomerVisitExitReason.None));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+
+            Assert.That(authority.CommitPreparedOfferDeclinedExit(prepared.Value).IsSuccess,
+                Is.True);
+
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord committed), Is.True);
+            Assert.That(committed.State, Is.EqualTo(CustomerVisitState.Exiting));
+            Assert.That(committed.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(committed.StateEnteredAt, Is.EqualTo(Time(3)));
+            Assert.That(committed.LastUpdatedAt, Is.EqualTo(Time(3)));
+            Assert.That(committed.RouteFallbackUsed, Is.False);
+            Assert.That(authority.ActiveCount, Is.EqualTo(1));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PreparedOfferDeclinedExitRejectsForeignOwnerWithoutMutation()
+        {
+            CustomerVisitAuthority owner = CreateAuthority();
+            CustomerVisitAuthority foreign = CreateAuthority();
+            Assert.That(Start(owner, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(owner.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            Assert.That(Start(foreign, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(foreign.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> prepared =
+                owner.PrepareOfferDeclinedExit(VisitId, Time(3));
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(foreign.TryGetVisit(VisitId, out CustomerVisitRecord before), Is.True);
+            long revision = foreign.Revision;
+
+            OperationResult commit =
+                foreign.CommitPreparedOfferDeclinedExit(prepared.Value);
+
+            Assert.That(commit.Error,
+                Is.EqualTo(CustomerVisitFailures.OfferDeclinedExitPlanInvalid));
+            Assert.That(foreign.Revision, Is.EqualTo(revision));
+            Assert.That(foreign.TryGetVisit(VisitId, out CustomerVisitRecord after), Is.True);
+            Assert.That(after, Is.SameAs(before));
+            Assert.That(after.State, Is.EqualTo(CustomerVisitState.Browsing));
+            Assert.That(owner.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(foreign.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PreparedOfferDeclinedExitRejectsObservedTimeDriftWithoutMutation()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> prepared =
+                authority.PrepareOfferDeclinedExit(VisitId, Time(4));
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord before), Is.True);
+            long revision = authority.Revision;
+
+            Assert.That(authority.AdvanceTime(Time(3)).IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            OperationResult commit =
+                authority.CommitPreparedOfferDeclinedExit(prepared.Value);
+
+            Assert.That(commit.Error,
+                Is.EqualTo(CustomerVisitFailures.OfferDeclinedExitPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord after), Is.True);
+            Assert.That(after, Is.SameAs(before));
+            Assert.That(after.State, Is.EqualTo(CustomerVisitState.Browsing));
+            Assert.That(after.ExitReason, Is.EqualTo(CustomerVisitExitReason.None));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void OfferDeclinedExactReplaySurvivesExitedStateAndWatermarkAdvance()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            Assert.That(authority.BeginOfferDeclinedExit(VisitId, Time(3)).IsSuccess, Is.True);
+            Assert.That(authority.MarkExitArrival(VisitId, Time(4)).IsSuccess, Is.True);
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord terminal), Is.True);
+            long terminalRevision = authority.Revision;
+
+            Assert.That(authority.AdvanceTime(Time(20)).IsSuccess, Is.True);
+            OperationResult<CustomerVisitOfferDeclinedExitPlan> replay =
+                authority.PrepareOfferDeclinedExit(VisitId, Time(3));
+            Assert.That(replay.IsSuccess, Is.True);
+            Assert.That(replay.Value.IsReplay, Is.True);
+            Assert.That(authority.CommitPreparedOfferDeclinedExit(replay.Value).IsSuccess,
+                Is.True);
+            Assert.That(authority.BeginOfferDeclinedExit(VisitId, Time(3)).IsSuccess, Is.True);
+
+            Assert.That(authority.Revision, Is.EqualTo(terminalRevision));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord replayed), Is.True);
+            Assert.That(replayed, Is.SameAs(terminal));
+            Assert.That(replayed.State, Is.EqualTo(CustomerVisitState.Exited));
+            Assert.That(replayed.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(replayed.RouteFallbackUsed, Is.False);
+            Assert.That(authority.ActiveCount, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void OfferDeclinedExitRouteFallbackPreservesDeclinedReason()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess,
+                Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            Assert.That(authority.BeginOfferDeclinedExit(VisitId, Time(3)).IsSuccess, Is.True);
+
+            Assert.That(authority.ReportRouteFailure(VisitId, Time(4)).IsSuccess, Is.True);
+            Assert.That(authority.ReportRouteFailure(VisitId, Time(5)).IsSuccess, Is.True);
+
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord terminal), Is.True);
+            Assert.That(terminal.State, Is.EqualTo(CustomerVisitState.Exited));
+            Assert.That(terminal.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.OfferDeclined));
+            Assert.That(terminal.RouteFallbackUsed, Is.True);
+            Assert.That(terminal.RouteFailureCount, Is.EqualTo(2));
+            Assert.That(terminal.TotalRouteFailureCount, Is.EqualTo(2));
+            Assert.That(authority.ActiveCount, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static CustomerVisitAuthority CreateAuthority()
         {
             ProductDefinition product = ProductDefinition.Create(

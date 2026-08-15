@@ -184,6 +184,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            binding.LocationLabel + actionFailure;
                 }
 
+                if (binding != null && binding.RequiresCustomerDeparture)
+                {
+                    string actionFailure = LastFailureCode.StartsWith(
+                        "retail.offer-action.",
+                        StringComparison.Ordinal)
+                        ? $"   |   AYRILMA ENGELLİ: {LastFailureCode}"
+                        : string.Empty;
+                    return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                           $"{FocusedItem.DisplayName} al   |   " +
+                           $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
+                           "müşteriyi teklifi reddederek uğurla   |   " +
+                           binding.LocationLabel + actionFailure;
+                }
+
                 return FocusedItem.HasStackedItem
                     ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
                     : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
@@ -653,9 +667,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return;
                 }
 
-                if (focusedBinding.RequiresCustomerReservation)
+                if (focusedBinding.RequiresCustomerDecisionAction)
                 {
-                    Remember(focusedBinding.TryReserveForCustomer());
+                    Remember(focusedBinding.TryApplyCurrentCustomerDecision());
                     return;
                 }
             }

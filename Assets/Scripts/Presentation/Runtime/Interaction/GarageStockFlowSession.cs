@@ -33,6 +33,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "retail.customer-binding.demo-walk-in-001";
         public const string PrototypeCustomerBuyActionIdValue =
             "retail.offer-action.demo-walk-in-001";
+        public const string PrototypeCustomerLeaveActionIdValue =
+            "retail.offer-action.demo-walk-in-leave-001";
         public const string PrototypeBasketIdValue = "retail.basket.demo-customer-001";
         public const string PrototypeBasketLineIdValue = "retail.basket-line.demo-a60-001";
         public const string PrototypeCheckoutIdValue = "retail.checkout.demo-customer-001";
@@ -130,6 +132,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<CustomerOfferDecisionActionIdScope> PrototypeCustomerBuyActionId =>
             StableId<CustomerOfferDecisionActionIdScope>.Parse(
                 PrototypeCustomerBuyActionIdValue);
+
+        public StableId<CustomerOfferDecisionActionIdScope> PrototypeCustomerLeaveActionId =>
+            StableId<CustomerOfferDecisionActionIdScope>.Parse(
+                PrototypeCustomerLeaveActionIdValue);
 
         public StableId<RetailBasketIdScope> PrototypeBasketId =>
             StableId<RetailBasketIdScope>.Parse(PrototypeBasketIdValue);
@@ -342,6 +348,25 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             return CustomerOfferActions.TryGetAction(
                 PrototypeCustomerBuyActionId,
+                out action);
+        }
+
+        public OperationResult ApplyPrototypeCustomerLeave(
+            CustomerOfferDecision sourceDecision,
+            SimulationTimestamp at)
+        {
+            return CustomerOfferActions.ApplyLeave(
+                PrototypeCustomerLeaveActionId,
+                PrototypeCustomerBinding,
+                sourceDecision,
+                at);
+        }
+
+        public bool TryGetPrototypeCustomerLeaveAction(
+            out CustomerOfferDecisionActionRecord action)
+        {
+            return CustomerOfferActions.TryGetAction(
+                PrototypeCustomerLeaveActionId,
                 out action);
         }
 
