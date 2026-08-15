@@ -6,6 +6,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Unity bağımsız `PSE.Assembly`, managed Workbench custody'si, stable build/chassis/slot/operation kimlikleri ve immutable `SeatedUnsecured` attach/detach receipt'leriyle eklendi.
+- GarageGraybox'a açık kasa, keyed motherboard tray/slot, standoff/connector işaretleri ve tek canonical hassas anakart projection'ı eklendi; guided range/focus/LOS/orientation/support/obstruction preview'su gerçek commit pozu ile aynıdır.
+- Klavye/fare ve gamepad al→guided preview→oturt→sök→recovery akışı, dynamic prompt, same-frame Primary+Drop tek-geçiş kuralı ve failed world-drop retry ile kilitlendi.
+- Issue #53 feature checkpoint'i `582a3cf`, tree `fc80b7c`, EditMode 394/394, PlayMode 26/26, 328020817 bayt Universal macOS build ve Apple M4/Metal `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` kanıtıyla oluşturuldu; USB kullanıcı talimatıyla ertelendi.
 - Private GitHub collaboration/devir yapısı, living Project Bible, governance ve katkı şablonları tamamlandı.
 - Full design/research package repository içine taşındı.
 - Canonical PC Shop Empire 1.1.6 legacy kaynak snapshot'ı ve manifesti eklendi.

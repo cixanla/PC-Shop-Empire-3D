@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; Issue #52 acceptance `17/17`, kapalı/Done ve parent Epic #9 kapalı/Done. Sırada Epic #10 ilk fiziksel PC assembly dilimi var.<br>
+**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; parent Epic #9 kapalı/Done. Epic #10 ilk fiziksel PC assembly dilimi Issue #53 feature `582a3cf` ile kaynak/test/build/runtime doğrulamasından geçti; remote/USB checkpointi sürüyor.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,14 +137,14 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail`, `PSE.Actors` ve `PSE.Economy` Unity bağımsız domain sınırlarını korur. Exact manifestten RAF A offer/reservation/immutable checkout'a uzanan serialized item; exact-cash settlement, receipt ve dengeli Cash/SalesRevenue/COGS/InventoryAsset postingleriyle atomik tüketilir. Stable müşteri ziyareti iki denemeli route/patience/exit fallback taşır. Issue #51 current `Browsing` visit'e canonical consultation receipt ve recommendation gate ekledi. Issue #52 stable `world.checkout-station.garage-001` fiziksel kasa, `2,75 m` range + `24°` focus + LOS/pause kapısı, RAF A checkout/payment bypass yasağı ve yalnız exact matching `AwaitingCheckout` visit için gerçek `Mouse Left / Gamepad RT` release/repress akışını ekledi. İlk edge immutable checkout, ikinci edge exact-cash settlement üretir; canonical Economy receipt stock projection/customer fulfillment'ı kapılar. Edit Mode 352/352, Play Mode 24/24, Universal macOS 327.864.494 bayt ve Apple M4/Metal 1280×720 stock r4 + art arda üç customer r6-r8 smoke geçti. Source/docs `d6cd203`, Guard `31892875650`, 584/584 manifestli USB, acceptance `17/17` ve Epic #9 closure tamamdır. Sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir. Save/Guardian, çoklu müşteri/ürün ve final art ayrı kalır.
+**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail`, `PSE.Actors`, `PSE.Economy` ve yeni `PSE.Assembly` Unity bağımsız domain sınırlarını korur. Order→stock→offer→customer→checkout→exact-cash zincirine ek olarak tek serialized `MicroAtx` anakart existing Inventory'den managed Workbench'e atomik attach/detach receipt'iyle taşınır. Garage'da açık kasa/keyed seat, deterministic range/focus/LOS/orientation/support/obstruction preview'su, same-frame input tek-geçişi, stable physical identity ve recovery çalışır. Issue #53 feature `582a3cf`; EditMode 394/394, PlayMode 26/26, Universal macOS 328.020.817 bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` geçti. Sıradaki bounded gameplay yalnız motherboard fastener secure/unsecure dilimidir. CPU/RAM/GPU, tam build/benchmark, Save/Guardian, çoklu müşteri/ürün ve final art ayrı kalır.
 
 ### Kapsam dışı
 
 - Güzel final mağaza sanatı.
 - Tam müşteri AI.
 - Tam ekonomi; mevcut kapsam yalnız bounded exact-cash satış settlement'ı ve ilk ledger deltalarıdır.
-- Ayrıntılı PC montajı.
+- Tam PC montajı; mevcut kapsam yalnız ilk unsecured motherboard seating dilimidir.
 - Steam entegrasyonu.
 
 ### Ana riskler

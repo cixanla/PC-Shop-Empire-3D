@@ -32,3 +32,15 @@ Windows çıktısı yalnız erken taşınabilirlik kanıtıdır. Final Windows s
 - Görsel smoke: gerçek player'da pickup, dinamik placement prompt'u ve kırmızı `ENGELLİ` ghost doğrulandı.
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır; imzalı/notarize yayın paketi veya Windows native doğrulaması değildir.
+
+## Stage B authoritative motherboard seating doğrulaması — 15 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #53 feature `582a3cf` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`).
+- Unity build raporu: `328.020.817` bayt; app disk kullanımı `320.976 KiB`.
+- Ana executable: `117.179` bayt; SHA-256 `cad75f5e070dfabe0335f9c6ee8d50659dc3ceddd1e036cb63c83b787e5da0f0`.
+- Runtime: Apple M4/Metal, pencereli 1280×720; `garage-motherboard-seating-r22-v1` readiness ve exact assembly smoke başarılı.
+- Test kapıları: EditMode `394/394`, PlayMode `26/26`; failed/skipped `0`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. Gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ve yayın imzası henüz tamamlanmamıştır.

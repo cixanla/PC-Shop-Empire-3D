@@ -209,6 +209,17 @@ Tam konuşma ve dosya geçmişi:
 - [Codex dosya değişiklik envanteri](../CodexHistory/FILE_CHANGE_INVENTORY.md).
 - [Git commit ve dosya geçmişi](../CodexHistory/GIT_COMMIT_AND_FILE_HISTORY.md).
 
+## 8.1 Issue #53 authoritative motherboard seating checkpoint'i
+
+- Epic #10'un ilk child paketi [Issue #53](https://github.com/cixanla/PC-Shop-Empire-3D/issues/53) ile sınırlandı: tek açık kasa, tek serialized `MicroAtx` anakart, tek doğru slot ve yalnız `SeatedUnsecured` sonucu.
+- Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`; `PSE.Assembly` mevcut Catalog/Inventory authority'lerini kullanır, managed Workbench dışında shadow authority yoktur.
+- Attach/detach exact item identity, immutable receipt, replay/conflict, revision ve failure no-mutation sözleşmelerini taşır. World projection domain transaction'dan sonra değişir; failed drop/recovery aynı fiziksel instance ve last-safe pose'u korur.
+- GarageGraybox açık kasa/keyed tray/standoff/anakart graybox'ını içerir. Solver pause/range/focus/LOS/orientation/support/obstruction kapılarını deterministic uygular; preview ve commit pozu aynıdır.
+- Primary+Drop aynı frame'de yalnız seat-mode geçişi üretir. Gerçek Input System keyboard/mouse ve gamepad akışları, dynamic prompt ve release–repress ile testlidir.
+- Final EditMode `394/394`, PlayMode `26/26`, Universal macOS `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` başarılıdır.
+- USB geçici olarak bağlı değildir ve bu checkpointte `/Volumes`e erişilmemiştir. Final evidence yerel build arşivinde korunur; USB yeniden bağlandığında ayrı manifest/readback milestone'u oluşturulur.
+- Sonraki bounded Epic #10 adımı yalnız motherboard fastener secure/unsecure akışıdır; CPU/RAM/GPU, tam build/benchmark ve Inventory genişlemesi ayrı kalır.
+
 ## 9. USB ve yedek güvenlik katmanı
 
 Korunan milestone snapshotları:
@@ -252,4 +263,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, başarılı Guard `31892420515` + `31892875650`, EditMode 352/352, PlayMode 24/24, Universal Mac `327864494` bayt, `garage-physical-checkout-station-r21-v1` smoke ve `7fbb5f0c…31fbd` manifestli USB checkpointiyle tamamlandı; acceptance 17/17, Issue #52 ve parent Epic #9 kapalı/Done. Sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
+> Issue #53 feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`, EditMode 394/394, PlayMode 26/26, Universal Mac `328020817` bayt ve Apple M4/Metal `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/CI ve kullanıcı tarafından ertelenen USB manifesti sıradaki checkpointtir; ardından yalnız motherboard fastener secure/unsecure dilimine geçilir.

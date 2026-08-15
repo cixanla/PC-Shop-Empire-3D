@@ -1,10 +1,25 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #52 fiziksel checkout station ve `AwaitingCheckout`-gated exact-cash ödeme kaynak, test, build, runtime, CI, USB ve GitHub kapılarıyla tamamlandı; Issue #52 ile parent Epic #9 kapalı/Roadmap `Done`<br>
+**Durum:** Issue #53 authoritative tek-anakart seating feature `582a3cf` ile kaynak/test/build/runtime kapılarından geçti; remote CI/Issue metadata ve kullanıcı tarafından ertelenen USB milestone'u takip checkpointindedir<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #52 / Epic #9
+## En yeni checkpoint — Issue #53 / Epic #10
+
+- Feature commit `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`; yerel Repository Guard `tracked=615` ile başarılıdır.
+- Yeni Unity-bağımsız `PSE.Assembly`, existing Catalog/Inventory authority'lerini kullanır. Tek `MicroAtx` anakart exact serialized item/product kimliğiyle ActorHands↔managed Workbench arasında atomik attach/detach receipt'leri üretir.
+- GarageGraybox'ta görünür açık kasa, keyed tray/slot, standoff/connector işaretleri ve tek canonical motherboard projection'ı vardır. Guided solver pause/range/focus/LOS/orientation/support/obstruction kapılarını domain mutation öncesi fail-closed uygular.
+- `Mouse Left / Gamepad RT` seat modunu, fresh `G / Gamepad East` confirm'i yönetir. Aynı-frame Primary+Drop yalnız mode geçişini tüketir; attach/drop yapmaz. Promptlar son cihaz ailesine göre `E/G/R/LMB` veya `A/B/RB/RT` gösterir.
+- Attach sonucu yalnız `SeatedUnsecured`dır. Exact replay idempotent; wrong kind/form factor/identity, occupied/foreign/stale/overflow/full-hands ve failed world-drop yollarında Assembly/Inventory/world projection değişmez.
+- Detach ve recovery aynı fiziksel instance ile Inventory item ID'sini korur; generic pickup/cart/stack/box-placement bypass'ı, jitter, duplicate ve ghost custody engellenir.
+- Final EditMode `394/394`, gerçek Input System PlayMode `26/26`; failed/skipped `0`.
+- Universal macOS Development/StrictMode build `328020817` bayttır; ana executable Mach-O `x86_64 + arm64`, SHA-256 `cad75f5e…a0f0`.
+- Apple M4/Metal 1280×720 runtime `garage-motherboard-seating-r22-v1` readiness ve exact `assembly-flow=ok ... input-single-consumer=ok ... recovery=ok` smoke verdi.
+- Final evidence repo dışında `/Users/cixanla/Developer/PCShopEmpire3D/Builds/Local/Evidence/Issue53-2026-08-15` altında korunur; ayrıntı `Docs/Evidence/AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING-CHECKPOINT-2026-08-15.md` içindedir.
+- USB kullanıcı tarafından geçici olarak çıkarıldı. `/Volumes` erişimi veya snapshot yazımı yapılmadı; USB yeniden bağlandığında manifest/readback checkpointi alınacaktır.
+- Sıradaki bounded gameplay paketi, Issue #53 remote/backup kapanışından sonra tek motherboard fastener secure/unsecure akışıdır. CPU/RAM/GPU, tam build ve Inventory #7/#8 genişlemesi ayrı kalır.
+
+## Önceki tamamlanmış checkpoint — Issue #52 / Epic #9
 
 - Feature commit `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`; [feature Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) başarılıdır.
 - Source/docs commit `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılıdır.
@@ -30,18 +45,19 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; closure metadata commitinden önceki doğrulanmış source/docs checkpoint'i `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc` üzerinde yerel/remote eşittir.
+- Branch: `main`; Issue #53 feature commit'i `582a3cf3e81a2905e39148065bd5f6c7e35bbc06` yerelde doğrulandı, source/docs ve remote CI takip checkpointindedir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-physical-checkout-station-r21-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-motherboard-seating-r22-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
+- İlk PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e `SeatedUnsecured` olarak oturtur; attach/detach/recovery receipt lineage'ı ve stable world identity korunur.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
 
-## Feature checkpoint ve doğrulama kanıtı
+## Önceki tamamlanmış feature checkpoint ve doğrulama kanıtı — Issue #52
 
 - Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#52](https://github.com/cixanla/PC-Shop-Empire-3D/issues/52).
 - Feature commit: `92a0f7b814ad5e597d8d4ca033f2e533f618f719`.
@@ -91,11 +107,11 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Epic #10 altında ilk fiziksel PC assembly dilimini ayrı bounded issue olarak açmak: tek açık kasa, tek component ve tek doğru slotla kasıtlı al/tak/sök akışı.
-2. Assembly authority'sini Inventory/checkout state'inden ayırmak; stable component/case/slot/operation provenance'ını ve attach/detach replay sözleşmesini kilitlemek.
-3. Yanlış slot, engel, range/focus/LOS, pause, held/same-frame ve stale identity yollarını no-mutation kapatmak; pickup/drop/placement/cart/customer/checkout regresyonlarını korumak.
-4. EditMode/gerçek Input System PlayMode, Universal Mac build, 1280×720 runtime smoke, Guard ve USB checkpoint zincirini yine aynı bounded pakette kapatmak.
+1. Issue #53 source/docs commitini private `origin/main`e push etmek, Repository Guard'ı doğrulamak ve Issue/Project kabul durumunu güncellemek.
+2. USB yeniden bağlandığında feature/source/docs ile final r12 kanıtlarını ayrı SHA-256 manifest/readback milestone'una almak; o zamana kadar `/Volumes`e erişmemek.
+3. Sonraki Epic #10 child paketini tek motherboard fastener secure/unsecure akışıyla sınırlamak; deterministic fastener/screwdriver/replay/recovery sözleşmesini kurmak.
+4. CPU/RAM/GPU, tam PC build, benchmark score, Inventory genişlemesi, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, başarılı Guard `31892420515` + `31892875650`, EditMode `352/352`, PlayMode `24/24`, Universal Mac `327864494` bayt, `garage-physical-checkout-station-r21-v1` stock r4/customer r6-r8 smoke ve `7fbb5f0c…31fbd` manifestli USB checkpointiyle tamamlandı; acceptance `17/17`, Issue kapalı/Done ve parent Epic #9 kapalı/Done. Sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
+Issue #53 feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`, EditMode `394/394`, PlayMode `26/26`, Universal Mac `328020817` bayt ve Apple M4/Metal `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/CI ve kullanıcı tarafından ertelenen USB milestone'u sıradaki checkpointtir; sonra tek motherboard fastener secure/unsecure dilimine geçilir.

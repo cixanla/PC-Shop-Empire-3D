@@ -14,6 +14,15 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
+### Güncel checkpoint — Issue #53
+
+- Feature commit `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd` ilk authoritative motherboard seating dilimini taşır.
+- `PSE.Assembly`, mevcut Catalog/Inventory ile tek serialized `MicroAtx` anakartı managed Workbench'e `SeatedUnsecured` olarak attach/detach eder; stable kimlik, receipt/replay ve failure no-mutation sözleşmeleri testlidir.
+- GarageGraybox marker'ı `garage-motherboard-seating-r22-v1`dir. Final EditMode `394/394`, PlayMode `26/26`; Universal macOS build `328020817` bayt ve Apple M4/Metal 1280×720 exact assembly smoke başarılıdır.
+- Ayrıntı: `Docs/ADR-0031-AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING.md` ve `Docs/Evidence/AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING-CHECKPOINT-2026-08-15.md`.
+- USB bağlı değildir; bu checkpointte `/Volumes`e yazılmadı. USB yeniden bağlanınca final evidence ayrı manifest/readback snapshotına alınır.
+- Sonraki bounded Epic #10 paketi yalnız motherboard fastener secure/unsecure akışıdır; CPU/RAM/GPU, tam build ve Inventory genişlemesi kapsam dışıdır.
+
 ## 2. Gereken temel araçlar
 
 - Git.
@@ -52,8 +61,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `352/352` passed.
-- Play Mode `24/24` passed.
+- Edit Mode `394/394` passed.
+- Play Mode `26/26` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -140,7 +149,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş Epic #10 altında ayrı issue ile ilk fiziksel PC assembly dilimidir: tek açık kasa, tek component ve tek doğru slot; kasıtlı al/tak/sök, stable identity/provenance ve no-mutation yanlış-slot/engel/replay sözleşmesi. Tam PC kataloğu, Inventory authority genişlemesi, Save veya final sanat kapsamını gizlice büyütme.
+Sıradaki immediate iş Issue #53 private push/Guard/Issue metadata ve USB yeniden bağlandığında manifest checkpointidir. Sonraki gameplay child yalnız tek motherboard fastener secure/unsecure akışıdır; deterministic fastener/screwdriver/replay/recovery sözleşmesi dışına, CPU/RAM/GPU, tam PC kataloğu, Inventory authority genişlemesi, Save veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 
