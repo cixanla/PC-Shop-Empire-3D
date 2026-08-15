@@ -1,7 +1,7 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
 **Sürüm:** 0.9 — Stage B küçük-kutu placement ve güvenli büyük-kutu taşımaya ilerledi<br>
-**Son güncelleme:** 13 Ağustos 2026<br>
+**Son güncelleme:** 15 Ağustos 2026<br>
 **Kural:** Bu dosya konuşmalardaki kalıcı kararların tek özetidir. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
 ## Durum işaretleri
@@ -270,6 +270,8 @@
 | D-166 | Küçük kutu placement rotation'ı ayrı Input System eylemiyle deterministik clockwise 90° quarter-turn kullanır. | Proje lideri kararı — uygulandı 13 Ağustos 2026 | `R / Right Shoulder`; yalnız SmallBox placement modunda çalışır. Ghost ve confirm aynı yaw/solver girdisini, döndürülmüş footprint tam destek/obstruction kontrolünü kullanır; iptal/release/recovery'de sıfırlanır. Edit Mode 127/127, Play Mode 10/10 ve Mac `rotation=ok` smoke geçti; commit `661f2dc`. |
 | D-167 | Oyunun görsel hedefi okunaklı yarı gerçekçiliktir; mevcut graybox final sanat değildir. | Kullanıcı onayı — 13 Ağustos 2026 | Gerçek oran, URP/PBR yüzey tepkisi, bevel/normal detayı, zemine oturan ışık ve doğal ağırlık; hafif stilize siluet/etkileşim okunabilirliğiyle birleşir. Fotogerçekçilik, lisansı belirsiz/ücretli asset ve full-scene dönüşümü otomatik kapsam değildir. İlk kapı Issue #34 tek benchmark köşesidir. |
 | D-168 | Okunaklı yarı gerçekçilik önce tek ölçülebilir benchmark köşesinde uygulanır. | Uygulandı — 13 Ağustos 2026 | Prosedürel lisanslı yüzeyler, bevel, görev ışığı, ACES/bloom/reflection probe eklendi; gameplay collider/kimlik invariantları korundu. Edit Mode 128/128, Play Mode 10/10 ve Mac `lookdev=ok` geçti; commit `c7214af`. |
+| D-169 | Küçük kutu istifi serbest rigidbody yığını değil, stable dünya desteğinde deterministik ve fail-closed placement ilişkisidir. | Uygulandı — 15 Ağustos 2026 | Yalnız kinematic/gravity-off `SmallBox`; merkez/90° snap, beş noktalı tam destek, overlap engeli, tek kat/tek üst, dolu taban pickup kilidi ve üst kutu alımında ilişki çözümü. Stable ID/recovery korunur; Inventory authority değildir. Edit Mode 131/131, Play Mode 12/12, Mac `stacking=ok`; commit `2e11e30`. |
+| D-170 | Tamamlanan geliştirme paketleri USB'ye her dosya kaydında değil, doğrulanmış milestone snapshotı olarak yazılır. | Kullanıcı onayı — uygulandı 15 Ağustos 2026 | `2026-08-15_STAGE_B_SMALL_BOX_STACKING` final tracked kaynak ve küçük kanıt setini taşır; SHA-256 manifest/readback ve source checksum kapıları kullanılır. `.git`, cache, build uygulaması ve credential dışarıda kalır. |
 
 ## Vertical slice kilidi
 
@@ -381,7 +383,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop, kontrollü küçük-kutu stock placement/rotation ve güvenli büyük-kutu taşıma ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 127/127 ve Play Mode 10/10'dur; sıradaki bounded iş Issue #34 tek-köşe okunaklı yarı gerçekçi görsel benchmarkıdır.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Yerel Unity teknik temeli, development buildleri, Git geçmişi ve USB kaynak snapshot'ı tamamlandı. Stage B Core, oynanabilir GarageGraybox, fiziksel pickup/drop, kontrollü küçük-kutu stock placement/rotation/istif, güvenli büyük-kutu taşıma ve tek-köşe görsel benchmark ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 131/131 ve Play Mode 12/12'dir; sıradaki bounded iş Issue #6 taşıma arabası grayboxıdır.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -439,3 +441,4 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Onuncu Stage B paketi `e94419862b04f6f03f97ef2e43c9da393c5d30a9` commit'iyle ayrı büyük-kutu graybox/carry profili, iki-el durumu, bounded hız/FOV maliyeti, sprint kilidi, fail-closed drop ve gerçek keyboard/gamepad testlerini ekledi; Edit Mode 126/126, Play Mode 10/10 ve Universal macOS `large-carry=ok` runtime smoke geçti.
 - On birinci Stage B paketi `661f2dcc64246a8282fd63fbf303454ec856ea40` commit'iyle küçük-kutu placement moduna `R / Right Shoulder` deterministik 90° rotation, etkin prompt/açı, döndürülmüş footprint doğrulaması ve görünür yön işareti ekledi; Edit Mode 127/127, Play Mode 10/10 ve Universal macOS `rotation=ok` runtime smoke geçti.
 - On ikinci Stage B paketi `c7214afab81a360a3ca10a88cbdd29f67e741994` commit'iyle tek-köşe okunaklı yarı gerçekçi benchmarkı ekledi; Edit Mode 128/128, Play Mode 10/10 ve Mac `lookdev=ok` geçti. Sıradaki paket tam destekli küçük-kutu istiflemedir; taşıma arabası ve Inventory authority ayrı kalır.
+- On üçüncü Stage B paketi `2e11e30a1a4b3435046ae18001004cacc170079e` commit'iyle stable küçük kutu üstünde merkez/90° snap, beş noktalı tam destek, overlap engeli, tek kat/tek üst ilişki, dolu taban pickup kilidi ve gerçek keyboard/gamepad testlerini ekledi; Edit Mode 131/131, Play Mode 12/12 ve Universal macOS `stacking=ok` runtime smoke geçti. Sıradaki paket taşıma arabasıdır; Inventory authority Issue #7/#8'e bağlı kalır.

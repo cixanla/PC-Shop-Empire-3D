@@ -48,8 +48,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `128/128` passed.
-- Play Mode `10/10` passed.
+- Edit Mode `131/131` passed.
+- Play Mode `12/12` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -90,19 +90,20 @@ Tamamlanan saf Core sözleşmeleri:
 - Büyük kutu `G / Gamepad East` ile gerçek boyutuna göre fail-closed güvenli bırakılır; etkin binding, ağır-yük ve engelli-drop durumu HUD prompt'unda görünür.
 - Büyük-kutu placement girişi kapalıdır; stable ID, tek slot, physics snapshot ve disable/world-floor recovery korunur.
 - Küçük kutu placement modunda `R / Right Shoulder` ile deterministik `90°` döner; etkin binding/açı promptu, ghost/confirm poz eşitliği ve döndürülmüş footprint güvenlik kontrolü vardır.
+- Stable küçük kutu desteğinde merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidi vardır; gerçek keyboard/mouse ve gamepad zinciri testlidir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- USB milestone `2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`: source commit `7794e2ab82c3b26c1149af526ed582f1cc406acb`, 336 dosya / 5.928.850 bayt, manifest SHA-256 `b4df8efde544cbe3557bf67f67c13034733949821bdc7848ce612af1129be0fb`; çift readback/checksum geçti.
+- Güncel USB milestone `2026-08-15_STAGE_B_SMALL_BOX_STACKING`: final tracked kaynak ve küçük test/build/runtime kanıt seti, SHA-256 manifest readback ve source checksum ile doğrulandı; cache/build uygulaması/credential dışarıda.
 
 Henüz yapılmayanlar:
 
-- Gelişmiş el animasyonu, raf/istifleme ve taşıma arabası.
+- Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve taşıma arabası.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket küçük-kutu üstü istiflemedir: tam destek, overlap, rotation ve recovery ayrı acceptance ile kilitlenir. Taşıma arabası sonraki ayrı pakettir; Inventory authority Issue #7/#8 öncesinde world projection'a eklenmez.
+Sıradaki bounded paket taşıma arabası grayboxıdır. Büyük-kutu elde taşıma sözleşmesi korunur; Inventory authority Issue #7/#8 öncesinde world projection'a eklenmez.
 
 ## 7. Çalışma akışı
 
@@ -156,7 +157,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 128 Edit Mode ve 10 Play Mode baseline testi geçti.
+2. Repo guard, 131 Edit Mode ve 12 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

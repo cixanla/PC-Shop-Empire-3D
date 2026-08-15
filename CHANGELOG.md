@@ -24,7 +24,8 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Dikdörtgen küçük kutu ve üst yön işareti GarageGraybox'ta rotation'ı görünür kılar; ghost ile onaylanan poz aynı solver sonucunu kullanır.
 - Okunaklı yarı gerçekçilik görsel yönü kabul edildi: gerçek oran/PBR yüzey/zemine oturan ışık/doğal ağırlık, hafif stilize okunabilirlik ve ölçülü performans bütçesi.
 - GarageGraybox tek-köşe benchmarkına bevel'lı tezgâh/raf, prosedürel beton/duvar/metal/karton/ahşap yüzeyler, etiket detayları, görev ışığı, ACES, ölçülü bloom ve reflection probe eklendi.
-- Edit Mode baseline `128/128`, Play Mode baseline `10/10` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok lookdev=ok` gerçek player smoke geçti.
+- Stable küçük kutu üstüne merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi, dolu taban pickup kilidi ve `İSTİF GEÇERLİ` geri bildirimi eklendi.
+- Edit Mode baseline `131/131`, Play Mode baseline `12/12` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok lookdev=ok` gerçek player smoke geçti.
 
 ### Changed
 
@@ -32,6 +33,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Yanlışlıkla oluşturulan ayrı Codex `Game` proje kaydı kaldırıldı; Unity kaynak klasörü ve GitHub bağlantısı korunuyor.
 - Repository Guard checkout action, Node.js 20 deprecation uyarısını kaldırmak için resmî güncel major `actions/checkout@v7`ye yükseltildi.
 - Pickup/drop + kontrollü placement milestone'ı ayrı USB hedefinde 336 tracked dosya ve SHA-256 manifest ile geri okunarak doğrulandı.
+- Kontrollü küçük-kutu istifleme milestone'ı final tracked kaynak ve test/build/runtime kanıtlarıyla ayrı USB hedefinde SHA-256 manifest/readback kapısından geçirildi.
 
 ## 2026-08-11 — Stage B Core Foundation
 
@@ -59,4 +61,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma/placement/rotation ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, istifleme, taşıma arabası ve final sanat henüz tamamlanmadı.
+- Küçük kutu alma/bırakma/placement/rotation/tek-kat istif ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, taşıma arabası, gerçek raf/Inventory authority ve final sanat henüz tamamlanmadı.
