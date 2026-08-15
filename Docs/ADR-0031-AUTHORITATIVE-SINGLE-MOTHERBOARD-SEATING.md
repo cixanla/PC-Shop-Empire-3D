@@ -1,7 +1,7 @@
 # ADR-0031 — Authoritative Single-Motherboard Seating
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Kabul edildi; kaynak, test, macOS build ve native runtime kapıları tamamlandı<br>
+**Durum:** Kabul edildi; kaynak, test, macOS build, native runtime, private push ve Repository Guard kapıları tamamlandı; USB kullanıcı talimatıyla ertelendi<br>
 **Bağlam:** Epic #10 / Issue #53 — ilk bounded fiziksel PC assembly dikey dilimi
 
 ## Bağlam

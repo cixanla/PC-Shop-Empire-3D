@@ -10,6 +10,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - GarageGraybox'a açık kasa, keyed motherboard tray/slot, standoff/connector işaretleri ve tek canonical hassas anakart projection'ı eklendi; guided range/focus/LOS/orientation/support/obstruction preview'su gerçek commit pozu ile aynıdır.
 - Klavye/fare ve gamepad al→guided preview→oturt→sök→recovery akışı, dynamic prompt, same-frame Primary+Drop tek-geçiş kuralı ve failed world-drop retry ile kilitlendi.
 - Issue #53 feature checkpoint'i `582a3cf`, tree `fc80b7c`, EditMode 394/394, PlayMode 26/26, 328020817 bayt Universal macOS build ve Apple M4/Metal `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` kanıtıyla oluşturuldu; USB kullanıcı talimatıyla ertelendi.
+- Issue #53 source/docs `8c6abe4`, tree `387bcba` ve başarılı [Repository Guard `31905540378`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) ile private `main`e ulaştı.
 - Private GitHub collaboration/devir yapısı, living Project Bible, governance ve katkı şablonları tamamlandı.
 - Full design/research package repository içine taşındı.
 - Canonical PC Shop Empire 1.1.6 legacy kaynak snapshot'ı ve manifesti eklendi.

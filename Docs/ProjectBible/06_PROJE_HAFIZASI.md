@@ -471,7 +471,7 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 ## Güncel uygulama kaydı — Issue #53 authoritative motherboard seating
 
 - Issue #50–#52 ile Economy, consultation ve fiziksel checkout zinciri tamamlanıp parent Epic #9 kapatıldı. Tarihsel commit/CI/USB kimlikleri `10_DEVAM_CHECKPOINT.md` içinde korunur.
-- Epic #10'un ilk bounded child'ı Issue #53'tür. Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, mevcut Catalog/Inventory'yi kullanan Unity bağımsız `PSE.Assembly` ve tek `MicroAtx` anakart için managed Workbench custody'si kurdu.
+- Epic #10'un ilk bounded child'ı Issue #53'tür. Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, source/docs `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d` ve başarılı Guard `31905540378`; mevcut Catalog/Inventory'yi kullanan Unity bağımsız `PSE.Assembly` ve tek `MicroAtx` anakart için managed Workbench custody'si kurdu.
 - Karar: fiziksel transform/collider authority değildir. Attach/detach exact serialized item ID, stable build/chassis/slot/operation provenance'ı, immutable receipt/replay ve no-mutation failure kapılarıyla ilerler.
 - Karar: seat solver preview ve commit için tek deterministic pose üretir; pause/range/focus/LOS/orientation/support/obstruction fail-closed'dur. Reset/disabled projection valid sayılamaz.
 - Karar: aynı-frame Primary+Drop içinde Primary tek state-transition sahibidir; Drop consume/no-op olur. Klavye/fare ve gamepad dynamic promptları gerçek Input System testlidir.

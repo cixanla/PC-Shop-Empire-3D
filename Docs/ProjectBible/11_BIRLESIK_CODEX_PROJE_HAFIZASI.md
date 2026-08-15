@@ -212,7 +212,7 @@ Tam konuşma ve dosya geçmişi:
 ## 8.1 Issue #53 authoritative motherboard seating checkpoint'i
 
 - Epic #10'un ilk child paketi [Issue #53](https://github.com/cixanla/PC-Shop-Empire-3D/issues/53) ile sınırlandı: tek açık kasa, tek serialized `MicroAtx` anakart, tek doğru slot ve yalnız `SeatedUnsecured` sonucu.
-- Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`; `PSE.Assembly` mevcut Catalog/Inventory authority'lerini kullanır, managed Workbench dışında shadow authority yoktur.
+- Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, source/docs `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7` ve başarılı [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378); `PSE.Assembly` mevcut Catalog/Inventory authority'lerini kullanır, managed Workbench dışında shadow authority yoktur.
 - Attach/detach exact item identity, immutable receipt, replay/conflict, revision ve failure no-mutation sözleşmelerini taşır. World projection domain transaction'dan sonra değişir; failed drop/recovery aynı fiziksel instance ve last-safe pose'u korur.
 - GarageGraybox açık kasa/keyed tray/standoff/anakart graybox'ını içerir. Solver pause/range/focus/LOS/orientation/support/obstruction kapılarını deterministic uygular; preview ve commit pozu aynıdır.
 - Primary+Drop aynı frame'de yalnız seat-mode geçişi üretir. Gerçek Input System keyboard/mouse ve gamepad akışları, dynamic prompt ve release–repress ile testlidir.

@@ -17,6 +17,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 ### Güncel checkpoint — Issue #53
 
 - Feature commit `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd` ilk authoritative motherboard seating dilimini taşır.
+- Source/docs commit `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7` ve [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılıdır.
 - `PSE.Assembly`, mevcut Catalog/Inventory ile tek serialized `MicroAtx` anakartı managed Workbench'e `SeatedUnsecured` olarak attach/detach eder; stable kimlik, receipt/replay ve failure no-mutation sözleşmeleri testlidir.
 - GarageGraybox marker'ı `garage-motherboard-seating-r22-v1`dir. Final EditMode `394/394`, PlayMode `26/26`; Universal macOS build `328020817` bayt ve Apple M4/Metal 1280×720 exact assembly smoke başarılıdır.
 - Ayrıntı: `Docs/ADR-0031-AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING.md` ve `Docs/Evidence/AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING-CHECKPOINT-2026-08-15.md`.

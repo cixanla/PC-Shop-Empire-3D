@@ -1,12 +1,13 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #53 authoritative tek-anakart seating feature `582a3cf` ile kaynak/test/build/runtime kapılarından geçti; remote CI/Issue metadata ve kullanıcı tarafından ertelenen USB milestone'u takip checkpointindedir<br>
+**Durum:** Issue #53 authoritative tek-anakart seating feature `582a3cf`, source/docs `8c6abe4` ve başarılı Repository Guard `31905540378` ile kaynak/test/build/runtime/private-push kapılarından geçti; Issue metadata ve kullanıcı tarafından ertelenen USB milestone'u takip checkpointindedir<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #53 / Epic #10
 
 - Feature commit `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`; yerel Repository Guard `tracked=615` ile başarılıdır.
+- Source/docs commit `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7`; [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılıdır.
 - Yeni Unity-bağımsız `PSE.Assembly`, existing Catalog/Inventory authority'lerini kullanır. Tek `MicroAtx` anakart exact serialized item/product kimliğiyle ActorHands↔managed Workbench arasında atomik attach/detach receipt'leri üretir.
 - GarageGraybox'ta görünür açık kasa, keyed tray/slot, standoff/connector işaretleri ve tek canonical motherboard projection'ı vardır. Guided solver pause/range/focus/LOS/orientation/support/obstruction kapılarını domain mutation öncesi fail-closed uygular.
 - `Mouse Left / Gamepad RT` seat modunu, fresh `G / Gamepad East` confirm'i yönetir. Aynı-frame Primary+Drop yalnız mode geçişini tüketir; attach/drop yapmaz. Promptlar son cihaz ailesine göre `E/G/R/LMB` veya `A/B/RB/RT` gösterir.
@@ -45,7 +46,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #53 feature commit'i `582a3cf3e81a2905e39148065bd5f6c7e35bbc06` yerelde doğrulandı, source/docs ve remote CI takip checkpointindedir.
+- Branch: `main`; Issue #53 source/docs checkpoint'i `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d` private remote'a ulaştı ve Guard başarılıdır.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.

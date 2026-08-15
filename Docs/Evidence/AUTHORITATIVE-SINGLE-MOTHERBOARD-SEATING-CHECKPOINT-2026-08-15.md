@@ -17,10 +17,12 @@ Issue [#53](https://github.com/cixanla/PC-Shop-Empire-3D/issues/53), Epic [#10](
 - Branch: `main`
 - Feature commit: `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`
 - Feature tree: `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`
+- Source/docs commit: `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`
+- Source/docs tree: `387bcba701b8a959681e92bf29dc48a4d09f0ab7`
+- Source/docs Repository Guard: [31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378), başarılı
 - ADR: `Docs/ADR-0031-AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING.md`
 - Marker: `garage-motherboard-seating-r22-v1`
 - Yerel Repository Guard: `REPOSITORY_GUARD_OK unity=6000.3.21f1 legacy=26 project_bible_docs=12 tracked=615`
-- Source/docs commit ve remote Repository Guard bu evidence'i taşıyan takip checkpointinde kaydedilecektir.
 
 ## Otomatik doğrulama
 
@@ -67,6 +69,6 @@ Native player, exact başarı marker'ı kaydedildikten sonra kontrollü olarak k
 
 ## GitHub ve USB durumu
 
-- Issue #53 kaynak/test/build/runtime kabulü tamamdır; private push, Repository Guard ve Issue/Project metadata takip checkpointinde tamamlanır.
+- Issue #53 kaynak/test/build/runtime/private-push/Repository-Guard kabulü tamamdır; Issue/Project metadata ve USB durumu takip checkpointinde güncellenir.
 - Kullanıcı USB'yi geçici olarak çıkardığını bildirdi. Bu turda `/Volumes` veya USB'ye erişilmedi; snapshot oluşturulmadı.
 - Yerel final evidence arşivi korunur. USB yeniden bağlandığında feature/source/docs commitleri ve bu final kanıtlar ayrı SHA-256 manifest/readback milestone'ına aktarılacaktır.
