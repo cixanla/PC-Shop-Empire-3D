@@ -35,16 +35,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
-        public string CustomerBasketStatusText =>
-            EnsureInitialized().TryGetPrototypeBasketLine(out _)
-                ? "1 ÜRÜN • AYRILDI"
-                : "BOŞ";
+        public string CustomerBasketStatusText
+        {
+            get
+            {
+                GarageStockFlowSession session = EnsureInitialized();
+                if (session.TryGetPrototypeCheckoutCompletion(out _))
+                {
+                    return "TESLİM EDİLDİ";
+                }
+
+                return session.TryGetPrototypeBasketLine(out _)
+                    ? "1 ÜRÜN • AYRILDI"
+                    : "BOŞ";
+            }
+        }
 
         public string CheckoutStatusText
         {
             get
             {
                 GarageStockFlowSession session = EnsureInitialized();
+                if (session.TryGetPrototypeCheckoutCompletion(
+                        out RetailCheckoutCompletionRecord completion))
+                {
+                    return $"{FormatMoney(completion.Currency, completion.TotalMinorUnits)} • TAMAMLANDI";
+                }
+
                 return session.TryGetPrototypeCheckout(out RetailCheckoutRecord checkout)
                     ? $"{FormatMoney(checkout.Currency, checkout.TotalMinorUnits)} • DONDURULDU"
                     : "BEKLİYOR";
@@ -126,7 +143,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             Material target = arrivedMaterial;
-            if (session.TryGetItem(out InventoryItemRecord item) &&
+            if (session.TryGetPrototypeCheckoutCompletion(out _))
+            {
+                target = shelvedMaterial;
+            }
+            else if (session.TryGetItem(out InventoryItemRecord item) &&
                 session.Inventory.TryGetContainer(
                     item.ContainerId,
                     out InventoryContainerDefinition container))

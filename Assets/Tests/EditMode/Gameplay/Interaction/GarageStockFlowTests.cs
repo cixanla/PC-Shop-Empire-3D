@@ -410,6 +410,75 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void BindingCompletesSaleConsumesStockAndHidesShelfProjectionExactlyOnce()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+            Assert.That(fixture.Session.TransferItem(
+                fixture.Session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryReserveForCustomer().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryBeginCheckout().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.RequiresCheckoutCompletion, Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long basketRevision = fixture.Session.RetailBaskets.Revision;
+            long checkoutRevision = fixture.Session.RetailCheckouts.Revision;
+            long offerRevision = fixture.Session.RetailOffers.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            OperationResult result = fixture.Binding.TryCompleteCheckout();
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(fixture.Binding.IsCheckoutCompleted, Is.True);
+            Assert.That(fixture.Binding.IsCustomerReserved, Is.False);
+            Assert.That(fixture.Binding.RequiresCheckoutCompletion, Is.False);
+            Assert.That(fixture.Item.gameObject.activeSelf, Is.False);
+            Assert.That(fixture.Session.TryGetItem(out _), Is.False);
+            Assert.That(fixture.Session.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(fixture.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(fixture.Session.Inventory.GetTotalQuantity(
+                fixture.Session.ProductId).Value, Is.Zero);
+            Assert.That(fixture.Session.Inventory.GetAvailableQuantity(
+                fixture.Session.ProductId).Value, Is.Zero);
+            Assert.That(fixture.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(fixture.Session.TryGetPrototypeCheckoutCompletion(
+                out RetailCheckoutCompletionRecord completion), Is.True);
+            Assert.That(completion.Id,
+                Is.EqualTo(fixture.Session.PrototypeCheckoutCompletionId));
+            Assert.That(completion.TotalMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(fixture.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevision + 1));
+            Assert.That(fixture.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevision + 1));
+            Assert.That(fixture.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision + 1));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Binding.LocationLabel,
+                Is.EqualTo("MÜŞTERİYE TESLİM EDİLDİ • STOK 0"));
+            Assert.That(fixture.Binding.Runtime.CustomerBasketStatusText,
+                Is.EqualTo("TESLİM EDİLDİ"));
+            Assert.That(fixture.Binding.Runtime.CheckoutStatusText,
+                Is.EqualTo($"{GarageStockFlowRuntime.PrototypePriceText} • TAMAMLANDI"));
+            Assert.That(fixture.Binding.Runtime.ShelfOfferLabelText,
+                Does.Contain("TAMAMLANDI"));
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+
+            inventoryRevision = fixture.Session.Inventory.Revision;
+            basketRevision = fixture.Session.RetailBaskets.Revision;
+            checkoutRevision = fixture.Session.RetailCheckouts.Revision;
+            Assert.That(fixture.Binding.TryCompleteCheckout().IsSuccess, Is.True);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(fixture.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevision));
+            Assert.That(fixture.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+        }
+
         private Fixture CreateBindingFixture()
         {
             _root = new GameObject("StockFlowTestRoot");

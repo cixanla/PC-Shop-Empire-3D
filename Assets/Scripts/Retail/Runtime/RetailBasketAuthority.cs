@@ -194,6 +194,88 @@ namespace PCShopEmpire3D.Retail
             return OperationResult.Success();
         }
 
+        /// <summary>
+        /// Internal checkout commit boundary. It verifies that the basket still exactly matches
+        /// the immutable checkout snapshot before asking Inventory to consume every reservation
+        /// atomically. After that successful call, removing the preflighted lines cannot fail.
+        /// </summary>
+        internal OperationResult ConsumeCheckoutLines(RetailCheckoutRecord checkout)
+        {
+            if (checkout == null || checkout.Lines == null || checkout.Lines.Count == 0)
+            {
+                return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+            }
+
+            int basketLineCount = 0;
+            foreach (RetailBasketLineRecord current in _lines.Values)
+            {
+                if (current.BasketId == checkout.BasketId)
+                {
+                    basketLineCount++;
+                }
+            }
+
+            if (basketLineCount != checkout.Lines.Count)
+            {
+                return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+            }
+
+            var lineIds = new HashSet<StableId<RetailBasketLineIdScope>>();
+            var itemIds = new HashSet<StableId<ItemInstanceIdScope>>();
+            var reservationIds = new HashSet<StableId<ReservationIdScope>>();
+            var reservations = new List<StableId<ReservationIdScope>>(checkout.Lines.Count);
+            for (int index = 0; index < checkout.Lines.Count; index++)
+            {
+                RetailCheckoutLineSnapshot snapshot = checkout.Lines[index];
+                if (snapshot == null ||
+                    !lineIds.Add(snapshot.BasketLineId) ||
+                    !itemIds.Add(snapshot.ItemId) ||
+                    !reservationIds.Add(snapshot.InventoryReservationId) ||
+                    !_lines.TryGetValue(
+                        snapshot.BasketLineId,
+                        out RetailBasketLineRecord line) ||
+                    line.BasketId != checkout.BasketId ||
+                    line.CustomerId != checkout.CustomerId ||
+                    line.OfferId != snapshot.OfferId ||
+                    line.ItemId != snapshot.ItemId ||
+                    line.InventoryReservationId != snapshot.InventoryReservationId ||
+                    line.InventoryClaimId != snapshot.InventoryClaimId ||
+                    !_inventory.TryGetSerializedItem(
+                        snapshot.ItemId,
+                        out InventoryItemRecord item) ||
+                    item.ProductId != snapshot.ProductId ||
+                    item.ContainerId != snapshot.ShelfContainerId ||
+                    !_inventory.TryGetReservation(
+                        snapshot.InventoryReservationId,
+                        out InventoryReservation reservation) ||
+                    !Matches(reservation, line))
+                {
+                    return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+                }
+
+                reservations.Add(snapshot.InventoryReservationId);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(RetailBasketFailures.RevisionOverflow);
+            }
+
+            OperationResult consume = _inventory.ConsumeReservations(reservations);
+            if (consume.IsFailure)
+            {
+                return consume;
+            }
+
+            foreach (StableId<RetailBasketLineIdScope> lineId in lineIds)
+            {
+                _lines.Remove(lineId);
+            }
+
+            Revision++;
+            return OperationResult.Success();
+        }
+
         public bool TryGetLine(
             StableId<RetailBasketLineIdScope> lineId,
             out RetailBasketLineRecord line)
@@ -374,6 +456,7 @@ namespace PCShopEmpire3D.Retail
         public static readonly Failure ItemAlreadyInBasket = Failure.FromCode("retail.basket.item-already-reserved");
         public static readonly Failure ReservationIdentityConflict = Failure.FromCode("retail.basket.reservation-identity-conflict");
         public static readonly Failure InventoryReservationDrift = Failure.FromCode("retail.basket.inventory-drift");
+        public static readonly Failure CheckoutSnapshotMismatch = Failure.FromCode("retail.basket.checkout-snapshot-mismatch");
         public static readonly Failure RevisionOverflow = Failure.FromCode("retail.basket.revision-overflow");
         public static readonly Failure InvariantViolation = Failure.FromCode("retail.basket.invariant");
     }

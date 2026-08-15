@@ -28,6 +28,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string PrototypeBasketIdValue = "retail.basket.demo-customer-001";
         public const string PrototypeBasketLineIdValue = "retail.basket-line.demo-a60-001";
         public const string PrototypeCheckoutIdValue = "retail.checkout.demo-customer-001";
+        public const string PrototypeCheckoutCompletionIdValue =
+            "retail.checkout-completion.demo-customer-001";
         public const string PrototypeReservationIdValue =
             "inventory.reservation.demo-basket-a60-001";
         public const string PrototypeClaimIdValue =
@@ -99,6 +101,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<RetailCheckoutIdScope> PrototypeCheckoutId =>
             StableId<RetailCheckoutIdScope>.Parse(PrototypeCheckoutIdValue);
+
+        public StableId<RetailCheckoutCompletionIdScope> PrototypeCheckoutCompletionId =>
+            StableId<RetailCheckoutCompletionIdScope>.Parse(
+                PrototypeCheckoutCompletionIdValue);
 
         public StableId<ReservationIdScope> PrototypeReservationId =>
             StableId<ReservationIdScope>.Parse(PrototypeReservationIdValue);
@@ -264,6 +270,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool TryGetPrototypeCheckout(out RetailCheckoutRecord checkout)
         {
             return RetailCheckouts.TryGetCheckout(PrototypeCheckoutId, out checkout);
+        }
+
+        public OperationResult CompletePrototypeCheckout()
+        {
+            return RetailCheckouts.CompleteCheckout(
+                PrototypeCheckoutCompletionId,
+                PrototypeCheckoutId,
+                Time(7));
+        }
+
+        public bool TryGetPrototypeCheckoutCompletion(
+            out RetailCheckoutCompletionRecord completion)
+        {
+            return RetailCheckouts.TryGetCompletion(
+                PrototypeCheckoutCompletionId,
+                out completion);
         }
 
         public OperationResult ValidateInvariants()

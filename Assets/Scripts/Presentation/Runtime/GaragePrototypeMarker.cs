@@ -5,6 +5,7 @@ using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
+using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-checkout-snapshot-r13-v1";
+        public const string Version = "garage-sale-completion-r14-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -101,6 +102,8 @@ namespace PCShopEmpire3D.Presentation
             bool hasCheckoutAuthority = hasArrivedStockFlow &&
                                         stockFlow.Session.RetailCheckouts != null &&
                                         stockFlow.Session.RetailCheckouts.Count == 0;
+            bool hasCheckoutCompletionAuthority = hasCheckoutAuthority &&
+                                                  stockFlow.Session.RetailCheckouts.CompletionCount == 0;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -118,6 +121,7 @@ namespace PCShopEmpire3D.Presentation
                 $"shelf-offer={(hasShelfOfferAuthority ? "ready" : "missing")} " +
                 $"basket-reservation={(hasBasketAuthority ? "ready" : "missing")} " +
                 $"checkout-snapshot={(hasCheckoutAuthority ? "ready" : "missing")} " +
+                $"checkout-completion={(hasCheckoutCompletionAuthority ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
@@ -382,6 +386,59 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            long completionInventoryBefore = checkoutSession.Inventory.Revision;
+            long completionBasketBefore = checkoutSession.RetailBaskets.Revision;
+            long completionCheckoutBefore = checkoutSession.RetailCheckouts.Revision;
+            long completionOfferBefore = checkoutSession.RetailOffers.Revision;
+            long completionOrdersBefore = checkoutSession.Orders.Revision;
+            OperationResult completeSale = checkoutSession.CompletePrototypeCheckout();
+            OperationResult repeatedCompletion = checkoutSession.CompletePrototypeCheckout();
+            OperationResult repeatedBeginAfterCompletion = checkoutSession.BeginPrototypeCheckout();
+            bool saleCompleted =
+                completeSale.IsSuccess &&
+                repeatedCompletion.IsSuccess &&
+                repeatedBeginAfterCompletion.IsSuccess &&
+                checkoutSession.TryGetPrototypeCheckoutCompletion(
+                    out RetailCheckoutCompletionRecord completionRecord) &&
+                completionRecord.CheckoutId == checkoutSession.PrototypeCheckoutId &&
+                completionRecord.BasketId == checkoutSession.PrototypeBasketId &&
+                completionRecord.CustomerId == checkoutSession.PrototypeCustomerId &&
+                completionRecord.Currency.Value ==
+                    GarageStockFlowSession.PrototypeCurrencyCode &&
+                completionRecord.TotalMinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                completionRecord.Lines.Count == 1 &&
+                completionRecord.Lines[0].ItemId == checkoutSession.ItemId &&
+                !checkoutSession.TryGetItem(out _) &&
+                checkoutSession.Inventory.GetTotalQuantity(
+                    checkoutSession.ProductId).Value == 0 &&
+                checkoutSession.Inventory.GetAvailableQuantity(
+                    checkoutSession.ProductId).Value == 0 &&
+                checkoutSession.Inventory.ReservationCount == 0 &&
+                checkoutSession.RetailBaskets.Count == 0 &&
+                checkoutSession.RetailCheckouts.Count == 1 &&
+                checkoutSession.RetailCheckouts.CompletionCount == 1 &&
+                checkoutSession.Inventory.Revision == completionInventoryBefore + 1 &&
+                checkoutSession.RetailBaskets.Revision == completionBasketBefore + 1 &&
+                checkoutSession.RetailCheckouts.Revision == completionCheckoutBefore + 1 &&
+                checkoutSession.RetailOffers.Revision == completionOfferBefore &&
+                checkoutSession.Orders.Revision == completionOrdersBefore &&
+                checkoutSession.ValidateInvariants().IsSuccess;
+            if (!saleCompleted)
+            {
+                string completionFailureCode = completeSale.IsFailure
+                    ? completeSale.Error.Code
+                    : repeatedCompletion.IsFailure
+                        ? repeatedCompletion.Error.Code
+                        : repeatedBeginAfterCompletion.IsFailure
+                            ? repeatedBeginAfterCompletion.Error.Code
+                            : "smoke.sale-completion-contract";
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={completionFailureCode}");
+                yield break;
+            }
+
             Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
             if (cameraPivot != null)
             {
@@ -394,8 +451,10 @@ namespace PCShopEmpire3D.Presentation
                 $"currency={offer.Price.Currency.Value} " +
                 "basket-reservation=ok release=ok " +
                 "checkout-snapshot=ok price-frozen=ok " +
+                "sale-completion=ok stock-consumed=ok " +
                 $"stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
-                $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
+                $"completed-quantity={checkoutSession.Inventory.GetTotalQuantity(checkoutSession.ProductId).Value} " +
+                $"projection-quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();
         }
 

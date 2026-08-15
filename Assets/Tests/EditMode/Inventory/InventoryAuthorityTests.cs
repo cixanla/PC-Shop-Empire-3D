@@ -230,6 +230,90 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
+        public void BulkConsumeRemovesMultipleSerializedReservationsInOneRevision()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> firstItem = ItemId("item.bulk-a");
+            StableId<ItemInstanceIdScope> secondItem = ItemId("item.bulk-b");
+            StableId<ReservationIdScope> firstReservation =
+                ReservationId("reservation.bulk-a");
+            StableId<ReservationIdScope> secondReservation =
+                ReservationId("reservation.bulk-b");
+            authority.ReceiveSerializedItem(
+                firstItem, SerializedProduct, Shelf, InventoryCondition.New);
+            authority.ReceiveSerializedItem(
+                secondItem, SerializedProduct, Shelf, InventoryCondition.New);
+            authority.ReserveSerializedItem(
+                firstReservation, ClaimId("claim.bulk-a"), firstItem);
+            authority.ReserveSerializedItem(
+                secondReservation, ClaimId("claim.bulk-b"), secondItem);
+            long revision = authority.Revision;
+
+            OperationResult result = authority.ConsumeReservations(
+                new[] { secondReservation, firstReservation });
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.SerializedItemCount, Is.Zero);
+            Assert.That(authority.ReservationCount, Is.Zero);
+            Assert.That(authority.GetTotalQuantity(SerializedProduct).Value, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void BulkConsumeAggregatesBatchReservationsBeforeOneMutation()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<BatchIdScope> batch = BatchId("batch.bulk");
+            StableId<ReservationIdScope> first = ReservationId("reservation.batch-bulk-a");
+            StableId<ReservationIdScope> second = ReservationId("reservation.batch-bulk-b");
+            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 10);
+            authority.ReserveBatch(first, ClaimId("claim.batch-bulk-a"), batch, Receiving, 3);
+            authority.ReserveBatch(second, ClaimId("claim.batch-bulk-b"), batch, Receiving, 4);
+            long revision = authority.Revision;
+
+            OperationResult result = authority.ConsumeReservations(new[] { first, second });
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.GetBatchQuantity(batch, Receiving).Value, Is.EqualTo(3));
+            Assert.That(authority.ReservationCount, Is.Zero);
+            Assert.That(authority.GetAvailableQuantity(BatchProduct).Value, Is.EqualTo(3));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void InvalidBulkReservationSetsFailWithoutPartialConsumption()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.bulk-failure");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.bulk-failure");
+            authority.ReceiveSerializedItem(
+                item, SerializedProduct, Shelf, InventoryCondition.New);
+            authority.ReserveSerializedItem(
+                reservation, ClaimId("claim.bulk-failure"), item);
+            long revision = authority.Revision;
+
+            Assert.That(authority.ConsumeReservations(null).Error,
+                Is.EqualTo(InventoryFailures.MissingReservationSet));
+            Assert.That(authority.ConsumeReservations(
+                    System.Array.Empty<StableId<ReservationIdScope>>()).Error,
+                Is.EqualTo(InventoryFailures.EmptyReservationSet));
+            Assert.That(authority.ConsumeReservations(
+                    new[] { reservation, reservation }).Error,
+                Is.EqualTo(InventoryFailures.DuplicateReservationInSet));
+            Assert.That(authority.ConsumeReservations(
+                    new[] { reservation, ReservationId("reservation.unknown") }).Error,
+                Is.EqualTo(InventoryFailures.UnknownReservation));
+
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TryGetSerializedItem(item, out _), Is.True);
+            Assert.That(authority.TryGetReservation(reservation, out _), Is.True);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void QueriesReturnDeterministicStableIdOrder()
         {
             InventoryAuthority authority = CreateAuthority();

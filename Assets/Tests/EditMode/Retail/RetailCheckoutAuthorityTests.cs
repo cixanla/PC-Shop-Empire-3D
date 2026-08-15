@@ -43,8 +43,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             StableId<InventoryClaimIdScope>.Parse("inventory.claim.checkout-b70");
         private static readonly StableId<RetailCheckoutIdScope> Checkout =
             StableId<RetailCheckoutIdScope>.Parse("retail.checkout.customer-001");
+        private static readonly StableId<RetailCheckoutCompletionIdScope> Completion =
+            StableId<RetailCheckoutCompletionIdScope>.Parse(
+                "retail.checkout-completion.customer-001");
         private static readonly SimulationTimestamp StartedAt =
             SimulationTimestamp.Create(10, 10_000);
+        private static readonly SimulationTimestamp CompletedAt =
+            SimulationTimestamp.Create(11, 11_000);
 
         [Test]
         public void CreateRequiresAllAuthorities()
@@ -308,9 +313,180 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Assert.That(fixture.Checkouts.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void CompletionConsumesEveryLineAtomicallyAndCreatesImmutableResult()
+        {
+            Fixture fixture = CreateFixture(includeSecondLine: true);
+            Assert.That(Begin(fixture).IsSuccess, Is.True);
+            Assert.That(fixture.Checkouts.TryGetCheckout(
+                Checkout, out RetailCheckoutRecord checkout), Is.True);
+            long inventoryRevision = fixture.Inventory.Revision;
+            long basketRevision = fixture.Baskets.Revision;
+            long checkoutRevision = fixture.Checkouts.Revision;
+            long offerRevision = fixture.Offers.Revision;
+
+            OperationResult result = Complete(fixture);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision + 1));
+            Assert.That(fixture.Baskets.Revision, Is.EqualTo(basketRevision + 1));
+            Assert.That(fixture.Checkouts.Revision, Is.EqualTo(checkoutRevision + 1));
+            Assert.That(fixture.Offers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(fixture.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(fixture.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Baskets.Count, Is.Zero);
+            Assert.That(fixture.Checkouts.Count, Is.EqualTo(1));
+            Assert.That(fixture.Checkouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(fixture.Checkouts.TryGetCompletion(
+                Completion, out RetailCheckoutCompletionRecord completion), Is.True);
+            Assert.That(completion.CheckoutId, Is.EqualTo(Checkout));
+            Assert.That(completion.BasketId, Is.EqualTo(Basket));
+            Assert.That(completion.CustomerId, Is.EqualTo(Customer));
+            Assert.That(completion.CompletedAt, Is.EqualTo(CompletedAt));
+            Assert.That(completion.Currency, Is.EqualTo(checkout.Currency));
+            Assert.That(completion.TotalMinorUnits, Is.EqualTo(119_998));
+            Assert.That(completion.Lines.Count, Is.EqualTo(2));
+            Assert.That(completion.Lines[0].ItemId, Is.EqualTo(ItemA));
+            Assert.That(completion.Lines[1].ItemId, Is.EqualTo(ItemB));
+            Assert.That(fixture.Checkouts.ValidateInvariants().IsSuccess, Is.True);
+
+            Assert.That(fixture.Offers.SetOffer(
+                OfferA, ProductA, Shelf, "EUR", 59_999).IsSuccess, Is.True);
+            Assert.That(checkout.TotalMinorUnits, Is.EqualTo(119_998));
+            Assert.That(completion.TotalMinorUnits, Is.EqualTo(119_998));
+            Assert.That(completion.Lines[0].UnitPrice.MinorUnits, Is.EqualTo(54_999));
+            Assert.That(fixture.Checkouts.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ExactCompletionAndBeginRepeatsAreIdempotentAfterFulfillment()
+        {
+            Fixture fixture = CreateFixture();
+            Assert.That(Begin(fixture).IsSuccess, Is.True);
+            Assert.That(Complete(fixture).IsSuccess, Is.True);
+            AuthorityState before = Capture(fixture);
+            long checkoutRevision = fixture.Checkouts.Revision;
+            int serializedItemCount = fixture.Inventory.SerializedItemCount;
+
+            OperationResult repeatedCompletion = Complete(fixture);
+            OperationResult repeatedBegin = Begin(fixture);
+
+            Assert.That(repeatedCompletion.IsSuccess, Is.True);
+            Assert.That(repeatedBegin.IsSuccess, Is.True);
+            Assert.That(fixture.Checkouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(fixture.Checkouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.SerializedItemCount, Is.EqualTo(serializedItemCount));
+            AssertOtherAuthoritiesUnchanged(fixture, before);
+            Assert.That(fixture.Checkouts.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CompletionIdentityConflictsFailWithoutMutation()
+        {
+            Fixture fixture = CreateFixture();
+            Assert.That(Begin(fixture).IsSuccess, Is.True);
+            Assert.That(Complete(fixture).IsSuccess, Is.True);
+            AuthorityState before = Capture(fixture);
+            long checkoutRevision = fixture.Checkouts.Revision;
+
+            OperationResult reusedCompletionId = fixture.Checkouts.CompleteCheckout(
+                Completion,
+                StableId<RetailCheckoutIdScope>.Parse("retail.checkout.other"),
+                CompletedAt);
+            OperationResult secondCompletion = fixture.Checkouts.CompleteCheckout(
+                StableId<RetailCheckoutCompletionIdScope>.Parse(
+                    "retail.checkout-completion.second"),
+                Checkout,
+                CompletedAt);
+
+            Assert.That(reusedCompletionId.Error,
+                Is.EqualTo(RetailCheckoutFailures.CompletionIdentityConflict));
+            Assert.That(secondCompletion.Error,
+                Is.EqualTo(RetailCheckoutFailures.CheckoutAlreadyCompleted));
+            Assert.That(fixture.Checkouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(fixture.Checkouts.CompletionCount, Is.EqualTo(1));
+            AssertOtherAuthoritiesUnchanged(fixture, before);
+        }
+
+        [Test]
+        public void CompletionTimeAndReservationDriftFailWithoutCrossAuthorityMutation()
+        {
+            Fixture timeFixture = CreateFixture();
+            Assert.That(Begin(timeFixture).IsSuccess, Is.True);
+            AuthorityState timeBefore = Capture(timeFixture);
+            OperationResult early = timeFixture.Checkouts.CompleteCheckout(
+                Completion,
+                Checkout,
+                SimulationTimestamp.Create(9, 9_000));
+            Assert.That(early.Error,
+                Is.EqualTo(RetailCheckoutFailures.CompletionBeforeCheckout));
+            Assert.That(timeFixture.Checkouts.CompletionCount, Is.Zero);
+            AssertOtherAuthoritiesUnchanged(timeFixture, timeBefore);
+
+            Fixture driftFixture = CreateFixture();
+            Assert.That(Begin(driftFixture).IsSuccess, Is.True);
+            Assert.That(driftFixture.Inventory.ReleaseReservation(ReservationA).IsSuccess,
+                Is.True);
+            AuthorityState driftBefore = Capture(driftFixture);
+            long checkoutRevision = driftFixture.Checkouts.Revision;
+
+            OperationResult drifted = Complete(driftFixture);
+
+            Assert.That(drifted.Error,
+                Is.EqualTo(RetailCheckoutFailures.InventoryReservationDrift));
+            Assert.That(driftFixture.Checkouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(driftFixture.Checkouts.CompletionCount, Is.Zero);
+            AssertOtherAuthoritiesUnchanged(driftFixture, driftBefore);
+        }
+
+        [Test]
+        public void CompletionQueriesUseDeterministicStableIdOrder()
+        {
+            Fixture fixture = CreateFixture();
+            StableId<RetailBasketIdScope> secondBasket =
+                StableId<RetailBasketIdScope>.Parse("retail.basket.checkout-second");
+            StableId<RetailCustomerIdScope> secondCustomer =
+                StableId<RetailCustomerIdScope>.Parse("retail.customer.checkout-second");
+            StableId<RetailCheckoutIdScope> secondCheckout =
+                StableId<RetailCheckoutIdScope>.Parse("retail.checkout.second");
+            StableId<RetailCheckoutCompletionIdScope> laterCompletion =
+                StableId<RetailCheckoutCompletionIdScope>.Parse(
+                    "retail.checkout-completion.z-later");
+            StableId<RetailCheckoutCompletionIdScope> earlierCompletion =
+                StableId<RetailCheckoutCompletionIdScope>.Parse(
+                    "retail.checkout-completion.a-earlier");
+            Assert.That(ReserveSecondLine(fixture, secondBasket, secondCustomer).IsSuccess,
+                Is.True);
+            Assert.That(Begin(fixture).IsSuccess, Is.True);
+            Assert.That(fixture.Checkouts.BeginCheckout(
+                secondCheckout, secondBasket, secondCustomer, StartedAt).IsSuccess, Is.True);
+
+            Assert.That(fixture.Checkouts.CompleteCheckout(
+                laterCompletion, Checkout, CompletedAt).IsSuccess, Is.True);
+            Assert.That(fixture.Checkouts.CompleteCheckout(
+                earlierCompletion, secondCheckout, CompletedAt).IsSuccess, Is.True);
+
+            Assert.That(fixture.Checkouts.GetCompletions()[0].Id,
+                Is.EqualTo(earlierCompletion));
+            Assert.That(fixture.Checkouts.GetCompletions()[1].Id,
+                Is.EqualTo(laterCompletion));
+            Assert.That(fixture.Checkouts.TryGetCompletionForCheckout(
+                secondCheckout, out RetailCheckoutCompletionRecord completion), Is.True);
+            Assert.That(completion.Id, Is.EqualTo(earlierCompletion));
+            Assert.That(fixture.Checkouts.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static OperationResult Begin(Fixture fixture)
         {
             return fixture.Checkouts.BeginCheckout(Checkout, Basket, Customer, StartedAt);
+        }
+
+        private static OperationResult Complete(Fixture fixture)
+        {
+            return fixture.Checkouts.CompleteCheckout(
+                Completion,
+                Checkout,
+                CompletedAt);
         }
 
         private static OperationResult ReserveSecondLine(

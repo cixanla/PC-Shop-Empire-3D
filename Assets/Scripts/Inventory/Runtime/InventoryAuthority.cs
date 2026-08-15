@@ -499,53 +499,136 @@ namespace PCShopEmpire3D.Inventory
 
         public OperationResult ConsumeReservation(StableId<ReservationIdScope> reservationId)
         {
-            if (!_reservations.TryGetValue(reservationId, out InventoryReservation reservation))
+            return ConsumeReservations(new[] { reservationId });
+        }
+
+        /// <summary>
+        /// Atomically consumes an exact set of reservations. Every target is preflighted before
+        /// any item, batch position or reservation is removed, and one successful set advances
+        /// Inventory Revision exactly once.
+        /// </summary>
+        public OperationResult ConsumeReservations(
+            IReadOnlyList<StableId<ReservationIdScope>> reservationIds)
+        {
+            if (reservationIds == null)
             {
-                return OperationResult.Fail(InventoryFailures.UnknownReservation);
+                return OperationResult.Fail(InventoryFailures.MissingReservationSet);
             }
 
-            if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
+            if (reservationIds.Count == 0)
             {
-                if (!_items.ContainsKey(reservation.ItemId))
+                return OperationResult.Fail(InventoryFailures.EmptyReservationSet);
+            }
+
+            var selectedIds = new HashSet<StableId<ReservationIdScope>>();
+            var selected = new List<InventoryReservation>(reservationIds.Count);
+            var serializedItems = new HashSet<StableId<ItemInstanceIdScope>>();
+            var batchConsumption = new Dictionary<BatchPositionKey, long>();
+            for (int index = 0; index < reservationIds.Count; index++)
+            {
+                StableId<ReservationIdScope> reservationId = reservationIds[index];
+                if (reservationId.IsEmpty)
+                {
+                    return OperationResult.Fail(InventoryFailures.InvalidReservationId);
+                }
+
+                if (!selectedIds.Add(reservationId))
+                {
+                    return OperationResult.Fail(InventoryFailures.DuplicateReservationInSet);
+                }
+
+                if (!_reservations.TryGetValue(reservationId, out InventoryReservation reservation))
+                {
+                    return OperationResult.Fail(InventoryFailures.UnknownReservation);
+                }
+
+                if (reservation == null ||
+                    reservation.Id != reservationId ||
+                    reservation.ClaimId.IsEmpty)
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
                 }
 
-                _items.Remove(reservation.ItemId);
-                _reservations.Remove(reservationId);
-                AdvanceRevision();
-                return OperationResult.Success();
+                if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
+                {
+                    if (reservation.Quantity != 1 ||
+                        !_items.ContainsKey(reservation.ItemId) ||
+                        !serializedItems.Add(reservation.ItemId))
+                    {
+                        return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                    }
+                }
+                else if (reservation.TargetKind == InventoryReservationTargetKind.BatchPosition)
+                {
+                    var position = new BatchPositionKey(
+                        reservation.BatchId,
+                        reservation.ContainerId);
+                    if (reservation.Quantity <= 0 ||
+                        !_batches.ContainsKey(reservation.BatchId) ||
+                        !_batchQuantities.TryGetValue(position, out int storedQuantity))
+                    {
+                        return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                    }
+
+                    batchConsumption.TryGetValue(position, out long selectedQuantity);
+                    if (selectedQuantity > storedQuantity - (long)reservation.Quantity)
+                    {
+                        return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                    }
+
+                    batchConsumption[position] = selectedQuantity + reservation.Quantity;
+                }
+                else
+                {
+                    return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                }
+
+                selected.Add(reservation);
             }
 
-            if (reservation.TargetKind != InventoryReservationTargetKind.BatchPosition)
+            if (Revision == long.MaxValue)
             {
-                return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                return OperationResult.Fail(InventoryFailures.RevisionOverflow);
             }
 
-            var position = new BatchPositionKey(reservation.BatchId, reservation.ContainerId);
-            if (!_batchQuantities.TryGetValue(position, out int storedQuantity) ||
-                storedQuantity < reservation.Quantity)
+            foreach (StableId<ItemInstanceIdScope> itemId in serializedItems)
             {
-                return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                _items.Remove(itemId);
             }
 
-            int remaining = storedQuantity - reservation.Quantity;
-            if (remaining == 0)
+            foreach (KeyValuePair<BatchPositionKey, long> consumption in batchConsumption)
             {
-                _batchQuantities.Remove(position);
-            }
-            else
-            {
-                _batchQuantities[position] = remaining;
-            }
-
-            _reservations.Remove(reservationId);
-            if (!HasBatchPositionsUnsafe(reservation.BatchId))
-            {
-                _batches.Remove(reservation.BatchId);
+                int remaining = _batchQuantities[consumption.Key] - (int)consumption.Value;
+                if (remaining == 0)
+                {
+                    _batchQuantities.Remove(consumption.Key);
+                }
+                else
+                {
+                    _batchQuantities[consumption.Key] = remaining;
+                }
             }
 
-            AdvanceRevision();
+            var affectedBatches = new HashSet<StableId<BatchIdScope>>();
+            for (int index = 0; index < selected.Count; index++)
+            {
+                InventoryReservation reservation = selected[index];
+                _reservations.Remove(reservation.Id);
+                if (reservation.TargetKind == InventoryReservationTargetKind.BatchPosition)
+                {
+                    affectedBatches.Add(reservation.BatchId);
+                }
+            }
+
+            foreach (StableId<BatchIdScope> batchId in affectedBatches)
+            {
+                if (!HasBatchPositionsUnsafe(batchId))
+                {
+                    _batches.Remove(batchId);
+                }
+            }
+
+            Revision++;
             return OperationResult.Success();
         }
 

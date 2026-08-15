@@ -149,10 +149,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (binding != null && binding.IsCustomerReserved)
                 {
-                    if (binding.IsCheckoutStarted)
+                    if (binding.RequiresCheckoutCompletion)
                     {
-                        return $"KASA: {binding.Runtime.CheckoutStatusText}   |   " +
-                               "MÜŞTERİ REZERVASYONU KİLİTLİ";
+                        return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
+                               "satışı tamamla   |   " +
+                               $"KASA: {binding.Runtime.CheckoutStatusText}   |   " +
+                               "REZERVASYON KİLİTLİ";
                     }
 
                     return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
@@ -615,6 +617,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : VisibleHandsState.Empty);
 
             InventoryItemWorldBinding focusedBinding = GetInventoryBinding(FocusedItem);
+            if (focusedBinding != null &&
+                focusedBinding.RequiresCheckoutCompletion &&
+                input.PrimaryActionPressedThisFrame)
+            {
+                Remember(focusedBinding.TryCompleteCheckout());
+                return;
+            }
+
             if (focusedBinding != null &&
                 focusedBinding.RequiresCheckoutStart &&
                 input.PrimaryActionPressedThisFrame)

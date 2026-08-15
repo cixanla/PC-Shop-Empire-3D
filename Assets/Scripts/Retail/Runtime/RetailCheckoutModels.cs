@@ -83,4 +83,47 @@ namespace PCShopEmpire3D.Retail
 
         public IReadOnlyList<RetailCheckoutLineSnapshot> Lines { get; }
     }
+
+    /// <summary>
+    /// Immutable proof that an exact checkout snapshot was fulfilled from authoritative stock.
+    /// Payment and Economy settlement deliberately remain outside this record.
+    /// </summary>
+    public sealed class RetailCheckoutCompletionRecord
+    {
+        internal RetailCheckoutCompletionRecord(
+            StableId<RetailCheckoutCompletionIdScope> id,
+            StableId<RetailCheckoutIdScope> checkoutId,
+            StableId<RetailBasketIdScope> basketId,
+            StableId<RetailCustomerIdScope> customerId,
+            SimulationTimestamp completedAt,
+            CurrencyCode currency,
+            long totalMinorUnits,
+            IReadOnlyList<RetailCheckoutLineSnapshot> lines)
+        {
+            Id = id;
+            CheckoutId = checkoutId;
+            BasketId = basketId;
+            CustomerId = customerId;
+            CompletedAt = completedAt;
+            Currency = currency;
+            TotalMinorUnits = totalMinorUnits;
+            Lines = lines;
+        }
+
+        public StableId<RetailCheckoutCompletionIdScope> Id { get; }
+
+        public StableId<RetailCheckoutIdScope> CheckoutId { get; }
+
+        public StableId<RetailBasketIdScope> BasketId { get; }
+
+        public StableId<RetailCustomerIdScope> CustomerId { get; }
+
+        public SimulationTimestamp CompletedAt { get; }
+
+        public CurrencyCode Currency { get; }
+
+        public long TotalMinorUnits { get; }
+
+        public IReadOnlyList<RetailCheckoutLineSnapshot> Lines { get; }
+    }
 }
