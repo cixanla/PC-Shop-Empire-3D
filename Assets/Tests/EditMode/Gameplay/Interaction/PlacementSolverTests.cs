@@ -128,6 +128,89 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(item.IsCarried, Is.True);
         }
 
+        [Test]
+        public void StableSmallBoxProducesCenteredStackPoseAndLocksItsSupport()
+        {
+            Transform origin = CreateOrigin(0f);
+            PhysicalItemProjection support = CreateStackSupport(stable: true);
+            PhysicalItemProjection item = CreateCarriedItem();
+            int stackLayerMask = 1 << support.gameObject.layer;
+            Physics.SyncTransforms();
+
+            PlacementEvaluation evaluation = PlacementSolver.Evaluate(
+                origin,
+                item,
+                0,
+                stackLayerMask,
+                0,
+                stackLayerMask);
+
+            Assert.That(evaluation.IsValid, Is.True);
+            Assert.That(evaluation.StackSupport, Is.SameAs(support));
+            Assert.That(evaluation.Pose.position.x, Is.EqualTo(support.transform.position.x).Within(0.001f));
+            Assert.That(evaluation.Pose.position.z, Is.EqualTo(support.transform.position.z).Within(0.001f));
+            Assert.That(item.PlaceAt(evaluation.Pose, evaluation.StackSupport).IsSuccess, Is.True);
+            Assert.That(item.StackSupport, Is.SameAs(support));
+            Assert.That(support.StackedItem, Is.SameAs(item));
+            Assert.That(item.Body.isKinematic, Is.True);
+
+            GameObject baseCarryAnchor = Track(new GameObject("BaseCarryAnchor"));
+            var blockedPickup = support.BeginCarry(baseCarryAnchor.transform, 8);
+            Assert.That(blockedPickup.IsFailure, Is.True);
+            Assert.That(blockedPickup.Error.Code, Is.EqualTo("pickup.stack-occupied"));
+
+            GameObject topCarryAnchor = Track(new GameObject("TopCarryAnchor"));
+            Assert.That(item.BeginCarry(topCarryAnchor.transform, 8).IsSuccess, Is.True);
+            Assert.That(item.StackSupport, Is.Null);
+            Assert.That(support.StackedItem, Is.Null);
+        }
+
+        [Test]
+        public void RotatedRectangularBoxWithoutFullFootprintSupportFailsClosed()
+        {
+            Transform origin = CreateOrigin(0f);
+            PhysicalItemProjection support = CreateStackSupport(stable: true);
+            PhysicalItemProjection item = CreateCarriedItem();
+            int stackLayerMask = 1 << support.gameObject.layer;
+            Physics.SyncTransforms();
+
+            PlacementEvaluation evaluation = PlacementSolver.Evaluate(
+                origin,
+                item,
+                0,
+                stackLayerMask,
+                1,
+                stackLayerMask);
+
+            Assert.That(evaluation.IsValid, Is.False);
+            Assert.That(evaluation.Status, Is.EqualTo(PlacementStatus.OutsideSurface));
+            Assert.That(evaluation.StackSupport, Is.Null);
+            Assert.That(item.IsCarried, Is.True);
+        }
+
+        [Test]
+        public void DynamicSmallBoxCannotBecomeStackSupport()
+        {
+            Transform origin = CreateOrigin(0f);
+            PhysicalItemProjection support = CreateStackSupport(stable: false);
+            PhysicalItemProjection item = CreateCarriedItem();
+            int stackLayerMask = 1 << support.gameObject.layer;
+            Physics.SyncTransforms();
+
+            PlacementEvaluation evaluation = PlacementSolver.Evaluate(
+                origin,
+                item,
+                0,
+                stackLayerMask,
+                0,
+                stackLayerMask);
+
+            Assert.That(evaluation.IsValid, Is.False);
+            Assert.That(evaluation.Status, Is.EqualTo(PlacementStatus.StackSupportUnavailable));
+            Assert.That(evaluation.FailureCode, Is.EqualTo("placement.stack-support-unavailable"));
+            Assert.That(item.IsCarried, Is.True);
+        }
+
         private Transform CreateOrigin(float yaw)
         {
             GameObject origin = Track(new GameObject("PlacementOrigin"));
@@ -168,6 +251,27 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             GameObject anchor = Track(new GameObject("CarryAnchor"));
             Assert.That(item.BeginCarry(anchor.transform, 8).IsSuccess, Is.True);
             return item;
+        }
+
+        private PhysicalItemProjection CreateStackSupport(bool stable)
+        {
+            GameObject supportObject = Track(new GameObject("StackSupport"));
+            supportObject.layer = 7;
+            supportObject.transform.position = new Vector3(0f, 0.275f, 1.15f);
+            BoxCollider collider = supportObject.AddComponent<BoxCollider>();
+            collider.size = new Vector3(0.7f, 0.45f, 0.5f);
+            Rigidbody body = supportObject.AddComponent<Rigidbody>();
+            body.useGravity = !stable;
+            body.isKinematic = stable;
+            PhysicalItemProjection support = supportObject.AddComponent<PhysicalItemProjection>();
+            support.Configure(
+                stable ? "tests.stack-support-stable" : "tests.stack-support-dynamic",
+                "Stack Support",
+                body,
+                new Vector3(0.35f, 0.225f, 0.25f),
+                Vector3.zero,
+                Vector3.zero);
+            return support;
         }
 
         private GameObject Track(GameObject gameObject)

@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
     public sealed class GarageGrayboxPlayModeTests : InputTestFixture
     {
         private const string SmallBoxId = "prototype.garage-box-001";
+        private const string StackBaseBoxId = "prototype.garage-box-002";
         private const string LargeBoxId = "prototype.garage-large-box-001";
 
         [UnityTest]
@@ -347,6 +348,135 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardStackingRequiresFullSupportAndPreservesBothIdentities()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
+            PhysicalItemProjection support = FindPhysicalItem(StackBaseBoxId);
+            marker.PlayerMotor.SetPaused(false);
+            string itemIdentity = item.ItemIdValue;
+            string supportIdentity = support.ItemIdValue;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToStackSupport(marker);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentStackSupport, Is.SameAs(support));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("İSTİF GEÇERLİ"));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.False);
+            Assert.That(marker.PlayerCarry.CurrentPlacementStatus, Is.EqualTo(PlacementStatus.OutsideSurface));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.ItemIdValue, Is.EqualTo(itemIdentity));
+
+            for (int turn = 0; turn < 3; turn++)
+            {
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+                InputSystem.Update();
+                marker.PlayerCarry.ProcessInputFrame();
+            }
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentStackSupport, Is.SameAs(support));
+            Pose stackPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.ItemIdValue, Is.EqualTo(itemIdentity));
+            Assert.That(support.ItemIdValue, Is.EqualTo(supportIdentity));
+            Assert.That(item.StackSupport, Is.SameAs(support));
+            Assert.That(support.StackedItem, Is.SameAs(item));
+            Assert.That(Vector3.Distance(item.transform.position, stackPose.position), Is.LessThan(0.001f));
+            Assert.That(item.Body.isKinematic, Is.True);
+            Vector3 stablePosition = item.transform.position;
+            yield return new WaitForFixedUpdate();
+            Assert.That(Vector3.Distance(item.transform.position, stablePosition), Is.LessThan(0.001f));
+
+            var blockedBasePickup = marker.PlayerCarry.TryPickup(support);
+            Assert.That(blockedBasePickup.IsFailure, Is.True);
+            Assert.That(blockedBasePickup.Error.Code, Is.EqualTo("pickup.stack-occupied"));
+            Assert.That(support.StackedItem, Is.SameAs(item));
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadCanPlaceSmallBoxOnStableSmallBoxSupport()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(SmallBoxId);
+            PhysicalItemProjection support = FindPhysicalItem(StackBaseBoxId);
+            marker.PlayerMotor.SetPaused(false);
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToStackSupport(marker);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentStackSupport, Is.SameAs(support));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.StackSupport, Is.SameAs(support));
+            Assert.That(support.StackedItem, Is.SameAs(item));
+            Assert.That(item.Body.isKinematic, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator KeyboardLargeBoxCarryAppliesLoadAndBlockedDropFailsClosed()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -559,6 +689,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
             controller.enabled = false;
             marker.PlayerMotor.transform.SetPositionAndRotation(
                 new Vector3(-1.5f, 0.05f, -2.5f),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToStackSupport(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(1.4f, 0.05f, -2.55f),
                 Quaternion.identity);
             controller.enabled = true;
             Physics.SyncTransforms();

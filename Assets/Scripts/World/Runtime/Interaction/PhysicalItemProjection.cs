@@ -42,6 +42,8 @@ namespace PCShopEmpire3D.World.Interaction
         private bool _hasCarrySnapshot;
         private Vector3 _lastSafePosition;
         private Quaternion _lastSafeRotation = Quaternion.identity;
+        private PhysicalItemProjection _stackSupport;
+        private PhysicalItemProjection _stackedItem;
 
         public StableId<PhysicalItemIdScope> ItemId => StableId<PhysicalItemIdScope>.Parse(itemId);
 
@@ -69,6 +71,33 @@ namespace PCShopEmpire3D.World.Interaction
         public Vector3 LastSafePosition => _lastSafePosition;
 
         public Quaternion LastSafeRotation => _lastSafeRotation;
+
+        public PhysicalItemProjection StackSupport => _stackSupport;
+
+        public PhysicalItemProjection StackedItem => _stackedItem;
+
+        public bool IsStacked => _stackSupport != null;
+
+        public bool HasStackedItem => _stackedItem != null;
+
+        public bool IsStablePlacement => Ownership == PhysicalItemOwnership.World &&
+                                         body != null &&
+                                         body.isKinematic &&
+                                         !body.useGravity;
+
+        public bool CanAcceptStackedItem(PhysicalItemProjection candidate)
+        {
+            return candidate != null &&
+                   candidate != this &&
+                   candidate.Ownership == PhysicalItemOwnership.PlayerHands &&
+                   candidate.CarryProfile == PhysicalCarryProfile.SmallBox &&
+                   !candidate.HasStackedItem &&
+                   Ownership == PhysicalItemOwnership.World &&
+                   CarryProfile == PhysicalCarryProfile.SmallBox &&
+                   IsStablePlacement &&
+                   !IsStacked &&
+                   !HasStackedItem;
+        }
 
         public void Configure(
             string stableItemId,
@@ -112,7 +141,13 @@ namespace PCShopEmpire3D.World.Interaction
                 return contract;
             }
 
+            if (HasStackedItem)
+            {
+                return OperationResult.Fail(Failure.FromCode("pickup.stack-occupied"));
+            }
+
             CaptureWorldState();
+            DetachFromStackSupport();
             Ownership = PhysicalItemOwnership.PlayerHands;
 
             body.linearVelocity = Vector3.zero;
@@ -134,14 +169,29 @@ namespace PCShopEmpire3D.World.Interaction
 
         public OperationResult PlaceAt(Pose worldPose)
         {
-            return ReleaseInternal(worldPose, stabilizePlacement: true);
+            return PlaceAt(worldPose, null);
         }
 
-        private OperationResult ReleaseInternal(Pose worldPose, bool stabilizePlacement)
+        public OperationResult PlaceAt(
+            Pose worldPose,
+            PhysicalItemProjection stackSupport)
+        {
+            return ReleaseInternal(worldPose, stabilizePlacement: true, stackSupport);
+        }
+
+        private OperationResult ReleaseInternal(
+            Pose worldPose,
+            bool stabilizePlacement,
+            PhysicalItemProjection stackSupport = null)
         {
             if (Ownership != PhysicalItemOwnership.PlayerHands || !_hasCarrySnapshot)
             {
                 return OperationResult.Fail(Failure.FromCode("drop.item-not-held"));
+            }
+
+            if (stackSupport != null && !stackSupport.CanAcceptStackedItem(this))
+            {
+                return OperationResult.Fail(Failure.FromCode("placement.stack-support-unavailable"));
             }
 
             transform.SetParent(_worldParent, true);
@@ -157,6 +207,10 @@ namespace PCShopEmpire3D.World.Interaction
 
             Ownership = PhysicalItemOwnership.World;
             _hasCarrySnapshot = false;
+            if (stackSupport != null)
+            {
+                AttachToStackSupport(stackSupport);
+            }
             RecordSafePose();
             return OperationResult.Success();
         }
@@ -287,6 +341,23 @@ namespace PCShopEmpire3D.World.Interaction
         private void CacheColliders()
         {
             _colliders = GetComponentsInChildren<Collider>(true);
+        }
+
+        private void AttachToStackSupport(PhysicalItemProjection support)
+        {
+            DetachFromStackSupport();
+            _stackSupport = support;
+            support._stackedItem = this;
+        }
+
+        private void DetachFromStackSupport()
+        {
+            if (_stackSupport != null && _stackSupport._stackedItem == this)
+            {
+                _stackSupport._stackedItem = null;
+            }
+
+            _stackSupport = null;
         }
 
         private void EnsureRuntimeReferences()

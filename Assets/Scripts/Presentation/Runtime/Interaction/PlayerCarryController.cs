@@ -17,6 +17,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private VisibleHandsPresenter hands;
         [SerializeField] private PlacementPreview placementPreview;
         [SerializeField] private LayerMask supportMask;
+        [SerializeField] private LayerMask stackSupportMask;
         [SerializeField] private LayerMask obstructionMask;
         [SerializeField] private int heldItemLayer;
 
@@ -39,6 +40,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PlacementStatus CurrentPlacementStatus { get; private set; } = PlacementStatus.ContextMissing;
 
         public PlacementPreview PlacementPreview => placementPreview;
+
+        public PhysicalItemProjection CurrentStackSupport { get; private set; }
 
         public int PlacementRotationQuarterTurns => _placementRotationQuarterTurns;
 
@@ -71,12 +74,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return IsPlacementMode
                         ? $"{drop}: yerleştir   |   {rotate}: 90° döndür " +
                           $"[{PlacementRotationDegrees:0}°]   |   {placement}: iptal   |   " +
-                          (PlacementValid ? "GEÇERLİ" : "ENGELLİ")
+                          (PlacementValid
+                              ? (CurrentStackSupport != null ? "İSTİF GEÇERLİ" : "GEÇERLİ")
+                              : "ENGELLİ")
                         : $"{placement}: yerleştirme önizlemesi   |   {drop}: güvenli bırak";
                 }
 
                 return FocusedItem != null
-                    ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al"
+                    ? (FocusedItem.HasStackedItem
+                        ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
+                        : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                          $"{FocusedItem.DisplayName} al")
                     : string.Empty;
             }
         }
@@ -89,6 +97,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             VisibleHandsPresenter handsPresenter,
             PlacementPreview preview,
             LayerMask groundLayers,
+            LayerMask stackingLayers,
             LayerMask blockingLayers,
             int heldLayer)
         {
@@ -105,6 +114,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : throw new ArgumentNullException(nameof(handsPresenter));
             placementPreview = preview != null ? preview : throw new ArgumentNullException(nameof(preview));
             supportMask = groundLayers;
+            stackSupportMask = stackingLayers;
             obstructionMask = blockingLayers;
             heldItemLayer = heldLayer;
         }
@@ -180,14 +190,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HeldItem,
                 supportMask,
                 obstructionMask,
-                _placementRotationQuarterTurns);
+                _placementRotationQuarterTurns,
+                stackSupportMask);
             ApplyPlacementEvaluation(evaluation);
             if (!evaluation.IsValid)
             {
                 return Remember(OperationResult.Fail(Failure.FromCode(evaluation.FailureCode)));
             }
 
-            return ReleaseHeldItem(evaluation.Pose, stabilizePlacement: true);
+            return ReleaseHeldItem(
+                evaluation.Pose,
+                stabilizePlacement: true,
+                evaluation.StackSupport);
         }
 
         public void ProcessInputFrame()
@@ -295,11 +309,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessInputFrame();
         }
 
-        private OperationResult ReleaseHeldItem(Pose pose, bool stabilizePlacement)
+        private OperationResult ReleaseHeldItem(
+            Pose pose,
+            bool stabilizePlacement,
+            PhysicalItemProjection stackSupport = null)
         {
             PhysicalItemProjection releasedItem = HeldItem;
             OperationResult result = stabilizePlacement
-                ? releasedItem.PlaceAt(pose)
+                ? releasedItem.PlaceAt(pose, stackSupport)
                 : releasedItem.ReleaseTo(pose);
             if (result.IsFailure)
             {
@@ -320,6 +337,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             PlacementValid = false;
+            CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             LastFailureCode = string.Empty;
             if (!IsPlacementMode)
@@ -344,7 +362,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HeldItem,
                 supportMask,
                 obstructionMask,
-                _placementRotationQuarterTurns);
+                _placementRotationQuarterTurns,
+                stackSupportMask);
             ApplyPlacementEvaluation(evaluation);
         }
 
@@ -352,6 +371,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             CurrentPlacementStatus = evaluation.Status;
             PlacementValid = evaluation.IsValid;
+            CurrentStackSupport = evaluation.StackSupport;
             LastFailureCode = evaluation.IsValid ? string.Empty : evaluation.FailureCode;
             placementPreview?.Show(HeldItem, evaluation);
             SetCarryHandsState(blocked: !evaluation.IsValid);
@@ -362,6 +382,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = false;
             _placementRotationQuarterTurns = 0;
             PlacementValid = false;
+            CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             placementPreview?.Hide();
         }

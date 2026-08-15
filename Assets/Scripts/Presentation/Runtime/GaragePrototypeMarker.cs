@@ -9,7 +9,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-readable-lookdev-g6-v1";
+        public const string Version = "garage-small-box-stacking-g7-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -34,6 +34,7 @@ namespace PCShopEmpire3D.Presentation
         private void Start()
         {
             bool hasLargeBox = false;
+            int smallBoxCount = 0;
             PhysicalItemProjection[] items = FindObjectsByType<PhysicalItemProjection>(
                 FindObjectsSortMode.None);
             foreach (PhysicalItemProjection item in items)
@@ -41,7 +42,10 @@ namespace PCShopEmpire3D.Presentation
                 if (item.CarryProfile == PhysicalCarryProfile.LargeBox)
                 {
                     hasLargeBox = true;
-                    break;
+                }
+                else if (item.CarryProfile == PhysicalCarryProfile.SmallBox)
+                {
+                    smallBoxCount++;
                 }
             }
 
@@ -79,6 +83,7 @@ namespace PCShopEmpire3D.Presentation
                 $"placement={(playerCarry != null && playerCarry.PlacementPreview != null ? "ok" : "missing")} " +
                 $"large-carry={(hasLargeBox ? "ok" : "missing")} " +
                 $"rotation={(hasRotationAction && hasRotationSurface ? "ok" : "missing")} " +
+                $"stacking={(smallBoxCount >= 2 ? "ok" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
         }
     }

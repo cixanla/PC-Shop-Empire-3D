@@ -911,6 +911,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 handsPresenter,
                 placementPreview,
                 1 << 0,
+                1 << interactableLayer,
                 (1 << 0) | (1 << interactableLayer) | (1 << playerLayer),
                 RequireLayer(HeldItemLayerName));
             return motor;
@@ -998,6 +999,63 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 "prototype.garage-box-001",
                 "Parça Kutusu",
                 body,
+                new Vector3(0.35f, 0.225f, 0.25f),
+                Vector3.zero,
+                Vector3.zero,
+                PhysicalCarryProfile.SmallBox);
+
+            GameObject stackBaseRoot = new GameObject("StarterStackBaseBox");
+            stackBaseRoot.transform.SetParent(parent, false);
+            stackBaseRoot.transform.localPosition = new Vector3(1.4f, 0.31f, -1.4f);
+            stackBaseRoot.layer = interactableLayer;
+
+            GameObject stackBaseVisual = CreateCube(
+                "StackBaseVisual",
+                stackBaseRoot.transform,
+                Vector3.zero,
+                new Vector3(0.7f, 0.45f, 0.5f),
+                cardboard);
+            stackBaseVisual.layer = interactableLayer;
+
+            GameObject stackBaseMarker = CreateCube(
+                "StackBaseOrientationMarker",
+                stackBaseRoot.transform,
+                new Vector3(0f, 0.231f, 0.12f),
+                new Vector3(0.12f, 0.012f, 0.18f),
+                accent);
+            stackBaseMarker.layer = interactableLayer;
+            Collider stackBaseMarkerCollider = stackBaseMarker.GetComponent<Collider>();
+            if (stackBaseMarkerCollider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(stackBaseMarkerCollider);
+            }
+
+            CreateDetailCube(
+                "StackBasePackingTape",
+                stackBaseRoot.transform,
+                new Vector3(0f, 0.231f, 0f),
+                new Vector3(0.13f, 0.012f, 0.48f),
+                tape);
+            CreateDetailCube(
+                "StackBaseShippingLabel",
+                stackBaseRoot.transform,
+                new Vector3(0.17f, 0f, -0.256f),
+                new Vector3(0.24f, 0.14f, 0.012f),
+                labelPaper);
+
+            Rigidbody stackBaseBody = stackBaseRoot.AddComponent<Rigidbody>();
+            stackBaseBody.mass = 2f;
+            stackBaseBody.interpolation = RigidbodyInterpolation.Interpolate;
+            stackBaseBody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            stackBaseBody.useGravity = false;
+            stackBaseBody.isKinematic = true;
+
+            PhysicalItemProjection stackBaseItem =
+                stackBaseRoot.AddComponent<PhysicalItemProjection>();
+            stackBaseItem.Configure(
+                "prototype.garage-box-002",
+                "Stok Kutusu",
+                stackBaseBody,
                 new Vector3(0.35f, 0.225f, 0.25f),
                 Vector3.zero,
                 Vector3.zero,

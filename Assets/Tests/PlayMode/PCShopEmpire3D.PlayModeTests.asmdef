@@ -2,6 +2,7 @@
   "name": "PCShopEmpire3D.PlayModeTests",
   "rootNamespace": "PCShopEmpire3D.Tests.PlayMode",
   "references": [
+    "PSE.Core",
     "PSE.Presentation",
     "PSE.World",
     "Unity.InputSystem",

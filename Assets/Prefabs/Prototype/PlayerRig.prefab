@@ -671,6 +671,9 @@ MonoBehaviour:
   supportMask:
     serializedVersion: 2
     m_Bits: 1
+  stackSupportMask:
+    serializedVersion: 2
+    m_Bits: 128
   obstructionMask:
     serializedVersion: 2
     m_Bits: 193

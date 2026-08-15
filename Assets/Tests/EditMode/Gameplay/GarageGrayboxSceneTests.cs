@@ -79,17 +79,26 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(2));
+                Assert.That(physicalItems.Length, Is.EqualTo(3));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
-                PhysicalItemProjection smallBox = physicalItems.Single(
-                    item => item.CarryProfile == PhysicalCarryProfile.SmallBox);
+                PhysicalItemProjection[] smallBoxes = physicalItems.Where(
+                    item => item.CarryProfile == PhysicalCarryProfile.SmallBox).ToArray();
+                Assert.That(smallBoxes.Length, Is.EqualTo(2));
+                PhysicalItemProjection smallBox = smallBoxes.Single(
+                    item => item.ItemIdValue == "prototype.garage-box-001");
+                PhysicalItemProjection stackBase = smallBoxes.Single(
+                    item => item.ItemIdValue == "prototype.garage-box-002");
                 PhysicalItemProjection largeBox = physicalItems.Single(
                     item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
+                Assert.That(stackBase.DisplayName, Is.EqualTo("Stok Kutusu"));
+                Assert.That(stackBase.IsStablePlacement, Is.True);
+                Assert.That(stackBase.IsStacked, Is.False);
+                Assert.That(stackBase.HasStackedItem, Is.False);
                 Assert.That(largeBox.ItemIdValue, Is.EqualTo("prototype.garage-large-box-001"));
                 Assert.That(largeBox.DisplayName, Is.EqualTo("Büyük Kargo Kutusu"));
                 Assert.That(largeBox.SupportsPlacement, Is.False);
@@ -154,7 +163,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             {
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
-                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-readable-lookdev-g6-v1"));
+                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-small-box-stacking-g7-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
