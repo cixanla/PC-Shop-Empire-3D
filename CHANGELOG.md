@@ -47,7 +47,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Reserved RAF A ürününde Mouse Left/Gamepad RT checkout başlatıyor; shelf etiketi/HUD/prompt dondurulmuş `549,99 EUR` fiyatını gösteriyor. Sonraki offer update'i açık işlemi değiştirmiyor; checkout aktif release/pickup fail-closed kalıyor.
 - Inventory'ye exact reservation setini tamamen preflight edip serialized ve aggregate batch hedeflerini tek revision'da tüketen atomik bulk API; Retail'e stable immutable checkout completion kaydı ve Basket/Inventory commit sınırı eklendi.
 - Aktif checkout'ta ikinci Mouse Left/Gamepad RT fulfillment'ı tamamlıyor; ürün projection'ı raftan kaldırılıyor, stok/sepet/reservation `0`, shelf/HUD `TAMAMLANDI` gösteriyor. Exact tekrar idempotent; identity/time/drift failure cross-authority no-mutation kalıyor.
-- Edit Mode baseline `242/242`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `sale-completion=ok stock-consumed=ok completed-quantity=0` gerçek player smoke geçti.
+- Unity bağımsız `PSE.Actors`; stable customer/intent/visit kimlikleri, immutable lifecycle kayıtları, bounded exact command receipt ledger'ı, deterministic query/revision ve invariant audit ile eklendi.
+- Müşteri yaşam döngüsü `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited`; state başına iki route denemesi, `RouteUnavailable`, patience/exit timeout ve güvenli terminal fallback ile sınırlandı.
+- GarageGraybox'a runtime `NavMeshSurface`, explicit giriş/RAF A/checkout/çıkış anchor'ları, görünür graybox müşteri ve checkout köşesi eklendi. Offer, reservation ve fulfillment mevcut authority sonuçlarından projection transition'ı tetikliyor; NPC transformu stok/checkout authority'sini değiştirmiyor.
+- Customer runtime smoke transient state yarışına karşı bounded başlangıç pause'u/diagnostic hız penceresi kullanıyor; normal ve leakdiag player koşuları canlı route, pause, fulfillment, route/timeout fallback, authority isolation ve güvenli despawn sonucunu doğruluyor.
+- Edit Mode baseline `255/255`, Play Mode baseline `18/18` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` gerçek player smoke geçti.
 
 ### Changed
 

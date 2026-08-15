@@ -1,6 +1,6 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B teknik order-to-sale checkpoint'i 0.15<br>
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B deterministic customer-visit checkpoint'i 0.16<br>
 **Tarih:** 15 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
@@ -88,6 +88,7 @@ Yapıldı:
 - Yirminci bounded paket tamamlandı: stable customer/basket/line ile exact shelf offer + serialized item + Inventory reservation bağlandı; duplicate müşteri talebi ve drift no-mutation, reserve/release idempotent ve ayrılmış ürün pickup'ı fail-closed. RAF A etiketi/panosu gerçek `G / Gamepad East` akışını gösteriyor. Edit Mode 220/220, Play Mode 17/17, Universal macOS ve Apple M4/Metal `basket-reservation=ok release=ok` geçti.
 - Yirmi birinci bounded paket tamamlandı: bütün aktif basket satırlarını exact offer/item/reservation ile atomik doğrulayan stable checkout authority, integer minor-unit fiyat/currency/total snapshot'ını immutable donduruyor. Mouse Left/Gamepad RT checkout başlatıyor; sonradan raf fiyatı değişse de açık işlem `549,99 EUR` kalıyor ve aktif checkout release/pickup'ı kilitliyor. Edit Mode 233/233, Play Mode 17/17, Universal macOS ve Apple M4/Metal `checkout-snapshot=ok price-frozen=ok` geçti.
 - Yirmi ikinci bounded paket tamamlandı: exact checkout reservation seti tam preflight sonrası tek Inventory revision'ında atomik tüketiliyor; Basket ve Checkout revision'ları birer kez ilerliyor, stable immutable completion sonucu korunuyor. İkinci Mouse Left/Gamepad RT ürünü raftan kaldırıyor; stok/sepet/reservation `0`, shelf/HUD `TAMAMLANDI` gösteriyor. Exact tekrar idempotent, conflict/time/drift failure no-mutation. Edit Mode 242/242, Play Mode 17/17, Universal macOS ve Apple M4/Metal `sale-completion=ok stock-consumed=ok completed-quantity=0` geçti.
+- Yirmi üçüncü bounded paket tamamlandı: Unity bağımsız `PSE.Actors` stable müşteri/intent/visit, monotonik state ve bounded exact receipt ledger'ı taşıyor. Runtime NavMesh müşteriyi offer sonrası giriş→RAF A, reservation sonrası checkout ve fulfillment sonrası çıkış zincirinde gösteriyor; route state başına iki deneme, patience/exit timeout ve güvenli terminal fallback var. Edit Mode 255/255, Play Mode 18/18, Universal macOS ve Apple M4/Metal normal + leakdiag customer smoke geçti.
 - Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
@@ -134,6 +135,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj, Catalog + Inventory, atomik purchase-order receiving, görünür Receiving→eller→RAF A projection, idempotent koli açma, authoritative fiyat, customer basket reservation, immutable checkout snapshot ve atomik fulfillment hazırdır: Edit Mode 242/242, Play Mode 17/17 geçti; Universal Mac build/runtime smoke başarılıdır. Bir sonraki bounded alan Issue #9 altındaki müşteri intent/state ve timeout/fallback sözleşmesidir; ödeme/Economy ledger ve Save ayrı kalır.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj, Catalog + Inventory, atomik purchase-order receiving, görünür Receiving→eller→RAF A projection, idempotent koli açma, authoritative fiyat, customer basket, immutable checkout, atomik fulfillment ve ilk deterministic müşteri ziyareti hazırdır: Edit Mode 255/255, Play Mode 18/18 geçti; Universal Mac build ve Apple M4/Metal runtime smoke başarılıdır. Bir sonraki bounded alan tek customer + tek offer için açıklanabilir satın-al/ayrıl değerlendirmesidir; ödeme/Economy ledger, çoklu ürün/müşteri ve Save ayrı kalır.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

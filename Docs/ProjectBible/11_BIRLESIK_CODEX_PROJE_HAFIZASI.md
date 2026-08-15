@@ -104,6 +104,7 @@ Korunan temel commit çizgisi:
 - Codex proje konsolidasyonu: `2c10873a7e6ec3984292418121bed19072dd6d79`.
 - Yüklü taşıma arabası feature: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
 - Atomik checkout fulfillment feature: `bb89b0c297400f6eed22407df76dc1c85912cd74`.
+- Deterministik customer visit ve runtime NavMesh feature: `b37b056271fac317e99ec47df0833b8ef219cf83`.
 
 Tamamlanan oynanabilir sistemler:
 
@@ -125,6 +126,9 @@ Tamamlanan oynanabilir sistemler:
 - Tek `LargeBox` kapasiteli stable platform arabasına hands→cart→hands transferi.
 - Dört noktalı zemin desteği, swept obstruction, yüklü/boş hız profili, sprint kilidi, gerçek keyboard/gamepad kontrolü ve fail-closed cargo recovery.
 - Tek referans garaj köşesinde bevel, prosedürel PBR yüzey, görev ışığı, ACES/bloom ve reflection probe.
+- Unity-bağımsız `PSE.Actors` sınırında kararlı müşteri/intent/visit kimliği, immutable lifecycle state'i ve bounded command receipt ledger'ı.
+- Garajda runtime-built NavMesh üzerinde giriş → RAF A göz atma → checkout bekleme → çıkış müşteri projection'ı.
+- İki denemeli route fallback, patience/exit timeout, pause-safe `SimulationClock` ve stock/checkout/order authority izolasyonu.
 
 ## 6. Konsolidasyon anındaki kesin durum — tarihsel baz
 
@@ -144,21 +148,22 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `bb89b0c297400f6eed22407df76dc1c85912cd74`.
-- Issue #45 ve Epic #8 tamamlandı/kapatıldı; Roadmap item'ları Done. Teknik order-to-sale graybox zinciri kapısı tamamlandı; ödeme/Economy, final Dashboard UI ve müşteri AI ayrı epiklerde kalır.
-- EditMode `242/242`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
-- Universal macOS development build `327.567.424` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `sale-completion=ok stock-consumed=ok completed-quantity=0` geçti.
-- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer reserve/release → checkout begin → completion zincirinde taşınır.
-- Completion exact checkout/basket/item/reservation bağını yeniden preflight eder; Inventory, Basket ve Checkout revision'larını birer kez ilerletip item/reservation/line'ı birlikte kapatır. Stable immutable fulfillment kaydı kalır; exact repeat idempotent, conflict/time/drift failure cross-authority no-mutation; ShelfOffer/Orders değişmez. Ödeme/Economy sonucu değildir.
+- Son doğrulanmış kaynak feature: `b37b056271fac317e99ec47df0833b8ef219cf83`, tree `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
+- Issue #46 kapsamındaki ilk deterministic customer visit ve runtime NavMesh graybox dilimi teknik olarak tamamlandı; feature Repository Guard [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147) başarılıdır. Yaşayan belge/Issue/Project/USB kapanışı bu checkpoint turunda tamamlanmaktadır.
+- EditMode `255/255`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
+- Universal macOS development build `327.697.921` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `customer-visit=ok runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` geçti.
+- Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
+- Customer visit lifecycle yalnız ileri ilerler; route başarısızlığı iki denemeyle sınırlıdır. `RouteUnavailable`, patience ve exit timeout sonuçları açıklanabilir ve no-mutation'dır; exact terminal replay ve receipt ledger invariantları testlidir.
+- Mevcut primitive müşteri, büyük durum panoları ve debug HUD final sanat/UI değildir. Okunaklı yarı gerçekçi görsel yön ve bağlamsal/diegetic UI ayrı bounded presentation paketlerinde geliştirilecektir.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #9 altında müşteri intent/state kimliği, bounded transition ve timeout/fallback sözleşmesini Unity-bağımsız kur.
-2. İlk graybox müşteri projection'ını giriş → RAF A göz atma → checkout bekleme → çıkış zincirine bağla; stok/checkout authority'sini doğrudan NPC transformundan yönetme.
-3. Navigation başarısızlığı veya timeout item/para uydurmasın; açıklanabilir failure/fallback ve deterministic test üret.
-4. Ödeme/Economy ledger/COGS/nakit, danışmanlık derinliği, Save ve final karakter sanatını ayrı bounded paketlerde tut.
+1. Önce Issue #46 yaşayan belge, Project ve doğrulanmış USB kapanışını bitir.
+2. Issue #9 altında tek müşterinin tek immutable shelf offer/product snapshot'ını deterministic ve revision-aware değerlendiren küçük bir `buy/leave` sözleşmesi kur.
+3. Kararı stable reason code ve idempotent receipt ile açıkla; stok, sepet, checkout, Economy veya Save'i değerlendirme authority'sinden doğrudan mutate etme.
+4. Garaj presentation'ını yalnız explicit adapter üzerinden mevcut reservation/checkout zincirine bağla; çoklu ürün/müşteri, price optimization, memnuniyet ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -238,4 +243,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Atomik checkout fulfillment checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #9'u doğrula. Sıradaki bounded paket müşteri intent/state ile timeout/fallback sözleşmesidir; stock/checkout authority, ödeme/Economy ve Save sınırlarını karıştırma. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Deterministik customer visit checkpointinden devam et. Önce `b37b056` feature'ının yaşayan belge, Issue #46/Project ve doğrulanmış USB kapanışını tamamla. Sonraki bounded paket tek müşteri + tek shelf offer için açıklanabilir `buy/leave` değerlendirmesidir; Inventory/Retail/Economy/Save authority sınırlarını karıştırma. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
