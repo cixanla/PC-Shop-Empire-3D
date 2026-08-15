@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; parent Epic #9 kapalı/Done. Epic #10 ilk fiziksel PC assembly dilimi Issue #53 feature `582a3cf` ile kaynak/test/build/runtime doğrulamasından geçti; remote/USB checkpointi sürüyor.<br>
+**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; parent Epic #9 kapalı/Done. Epic #10'un motherboard seating ve deterministic fastener secure/unsecure dilimleri Issue #53–#54 ile kaynak/test/build/runtime doğrulamasından geçti; Issue #54 source/docs/Guard ve ertelenen USB checkpointi sürüyor.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,14 +137,14 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail`, `PSE.Actors`, `PSE.Economy` ve yeni `PSE.Assembly` Unity bağımsız domain sınırlarını korur. Order→stock→offer→customer→checkout→exact-cash zincirine ek olarak tek serialized `MicroAtx` anakart existing Inventory'den managed Workbench'e atomik attach/detach receipt'iyle taşınır. Garage'da açık kasa/keyed seat, deterministic range/focus/LOS/orientation/support/obstruction preview'su, same-frame input tek-geçişi, stable physical identity ve recovery çalışır. Issue #53 feature `582a3cf`; EditMode 394/394, PlayMode 26/26, Universal macOS 328.020.817 bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` geçti. Sıradaki bounded gameplay yalnız motherboard fastener secure/unsecure dilimidir. CPU/RAM/GPU, tam build/benchmark, Save/Guardian, çoklu müşteri/ürün ve final art ayrı kalır.
+**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail`, `PSE.Actors`, `PSE.Economy` ve `PSE.Assembly` Unity bağımsız domain sınırlarını korur. Order→stock→offer→customer→checkout→exact-cash zincirine ek olarak tek serialized `MicroAtx` anakart existing Inventory'den managed Workbench'e atomik attach/detach edilir ve Assembly-owned captive fastener ile `SeatedUnsecured ↔ SeatedSecured` geçer. Garage'da açık kasa/keyed seat, deterministic seat + fastener solverları, stable physical identity, secured detach gate'i, historical replay ve recovery çalışır. Issue #54 feature `b681239`; EditMode 411/411, PlayMode 29/29, Universal macOS 328.057.977 bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... detach-authority-blocked=ok ... recovery=ok` geçti. Sıradaki bounded gameplay yalnız CPU socket seating + retention lever dilimidir. RAM/GPU/cooler, tam build/benchmark, Save/Guardian, çoklu müşteri/ürün ve final art ayrı kalır.
 
 ### Kapsam dışı
 
 - Güzel final mağaza sanatı.
 - Tam müşteri AI.
 - Tam ekonomi; mevcut kapsam yalnız bounded exact-cash satış settlement'ı ve ilk ledger deltalarıdır.
-- Tam PC montajı; mevcut kapsam yalnız ilk unsecured motherboard seating dilimidir.
+- Tam PC montajı; mevcut kapsam motherboard seating + tek captive-fastener secure/unsecure dilimidir.
 - Steam entegrasyonu.
 
 ### Ana riskler

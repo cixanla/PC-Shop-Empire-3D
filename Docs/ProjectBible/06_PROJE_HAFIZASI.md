@@ -477,4 +477,15 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Karar: aynı-frame Primary+Drop içinde Primary tek state-transition sahibidir; Drop consume/no-op olur. Klavye/fare ve gamepad dynamic promptları gerçek Input System testlidir.
 - Kanıt: EditMode `394/394`, PlayMode `26/26`, Universal macOS `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok`.
 - USB bağlı değildir; final evidence repo dışı yerel build arşivinde korunur ve USB yeniden bağlandığında manifest/readback milestone'una alınır.
-- Sıradaki küçük karar: yalnız motherboard fastener secure/unsecure. CPU/RAM/GPU, tam build/benchmark, Inventory genişlemesi, Save ve final art ayrı kapıdır.
+- Bu tarihsel checkpointin sonraki kararı Issue #54 motherboard fastener secure/unsecure idi; aşağıdaki güncel kayıtla tamamlandı.
+
+## Güncel uygulama kaydı — Issue #54 deterministic motherboard fastener
+
+- Epic #10'un ikinci bounded child'ı Issue #54'tür. Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; Assembly-owned `assembly.fastener.motherboard-main-01` kimliği ve `SeatedUnsecured ↔ SeatedSecured` state'i ekledi.
+- Karar: fastener ayrı Inventory/Catalog/tool authority değildir. Secure/unsecure yalnız Assembly revision + immutable receipt üretir; Inventory custody/revision'ı sabit kalır. Receipt-history fold exact Assembly order, item/product, attach/secure lineage ve Inventory revision monotonluğunu doğrular.
+- Karar: secured anakart presentation pickup ve direct Assembly detach kapılarının ikisinde de fail-closed'dur. Wrong identity/state/lineage/conflict/overflow ile immediate veya delayed replay hiçbir authority/world state'ini yanlış mutate etmez.
+- Karar: screw/screwdriver/plate yalnız projection'dır. Exact 4 mm secured depth ve tool rotation görsel okunabilirlik sağlar; transform drift'i `assembly-seat.projection-invariant` üretir fakat domain'e geri okunmaz.
+- Karar: valid ve blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Cached evaluation tek NonAlloc raycast'i korur; pause ve blocker aynı-frame replay'i drain eder, release–repress zorunludur.
+- Kanıt: EditMode `411/411`, gerçek Input System PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok`.
+- USB bağlı değildir; final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur ve USB yeniden bağlandığında Issue #53–#54 ayrı manifest/readback milestone'una alınır.
+- Sıradaki küçük karar: yalnız CPU socket seating + retention lever. RAM/GPU/cooler, tam build/benchmark, genel Inventory revision-max hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.

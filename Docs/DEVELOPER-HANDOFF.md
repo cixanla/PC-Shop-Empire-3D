@@ -14,15 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #53
+### Güncel checkpoint — Issue #54
 
-- Feature commit `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd` ilk authoritative motherboard seating dilimini taşır.
-- Source/docs commit `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7` ve [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılıdır.
-- `PSE.Assembly`, mevcut Catalog/Inventory ile tek serialized `MicroAtx` anakartı managed Workbench'e `SeatedUnsecured` olarak attach/detach eder; stable kimlik, receipt/replay ve failure no-mutation sözleşmeleri testlidir.
-- GarageGraybox marker'ı `garage-motherboard-seating-r22-v1`dir. Final EditMode `394/394`, PlayMode `26/26`; Universal macOS build `328020817` bayt ve Apple M4/Metal 1280×720 exact assembly smoke başarılıdır.
-- Ayrıntı: `Docs/ADR-0031-AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING.md` ve `Docs/Evidence/AUTHORITATIVE-SINGLE-MOTHERBOARD-SEATING-CHECKPOINT-2026-08-15.md`.
-- USB bağlı değildir; bu checkpointte `/Volumes`e yazılmadı. USB yeniden bağlanınca final evidence ayrı manifest/readback snapshotına alınır.
-- Sonraki bounded Epic #10 paketi yalnız motherboard fastener secure/unsecure akışıdır; CPU/RAM/GPU, tam build ve Inventory genişlemesi kapsam dışıdır.
+- Feature commit `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6` deterministic motherboard fastener secure/unsecure dilimini taşır.
+- `PSE.Assembly` stable fastener sub-identity, `SeatedUnsecured ↔ SeatedSecured` state'i, immutable secure/unsecure receipt'i, historical replay ve direct secured detach gate'ini taşır. Secure/unsecure Inventory custody/revision'ını değiştirmez.
+- GarageGraybox marker'ı `garage-motherboard-fastener-r23-v1`dir. Görünür captive screw, screwdriver ve plate'e bağlı tek satır status metni vardır; transformlar presentation'dır ve pose drift invariantı fail-closed'dur.
+- Gerçek Input System valid/blocked tek-consumer, dynamic keyboard/gamepad prompt, pause co-edge ve release–repress sözleşmeleri testlidir.
+- Final EditMode `411/411`, PlayMode `29/29`; Universal macOS build `328057977` bayt ve Apple M4/Metal 1280×720 exact assembly smoke başarılıdır.
+- Ayrıntı: `Docs/ADR-0032-DETERMINISTIC-MOTHERBOARD-FASTENER-SECURE-UNSECURE-GATE.md` ve `Docs/Evidence/DETERMINISTIC-MOTHERBOARD-FASTENER-SECURE-UNSECURE-CHECKPOINT-2026-08-15.md`.
+- USB bağlı değildir; bu checkpointte `/Volumes`e erişilmedi. USB yeniden bağlanınca Issue #53–#54 evidence ayrı manifest/readback snapshotına alınır.
+- Source/docs private push, Repository Guard ve Issue/Project `Done` metadata'sı takip commitindedir. Sonraki bounded Epic #10 child adayı yalnız CPU socket seating + retention lever akışıdır.
 
 ## 2. Gereken temel araçlar
 
@@ -150,7 +151,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş Issue #53 private push/Guard/Issue metadata ve USB yeniden bağlandığında manifest checkpointidir. Sonraki gameplay child yalnız tek motherboard fastener secure/unsecure akışıdır; deterministic fastener/screwdriver/replay/recovery sözleşmesi dışına, CPU/RAM/GPU, tam PC kataloğu, Inventory authority genişlemesi, Save veya final sanata gizlice büyütülmez.
+Sıradaki immediate iş Issue #54 source/docs private push/Guard/acceptance/Project kapanışıdır. USB yeniden bağlandığında Issue #53–#54 manifest/readback checkpointi alınır. Sonraki gameplay child yalnız tek CPU socket seating + retention lever akışıdır; RAM/GPU/cooler, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 

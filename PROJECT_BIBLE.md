@@ -244,7 +244,7 @@ Monotonluğu azaltma ilkeleri:
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
 | 2 | Temel mağaza döngüsü | Tamamlandı; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, deterministic müşteri ziyareti + runtime NavMesh, consultation-gated stale-safe `Buy/Leave` ve `AwaitingCheckout`-gated fiziksel kasa üzerinden exact-cash `PSE.Economy` settlement kaynak/test/build/runtime/CI/USB kapılarıyla kapandı; Epic #9 Done |
-| 3 | PC toplama teknik prototipi | Planlandı |
+| 3 | PC toplama teknik prototipi | Devam ediyor; authoritative tek-anakart seating ve deterministic fastener secure/unsecure kapıları tamamlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
 | 6 | Servis, iade, garanti, ikinci el | Planlandı |
@@ -289,6 +289,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A ve görünür yardım bekleme; odaklı `E / Gamepad South` danışmanlığı sonrası karar, Buy reservation sonrası checkout, Economy receipt sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
 | Fiziksel checkout station | Stable `world.checkout-station.garage-001`; `2,75 m` range, `24°` focus, LOS ve pause gate'i; RAF A ödeme bypass'ı kapalı; ilk `Mouse Left / Gamepad RT` immutable checkout, release/repress sonrası ikinci edge exact-cash settlement; canonical receipt-gated stock/customer completion |
 | İlk authoritative PC assembly dilimi | Unity bağımsız `PSE.Assembly`; mevcut Catalog/Inventory ile tek serialized `MicroAtx` anakartın ActorHands↔managed Workbench transferi, immutable attach/detach receipt'i, stable identity/replay ve GarageGraybox'ta range/focus/LOS/support/obstruction gated `SeatedUnsecured` fiziksel slot akışı |
+| Deterministic motherboard fastener | Assembly-owned stable fastener ID, exact secure/unsecure receipt ve historical replay; secured detach kilidi, Inventory-isolated revision, NonAlloc range/focus/LOS/pause/obstruction solver, gerçek keyboard/gamepad input ownership'i ve görünür screw/screwdriver/status-plate projection'ı |
 | Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; owned current consultation + immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
 | Stale-safe müşteri Buy eylemi | Explicit Actors↔Retail kimlik bağı, current visit/offer yeniden doğrulaması, exact serialized action-owned reservation, `Browsing → NavigatingToCheckout`, idempotent replay ve stale no-mutation |
 | Stale-safe müşteri Leave eylemi | Aynı kind-discriminated action ledger'ında current visit/offer revalidation, internal Actors prepared planı, `Browsing → Exiting`, stable `OfferDeclined`, Browse→Exit NavMesh ve bütün commerce authority'lerinde no-mutation |
@@ -306,16 +307,18 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Issue #51 kapanış checkpoint'i | Feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98`; [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılı; acceptance `16/16`, Issue kapalı ve Roadmap `Done` |
 | Issue #52 kapanış checkpoint'i | Feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılı; acceptance `17/17`, Issue kapalı/Roadmap `Done`; parent Epic #9 kapalı/Done |
 | Issue #53 kaynak checkpoint'i | Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, source/docs `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7`; [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılı; authoritative tek-anakart al/hizala/oturt/sök/recovery dilimi doğrulandı; USB milestone'u kullanıcı talimatıyla ertelendi |
-| Son test/build | Issue #53 sonrası Edit Mode `394/394` (`editmode-issue53-final-r12.xml`), gerçek Input System Play Mode `26/26` (`playmode-issue53-final-r12.xml`), failed/skipped `0`; Universal macOS build `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly=ready motherboard-seat=ready motherboard-identity=stable` ile exact assembly smoke geçti; scene SHA-256 `76e4ca7dff6c2b778d8f5b7c6f779217d474e177e8d5255fc68d44b8a5f42bda` |
+| Issue #54 yerel feature checkpoint'i | Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; stable fastener, secure/unsecure lineage, direct secured detach gate, blocked/pause edge ownership, projection drift oracle ve r23 görünür graybox doğrulandı; source/docs push/Guard metadata takip commitindedir |
+| Son test/build | Issue #54 sonrası Edit Mode `411/411` (`editmode-issue54-r4.xml`), gerçek Input System Play Mode `29/29` (`playmode-issue54-r4.xml`), failed/skipped `0`; Universal macOS build `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1` readiness + delayed replay/authority detach içeren exact assembly smoke geçti; scene SHA-256 `2358218819984b78274afd898e771299be3b6df83b83d69d5767f08b417bb0e4` |
 
-Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50–#52 kapanışları tarihsel olarak korunur. Issue #53'ün kaynak/test/build/runtime ve ertelenen USB durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` ile tarihli evidence belgesinde kayıtlıdır.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50–#53 checkpointleri tarihsel olarak korunur. Issue #54'ün kaynak/test/build/runtime ve ertelenen USB durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` ile tarihli evidence belgesinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. Issue #53 remote CI/Issue metadata checkpointini tamamla; USB yeniden bağlandığında yerel final evidence ile ayrı SHA-256 manifest/readback milestone'u oluştur.
-2. Epic #10'da yalnız tek motherboard fastener secure/unsecure dilimini aç: deterministic fastener kimliği/sırası, screwdriver etkileşimi ve `SeatedUnsecured → Secured` geçişi. CPU/RAM/GPU veya Inventory genişlemesini alma.
-3. Fastener paketinde yanlış vida/sıra, same-frame/replay, sökme ve recovery yollarını Assembly/Inventory/world authority'lerinde no-mutation kapat; mevcut stable motherboard kimliğini koru.
-4. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. Issue #54 source/docs commitini private `origin/main`e push et; Repository Guard, acceptance `18/18` ve Project `Done` kapanışını doğrula.
+2. USB yeniden bağlandığında Issue #53–#54 source/evidence dosyalarını ayrı SHA-256 manifest/readback milestone'una al; o zamana kadar `/Volumes`e erişme.
+3. Epic #10'un sıradaki bounded child'ını tek CPU socket seating + retention lever akışıyla sınırla. CPU uyumluluğu, keyed orientation, socket cover/lever sırası ve no-mutation sökme/recovery kanıtlanmadan RAM/GPU/cooler kapsamına geçme.
+4. Genel Inventory revision-max hardening'ini ayrı P1 teknik issue olarak kaydet; Issue #54'e geri bağlama. Graybox/debug metinlerini bağlamsal prompt ve fiziksel terminal katmanına kademeli taşı; mevcut sahneyi final art sayma.
+5. İlk gerçek Windows x64 test cihazında IL2CPP/DirectX/Steam kapısını ayrı dış-platform acceptance olarak çalıştır.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 

@@ -6,6 +6,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Assembly-owned stable motherboard fastener kimliği, `SeatedUnsecured ↔ SeatedSecured` secure/unsecure komutları, immutable receipt/historical replay fold'u, Inventory-isolated revision ve secured direct detach gate'i eklendi.
+- GarageGraybox r23'e görünür captive screw, deterministic 4 mm secured depth, cross recess, screwdriver, fiziksel tek-satır status plate ve renk dışı compact keyboard/gamepad promptları eklendi; büyük/yüzen fastener debug metni kullanılmadı.
+- NonAlloc range/focus/LOS/pause/obstruction solver, near-hit deterministic tie-break, projection drift invariantı, blocked/pause same-frame edge drain'i ve gerçek Input System release–repress testleri eklendi.
+- Issue #54 feature checkpoint'i `b681239`, tree `192f9d8`, EditMode 411/411, PlayMode 29/29, 328057977 bayt Universal macOS build ve Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` kanıtıyla oluşturuldu; USB kullanıcı talimatıyla ertelendi.
 - Unity bağımsız `PSE.Assembly`, managed Workbench custody'si, stable build/chassis/slot/operation kimlikleri ve immutable `SeatedUnsecured` attach/detach receipt'leriyle eklendi.
 - GarageGraybox'a açık kasa, keyed motherboard tray/slot, standoff/connector işaretleri ve tek canonical hassas anakart projection'ı eklendi; guided range/focus/LOS/orientation/support/obstruction preview'su gerçek commit pozu ile aynıdır.
 - Klavye/fare ve gamepad al→guided preview→oturt→sök→recovery akışı, dynamic prompt, same-frame Primary+Drop tek-geçiş kuralı ve failed world-drop retry ile kilitlendi.

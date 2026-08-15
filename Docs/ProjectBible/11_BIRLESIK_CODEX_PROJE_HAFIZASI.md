@@ -218,7 +218,17 @@ Tam konuşma ve dosya geçmişi:
 - Primary+Drop aynı frame'de yalnız seat-mode geçişi üretir. Gerçek Input System keyboard/mouse ve gamepad akışları, dynamic prompt ve release–repress ile testlidir.
 - Final EditMode `394/394`, PlayMode `26/26`, Universal macOS `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` başarılıdır.
 - USB geçici olarak bağlı değildir ve bu checkpointte `/Volumes`e erişilmemiştir. Final evidence yerel build arşivinde korunur; USB yeniden bağlandığında ayrı manifest/readback milestone'u oluşturulur.
-- Sonraki bounded Epic #10 adımı yalnız motherboard fastener secure/unsecure akışıdır; CPU/RAM/GPU, tam build/benchmark ve Inventory genişlemesi ayrı kalır.
+- Bu tarihsel checkpointin sonraki adımı Issue #54 motherboard fastener secure/unsecure idi; aşağıdaki güncel kayıtla tamamlandı.
+
+## 8.2 Issue #54 deterministic motherboard fastener checkpoint'i
+
+- Epic #10'un ikinci child paketi [Issue #54](https://github.com/cixanla/PC-Shop-Empire-3D/issues/54) ile tek Assembly-owned fastener, tek visible screwdriver ve `SeatedUnsecured ↔ SeatedSecured` geçişine sınırlandı.
+- Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; secure/unsecure exact receipt, historical replay, Inventory revision izolasyonu ve secured presentation+authority detach gate'i ekledi.
+- GarageGraybox r23 captive screw/cross recess, solid focus target, screwdriver ve plate'e bağlı tek satır metin taşır. Solver pause/range/focus/LOS/obstruction fail-closed'dur; screw/tool pose yalnız projection'dır ve drift authority'yi mutate etmeden invariantı bozar.
+- Valid/blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Gerçek keyboard/mouse ve gamepad PlayMode testleri dynamic prompt, same-frame blocker drain, pause co-edge ve release–repress sözleşmesini taşır.
+- Final EditMode `411/411`, PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` başarılıdır.
+- USB bağlı değildir ve `/Volumes`e erişilmemiştir. Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; USB yeniden bağlandığında Issue #53–#54 ayrı manifest/readback milestone'una alınır.
+- Sonraki bounded Epic #10 adımı yalnız CPU socket seating + retention lever akışıdır. RAM/GPU/cooler, tam build/benchmark, genel Inventory revision-max hardening, Save/Guardian ve Windows/Steam ayrı kalır.
 
 ## 9. USB ve yedek güvenlik katmanı
 
@@ -263,4 +273,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #53 feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, tree `fc80b7cd72e0fd8bc48f5917f9c303e84d72f4cd`, EditMode 394/394, PlayMode 26/26, Universal Mac `328020817` bayt ve Apple M4/Metal `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/CI ve kullanıcı tarafından ertelenen USB manifesti sıradaki checkpointtir; ardından yalnız motherboard fastener secure/unsecure dilimine geçilir.
+> Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`, EditMode 411/411, PlayMode 29/29, Universal Mac `328057977` bayt ve Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/Guard/Issue `Done` metadata'sı sıradaki checkpointtir; USB bağlı değildir. Ardından yalnız CPU socket seating + retention lever dilimine geçilir.
