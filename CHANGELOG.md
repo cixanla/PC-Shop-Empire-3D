@@ -45,7 +45,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Fiyatlanmış RAF A ürününde `G / Gamepad East` demo müşteri rezervasyonunu açıp kapatıyor; etiket/pano `1 ÜRÜN • AYRILDI` durumunu gösteriyor, ayrılmış ürün `E / Gamepad South` pickup'a fail-closed yanıt veriyor ve release available quantity'yi geri getiriyor.
 - `PSE.Retail` içine stable checkout transaction ve deterministic immutable line snapshot authority'si eklendi; exact basket/offer/item/reservation preflight, tek currency, overflow-safe integer total, idempotent begin ve failure no-mutation sözleşmesi kilitlendi.
 - Reserved RAF A ürününde Mouse Left/Gamepad RT checkout başlatıyor; shelf etiketi/HUD/prompt dondurulmuş `549,99 EUR` fiyatını gösteriyor. Sonraki offer update'i açık işlemi değiştirmiyor; checkout aktif release/pickup fail-closed kalıyor.
-- Edit Mode baseline `233/233`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `checkout-snapshot=ok price-frozen=ok stable=ok quantity=1` gerçek player smoke geçti.
+- Inventory'ye exact reservation setini tamamen preflight edip serialized ve aggregate batch hedeflerini tek revision'da tüketen atomik bulk API; Retail'e stable immutable checkout completion kaydı ve Basket/Inventory commit sınırı eklendi.
+- Aktif checkout'ta ikinci Mouse Left/Gamepad RT fulfillment'ı tamamlıyor; ürün projection'ı raftan kaldırılıyor, stok/sepet/reservation `0`, shelf/HUD `TAMAMLANDI` gösteriyor. Exact tekrar idempotent; identity/time/drift failure cross-authority no-mutation kalıyor.
+- Edit Mode baseline `242/242`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `sale-completion=ok stock-consumed=ok completed-quantity=0` gerçek player smoke geçti.
 
 ### Changed
 

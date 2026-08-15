@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `233/233` passed.
+- Edit Mode `242/242` passed.
 - Play Mode `17/17` passed.
 - `0` failed.
 - `0` skipped.
@@ -86,7 +86,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
 - Catalog yalnız Core; Inventory yalnız Core + Catalog; Orders Core + Catalog + Inventory; Retail ise Core + Catalog + Inventory referanslıdır. Dört assembly de Unity/Editor bağımlılığı taşımaz.
 - `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
-- `PSE.Retail` assembly: stable shelf-offer, customer basket reservation ve immutable checkout transaction authority'leri; exact serialized item/claim bağları, deterministic sorgu/snapshot, idempotent komutlar, drift denetimi ve failure no-mutation.
+- `PSE.Retail` assembly: stable shelf-offer, customer basket reservation, immutable checkout ve checkout completion authority'leri; exact serialized item/claim bağları, deterministic sorgu/snapshot, idempotent komutlar, drift denetimi ve failure no-mutation.
 - `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
 - `GarageStockFlowSession` exact serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` prototype composition'ını kurar.
 - `InventoryItemWorldBinding` aynı Inventory item/world item kimliğini, `InventoryPlacementZone` ise doğrulanmış surface/container eşlemesini taşır.
@@ -96,6 +96,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Exact ürün RAF A Shelf container'ındayken aynı Interact binding'i kasıtlı offer publish yapar; etiket authority başarısından önce `FİYAT YOK`, sonra `549,99 EUR` gösterir. Publish Inventory/Orders revision veya quantity değiştirmez.
 - Fiyatlanmış RAF A ürününde `G / Gamepad East` exact item'ı demo customer basket için ayırır; available quantity `0`, total quantity `1` kalır. Etiket/pano reservation'ı gösterir, `E / Gamepad South` pickup fail-closed olur ve aynı `G / East` release sonrası available quantity `1`e döner.
 - Ayrılmış RAF A ürününde `Mouse Left / Gamepad RT` bütün basket satırlarını exact offer/item/reservation ile preflight edip integer price/currency/total'i immutable checkout snapshot'ına alır. Sonraki offer update'i açık `549,99 EUR` fiyatını değiştirmez; checkout aktif release ve pickup fail-closed kalır.
+- Aktif checkout'ta ikinci `Mouse Left / Gamepad RT`, exact reservation setini tek Inventory revision'ında atomik tüketir; Basket ve Checkout revision'larını birer kez ilerletir, stable fulfillment kaydı bırakır ve ürün projection'ını raftan kaldırır. Shelf/HUD `TAMAMLANDI`, stok/sepet/reservation `0`; exact tekrar idempotent, drift failure no-mutation'dır. Bu kayıt ödeme/Economy settlement değildir.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -113,18 +114,18 @@ Tamamlanan saf Core sözleşmeleri:
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`: source/docs checkpoint `0936cc0`, 508 tracked kaynak, 4 Unity test/build/runtime kanıtı ve source kayıt dosyası; 513 satırlı `30c1e7fa…16efa` SHA-256 manifest/readback ile doğrulandı. Source path/checksum mismatch, forbidden/credential ve AppleDouble sayısı `0`dır.
+- Son doğrulanmış USB milestone şu an `2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`tır; atomik checkout fulfillment snapshotı docs checkpointinden sonra ayrıca üretilecektir.
 
 Henüz yapılmayanlar:
 
 - Gelişmiş el animasyonu, çok satırlı/çok adetli parcel unpack layout'u, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Sayısal fiyat düzenleme UI'si, checkout reservation consume/satış completion, fiziksel müşteri/gerçek sepet transferi ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
+- Sayısal fiyat düzenleme UI'si, ödeme/Economy settlement, fiziksel müşteri/gerçek sepet transferi ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #8 altında exact checkout reservation'ını atomik consume edip basket line'ı tamamlayan ve serialized item için stable sold/fulfilled sonucu üreten Unity-bağımsız completion sözleşmesidir. Fiziksel müşteri AI, ödeme, Economy ledger/COGS/nakit, vergi/indirim ve Save bu küçük pakete girmez.
+Sıradaki bounded paket Issue #9 altında stable müşteri intent/state, bounded transition ve timeout/fallback sözleşmesidir. İlk görünür graybox zincir giriş → RAF A göz atma → checkout bekleme → çıkış olacaktır; ödeme, Economy ledger/COGS/nakit, derin danışmanlık, Save ve final karakter sanatı ayrı kalır.
 
 ## 7. Çalışma akışı
 
@@ -178,7 +179,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 233 Edit Mode ve 17 Play Mode baseline testi geçti.
+2. Repo guard, 242 Edit Mode ve 17 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.
