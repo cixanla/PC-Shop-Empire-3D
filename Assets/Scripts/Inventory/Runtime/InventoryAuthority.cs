@@ -166,6 +166,126 @@ namespace PCShopEmpire3D.Inventory
             return OperationResult.Success();
         }
 
+        public OperationResult ReceiveIntake(
+            StableId<ContainerIdScope> containerId,
+            InventoryIntake intake)
+        {
+            if (intake == null)
+            {
+                return OperationResult.Fail(InventoryFailures.MissingIntake);
+            }
+
+            if (!_containers.ContainsKey(containerId))
+            {
+                return OperationResult.Fail(InventoryFailures.UnknownContainer);
+            }
+
+            long addedQuantity = 0;
+            var pendingItemIds = new HashSet<StableId<ItemInstanceIdScope>>();
+            var pendingBatchIds = new HashSet<StableId<BatchIdScope>>();
+
+            for (int index = 0; index < intake.SerializedItems.Count; index++)
+            {
+                InventorySerializedIntake item = intake.SerializedItems[index];
+                if (item == null || item.ItemId.IsEmpty || !pendingItemIds.Add(item.ItemId))
+                {
+                    return OperationResult.Fail(InventoryFailures.DuplicateIntakeItem);
+                }
+
+                if (_items.ContainsKey(item.ItemId))
+                {
+                    return OperationResult.Fail(InventoryFailures.DuplicateItem);
+                }
+
+                Failure productFailure = ValidateProduct(
+                    item.ProductId,
+                    ProductTrackingPolicy.SerializedInstance);
+                if (!productFailure.IsNone)
+                {
+                    return OperationResult.Fail(productFailure);
+                }
+
+                if (!InventoryValidation.IsValidCondition(item.Condition))
+                {
+                    return OperationResult.Fail(InventoryFailures.InvalidCondition);
+                }
+
+                addedQuantity++;
+            }
+
+            for (int index = 0; index < intake.Batches.Count; index++)
+            {
+                InventoryBatchIntake batch = intake.Batches[index];
+                if (batch == null || batch.BatchId.IsEmpty || !pendingBatchIds.Add(batch.BatchId))
+                {
+                    return OperationResult.Fail(InventoryFailures.DuplicateIntakeBatch);
+                }
+
+                if (_batches.ContainsKey(batch.BatchId))
+                {
+                    return OperationResult.Fail(InventoryFailures.DuplicateBatch);
+                }
+
+                if (batch.Quantity <= 0)
+                {
+                    return OperationResult.Fail(InventoryFailures.InvalidQuantity);
+                }
+
+                Failure productFailure = ValidateProduct(
+                    batch.ProductId,
+                    ProductTrackingPolicy.BatchQuantity);
+                if (!productFailure.IsNone)
+                {
+                    return OperationResult.Fail(productFailure);
+                }
+
+                if (!InventoryValidation.IsValidCondition(batch.Condition))
+                {
+                    return OperationResult.Fail(InventoryFailures.InvalidCondition);
+                }
+
+                if (long.MaxValue - addedQuantity < batch.Quantity)
+                {
+                    return OperationResult.Fail(InventoryFailures.QuantityOverflow);
+                }
+
+                addedQuantity += batch.Quantity;
+            }
+
+            if (addedQuantity <= 0)
+            {
+                return OperationResult.Fail(InventoryFailures.EmptyIntake);
+            }
+
+            Failure capacityFailure = ValidateCapacity(containerId, addedQuantity);
+            if (!capacityFailure.IsNone)
+            {
+                return OperationResult.Fail(capacityFailure);
+            }
+
+            for (int index = 0; index < intake.SerializedItems.Count; index++)
+            {
+                InventorySerializedIntake item = intake.SerializedItems[index];
+                _items.Add(
+                    item.ItemId,
+                    new InventoryItemRecord(item.ItemId, item.ProductId, containerId, item.Condition));
+            }
+
+            for (int index = 0; index < intake.Batches.Count; index++)
+            {
+                InventoryBatchIntake batch = intake.Batches[index];
+                _batches.Add(
+                    batch.BatchId,
+                    new InventoryBatchRecord(batch.BatchId, batch.ProductId, batch.Condition));
+                _batchQuantities.Add(
+                    new BatchPositionKey(batch.BatchId, containerId),
+                    batch.Quantity);
+            }
+
+            AdvanceRevision();
+            return OperationResult.Success();
+        }
+
         public OperationResult TransferSerializedItem(
             StableId<ItemInstanceIdScope> itemId,
             StableId<ContainerIdScope> targetContainerId)
@@ -434,6 +554,13 @@ namespace PCShopEmpire3D.Inventory
             out InventoryItemRecord item)
         {
             return _items.TryGetValue(itemId, out item);
+        }
+
+        public bool TryGetContainer(
+            StableId<ContainerIdScope> containerId,
+            out InventoryContainerDefinition container)
+        {
+            return _containers.TryGetValue(containerId, out container);
         }
 
         public bool TryGetReservation(
@@ -718,7 +845,7 @@ namespace PCShopEmpire3D.Inventory
                    definition.TrackingPolicy == policy;
         }
 
-        private Failure ValidateCapacity(StableId<ContainerIdScope> containerId, int addedQuantity)
+        private Failure ValidateCapacity(StableId<ContainerIdScope> containerId, long addedQuantity)
         {
             if (!_containers.TryGetValue(containerId, out InventoryContainerDefinition container))
             {

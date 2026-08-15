@@ -257,5 +257,10 @@ namespace PCShopEmpire3D.Inventory
         public static readonly Failure ItemAlreadyReserved = Failure.FromCode("inventory.reservation.item-reserved");
         public static readonly Failure InsufficientAvailable = Failure.FromCode("inventory.reservation.insufficient-available");
         public static readonly Failure InvariantViolation = Failure.FromCode("inventory.invariant.failed");
+        public static readonly Failure MissingIntake = Failure.FromCode("inventory.intake.missing");
+        public static readonly Failure EmptyIntake = Failure.FromCode("inventory.intake.empty");
+        public static readonly Failure NullIntakeEntry = Failure.FromCode("inventory.intake.entry-null");
+        public static readonly Failure DuplicateIntakeItem = Failure.FromCode("inventory.intake.item-duplicate");
+        public static readonly Failure DuplicateIntakeBatch = Failure.FromCode("inventory.intake.batch-duplicate");
     }
 }
