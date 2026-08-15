@@ -215,6 +215,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_AUTHORITATIVE_STOCK_FLOW`; source `f20fd17`, 467 tracked source + 4 test/build/runtime evidence + source kaydı, 472 satırlı `5521f869…22a3` manifest, tam readback/source checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`; source `756547f`, 471 tracked source + 5 scene/test/build/runtime evidence + source kaydı, 477 satırlı `37f95b3c…58ac` manifest, tam readback/source checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`; source `6ae294e`, 488 tracked source + 5 scene/test/build/runtime evidence + source kaydı, 494 satırlı `a95d8457…de7a` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`; source `109237a`, 498 tracked source + 4 test/build/runtime evidence + source kaydı, 503 satırlı `ff868e4c…20d7` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 

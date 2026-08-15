@@ -44,9 +44,10 @@
 - Branch: `main`
 - Feature commit: `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`
 - Tree: `788e9a016a692a9e558d8fb3903e32830b3a8b08`
-- USB snapshot source/docs checkpoint commit: bu checkpoint belgeleri commitlendikten sonra kaydedilecek.
+- USB snapshot source/docs checkpoint commit: `109237a1d862c3a43be8b13ec4756fb0f4bf45a1`.
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#43](https://github.com/cixanla/PC-Shop-Empire-3D/issues/43)
 - Repository Guard: [31867913964](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31867913964), başarılı.
+- Docs Repository Guard: [31868148943](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31868148943), başarılı.
 
 ## Test, build ve runtime kanıtı
 
@@ -76,7 +77,7 @@ Klavye ve gamepad acceptance→open→pickup→RAF A placement→offer publish�
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`, source/docs checkpoint `6ae294ea97571921d1296b72ab86e458235f9c22` taşır. İçerik 488 tracked kaynak + 5 scene/test/build/runtime kanıtı + source kaydıdır; 494 manifest satırı ve manifest SHA-256 `a95d8457e2b52732a35c28d49fa51dfd4981ca0af2b585947a20743e8e10de7a` tam readback/source checksum ile doğrulandı. Hash/boyut mismatch, source path/checksum mismatch, forbidden dir, credential filename ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır. USB güvenle çıkarılabilir.
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`, source/docs checkpoint `109237a1d862c3a43be8b13ec4756fb0f4bf45a1` taşır. İçerik 498 tracked kaynak + 4 test/build/runtime kanıtı + source kaydıdır; 503 manifest satırı ve manifest SHA-256 `ff868e4c999a11c994719fa5cd3695abb63ab4f6cdb20de26510a4819b0d20d7` tam readback/source checksum ile doğrulandı. Hash/boyut mismatch, source path/checksum mismatch, forbidden dir, credential filename/kalıbı ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır. USB güvenle çıkarılabilir.
 
 ## Sıradaki bounded paket
 
