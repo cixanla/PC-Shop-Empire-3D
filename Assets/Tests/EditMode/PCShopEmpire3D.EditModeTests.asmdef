@@ -3,6 +3,8 @@
   "rootNamespace": "PCShopEmpire3D.Tests.EditMode",
   "references": [
     "PSE.Core",
+    "PSE.Catalog",
+    "PSE.Inventory",
     "PSE.World",
     "PSE.Presentation",
     "PSE.GaragePrototype.Editor",

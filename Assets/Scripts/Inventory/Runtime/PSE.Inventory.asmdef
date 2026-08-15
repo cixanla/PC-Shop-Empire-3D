@@ -1,0 +1,17 @@
+{
+  "name": "PSE.Inventory",
+  "rootNamespace": "PCShopEmpire3D.Inventory",
+  "references": [
+    "PSE.Core",
+    "PSE.Catalog"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
