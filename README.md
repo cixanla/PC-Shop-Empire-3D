@@ -18,10 +18,10 @@ Bu depo, eski Electron oyununun doğrudan portu değildir. Yeni oyun Unity 6000.
 - Unity: `6000.3.21f1` ARM64 editör, URP `17.3.0`.
 - Hedef: önce Windows x64 + Steam 1.0; bütçe uygunsa daha sonra ayrı macOS port/QA turu.
 - Stage A: proje, paket, macOS/Windows Mono smoke build ve private GitHub temeli tamamlandı.
-- Stage B: saf `PSE.Core` sözleşmeleri, ilk oynanabilir garaj ve ilk fiziksel ürün alma/bırakma zinciri tamamlandı.
-- Son doğrulama: Edit Mode `120/120`, Play Mode `6/6`; başarısız/atlanan test yok.
+- Stage B: saf `PSE.Core` sözleşmeleri; oynanabilir garaj; güvenli pickup/drop; küçük-kutu placement/rotation/istif; büyük-kutu taşıma ve yüklü platform arabası graybox zincirleri tamamlandı.
+- Son doğrulama: Edit Mode `136/136`, Play Mode `14/14`; başarısız/atlanan test yok. Universal macOS build ve Apple M4/Metal runtime smoke geçti.
 - Yürütme panosu: [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2), 22 epic.
-- GarageGraybox sahnesinde hareket, kamera, görünür eller, dinamik tuş bildirimi ve klavye/gamepad ile `E/A` alma + `G/B` güvenli bırakma çalışıyor; sıradaki iş kontrollü kutu placement'tır.
+- GarageGraybox sahnesinde hareket, kamera, görünür eller, dinamik tuş bildirimi, güvenli kutu yerleştirme/istifleme ve klavye/gamepad ile tek büyük kutuyu platform arabasına yükleme–taşıma–geri alma çalışıyor; sıradaki bounded iş Issue #7 Catalog + Inventory çekirdeğidir.
 
 ## Dizinler
 

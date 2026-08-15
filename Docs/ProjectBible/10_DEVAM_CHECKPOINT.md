@@ -1,18 +1,19 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #35 kontrollü küçük-kutu istifleme tamamlandı; sıradaki bounded paket taşıma arabası grayboxıdır<br>
+**Durum:** Issue #37 yüklü taşıma arabası ve Epic #6 tamamlandı; sıradaki bounded paket Issue #7 Catalog + Inventory çekirdeğidir<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #35
+## En yeni checkpoint — Issue #37 / Epic #6
 
-- Feature commit `2e11e30a1a4b3435046ae18001004cacc170079e`, tree `e2cb49e318ea84b4a8db08ab3dd79d9b833b2483`.
-- Stable dünya durumundaki küçük kutu, eldeki küçük kutu için merkez/90° snap ve beş noktalı tam destek yüzeyi olabilir.
-- Geçersiz rotation/footprint, dinamik destek ve overlap fail-closed kalır; tek üst kutu ve dolu tabanı alma kilidi vardır.
-- EditMode `131/131`, gerçek Input System PlayMode `12/12`, Universal macOS build ve Apple M4/Metal `rotation=ok stacking=ok lookdev=ok` player smoke geçti.
-- Pickup/drop/placement/rotation/large-carry/recovery ve stable-ID invariantları korundu.
-- Kanıt: `Docs/Evidence/SMALL-BOX-STACKING-CHECKPOINT-2026-08-15.md`; Repository Guard [31856764087](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31856764087) başarılı.
-- Sıradaki bounded iş taşıma arabası grayboxıdır; Inventory authority Issue #7/#8'e bağlı kalır.
+- Feature commit `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`, tree `1d48b75c74e5ae14ee92d4f0687a68ec35182ddd`.
+- GarageGraybox tek stable platform arabası taşır; eldeki `LargeBox` `E / Gamepad South` ile yüklenir veya yeniden ellere alınır.
+- `Mouse Left / Gamepad RT` arabayı tutar/bırakır; yüklü hız `0,85×`, boş hız `0,90×`, sprint kapalıdır.
+- Dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kontrolü başarısızsa hareket uygulanmaz; araba/yük son güvenli durumda kalır.
+- EditMode `136/136`, gerçek Input System PlayMode `14/14`, Universal macOS build ve Apple M4/Metal `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` player smoke geçti.
+- Pickup/drop/placement/rotation/stacking/large-carry/recovery ve stable-ID invariantları korundu.
+- Kanıt: `Docs/Evidence/LOADED-TRANSPORT-CART-CHECKPOINT-2026-08-15.md`; feature Repository Guard [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692) başarılı.
+- Sıradaki bounded iş Issue #7 altında Unity'den bağımsız Catalog + Inventory çekirdeğidir; fiziksel projection henüz authoritative stok değildir.
 
 ## Kullanım güvenliği protokolü
 
@@ -36,6 +37,8 @@
 - Turuncu bantlı büyük kutu ayrı stable kimlik/boyut ve carry profili taşır. Alındığında iki-el pozu, `0,65×` hareket ve sprint kilidi uygulanır.
 - Büyük kutunun istenen FOV bedeli `6°`, üst sınırı `8°`dir. Varsayılan `motionReduced` açıkken lens değişmez; görünür kutu/eller görüş maliyetini taşır. Ayar kapalıysa FOV yumuşak geçişle uygulanır.
 - Büyük kutu küçük-kutu placement moduna giremez. Etkin `G / Gamepad East` promptuyla gerçek yarı boyutlarına göre güvenli bırakılır; obstruction durumunda `BIRAKMA ENGELLİ` gösterir ve elde kalır.
+- Platform arabası tek büyük kutuyu aynı stable ID ve ilk physics snapshot'ıyla taşır. Dört teker desteği ve swept obstruction geçmeden pose uygulanmaz; yük world-parent kinematic olarak anchor'a senkronlanır.
+- Yüklü/boş araba etkin binding prompt'u, ayrı iki-el tutuş pozu, sprint kilidi ve `0,85×`/`0,90×` hareket profili taşır. Engel, driver/controller veya cart disable recovery'si fail-closed davranır.
 - Tek slot, stable item ID, physics snapshot, disable/world-floor recovery ve küçük-kutu davranışları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; mevcut primitive garaj/kutular/eller final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ dış platform kapısıdır.
@@ -43,15 +46,15 @@
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `2e11e30a1a4b3435046ae18001004cacc170079e`
-- Tree: `e2cb49e318ea84b4a8db08ab3dd79d9b833b2483`
-- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#35](https://github.com/cixanla/PC-Shop-Empire-3D/issues/35)
-- Karar: `Docs/ADR-0014-CONTROLLED-SMALL-BOX-STACKING.md`.
-- Kanıt: `Docs/Evidence/SMALL-BOX-STACKING-CHECKPOINT-2026-08-15.md`.
-- Kapsam: stable küçük-kutu desteği, merkez/90° snap, beş noktalı footprint, obstruction, tek kat/tek üst ilişki, dolu taban kilidi, dinamik prompt ve gerçek keyboard/gamepad testleri.
-- Builder güvenliği, connected prefab, build-scene sırası, stable item ID, tek slot ve pickup/drop/placement/rotation/large-carry/recovery invariantları korundu.
-- Çok katlı/palet istifi, büyük-kutu placement/istif, taşıma arabası ve authoritative Inventory bu checkpoint'in dışında kaldı.
-- Remote Repository Guard: [31856764087](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31856764087), başarılı.
+- Feature commit: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`
+- Tree: `1d48b75c74e5ae14ee92d4f0687a68ec35182ddd`
+- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#37](https://github.com/cixanla/PC-Shop-Empire-3D/issues/37)
+- Karar: `Docs/ADR-0015-LOADED-TRANSPORT-CART-GRAYBOX.md`.
+- Kanıt: `Docs/Evidence/LOADED-TRANSPORT-CART-CHECKPOINT-2026-08-15.md`.
+- Kapsam: tek `LargeBox` slotu, hands→cart→hands ownership, tam destek/swept obstruction, yüklü/boş hareket profili, dinamik prompt, gerçek keyboard/gamepad akışı ve recovery.
+- Builder güvenliği, connected prefab, build-scene sırası, stable item ID, physics snapshot ve pickup/drop/placement/rotation/stacking/large-carry invariantları korundu.
+- Çoklu slot/palet, büyük-kutu placement/istif, gerçek raf container'ı ve authoritative Inventory bu checkpoint'in dışında kaldı.
+- Remote feature Repository Guard: [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692), başarılı.
 
 ## Test ve build kanıtı
 
@@ -59,13 +62,14 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `stacking-editmode-final.xml` | 131/131 geçti | `b1b7039bf5ff42f8f82b1f9575bdb34b5c4ce306fbaed711a184ccb563fea737` |
-| `stacking-playmode-final.xml` | 12/12 geçti | `0993555d45b11392c748fd7ef5d355d6887eaec449d40d1dfffc663b3351911e` |
-| `stacking-macos-build.log` | Universal development build, 327.217.897 bayt | `51ad3ad892c6ef91f42494fbdff7c3db2bf2a1ac855d1d66314e9ab6234a7de7` |
-| Player executable | Mach-O `x86_64 + arm64` | `7ee0d3418135a381f6751a026d4c58e2eabfb78ba3fe86fa1cf1acc8c661a356` |
-| `stacking-macos-runtime.log` | Apple M4/Metal, 1280×720, `stacking=ok` | `13e030c4a45b8bd9e782e4dd63cf892814a5da2a5e32d4a3c457a1c92bd33472` |
+| `cart-editmode-final.xml` | 136/136 geçti | `6de78a3e7be6d47e9780962bdabef4a64d5efe153bf3b572fee90c5da98c9bca` |
+| `cart-playmode-final.xml` | 14/14 geçti | `87b3c4e42d73186191740b69971b482bb49ab68c882105f48e7aee39628ccea3` |
+| `cart-macos-build.log` | Universal development build, 327.282.300 bayt | `1511e285a0cb051b1216c11d455efba7334fdda22ef75456e627451a7677f347` |
+| Player executable | Mach-O `x86_64 + arm64` | `d6d5e7afdf5cae9d39c6696507bf9ea8c181b22a58299de31b8968889739ba27` |
+| `cart-macos-runtime-final.log` | Apple M4/Metal, `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` | `e2a5c113f28db09d4746182bb062031b29b601b0e188d8737fe5967ca5ef2a56` |
+| `cart-macos-runtime-final.png` | 1280×748 yüklü araba ve HUD | `816fec72ed909be4a5ab9244a888adbddce0743b1b42450ec27cabcf72bfc5d2` |
 
-EditMode stabil/dinamik destek, tam footprint, rotation, ilişki ve pickup kilidini doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/mouse ve gamepad istifleme, etkin prompt, invalid rotation fail-closed davranışı, stable kimlik ve pickup/drop/büyük-kutu/recovery regresyonlarını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
+EditMode ownership/physics snapshot, kapasite/profil, grip menzili, dört noktalı destek ve obstruction sözleşmesini doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/mouse ve gamepad yükle→sür→engel→bırak→geri al→recovery zincirini ve bütün önceki fiziksel etkileşim regresyonlarını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -83,6 +87,7 @@ EditMode stabil/dinamik destek, tam footprint, rotation, ilişki ve pickup kilid
 - Controlled small-box rotation: `661f2dcc64246a8282fd63fbf303454ec856ea40`.
 - Readable lookdev benchmark: `c7214afab81a360a3ca10a88cbdd29f67e741994`.
 - Controlled small-box stacking: `2e11e30a1a4b3435046ae18001004cacc170079e`.
+- Loaded transport cart: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
 
 ## USB güvenlik katmanı
 
@@ -98,9 +103,9 @@ Güncel küçük-kutu istifleme snapshot'ı final tracked kaynak ile test/build/
 
 ## Devam sırası
 
-1. Taşıma arabasını Issue #6'nın ayrı graybox dilimi olarak doğrula; ağır kutunun elde taşıma sözleşmesini bozma.
-2. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yay; sahneyi final art ilan etme.
-3. Gerçek raf stoklama ve ekonomik Inventory authority'yi Issue #7/#8 bağımlılıklarına bağla; sahne projection'ını tek başına stok gerçeği sayma.
+1. Issue #7 Catalog + Inventory çekirdeğini saf domain sözleşmeleri ve invariant testleriyle küçük bir ilk pakete böl.
+2. Issue #8 sipariş/teslimat/raf akışını yalnız authoritative Inventory hazır olduktan sonra dünya projection'ına bağla.
+3. Benchmark görsel dilini tamamlanan gameplay alanlarına kademeli yay; sahneyi final art ilan etme.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
 
 ## Düşük kullanımda bırakılacak mesaj

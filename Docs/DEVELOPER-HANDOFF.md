@@ -52,8 +52,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `131/131` passed.
-- Play Mode `12/12` passed.
+- Edit Mode `136/136` passed.
+- Play Mode `14/14` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -95,19 +95,21 @@ Tamamlanan saf Core sözleşmeleri:
 - Büyük-kutu placement girişi kapalıdır; stable ID, tek slot, physics snapshot ve disable/world-floor recovery korunur.
 - Küçük kutu placement modunda `R / Right Shoulder` ile deterministik `90°` döner; etkin binding/açı promptu, ghost/confirm poz eşitliği ve döndürülmüş footprint güvenlik kontrolü vardır.
 - Stable küçük kutu desteğinde merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidi vardır; gerçek keyboard/mouse ve gamepad zinciri testlidir.
+- Stable platform arabası tek `LargeBox` kabul eder; `E / Gamepad South` ile hands→cart→hands transferi, `Mouse Left / Gamepad RT` ile tut/bırak, 0,85× yüklü ve 0,90× boş hız, sprint kilidi ve dinamik prompt uygulanır.
+- Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
 - Güncel USB milestone `2026-08-15_STAGE_B_SMALL_BOX_STACKING`: final tracked kaynak ve küçük test/build/runtime kanıt seti, SHA-256 manifest readback ve source checksum ile doğrulandı; cache/build uygulaması/credential dışarıda.
 
 Henüz yapılmayanlar:
 
-- Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve taşıma arabası.
+- Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket taşıma arabası grayboxıdır. Büyük-kutu elde taşıma sözleşmesi korunur; Inventory authority Issue #7/#8 öncesinde world projection'a eklenmez.
+Sıradaki bounded paket Issue #7 altında Unity'den bağımsız Catalog + Inventory çekirdeğidir. Dünya projection'ı ekonomik stok gerçeği sayılmaz; sipariş/teslimat/raf bağlaması Issue #8'e kadar yapılmaz.
 
 ## 7. Çalışma akışı
 

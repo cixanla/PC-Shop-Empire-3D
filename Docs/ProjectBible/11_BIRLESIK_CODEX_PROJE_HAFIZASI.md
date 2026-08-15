@@ -101,6 +101,8 @@ Korunan temel commit çizgisi:
 - Okunaklı yarı gerçekçi benchmark: `c7214afab81a360a3ca10a88cbdd29f67e741994`.
 - Güvenli küçük-kutu stacking feature: `2e11e30a1a4b3435046ae18001004cacc170079e`.
 - Stacking yaşayan checkpoint: `74070f7bbab041b1a978ef5f889f64b1cfcd6ff9`.
+- Codex proje konsolidasyonu: `2c10873a7e6ec3984292418121bed19072dd6d79`.
+- Yüklü taşıma arabası feature: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
 
 Tamamlanan oynanabilir sistemler:
 
@@ -119,9 +121,11 @@ Tamamlanan oynanabilir sistemler:
 - Büyük kutu için iki-el pozu, 0,65× hareket, sprint kilidi ve motion-safe FOV bedeli.
 - Büyük kutu için gerçek boyuta göre fail-closed güvenli bırakma.
 - Stable küçük kutu üzerinde merkez/90° snap, beş noktalı footprint, tek kat/tek üst ilişkisi ve dolu tabanı alma kilidi.
+- Tek `LargeBox` kapasiteli stable platform arabasına hands→cart→hands transferi.
+- Dört noktalı zemin desteği, swept obstruction, yüklü/boş hız profili, sprint kilidi, gerçek keyboard/gamepad kontrolü ve fail-closed cargo recovery.
 - Tek referans garaj köşesinde bevel, prosedürel PBR yüzey, görev ışığı, ACES/bloom ve reflection probe.
 
-## 6. Konsolidasyon anındaki kesin durum
+## 6. Konsolidasyon anındaki kesin durum — tarihsel baz
 
 - Son doğrulanmış kaynak feature: `2e11e30a1a4b3435046ae18001004cacc170079e`.
 - Son yaşayan checkpoint ve konsolidasyon öncesi HEAD: `74070f7bbab041b1a978ef5f889f64b1cfcd6ff9`.
@@ -137,14 +141,24 @@ Tamamlanan oynanabilir sistemler:
 - Konsolidasyon sırasında açılan geçici taslak ve Issue #36 tamamen kaldırılmıştır.
 - Bu konsolidasyon belgeleri dışında kullanıcıya ait veya ilişkisiz açık değişiklik yoktur.
 
+### Konsolidasyon sonrası güncel checkpoint
+
+- Son doğrulanmış kaynak feature: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
+- Issue #37 yüklü taşıma arabası acceptance'ı tamamlandı; Epic #6'nın küçük/büyük kutu, placement ve araba kapısı kapandı.
+- EditMode `136/136`, gerçek Input System PlayMode `14/14` geçti; failed/skipped `0`.
+- Universal macOS development build `327.282.300` bayt ve Mach-O `x86_64 + arm64` olarak üretildi.
+- Apple M4/Metal gerçek player: `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, ayrıca `cart-flow=ok loaded=ok stable=ok`.
+- Feature Repository Guard [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692) başarılıdır.
+- Dünya projection'ı fiziksel kanıttır; Catalog/Inventory authority henüz eklenmemiştir.
+
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #6 altında yüklü taşıma arabası graybox akışı.
-2. Büyük kutunun mevcut elde taşıma sözleşmesi korunmalıdır.
-3. Yükleme, taşıma, bırakma, obstruction, recovery ve gerçek input acceptance ölçütleri ayrı testlerle kilitlenmelidir.
-4. Dünya sahnesindeki fiziksel projection, Issue #7/#8 öncesinde authoritative Inventory sayılmamalıdır.
+1. Issue #7 Catalog + Inventory çekirdeğini Unity'den bağımsız saf domain sözleşmelerine böl.
+2. İlk dilim ürün tanımı, fiziksel instance/batch/container kimliği ve adet/rezervasyon invariantlarını test etsin; UI veya raf görseli eklemesin.
+3. Mevcut item/cart projection stable kimliklerini koru, fakat onları henüz ekonomik authority olarak kullanma.
+4. Sipariş, teslimat ve raf dünya bağlamasını Issue #8'e kadar ertele.
 
 Sonraki ana geliştirme sırası:
 
@@ -159,8 +173,8 @@ Sonraki ana geliştirme sırası:
 
 Henüz tamamlanmayan önemli alanlar:
 
-- Taşıma arabası.
 - Gerçek raf ve authoritative Inventory.
+- Çoklu slot/palet taşıma arabası ve lojistik ekipmanı.
 - Çok katlı veya palet istifi.
 - Gelişmiş el modeli/animasyonu.
 - Garajın bütününe yayılmış final sanat.
@@ -216,4 +230,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> `74070f7` temiz checkpointinden devam et. Önce yaşayan belgeleri ve Issue #6'yı doğrula. Sıradaki tek bounded paket yüklü taşıma arabası graybox akışıdır. Inventory authority ekleme; mevcut küçük/büyük kutu, placement, rotation, stacking, recovery ve stable-ID invariantlarını koru. Gerçek EditMode/PlayMode, macOS build/runtime smoke, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Yüklü taşıma arabası checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #7'yi doğrula. Sıradaki tek bounded paket Unity'den bağımsız Catalog + Inventory çekirdeğinin en küçük invariant-testli dilimidir. Dünya item/cart projection'ını ekonomik authority sayma; sipariş/teslimat/raf bağlamasını Issue #8'e bırak. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

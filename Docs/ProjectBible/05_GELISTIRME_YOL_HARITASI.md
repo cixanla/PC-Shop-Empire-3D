@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Devam ediyor; teknik temel, oynanabilir garaj, küçük-kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma ve tek-köşe görsel benchmark tamamlandı; taşıma arabası sırada.<br>
+**Durum:** Devam ediyor; teknik temel, oynanabilir garaj, küçük-kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, tek yüklü platform arabası ve tek-köşe görsel benchmark tamamlandı; sırada Catalog + Inventory çekirdeği var.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,7 +137,7 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** `PSE.Core` Unity bağımlılığı olmadan derlenir; stable ID, result, zaman, RNG ve event dispatcher sözleşmeleri tamamdır. `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, görünür eller, stable pickup/drop/recovery, deterministik küçük-kutu placement/90° rotation, tam destekli tek-kat istif ve ayrı büyük-kutu taşıma profili içerir. Tek-köşe benchmarkı prosedürel PBR yüzey, bevel, görev ışığı, ACES/bloom ve reflection probe taşır. Edit Mode 131/131, gerçek device-state Play Mode 12/12, Universal macOS build ve Apple M4/Metal `rotation=ok stacking=ok lookdev=ok` runtime smoke geçer. Sıradaki bounded paket taşıma arabasıdır; full final-art ve Inventory authority ayrı kalır.
+**Güncel teknik kanıt:** `PSE.Core` Unity bağımlılığı olmadan derlenir; stable ID, result, zaman, RNG ve event dispatcher sözleşmeleri tamamdır. `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, klavye/fare + gamepad hareket/kamera, görünür eller, stable pickup/drop/recovery, deterministik küçük-kutu placement/90° rotation, tam destekli tek-kat istif, ayrı büyük-kutu taşıma profili ve tek `LargeBox` kapasiteli güvenli platform arabası içerir. Araba dört noktalı destek/swept obstruction, yüklü/boş hız, sprint kilidi, stable ownership ve recovery sözleşmeleriyle çalışır. Tek-köşe benchmarkı prosedürel PBR yüzey, bevel, görev ışığı, ACES/bloom ve reflection probe taşır. Edit Mode 136/136, gerçek device-state Play Mode 14/14, Universal macOS build ve Apple M4/Metal `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, `cart-flow=ok loaded=ok stable=ok` runtime smoke geçer. Sıradaki bounded paket Issue #7 Catalog + Inventory çekirdeğidir; full final-art ve Issue #8 dünya bağlaması ayrı kalır.
 
 ### Kapsam dışı
 

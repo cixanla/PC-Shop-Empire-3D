@@ -25,7 +25,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Okunaklı yarı gerçekçilik görsel yönü kabul edildi: gerçek oran/PBR yüzey/zemine oturan ışık/doğal ağırlık, hafif stilize okunabilirlik ve ölçülü performans bütçesi.
 - GarageGraybox tek-köşe benchmarkına bevel'lı tezgâh/raf, prosedürel beton/duvar/metal/karton/ahşap yüzeyler, etiket detayları, görev ışığı, ACES, ölçülü bloom ve reflection probe eklendi.
 - Stable küçük kutu üstüne merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi, dolu taban pickup kilidi ve `İSTİF GEÇERLİ` geri bildirimi eklendi.
-- Edit Mode baseline `131/131`, Play Mode baseline `12/12` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok lookdev=ok` gerçek player smoke geçti.
+- Tek `LargeBox` kapasiteli stable platform arabası; hands→cart→hands ownership geçişi, dört noktalı zemin desteği, swept obstruction kontrolü, yüklü/boş hız profili, sprint kilidi, dinamik binding prompt'u ve fail-closed recovery ile eklendi.
+- Klavye/fare ve gamepad ile yükle→sür→bırak→geri al zinciri gerçek Input System testleriyle; yüklü araba aynı stable item kimliği ve physics snapshot'ıyla doğrulandı.
+- Edit Mode baseline `136/136`, Play Mode baseline `14/14` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçti.
 
 ### Changed
 
@@ -61,4 +63,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma/placement/rotation/tek-kat istif ve büyük-kutu güvenli taşıma çalışıyor; gelişmiş el animasyonu, taşıma arabası, gerçek raf/Inventory authority ve final sanat henüz tamamlanmadı.
+- Küçük kutu alma/bırakma/placement/rotation/tek-kat istif, büyük-kutu güvenli taşıma ve tek yüklü platform arabası çalışıyor; gelişmiş el animasyonu, çoklu/palet taşıma, gerçek raf/Inventory authority ve final sanat henüz tamamlanmadı.

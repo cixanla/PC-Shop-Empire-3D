@@ -1,6 +1,6 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.13<br>
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A, Stage B Core ve fiziksel etkileşim checkpoint'i 0.14<br>
 **Tarih:** 13 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
@@ -79,6 +79,7 @@ Yapıldı:
 - On birinci bounded paket tamamlandı: küçük kutu placement moduna `R / Right Shoulder` ile deterministik 90° rotation, etkin binding/açı promptu, döndürülmüş footprint doğrulaması ve görünür yön işareti eklendi; Edit Mode 127/127, gerçek keyboard/gamepad Play Mode 10/10 ve Apple M4/Metal `rotation=ok` player smoke geçti.
 - On ikinci bounded paket tamamlandı: tek garaj köşesine bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe eklendi; Edit Mode 128/128, Play Mode 10/10 ve gerçek player `lookdev=ok` geçti.
 - On üçüncü bounded paket tamamlandı: stable küçük kutu üstüne merkez/90° snap, beş noktalı tam destek, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidiyle kontrollü istifleme eklendi; Edit Mode 131/131, gerçek keyboard/mouse + gamepad Play Mode 12/12 ve gerçek player `stacking=ok` geçti.
+- On dördüncü bounded paket tamamlandı: tek `LargeBox` kapasiteli stable platform arabasına hands→cart→hands transferi, dört noktalı destek/swept obstruction, yüklü/boş hız profili, sprint kilidi, dinamik prompt ve fail-closed recovery eklendi; Edit Mode 136/136, gerçek keyboard/mouse + gamepad Play Mode 14/14 ve gerçek player `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` geçti.
 - Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
@@ -125,6 +126,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; pickup/drop, kontrollü placement/rotation/istifleme, güvenli büyük-kutu taşıma ve tek-köşe okunaklı yarı gerçekçi benchmark içerir: Edit Mode 131/131, Play Mode 12/12, Universal Mac build ve `rotation=ok stacking=ok lookdev=ok` runtime smoke geçti. Bir sonraki bounded iş taşıma arabası grayboxıdır; benchmark full final-art dönüşümü değildir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; pickup/drop, kontrollü placement/rotation/istifleme, güvenli büyük-kutu taşıma, yüklü platform arabası ve tek-köşe okunaklı yarı gerçekçi benchmark içerir: Edit Mode 136/136, Play Mode 14/14, Universal Mac build ve `rotation=ok stacking=ok transport-cart=ok lookdev=ok` runtime smoke geçti. Bir sonraki bounded iş Issue #7 Catalog + Inventory çekirdeğidir; fiziksel projection henüz authoritative stok ve benchmark full final-art değildir.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.
