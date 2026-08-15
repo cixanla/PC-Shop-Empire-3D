@@ -145,7 +145,7 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `bb89b0c297400f6eed22407df76dc1c85912cd74`.
-- Issue #45 atomik checkout fulfillment feature'ı tamamlandı; Epic #8 teknik order-to-sale graybox zinciri kapısına ulaştı.
+- Issue #45 ve Epic #8 tamamlandı/kapatıldı; Roadmap item'ları Done. Teknik order-to-sale graybox zinciri kapısı tamamlandı; ödeme/Economy, final Dashboard UI ve müşteri AI ayrı epiklerde kalır.
 - EditMode `242/242`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
 - Universal macOS development build `327.567.424` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `sale-completion=ok stock-consumed=ok completed-quantity=0` geçti.
 - Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer reserve/release → checkout begin → completion zincirinde taşınır.
@@ -218,6 +218,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`; source `6ae294e`, 488 tracked source + 5 scene/test/build/runtime evidence + source kaydı, 494 satırlı `a95d8457…de7a` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`; source `109237a`, 498 tracked source + 4 test/build/runtime evidence + source kaydı, 503 satırlı `ff868e4c…20d7` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`; source `0936cc0`, 508 tracked source + 4 test/build/runtime evidence + source kaydı, 513 satırlı `30c1e7fa…16efa` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`; source `80eea8f`, 510 tracked source + 4 test/build/runtime evidence + source kaydı, 515 satırlı `ce72122a…db50b` manifest, 9.373.684 bayt; tam readback/source path+Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 

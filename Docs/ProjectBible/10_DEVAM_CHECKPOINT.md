@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #45 atomik checkout fulfillment tamamlandı; Epic #8 teknik order-to-sale graybox kabul kapısına ulaştı; sıradaki bounded alan Issue #9 müşteri davranışıdır<br>
+**Durum:** Issue #45 ve Epic #8 tamamlandı/Done; teknik order-to-sale graybox kapısı kapandı; sıradaki bounded alan Issue #9 müşteri davranışıdır<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #45 / Epic #8
@@ -41,7 +41,9 @@
 - Tree: `831b310717df32bbe2b6bb3465c8caf7323c74b8`
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#45](https://github.com/cixanla/PC-Shop-Empire-3D/issues/45)
 - Feature Repository Guard: [31870482690](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31870482690), başarılı.
-- Docs/USB checkpoint commit ve final Repository Guard, yeni milestone oluşturulduğunda aşağıdaki USB kaydıyla birlikte sabitlenecektir.
+- Source/docs checkpoint commit: `80eea8f507ff74d7522e8260a0eca6fadf7b78c6`, tree `6c34948a54fefc941bc28e41ef74d9e69f3e3f9d`.
+- Docs Repository Guard: [31870828169](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31870828169), başarılı.
+- Issue #45 ve Epic #8 kapatıldı; iki Roadmap item'ı da Done yapıldı. Bu kapanış ödeme/Economy, final Dashboard UI, müşteri AI veya Save tamamlandı iddiası taşımaz.
 
 ## Test, build ve runtime kanıtı
 
@@ -75,7 +77,7 @@ Gerçek klavye/fare ve gamepad, bütün physical stock-flow zincirinden sonra re
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Yeni atomik fulfillment snapshotı tamamlanana kadar son doğrulanmış kayıt `2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`, source/docs checkpoint `0936cc00b9f06264061ebe31893e53b3e8af2950`dır. İçerik 508 tracked kaynak + 4 test/build/runtime kanıtı + source kaydıdır; 513 manifest satırı ve manifest SHA-256 `30c1e7fa3703bfb84ebf89f8b5b3ba3c6a7ad0be044a6e502434f55256616efa` tam readback/source checksum ile doğrulandı. Hash/boyut/source mismatch, forbidden dir, credential filename/kalıbı ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır.
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`, source/docs checkpoint `80eea8f507ff74d7522e8260a0eca6fadf7b78c6` taşır. İçerik 510 tracked kaynak + 4 test/build/runtime kanıtı + source kaydı, toplam 9.373.684 bayttır; 515 manifest satırı ve manifest SHA-256 `ce72122a6df5b7e567d7eeec4c0ba537b3c87bc594a388b7c94a8507162db50b` tam readback ve 510/510 Git blob eşliğiyle doğrulandı. Eksik/fazla yol, hash/boyut/Git-blob mismatch, forbidden dir, credential filename/kalıbı ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır.
 
 ## Sıradaki bounded paket
 

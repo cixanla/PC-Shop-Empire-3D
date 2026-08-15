@@ -58,4 +58,9 @@ macOS oturumu için yeni ekran görüntüsü kanıtı üretilmedi; sahne sözle�
 ## Uzak ve USB kapanışı
 
 - Feature Repository Guard [31870482690](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31870482690): başarılı.
-- Docs checkpoint, Issue/Project kapanışı ve USB manifest/readback bilgisi final checkpoint güncellemesinde eklenecektir.
+- Source/docs checkpoint `80eea8f507ff74d7522e8260a0eca6fadf7b78c6`, tree `6c34948a54fefc941bc28e41ef74d9e69f3e3f9d`; Docs Repository Guard [31870828169](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31870828169): başarılı.
+- Issue #45 ve Epic #8 kapatıldı; iki Roadmap item'ı Done yapıldı. Epic kapanışı teknik order-to-sale graybox zincirine aittir; ödeme/Economy, final Dashboard UI ve müşteri AI tamamlandı iddiası taşımaz.
+- USB: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`.
+- İçerik: 510 tracked source + 4 Unity test/build/runtime kanıtı + source kaydı; toplam 515 manifest satırı ve 9.373.684 bayt.
+- `MANIFEST.tsv` SHA-256: `ce72122a6df5b7e567d7eeec4c0ba537b3c87bc594a388b7c94a8507162db50b`.
+- 515/515 hash ve boyut readback, 510/510 Git blob eşliği geçti; missing/hash/size/path/source mismatch, forbidden dir, credential filename/kalıbı ve AppleDouble `0`.
