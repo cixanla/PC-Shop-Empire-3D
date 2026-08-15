@@ -143,21 +143,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `3766f3f06df624093f4774ef8fa4e7f1286d1c01`.
-- Issue #41 tamamlandı; Epic #8 authoritative fiyat/etiket ve satış alt işleriyle sürüyor.
-- EditMode `192/192`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
-- Universal macOS development build `327.475.393` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok stable=ok quantity=1` geçti.
-- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor zincirinde taşınır.
-- Opening domain quantity/revision değiştirmez; repeated open duplicate üretmez, invalid state/identity/location no-reveal kalır. Domain-first transfer/rollback/recovery sonraki fiziksel sahiplik geçişlerinde korunur.
+- Son doğrulanmış kaynak feature: `7a23cd92be6ff1169ff49530319b0759965cadf5`.
+- Issue #42 feature'ı tamamlandı; Epic #8 müşteri rezervasyon/checkout/satış alt işleriyle sürüyor.
+- EditMode `207/207`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
+- Universal macOS development build `327.511.689` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok price-minor=54999 currency=EUR stable=ok quantity=1` geçti.
+- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor zincirinde taşınır; `PSE.Retail` başarılı publish sonrası exact product+shelf teklifini kaydeder.
+- Offer publish Inventory quantity/revision veya Orders revision değiştirmez; exact tekrar idempotent, validation failure no-mutation kalır. RAF A etiketi yalnız authority sonucunu yansıtır.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8 altında Unity-bağımsız authoritative shelf offer/fiyat etiketi sözleşmesini kur.
-2. Product/shelf offer kimliği, para birimi, pozitif minor-unit değer, revision ve failure no-mutation invariantlarını doğrula.
-3. RAF A label projection'ını yalnız başarılı offer komutuna bağla; Inventory/world quantity fiyat authority'si olmasın.
-4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula; dinamik ekonomi, vergi, indirim, ledger ve müşteri AI ekleme.
+1. Issue #8 altında müşteri/sepet talebi ile serialized item reservation arasındaki Unity-bağımsız bounded retail sözleşmesini kur.
+2. Duplicate reservation, unknown offer/item ve location/identity failure'larında Retail/Inventory no-mutation invariantlarını doğrula.
+3. Checkout başlangıcında teklif fiyatını immutable snapshot olarak donduracak sonraki sınırı açık tut.
+4. İlk pakete fiziksel müşteri AI, Economy ledger, vergi/indirim, Save veya final UI ekleme.
 
 Sonraki ana geliştirme sırası:
 
@@ -233,4 +233,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Delivery parcel unpacking checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket RAF A için Unity-bağımsız authoritative shelf offer/fiyat etiketi ve görünür label projection'ıdır. Inventory/world quantity fiyat authority'si olmasın; failure no-mutation kalsın. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Authoritative RAF A shelf-offer checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket müşteri/sepet talebi ile serialized stok reservation arasındaki Unity-bağımsız retail sözleşmesidir. Offer price snapshot, ledger ve müşteri AI ayrı kalsın; failure no-mutation korunsun. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

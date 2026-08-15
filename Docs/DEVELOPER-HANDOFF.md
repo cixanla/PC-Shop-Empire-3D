@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `192/192` passed.
+- Edit Mode `207/207` passed.
 - Play Mode `17/17` passed.
 - `0` failed.
 - `0` skipped.
@@ -84,14 +84,16 @@ Tamamlanan saf Core sözleşmeleri:
 - Event correlation/direct-causation, global FIFO ve breadth-first nested enqueue uygulayan bounded in-memory dispatcher.
 - `PSE.Catalog` assembly: immutable product definition, stable product/category kimliği, serialized/batch tracking policy, doğrulanmış görünür ad ve bounded garanti.
 - `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
-- Catalog yalnız Core; Inventory yalnız Core + Catalog referanslıdır. İki assembly de Unity/Editor bağımlılığı taşımaz.
+- Catalog yalnız Core; Inventory yalnız Core + Catalog; Orders Core + Catalog + Inventory; Retail ise Core + Catalog + Inventory referanslıdır. Dört assembly de Unity/Editor bağımlılığı taşımaz.
 - `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
+- `PSE.Retail` assembly: stable shelf-offer/product/shelf kimliği, doğrulanmış üç harf currency, pozitif bounded integer minor-unit fiyat, idempotent set/update revision, deterministic sorgu ve failure no-mutation.
 - `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
 - `GarageStockFlowSession` exact serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` prototype composition'ını kurar.
 - `InventoryItemWorldBinding` aynı Inventory item/world item kimliğini, `InventoryPlacementZone` ise doğrulanmış surface/container eşlemesini taşır.
 - `PlayerCarryController` bound item'larda domain-first world mutation uygular; world failure domain rollback yapar, recovery authoritative container ve fiziksel pozu birlikte düzeltir.
 - `DeliveryParcelProjection` kapalı dış parcel ile revealed ürün ve Receiving'de kalan açık kabuğu ayırır; opening accepted exact manifest/location doğrulaması sonrası idempotenttir ve domain revision/quantity değiştirmez.
 - Aynı Interact binding'i acceptance → unpack → pickup olarak sıralanır; HUD/dünya panosu/prompt parcel durumunu klavye ve gamepad için dinamik gösterir.
+- Exact ürün RAF A Shelf container'ındayken aynı Interact binding'i kasıtlı offer publish yapar; etiket authority başarısından önce `FİYAT YOK`, sonra `549,99 EUR` gösterir. Publish Inventory/Orders revision veya quantity değiştirmez.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -109,18 +111,18 @@ Tamamlanan saf Core sözleşmeleri:
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`: source/docs checkpoint `756547f`, 471 tracked kaynak, 5 Unity scene/test/build/runtime kanıtı ve source kayıt dosyası; 477 satırlı `37f95b3c…58ac` SHA-256 manifest/readback ile doğrulandı. Source/hash mismatch, forbidden/credential ve AppleDouble sayısı `0`dır.
+- Son kapanmış USB milestone `2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`: source/docs checkpoint `756547f`, 471 tracked kaynak, 5 Unity scene/test/build/runtime kanıtı ve source kayıt dosyası; 477 satırlı `37f95b3c…58ac` SHA-256 manifest/readback ile doğrulandı. Shelf-offer snapshotı kapanış adımında ayrıca kaydedilecektir.
 
 Henüz yapılmayanlar:
 
 - Gelişmiş el animasyonu, çok satırlı/çok adetli parcel unpack layout'u, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Fiyat/etiket, müşteri checkout/satış ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
+- Sayısal fiyat düzenleme UI'si, customer basket/serialized reservation, checkout price snapshot/satış ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #8 altında Unity-bağımsız authoritative shelf offer/fiyat etiketi sözleşmesini ve RAF A label projection'ını kurar. Inventory/world quantity fiyat authority'si değildir; dinamik ekonomi, vergi/indirim, ledger ve müşteri satışı bu küçük pakete girmez.
+Sıradaki bounded paket Issue #8 altında müşteri/sepet talebi ile serialized stok reservation arasındaki Unity-bağımsız retail sözleşmesini kurar. Aynı item iki talebe ayrılamaz; checkout price snapshot, fiziksel müşteri AI, dinamik ekonomi, vergi/indirim, ledger ve Save bu küçük pakete girmez.
 
 ## 7. Çalışma akışı
 
@@ -174,7 +176,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 192 Edit Mode ve 17 Play Mode baseline testi geçti.
+2. Repo guard, 207 Edit Mode ve 17 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

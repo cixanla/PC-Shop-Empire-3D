@@ -162,7 +162,7 @@ Para, uyumluluk, görev veya stok kuralları `MonoBehaviour`, sahne objesi ya da
 | `PSE.Inventory` | Item instance, batch, konteyner, konum, rezervasyon, kondisyon | Catalog + Core |
 | `PSE.Orders` | Satın alma, satış, özel PC, servis, online ve kurumsal iş emirleri | Inventory ve sözleşme veri tipleri |
 | `PSE.Economy` | Çift taraflı/izlenebilir defter, nakit, COGS, borç, ödeme takvimi | Alan olaylarını tüketir; sunuma bağlı değil |
-| `PSE.Retail` | Raf fiyatı, sepet, checkout, kampanya, iade, garanti | Inventory + Orders + Economy işlemleri |
+| `PSE.Retail` | Raf fiyatı, sepet, checkout, kampanya, iade, garanti | İlk offer dilimi Core + Catalog + Inventory; Orders/Economy yalnız checkout işlemleri geldikçe açık sınırla eklenir |
 | `PSE.Assembly` | Build graph, uyumluluk, montaj adımları, kalite, test ve benchmark | Catalog + Inventory + Orders |
 | `PSE.Service` | Intake, teşhis hipotezleri, izin, onarım, RMA, refurbish | Assembly + Inventory + Orders |
 | `PSE.Actors` | Müşteri profili, çalışan becerisi, ihtiyaç ve görev durumu | Alan servisleriyle açık arayüzler |

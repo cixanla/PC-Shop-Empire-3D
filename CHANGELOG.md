@@ -39,7 +39,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Kapalı dış teslimat kolisi, açıldığında görünür exact ürün kutusu ve Receiving'de kalan açık koli kabuğu ayrı world projection durumları olarak eklendi.
 - Acceptance → unpack → pickup aynı Interact binding'iyle sıralandı; opening exact manifest/item/container doğrulaması, idempotent transition ve domain revision no-mutation sözleşmesiyle kilitlendi.
 - Mutually-exclusive parcel/product görsellerinde pickup yalnız aktif collider setini doğruluyor; kapalı ürün alınamıyor, invalid state/identity/location parcel'ı kapalı bırakıyor.
-- Edit Mode baseline `192/192`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok parcel-open=ok carry=ok world-floor=ok stable=ok quantity=1` gerçek player smoke geçti.
+- Unity bağımsız `PSE.Retail`; stable shelf-offer/product/shelf kimliği, üç harf currency, pozitif bounded integer minor-unit fiyat, idempotent set/update revision, deterministic query ve failure no-mutation sözleşmesiyle eklendi.
+- Exact ürün authoritative RAF A'dayken `E / Gamepad South` kasıtlı fiyat publish yapıyor; dünya etiketi yalnız başarıdan sonra `FİYAT YOK` → `549,99 EUR` değişiyor ve Inventory/Orders state'i sabit kalıyor.
+- Edit Mode baseline `207/207`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok price-minor=54999 currency=EUR stable=ok quantity=1` gerçek player smoke geçti.
 
 ### Changed
 
