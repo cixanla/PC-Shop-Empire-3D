@@ -14,6 +14,35 @@ namespace PCShopEmpire3D.Presentation
 
         public CheckoutStationProjection CheckoutStation => checkoutStation;
 
+        public bool UsesCompactAssemblyUi =>
+            carryController != null && carryController.HasAssemblyPromptOwnership;
+
+        public string EffectivePromptText
+        {
+            get
+            {
+                if (UsesCompactAssemblyUi)
+                {
+                    return carryController.PromptText;
+                }
+
+                string prompt = checkoutStation != null
+                    ? checkoutStation.PromptText
+                    : string.Empty;
+                if (string.IsNullOrEmpty(prompt) && customerFlow != null)
+                {
+                    prompt = customerFlow.ContextualPromptText;
+                }
+
+                if (string.IsNullOrEmpty(prompt) && carryController != null)
+                {
+                    prompt = carryController.PromptText;
+                }
+
+                return prompt;
+            }
+        }
+
         public void Configure(
             FirstPersonMotor playerMotor,
             PlayerCarryController playerCarryController,
@@ -31,9 +60,7 @@ namespace PCShopEmpire3D.Presentation
         private void OnGUI()
         {
             GUI.color = Color.white;
-            bool compactAssemblyUi = carryController != null &&
-                                     (carryController.IsMotherboardSeatMode ||
-                                      carryController.HasMotherboardFastenerContext);
+            bool compactAssemblyUi = UsesCompactAssemblyUi;
             if (!compactAssemblyUi)
             {
                 GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
@@ -51,26 +78,7 @@ namespace PCShopEmpire3D.Presentation
                     status);
             }
 
-            string prompt;
-            if (compactAssemblyUi)
-            {
-                prompt = carryController.PromptText;
-            }
-            else
-            {
-                prompt = checkoutStation != null
-                    ? checkoutStation.PromptText
-                    : string.Empty;
-                if (string.IsNullOrEmpty(prompt) && customerFlow != null)
-                {
-                    prompt = customerFlow.ContextualPromptText;
-                }
-
-                if (string.IsNullOrEmpty(prompt) && carryController != null)
-                {
-                    prompt = carryController.PromptText;
-                }
-            }
+            string prompt = EffectivePromptText;
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
                 float promptWidth = Mathf.Min(

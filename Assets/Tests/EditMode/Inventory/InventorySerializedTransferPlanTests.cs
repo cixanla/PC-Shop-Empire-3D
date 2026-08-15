@@ -14,6 +14,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ContainerIdScope>.Parse("container.actor-hands");
         private static readonly StableId<ContainerIdScope> Workbench =
             StableId<ContainerIdScope>.Parse("container.assembly-workbench");
+        private static readonly StableId<ContainerIdScope> ProcessorSocket =
+            StableId<ContainerIdScope>.Parse("container.processor-socket");
         private static readonly StableId<ItemInstanceIdScope> Item =
             StableId<ItemInstanceIdScope>.Parse("item.motherboard-001");
 
@@ -171,6 +173,52 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ManagedContainerPairClaimSucceedsInOneRevisionAndBlocksBothPublicPaths()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessPair> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.TransferSerializedItem(Item, Workbench).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TransferSerializedItem(Item, ProcessorSocket).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TryGetSerializedItem(Item, out InventoryItemRecord unchanged),
+                Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerPairConflictLeavesUnclaimedPeerPubliclyAvailable()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            Assert.That(authority.ClaimManagedSerializedTransferContainer(
+                ProcessorSocket).IsSuccess, Is.True);
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessPair> conflict =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket);
+
+            Assert.That(conflict.Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TransferSerializedItem(Item, Workbench).IsSuccess, Is.True);
+            Assert.That(authority.TryGetSerializedItem(Item, out InventoryItemRecord moved),
+                Is.True);
+            Assert.That(moved.ContainerId, Is.EqualTo(Workbench));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static InventoryAuthority CreateAuthority(
             int workbenchCapacity = 2,
             bool fillWorkbench = false)
@@ -191,6 +239,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                 Workbench,
                 InventoryContainerKind.Workbench,
                 workbenchCapacity).Value);
+            authority.RegisterContainer(InventoryContainerDefinition.Create(
+                ProcessorSocket,
+                InventoryContainerKind.Workbench,
+                1).Value);
             authority.ReceiveSerializedItem(
                 Item,
                 ProductId,

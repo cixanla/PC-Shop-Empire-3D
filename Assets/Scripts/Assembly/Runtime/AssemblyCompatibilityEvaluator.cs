@@ -55,5 +55,36 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.MotherboardFormFactorMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluateProcessorSeat(
+            PcComponentSpecification processorSpecification,
+            PcComponentSpecification motherboardSpecification,
+            CpuSocketFamily supportedSocketFamily)
+        {
+            if (processorSpecification == null || motherboardSpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidCpuSocketFamily(supportedSocketFamily))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidCpuSocketFamily);
+            }
+
+            if (processorSpecification.Kind != PcComponentKind.Processor ||
+                motherboardSpecification.Kind != PcComponentKind.Motherboard)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            return processorSpecification.CpuSocketFamily == supportedSocketFamily &&
+                   motherboardSpecification.CpuSocketFamily == supportedSocketFamily
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.CpuSocketFamilyMismatch);
+        }
     }
 }

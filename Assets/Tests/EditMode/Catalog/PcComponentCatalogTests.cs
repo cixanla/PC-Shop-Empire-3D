@@ -26,6 +26,40 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
         }
 
         [Test]
+        public void ProcessorAndMotherboardSpecificationsKeepTypedSocketCompatibility()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> motherboardId =
+                ProductId("component.motherboard-matx");
+            StableId<ProductDefinitionIdScope> processorId =
+                ProductId("component.processor-lga1700");
+
+            OperationResult<PcComponentSpecification> motherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    motherboardId,
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700);
+            OperationResult<PcComponentSpecification> processor =
+                PcComponentSpecification.CreateProcessor(
+                    products,
+                    processorId,
+                    CpuSocketFamily.Lga1700);
+
+            Assert.That(motherboard.IsSuccess, Is.True);
+            Assert.That(motherboard.Value.Kind, Is.EqualTo(PcComponentKind.Motherboard));
+            Assert.That(motherboard.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+            Assert.That(processor.IsSuccess, Is.True);
+            Assert.That(processor.Value.ProductId, Is.EqualTo(processorId));
+            Assert.That(processor.Value.Kind, Is.EqualTo(PcComponentKind.Processor));
+            Assert.That(processor.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(processor.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+        }
+
+        [Test]
         public void SpecificationRejectsUnknownBatchAndInvalidCompatibilityData()
         {
             ProductCatalog products = CreateProducts();
@@ -60,6 +94,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     PcComponentKind.Motherboard,
                     (MotherboardFormFactor)99).Error,
                 Is.EqualTo(CatalogFailures.InvalidMotherboardFormFactor));
+            Assert.That(PcComponentSpecification.Create(
+                    products,
+                    ProductId("component.processor-lga1700"),
+                    PcComponentKind.Processor,
+                    MotherboardFormFactor.MicroAtx).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+            Assert.That(PcComponentSpecification.CreateProcessor(
+                    products,
+                    ProductId("component.processor-lga1700"),
+                    (CpuSocketFamily)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidCpuSocketFamily));
         }
 
         [Test]
@@ -125,6 +170,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             {
                 Definition("component.motherboard-matx", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.motherboard-atx", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.processor-lga1700", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

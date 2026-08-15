@@ -7,12 +7,13 @@ using PCShopEmpire3D.Core.Primitives;
 namespace PCShopEmpire3D.Catalog
 {
     /// <summary>
-    /// Persisted component category used by physical PC assembly rules. The first bounded
-    /// assembly slice intentionally supports motherboards only.
+    /// Persisted component category used by physical PC assembly rules. Existing numeric
+    /// values are save-data contracts and must never be renumbered.
     /// </summary>
     public enum PcComponentKind
     {
-        Motherboard = 1
+        Motherboard = 1,
+        Processor = 2
     }
 
     /// <summary>
@@ -26,6 +27,16 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed CPU socket compatibility family. This is assembly compatibility
+    /// metadata rather than a display string so comparisons remain culture independent.
+    /// </summary>
+    public enum CpuSocketFamily
+    {
+        Lga1700 = 1,
+        Am5 = 2
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -34,12 +45,14 @@ namespace PCShopEmpire3D.Catalog
             ProductCatalog ownerCatalog,
             StableId<ProductDefinitionIdScope> productId,
             PcComponentKind kind,
-            MotherboardFormFactor motherboardFormFactor)
+            MotherboardFormFactor motherboardFormFactor,
+            CpuSocketFamily cpuSocketFamily)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
             Kind = kind;
             MotherboardFormFactor = motherboardFormFactor;
+            CpuSocketFamily = cpuSocketFamily;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -49,6 +62,8 @@ namespace PCShopEmpire3D.Catalog
         public PcComponentKind Kind { get; }
 
         public MotherboardFormFactor MotherboardFormFactor { get; }
+
+        public CpuSocketFamily CpuSocketFamily { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -92,17 +107,88 @@ namespace PCShopEmpire3D.Catalog
                     CatalogFailures.InvalidMotherboardFormFactor);
             }
 
+            if (kind != PcComponentKind.Motherboard)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.ComponentMetadataMismatch);
+            }
+
             return OperationResult<PcComponentSpecification>.Success(
                 new PcComponentSpecification(
                     productCatalog,
                     productId,
                     kind,
-                    motherboardFormFactor));
+                    motherboardFormFactor,
+                    default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateMotherboard(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            MotherboardFormFactor motherboardFormFactor,
+            CpuSocketFamily cpuSocketFamily)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidMotherboardFormFactor(motherboardFormFactor))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidMotherboardFormFactor);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.Motherboard,
+                    motherboardFormFactor,
+                    cpuSocketFamily));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateProcessor(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            CpuSocketFamily cpuSocketFamily)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.Processor,
+                    default,
+                    cpuSocketFamily));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
         {
-            return kind == PcComponentKind.Motherboard;
+            return kind == PcComponentKind.Motherboard ||
+                   kind == PcComponentKind.Processor;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -110,6 +196,36 @@ namespace PCShopEmpire3D.Catalog
             return formFactor == MotherboardFormFactor.MiniItx ||
                    formFactor == MotherboardFormFactor.MicroAtx ||
                    formFactor == MotherboardFormFactor.Atx;
+        }
+
+        public static bool IsValidCpuSocketFamily(CpuSocketFamily socketFamily)
+        {
+            return socketFamily == CpuSocketFamily.Lga1700 ||
+                   socketFamily == CpuSocketFamily.Am5;
+        }
+
+        private static Failure ValidateSerializedComponentProduct(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId)
+        {
+            if (productCatalog == null)
+            {
+                return CatalogFailures.MissingProductCatalog;
+            }
+
+            if (productId.IsEmpty)
+            {
+                return CatalogFailures.InvalidComponentProductId;
+            }
+
+            if (!productCatalog.TryGet(productId, out ProductDefinition definition))
+            {
+                return CatalogFailures.UnknownComponentProduct;
+            }
+
+            return definition.TrackingPolicy == ProductTrackingPolicy.SerializedInstance
+                ? Failure.None
+                : CatalogFailures.ComponentTrackingMismatch;
         }
     }
 
@@ -176,6 +292,23 @@ namespace PCShopEmpire3D.Catalog
                 {
                     return OperationResult<PcComponentCatalog>.Fail(
                         CatalogFailures.UnknownComponentProduct);
+                }
+
+                bool metadataIsValid =
+                    specification.Kind == PcComponentKind.Motherboard
+                        ? PcComponentSpecification.IsValidMotherboardFormFactor(
+                              specification.MotherboardFormFactor) &&
+                          (specification.CpuSocketFamily == default ||
+                           PcComponentSpecification.IsValidCpuSocketFamily(
+                               specification.CpuSocketFamily))
+                        : specification.Kind == PcComponentKind.Processor &&
+                          specification.MotherboardFormFactor == default &&
+                          PcComponentSpecification.IsValidCpuSocketFamily(
+                              specification.CpuSocketFamily);
+                if (!metadataIsValid)
+                {
+                    return OperationResult<PcComponentCatalog>.Fail(
+                        CatalogFailures.ComponentMetadataMismatch);
                 }
 
                 if (byProductId.ContainsKey(specification.ProductId))

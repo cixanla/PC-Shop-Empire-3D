@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsOneCanonicalLooseMicroAtxMotherboard()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardAndProcessor()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(2));
-            Assert.That(session.Components.Count, Is.EqualTo(1));
+            Assert.That(session.Catalog.Count, Is.EqualTo(3));
+            Assert.That(session.Components.Count, Is.EqualTo(2));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -60,16 +60,32 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(PcComponentKind.Motherboard));
             Assert.That(specification.Value.MotherboardFormFactor,
                 Is.EqualTo(MotherboardFormFactor.MicroAtx));
+            Assert.That(specification.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+            OperationResult<PcComponentSpecification> processorSpecification =
+                session.Components.Get(session.ProcessorProductId);
+            Assert.That(processorSpecification.IsSuccess, Is.True);
+            Assert.That(processorSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.Processor));
+            Assert.That(processorSpecification.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
             Assert.That(session.TryGetMotherboardItem(out InventoryItemRecord item), Is.True);
             Assert.That(item.Id, Is.EqualTo(session.MotherboardItemId));
             Assert.That(item.ProductId, Is.EqualTo(session.MotherboardProductId));
             Assert.That(item.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(1));
+            Assert.That(session.TryGetProcessorItem(
+                out InventoryItemRecord processor), Is.True);
+            Assert.That(processor.Id, Is.EqualTo(session.ProcessorItemId));
+            Assert.That(processor.ProductId, Is.EqualTo(session.ProcessorProductId));
+            Assert.That(processor.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(2));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
                 Is.EqualTo(AssemblySeatState.Empty));
             Assert.That(session.AssemblyBuild.MotherboardItemId.IsEmpty, Is.True);
+            Assert.That(session.AssemblyBuild.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -127,6 +143,72 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(loose.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorWorldHandsSocketRetentionAndRecoveryPreserveIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            StableId<AssemblyOperationIdScope> attachId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-motherboard-attach");
+            StableId<AssemblyOperationIdScope> secureId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-motherboard-secure");
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(attachId).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                secureId,
+                attachId,
+                1).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseProcessorToHands().IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> seatId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-seat");
+            AssemblyOperationReceipt seat = session.SeatProcessor(
+                seatId,
+                attachId,
+                secureId,
+                2).Value;
+            Assert.That(seat.OperationKind, Is.EqualTo(AssemblyOperationKind.SeatProcessor));
+            Assert.That(session.TryGetProcessorItem(
+                out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.Id, Is.EqualTo(session.ProcessorItemId));
+            Assert.That(seated.ContainerId,
+                Is.EqualTo(session.ProcessorSocketContainerId));
+
+            StableId<AssemblyOperationIdScope> retainId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-retain");
+            Assert.That(session.CloseProcessorRetention(
+                retainId,
+                seatId,
+                3).IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> openId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-open");
+            Assert.That(session.OpenProcessorRetention(
+                openId,
+                seatId,
+                retainId,
+                4).IsSuccess, Is.True);
+            Assert.That(session.RemoveProcessor(
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.cpu-remove"),
+                seatId,
+                5).IsSuccess, Is.True);
+            Assert.That(session.DropHeldProcessorToWorld().IsSuccess, Is.True);
+
+            Assert.That(session.TryGetProcessorItem(
+                out InventoryItemRecord recovered), Is.True);
+            Assert.That(recovered.Id, Is.EqualTo(session.ProcessorItemId));
+            Assert.That(recovered.ProductId, Is.EqualTo(session.ProcessorProductId));
+            Assert.That(recovered.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.AssemblyBuild.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

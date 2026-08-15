@@ -23,6 +23,7 @@ namespace PCShopEmpire3D.Presentation.Input
         private InputAction _subscribedPrimaryAction;
         private InputAction _subscribedInteract;
         private InputAction _subscribedDrop;
+        private InputAction _subscribedRotatePlacement;
         private InputActionMap _subscribedDeviceMap;
         private bool _ownsRuntimeActions;
         private bool _usesGamepadPrompts;
@@ -32,6 +33,8 @@ namespace PCShopEmpire3D.Presentation.Input
         private long _interactConsumedVersion = -1;
         private long _dropPressVersion;
         private long _dropConsumedVersion = -1;
+        private long _rotatePressVersion;
+        private long _rotateConsumedVersion = -1;
 
         public InputActionAsset Actions => actions;
 
@@ -54,7 +57,8 @@ namespace PCShopEmpire3D.Presentation.Input
             _dropConsumedVersion != _dropPressVersion;
 
         public bool RotatePlacementPressedThisFrame =>
-            _rotatePlacement?.WasPressedThisFrame() ?? false;
+            (_rotatePlacement?.WasPressedThisFrame() ?? false) &&
+            _rotateConsumedVersion != _rotatePressVersion;
 
         public bool PausePressedThisFrame => _pause?.WasPressedThisFrame() ?? false;
 
@@ -104,6 +108,25 @@ namespace PCShopEmpire3D.Presentation.Input
             return true;
         }
 
+        public bool TryConsumeRotatePlacementPressThisFrame()
+        {
+            if (!RotatePlacementPressedThisFrame)
+            {
+                return false;
+            }
+
+            _rotateConsumedVersion = _rotatePressVersion;
+            return true;
+        }
+
+        public void DrainGameplayPressesThisFrame()
+        {
+            TryConsumePrimaryActionPressThisFrame();
+            TryConsumeInteractPressThisFrame();
+            TryConsumeDropPressThisFrame();
+            TryConsumeRotatePlacementPressThisFrame();
+        }
+
         public void Configure(InputActionAsset inputActions)
         {
             if (inputActions == null)
@@ -122,6 +145,8 @@ namespace PCShopEmpire3D.Presentation.Input
             _interactConsumedVersion = -1;
             _dropPressVersion = 0;
             _dropConsumedVersion = -1;
+            _rotatePressVersion = 0;
+            _rotateConsumedVersion = -1;
             _usesGamepadPrompts = false;
             CacheActions();
         }
@@ -153,6 +178,7 @@ namespace PCShopEmpire3D.Presentation.Input
             SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
             SetDropSubscription(null);
+            SetRotatePlacementSubscription(null);
             if (_ownsRuntimeActions && actions != null)
             {
                 Destroy(actions);
@@ -169,6 +195,7 @@ namespace PCShopEmpire3D.Presentation.Input
             SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
             SetDropSubscription(null);
+            SetRotatePlacementSubscription(null);
             _playerMap = null;
             _move = null;
             _look = null;
@@ -217,6 +244,7 @@ namespace PCShopEmpire3D.Presentation.Input
             _drop = _playerMap.FindAction(PlayerInputContract.Drop, true);
             SetDropSubscription(_drop);
             _rotatePlacement = _playerMap.FindAction(PlayerInputContract.RotatePlacement, true);
+            SetRotatePlacementSubscription(_rotatePlacement);
             _pause = _playerMap.FindAction(PlayerInputContract.Pause, true);
             if (isActiveAndEnabled)
             {
@@ -278,6 +306,25 @@ namespace PCShopEmpire3D.Presentation.Input
             if (_subscribedDrop != null)
             {
                 _subscribedDrop.performed += OnDropPerformed;
+            }
+        }
+
+        private void SetRotatePlacementSubscription(InputAction rotateAction)
+        {
+            if (ReferenceEquals(_subscribedRotatePlacement, rotateAction))
+            {
+                return;
+            }
+
+            if (_subscribedRotatePlacement != null)
+            {
+                _subscribedRotatePlacement.performed -= OnRotatePlacementPerformed;
+            }
+
+            _subscribedRotatePlacement = rotateAction;
+            if (_subscribedRotatePlacement != null)
+            {
+                _subscribedRotatePlacement.performed += OnRotatePlacementPerformed;
             }
         }
 
@@ -351,6 +398,18 @@ namespace PCShopEmpire3D.Presentation.Input
             }
 
             _dropPressVersion++;
+        }
+
+        private void OnRotatePlacementPerformed(InputAction.CallbackContext context)
+        {
+            if (_rotatePressVersion == long.MaxValue)
+            {
+                _rotatePressVersion = 0;
+                _rotateConsumedVersion = -1;
+                return;
+            }
+
+            _rotatePressVersion++;
         }
 
         private string GetBindingPrompt(

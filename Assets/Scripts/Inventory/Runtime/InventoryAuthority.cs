@@ -25,6 +25,26 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns two distinct managed
+    /// serialized-item containers. The pair is internal so Inventory remains the only
+    /// public stock authority.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessPair
+    {
+        internal InventorySerializedTransferAccessPair(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second)
+        {
+            First = first;
+            Second = second;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -252,6 +272,55 @@ namespace PCShopEmpire3D.Inventory
             _managedSerializedTransferContainers.Add(containerId, access);
             Revision++;
             return OperationResult<InventorySerializedTransferAccess>.Success(access);
+        }
+
+        internal OperationResult<InventorySerializedTransferAccessPair>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId)
+        {
+            if (!_containers.ContainsKey(firstContainerId) ||
+                !_containers.ContainsKey(secondContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessPair>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            if (firstContainerId == secondContainerId)
+            {
+                return OperationResult<InventorySerializedTransferAccessPair>.Fail(
+                    InventoryFailures.SameContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(firstContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(secondContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessPair>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
+            if (GetContainerLoadUnsafe(firstContainerId) != 0 ||
+                GetContainerLoadUnsafe(secondContainerId) != 0 ||
+                HasReservationTargetingContainerUnsafe(firstContainerId) ||
+                HasReservationTargetingContainerUnsafe(secondContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessPair>.Fail(
+                    InventoryFailures.SerializedTransferContainerOccupied);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessPair>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var first = new InventorySerializedTransferAccess(this, firstContainerId);
+            var second = new InventorySerializedTransferAccess(this, secondContainerId);
+            _managedSerializedTransferContainers.Add(firstContainerId, first);
+            _managedSerializedTransferContainers.Add(secondContainerId, second);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessPair>.Success(
+                new InventorySerializedTransferAccessPair(first, second));
         }
 
         public OperationResult ReceiveSerializedItem(

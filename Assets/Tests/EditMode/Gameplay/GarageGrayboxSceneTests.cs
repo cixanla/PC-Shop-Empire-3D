@@ -90,7 +90,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(5));
+                Assert.That(physicalItems.Length, Is.EqualTo(6));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -106,7 +106,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection deliveryItem = physicalItems.Single(
                     item => item.ItemIdValue == GarageStockFlowSession.ItemInstanceIdValue);
                 PhysicalItemProjection motherboard = physicalItems.Single(
-                    item => item.CarryProfile == PhysicalCarryProfile.PcComponent);
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.MotherboardItemInstanceIdValue);
+                PhysicalItemProjection processor = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.ProcessorItemInstanceIdValue);
+                Assert.That(physicalItems.Count(
+                    item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
+                    Is.EqualTo(2));
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -176,6 +183,47 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.Session.AssemblyBuild.MotherboardSeatState,
                     Is.EqualTo(AssemblySeatState.Empty));
                 Assert.That(motherboardBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                ProcessorAssemblyItemBinding processorBinding =
+                    processor.GetComponent<ProcessorAssemblyItemBinding>();
+                Assert.That(processorBinding, Is.Not.Null);
+                Assert.That(processor.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorDisplayName));
+                Assert.That(processor.SupportsPlacement, Is.False);
+                Assert.That(processor.Body.mass, Is.EqualTo(0.08f).Within(0.001f));
+                Assert.That(Vector3.Distance(
+                    processor.DropHalfExtents,
+                    new Vector3(0.0225f, 0.01875f, 0.010f)), Is.LessThan(0.0001f));
+                Assert.That(marker.Processor, Is.SameAs(processor));
+                Assert.That(marker.ProcessorBinding, Is.SameAs(processorBinding));
+                Assert.That(marker.ProcessorSocket, Is.Not.Null);
+                Assert.That(marker.ProcessorSocket.IsConfigured, Is.True);
+                Assert.That(marker.ProcessorSocket.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorSlotIdValue));
+                Assert.That(marker.ProcessorSocket.RetentionIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorRetentionIdValue));
+                Assert.That(marker.ProcessorSocket.FocusCollider.enabled, Is.False);
+                Assert.That(marker.ProcessorSocket.MatchesAuthorityState(
+                    AssemblySeatState.Empty,
+                    ProcessorSocketState.EmptyOpen), Is.True);
+                Assert.That(processorBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(processorBinding.PhysicalItem, Is.SameAs(processor));
+                Assert.That(processorBinding.Socket, Is.SameAs(marker.ProcessorSocket));
+                Assert.That(processorBinding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorItemInstanceIdValue));
+                Assert.That(marker.StockFlow.Session.TryGetProcessorItem(
+                    out InventoryItemRecord processorItem), Is.True);
+                Assert.That(processorItem.Id,
+                    Is.EqualTo(marker.StockFlow.Session.ProcessorItemId));
+                Assert.That(processorItem.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.ProcessorProductId));
+                Assert.That(processorItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.HasProcessorSocket,
+                    Is.True);
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.ProcessorSocketState,
+                    Is.EqualTo(ProcessorSocketState.EmptyOpen));
+                Assert.That(processorBinding.ValidateProjectionInvariant().IsSuccess,
+                    Is.True);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -332,7 +380,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-motherboard-fastener-r23-v1"));
+                    Is.EqualTo("garage-cpu-socket-retention-r24-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -367,6 +415,33 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .Single(transform => transform.name == "MotherboardIoKey");
                 Transform cpuSocket = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardCpuSocket");
+                Transform processorSocketBase = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorSocketBase");
+                Transform processorSnapAnchor = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorSnapAnchor");
+                Transform processorLoadPlatePivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorLoadPlatePivot");
+                Transform processorLoadPlate = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorLoadPlate");
+                Transform processorLeverPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorRetentionLeverPivot");
+                Transform processorLever = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorRetentionLever");
+                Transform processorFocus = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorSocketFocusTarget");
+                Transform processorRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeProcessor");
+                Transform processorPackage = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeProcessorPackage");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
                 Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
@@ -383,13 +458,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     assemblySlice.GetComponentInChildren<MotherboardFastenerProjection>(true);
                 MotherboardAssemblyItemBinding binding =
                     assemblySlice.GetComponentInChildren<MotherboardAssemblyItemBinding>(true);
+                ProcessorSocketProjection processorSocket =
+                    assemblySlice.GetComponentInChildren<ProcessorSocketProjection>(true);
+                ProcessorAssemblyItemBinding processorBinding =
+                    assemblySlice.GetComponentInChildren<ProcessorAssemblyItemBinding>(true);
+                PhysicalItemProjection processor =
+                    processorRoot.GetComponent<PhysicalItemProjection>();
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
                 Assert.That(fastener, Is.Not.Null);
                 Assert.That(binding, Is.Not.Null);
+                Assert.That(processorSocket, Is.Not.Null);
+                Assert.That(processorBinding, Is.Not.Null);
+                Assert.That(processor, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
                 Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
+                Assert.That(marker.ProcessorSocket, Is.SameAs(processorSocket));
+                Assert.That(marker.ProcessorBinding, Is.SameAs(processorBinding));
+                Assert.That(marker.Processor, Is.SameAs(processor));
                 Assert.That(binding.Fastener, Is.SameAs(fastener));
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
@@ -414,6 +501,144 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(Vector3.Distance(
                     cpuSocket.localPosition,
                     new Vector3(0.015f, 0.025f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(processorSocket.IsConfigured, Is.True);
+                Assert.That(processorSocket.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorSlotIdValue));
+                Assert.That(processorSocket.RetentionIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorRetentionIdValue));
+                Assert.That(processorSocket.SnapAnchor,
+                    Is.SameAs(processorSnapAnchor));
+                Assert.That(processorSocket.AssemblyRoot,
+                    Is.SameAs(binding.PhysicalItem.transform));
+                Assert.That(processorSocket.LoadPlatePivot,
+                    Is.SameAs(processorLoadPlatePivot));
+                Assert.That(processorSocket.RetentionLeverPivot,
+                    Is.SameAs(processorLeverPivot));
+                Assert.That(processorSocket.GhostRenderer, Is.Null);
+                Assert.That(processorSocket.FocusCollider,
+                    Is.SameAs(processorFocus.GetComponent<BoxCollider>()));
+                Assert.That(processorSocket.FocusCollider.enabled, Is.False);
+                Assert.That(processorSocket.FocusCollider.isTrigger, Is.False);
+                Assert.That(processorSocket.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(Vector3.Distance(
+                    processorFocus.localPosition,
+                    new Vector3(0f, 0f, 0.010f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorFocus.GetComponent<BoxCollider>().size,
+                    new Vector3(0.092f, 0.084f, 0.022f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorSocketBase.localPosition,
+                    Vector3.zero), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorSnapAnchor.localPosition,
+                    new Vector3(0f, 0f, 0.0035f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorLoadPlatePivot.localPosition,
+                    new Vector3(0f, 0.026f, 0.007f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    processorLoadPlatePivot.localRotation,
+                    Quaternion.Euler(-68f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(Vector3.Distance(
+                    processorLeverPivot.localPosition,
+                    new Vector3(0.03025f, 0.026f, 0.007f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    processorLeverPivot.localRotation,
+                    Quaternion.Euler(-55f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(processorLoadPlate.GetComponent<Collider>(), Is.Null);
+                Assert.That(processorLever.GetComponent<Collider>(), Is.Null);
+                Assert.That(processorSocket.MatchesAuthorityState(
+                    AssemblySeatState.Empty,
+                    ProcessorSocketState.EmptyOpen), Is.True);
+                Assert.That(processorBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(processorBinding.PhysicalItem, Is.SameAs(processor));
+                Assert.That(processorBinding.Socket, Is.SameAs(processorSocket));
+                Assert.That(processorBinding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorItemInstanceIdValue));
+                Assert.That(processor.ItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorItemInstanceIdValue));
+                Assert.That(processor.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorDisplayName));
+                Assert.That(processor.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(processor.SupportsPlacement, Is.False);
+                Assert.That(processor.Body.mass, Is.EqualTo(0.08f).Within(0.001f));
+                Assert.That(processor.Body.isKinematic, Is.True);
+                Assert.That(processor.Body.useGravity, Is.False);
+                Assert.That(Vector3.Distance(
+                    processor.DropHalfExtents,
+                    new Vector3(0.0225f, 0.01875f, 0.010f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorRoot.localPosition,
+                    new Vector3(-1.17f, 0.992f, 3.93f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    processorRoot.localRotation,
+                    Quaternion.Euler(-90f, 0f, 0f)), Is.LessThan(0.1f));
+                Mesh processorMesh = processorPackage.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(processorMesh, Is.Not.Null);
+                Assert.That(processorMesh.subMeshCount, Is.EqualTo(2));
+                Assert.That(processorMesh.vertexCount, Is.EqualTo(54));
+                Assert.That(processorMesh.uv.Length, Is.EqualTo(54));
+                Assert.That(Vector3.Distance(processorMesh.bounds.center, Vector3.zero),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    processorMesh.bounds.size,
+                    new Vector3(0.045f, 0.0375f, 0.004f)), Is.LessThan(0.0001f));
+                Material[] processorMaterials =
+                    processorPackage.GetComponent<Renderer>().sharedMaterials;
+                Assert.That(processorMaterials.Length, Is.EqualTo(2));
+                Assert.That(processorMaterials[0].name, Does.StartWith("MotherboardPcb"));
+                Assert.That(processorMaterials[1].name, Does.StartWith("BrushedSteel"));
+                Assert.That(processorRoot.GetComponent<BoxCollider>().center,
+                    Is.EqualTo(Vector3.zero));
+                Assert.That(Vector3.Distance(
+                    processorRoot.GetComponent<BoxCollider>().size,
+                    new Vector3(0.045f, 0.0375f, 0.004f)), Is.LessThan(0.0001f));
+                Assert.That(processorSocketBase.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("WorkshopRubber"));
+                Bounds socketBaseBounds =
+                    processorSocketBase.GetComponent<MeshFilter>().sharedMesh.bounds;
+                Mesh socketBaseMesh =
+                    processorSocketBase.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(socketBaseMesh.vertexCount, Is.EqualTo(138));
+                Assert.That(socketBaseMesh.uv.Length, Is.EqualTo(138));
+                Assert.That(socketBaseBounds.size.x, Is.EqualTo(0.060f).Within(0.0001f));
+                Assert.That(socketBaseBounds.size.y, Is.EqualTo(0.052f).Within(0.0001f));
+                Assert.That(socketBaseMesh.vertices.Any(vertex => Vector3.Distance(
+                    vertex,
+                    new Vector3(0.01925f, -0.01850f, 0f)) < 0.00001f), Is.True);
+                Assert.That(socketBaseMesh.vertices.Any(vertex => Vector3.Distance(
+                    vertex,
+                    new Vector3(0.02225f, -0.01550f, 0.0035f)) < 0.00001f), Is.True);
+                Bounds loadPlateBounds =
+                    processorLoadPlate.GetComponent<MeshFilter>().sharedMesh.bounds;
+                Mesh loadPlateMesh =
+                    processorLoadPlate.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(loadPlateMesh.vertexCount, Is.EqualTo(96));
+                Assert.That(loadPlateMesh.uv.Length, Is.EqualTo(96));
+                Assert.That(Vector3.Distance(
+                    loadPlateBounds.size,
+                    new Vector3(0.058f, 0.050f, 0.0015f)), Is.LessThan(0.0001f));
+                Assert.That(loadPlateBounds.center.y, Is.EqualTo(-0.026f).Within(0.0001f));
+                Assert.That(loadPlateMesh.vertices.Any(vertex =>
+                    Mathf.Abs(Mathf.Abs(vertex.x) - 0.0175f) < 0.00001f &&
+                    Mathf.Abs(vertex.y + 0.0105f) < 0.00001f), Is.True);
+                Assert.That(loadPlateMesh.vertices.Any(vertex =>
+                    Mathf.Abs(Mathf.Abs(vertex.x) - 0.0175f) < 0.00001f &&
+                    Mathf.Abs(vertex.y + 0.0415f) < 0.00001f), Is.True);
+                Assert.That(
+                    processorSnapAnchor.localPosition.z + processorMesh.bounds.max.z,
+                    Is.LessThan(
+                        processorLoadPlatePivot.localPosition.z -
+                        loadPlateBounds.extents.z),
+                    "Closed load-plate frame must clear the seated CPU IHS.");
+                Renderer workbenchTop = benchmark.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => renderer.name == "WorkbenchTop");
+                Assert.That(Mathf.Abs(
+                    processorPackage.GetComponent<Renderer>().bounds.min.y -
+                    workbenchTop.bounds.max.y), Is.LessThan(0.0001f));
+                Assert.That(processorBinding.ValidateProjectionInvariant().IsSuccess,
+                    Is.True);
 
                 Bounds standoffBounds = standoffMarks.GetComponent<MeshFilter>().sharedMesh.bounds;
                 Assert.That(Vector3.Distance(
@@ -480,9 +705,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(18));
+                    Is.EqualTo(21));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(9));
+                    Is.EqualTo(11));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));

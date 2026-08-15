@@ -1101,6 +1101,498 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
             Assert.That(fixture.Authority.GetReceipts(), Is.EqualTo(new[] { receipt }));
         }
 
+        [Test]
+        public void ProcessorSeatRetentionAndRemovalPreserveExactCustodyAndReplay()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            fixture.AttachAndSecureMotherboard();
+            long inventoryBeforeSeat = fixture.Inventory.Revision;
+            StableId<AssemblyOperationIdScope> seatId =
+                OperationId("operation.processor-seat");
+
+            OperationResult<AssemblyOperationReceipt> seated =
+                fixture.Authority.SeatProcessor(
+                    seatId,
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    fixture.AttachId,
+                    fixture.SecureId,
+                    2);
+            OperationResult<AssemblyOperationReceipt> seatReplay =
+                fixture.Authority.SeatProcessor(
+                    seatId,
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    fixture.AttachId,
+                    fixture.SecureId,
+                    2);
+
+            Assert.That(seated.IsSuccess, Is.True);
+            Assert.That(seatReplay.Value, Is.SameAs(seated.Value));
+            Assert.That(seated.Value.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.SeatProcessor));
+            Assert.That(seated.Value.PreviousProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(seated.Value.ResultingProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.ProcessorSeatedOpen));
+            Assert.That(seated.Value.SourceContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(seated.Value.TargetContainerId,
+                Is.EqualTo(fixture.ProcessorSocketContainerId));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryBeforeSeat + 1));
+            Assert.That(fixture.Authority.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.ProcessorUnretained));
+
+            long inventoryBeforeRetention = fixture.Inventory.Revision;
+            StableId<AssemblyOperationIdScope> retainId =
+                OperationId("operation.processor-retain");
+            AssemblyOperationReceipt retained =
+                fixture.Authority.CloseProcessorRetention(
+                    retainId,
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    fixture.RetentionId,
+                    seatId,
+                    3).Value;
+            AssemblyOperationReceipt retainedReplay =
+                fixture.Authority.CloseProcessorRetention(
+                    retainId,
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    fixture.RetentionId,
+                    seatId,
+                    3).Value;
+
+            Assert.That(retainedReplay, Is.SameAs(retained));
+            Assert.That(retained.ResultingProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.ProcessorRetained));
+            Assert.That(retained.RetentionId, Is.EqualTo(fixture.RetentionId));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryBeforeRetention));
+            Assert.That(fixture.Authority.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+
+            StableId<AssemblyOperationIdScope> openId =
+                OperationId("operation.processor-open");
+            Assert.That(fixture.Authority.OpenProcessorRetention(
+                openId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                retainId,
+                4).IsSuccess, Is.True);
+            long inventoryBeforeRemove = fixture.Inventory.Revision;
+            StableId<AssemblyOperationIdScope> removeId =
+                OperationId("operation.processor-remove");
+            AssemblyOperationReceipt removed = fixture.Authority.RemoveProcessor(
+                removeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                seatId,
+                5).Value;
+            AssemblyOperationReceipt removeReplay = fixture.Authority.RemoveProcessor(
+                removeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                seatId,
+                5).Value;
+
+            Assert.That(removeReplay, Is.SameAs(removed));
+            Assert.That(removed.ResultingProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(6));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(6));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryBeforeRemove + 1));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ProcessorItemId,
+                out InventoryItemRecord returned), Is.True);
+            Assert.That(returned.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorMismatchAndStaleLineageFailWithoutMutation()
+        {
+            ProcessorFixture mismatch = ProcessorFixture.Create(
+                "component.processor-am5");
+            mismatch.AttachAndSecureMotherboard();
+            long mismatchInventoryRevision = mismatch.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> incompatible =
+                mismatch.Authority.SeatProcessor(
+                    OperationId("operation.processor-mismatch"),
+                    mismatch.ProcessorItemId,
+                    mismatch.ProcessorSlotId,
+                    mismatch.AttachId,
+                    mismatch.SecureId,
+                    2);
+
+            Assert.That(incompatible.Error,
+                Is.EqualTo(AssemblyFailures.CpuSocketFamilyMismatch));
+            Assert.That(mismatch.Authority.Revision, Is.EqualTo(2));
+            Assert.That(mismatch.Authority.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(mismatch.Inventory.Revision,
+                Is.EqualTo(mismatchInventoryRevision));
+
+            ProcessorFixture stale = ProcessorFixture.Create();
+            stale.AttachAndSecureMotherboard();
+            long staleInventoryRevision = stale.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> staleResult =
+                stale.Authority.SeatProcessor(
+                    OperationId("operation.processor-stale"),
+                    stale.ProcessorItemId,
+                    stale.ProcessorSlotId,
+                    stale.AttachId,
+                    stale.SecureId,
+                    1);
+
+            Assert.That(staleResult.Error, Is.EqualTo(AssemblyFailures.PlanStale));
+            Assert.That(stale.Authority.Revision, Is.EqualTo(2));
+            Assert.That(stale.Inventory.Revision, Is.EqualTo(staleInventoryRevision));
+            Assert.That(stale.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void InstalledProcessorBlocksMotherboardDetachUntilOpenedAndRemoved()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            fixture.AttachAndSecureMotherboard();
+            StableId<AssemblyOperationIdScope> seatId =
+                OperationId("operation.detach-gate-seat");
+            StableId<AssemblyOperationIdScope> retainId =
+                OperationId("operation.detach-gate-retain");
+            fixture.Authority.SeatProcessor(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.AttachId,
+                fixture.SecureId,
+                2);
+            fixture.Authority.CloseProcessorRetention(
+                retainId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                3);
+            long securedAssemblyRevision = fixture.Authority.Revision;
+            long securedInventoryRevision = fixture.Inventory.Revision;
+            int securedReceiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult<AssemblyOperationReceipt> securedBlocked =
+                fixture.Authority.DetachMotherboard(
+                    OperationId("operation.detach-gate-secured-blocked"),
+                    fixture.MotherboardItemId,
+                    fixture.MotherboardSlotId);
+
+            Assert.That(securedBlocked.Error,
+                Is.EqualTo(AssemblyFailures.ProcessorInstalled));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(securedAssemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(securedInventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(securedReceiptCount));
+            fixture.Authority.UnsecureMotherboardFastener(
+                OperationId("operation.detach-gate-unsecure"),
+                fixture.MotherboardItemId,
+                fixture.MotherboardSlotId,
+                fixture.FastenerId,
+                fixture.AttachId,
+                fixture.SecureId,
+                4);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> blocked =
+                fixture.Authority.DetachMotherboard(
+                    OperationId("operation.detach-gate-blocked"),
+                    fixture.MotherboardItemId,
+                    fixture.MotherboardSlotId);
+
+            Assert.That(blocked.Error, Is.EqualTo(AssemblyFailures.ProcessorInstalled));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.OpenProcessorRetention(
+                OperationId("operation.detach-gate-open"),
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                retainId,
+                5).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.RemoveProcessor(
+                OperationId("operation.detach-gate-remove"),
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                seatId,
+                6).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.DetachMotherboard(
+                OperationId("operation.detach-gate-detach"),
+                fixture.MotherboardItemId,
+                fixture.MotherboardSlotId).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorSeatReportsHostStateBeforeLineageWithoutMutation()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            long initialInventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> missing =
+                fixture.Authority.SeatProcessor(
+                    OperationId("operation.processor-host-missing"),
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    default,
+                    default,
+                    0);
+
+            Assert.That(missing.Error, Is.EqualTo(AssemblyFailures.MotherboardMissing));
+            Assert.That(fixture.Authority.Revision, Is.Zero);
+            Assert.That(fixture.Authority.ReceiptCount, Is.Zero);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(initialInventoryRevision));
+
+            Assert.That(fixture.Authority.AttachMotherboard(
+                fixture.AttachId,
+                fixture.MotherboardItemId,
+                fixture.MotherboardSlotId).IsSuccess, Is.True);
+            long attachedInventoryRevision = fixture.Inventory.Revision;
+            int attachedReceiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult<AssemblyOperationReceipt> unsecured =
+                fixture.Authority.SeatProcessor(
+                    OperationId("operation.processor-host-unsecured"),
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    fixture.AttachId,
+                    default,
+                    1);
+
+            Assert.That(unsecured.Error,
+                Is.EqualTo(AssemblyFailures.MotherboardUnsecured));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(attachedReceiptCount));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(attachedInventoryRevision));
+            Assert.That(fixture.Authority.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorSnapshotExposesStableSocketRetentionAndBenchmarkGates()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            Assert.That(fixture.Authority.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.MotherboardMissing));
+            fixture.AttachAndSecureMotherboard();
+            Assert.That(fixture.Authority.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.ProcessorMissing));
+
+            AssemblyBuildSnapshot snapshot = fixture.Authority.GetSnapshot();
+
+            Assert.That(snapshot.HasProcessorSocket, Is.True);
+            Assert.That(snapshot.ProcessorSlotId, Is.EqualTo(fixture.ProcessorSlotId));
+            Assert.That(snapshot.ProcessorRetentionId, Is.EqualTo(fixture.RetentionId));
+            Assert.That(snapshot.ProcessorSocketContainerId,
+                Is.EqualTo(fixture.ProcessorSocketContainerId));
+            Assert.That(snapshot.SupportedCpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+            Assert.That(snapshot.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void OccupiedProcessorSocketFailsAtomicPairClaimWithoutManagingWorkbench()
+        {
+            ProcessorFixture fixture = ProcessorFixture.CreateUnclaimed(
+                fillProcessorSocket: true);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result =
+                fixture.TryCreateAuthority();
+
+            Assert.That(result.Error,
+                Is.EqualTo(AssemblyFailures.ProcessorSocketOccupied));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                fixture.MotherboardItemId,
+                fixture.WorkbenchId).IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorSocketCapacityMustBeExactlyOneAndPairClaimFailureIsAtomic()
+        {
+            ProcessorFixture fixture = ProcessorFixture.CreateUnclaimed(
+                processorSocketCapacity: 2);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result =
+                fixture.TryCreateAuthority();
+
+            Assert.That(result.Error,
+                Is.EqualTo(AssemblyFailures.InvalidProcessorSocketContainer));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                fixture.MotherboardItemId,
+                fixture.WorkbenchId).IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                fixture.ProcessorItemId,
+                fixture.ProcessorSocketContainerId).IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.GetContainerQuantity(
+                fixture.ProcessorSocketContainerId).Value, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorFullCycleDelayedReplayAndConflictsNeverRewriteFinalCustody()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            fixture.AttachAndSecureMotherboard();
+            StableId<AssemblyOperationIdScope> seatId =
+                OperationId("operation.processor-delayed-seat");
+            StableId<AssemblyOperationIdScope> closeId =
+                OperationId("operation.processor-delayed-close");
+            StableId<AssemblyOperationIdScope> openId =
+                OperationId("operation.processor-delayed-open");
+            StableId<AssemblyOperationIdScope> removeId =
+                OperationId("operation.processor-delayed-remove");
+
+            AssemblyOperationReceipt seat = fixture.Authority.SeatProcessor(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.AttachId,
+                fixture.SecureId,
+                2).Value;
+            AssemblyOperationReceipt close = fixture.Authority.CloseProcessorRetention(
+                closeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                3).Value;
+            AssemblyOperationReceipt open = fixture.Authority.OpenProcessorRetention(
+                openId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                closeId,
+                4).Value;
+            AssemblyOperationReceipt remove = fixture.Authority.RemoveProcessor(
+                removeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                seatId,
+                5).Value;
+            long finalAssemblyRevision = fixture.Authority.Revision;
+            long finalInventoryRevision = fixture.Inventory.Revision;
+            int finalReceiptCount = fixture.Authority.ReceiptCount;
+
+            Assert.That(fixture.Authority.SeatProcessor(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.AttachId,
+                fixture.SecureId,
+                2).Value, Is.SameAs(seat));
+            Assert.That(fixture.Authority.CloseProcessorRetention(
+                closeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                3).Value, Is.SameAs(close));
+            Assert.That(fixture.Authority.OpenProcessorRetention(
+                openId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                closeId,
+                4).Value, Is.SameAs(open));
+            Assert.That(fixture.Authority.RemoveProcessor(
+                removeId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                seatId,
+                5).Value, Is.SameAs(remove));
+
+            Assert.That(fixture.Authority.SeatProcessor(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.AttachId,
+                default,
+                2).Error, Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(fixture.Authority.CloseProcessorRetention(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.RetentionId,
+                seatId,
+                3).Error, Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(finalAssemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(finalInventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(finalReceiptCount));
+            Assert.That(fixture.Authority.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ProcessorItemId,
+                out InventoryItemRecord returned), Is.True);
+            Assert.That(returned.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorRemoveIntoFullHandsFailsWithoutMutation()
+        {
+            ProcessorFixture fixture = ProcessorFixture.Create();
+            fixture.AttachAndSecureMotherboard();
+            StableId<AssemblyOperationIdScope> seatId =
+                OperationId("operation.processor-full-hands-seat");
+            Assert.That(fixture.Authority.SeatProcessor(
+                seatId,
+                fixture.ProcessorItemId,
+                fixture.ProcessorSlotId,
+                fixture.AttachId,
+                fixture.SecureId,
+                2).IsSuccess, Is.True);
+            for (int index = 0; index < 3; index++)
+            {
+                Assert.That(fixture.Inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse($"item.hands-blocker-{index}"),
+                    fixture.ProcessorProductId,
+                    fixture.HandsId,
+                    InventoryCondition.OpenBox,
+                    InventoryUnitCost.Create("EUR", 10_000 + index).Value).IsSuccess,
+                    Is.True);
+            }
+
+            long assemblyRevision = fixture.Authority.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
+            OperationResult<AssemblyOperationReceipt> blocked =
+                fixture.Authority.RemoveProcessor(
+                    OperationId("operation.processor-full-hands-remove"),
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorSlotId,
+                    seatId,
+                    3);
+
+            Assert.That(blocked.Error, Is.EqualTo(AssemblyFailures.HandsCapacityExceeded));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+            Assert.That(fixture.Authority.ProcessorSocketState,
+                Is.EqualTo(ProcessorSocketState.ProcessorSeatedOpen));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ProcessorItemId,
+                out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.ContainerId,
+                Is.EqualTo(fixture.ProcessorSocketContainerId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void AssertFailureWithoutMutation(
             Fixture fixture,
             OperationResult<AssemblyOperationReceipt> result,
@@ -1250,6 +1742,216 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     HandsId,
                     WorkbenchId,
                     MotherboardFormFactor.MicroAtx);
+            }
+
+            private static ProductDefinition Definition(string id, string displayName)
+            {
+                return ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(id),
+                    StableId<ProductCategoryIdScope>.Parse("pc-components"),
+                    displayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    730).Value;
+            }
+        }
+
+        private sealed class ProcessorFixture
+        {
+            private ProcessorFixture()
+            {
+            }
+
+            public ProductCatalog Products { get; private set; }
+
+            public PcComponentCatalog Components { get; private set; }
+
+            public InventoryAuthority Inventory { get; private set; }
+
+            public AssemblyBuildAuthority Authority { get; private set; }
+
+            public StableId<PcBuildIdScope> BuildId { get; private set; }
+
+            public StableId<ChassisIdScope> ChassisId { get; private set; }
+
+            public StableId<AssemblySlotIdScope> MotherboardSlotId { get; private set; }
+
+            public StableId<AssemblySlotIdScope> ProcessorSlotId { get; private set; }
+
+            public StableId<AssemblyFastenerIdScope> FastenerId { get; private set; }
+
+            public StableId<AssemblyRetentionIdScope> RetentionId { get; private set; }
+
+            public StableId<ContainerIdScope> HandsId { get; private set; }
+
+            public StableId<ContainerIdScope> WorkbenchId { get; private set; }
+
+            public StableId<ContainerIdScope> ProcessorSocketContainerId { get; private set; }
+
+            public StableId<ContainerIdScope> StorageId { get; private set; }
+
+            public StableId<ItemInstanceIdScope> MotherboardItemId { get; private set; }
+
+            public StableId<ItemInstanceIdScope> ProcessorItemId { get; private set; }
+
+            public StableId<ProductDefinitionIdScope> MotherboardProductId { get; private set; }
+
+            public StableId<ProductDefinitionIdScope> ProcessorProductId { get; private set; }
+
+            public StableId<AssemblyOperationIdScope> AttachId { get; private set; }
+
+            public StableId<AssemblyOperationIdScope> SecureId { get; private set; }
+
+            public static ProcessorFixture Create(
+                string processorProductId = "component.processor-lga1700")
+            {
+                ProcessorFixture fixture = CreateUnclaimed(processorProductId);
+                fixture.Authority = fixture.TryCreateAuthority().Value;
+                return fixture;
+            }
+
+            public static ProcessorFixture CreateUnclaimed(
+                string processorProductId = "component.processor-lga1700",
+                bool fillProcessorSocket = false,
+                int processorSocketCapacity = 1)
+            {
+                var fixture = new ProcessorFixture
+                {
+                    BuildId = StableId<PcBuildIdScope>.Parse("build.processor-prototype"),
+                    ChassisId = StableId<ChassisIdScope>.Parse("chassis.processor-prototype"),
+                    MotherboardSlotId = StableId<AssemblySlotIdScope>.Parse(
+                        "slot.motherboard-main"),
+                    ProcessorSlotId = StableId<AssemblySlotIdScope>.Parse(
+                        "slot.processor-main"),
+                    FastenerId = StableId<AssemblyFastenerIdScope>.Parse(
+                        "fastener.motherboard-main-01"),
+                    RetentionId = StableId<AssemblyRetentionIdScope>.Parse(
+                        "retention.processor-main"),
+                    HandsId = StableId<ContainerIdScope>.Parse("container.actor-hands"),
+                    WorkbenchId = StableId<ContainerIdScope>.Parse(
+                        "container.assembly-workbench"),
+                    ProcessorSocketContainerId = StableId<ContainerIdScope>.Parse(
+                        "container.processor-socket"),
+                    StorageId = StableId<ContainerIdScope>.Parse("container.storage"),
+                    MotherboardItemId = StableId<ItemInstanceIdScope>.Parse(
+                        "item.motherboard-processor-fixture"),
+                    ProcessorItemId = StableId<ItemInstanceIdScope>.Parse(
+                        "item.processor-fixture"),
+                    MotherboardProductId = StableId<ProductDefinitionIdScope>.Parse(
+                        "component.motherboard-lga1700"),
+                    ProcessorProductId = StableId<ProductDefinitionIdScope>.Parse(
+                        processorProductId),
+                    AttachId = OperationId("operation.processor-fixture-attach"),
+                    SecureId = OperationId("operation.processor-fixture-secure")
+                };
+
+                ProductDefinition motherboard = Definition(
+                    "component.motherboard-lga1700",
+                    "LGA1700 Motherboard");
+                ProductDefinition processor = Definition(
+                    "component.processor-lga1700",
+                    "LGA1700 Processor");
+                ProductDefinition mismatchedProcessor = Definition(
+                    "component.processor-am5",
+                    "AM5 Processor");
+                fixture.Products = ProductCatalog.Create(new[]
+                {
+                    motherboard,
+                    processor,
+                    mismatchedProcessor
+                }).Value;
+                fixture.Components = PcComponentCatalog.Create(
+                    fixture.Products,
+                    new[]
+                    {
+                        PcComponentSpecification.CreateMotherboard(
+                            fixture.Products,
+                            motherboard.Id,
+                            MotherboardFormFactor.MicroAtx,
+                            CpuSocketFamily.Lga1700).Value,
+                        PcComponentSpecification.CreateProcessor(
+                            fixture.Products,
+                            processor.Id,
+                            CpuSocketFamily.Lga1700).Value,
+                        PcComponentSpecification.CreateProcessor(
+                            fixture.Products,
+                            mismatchedProcessor.Id,
+                            CpuSocketFamily.Am5).Value
+                    }).Value;
+
+                fixture.Inventory = InventoryAuthority.Create(fixture.Products).Value;
+                fixture.Inventory.RegisterContainer(InventoryContainerDefinition.Create(
+                    fixture.HandsId,
+                    InventoryContainerKind.ActorHands,
+                    3).Value);
+                fixture.Inventory.RegisterContainer(InventoryContainerDefinition.Create(
+                    fixture.WorkbenchId,
+                    InventoryContainerKind.Workbench,
+                    1).Value);
+                fixture.Inventory.RegisterContainer(InventoryContainerDefinition.Create(
+                    fixture.ProcessorSocketContainerId,
+                    InventoryContainerKind.Workbench,
+                    processorSocketCapacity).Value);
+                fixture.Inventory.RegisterContainer(InventoryContainerDefinition.Create(
+                    fixture.StorageId,
+                    InventoryContainerKind.Storage,
+                    4).Value);
+                fixture.Inventory.ReceiveSerializedItem(
+                    fixture.MotherboardItemId,
+                    fixture.MotherboardProductId,
+                    fixture.HandsId,
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create("EUR", 14_900).Value);
+                fixture.Inventory.ReceiveSerializedItem(
+                    fixture.ProcessorItemId,
+                    fixture.ProcessorProductId,
+                    fixture.HandsId,
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create("EUR", 24_900).Value);
+                if (fillProcessorSocket)
+                {
+                    fixture.Inventory.ReceiveSerializedItem(
+                        StableId<ItemInstanceIdScope>.Parse(
+                            "item.processor-socket-occupied"),
+                        processor.Id,
+                        fixture.ProcessorSocketContainerId,
+                        InventoryCondition.OpenBox,
+                        InventoryUnitCost.Create("EUR", 20_000).Value);
+                }
+
+                return fixture;
+            }
+
+            public OperationResult<AssemblyBuildAuthority> TryCreateAuthority()
+            {
+                return AssemblyBuildAuthority.CreateWithProcessorSocket(
+                    Components,
+                    Inventory,
+                    BuildId,
+                    ChassisId,
+                    MotherboardSlotId,
+                    FastenerId,
+                    ProcessorSlotId,
+                    RetentionId,
+                    HandsId,
+                    WorkbenchId,
+                    ProcessorSocketContainerId,
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700);
+            }
+
+            public void AttachAndSecureMotherboard()
+            {
+                Assert.That(Authority.AttachMotherboard(
+                    AttachId,
+                    MotherboardItemId,
+                    MotherboardSlotId).IsSuccess, Is.True);
+                Assert.That(Authority.SecureMotherboardFastener(
+                    SecureId,
+                    MotherboardItemId,
+                    MotherboardSlotId,
+                    FastenerId,
+                    AttachId,
+                    1).IsSuccess, Is.True);
             }
 
             private static ProductDefinition Definition(string id, string displayName)

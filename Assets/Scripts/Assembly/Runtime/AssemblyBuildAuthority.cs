@@ -7,8 +7,8 @@ using PCShopEmpire3D.Inventory;
 namespace PCShopEmpire3D.Assembly
 {
     /// <summary>
-    /// Authoritative single-chassis, single-motherboard-seat aggregate for the first bounded
-    /// physical PC assembly slice. Presentation may project it but cannot own component state.
+    /// Authoritative single-chassis assembly aggregate. Presentation may project motherboard
+    /// and processor state but cannot own component identity, custody or operation chronology.
     /// </summary>
     public sealed class AssemblyBuildAuthority
     {
@@ -19,6 +19,11 @@ namespace PCShopEmpire3D.Assembly
         private readonly StableId<AssemblyFastenerIdScope> _motherboardFastenerId;
         private readonly InventorySerializedTransferAccess _inventoryTransferAccess;
         private readonly MotherboardFormFactor _supportedMotherboardFormFactor;
+        private readonly StableId<AssemblySlotIdScope> _processorSlotId;
+        private readonly StableId<AssemblyRetentionIdScope> _processorRetentionId;
+        private readonly StableId<ContainerIdScope> _processorSocketContainerId;
+        private readonly InventorySerializedTransferAccess _processorInventoryTransferAccess;
+        private readonly CpuSocketFamily _supportedCpuSocketFamily;
         private readonly Dictionary<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt> _receipts =
             new Dictionary<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt>();
 
@@ -27,6 +32,11 @@ namespace PCShopEmpire3D.Assembly
         private StableId<ProductDefinitionIdScope> _motherboardProductId;
         private StableId<AssemblyOperationIdScope> _installedByOperationId;
         private StableId<AssemblyOperationIdScope> _securedByOperationId;
+        private ProcessorSocketState _processorSocketState = ProcessorSocketState.Unsupported;
+        private StableId<ItemInstanceIdScope> _processorItemId;
+        private StableId<ProductDefinitionIdScope> _processorProductId;
+        private StableId<AssemblyOperationIdScope> _processorSeatedByOperationId;
+        private StableId<AssemblyOperationIdScope> _processorRetainedByOperationId;
 
         private AssemblyBuildAuthority(
             PcComponentCatalog componentCatalog,
@@ -39,6 +49,41 @@ namespace PCShopEmpire3D.Assembly
             StableId<ContainerIdScope> workbenchContainerId,
             MotherboardFormFactor supportedMotherboardFormFactor,
             InventorySerializedTransferAccess inventoryTransferAccess)
+            : this(
+                componentCatalog,
+                inventory,
+                buildId,
+                chassisId,
+                motherboardSlotId,
+                motherboardFastenerId,
+                handsContainerId,
+                workbenchContainerId,
+                supportedMotherboardFormFactor,
+                inventoryTransferAccess,
+                default,
+                default,
+                default,
+                default,
+                default)
+        {
+        }
+
+        private AssemblyBuildAuthority(
+            PcComponentCatalog componentCatalog,
+            InventoryAuthority inventory,
+            StableId<PcBuildIdScope> buildId,
+            StableId<ChassisIdScope> chassisId,
+            StableId<AssemblySlotIdScope> motherboardSlotId,
+            StableId<AssemblyFastenerIdScope> motherboardFastenerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> workbenchContainerId,
+            MotherboardFormFactor supportedMotherboardFormFactor,
+            InventorySerializedTransferAccess inventoryTransferAccess,
+            StableId<AssemblySlotIdScope> processorSlotId,
+            StableId<AssemblyRetentionIdScope> processorRetentionId,
+            StableId<ContainerIdScope> processorSocketContainerId,
+            CpuSocketFamily supportedCpuSocketFamily,
+            InventorySerializedTransferAccess processorInventoryTransferAccess)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -50,6 +95,15 @@ namespace PCShopEmpire3D.Assembly
             _workbenchContainerId = workbenchContainerId;
             _supportedMotherboardFormFactor = supportedMotherboardFormFactor;
             _inventoryTransferAccess = inventoryTransferAccess;
+            _processorSlotId = processorSlotId;
+            _processorRetentionId = processorRetentionId;
+            _processorSocketContainerId = processorSocketContainerId;
+            _supportedCpuSocketFamily = supportedCpuSocketFamily;
+            _processorInventoryTransferAccess = processorInventoryTransferAccess;
+            if (!processorSlotId.IsEmpty)
+            {
+                _processorSocketState = ProcessorSocketState.EmptyOpen;
+            }
         }
 
         public StableId<PcBuildIdScope> BuildId { get; }
@@ -77,6 +131,29 @@ namespace PCShopEmpire3D.Assembly
         public StableId<AssemblyOperationIdScope> InstalledByOperationId => _installedByOperationId;
 
         public StableId<AssemblyOperationIdScope> SecuredByOperationId => _securedByOperationId;
+
+        public bool HasProcessorSocket => !_processorSlotId.IsEmpty;
+
+        public StableId<AssemblySlotIdScope> ProcessorSlotId => _processorSlotId;
+
+        public StableId<AssemblyRetentionIdScope> ProcessorRetentionId => _processorRetentionId;
+
+        public StableId<ContainerIdScope> ProcessorSocketContainerId =>
+            _processorSocketContainerId;
+
+        public CpuSocketFamily SupportedCpuSocketFamily => _supportedCpuSocketFamily;
+
+        public ProcessorSocketState ProcessorSocketState => _processorSocketState;
+
+        public StableId<ItemInstanceIdScope> ProcessorItemId => _processorItemId;
+
+        public StableId<ProductDefinitionIdScope> ProcessorProductId => _processorProductId;
+
+        public StableId<AssemblyOperationIdScope> ProcessorSeatedByOperationId =>
+            _processorSeatedByOperationId;
+
+        public StableId<AssemblyOperationIdScope> ProcessorRetainedByOperationId =>
+            _processorRetainedByOperationId;
 
         public long Revision { get; private set; }
 
@@ -187,6 +264,170 @@ namespace PCShopEmpire3D.Assembly
                     access.Value));
         }
 
+        public static OperationResult<AssemblyBuildAuthority> CreateWithProcessorSocket(
+            PcComponentCatalog componentCatalog,
+            InventoryAuthority inventory,
+            StableId<PcBuildIdScope> buildId,
+            StableId<ChassisIdScope> chassisId,
+            StableId<AssemblySlotIdScope> motherboardSlotId,
+            StableId<AssemblyFastenerIdScope> motherboardFastenerId,
+            StableId<AssemblySlotIdScope> processorSlotId,
+            StableId<AssemblyRetentionIdScope> processorRetentionId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> workbenchContainerId,
+            StableId<ContainerIdScope> processorSocketContainerId,
+            MotherboardFormFactor supportedMotherboardFormFactor,
+            CpuSocketFamily supportedCpuSocketFamily)
+        {
+            if (componentCatalog == null)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.MissingComponentCatalog);
+            }
+
+            if (inventory == null)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.MissingInventoryAuthority);
+            }
+
+            if (!inventory.UsesCatalog(componentCatalog.OwnerCatalog))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.CatalogAuthorityMismatch);
+            }
+
+            if (buildId.IsEmpty)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidBuildId);
+            }
+
+            if (chassisId.IsEmpty)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidChassisId);
+            }
+
+            if (motherboardSlotId.IsEmpty ||
+                processorSlotId.IsEmpty ||
+                motherboardSlotId == processorSlotId)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidSlotId);
+            }
+
+            if (motherboardFastenerId.IsEmpty)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidFastener);
+            }
+
+            if (processorRetentionId.IsEmpty)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidRetention);
+            }
+
+            if (handsContainerId.IsEmpty ||
+                !inventory.TryGetContainer(
+                    handsContainerId,
+                    out InventoryContainerDefinition hands) ||
+                hands.Kind != InventoryContainerKind.ActorHands)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidHandsContainer);
+            }
+
+            if (workbenchContainerId.IsEmpty ||
+                !inventory.TryGetContainer(
+                    workbenchContainerId,
+                    out InventoryContainerDefinition workbench) ||
+                workbench.Kind != InventoryContainerKind.Workbench)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidWorkbenchContainer);
+            }
+
+            if (processorSocketContainerId.IsEmpty ||
+                !inventory.TryGetContainer(
+                    processorSocketContainerId,
+                    out InventoryContainerDefinition processorSocket) ||
+                processorSocket.Kind != InventoryContainerKind.Workbench ||
+                processorSocket.UnitCapacity != 1)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidProcessorSocketContainer);
+            }
+
+            if (handsContainerId == workbenchContainerId ||
+                handsContainerId == processorSocketContainerId ||
+                workbenchContainerId == processorSocketContainerId)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.SameInventoryContainer);
+            }
+
+            if (!PcComponentSpecification.IsValidMotherboardFormFactor(
+                    supportedMotherboardFormFactor))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidMotherboardFormFactor);
+            }
+
+            if (!PcComponentSpecification.IsValidCpuSocketFamily(
+                    supportedCpuSocketFamily))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidCpuSocketFamily);
+            }
+
+            if (inventory.GetContainerQuantity(workbenchContainerId).Value != 0)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.SlotOccupied);
+            }
+
+            if (inventory.GetContainerQuantity(processorSocketContainerId).Value != 0)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.ProcessorSocketOccupied);
+            }
+
+            OperationResult<InventorySerializedTransferAccessPair> accessPair =
+                inventory.ClaimManagedSerializedTransferContainers(
+                    workbenchContainerId,
+                    processorSocketContainerId);
+            if (accessPair.IsFailure)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    accessPair.Error == InventoryFailures.RevisionOverflow
+                        ? AssemblyFailures.RevisionOverflow
+                        : accessPair.Error ==
+                            InventoryFailures.SerializedTransferContainerOccupied
+                            ? AssemblyFailures.SlotOccupied
+                            : AssemblyFailures.PlanForeign);
+            }
+
+            return OperationResult<AssemblyBuildAuthority>.Success(
+                new AssemblyBuildAuthority(
+                    componentCatalog,
+                    inventory,
+                    buildId,
+                    chassisId,
+                    motherboardSlotId,
+                    motherboardFastenerId,
+                    handsContainerId,
+                    workbenchContainerId,
+                    supportedMotherboardFormFactor,
+                    accessPair.Value.First,
+                    processorSlotId,
+                    processorRetentionId,
+                    processorSocketContainerId,
+                    supportedCpuSocketFamily,
+                    accessPair.Value.Second));
+        }
+
         public OperationResult<AssemblyOperationReceipt> AttachMotherboard(
             StableId<AssemblyOperationIdScope> operationId,
             StableId<ItemInstanceIdScope> itemId,
@@ -257,7 +498,8 @@ namespace PCShopEmpire3D.Assembly
                 AssemblySeatState.Empty,
                 _motherboardSeatState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _processorSocketState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -335,7 +577,8 @@ namespace PCShopEmpire3D.Assembly
                 AssemblySeatState.SeatedUnsecured,
                 _motherboardSeatState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _processorSocketState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -403,7 +646,8 @@ namespace PCShopEmpire3D.Assembly
                 AssemblySeatState.SeatedUnsecured,
                 _motherboardSeatState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _processorSocketState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -473,6 +717,342 @@ namespace PCShopEmpire3D.Assembly
                 AssemblySeatState.SeatedSecured,
                 _motherboardSeatState,
                 Revision,
+                _inventory.Revision,
+                _processorSocketState);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> SeatProcessor(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesSeatProcessor(
+                        itemId,
+                        slotId,
+                        sourceMotherboardAttachOperationId,
+                        sourceMotherboardSecureOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateSeatProcessor(
+                itemId,
+                slotId,
+                sourceMotherboardAttachOperationId,
+                sourceMotherboardSecureOperationId,
+                expectedAssemblyRevision);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            InventoryItemRecord item = GetItem(itemId);
+            OperationResult<InventorySerializedTransferPlan> prepared =
+                _inventory.PrepareSerializedItemTransfer(
+                    itemId,
+                    _processorSocketContainerId,
+                    _processorInventoryTransferAccess);
+            if (prepared.IsFailure)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    MapProcessorInventoryFailure(prepared.Error, seating: true));
+            }
+
+            OperationResult committed =
+                _inventory.CommitPreparedSerializedItemTransfer(prepared.Value);
+            if (committed.IsFailure)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    MapProcessorInventoryFailure(committed.Error, seating: true));
+            }
+
+            _processorSocketState = ProcessorSocketState.ProcessorSeatedOpen;
+            _processorItemId = item.Id;
+            _processorProductId = item.ProductId;
+            _processorSeatedByOperationId = operationId;
+            _processorRetainedByOperationId = default;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.SeatProcessor,
+                BuildId,
+                ChassisId,
+                _processorSlotId,
+                item.Id,
+                item.ProductId,
+                _handsContainerId,
+                _processorSocketContainerId,
+                sourceMotherboardAttachOperationId,
+                sourceMotherboardSecureOperationId,
+                default,
+                default,
+                default,
+                default,
+                -1,
+                expectedAssemblyRevision,
+                _motherboardSeatState,
+                _motherboardSeatState,
+                ProcessorSocketState.EmptyOpen,
+                _processorSocketState,
+                Revision,
+                _inventory.Revision);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> CloseProcessorRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyRetentionIdScope> retentionId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesCloseProcessorRetention(
+                        itemId,
+                        slotId,
+                        retentionId,
+                        sourceProcessorSeatOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateProcessorRetention(
+                itemId,
+                slotId,
+                retentionId,
+                sourceProcessorSeatOperationId,
+                default,
+                expectedAssemblyRevision,
+                closing: true);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            AssemblyOperationReceipt seatReceipt =
+                _receipts[sourceProcessorSeatOperationId];
+            _processorSocketState = ProcessorSocketState.ProcessorRetained;
+            _processorRetainedByOperationId = operationId;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.CloseProcessorRetention,
+                BuildId,
+                ChassisId,
+                _processorSlotId,
+                _processorItemId,
+                _processorProductId,
+                default,
+                default,
+                seatReceipt.SourceAttachOperationId,
+                seatReceipt.SourceSecureOperationId,
+                default,
+                retentionId,
+                sourceProcessorSeatOperationId,
+                default,
+                0,
+                expectedAssemblyRevision,
+                _motherboardSeatState,
+                _motherboardSeatState,
+                ProcessorSocketState.ProcessorSeatedOpen,
+                _processorSocketState,
+                Revision,
+                _inventory.Revision);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> OpenProcessorRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyRetentionIdScope> retentionId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesOpenProcessorRetention(
+                        itemId,
+                        slotId,
+                        retentionId,
+                        sourceProcessorSeatOperationId,
+                        sourceProcessorRetentionOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateProcessorRetention(
+                itemId,
+                slotId,
+                retentionId,
+                sourceProcessorSeatOperationId,
+                sourceProcessorRetentionOperationId,
+                expectedAssemblyRevision,
+                closing: false);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            AssemblyOperationReceipt seatReceipt =
+                _receipts[sourceProcessorSeatOperationId];
+            _processorSocketState = ProcessorSocketState.ProcessorSeatedOpen;
+            _processorRetainedByOperationId = default;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.OpenProcessorRetention,
+                BuildId,
+                ChassisId,
+                _processorSlotId,
+                _processorItemId,
+                _processorProductId,
+                default,
+                default,
+                seatReceipt.SourceAttachOperationId,
+                seatReceipt.SourceSecureOperationId,
+                default,
+                retentionId,
+                sourceProcessorSeatOperationId,
+                sourceProcessorRetentionOperationId,
+                0,
+                expectedAssemblyRevision,
+                _motherboardSeatState,
+                _motherboardSeatState,
+                ProcessorSocketState.ProcessorRetained,
+                _processorSocketState,
+                Revision,
+                _inventory.Revision);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> RemoveProcessor(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesRemoveProcessor(
+                        itemId,
+                        slotId,
+                        sourceProcessorSeatOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateRemoveProcessor(
+                itemId,
+                slotId,
+                sourceProcessorSeatOperationId,
+                expectedAssemblyRevision);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            InventoryItemRecord item = GetItem(itemId);
+            AssemblyOperationReceipt seatReceipt =
+                _receipts[sourceProcessorSeatOperationId];
+            OperationResult<InventorySerializedTransferPlan> prepared =
+                _inventory.PrepareSerializedItemTransfer(
+                    itemId,
+                    _handsContainerId,
+                    _processorInventoryTransferAccess);
+            if (prepared.IsFailure)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    MapProcessorInventoryFailure(prepared.Error, seating: false));
+            }
+
+            OperationResult committed =
+                _inventory.CommitPreparedSerializedItemTransfer(prepared.Value);
+            if (committed.IsFailure)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    MapProcessorInventoryFailure(committed.Error, seating: false));
+            }
+
+            _processorSocketState = ProcessorSocketState.EmptyOpen;
+            _processorItemId = default;
+            _processorProductId = default;
+            _processorSeatedByOperationId = default;
+            _processorRetainedByOperationId = default;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.RemoveProcessor,
+                BuildId,
+                ChassisId,
+                _processorSlotId,
+                item.Id,
+                item.ProductId,
+                _processorSocketContainerId,
+                _handsContainerId,
+                seatReceipt.SourceAttachOperationId,
+                seatReceipt.SourceSecureOperationId,
+                default,
+                default,
+                sourceProcessorSeatOperationId,
+                default,
+                -1,
+                expectedAssemblyRevision,
+                _motherboardSeatState,
+                _motherboardSeatState,
+                ProcessorSocketState.ProcessorSeatedOpen,
+                _processorSocketState,
+                Revision,
                 _inventory.Revision);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
@@ -485,8 +1065,23 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.MotherboardMissing);
             }
 
-            return _motherboardSeatState == AssemblySeatState.SeatedUnsecured
-                ? OperationResult.Fail(AssemblyFailures.MotherboardUnsecured)
+            if (_motherboardSeatState == AssemblySeatState.SeatedUnsecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.MotherboardUnsecured);
+            }
+
+            if (!HasProcessorSocket)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (_processorSocketState == ProcessorSocketState.EmptyOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.ProcessorMissing);
+            }
+
+            return _processorSocketState == ProcessorSocketState.ProcessorSeatedOpen
+                ? OperationResult.Fail(AssemblyFailures.ProcessorUnretained)
                 : OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
@@ -499,12 +1094,21 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardFastenerId,
                 _handsContainerId,
                 _workbenchContainerId,
+                _processorSlotId,
+                _processorRetentionId,
+                _processorSocketContainerId,
                 _supportedMotherboardFormFactor,
+                _supportedCpuSocketFamily,
                 _motherboardSeatState,
                 _motherboardItemId,
                 _motherboardProductId,
                 _installedByOperationId,
                 _securedByOperationId,
+                _processorSocketState,
+                _processorItemId,
+                _processorProductId,
+                _processorSeatedByOperationId,
+                _processorRetainedByOperationId,
                 Revision);
         }
 
@@ -560,12 +1164,46 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (HasProcessorSocket)
+            {
+                if (_processorRetentionId.IsEmpty ||
+                    _processorSocketContainerId.IsEmpty ||
+                    _processorInventoryTransferAccess == null ||
+                    _processorSlotId == MotherboardSlotId ||
+                    _processorSocketContainerId == _handsContainerId ||
+                    _processorSocketContainerId == _workbenchContainerId ||
+                    !PcComponentSpecification.IsValidCpuSocketFamily(
+                        _supportedCpuSocketFamily) ||
+                    !_inventory.TryGetContainer(
+                        _processorSocketContainerId,
+                        out InventoryContainerDefinition processorSocket) ||
+                    processorSocket.Kind != InventoryContainerKind.Workbench ||
+                    processorSocket.UnitCapacity != 1)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+            }
+            else if (!_processorRetentionId.IsEmpty ||
+                     !_processorSocketContainerId.IsEmpty ||
+                     _processorInventoryTransferAccess != null ||
+                     _supportedCpuSocketFamily != default ||
+                     _processorSocketState != ProcessorSocketState.Unsupported)
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (_motherboardSeatState == AssemblySeatState.Empty)
             {
                 if (!_motherboardItemId.IsEmpty ||
                     !_motherboardProductId.IsEmpty ||
                     !_installedByOperationId.IsEmpty ||
                     !_securedByOperationId.IsEmpty)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+
+                if (HasProcessorSocket &&
+                    _processorSocketState != ProcessorSocketState.EmptyOpen)
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
@@ -616,6 +1254,87 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (!HasProcessorSocket)
+            {
+                if (!_processorItemId.IsEmpty ||
+                    !_processorProductId.IsEmpty ||
+                    !_processorSeatedByOperationId.IsEmpty ||
+                    !_processorRetainedByOperationId.IsEmpty)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+            }
+            else if (_processorSocketState == ProcessorSocketState.EmptyOpen)
+            {
+                if (!_processorItemId.IsEmpty ||
+                    !_processorProductId.IsEmpty ||
+                    !_processorSeatedByOperationId.IsEmpty ||
+                    !_processorRetainedByOperationId.IsEmpty ||
+                    _inventory.GetContainerQuantity(
+                        _processorSocketContainerId).Value != 0)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+            }
+            else if (_processorSocketState ==
+                         ProcessorSocketState.ProcessorSeatedOpen ||
+                     _processorSocketState == ProcessorSocketState.ProcessorRetained)
+            {
+                if (_motherboardSeatState == AssemblySeatState.Empty ||
+                    _processorItemId.IsEmpty ||
+                    _processorProductId.IsEmpty ||
+                    _processorSeatedByOperationId.IsEmpty ||
+                    !_inventory.TryGetSerializedItem(
+                        _processorItemId,
+                        out InventoryItemRecord processorItem) ||
+                    processorItem.ProductId != _processorProductId ||
+                    processorItem.ContainerId != _processorSocketContainerId ||
+                    !_componentCatalog.TryGet(
+                        processorItem.ProductId,
+                        out PcComponentSpecification processorSpecification) ||
+                    !_componentCatalog.TryGet(
+                        _motherboardProductId,
+                        out PcComponentSpecification motherboardSpecification) ||
+                    !AssemblyCompatibilityEvaluator.EvaluateProcessorSeat(
+                        processorSpecification,
+                        motherboardSpecification,
+                        _supportedCpuSocketFamily).IsCompatible ||
+                    !_receipts.TryGetValue(
+                        _processorSeatedByOperationId,
+                        out AssemblyOperationReceipt seatReceipt) ||
+                    seatReceipt.OperationKind != AssemblyOperationKind.SeatProcessor ||
+                    seatReceipt.ItemId != _processorItemId ||
+                    seatReceipt.SlotId != _processorSlotId)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+
+                if (_processorSocketState == ProcessorSocketState.ProcessorSeatedOpen)
+                {
+                    if (!_processorRetainedByOperationId.IsEmpty)
+                    {
+                        return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                    }
+                }
+                else if (_processorRetainedByOperationId.IsEmpty ||
+                         !_receipts.TryGetValue(
+                             _processorRetainedByOperationId,
+                             out AssemblyOperationReceipt retentionReceipt) ||
+                         retentionReceipt.OperationKind !=
+                             AssemblyOperationKind.CloseProcessorRetention ||
+                         retentionReceipt.ItemId != _processorItemId ||
+                         retentionReceipt.RetentionId != _processorRetentionId ||
+                         retentionReceipt.SourceProcessorSeatOperationId !=
+                             _processorSeatedByOperationId)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+            }
+            else
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (Revision != _receipts.Count)
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
@@ -625,12 +1344,15 @@ namespace PCShopEmpire3D.Assembly
             foreach (KeyValuePair<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt> entry in _receipts)
             {
                 AssemblyOperationReceipt receipt = entry.Value;
+                bool processorOperation = receipt != null &&
+                    IsProcessorOperation(receipt.OperationKind);
                 if (receipt == null ||
                     entry.Key.IsEmpty ||
                     entry.Key != receipt.OperationId ||
                     receipt.BuildId != BuildId ||
                     receipt.ChassisId != ChassisId ||
-                    receipt.SlotId != MotherboardSlotId ||
+                    receipt.SlotId !=
+                        (processorOperation ? _processorSlotId : MotherboardSlotId) ||
                     receipt.ItemId.IsEmpty ||
                     receipt.ProductId.IsEmpty ||
                     receipt.AssemblyRevision <= 0 ||
@@ -638,12 +1360,7 @@ namespace PCShopEmpire3D.Assembly
                     receipt.ExpectedAssemblyRevision != receipt.AssemblyRevision - 1L ||
                     receipt.InventoryRevision <= 0 ||
                     receipt.InventoryRevision > _inventory.Revision ||
-                    (receipt.OperationKind != AssemblyOperationKind.AttachMotherboard &&
-                     receipt.OperationKind != AssemblyOperationKind.DetachMotherboard &&
-                     receipt.OperationKind !=
-                         AssemblyOperationKind.SecureMotherboardFastener &&
-                     receipt.OperationKind !=
-                         AssemblyOperationKind.UnsecureMotherboardFastener))
+                    !IsKnownOperationKind(receipt.OperationKind))
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
@@ -656,26 +1373,7 @@ namespace PCShopEmpire3D.Assembly
 
                 receiptsByRevision[revisionIndex] = receipt;
 
-                bool isInventoryTransfer =
-                    receipt.OperationKind == AssemblyOperationKind.AttachMotherboard ||
-                    receipt.OperationKind == AssemblyOperationKind.DetachMotherboard;
-                if (isInventoryTransfer)
-                {
-                    if (receipt.SourceContainerId.IsEmpty ||
-                        receipt.TargetContainerId.IsEmpty ||
-                        receipt.SourceContainerId == receipt.TargetContainerId ||
-                        !receipt.FastenerId.IsEmpty ||
-                        !receipt.SourceSecureOperationId.IsEmpty ||
-                        receipt.SequenceIndex != -1)
-                    {
-                        return OperationResult.Fail(AssemblyFailures.InvariantViolation);
-                    }
-                }
-                else if (!receipt.SourceContainerId.IsEmpty ||
-                         !receipt.TargetContainerId.IsEmpty ||
-                         receipt.FastenerId != _motherboardFastenerId ||
-                         receipt.SequenceIndex != 0 ||
-                         receipt.SourceAttachOperationId.IsEmpty)
+                if (!ValidateReceiptShape(receipt))
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
@@ -751,6 +1449,12 @@ namespace PCShopEmpire3D.Assembly
             if (Revision == long.MaxValue)
             {
                 return AssemblyFailures.RevisionOverflow;
+            }
+
+            if (HasProcessorSocket &&
+                _processorSocketState != ProcessorSocketState.EmptyOpen)
+            {
+                return AssemblyFailures.ProcessorInstalled;
             }
 
             if (_motherboardSeatState == AssemblySeatState.SeatedSecured)
@@ -863,6 +1567,374 @@ namespace PCShopEmpire3D.Assembly
             return Failure.None;
         }
 
+        private Failure ValidateSeatProcessor(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (!HasProcessorSocket)
+            {
+                return AssemblyFailures.ProcessorSocketUnavailable;
+            }
+
+            if (slotId != _processorSlotId)
+            {
+                return AssemblyFailures.UnknownSlot;
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return AssemblyFailures.RevisionOverflow;
+            }
+
+            if (expectedAssemblyRevision != Revision)
+            {
+                return AssemblyFailures.PlanStale;
+            }
+
+            if (_motherboardSeatState == AssemblySeatState.Empty)
+            {
+                return AssemblyFailures.MotherboardMissing;
+            }
+
+            if (_motherboardSeatState != AssemblySeatState.SeatedSecured)
+            {
+                return AssemblyFailures.MotherboardUnsecured;
+            }
+
+            if (sourceMotherboardAttachOperationId.IsEmpty ||
+                sourceMotherboardAttachOperationId != _installedByOperationId ||
+                sourceMotherboardSecureOperationId.IsEmpty ||
+                sourceMotherboardSecureOperationId != _securedByOperationId ||
+                !_receipts.TryGetValue(
+                    sourceMotherboardAttachOperationId,
+                    out AssemblyOperationReceipt attachReceipt) ||
+                attachReceipt.OperationKind != AssemblyOperationKind.AttachMotherboard ||
+                !_receipts.TryGetValue(
+                    sourceMotherboardSecureOperationId,
+                    out AssemblyOperationReceipt secureReceipt) ||
+                secureReceipt.OperationKind !=
+                    AssemblyOperationKind.SecureMotherboardFastener ||
+                secureReceipt.SourceAttachOperationId !=
+                    sourceMotherboardAttachOperationId)
+            {
+                return AssemblyFailures.PlanStale;
+            }
+
+            if (_processorSocketState != ProcessorSocketState.EmptyOpen)
+            {
+                return AssemblyFailures.ProcessorSocketOccupied;
+            }
+
+            if (!_inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item))
+            {
+                return AssemblyFailures.UnknownItem;
+            }
+
+            if (item.ContainerId != _handsContainerId)
+            {
+                return AssemblyFailures.ItemNotInActorHands;
+            }
+
+            if (!_componentCatalog.TryGet(
+                    item.ProductId,
+                    out PcComponentSpecification processorSpecification) ||
+                !_componentCatalog.TryGet(
+                    _motherboardProductId,
+                    out PcComponentSpecification motherboardSpecification))
+            {
+                return AssemblyFailures.UnknownComponentSpecification;
+            }
+
+            AssemblyCompatibilityResult compatibility =
+                AssemblyCompatibilityEvaluator.EvaluateProcessorSeat(
+                    processorSpecification,
+                    motherboardSpecification,
+                    _supportedCpuSocketFamily);
+            return compatibility.IsCompatible ? Failure.None : compatibility.Reason;
+        }
+
+        private Failure ValidateProcessorRetention(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyRetentionIdScope> retentionId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            long expectedAssemblyRevision,
+            bool closing)
+        {
+            if (!HasProcessorSocket)
+            {
+                return AssemblyFailures.ProcessorSocketUnavailable;
+            }
+
+            if (slotId != _processorSlotId)
+            {
+                return AssemblyFailures.UnknownSlot;
+            }
+
+            if (retentionId != _processorRetentionId)
+            {
+                return AssemblyFailures.InvalidRetention;
+            }
+
+            if (itemId.IsEmpty ||
+                (!_processorItemId.IsEmpty && itemId != _processorItemId))
+            {
+                return AssemblyFailures.IdentityConflict;
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return AssemblyFailures.RevisionOverflow;
+            }
+
+            if (expectedAssemblyRevision != Revision ||
+                sourceProcessorSeatOperationId.IsEmpty ||
+                sourceProcessorSeatOperationId != _processorSeatedByOperationId ||
+                !_receipts.TryGetValue(
+                    sourceProcessorSeatOperationId,
+                    out AssemblyOperationReceipt seatReceipt) ||
+                seatReceipt.OperationKind != AssemblyOperationKind.SeatProcessor ||
+                seatReceipt.ItemId != itemId ||
+                seatReceipt.SlotId != slotId)
+            {
+                return AssemblyFailures.PlanStale;
+            }
+
+            if (_motherboardSeatState == AssemblySeatState.Empty)
+            {
+                return AssemblyFailures.MotherboardMissing;
+            }
+
+            if (closing && _motherboardSeatState != AssemblySeatState.SeatedSecured)
+            {
+                return AssemblyFailures.MotherboardUnsecured;
+            }
+
+            if (closing)
+            {
+                if (!sourceProcessorRetentionOperationId.IsEmpty ||
+                    _processorSocketState !=
+                        ProcessorSocketState.ProcessorSeatedOpen ||
+                    !_processorRetainedByOperationId.IsEmpty)
+                {
+                    return AssemblyFailures.ProcessorRetentionOutOfOrder;
+                }
+            }
+            else if (sourceProcessorRetentionOperationId.IsEmpty ||
+                     sourceProcessorRetentionOperationId !=
+                         _processorRetainedByOperationId ||
+                     _processorSocketState != ProcessorSocketState.ProcessorRetained ||
+                     !_receipts.TryGetValue(
+                         sourceProcessorRetentionOperationId,
+                         out AssemblyOperationReceipt retentionReceipt) ||
+                     retentionReceipt.OperationKind !=
+                         AssemblyOperationKind.CloseProcessorRetention ||
+                     retentionReceipt.ItemId != itemId ||
+                     retentionReceipt.RetentionId != retentionId ||
+                     retentionReceipt.SourceProcessorSeatOperationId !=
+                         sourceProcessorSeatOperationId)
+            {
+                return AssemblyFailures.ProcessorRetentionOutOfOrder;
+            }
+
+            return _inventory.TryGetSerializedItem(
+                       itemId,
+                       out InventoryItemRecord item) &&
+                   item.ProductId == _processorProductId &&
+                   item.ContainerId == _processorSocketContainerId
+                ? Failure.None
+                : AssemblyFailures.ComponentNotSeated;
+        }
+
+        private Failure ValidateRemoveProcessor(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (!HasProcessorSocket)
+            {
+                return AssemblyFailures.ProcessorSocketUnavailable;
+            }
+
+            if (slotId != _processorSlotId)
+            {
+                return AssemblyFailures.UnknownSlot;
+            }
+
+            if (itemId.IsEmpty ||
+                (!_processorItemId.IsEmpty && itemId != _processorItemId))
+            {
+                return AssemblyFailures.IdentityConflict;
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return AssemblyFailures.RevisionOverflow;
+            }
+
+            if (expectedAssemblyRevision != Revision ||
+                sourceProcessorSeatOperationId.IsEmpty ||
+                sourceProcessorSeatOperationId != _processorSeatedByOperationId ||
+                !_receipts.TryGetValue(
+                    sourceProcessorSeatOperationId,
+                    out AssemblyOperationReceipt seatReceipt) ||
+                seatReceipt.OperationKind != AssemblyOperationKind.SeatProcessor ||
+                seatReceipt.ItemId != itemId ||
+                seatReceipt.SlotId != slotId)
+            {
+                return AssemblyFailures.PlanStale;
+            }
+
+            if (_motherboardSeatState == AssemblySeatState.Empty)
+            {
+                return AssemblyFailures.MotherboardMissing;
+            }
+
+            if (_processorSocketState == ProcessorSocketState.ProcessorRetained)
+            {
+                return AssemblyFailures.ProcessorRetained;
+            }
+
+            if (_processorSocketState != ProcessorSocketState.ProcessorSeatedOpen)
+            {
+                return AssemblyFailures.ComponentNotSeated;
+            }
+
+            return _inventory.TryGetSerializedItem(
+                       itemId,
+                       out InventoryItemRecord item) &&
+                   item.ProductId == _processorProductId &&
+                   item.ContainerId == _processorSocketContainerId
+                ? Failure.None
+                : AssemblyFailures.ComponentNotSeated;
+        }
+
+        private bool ValidateReceiptShape(AssemblyOperationReceipt receipt)
+        {
+            switch (receipt.OperationKind)
+            {
+                case AssemblyOperationKind.AttachMotherboard:
+                    return receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId == _workbenchContainerId &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.DetachMotherboard:
+                    return receipt.SourceContainerId == _workbenchContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.SecureMotherboardFastener:
+                    return receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId == _motherboardFastenerId &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.UnsecureMotherboardFastener:
+                    return receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId == _motherboardFastenerId &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.SeatProcessor:
+                    return HasProcessorSocket &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId == _processorSocketContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RemoveProcessor:
+                    return HasProcessorSocket &&
+                           receipt.SourceContainerId == _processorSocketContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.CloseProcessorRetention:
+                    return HasProcessorSocket &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId == _processorRetentionId &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.OpenProcessorRetention:
+                    return HasProcessorSocket &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId == _processorRetentionId &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SequenceIndex == 0;
+
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsKnownOperationKind(AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.AttachMotherboard ||
+                   operationKind == AssemblyOperationKind.DetachMotherboard ||
+                   operationKind == AssemblyOperationKind.SecureMotherboardFastener ||
+                   operationKind == AssemblyOperationKind.UnsecureMotherboardFastener ||
+                   operationKind == AssemblyOperationKind.SeatProcessor ||
+                   operationKind == AssemblyOperationKind.RemoveProcessor ||
+                   operationKind == AssemblyOperationKind.CloseProcessorRetention ||
+                   operationKind == AssemblyOperationKind.OpenProcessorRetention;
+        }
+
+        private static bool IsProcessorOperation(AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.SeatProcessor ||
+                   operationKind == AssemblyOperationKind.RemoveProcessor ||
+                   operationKind == AssemblyOperationKind.CloseProcessorRetention ||
+                   operationKind == AssemblyOperationKind.OpenProcessorRetention;
+        }
+
         private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
         {
             switch (receipt.OperationKind)
@@ -873,7 +1945,9 @@ namespace PCShopEmpire3D.Assembly
                            receipt.SourceAttachOperationId.IsEmpty &&
                            receipt.PreviousSeatState == AssemblySeatState.Empty &&
                            receipt.ResultingSeatState ==
-                               AssemblySeatState.SeatedUnsecured;
+                               AssemblySeatState.SeatedUnsecured &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState;
 
                 case AssemblyOperationKind.DetachMotherboard:
                     return receipt.SourceContainerId == _workbenchContainerId &&
@@ -881,6 +1955,8 @@ namespace PCShopEmpire3D.Assembly
                            receipt.PreviousSeatState ==
                                AssemblySeatState.SeatedUnsecured &&
                            receipt.ResultingSeatState == AssemblySeatState.Empty &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
                            IsMatchingAttachReceipt(
                                receipt.SourceAttachOperationId,
                                receipt);
@@ -890,6 +1966,8 @@ namespace PCShopEmpire3D.Assembly
                                AssemblySeatState.SeatedUnsecured &&
                            receipt.ResultingSeatState ==
                                AssemblySeatState.SeatedSecured &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
                            receipt.SourceSecureOperationId.IsEmpty &&
                            IsMatchingAttachReceipt(
                                receipt.SourceAttachOperationId,
@@ -898,6 +1976,8 @@ namespace PCShopEmpire3D.Assembly
                 case AssemblyOperationKind.UnsecureMotherboardFastener:
                     if (receipt.PreviousSeatState != AssemblySeatState.SeatedSecured ||
                         receipt.ResultingSeatState != AssemblySeatState.SeatedUnsecured ||
+                        receipt.PreviousProcessorSocketState !=
+                            receipt.ResultingProcessorSocketState ||
                         !IsMatchingAttachReceipt(
                             receipt.SourceAttachOperationId,
                             receipt) ||
@@ -918,6 +1998,52 @@ namespace PCShopEmpire3D.Assembly
                            secureReceipt.SourceAttachOperationId ==
                                receipt.SourceAttachOperationId;
 
+                case AssemblyOperationKind.SeatProcessor:
+                    return receipt.PreviousSeatState == AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.EmptyOpen &&
+                           receipt.ResultingProcessorSocketState ==
+                               ProcessorSocketState.ProcessorSeatedOpen &&
+                           IsMatchingMotherboardSecureLineage(receipt);
+
+                case AssemblyOperationKind.RemoveProcessor:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorSeatedOpen &&
+                           receipt.ResultingProcessorSocketState ==
+                               ProcessorSocketState.EmptyOpen &&
+                           IsMatchingProcessorSeatReceipt(
+                               receipt.SourceProcessorSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.CloseProcessorRetention:
+                    return receipt.PreviousSeatState == AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorSeatedOpen &&
+                           receipt.ResultingProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           IsMatchingProcessorSeatReceipt(
+                               receipt.SourceProcessorSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.OpenProcessorRetention:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.ResultingProcessorSocketState ==
+                               ProcessorSocketState.ProcessorSeatedOpen &&
+                           IsMatchingProcessorSeatReceipt(
+                               receipt.SourceProcessorSeatOperationId,
+                               receipt) &&
+                           IsMatchingProcessorRetentionReceipt(
+                               receipt.SourceProcessorRetentionOperationId,
+                               receipt);
+
                 default:
                     return false;
             }
@@ -930,6 +2056,13 @@ namespace PCShopEmpire3D.Assembly
             StableId<ProductDefinitionIdScope> foldedProductId = default;
             StableId<AssemblyOperationIdScope> foldedAttachOperationId = default;
             StableId<AssemblyOperationIdScope> foldedSecureOperationId = default;
+            ProcessorSocketState foldedProcessorState = HasProcessorSocket
+                ? ProcessorSocketState.EmptyOpen
+                : ProcessorSocketState.Unsupported;
+            StableId<ItemInstanceIdScope> foldedProcessorItemId = default;
+            StableId<ProductDefinitionIdScope> foldedProcessorProductId = default;
+            StableId<AssemblyOperationIdScope> foldedProcessorSeatOperationId = default;
+            StableId<AssemblyOperationIdScope> foldedProcessorRetentionOperationId = default;
             long foldedInventoryRevision = 0;
 
             for (int index = 0; index < receiptsByRevision.Length; index++)
@@ -938,6 +2071,7 @@ namespace PCShopEmpire3D.Assembly
                 if (receipt == null ||
                     receipt.AssemblyRevision != index + 1L ||
                     receipt.PreviousSeatState != foldedState ||
+                    receipt.PreviousProcessorSocketState != foldedProcessorState ||
                     receipt.InventoryRevision < foldedInventoryRevision)
                 {
                     return false;
@@ -945,7 +2079,9 @@ namespace PCShopEmpire3D.Assembly
 
                 bool inventoryTransfer =
                     receipt.OperationKind == AssemblyOperationKind.AttachMotherboard ||
-                    receipt.OperationKind == AssemblyOperationKind.DetachMotherboard;
+                    receipt.OperationKind == AssemblyOperationKind.DetachMotherboard ||
+                    receipt.OperationKind == AssemblyOperationKind.SeatProcessor ||
+                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessor;
                 if (inventoryTransfer &&
                     receipt.InventoryRevision <= foldedInventoryRevision)
                 {
@@ -971,6 +2107,9 @@ namespace PCShopEmpire3D.Assembly
 
                     case AssemblyOperationKind.DetachMotherboard:
                         if (foldedState != AssemblySeatState.SeatedUnsecured ||
+                            foldedProcessorState != (HasProcessorSocket
+                                ? ProcessorSocketState.EmptyOpen
+                                : ProcessorSocketState.Unsupported) ||
                             receipt.ItemId != foldedItemId ||
                             receipt.ProductId != foldedProductId ||
                             receipt.SourceAttachOperationId != foldedAttachOperationId ||
@@ -1014,11 +2153,85 @@ namespace PCShopEmpire3D.Assembly
                         foldedSecureOperationId = default;
                         break;
 
+                    case AssemblyOperationKind.SeatProcessor:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedProcessorState != ProcessorSocketState.EmptyOpen ||
+                            !foldedProcessorItemId.IsEmpty ||
+                            !foldedProcessorProductId.IsEmpty ||
+                            !foldedProcessorSeatOperationId.IsEmpty ||
+                            !foldedProcessorRetentionOperationId.IsEmpty ||
+                            receipt.SourceAttachOperationId !=
+                                foldedAttachOperationId ||
+                            receipt.SourceSecureOperationId !=
+                                foldedSecureOperationId)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorItemId = receipt.ItemId;
+                        foldedProcessorProductId = receipt.ProductId;
+                        foldedProcessorSeatOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.CloseProcessorRetention:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorSeatedOpen ||
+                            receipt.ItemId != foldedProcessorItemId ||
+                            receipt.ProductId != foldedProcessorProductId ||
+                            receipt.SourceProcessorSeatOperationId !=
+                                foldedProcessorSeatOperationId ||
+                            !foldedProcessorRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorRetentionOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.OpenProcessorRetention:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedProcessorState != ProcessorSocketState.ProcessorRetained ||
+                            receipt.ItemId != foldedProcessorItemId ||
+                            receipt.ProductId != foldedProcessorProductId ||
+                            receipt.SourceProcessorSeatOperationId !=
+                                foldedProcessorSeatOperationId ||
+                            receipt.SourceProcessorRetentionOperationId !=
+                                foldedProcessorRetentionOperationId ||
+                            foldedProcessorRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorRetentionOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.RemoveProcessor:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorSeatedOpen ||
+                            receipt.ItemId != foldedProcessorItemId ||
+                            receipt.ProductId != foldedProcessorProductId ||
+                            receipt.SourceProcessorSeatOperationId !=
+                                foldedProcessorSeatOperationId ||
+                            !receipt.SourceProcessorRetentionOperationId.IsEmpty ||
+                            !foldedProcessorRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorItemId = default;
+                        foldedProcessorProductId = default;
+                        foldedProcessorSeatOperationId = default;
+                        foldedProcessorRetentionOperationId = default;
+                        break;
+
                     default:
                         return false;
                 }
 
                 foldedState = receipt.ResultingSeatState;
+                foldedProcessorState = receipt.ResultingProcessorSocketState;
                 foldedInventoryRevision = receipt.InventoryRevision;
             }
 
@@ -1026,7 +2239,14 @@ namespace PCShopEmpire3D.Assembly
                    foldedItemId == _motherboardItemId &&
                    foldedProductId == _motherboardProductId &&
                    foldedAttachOperationId == _installedByOperationId &&
-                   foldedSecureOperationId == _securedByOperationId;
+                   foldedSecureOperationId == _securedByOperationId &&
+                   foldedProcessorState == _processorSocketState &&
+                   foldedProcessorItemId == _processorItemId &&
+                   foldedProcessorProductId == _processorProductId &&
+                   foldedProcessorSeatOperationId ==
+                       _processorSeatedByOperationId &&
+                   foldedProcessorRetentionOperationId ==
+                       _processorRetainedByOperationId;
         }
 
         private bool IsMatchingAttachReceipt(
@@ -1041,6 +2261,68 @@ namespace PCShopEmpire3D.Assembly
                    attachReceipt.AssemblyRevision < descendant.AssemblyRevision &&
                    attachReceipt.ItemId == descendant.ItemId &&
                    attachReceipt.SlotId == descendant.SlotId;
+        }
+
+        private bool IsMatchingMotherboardSecureLineage(
+            AssemblyOperationReceipt descendant)
+        {
+            return !descendant.SourceAttachOperationId.IsEmpty &&
+                   !descendant.SourceSecureOperationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       descendant.SourceAttachOperationId,
+                       out AssemblyOperationReceipt attachReceipt) &&
+                   _receipts.TryGetValue(
+                       descendant.SourceSecureOperationId,
+                       out AssemblyOperationReceipt secureReceipt) &&
+                   attachReceipt.OperationKind ==
+                       AssemblyOperationKind.AttachMotherboard &&
+                   secureReceipt.OperationKind ==
+                       AssemblyOperationKind.SecureMotherboardFastener &&
+                   attachReceipt.AssemblyRevision < secureReceipt.AssemblyRevision &&
+                   secureReceipt.AssemblyRevision < descendant.AssemblyRevision &&
+                   attachReceipt.ItemId == secureReceipt.ItemId &&
+                   attachReceipt.SlotId == MotherboardSlotId &&
+                   secureReceipt.SlotId == MotherboardSlotId &&
+                   secureReceipt.SourceAttachOperationId ==
+                       attachReceipt.OperationId;
+        }
+
+        private bool IsMatchingProcessorSeatReceipt(
+            StableId<AssemblyOperationIdScope> operationId,
+            AssemblyOperationReceipt descendant)
+        {
+            return !operationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       operationId,
+                       out AssemblyOperationReceipt seatReceipt) &&
+                   seatReceipt.OperationKind == AssemblyOperationKind.SeatProcessor &&
+                   seatReceipt.AssemblyRevision < descendant.AssemblyRevision &&
+                   seatReceipt.ItemId == descendant.ItemId &&
+                   seatReceipt.ProductId == descendant.ProductId &&
+                   seatReceipt.SlotId == descendant.SlotId &&
+                   seatReceipt.SourceAttachOperationId ==
+                       descendant.SourceAttachOperationId &&
+                   seatReceipt.SourceSecureOperationId ==
+                       descendant.SourceSecureOperationId;
+        }
+
+        private bool IsMatchingProcessorRetentionReceipt(
+            StableId<AssemblyOperationIdScope> operationId,
+            AssemblyOperationReceipt descendant)
+        {
+            return !operationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       operationId,
+                       out AssemblyOperationReceipt retentionReceipt) &&
+                   retentionReceipt.OperationKind ==
+                       AssemblyOperationKind.CloseProcessorRetention &&
+                   retentionReceipt.AssemblyRevision < descendant.AssemblyRevision &&
+                   retentionReceipt.ItemId == descendant.ItemId &&
+                   retentionReceipt.ProductId == descendant.ProductId &&
+                   retentionReceipt.SlotId == descendant.SlotId &&
+                   retentionReceipt.RetentionId == descendant.RetentionId &&
+                   retentionReceipt.SourceProcessorSeatOperationId ==
+                       descendant.SourceProcessorSeatOperationId;
         }
 
         private InventoryItemRecord GetItem(StableId<ItemInstanceIdScope> itemId)
@@ -1077,6 +2359,41 @@ namespace PCShopEmpire3D.Assembly
             if (failure == InventoryFailures.ReservedQuantity)
             {
                 return AssemblyFailures.ItemNotInActorHands;
+            }
+
+            return AssemblyFailures.InventoryTransferRejected;
+        }
+
+        private static Failure MapProcessorInventoryFailure(Failure failure, bool seating)
+        {
+            if (failure == InventoryFailures.ContainerCapacityExceeded)
+            {
+                return seating
+                    ? AssemblyFailures.ProcessorSocketCapacityExceeded
+                    : AssemblyFailures.HandsCapacityExceeded;
+            }
+
+            if (failure == InventoryFailures.RevisionOverflow)
+            {
+                return AssemblyFailures.InventoryRevisionOverflow;
+            }
+
+            if (failure == InventoryFailures.SerializedTransferPlanStale)
+            {
+                return AssemblyFailures.InventoryTransferStale;
+            }
+
+            if (failure == InventoryFailures.SerializedTransferAccessInvalid ||
+                failure == InventoryFailures.SerializedTransferContainerManaged)
+            {
+                return AssemblyFailures.PlanForeign;
+            }
+
+            if (failure == InventoryFailures.ReservedQuantity)
+            {
+                return seating
+                    ? AssemblyFailures.ItemNotInActorHands
+                    : AssemblyFailures.ComponentNotSeated;
             }
 
             return AssemblyFailures.InventoryTransferRejected;

@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-motherboard-fastener-r23-v1";
+        public const string Version = "garage-cpu-socket-retention-r24-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -31,6 +31,9 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
+        [SerializeField] private ProcessorSocketProjection processorSocket;
+        [SerializeField] private ProcessorAssemblyItemBinding processorBinding;
+        [SerializeField] private PhysicalItemProjection processor;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -52,6 +55,12 @@ namespace PCShopEmpire3D.Presentation
 
         public MotherboardAssemblyItemBinding MotherboardBinding => motherboardBinding;
 
+        public ProcessorSocketProjection ProcessorSocket => processorSocket;
+
+        public ProcessorAssemblyItemBinding ProcessorBinding => processorBinding;
+
+        public PhysicalItemProjection Processor => processor;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -62,7 +71,10 @@ namespace PCShopEmpire3D.Presentation
             CheckoutStationProjection physicalCheckoutStation = null,
             MotherboardSeatProjection physicalMotherboardSeat = null,
             MotherboardFastenerProjection physicalMotherboardFastener = null,
-            MotherboardAssemblyItemBinding physicalMotherboardBinding = null)
+            MotherboardAssemblyItemBinding physicalMotherboardBinding = null,
+            ProcessorSocketProjection physicalProcessorSocket = null,
+            ProcessorAssemblyItemBinding physicalProcessorBinding = null,
+            PhysicalItemProjection physicalProcessor = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -74,6 +86,9 @@ namespace PCShopEmpire3D.Presentation
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
+            processorSocket = physicalProcessorSocket;
+            processorBinding = physicalProcessorBinding;
+            processor = physicalProcessor;
         }
 
         private void Start()
@@ -178,7 +193,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 1 &&
+                                          assemblySession.Inventory.SerializedItemCount == 2 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -205,6 +220,43 @@ namespace PCShopEmpire3D.Presentation
                                           assemblySession.AssemblyBuild.ReceiptCount == 0 &&
                                           assemblySession.AssemblyBuild.ValidateInvariants().IsSuccess &&
                                           hasMotherboardIdentity;
+            bool hasProcessorSocket = processorSocket != null &&
+                                      processorSocket.IsConfigured &&
+                                      processorSocket.SlotIdValue ==
+                                          GarageStockFlowSession.ProcessorSlotIdValue &&
+                                      processorSocket.RetentionIdValue ==
+                                          GarageStockFlowSession.ProcessorRetentionIdValue &&
+                                      processorSocket.MatchesAuthorityState(
+                                          AssemblySeatState.Empty,
+                                          ProcessorSocketState.EmptyOpen);
+            bool hasProcessorIdentity = assemblySession != null &&
+                                        processorBinding != null &&
+                                        processor != null &&
+                                        processorBinding.PhysicalItem == processor &&
+                                        processorBinding.InventoryItemIdValue ==
+                                            assemblySession.ProcessorItemId.Value &&
+                                        processor.ItemIdValue ==
+                                            assemblySession.ProcessorItemId.Value &&
+                                        assemblySession.TryGetProcessorItem(
+                                            out InventoryItemRecord processorItem) &&
+                                        processorItem.Id == assemblySession.ProcessorItemId &&
+                                        processorItem.ProductId ==
+                                            assemblySession.ProcessorProductId &&
+                                        processorItem.ContainerId ==
+                                            assemblySession.WorldFloorContainerId &&
+                                        CountCanonicalProcessorProjections(
+                                            assemblySession.ProcessorItemId.Value) == 1 &&
+                                        processorBinding.ValidateProjectionInvariant().IsSuccess;
+            bool hasProcessorAssembly = hasProcessorSocket &&
+                                        hasProcessorIdentity &&
+                                        processorBinding.Runtime == stockFlow &&
+                                        processorBinding.Socket == processorSocket &&
+                                        processor.CarryProfile ==
+                                            PhysicalCarryProfile.PcComponent &&
+                                        assemblySession != null &&
+                                        assemblySession.AssemblyBuild.HasProcessorSocket &&
+                                        assemblySession.AssemblyBuild.ProcessorSocketState ==
+                                            ProcessorSocketState.EmptyOpen;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -234,21 +286,26 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"motherboard-identity={(hasMotherboardIdentity ? "stable" : "missing")} " +
+                $"processor-socket={(hasProcessorSocket ? "ready" : "missing")} " +
+                $"processor-retention={(hasProcessorAssembly ? "ready" : "missing")} " +
+                $"processor-identity={(hasProcessorIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
             bool runStockFlowSmoke = HasCommandLineArgument("-pse-stock-flow-smoke");
             bool runCustomerFlowSmoke = HasCommandLineArgument("-pse-customer-flow-smoke");
             bool runAssemblySmoke = HasCommandLineArgument("-pse-assembly-smoke");
+            bool runProcessorSmoke = HasCommandLineArgument("-pse-processor-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
-                             (runAssemblySmoke ? 1 : 0);
+                             (runAssemblySmoke ? 1 : 0) +
+                             (runProcessorSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -267,6 +324,14 @@ namespace PCShopEmpire3D.Presentation
                 Debug.LogError(
                     "GARAGE_MOTHERBOARD_ASSEMBLY_RUNTIME_SMOKE " +
                     "assembly-flow=failed code=smoke.assembly-requires-development-build");
+                return;
+            }
+
+            if (runProcessorSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_CPU_SOCKET_RUNTIME_SMOKE " +
+                    "cpu-socket-flow=failed code=smoke.processor-requires-development-build");
                 return;
             }
 
@@ -291,6 +356,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunMotherboardAssemblySmoke());
+            }
+
+            if (runProcessorSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorSocketSmoke());
             }
         }
 
@@ -1057,15 +1128,26 @@ namespace PCShopEmpire3D.Presentation
             bool invariantsValid = session.ValidateInvariants().IsSuccess;
             bool hasRemainingMotherboard = session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard);
+            bool hasRemainingProcessor = session.TryGetProcessorItem(
+                out InventoryItemRecord remainingProcessor);
             bool motherboardProjectionValid = motherboardBinding != null &&
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 1 &&
+            bool processorProjectionValid = processorBinding != null &&
+                                              processorBinding.ValidateProjectionInvariant().IsSuccess;
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 2 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
                                        remainingMotherboard.ContainerId == session.WorldFloorContainerId &&
+                                       hasRemainingProcessor &&
+                                       remainingProcessor.Id == session.ProcessorItemId &&
+                                       remainingProcessor.ProductId == session.ProcessorProductId &&
+                                       remainingProcessor.ContainerId == session.WorldFloorContainerId &&
                                        session.AssemblyBuild.Revision == 0 &&
-                                       motherboardProjectionValid;
+                                       session.AssemblyBuild.ProcessorSocketState ==
+                                           ProcessorSocketState.EmptyOpen &&
+                                       motherboardProjectionValid &&
+                                       processorProjectionValid;
             bool fulfilled = hasExitedVisit &&
                              exitedVisit.State == CustomerVisitState.Exited &&
                              exitedVisit.ExitReason == CustomerVisitExitReason.Fulfilled &&
@@ -1113,8 +1195,11 @@ namespace PCShopEmpire3D.Presentation
                     $"motherboard-id={(hasRemainingMotherboard && remainingMotherboard.Id == session.MotherboardItemId ? "ok" : "mismatch")} " +
                     $"motherboard-product={(hasRemainingMotherboard && remainingMotherboard.ProductId == session.MotherboardProductId ? "ok" : "mismatch")} " +
                     $"motherboard-container={(hasRemainingMotherboard ? remainingMotherboard.ContainerId.Value : "missing")} " +
+                    $"processor-id={(hasRemainingProcessor && remainingProcessor.Id == session.ProcessorItemId ? "ok" : "mismatch")} " +
+                    $"processor-container={(hasRemainingProcessor ? remainingProcessor.ContainerId.Value : "missing")} " +
                     $"assembly-revision={session.AssemblyBuild.Revision} " +
                     $"motherboard-projection={(motherboardProjectionValid ? "ok" : "failed")} " +
+                    $"processor-projection={(processorProjectionValid ? "ok" : "failed")} " +
                     $"invariants={(invariantsValid ? "ok" : "failed")}");
                 yield break;
             }
@@ -1582,11 +1667,17 @@ namespace PCShopEmpire3D.Presentation
                     session.MotherboardItemId.Value ||
                 motherboard.ItemIdValue != session.MotherboardItemId.Value ||
                 physicalMotherboardCount != 1 ||
-                session.Inventory.SerializedItemCount != 1 ||
+                session.Inventory.SerializedItemCount != 2 ||
                 !session.TryGetMotherboardItem(out InventoryItemRecord looseItem) ||
                 looseItem.Id != session.MotherboardItemId ||
                 looseItem.ProductId != session.MotherboardProductId ||
                 looseItem.ContainerId != session.WorldFloorContainerId ||
+                !session.TryGetProcessorItem(out InventoryItemRecord looseProcessor) ||
+                looseProcessor.Id != session.ProcessorItemId ||
+                looseProcessor.ProductId != session.ProcessorProductId ||
+                looseProcessor.ContainerId != session.WorldFloorContainerId ||
+                session.AssemblyBuild.ProcessorSocketState !=
+                    ProcessorSocketState.EmptyOpen ||
                 motherboardFastener.FastenerIdValue !=
                     session.MotherboardFastenerId.Value ||
                 motherboardFastener.FocusCollider == null ||
@@ -1977,7 +2068,14 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 1 &&
+                             session.Inventory.SerializedItemCount == 2 &&
+                             session.TryGetProcessorItem(
+                                 out InventoryItemRecord unchangedProcessor) &&
+                             unchangedProcessor.Id == session.ProcessorItemId &&
+                             unchangedProcessor.ProductId == session.ProcessorProductId &&
+                             unchangedProcessor.ContainerId == session.WorldFloorContainerId &&
+                             recoveredSnapshot.ProcessorSocketState ==
+                                 ProcessorSocketState.EmptyOpen &&
                              session.AssemblyBuild.Revision == initialAssemblyRevision + 5 &&
                              session.Inventory.Revision == initialInventoryRevision + 4 &&
                              session.AssemblyBuild.ReceiptCount == initialReceiptCount + 5 &&
@@ -2093,13 +2191,331 @@ namespace PCShopEmpire3D.Presentation
             yield return new WaitForEndOfFrame();
         }
 
+        private IEnumerator RunProcessorSocketSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(false);
+            yield return null;
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            if (playerMotor == null ||
+                playerCarry == null ||
+                session == null ||
+                motherboardBinding == null ||
+                motherboardSeat == null ||
+                motherboardFastener == null ||
+                processorSocket == null ||
+                processorBinding == null ||
+                processor == null)
+            {
+                LogProcessorSocketSmokeFailure("smoke.context-missing");
+                yield break;
+            }
+
+            Pose initialProcessorPose = new Pose(
+                processor.transform.position,
+                processor.transform.rotation);
+            Transform initialProcessorParent = processor.transform.parent;
+            int initialProcessorInstanceId = processor.GetInstanceID();
+
+            bool preflight = session.AssemblyBuild.HasProcessorSocket &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.Empty &&
+                             session.AssemblyBuild.ProcessorSocketState ==
+                                 ProcessorSocketState.EmptyOpen &&
+                             session.TryGetProcessorItem(
+                                 out InventoryItemRecord looseProcessor) &&
+                             looseProcessor.Id == session.ProcessorItemId &&
+                             looseProcessor.ProductId == session.ProcessorProductId &&
+                             looseProcessor.ContainerId == session.WorldFloorContainerId &&
+                             CountCanonicalProcessorProjections(
+                                 session.ProcessorItemId.Value) == 1 &&
+                             processorBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!preflight)
+            {
+                LogProcessorSocketSmokeFailure("smoke.preflight-mismatch");
+                yield break;
+            }
+
+            OperationResult motherboardPickup = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            MovePlayerToMotherboardSeat();
+            OperationResult motherboardMode =
+                playerCarry.TrySetMotherboardSeatMode(true);
+            OperationResult motherboardAttach = playerCarry.TryConfirmMotherboardSeat();
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardSecure =
+                playerCarry.TryOperateMotherboardFastener();
+            if (motherboardPickup.IsFailure ||
+                motherboardMode.IsFailure ||
+                motherboardAttach.IsFailure ||
+                motherboardSecure.IsFailure ||
+                session.AssemblyBuild.MotherboardSeatState !=
+                    AssemblySeatState.SeatedSecured)
+            {
+                LogProcessorSocketSmokeFailure("smoke.motherboard-preflight-failed");
+                yield break;
+            }
+
+            OperationResult processorPickup = playerCarry.TryPickup(processor);
+            MovePlayerToProcessorSocket();
+            OperationResult processorMode = playerCarry.TrySetProcessorSeatMode(true);
+            long keyedAssemblyRevision = session.AssemblyBuild.Revision;
+            long keyedInventoryRevision = session.Inventory.Revision;
+            int keyedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose carriedProcessorPose = new Pose(
+                processor.transform.position,
+                processor.transform.rotation);
+            OperationResult wrongOrientation =
+                playerCarry.TryRotateProcessorSeatPreviewClockwise();
+            OperationResult wrongOrientationConfirm =
+                playerCarry.TryConfirmProcessorSeat();
+            bool wrongOrientationBlocked = wrongOrientation.IsSuccess &&
+                                           wrongOrientationConfirm.Error.Code ==
+                                               "assembly-processor.orientation-invalid" &&
+                                           !playerCarry.PlacementValid &&
+                                           playerCarry.CurrentProcessorSocketStatus ==
+                                               ProcessorSocketStatus.OrientationInvalid &&
+                                           playerCarry.HeldItem == processor &&
+                                           session.AssemblyBuild.Revision ==
+                                               keyedAssemblyRevision &&
+                                           session.Inventory.Revision ==
+                                               keyedInventoryRevision &&
+                                           session.AssemblyBuild.ReceiptCount ==
+                                               keyedReceiptCount &&
+                                           ApproximatelySamePose(
+                                               new Pose(
+                                                   processor.transform.position,
+                                                   processor.transform.rotation),
+                                               carriedProcessorPose);
+            for (int turn = 0; turn < 3; turn++)
+            {
+                playerCarry.TryRotateProcessorSeatPreviewClockwise();
+            }
+
+            bool validPreview = processorMode.IsSuccess &&
+                                wrongOrientationBlocked &&
+                                playerCarry.IsProcessorSeatMode &&
+                                playerCarry.PlacementRotationQuarterTurns == 0 &&
+                                playerCarry.PlacementValid &&
+                                playerCarry.CurrentProcessorSocketStatus ==
+                                    ProcessorSocketStatus.ValidSeat &&
+                                session.AssemblyBuild.Revision == keyedAssemblyRevision &&
+                                session.Inventory.Revision == keyedInventoryRevision &&
+                                session.AssemblyBuild.ReceiptCount == keyedReceiptCount;
+            OperationResult processorSeat = playerCarry.TryConfirmProcessorSeat();
+            if (processorPickup.IsFailure ||
+                !validPreview ||
+                processorSeat.IsFailure ||
+                session.AssemblyBuild.ProcessorSocketState !=
+                    ProcessorSocketState.ProcessorSeatedOpen ||
+                processorBinding.ValidateProjectionInvariant().IsFailure)
+            {
+                LogProcessorSocketSmokeFailure("smoke.processor-seat-failed");
+                yield break;
+            }
+
+            var receiptsAfterSeat = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt seatReceipt =
+                receiptsAfterSeat[receiptsAfterSeat.Count - 1];
+            MovePlayerToProcessorSocket();
+            OperationResult close = playerCarry.TryOperateProcessorRetention();
+            var receiptsAfterClose = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt closeReceipt =
+                receiptsAfterClose[receiptsAfterClose.Count - 1];
+            bool retained = close.IsSuccess &&
+                            closeReceipt.OperationKind ==
+                                AssemblyOperationKind.CloseProcessorRetention &&
+                            session.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained &&
+                            processorSocket.MatchesAuthorityState(
+                                AssemblySeatState.SeatedSecured,
+                                ProcessorSocketState.ProcessorRetained);
+            long retainedGateAssemblyRevision = session.AssemblyBuild.Revision;
+            long retainedGateInventoryRevision = session.Inventory.Revision;
+            int retainedGateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose retainedGatePose = new Pose(
+                processor.transform.position,
+                processor.transform.rotation);
+            OperationResult retainedRemoval = playerCarry.TryPickup(processor);
+            bool retainedGate = retainedRemoval.IsFailure &&
+                                retainedRemoval.Error ==
+                                    AssemblyFailures.ProcessorRetained &&
+                                playerCarry.HeldItem == null &&
+                                session.AssemblyBuild.ProcessorSocketState ==
+                                    ProcessorSocketState.ProcessorRetained &&
+                                session.AssemblyBuild.Revision ==
+                                    retainedGateAssemblyRevision &&
+                                session.Inventory.Revision ==
+                                    retainedGateInventoryRevision &&
+                                session.AssemblyBuild.ReceiptCount ==
+                                    retainedGateReceiptCount &&
+                                ApproximatelySamePose(
+                                    new Pose(
+                                        processor.transform.position,
+                                        processor.transform.rotation),
+                                    retainedGatePose);
+            OperationResult open = playerCarry.TryOperateProcessorRetention();
+            var receiptsAfterOpen = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt openReceipt =
+                receiptsAfterOpen[receiptsAfterOpen.Count - 1];
+            bool reopened = open.IsSuccess &&
+                            session.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorSeatedOpen &&
+                            processorSocket.MatchesAuthorityState(
+                                AssemblySeatState.SeatedSecured,
+                                ProcessorSocketState.ProcessorSeatedOpen);
+            if (!retained || !retainedGate || !reopened)
+            {
+                LogProcessorSocketSmokeFailure("smoke.retention-cycle-failed");
+                yield break;
+            }
+
+            OperationResult remove = playerCarry.TryPickup(processor);
+            var receiptsAfterRemove = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt removeReceipt =
+                receiptsAfterRemove[receiptsAfterRemove.Count - 1];
+            if (remove.IsFailure ||
+                playerCarry.HeldItem != processor ||
+                !processorBinding.IsAuthorityInHands ||
+                session.AssemblyBuild.ProcessorSocketState !=
+                    ProcessorSocketState.EmptyOpen)
+            {
+                LogProcessorSocketSmokeFailure("smoke.processor-remove-failed");
+                yield break;
+            }
+
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardUnsecure =
+                playerCarry.TryOperateMotherboardFastener();
+            OperationResult recovery = playerCarry.TryRecoverHeldItem();
+            long finalAssemblyRevision = session.AssemblyBuild.Revision;
+            int finalReceiptCount = session.AssemblyBuild.ReceiptCount;
+            long finalInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> delayedSeatReplay =
+                session.SeatProcessor(
+                    seatReceipt.OperationId,
+                    seatReceipt.SourceAttachOperationId,
+                    seatReceipt.SourceSecureOperationId,
+                    seatReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedCloseReplay =
+                session.CloseProcessorRetention(
+                    closeReceipt.OperationId,
+                    seatReceipt.OperationId,
+                    closeReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedOpenReplay =
+                session.OpenProcessorRetention(
+                    openReceipt.OperationId,
+                    openReceipt.SourceProcessorSeatOperationId,
+                    openReceipt.SourceProcessorRetentionOperationId,
+                    openReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedRemoveReplay =
+                session.RemoveProcessor(
+                    removeReceipt.OperationId,
+                    removeReceipt.SourceProcessorSeatOperationId,
+                    removeReceipt.ExpectedAssemblyRevision);
+            bool replayStable = delayedSeatReplay.IsSuccess &&
+                                ReferenceEquals(delayedSeatReplay.Value, seatReceipt) &&
+                                delayedCloseReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedCloseReplay.Value,
+                                    closeReceipt) &&
+                                delayedOpenReplay.IsSuccess &&
+                                ReferenceEquals(delayedOpenReplay.Value, openReceipt) &&
+                                delayedRemoveReplay.IsSuccess &&
+                                ReferenceEquals(delayedRemoveReplay.Value, removeReceipt) &&
+                                session.AssemblyBuild.Revision == finalAssemblyRevision &&
+                                session.AssemblyBuild.ReceiptCount == finalReceiptCount &&
+                                session.Inventory.Revision == finalInventoryRevision;
+            bool recovered = motherboardUnsecure.IsSuccess &&
+                             recovery.IsSuccess &&
+                             playerCarry.HeldItem == null &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.SeatedUnsecured &&
+                             session.AssemblyBuild.ProcessorSocketState ==
+                                 ProcessorSocketState.EmptyOpen &&
+                             session.TryGetProcessorItem(
+                                 out InventoryItemRecord recoveredProcessor) &&
+                             recoveredProcessor.Id == session.ProcessorItemId &&
+                             recoveredProcessor.ProductId ==
+                                 session.ProcessorProductId &&
+                             recoveredProcessor.ContainerId ==
+                                 session.WorldFloorContainerId &&
+                             processor.GetInstanceID() == initialProcessorInstanceId &&
+                             processor.transform.parent == initialProcessorParent &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processor.transform.position,
+                                     processor.transform.rotation),
+                                 initialProcessorPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processor.Body.position,
+                                     processor.Body.rotation),
+                                 initialProcessorPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processor.LastSafePosition,
+                                     processor.LastSafeRotation),
+                                 initialProcessorPose) &&
+                             processor.Ownership == PhysicalItemOwnership.World &&
+                             processor.IsStablePlacement &&
+                             CountCanonicalProcessorProjections(
+                                 session.ProcessorItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 2 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.HandsContainerId).Value == 0 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.ProcessorSocketContainerId).Value == 0 &&
+                             processorBinding.ValidateProjectionInvariant().IsSuccess &&
+                             session.ValidateInvariants().IsSuccess;
+            if (!recovered || !replayStable)
+            {
+                LogProcessorSocketSmokeFailure(
+                    !recovered
+                        ? "smoke.recovery-failed"
+                        : "smoke.delayed-replay-failed");
+                yield break;
+            }
+
+            Debug.Log(
+                "GARAGE_CPU_SOCKET_RUNTIME_SMOKE cpu-socket-flow=ok " +
+                "preflight=ok retention-cycle=ok recovery=ok " +
+                "keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable");
+            yield return new WaitForEndOfFrame();
+        }
+
         private static void LogMotherboardAssemblySmokeFailure(string code)
         {
             Debug.LogError(
                 $"GARAGE_MOTHERBOARD_ASSEMBLY_RUNTIME_SMOKE assembly-flow=failed code={code}");
         }
 
+        private static void LogProcessorSocketSmokeFailure(string code)
+        {
+            Debug.LogError(
+                $"GARAGE_CPU_SOCKET_RUNTIME_SMOKE cpu-socket-flow=failed code={code}");
+        }
+
         private static int CountCanonicalMotherboardProjections(string canonicalItemId)
+        {
+            int count = 0;
+            foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
+                         FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+            {
+                if (item != null && item.ItemIdValue == canonicalItemId)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static int CountCanonicalProcessorProjections(string canonicalItemId)
         {
             int count = 0;
             foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
@@ -2258,6 +2674,27 @@ namespace PCShopEmpire3D.Presentation
         private void MovePlayerToMotherboardFastener()
         {
             Vector3 target = motherboardFastener.FocusCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+
+            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.rotation = Quaternion.LookRotation(
+                    target - playerCamera.transform.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToProcessorSocket()
+        {
+            Vector3 target = processorSocket.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;

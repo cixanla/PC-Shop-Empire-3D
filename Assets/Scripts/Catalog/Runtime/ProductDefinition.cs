@@ -141,6 +141,10 @@ namespace PCShopEmpire3D.Catalog
             Failure.FromCode("catalog.component.kind.invalid");
         public static readonly Failure InvalidMotherboardFormFactor =
             Failure.FromCode("catalog.component.motherboard-form-factor.invalid");
+        public static readonly Failure InvalidCpuSocketFamily =
+            Failure.FromCode("catalog.component.cpu-socket-family.invalid");
+        public static readonly Failure ComponentMetadataMismatch =
+            Failure.FromCode("catalog.component.metadata-mismatch");
         public static readonly Failure EmptyComponentCatalog =
             Failure.FromCode("catalog.component-catalog.empty");
         public static readonly Failure NullComponentSpecification =

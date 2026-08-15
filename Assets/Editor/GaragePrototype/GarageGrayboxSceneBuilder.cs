@@ -128,12 +128,18 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 MotherboardSeatProjection seat,
                 MotherboardFastenerProjection fastener,
                 MotherboardAssemblyItemBinding binding,
-                PhysicalItemProjection motherboard)
+                PhysicalItemProjection motherboard,
+                ProcessorSocketProjection processorSocket,
+                ProcessorAssemblyItemBinding processorBinding,
+                PhysicalItemProjection processor)
             {
                 Seat = seat;
                 Fastener = fastener;
                 Binding = binding;
                 Motherboard = motherboard;
+                ProcessorSocket = processorSocket;
+                ProcessorBinding = processorBinding;
+                Processor = processor;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -143,6 +149,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public MotherboardAssemblyItemBinding Binding { get; }
 
             public PhysicalItemProjection Motherboard { get; }
+
+            public ProcessorSocketProjection ProcessorSocket { get; }
+
+            public ProcessorAssemblyItemBinding ProcessorBinding { get; }
+
+            public PhysicalItemProjection Processor { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -422,10 +434,18 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Seat,
                 assemblyBuild.Fastener,
                 GarageStockFlowSession.MotherboardItemInstanceIdValue);
+            assemblyBuild.ProcessorBinding.Configure(
+                stockFlow,
+                assemblyBuild.Processor,
+                assemblyBuild.ProcessorSocket,
+                GarageStockFlowSession.ProcessorItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
                 assemblyBuild.Binding);
+            carry.ConfigureProcessorSocket(
+                assemblyBuild.ProcessorSocket,
+                assemblyBuild.ProcessorBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -461,7 +481,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 customerFlowBuild.CheckoutStation,
                 assemblyBuild.Seat,
                 assemblyBuild.Fastener,
-                assemblyBuild.Binding);
+                assemblyBuild.Binding,
+                assemblyBuild.ProcessorSocket,
+                assemblyBuild.ProcessorBinding,
+                assemblyBuild.Processor);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1146,14 +1169,86 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(0.07f, 0.10f, 0.035f),
                 0.004f,
                 brushedSteel);
-            CreateBeveledCube(
-                "MotherboardCpuSocket",
+            Transform processorSocketRoot = new GameObject(
+                "MotherboardCpuSocket").transform;
+            processorSocketRoot.SetParent(motherboardRoot.transform, false);
+            processorSocketRoot.localPosition = new Vector3(0.015f, 0.025f, 0.012f);
+
+            GameObject processorSocketBase = CreateProcessorSocketBase(
+                "ProcessorSocketBase",
+                processorSocketRoot,
+                rubber);
+            DisableDecorativeRendererCost(processorSocketBase.GetComponent<Renderer>());
+
+            Transform processorSnapAnchor = new GameObject(
+                "ProcessorSnapAnchor").transform;
+            processorSnapAnchor.SetParent(processorSocketRoot, false);
+            processorSnapAnchor.localPosition = new Vector3(0f, 0f, 0.0035f);
+
+            Transform loadPlatePivot = new GameObject("ProcessorLoadPlatePivot").transform;
+            loadPlatePivot.SetParent(processorSocketRoot, false);
+            loadPlatePivot.localPosition = new Vector3(0f, 0.026f, 0.007f);
+            loadPlatePivot.localRotation = Quaternion.Euler(-68f, 0f, 0f);
+            GameObject loadPlate = CreateHardSurfaceBoxDetails(
+                "ProcessorLoadPlate",
+                loadPlatePivot,
+                new[]
+                {
+                    new Vector3(-0.02325f, -0.026f, 0f),
+                    new Vector3(0.02325f, -0.026f, 0f),
+                    new Vector3(0f, -0.00575f, 0f),
+                    new Vector3(0f, -0.04625f, 0f)
+                },
+                new[]
+                {
+                    new Vector3(0.0115f, 0.050f, 0.0015f),
+                    new Vector3(0.0115f, 0.050f, 0.0015f),
+                    new Vector3(0.035f, 0.0095f, 0.0015f),
+                    new Vector3(0.035f, 0.0095f, 0.0015f)
+                },
+                brushedSteel);
+            DisableDecorativeRendererCost(loadPlate.GetComponent<Renderer>());
+
+            Transform retentionLeverPivot = new GameObject(
+                "ProcessorRetentionLeverPivot").transform;
+            retentionLeverPivot.SetParent(processorSocketRoot, false);
+            retentionLeverPivot.localPosition = new Vector3(0.03025f, 0.026f, 0.007f);
+            retentionLeverPivot.localRotation = Quaternion.Euler(-55f, 0f, 0f);
+            GameObject retentionLever = CreateCylinder(
+                "ProcessorRetentionLever",
+                retentionLeverPivot,
+                new Vector3(0f, -0.026f, 0f),
+                new Vector3(0.0025f, 0.026f, 0.0025f),
+                Quaternion.identity,
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(retentionLever.GetComponent<Collider>());
+            DisableDecorativeRendererCost(retentionLever.GetComponent<Renderer>());
+
+            GameObject processorFocusTarget = new GameObject(
+                "ProcessorSocketFocusTarget");
+            processorFocusTarget.transform.SetParent(processorSocketRoot, false);
+            processorFocusTarget.transform.localPosition = new Vector3(0f, 0f, 0.010f);
+            processorFocusTarget.layer = interactableLayer;
+            BoxCollider processorFocusCollider =
+                processorFocusTarget.AddComponent<BoxCollider>();
+            processorFocusCollider.size = new Vector3(0.092f, 0.084f, 0.022f);
+            processorFocusCollider.isTrigger = false;
+
+            ProcessorSocketProjection processorSocket =
+                processorSocketRoot.gameObject.AddComponent<ProcessorSocketProjection>();
+            processorSocket.Configure(
+                GarageStockFlowSession.ProcessorSlotIdValue,
+                GarageStockFlowSession.ProcessorRetentionIdValue,
+                processorSnapAnchor,
+                processorFocusCollider,
                 motherboardRoot.transform,
-                new Vector3(0.015f, 0.025f, 0.012f),
-                new Vector3(0.085f, 0.075f, 0.012f),
-                0.003f,
-                brushedSteel,
-                false);
+                loadPlatePivot,
+                retentionLeverPivot,
+                null,
+                validMaterial,
+                invalidMaterial,
+                2f,
+                0.94f);
             CreateCombinedBoxDetails(
                 "MotherboardConnectorMarks",
                 motherboardRoot.transform,
@@ -1187,7 +1282,52 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             MotherboardAssemblyItemBinding binding = motherboardRoot.AddComponent<
                 MotherboardAssemblyItemBinding>();
 
-            return new AssemblyBuildResult(seat, fastener, binding, motherboard);
+            GameObject processorRoot = new GameObject("PrototypeProcessor");
+            processorRoot.transform.SetParent(slice, false);
+            processorRoot.transform.localPosition = new Vector3(-1.17f, 0.992f, 3.93f);
+            processorRoot.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            processorRoot.layer = interactableLayer;
+
+            Rigidbody processorBody = processorRoot.AddComponent<Rigidbody>();
+            processorBody.mass = 0.08f;
+            processorBody.useGravity = false;
+            processorBody.isKinematic = true;
+            processorBody.interpolation = RigidbodyInterpolation.Interpolate;
+            processorBody.collisionDetectionMode =
+                CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject processorPackage = CreateProcessorPackage(
+                "PrototypeProcessorPackage",
+                processorRoot.transform,
+                motherboardPcb,
+                brushedSteel);
+            DisableDecorativeRendererCost(processorPackage.GetComponent<Renderer>());
+            BoxCollider processorCollider = processorRoot.AddComponent<BoxCollider>();
+            processorCollider.center = Vector3.zero;
+            processorCollider.size = new Vector3(0.045f, 0.0375f, 0.004f);
+            SetLayerRecursively(processorRoot, interactableLayer);
+
+            PhysicalItemProjection processor = processorRoot.AddComponent<
+                PhysicalItemProjection>();
+            processor.Configure(
+                GarageStockFlowSession.ProcessorItemInstanceIdValue,
+                GarageStockFlowSession.ProcessorDisplayName,
+                processorBody,
+                new Vector3(0.0225f, 0.01875f, 0.010f),
+                new Vector3(0f, -0.04f, 0f),
+                new Vector3(0f, 180f, 0f),
+                PhysicalCarryProfile.PcComponent);
+            ProcessorAssemblyItemBinding processorBinding =
+                processorRoot.AddComponent<ProcessorAssemblyItemBinding>();
+
+            return new AssemblyBuildResult(
+                seat,
+                fastener,
+                binding,
+                motherboard,
+                processorSocket,
+                processorBinding,
+                processor);
         }
 
         private static void BuildLighting(
@@ -2430,6 +2570,329 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             detail.AddComponent<MeshFilter>().sharedMesh = mesh;
             detail.AddComponent<MeshRenderer>().sharedMaterial = material;
             return detail;
+        }
+
+        private static GameObject CreateProcessorSocketBase(
+            string name,
+            Transform parent,
+            Material material)
+        {
+            return CreateHardSurfaceDetail(
+                name,
+                parent,
+                material,
+                (vertices, uvs, triangles) =>
+                {
+                    Vector3[] centers =
+                    {
+                        new Vector3(0f, 0f, -0.0025f),
+                        new Vector3(-0.026f, 0f, 0.001f),
+                        new Vector3(0.026f, 0f, 0.001f),
+                        new Vector3(0f, -0.0235f, 0.001f),
+                        new Vector3(0f, 0.0235f, 0.001f)
+                    };
+                    Vector3[] sizes =
+                    {
+                        new Vector3(0.060f, 0.052f, 0.005f),
+                        new Vector3(0.004f, 0.047f, 0.002f),
+                        new Vector3(0.004f, 0.047f, 0.002f),
+                        new Vector3(0.052f, 0.005f, 0.002f),
+                        new Vector3(0.052f, 0.005f, 0.002f)
+                    };
+                    for (int index = 0; index < centers.Length; index++)
+                    {
+                        AppendHardSurfaceBoxGeometry(
+                            vertices,
+                            uvs,
+                            triangles,
+                            centers[index],
+                            sizes[index]);
+                    }
+
+                    AppendHardSurfaceTriangularPrismGeometry(
+                        vertices,
+                        uvs,
+                        triangles,
+                        new Vector2(0.01925f, -0.01850f),
+                        new Vector2(0.02225f, -0.01850f),
+                        new Vector2(0.02225f, -0.01550f),
+                        0f,
+                        0.0035f);
+                });
+        }
+
+        private static GameObject CreateHardSurfaceBoxDetails(
+            string name,
+            Transform parent,
+            IReadOnlyList<Vector3> centers,
+            IReadOnlyList<Vector3> sizes,
+            Material material)
+        {
+            Require(centers != null && sizes != null && centers.Count == sizes.Count,
+                $"Hard-surface detail geometry is invalid: {name}");
+            Require(centers.Count > 0,
+                $"Hard-surface detail geometry is empty: {name}");
+            return CreateHardSurfaceDetail(
+                name,
+                parent,
+                material,
+                (vertices, uvs, triangles) =>
+                {
+                    for (int index = 0; index < centers.Count; index++)
+                    {
+                        AppendHardSurfaceBoxGeometry(
+                            vertices,
+                            uvs,
+                            triangles,
+                            centers[index],
+                            sizes[index]);
+                    }
+                });
+        }
+
+        private static GameObject CreateHardSurfaceDetail(
+            string name,
+            Transform parent,
+            Material material,
+            Action<List<Vector3>, List<Vector2>, List<int>> appendGeometry)
+        {
+            string meshPath = $"{MeshRoot}/{name}.asset";
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            bool createAsset = mesh == null;
+            mesh ??= new Mesh { name = name };
+            mesh.Clear();
+
+            var vertices = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var triangles = new List<int>();
+            appendGeometry(vertices, uvs, triangles);
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(mesh, meshPath);
+            }
+            else
+            {
+                EditorUtility.SetDirty(mesh);
+            }
+
+            GameObject detail = new GameObject(name);
+            detail.transform.SetParent(parent, false);
+            detail.AddComponent<MeshFilter>().sharedMesh = mesh;
+            detail.AddComponent<MeshRenderer>().sharedMaterial = material;
+            return detail;
+        }
+
+        private static GameObject CreateProcessorPackage(
+            string name,
+            Transform parent,
+            Material substrateMaterial,
+            Material heatSpreaderMaterial)
+        {
+            string meshPath = $"{MeshRoot}/{name}.asset";
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            bool createAsset = mesh == null;
+            mesh ??= new Mesh { name = name };
+            mesh.Clear();
+
+            var vertices = new List<Vector3>(54);
+            var uvs = new List<Vector2>(54);
+            var substrateTriangles = new List<int>(48);
+            var heatSpreaderTriangles = new List<int>(36);
+            Vector2[] outline =
+            {
+                new Vector2(-0.0225f, -0.01875f),
+                new Vector2(0.0185f, -0.01875f),
+                new Vector2(0.0225f, -0.01475f),
+                new Vector2(0.0225f, 0.01875f),
+                new Vector2(-0.0225f, 0.01875f)
+            };
+            const float substrateBottom = -0.002f;
+            const float substrateTop = -0.0004f;
+            AppendHardSurfacePolygonPrismGeometry(
+                vertices,
+                uvs,
+                substrateTriangles,
+                outline,
+                substrateBottom,
+                substrateTop);
+
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                heatSpreaderTriangles,
+                new Vector3(0f, 0f, 0.0008f),
+                new Vector3(0.031f, 0.027f, 0.0024f));
+
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.subMeshCount = 2;
+            mesh.SetTriangles(substrateTriangles, 0);
+            mesh.SetTriangles(heatSpreaderTriangles, 1);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(mesh, meshPath);
+            }
+            else
+            {
+                EditorUtility.SetDirty(mesh);
+            }
+
+            GameObject package = new GameObject(name);
+            package.transform.SetParent(parent, false);
+            package.AddComponent<MeshFilter>().sharedMesh = mesh;
+            package.AddComponent<MeshRenderer>().sharedMaterials =
+                new[] { substrateMaterial, heatSpreaderMaterial };
+            return package;
+        }
+
+        private static void AppendHardSurfaceBoxGeometry(
+            List<Vector3> vertices,
+            List<Vector2> uvs,
+            List<int> triangles,
+            Vector3 center,
+            Vector3 size)
+        {
+            Vector3 half = size * 0.5f;
+            Vector3[] boxVertices =
+            {
+                center + new Vector3(-half.x, -half.y, -half.z),
+                center + new Vector3(half.x, -half.y, -half.z),
+                center + new Vector3(half.x, half.y, -half.z),
+                center + new Vector3(-half.x, half.y, -half.z),
+                center + new Vector3(-half.x, -half.y, half.z),
+                center + new Vector3(half.x, -half.y, half.z),
+                center + new Vector3(half.x, half.y, half.z),
+                center + new Vector3(-half.x, half.y, half.z)
+            };
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[0], boxVertices[3], boxVertices[2], boxVertices[1]);
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[4], boxVertices[5], boxVertices[6], boxVertices[7]);
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[0], boxVertices[1], boxVertices[5], boxVertices[4]);
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[2], boxVertices[3], boxVertices[7], boxVertices[6]);
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[1], boxVertices[2], boxVertices[6], boxVertices[5]);
+            AppendHardSurfaceQuad(
+                vertices, uvs, triangles,
+                boxVertices[3], boxVertices[0], boxVertices[4], boxVertices[7]);
+        }
+
+        private static void AppendHardSurfaceTriangularPrismGeometry(
+            List<Vector3> vertices,
+            List<Vector2> uvs,
+            List<int> triangles,
+            Vector2 first,
+            Vector2 second,
+            Vector2 third,
+            float bottom,
+            float top)
+        {
+            AppendHardSurfacePolygonPrismGeometry(
+                vertices,
+                uvs,
+                triangles,
+                new[] { first, second, third },
+                bottom,
+                top);
+        }
+
+        private static void AppendHardSurfacePolygonPrismGeometry(
+            List<Vector3> vertices,
+            List<Vector2> uvs,
+            List<int> triangles,
+            IReadOnlyList<Vector2> outline,
+            float bottom,
+            float top)
+        {
+            Require(outline != null && outline.Count >= 3,
+                "Hard-surface polygon prism requires at least three points.");
+
+            int bottomOffset = vertices.Count;
+            foreach (Vector2 point in outline)
+            {
+                vertices.Add(new Vector3(point.x, point.y, bottom));
+                uvs.Add(new Vector2(
+                    point.x / 0.060f + 0.5f,
+                    point.y / 0.052f + 0.5f));
+            }
+
+            for (int index = 1; index < outline.Count - 1; index++)
+            {
+                triangles.Add(bottomOffset);
+                triangles.Add(bottomOffset + index + 1);
+                triangles.Add(bottomOffset + index);
+            }
+
+            int topOffset = vertices.Count;
+            foreach (Vector2 point in outline)
+            {
+                vertices.Add(new Vector3(point.x, point.y, top));
+                uvs.Add(new Vector2(
+                    point.x / 0.060f + 0.5f,
+                    point.y / 0.052f + 0.5f));
+            }
+
+            for (int index = 1; index < outline.Count - 1; index++)
+            {
+                triangles.Add(topOffset);
+                triangles.Add(topOffset + index);
+                triangles.Add(topOffset + index + 1);
+            }
+
+            for (int index = 0; index < outline.Count; index++)
+            {
+                int next = (index + 1) % outline.Count;
+                Vector2 currentPoint = outline[index];
+                Vector2 nextPoint = outline[next];
+                AppendHardSurfaceQuad(
+                    vertices,
+                    uvs,
+                    triangles,
+                    new Vector3(currentPoint.x, currentPoint.y, bottom),
+                    new Vector3(nextPoint.x, nextPoint.y, bottom),
+                    new Vector3(nextPoint.x, nextPoint.y, top),
+                    new Vector3(currentPoint.x, currentPoint.y, top));
+            }
+        }
+
+        private static void AppendHardSurfaceQuad(
+            List<Vector3> vertices,
+            List<Vector2> uvs,
+            List<int> triangles,
+            Vector3 first,
+            Vector3 second,
+            Vector3 third,
+            Vector3 fourth)
+        {
+            int offset = vertices.Count;
+            vertices.Add(first);
+            vertices.Add(second);
+            vertices.Add(third);
+            vertices.Add(fourth);
+            uvs.Add(new Vector2(0f, 0f));
+            uvs.Add(new Vector2(1f, 0f));
+            uvs.Add(new Vector2(1f, 1f));
+            uvs.Add(new Vector2(0f, 1f));
+            triangles.Add(offset);
+            triangles.Add(offset + 1);
+            triangles.Add(offset + 2);
+            triangles.Add(offset);
+            triangles.Add(offset + 2);
+            triangles.Add(offset + 3);
         }
 
         private static GameObject CreateCylinder(

@@ -70,6 +70,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "assembly.fastener.motherboard-main-01";
         public const string MotherboardDisplayName = "Northstar M-ATX Anakart";
         public const long MotherboardUnitCostMinorUnits = 8_500;
+        public const string ProcessorProductIdValue = "catalog.cpu.northstar-c01-lga1700";
+        public const string ProcessorCategoryIdValue = "catalog.category.processors";
+        public const string ProcessorItemInstanceIdValue =
+            "inventory.item.northstar-c01-lga1700-001";
+        public const string ProcessorSocketContainerIdValue =
+            "inventory.container.assembly-processor-socket";
+        public const string ProcessorSlotIdValue = "assembly.slot.processor-main";
+        public const string ProcessorRetentionIdValue =
+            "assembly.retention.processor-main-01";
+        public const string ProcessorDisplayName = "Northstar C-01 İşlemci";
+        public const long ProcessorUnitCostMinorUnits = 24_900;
 
         private GarageStockFlowSession(
             ProductCatalog catalog,
@@ -139,8 +150,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ItemInstanceIdScope> MotherboardItemId =>
             StableId<ItemInstanceIdScope>.Parse(MotherboardItemInstanceIdValue);
 
+        public StableId<ProductDefinitionIdScope> ProcessorProductId =>
+            StableId<ProductDefinitionIdScope>.Parse(ProcessorProductIdValue);
+
+        public StableId<ItemInstanceIdScope> ProcessorItemId =>
+            StableId<ItemInstanceIdScope>.Parse(ProcessorItemInstanceIdValue);
+
         public StableId<ContainerIdScope> WorkbenchContainerId =>
             StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue);
+
+        public StableId<ContainerIdScope> ProcessorSocketContainerId =>
+            StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
 
         public StableId<PcBuildIdScope> PrototypeBuildId =>
             StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue);
@@ -153,6 +173,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<AssemblyFastenerIdScope> MotherboardFastenerId =>
             StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue);
+
+        public StableId<AssemblySlotIdScope> ProcessorSlotId =>
+            StableId<AssemblySlotIdScope>.Parse(ProcessorSlotIdValue);
+
+        public StableId<AssemblyRetentionIdScope> ProcessorRetentionId =>
+            StableId<AssemblyRetentionIdScope>.Parse(ProcessorRetentionIdValue);
 
         public StableId<PurchaseOrderIdScope> OrderId =>
             StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
@@ -255,17 +281,42 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 MotherboardDisplayName,
                 ProductTrackingPolicy.SerializedInstance,
                 1095).Value;
+            ProductDefinition processorProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(ProcessorProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(ProcessorCategoryIdValue),
+                    ProcessorDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1095).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
-                new[] { product, motherboardProduct }).Value;
+                includeAssemblyPrototype
+                    ? new[] { product, motherboardProduct, processorProduct }
+                    : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
-                PcComponentSpecification.Create(
-                    catalog,
-                    motherboardProduct.Id,
-                    PcComponentKind.Motherboard,
-                    MotherboardFormFactor.MicroAtx).Value;
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreateMotherboard(
+                        catalog,
+                        motherboardProduct.Id,
+                        MotherboardFormFactor.MicroAtx,
+                        CpuSocketFamily.Lga1700).Value
+                    : PcComponentSpecification.Create(
+                        catalog,
+                        motherboardProduct.Id,
+                        PcComponentKind.Motherboard,
+                        MotherboardFormFactor.MicroAtx).Value;
+            PcComponentSpecification processorSpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreateProcessor(
+                        catalog,
+                        processorProduct.Id,
+                        CpuSocketFamily.Lga1700).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
-                new[] { motherboardSpecification }).Value;
+                includeAssemblyPrototype
+                    ? new[] { motherboardSpecification, processorSpecification }
+                    : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
             RegisterContainer(
                 inventory,
@@ -292,17 +343,40 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 WorkbenchContainerIdValue,
                 InventoryContainerKind.Workbench,
                 1);
+            if (includeAssemblyPrototype)
+            {
+                RegisterContainer(
+                    inventory,
+                    ProcessorSocketContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
+            }
 
-            AssemblyBuildAuthority assemblyBuild = AssemblyBuildAuthority.Create(
-                components,
-                inventory,
-                StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
-                StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue),
-                StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue),
-                StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue),
-                StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
-                StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
-                MotherboardFormFactor.MicroAtx).Value;
+            AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
+                ? AssemblyBuildAuthority.CreateWithProcessorSocket(
+                    components,
+                    inventory,
+                    StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
+                    StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue),
+                    StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue),
+                    StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue),
+                    StableId<AssemblySlotIdScope>.Parse(ProcessorSlotIdValue),
+                    StableId<AssemblyRetentionIdScope>.Parse(ProcessorRetentionIdValue),
+                    StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
+                    StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
+                    StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700).Value
+                : AssemblyBuildAuthority.Create(
+                    components,
+                    inventory,
+                    StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
+                    StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue),
+                    StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue),
+                    StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue),
+                    StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
+                    StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
+                    MotherboardFormFactor.MicroAtx).Value;
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
@@ -370,6 +444,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         MotherboardUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(ProcessorItemInstanceIdValue),
+                    processorProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        ProcessorUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(
@@ -410,6 +492,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Inventory.TryGetSerializedItem(MotherboardItemId, out item);
         }
 
+        public bool TryGetProcessorItem(out InventoryItemRecord item)
+        {
+            return Inventory.TryGetSerializedItem(ProcessorItemId, out item);
+        }
+
         public OperationResult PickupLooseMotherboardToHands()
         {
             if (AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
@@ -435,6 +522,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             return Inventory.TransferSerializedItem(
                 MotherboardItemId,
+                WorldFloorContainerId);
+        }
+
+        public OperationResult PickupLooseProcessorToHands()
+        {
+            if (!AssemblyBuild.HasProcessorSocket ||
+                AssemblyBuild.ProcessorSocketState != ProcessorSocketState.EmptyOpen ||
+                !TryGetProcessorItem(out InventoryItemRecord item) ||
+                item.ContainerId != WorldFloorContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-processor.loose-pickup-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(ProcessorItemId, HandsContainerId);
+        }
+
+        public OperationResult DropHeldProcessorToWorld()
+        {
+            if (!AssemblyBuild.HasProcessorSocket ||
+                AssemblyBuild.ProcessorSocketState != ProcessorSocketState.EmptyOpen ||
+                !TryGetProcessorItem(out InventoryItemRecord item) ||
+                item.ContainerId != HandsContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-processor.world-drop-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(
+                ProcessorItemId,
                 WorldFloorContainerId);
         }
 
@@ -483,6 +600,64 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 MotherboardFastenerId,
                 sourceAttachOperationId,
                 sourceSecureOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> SeatProcessor(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.SeatProcessor(
+                operationId,
+                ProcessorItemId,
+                ProcessorSlotId,
+                sourceMotherboardAttachOperationId,
+                sourceMotherboardSecureOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> CloseProcessorRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.CloseProcessorRetention(
+                operationId,
+                ProcessorItemId,
+                ProcessorSlotId,
+                ProcessorRetentionId,
+                sourceProcessorSeatOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> OpenProcessorRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.OpenProcessorRetention(
+                operationId,
+                ProcessorItemId,
+                ProcessorSlotId,
+                ProcessorRetentionId,
+                sourceProcessorSeatOperationId,
+                sourceProcessorRetentionOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> RemoveProcessor(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.RemoveProcessor(
+                operationId,
+                ProcessorItemId,
+                ProcessorSlotId,
+                sourceProcessorSeatOperationId,
                 expectedAssemblyRevision);
         }
 

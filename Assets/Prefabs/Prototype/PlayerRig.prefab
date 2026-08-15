@@ -671,6 +671,8 @@ MonoBehaviour:
   motherboardSeat: {fileID: 0}
   motherboardFastener: {fileID: 0}
   motherboardAssemblyBinding: {fileID: 0}
+  processorSocket: {fileID: 0}
+  processorAssemblyBinding: {fileID: 0}
   supportMask:
     serializedVersion: 2
     m_Bits: 1
