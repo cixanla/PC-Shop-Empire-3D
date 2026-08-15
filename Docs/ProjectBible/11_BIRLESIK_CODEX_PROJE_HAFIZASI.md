@@ -224,6 +224,7 @@ Tam konuşma ve dosya geçmişi:
 
 - Epic #10'un ikinci child paketi [Issue #54](https://github.com/cixanla/PC-Shop-Empire-3D/issues/54) ile tek Assembly-owned fastener, tek visible screwdriver ve `SeatedUnsecured ↔ SeatedSecured` geçişine sınırlandı.
 - Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; secure/unsecure exact receipt, historical replay, Inventory revision izolasyonu ve secured presentation+authority detach gate'i ekledi.
+- Source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad` ve [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılıdır; acceptance `18/18`, Issue kapalı/Roadmap `Done`dur.
 - GarageGraybox r23 captive screw/cross recess, solid focus target, screwdriver ve plate'e bağlı tek satır metin taşır. Solver pause/range/focus/LOS/obstruction fail-closed'dur; screw/tool pose yalnız projection'dır ve drift authority'yi mutate etmeden invariantı bozar.
 - Valid/blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Gerçek keyboard/mouse ve gamepad PlayMode testleri dynamic prompt, same-frame blocker drain, pause co-edge ve release–repress sözleşmesini taşır.
 - Final EditMode `411/411`, PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` başarılıdır.
@@ -273,4 +274,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`, EditMode 411/411, PlayMode 29/29, Universal Mac `328057977` bayt ve Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/Guard/Issue `Done` metadata'sı sıradaki checkpointtir; USB bağlı değildir. Ardından yalnız CPU socket seating + retention lever dilimine geçilir.
+> Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, EditMode 411/411, PlayMode 29/29, Universal Mac `328057977` bayt, Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` ve Guard `31909940414` ile tamamlandı; acceptance 18/18, Issue kapalı/Roadmap `Done`, USB bağlı değildir. Sıradaki bounded child yalnız CPU socket seating + retention lever dilimidir.

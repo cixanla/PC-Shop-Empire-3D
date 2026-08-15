@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; parent Epic #9 kapalı/Done. Epic #10'un motherboard seating ve deterministic fastener secure/unsecure dilimleri Issue #53–#54 ile kaynak/test/build/runtime doğrulamasından geçti; Issue #54 source/docs/Guard ve ertelenen USB checkpointi sürüyor.<br>
+**Durum:** Temel mağaza/müşteri/kasa zinciri tamamlandı; parent Epic #9 kapalı/Done. Epic #10'un motherboard seating ve deterministic fastener secure/unsecure dilimleri Issue #53–#54 ile kaynak/test/build/runtime doğrulamasından geçti; Issue #54 kapalı/Done, yalnız USB checkpointi ertelendi.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  

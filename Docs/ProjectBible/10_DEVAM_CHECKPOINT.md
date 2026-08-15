@@ -1,12 +1,13 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #54 deterministic motherboard fastener feature `b681239` ile kaynak/test/Universal-macOS/Apple-M4-runtime kapılarından geçti; source/docs private push, Repository Guard ve Issue/Project kapanış metadata'sı bu checkpointin takip commitindedir; USB kullanıcı talimatıyla ertelenmiştir<br>
+**Durum:** Issue #54 feature `b681239`, source/docs `7cec7cc`, 411/411 EditMode, 29/29 PlayMode, Universal macOS/Apple M4 runtime ve başarılı Repository Guard `31909940414` ile kapandı; acceptance `18/18`, Issue kapalı/Roadmap `Done`; USB kullanıcı talimatıyla ertelendi<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #54 / Epic #10
 
 - Feature commit `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; yerel Repository Guard `tracked=616` ile başarılıdır.
+- Source/docs commit `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, tree `214381bd6c9d06a7ab2b2c5ea5e902437dca5914`; [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılıdır. Acceptance `18/18`, Issue kapalı/Roadmap `Done`dur.
 - Assembly aggregate'ı stable `assembly.fastener.motherboard-main-01` kimliğini ve `Empty / SeatedUnsecured / SeatedSecured` seat durumlarını taşır. Secure/unsecure exact receipt, replay, expected revision ve attach/secure lineage kapılarıyla yürür.
 - Historical receipt fold Assembly revision sırasını, previous/result state'i, item/product provenance'ını, attach/secure lineage'ını ve Inventory revision monotonluğunu doğrular. Wrong identity/state/lineage/conflict/overflow hiçbir authority'yi mutate etmez.
 - Secure/unsecure Inventory custody ve revision'ı değiştirmez. Secured board hem player pickup preflight'ında hem direct Assembly detach authority'sinde `assembly.component-secured` ile kilitlidir.
@@ -62,7 +63,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #54 feature checkpoint'i `b6812394f835d64d5bf8422d8e7996ec433cd0f1`dir; source/docs push/Guard takip commitindedir.
+- Branch: `main`; Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1` ve source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad` private remote'a ulaştı; Guard başarılıdır.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
@@ -124,11 +125,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #54 source/docs commitini private `origin/main`e push etmek; Repository Guard'ı doğrulamak, acceptance `18/18`i işaretlemek ve Issue/Project'i `Done` kapatmak.
-2. USB yeniden bağlandığında Issue #53–#54 source/evidence kanıtlarını ayrı SHA-256 manifest/readback milestone'una almak; o zamana kadar `/Volumes`e erişmemek.
-3. Sonraki Epic #10 child paketini tek CPU socket seating + retention lever akışıyla sınırlamak; keyed orientation, compatibility, lever sırası, sökme ve recovery dışına büyütmemek.
-4. Inventory revision-max hardening, RAM/GPU/cooler, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. USB yeniden bağlandığında Issue #53–#54 source/evidence kanıtlarını ayrı SHA-256 manifest/readback milestone'una almak; o zamana kadar `/Volumes`e erişmemek.
+2. Sonraki Epic #10 child paketini tek CPU socket seating + retention lever akışıyla sınırlamak; keyed orientation, compatibility, lever sırası, sökme ve recovery dışına büyütmemek.
+3. Inventory revision-max hardening, RAM/GPU/cooler, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`, EditMode `411/411`, PlayMode `29/29`, Universal Mac `328057977` bayt ve Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` kanıtıyla yerelde tamamlandı. Source/docs push/Guard ve Issue/Project kapanışı sıradaki metadata checkpointidir; USB bağlı değildir. Ardından yalnız tek CPU socket seating + retention lever child'ına geçilir.
+Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, EditMode `411/411`, PlayMode `29/29`, Universal Mac `328057977` bayt, Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` ve Guard `31909940414` ile tamamlandı; acceptance 18/18, Issue kapalı/Roadmap `Done`, USB bağlı değildir. Sıradaki bounded child yalnız tek CPU socket seating + retention lever akışıdır.

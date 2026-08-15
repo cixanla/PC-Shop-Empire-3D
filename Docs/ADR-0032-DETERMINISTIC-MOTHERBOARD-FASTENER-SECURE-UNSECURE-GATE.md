@@ -1,7 +1,7 @@
 # ADR-0032 — Deterministic Motherboard Fastener Secure/Unsecure Gate
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Kabul edildi; kaynak, test, Universal macOS build ve Apple M4/Metal native runtime kapıları tamamlandı; private push/Repository Guard metadata checkpointi takip commitindedir<br>
+**Durum:** Kabul edildi; kaynak, test, Universal macOS build, Apple M4/Metal native runtime, private push, Repository Guard ve Issue/Project `Done` kapıları tamamlandı; USB kullanıcı talimatıyla ertelendi<br>
 **Bağlam:** Epic #10 / Issue #54 — tek motherboard fastener için bounded fiziksel assembly dilimi
 
 ## Bağlam

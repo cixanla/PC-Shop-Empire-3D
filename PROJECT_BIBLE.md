@@ -307,18 +307,17 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Issue #51 kapanış checkpoint'i | Feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98`; [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılı; acceptance `16/16`, Issue kapalı ve Roadmap `Done` |
 | Issue #52 kapanış checkpoint'i | Feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılı; acceptance `17/17`, Issue kapalı/Roadmap `Done`; parent Epic #9 kapalı/Done |
 | Issue #53 kaynak checkpoint'i | Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, source/docs `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7`; [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılı; authoritative tek-anakart al/hizala/oturt/sök/recovery dilimi doğrulandı; USB milestone'u kullanıcı talimatıyla ertelendi |
-| Issue #54 yerel feature checkpoint'i | Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; stable fastener, secure/unsecure lineage, direct secured detach gate, blocked/pause edge ownership, projection drift oracle ve r23 görünür graybox doğrulandı; source/docs push/Guard metadata takip commitindedir |
+| Issue #54 kapanış checkpoint'i | Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, tree `214381bd6c9d06a7ab2b2c5ea5e902437dca5914`; [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılı; acceptance `18/18`, Issue kapalı/Roadmap `Done`; USB ertelendi |
 | Son test/build | Issue #54 sonrası Edit Mode `411/411` (`editmode-issue54-r4.xml`), gerçek Input System Play Mode `29/29` (`playmode-issue54-r4.xml`), failed/skipped `0`; Universal macOS build `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1` readiness + delayed replay/authority detach içeren exact assembly smoke geçti; scene SHA-256 `2358218819984b78274afd898e771299be3b6df83b83d69d5767f08b417bb0e4` |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50–#53 checkpointleri tarihsel olarak korunur. Issue #54'ün kaynak/test/build/runtime ve ertelenen USB durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` ile tarihli evidence belgesinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. Issue #54 source/docs commitini private `origin/main`e push et; Repository Guard, acceptance `18/18` ve Project `Done` kapanışını doğrula.
-2. USB yeniden bağlandığında Issue #53–#54 source/evidence dosyalarını ayrı SHA-256 manifest/readback milestone'una al; o zamana kadar `/Volumes`e erişme.
-3. Epic #10'un sıradaki bounded child'ını tek CPU socket seating + retention lever akışıyla sınırla. CPU uyumluluğu, keyed orientation, socket cover/lever sırası ve no-mutation sökme/recovery kanıtlanmadan RAM/GPU/cooler kapsamına geçme.
-4. Genel Inventory revision-max hardening'ini ayrı P1 teknik issue olarak kaydet; Issue #54'e geri bağlama. Graybox/debug metinlerini bağlamsal prompt ve fiziksel terminal katmanına kademeli taşı; mevcut sahneyi final art sayma.
-5. İlk gerçek Windows x64 test cihazında IL2CPP/DirectX/Steam kapısını ayrı dış-platform acceptance olarak çalıştır.
+1. USB yeniden bağlandığında Issue #53–#54 source/evidence dosyalarını ayrı SHA-256 manifest/readback milestone'una al; o zamana kadar `/Volumes`e erişme.
+2. Epic #10'un sıradaki bounded child'ını tek CPU socket seating + retention lever akışıyla sınırla. CPU uyumluluğu, keyed orientation, socket cover/lever sırası ve no-mutation sökme/recovery kanıtlanmadan RAM/GPU/cooler kapsamına geçme.
+3. Genel Inventory revision-max hardening'ini ayrı P1 teknik issue olarak kaydet; Issue #54'e geri bağlama. Graybox/debug metinlerini bağlamsal prompt ve fiziksel terminal katmanına kademeli taşı; mevcut sahneyi final art sayma.
+4. İlk gerçek Windows x64 test cihazında IL2CPP/DirectX/Steam kapısını ayrı dış-platform acceptance olarak çalıştır.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 

@@ -482,6 +482,7 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 ## Güncel uygulama kaydı — Issue #54 deterministic motherboard fastener
 
 - Epic #10'un ikinci bounded child'ı Issue #54'tür. Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; Assembly-owned `assembly.fastener.motherboard-main-01` kimliği ve `SeatedUnsecured ↔ SeatedSecured` state'i ekledi.
+- Source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad` ve [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılıdır; acceptance `18/18`, Issue kapalı/Roadmap `Done`dur.
 - Karar: fastener ayrı Inventory/Catalog/tool authority değildir. Secure/unsecure yalnız Assembly revision + immutable receipt üretir; Inventory custody/revision'ı sabit kalır. Receipt-history fold exact Assembly order, item/product, attach/secure lineage ve Inventory revision monotonluğunu doğrular.
 - Karar: secured anakart presentation pickup ve direct Assembly detach kapılarının ikisinde de fail-closed'dur. Wrong identity/state/lineage/conflict/overflow ile immediate veya delayed replay hiçbir authority/world state'ini yanlış mutate etmez.
 - Karar: screw/screwdriver/plate yalnız projection'dır. Exact 4 mm secured depth ve tool rotation görsel okunabilirlik sağlar; transform drift'i `assembly-seat.projection-invariant` üretir fakat domain'e geri okunmaz.
