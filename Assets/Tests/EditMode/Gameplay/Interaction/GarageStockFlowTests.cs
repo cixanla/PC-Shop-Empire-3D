@@ -96,6 +96,63 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void PrototypeConsultationGatesDecisionAndOnlyAdvancesConsultationAuthority()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
+            Assert.That(session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(session.StartPrototypeCustomerVisit(Timestamp(10)).IsSuccess, Is.True);
+            Assert.That(session.MarkPrototypeCustomerBrowseArrival(Timestamp(11)).IsSuccess,
+                Is.True);
+
+            long visitRevision = session.CustomerVisits.Revision;
+            long inventoryRevision = session.Inventory.Revision;
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+            long economyRevision = session.CheckoutSettlements.Revision;
+
+            OperationResult<CustomerOfferDecision> gated =
+                session.EvaluatePrototypeCustomerOffer();
+            Assert.That(gated.Error,
+                Is.EqualTo(CustomerOfferDecisionFailures.ConsultationRequired));
+            Assert.That(session.CustomerConsultations.Revision, Is.Zero);
+
+            OperationResult consultation = session.ConsultPrototypeCustomer(Timestamp(12));
+            OperationResult replay = session.ConsultPrototypeCustomer(Timestamp(12));
+            Assert.That(consultation.IsSuccess, Is.True);
+            Assert.That(replay.IsSuccess, Is.True);
+            Assert.That(session.CustomerConsultations.Revision, Is.EqualTo(1));
+            Assert.That(session.TryGetPrototypeCustomerConsultation(
+                out CustomerConsultationRecord record), Is.True);
+            Assert.That(record.Id, Is.EqualTo(session.PrototypeCustomerConsultationId));
+            Assert.That(record.VisitId, Is.EqualTo(session.PrototypeCustomerVisitId));
+            Assert.That(record.Need, Is.EqualTo(CustomerNeedKind.GraphicsUpgrade));
+            Assert.That(record.ProductId, Is.EqualTo(session.ProductId));
+
+            OperationResult<CustomerOfferDecision> decision =
+                session.EvaluatePrototypeCustomerOffer();
+            Assert.That(decision.IsSuccess, Is.True);
+            Assert.That(decision.Value.DecisionKind,
+                Is.EqualTo(CustomerOfferDecisionKind.Buy));
+            Assert.That(decision.Value.Consultation, Is.EqualTo(record));
+            Assert.That(session.ConsultPrototypeCustomer(Timestamp(13)).Error,
+                Is.EqualTo(CustomerConsultationFailures.IdentityConflict));
+
+            Assert.That(session.CustomerConsultations.Revision, Is.EqualTo(1));
+            Assert.That(session.CustomerVisits.Revision, Is.EqualTo(visitRevision));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(session.CheckoutSettlements.Revision, Is.EqualTo(economyRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void BindingMovesAuthorityBeforeProjectionAndRecoveryReturnsBothToSafeSource()
         {
             Fixture fixture = CreateBindingFixture();

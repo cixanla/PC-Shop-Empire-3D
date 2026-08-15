@@ -22,6 +22,7 @@ namespace PCShopEmpire3D.Actors
         private readonly int _routeAttemptLimit;
         private readonly Dictionary<StableId<CustomerVisitIdScope>, CustomerVisitRecord> _visits =
             new Dictionary<StableId<CustomerVisitIdScope>, CustomerVisitRecord>();
+        private CustomerConsultationAuthority _consultationAuthority;
         private SimulationTimestamp _lastObservedAt;
         private bool _hasObservedTime;
 
@@ -59,6 +60,35 @@ namespace PCShopEmpire3D.Actors
         public SimulationDuration StateTimeout => _stateTimeout;
 
         public int RouteAttemptLimit => _routeAttemptLimit;
+
+        internal bool IsAtOrAfterObservedTime(SimulationTimestamp at)
+        {
+            return !_hasObservedTime || at.IsAtOrAfter(_lastObservedAt);
+        }
+
+        internal bool TryAttachConsultationAuthority(
+            CustomerConsultationAuthority consultationAuthority)
+        {
+            if (consultationAuthority == null)
+            {
+                return false;
+            }
+
+            if (_consultationAuthority == null)
+            {
+                _consultationAuthority = consultationAuthority;
+                return true;
+            }
+
+            return ReferenceEquals(_consultationAuthority, consultationAuthority);
+        }
+
+        internal bool OwnsConsultationAuthority(
+            CustomerConsultationAuthority consultationAuthority)
+        {
+            return consultationAuthority != null &&
+                   ReferenceEquals(_consultationAuthority, consultationAuthority);
+        }
 
         public static OperationResult<CustomerVisitAuthority> Create(
             ProductCatalog catalog,

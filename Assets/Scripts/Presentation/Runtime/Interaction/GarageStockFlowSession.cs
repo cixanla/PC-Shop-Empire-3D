@@ -30,6 +30,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string PrototypeActorCustomerIdValue = "actors.customer.demo-walk-in-001";
         public const string PrototypeCustomerIntentIdValue = "actors.intent.demo-a60-001";
         public const string PrototypeCustomerVisitIdValue = "actors.visit.demo-walk-in-001";
+        public const string PrototypeCustomerConsultationIdValue =
+            "actors.consultation.demo-walk-in-001";
         public const string PrototypeCustomerBindingIdValue =
             "retail.customer-binding.demo-walk-in-001";
         public const string PrototypeCustomerBuyActionIdValue =
@@ -64,6 +66,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RetailCheckoutAuthority retailCheckouts,
             CheckoutSettlementAuthority checkoutSettlements,
             CustomerVisitAuthority customerVisits,
+            CustomerConsultationAuthority customerConsultations,
             CustomerOfferDecisionActionAuthority customerOfferActions,
             CustomerRetailIdentityBinding prototypeCustomerBinding)
         {
@@ -75,6 +78,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RetailCheckouts = retailCheckouts;
             CheckoutSettlements = checkoutSettlements;
             CustomerVisits = customerVisits;
+            CustomerConsultations = customerConsultations;
             CustomerOfferActions = customerOfferActions;
             PrototypeCustomerBinding = prototypeCustomerBinding;
         }
@@ -94,6 +98,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public CheckoutSettlementAuthority CheckoutSettlements { get; }
 
         public CustomerVisitAuthority CustomerVisits { get; }
+
+        public CustomerConsultationAuthority CustomerConsultations { get; }
 
         public CustomerOfferDecisionActionAuthority CustomerOfferActions { get; }
 
@@ -134,6 +140,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<CustomerVisitIdScope> PrototypeCustomerVisitId =>
             StableId<CustomerVisitIdScope>.Parse(PrototypeCustomerVisitIdValue);
+
+        public StableId<CustomerConsultationIdScope> PrototypeCustomerConsultationId =>
+            StableId<CustomerConsultationIdScope>.Parse(
+                PrototypeCustomerConsultationIdValue);
 
         public StableId<CustomerRetailIdentityBindingIdScope> PrototypeCustomerBindingId =>
             StableId<CustomerRetailIdentityBindingIdScope>.Parse(
@@ -230,11 +240,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 catalog,
                 SimulationDuration.FromMilliseconds(60_000),
                 CustomerVisitAuthority.RequiredRouteAttemptLimit).Value;
+            CustomerConsultationAuthority customerConsultations =
+                CustomerConsultationAuthority.Create(customerVisits).Value;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
                     retailOffers,
                     retailBaskets,
-                    customerVisits).Value;
+                    customerVisits,
+                    customerConsultations).Value;
             CustomerRetailIdentityBinding prototypeCustomerBinding =
                 CustomerRetailIdentityBinding.Create(
                     StableId<CustomerRetailIdentityBindingIdScope>.Parse(
@@ -280,6 +293,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 retailCheckouts,
                 checkoutSettlements,
                 customerVisits,
+                customerConsultations,
                 customerOfferActions,
                 prototypeCustomerBinding);
             RequireSuccess(session.ValidateInvariants());
@@ -331,13 +345,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
             OperationResult<ShelfPrice> maximumAcceptedPrice = ShelfPrice.Create(
                 PrototypeCurrencyCode,
                 PrototypeMaximumAcceptedPriceMinorUnits);
+            TryGetPrototypeCustomerConsultation(
+                out CustomerConsultationRecord consultation);
             return maximumAcceptedPrice.IsFailure
                 ? OperationResult<CustomerOfferDecision>.Fail(
                     CustomerOfferDecisionFailures.InputInvalid)
                 : CustomerOfferDecisionEvaluator.Evaluate(
                     visit,
+                    consultation,
                     offer,
                     maximumAcceptedPrice.Value);
+        }
+
+        public OperationResult ConsultPrototypeCustomer(SimulationTimestamp at)
+        {
+            if (!TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit))
+            {
+                return OperationResult.Fail(
+                    CustomerConsultationFailures.InputInvalid);
+            }
+
+            return CustomerConsultations.RecordConsultation(
+                PrototypeCustomerConsultationId,
+                visit,
+                at);
+        }
+
+        public bool TryGetPrototypeCustomerConsultation(
+            out CustomerConsultationRecord consultation)
+        {
+            return CustomerConsultations.TryGetConsultation(
+                PrototypeCustomerConsultationId,
+                out consultation);
         }
 
         public OperationResult ReservePrototypeCustomerBasket()
@@ -557,8 +596,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             OperationResult visitResult = CustomerVisits.ValidateInvariants();
-            return visitResult.IsFailure
-                ? visitResult
+            if (visitResult.IsFailure)
+            {
+                return visitResult;
+            }
+
+            OperationResult consultationResult =
+                CustomerConsultations.ValidateInvariants();
+            return consultationResult.IsFailure
+                ? consultationResult
                 : CustomerOfferActions.ValidateInvariants();
         }
 

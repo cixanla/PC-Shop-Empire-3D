@@ -2,6 +2,7 @@ using System;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
+using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Player;
 using PCShopEmpire3D.Retail;
 using Unity.AI.Navigation;
@@ -15,6 +16,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// only report arrival or route failure; customer intent and lifecycle remain domain-owned.
     /// </summary>
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(100)]
     public sealed class GarageCustomerFlowRuntime : MonoBehaviour
     {
         private const float ArrivalTolerance = 0.10f;
@@ -22,13 +24,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private const long FixedStepMilliseconds = 20L;
         private const long RouteStallMilliseconds = 4_000L;
         private const float SampleRadius = 0.45f;
+        private const float ConsultationRange = 2.75f;
+        private const float ConsultationFocusDegrees = 24f;
+        private const float CustomerFocusHeight = 1.35f;
 
         [SerializeField] private GarageStockFlowRuntime stockFlow;
         [SerializeField] private FirstPersonMotor playerMotor;
+        [SerializeField] private PlayerInputAdapter playerInput;
+        [SerializeField] private Camera playerCamera;
         [SerializeField] private NavMeshSurface navigationSurface;
         [SerializeField] private NavMeshAgent customerAgent;
         [SerializeField] private GameObject customerVisualRoot;
         [SerializeField] private TextMesh customerStatusText;
+        [SerializeField] private TextMesh customerSpeechText;
         [SerializeField] private Transform entranceWaypoint;
         [SerializeField] private Transform browseWaypoint;
         [SerializeField] private Transform checkoutWaypoint;
@@ -52,10 +60,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private StableId<CustomerVisitIdScope> _displayedDecisionVisitId;
         private string _lastOfferActionFailureCode = string.Empty;
         private StableId<CustomerVisitIdScope> _lastOfferActionVisitId;
+        private string _lastConsultationFailureCode = string.Empty;
+        private StableId<CustomerVisitIdScope> _lastConsultationVisitId;
 
         public GarageStockFlowRuntime StockFlow => stockFlow;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
+
+        public PlayerInputAdapter PlayerInput => playerInput;
+
+        public Camera PlayerCamera => playerCamera;
 
         public NavMeshSurface NavigationSurface => navigationSurface;
 
@@ -64,6 +78,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public GameObject CustomerVisualRoot => customerVisualRoot;
 
         public TextMesh CustomerStatusText => customerStatusText;
+
+        public TextMesh CustomerSpeechText => customerSpeechText;
 
         public Transform EntranceWaypoint => entranceWaypoint;
 
@@ -85,28 +101,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public SimulationTimestamp CurrentOfferActionTime
         {
-            get
-            {
-                SimulationTimestamp current = CurrentSimulationTime;
-                CustomerVisitRecord visit = CurrentVisit;
-                if (visit == null ||
-                    (current.IsAtOrAfter(visit.LastUpdatedAt) &&
-                     current != visit.LastUpdatedAt))
-                {
-                    return current;
-                }
-
-                if (current.Tick == long.MaxValue ||
-                    current.ElapsedMilliseconds > long.MaxValue - FixedStepMilliseconds)
-                {
-                    return current;
-                }
-
-                return SimulationTimestamp.Create(
-                    current.Tick + 1,
-                    current.ElapsedMilliseconds + FixedStepMilliseconds);
-            }
+            get => ResolveCurrentCommandTime(requireStrictlyAfterVisit: true);
         }
+
+        public SimulationTimestamp CurrentConsultationTime =>
+            ResolveCurrentCommandTime(requireStrictlyAfterVisit: false);
 
         public CustomerVisitRecord CurrentVisit
         {
@@ -118,6 +117,105 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return session != null && session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit)
                     ? visit
                     : null;
+            }
+        }
+
+        public CustomerConsultationRecord CurrentConsultation
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
+                    : null;
+                return session != null &&
+                       session.TryGetPrototypeCustomerConsultation(
+                           out CustomerConsultationRecord consultation)
+                    ? consultation
+                    : null;
+            }
+        }
+
+        public bool ConsultationCompleted => CurrentConsultation != null;
+
+        public bool CanConsultCurrentCustomer
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                return visit != null &&
+                       visit.State == CustomerVisitState.Browsing &&
+                       !ConsultationCompleted &&
+                       CustomerVisible &&
+                       playerMotor != null &&
+                       !playerMotor.IsPaused &&
+                       HasCustomerFocus();
+            }
+        }
+
+        public string LastConsultationFailureCode
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                return visit != null &&
+                       visit.State == CustomerVisitState.Browsing &&
+                       visit.Id == _lastConsultationVisitId
+                    ? _lastConsultationFailureCode
+                    : string.Empty;
+            }
+        }
+
+        public string ContextualPromptText
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                if (visit == null || visit.State != CustomerVisitState.Browsing)
+                {
+                    return string.Empty;
+                }
+
+                string failure = LastConsultationFailureCode;
+                if (!string.IsNullOrEmpty(failure))
+                {
+                    return $"GÖRÜŞME ENGELLİ • {failure}";
+                }
+
+                if (ConsultationCompleted)
+                {
+                    return string.Empty;
+                }
+
+                return CanConsultCurrentCustomer
+                    ? $"{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: " +
+                      "müşterinin ihtiyacını sor"
+                    : string.Empty;
+            }
+        }
+
+        public string CustomerSpeechTextValue
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                if (visit == null)
+                {
+                    return "MÜŞTERİ 001";
+                }
+
+                if (visit.State != CustomerVisitState.Browsing)
+                {
+                    return "MÜŞTERİ 001";
+                }
+
+                if (ConsultationCompleted)
+                {
+                    return "MÜŞTERİ 001\n\"EKRAN KARTIMI\nYÜKSELTMEK İSTİYORUM\"";
+                }
+
+                return CanConsultCurrentCustomer
+                    ? $"MÜŞTERİ 001\n{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: İHTİYACI SOR"
+                    : "MÜŞTERİ 001\nYARDIM BEKLİYOR";
             }
         }
 
@@ -252,10 +350,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     case CustomerVisitState.Entering:
                         return "MAĞAZAYA GİRİYOR";
                     case CustomerVisitState.Browsing:
+                        if (!ConsultationCompleted)
+                        {
+                            return CanConsultCurrentCustomer
+                                ? "RAF A'DA YARDIM BEKLİYOR • KONUŞMAYA HAZIR"
+                                : "RAF A'DA YARDIM BEKLİYOR";
+                        }
+
                         string decisionText = OfferDecisionText;
                         return string.IsNullOrEmpty(decisionText)
-                            ? "RAF ÜRÜNÜNÜ İNCELİYOR • KARAR HAZIRLANIYOR"
-                            : $"RAF ÜRÜNÜNÜ İNCELİYOR • {decisionText}";
+                            ? "İHTİYAÇ KAYDEDİLDİ • KARAR HAZIRLANIYOR"
+                            : $"İHTİYAÇ: EKRAN KARTI YÜKSELTMESİ • {decisionText}";
                     case CustomerVisitState.NavigatingToCheckout:
                         return "KASAYA İLERLİYOR";
                     case CustomerVisitState.AwaitingCheckout:
@@ -289,13 +394,51 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : "ROTA BEKLEMEDE";
                 string reasonCode = OfferDecisionReasonCode;
                 string actionStatus = OfferActionStatusText;
+                string consultationFailure = LastConsultationFailureCode;
                 string status = string.IsNullOrEmpty(reasonCode)
                     ? $"MÜŞTERİ AKIŞI: {StateText}\n{route}"
                     : $"MÜŞTERİ AKIŞI: {StateText}\n{route}\n{reasonCode}";
+                if (!string.IsNullOrEmpty(consultationFailure))
+                {
+                    status = $"{status}\nGÖRÜŞME ENGELLİ • {consultationFailure}";
+                }
+
                 return string.IsNullOrEmpty(actionStatus)
                     ? status
                     : $"{status}\n{actionStatus}";
             }
+        }
+
+        public OperationResult TryConsultCurrentCustomer()
+        {
+            CustomerVisitRecord visit = CurrentVisit;
+            if (visit == null || visit.State != CustomerVisitState.Browsing ||
+                ConsultationCompleted || !CanConsultCurrentCustomer)
+            {
+                return RecordConsultationResult(
+                    OperationResult.Fail(
+                        GarageCustomerConsultationFailures.FocusRequired));
+            }
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            OperationResult result = session != null
+                ? session.ConsultPrototypeCustomer(CurrentConsultationTime)
+                : OperationResult.Fail(CustomerConsultationFailures.InputInvalid);
+            return RecordConsultationResult(result);
+        }
+
+        public void ProcessInputFrame()
+        {
+            if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
+                !CanConsultCurrentCustomer ||
+                !playerInput.TryConsumeInteractPressThisFrame())
+            {
+                return;
+            }
+
+            TryConsultCurrentCustomer();
         }
 
         public void RecordOfferActionResult(OperationResult result)
@@ -312,10 +455,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public void Configure(
             GarageStockFlowRuntime garageStockFlow,
             FirstPersonMotor motor,
+            PlayerInputAdapter inputAdapter,
+            Camera camera,
             NavMeshSurface surface,
             NavMeshAgent agent,
             GameObject visualRoot,
             TextMesh statusText,
+            TextMesh speechText,
             Transform entrance,
             Transform browse,
             Transform checkout,
@@ -327,6 +473,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             playerMotor = motor != null
                 ? motor
                 : throw new ArgumentNullException(nameof(motor));
+            playerInput = inputAdapter != null
+                ? inputAdapter
+                : throw new ArgumentNullException(nameof(inputAdapter));
+            playerCamera = camera != null
+                ? camera
+                : throw new ArgumentNullException(nameof(camera));
             navigationSurface = surface != null
                 ? surface
                 : throw new ArgumentNullException(nameof(surface));
@@ -336,7 +488,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             customerVisualRoot = visualRoot != null
                 ? visualRoot
                 : throw new ArgumentNullException(nameof(visualRoot));
-            customerStatusText = statusText;
+            customerStatusText = statusText != null
+                ? statusText
+                : throw new ArgumentNullException(nameof(statusText));
+            customerSpeechText = speechText != null
+                ? speechText
+                : throw new ArgumentNullException(nameof(speechText));
             entranceWaypoint = entrance != null
                 ? entrance
                 : throw new ArgumentNullException(nameof(entrance));
@@ -404,6 +561,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 customerStatusText.text = StatusText;
             }
+
+            if (customerSpeechText != null)
+            {
+                customerSpeechText.text = CustomerSpeechTextValue;
+                FaceSpeechToPlayer();
+            }
         }
 
         private void Awake()
@@ -415,6 +578,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             EnsureNavigationBuilt();
+            RefreshPresentation();
+        }
+
+        private void Update()
+        {
+            ProcessInputFrame();
             RefreshPresentation();
         }
 
@@ -760,13 +929,128 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             return stockFlow != null &&
                    playerMotor != null &&
+                   playerInput != null &&
+                   playerCamera != null &&
                    navigationSurface != null &&
                    customerAgent != null &&
                    customerVisualRoot != null &&
+                   customerStatusText != null &&
+                   customerSpeechText != null &&
                    entranceWaypoint != null &&
                    browseWaypoint != null &&
                    checkoutWaypoint != null &&
                    exitWaypoint != null;
+        }
+
+        private void FaceSpeechToPlayer()
+        {
+            if (customerSpeechText == null || playerCamera == null)
+            {
+                return;
+            }
+
+            Vector3 towardCamera =
+                playerCamera.transform.position - customerSpeechText.transform.position;
+            towardCamera.y = 0f;
+            if (towardCamera.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            customerSpeechText.transform.rotation = Quaternion.LookRotation(
+                -towardCamera.normalized,
+                Vector3.up);
+        }
+
+        private OperationResult RecordConsultationResult(OperationResult result)
+        {
+            CustomerVisitRecord visit = CurrentVisit;
+            bool showFailure = result.IsFailure &&
+                               visit != null &&
+                               visit.State == CustomerVisitState.Browsing;
+            _lastConsultationFailureCode = showFailure
+                ? result.Error.Code
+                : string.Empty;
+            _lastConsultationVisitId = showFailure ? visit.Id : default;
+            if (result.IsSuccess)
+            {
+                _displayedOfferDecision = null;
+                _displayedDecisionVisitId = default;
+            }
+
+            stockFlow?.RefreshPresentation();
+            RefreshPresentation();
+            return result;
+        }
+
+        private bool HasCustomerFocus()
+        {
+            if (playerCamera == null || customerVisualRoot == null || !CustomerVisible)
+            {
+                return false;
+            }
+
+            Vector3 target = customerVisualRoot.transform.position +
+                             (Vector3.up * CustomerFocusHeight);
+            Vector3 toTarget = target - playerCamera.transform.position;
+            float distance = toTarget.magnitude;
+            if (distance <= Mathf.Epsilon || distance > ConsultationRange)
+            {
+                return false;
+            }
+
+            Vector3 direction = toTarget / distance;
+            float minimumFocusDot = Mathf.Cos(ConsultationFocusDegrees * Mathf.Deg2Rad);
+            if (Vector3.Dot(playerCamera.transform.forward, direction) < minimumFocusDot)
+            {
+                return false;
+            }
+
+            if (!Physics.Raycast(
+                    playerCamera.transform.position,
+                    direction,
+                    out RaycastHit hit,
+                    distance + 0.15f,
+                    Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Ignore))
+            {
+                return false;
+            }
+
+            Transform hitTransform = hit.transform;
+            Transform customerTransform = customerVisualRoot.transform;
+            return hitTransform == customerTransform ||
+                   hitTransform.IsChildOf(customerTransform);
+        }
+
+        private SimulationTimestamp ResolveCurrentCommandTime(
+            bool requireStrictlyAfterVisit)
+        {
+            SimulationTimestamp current = CurrentSimulationTime;
+            CustomerVisitRecord visit = CurrentVisit;
+            if (visit == null)
+            {
+                return current;
+            }
+
+            bool currentIsValid = current.IsAtOrAfter(visit.LastUpdatedAt) &&
+                                  (!requireStrictlyAfterVisit ||
+                                   current != visit.LastUpdatedAt);
+            if (currentIsValid)
+            {
+                return current;
+            }
+
+            SimulationTimestamp baseline = visit.LastUpdatedAt;
+            if (baseline.Tick == long.MaxValue ||
+                baseline.ElapsedMilliseconds > long.MaxValue - FixedStepMilliseconds)
+            {
+                return current;
+            }
+
+            return SimulationTimestamp.Create(
+                baseline.Tick + 1,
+                baseline.ElapsedMilliseconds + FixedStepMilliseconds);
         }
 
         private static bool TrySamplePoint(Vector3 position, out Vector3 sampled)
@@ -849,5 +1133,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return "SONUÇ BEKLENİYOR";
             }
         }
+    }
+
+    public static class GarageCustomerConsultationFailures
+    {
+        public static readonly Failure FocusRequired =
+            Failure.FromCode("presentation.customer-consultation.focus-required");
     }
 }

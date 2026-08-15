@@ -28,6 +28,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             StableId<CustomerIntentIdScope>.Parse("actors.intent.decision-a60");
         private static readonly StableId<CustomerIdScope> CustomerId =
             StableId<CustomerIdScope>.Parse("actors.customer.decision-customer");
+        private static readonly StableId<CustomerConsultationIdScope> ConsultationId =
+            StableId<CustomerConsultationIdScope>.Parse(
+                "actors.consultation.decision-customer");
 
         [Test]
         public void StableCodesAndEnumValuesMatchPublicContract()
@@ -42,8 +45,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
                 Is.EqualTo("retail.offer-decision.leave.price-above-limit"));
             Assert.That(CustomerOfferDecisionFailures.InputInvalid.Code,
                 Is.EqualTo("retail.offer-decision.input-invalid"));
+            Assert.That(CustomerOfferDecisionFailures.ConsultationRequired.Code,
+                Is.EqualTo("retail.offer-decision.consultation-required"));
             Assert.That(CustomerOfferDecisionFailures.VisitNotBrowsing.Code,
                 Is.EqualTo("retail.offer-decision.visit-not-browsing"));
+            Assert.That(CustomerOfferDecisionFailures.ConsultationMismatch.Code,
+                Is.EqualTo("retail.offer-decision.consultation-mismatch"));
+            Assert.That(CustomerOfferDecisionFailures.ConsultationStale.Code,
+                Is.EqualTo("retail.offer-decision.consultation-stale"));
             Assert.That(CustomerOfferDecisionFailures.NeedUnsupported.Code,
                 Is.EqualTo("retail.offer-decision.need-unsupported"));
             Assert.That(CustomerOfferDecisionFailures.CurrencyMismatch.Code,
@@ -57,11 +66,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             ShelfPrice limit = Price("EUR", limitMinorUnits);
             Snapshot before = Snapshot.Capture(fixture);
 
             OperationResult<CustomerOfferDecision> result =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, offer, limit);
+                CustomerOfferDecisionEvaluator.Evaluate(visit, consultation, offer, limit);
 
             Assert.That(result.IsSuccess, Is.True);
             CustomerOfferDecision decision = result.Value;
@@ -75,6 +88,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Assert.That(decision.VisitLastUpdatedAt, Is.EqualTo(visit.LastUpdatedAt));
             Assert.That(decision.Need, Is.EqualTo(CustomerNeedKind.GraphicsUpgrade));
             Assert.That(decision.IntentProductId, Is.EqualTo(ProductA));
+            Assert.That(decision.Consultation, Is.SameAs(consultation));
             Assert.That(decision.OfferId, Is.EqualTo(OfferA));
             Assert.That(decision.OfferRevision, Is.EqualTo(1));
             Assert.That(decision.ShelfContainerId, Is.EqualTo(ShelfA));
@@ -90,10 +104,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferB, ProductB, ShelfB, "EUR", 90_000);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             Snapshot before = Snapshot.Capture(fixture);
 
             OperationResult<CustomerOfferDecision> result =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, offer, Price("EUR", 60_000));
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    offer,
+                    Price("EUR", 60_000));
 
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Value.DecisionKind, Is.EqualTo(CustomerOfferDecisionKind.Leave));
@@ -108,11 +130,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferB, ProductB, ShelfB, "EUR", 54_999);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             Snapshot before = Snapshot.Capture(fixture);
 
             OperationResult<CustomerOfferDecision> result =
                 CustomerOfferDecisionEvaluator.Evaluate(
                     visit,
+                    consultation,
                     offer,
                     Price("USD", 60_000));
 
@@ -126,10 +153,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 60_001);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             Snapshot before = Snapshot.Capture(fixture);
 
             OperationResult<CustomerOfferDecision> result =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, offer, Price("EUR", 60_000));
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    offer,
+                    Price("EUR", 60_000));
 
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Value.DecisionKind, Is.EqualTo(CustomerOfferDecisionKind.Leave));
@@ -146,12 +181,135 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             CustomerVisitRecord visit = CurrentVisit(fixture);
             Snapshot before = Snapshot.Capture(fixture);
 
-            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(null, offer, default).Error,
+            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(
+                    null,
+                    null,
+                    offer,
+                    default).Error,
                 Is.EqualTo(CustomerOfferDecisionFailures.InputInvalid));
-            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(visit, null, default).Error,
+            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    null,
+                    null,
+                    default).Error,
                 Is.EqualTo(CustomerOfferDecisionFailures.InputInvalid));
-            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(visit, offer, default).Error,
+            Assert.That(CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    null,
+                    offer,
+                    default).Error,
                 Is.EqualTo(CustomerOfferDecisionFailures.InputInvalid));
+            before.AssertUnchanged(fixture, visit, offer);
+        }
+
+        [Test]
+        public void MissingConsultationPrecedesVisitStateAndFailsWithoutMutation()
+        {
+            Fixture fixture = CreateFixture(browsing: false);
+            ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
+            CustomerVisitRecord entering = CurrentVisit(fixture);
+            Snapshot before = Snapshot.Capture(fixture);
+
+            OperationResult<CustomerOfferDecision> result =
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    entering,
+                    null,
+                    offer,
+                    Price("EUR", 60_000));
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionFailures.ConsultationRequired));
+            before.AssertUnchanged(fixture, entering, offer);
+        }
+
+        [Test]
+        public void MismatchedConsultationFailsBeforeOfferComparisonWithoutMutation()
+        {
+            Fixture fixture = CreateFixture(browsing: true);
+            ShelfOfferRecord offer = Publish(fixture, OfferB, ProductB, ShelfB, "USD", 90_000);
+            CustomerVisitRecord visit = CurrentVisit(fixture);
+            Fixture mismatchFixture = CreateFixture(
+                true,
+                ProductB,
+                Time(1),
+                Time(2));
+            CustomerConsultationRecord mismatch = RecordConsultation(
+                mismatchFixture,
+                CurrentVisit(mismatchFixture),
+                Time(3));
+            Snapshot before = Snapshot.Capture(fixture);
+
+            OperationResult<CustomerOfferDecision> result =
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    mismatch,
+                    offer,
+                    Price("EUR", 60_000));
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionFailures.ConsultationMismatch));
+            before.AssertUnchanged(fixture, visit, offer);
+        }
+
+        [Test]
+        public void StaleConsultationFailsBeforeOfferComparisonWithoutMutation()
+        {
+            Fixture fixture = CreateFixture(browsing: true);
+            ShelfOfferRecord offer = Publish(fixture, OfferB, ProductB, ShelfB, "USD", 90_000);
+            CustomerVisitRecord visit = CurrentVisit(fixture);
+            Fixture staleFixture = CreateFixture(
+                true,
+                ProductA,
+                Time(1),
+                Time(3));
+            CustomerConsultationRecord stale = RecordConsultation(
+                staleFixture,
+                CurrentVisit(staleFixture),
+                Time(4));
+            Snapshot before = Snapshot.Capture(fixture);
+
+            OperationResult<CustomerOfferDecision> result =
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    stale,
+                    offer,
+                    Price("EUR", 60_000));
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionFailures.ConsultationStale));
+            before.AssertUnchanged(fixture, visit, offer);
+        }
+
+        [Test]
+        public void ValueEqualForeignConsultationFailsBeforeOfferComparisonWithoutMutation()
+        {
+            Fixture fixture = CreateFixture(browsing: true);
+            ShelfOfferRecord offer = Publish(
+                fixture,
+                OfferA,
+                ProductA,
+                ShelfA,
+                "EUR",
+                54_999);
+            CustomerVisitRecord visit = CurrentVisit(fixture);
+            Fixture foreignFixture = CreateFixture(browsing: true);
+            CustomerConsultationRecord foreign = RecordConsultation(
+                foreignFixture,
+                CurrentVisit(foreignFixture),
+                Time(3));
+            Snapshot before = Snapshot.Capture(fixture);
+
+            OperationResult<CustomerOfferDecision> result =
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    foreign,
+                    offer,
+                    Price("EUR", 60_000));
+
+            Assert.That(foreign.VisitId, Is.EqualTo(visit.Id));
+            Assert.That(foreign.VisitLastUpdatedAt, Is.EqualTo(visit.LastUpdatedAt));
+            Assert.That(result.Error,
+                Is.EqualTo(CustomerOfferDecisionFailures.ConsultationMismatch));
             before.AssertUnchanged(fixture, visit, offer);
         }
 
@@ -161,18 +319,29 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: false);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
             CustomerVisitRecord entering = CurrentVisit(fixture);
+            Fixture consultationFixture = CreateFixture(browsing: true);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                consultationFixture,
+                CurrentVisit(consultationFixture),
+                Time(3));
             Snapshot before = Snapshot.Capture(fixture);
 
             Assert.That(CustomerOfferDecisionEvaluator.Evaluate(
                     entering,
+                    consultation,
                     offer,
                     Price("USD", 60_000)).Error,
                 Is.EqualTo(CustomerOfferDecisionFailures.VisitNotBrowsing));
             Assert.That(fixture.Visits.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
             CustomerVisitRecord browsing = CurrentVisit(fixture);
+            CustomerConsultationRecord localConsultation = RecordConsultation(
+                fixture,
+                browsing,
+                Time(3));
             Snapshot afterBrowse = Snapshot.Capture(fixture);
             Assert.That(CustomerOfferDecisionEvaluator.Evaluate(
                     browsing,
+                    localConsultation,
                     offer,
                     Price("USD", 60_000)).Error,
                 Is.EqualTo(CustomerOfferDecisionFailures.CurrencyMismatch));
@@ -187,13 +356,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             ShelfPrice limit = Price("EUR", 60_000);
             Snapshot before = Snapshot.Capture(fixture);
 
             CustomerOfferDecision first =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, offer, limit).Value;
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    offer,
+                    limit).Value;
             CustomerOfferDecision replay =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, offer, limit).Value;
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    offer,
+                    limit).Value;
 
             Assert.That(replay, Is.Not.SameAs(first));
             Assert.That(replay, Is.EqualTo(first));
@@ -207,14 +388,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             Snapshot before = Snapshot.Capture(fixture);
 
             CustomerOfferDecision first = CustomerOfferDecisionEvaluator.Evaluate(
                 visit,
+                consultation,
                 offer,
                 Price("EUR", 60_000)).Value;
             CustomerOfferDecision second = CustomerOfferDecisionEvaluator.Evaluate(
                 visit,
+                consultation,
                 offer,
                 Price("EUR", 61_000)).Value;
 
@@ -231,9 +418,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Fixture fixture = CreateFixture(browsing: true);
             ShelfOfferRecord offer = Publish(fixture, OfferA, ProductA, ShelfA, "EUR", 54_999);
             CustomerVisitRecord historicalBrowsing = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                historicalBrowsing,
+                Time(3));
             ShelfPrice limit = Price("EUR", 60_000);
             CustomerOfferDecision historicalDecision = CustomerOfferDecisionEvaluator.Evaluate(
                 historicalBrowsing,
+                consultation,
                 offer,
                 limit).Value;
 
@@ -246,6 +438,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
 
             CustomerOfferDecision replay = CustomerOfferDecisionEvaluator.Evaluate(
                 historicalBrowsing,
+                consultation,
                 offer,
                 limit).Value;
 
@@ -272,9 +465,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
                 "EUR",
                 54_999);
             CustomerVisitRecord visit = CurrentVisit(fixture);
+            CustomerConsultationRecord consultation = RecordConsultation(
+                fixture,
+                visit,
+                Time(3));
             ShelfPrice limit = Price("EUR", 60_000);
             CustomerOfferDecision historicalDecision =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, historical, limit).Value;
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    historical,
+                    limit).Value;
 
             Assert.That(fixture.Offers.SetOffer(
                 OfferA,
@@ -286,9 +487,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Snapshot afterUpdate = Snapshot.Capture(fixture);
 
             CustomerOfferDecision replay =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, historical, limit).Value;
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    historical,
+                    limit).Value;
             CustomerOfferDecision reevaluated =
-                CustomerOfferDecisionEvaluator.Evaluate(visit, current, limit).Value;
+                CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    consultation,
+                    current,
+                    limit).Value;
 
             Assert.That(replay, Is.EqualTo(historicalDecision));
             Assert.That(replay.OfferRevision, Is.EqualTo(1));
@@ -301,6 +510,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
         }
 
         private static Fixture CreateFixture(bool browsing)
+        {
+            return CreateFixture(
+                browsing,
+                ProductA,
+                Time(1),
+                Time(2));
+        }
+
+        private static Fixture CreateFixture(
+            bool browsing,
+            StableId<ProductDefinitionIdScope> intentProductId,
+            SimulationTimestamp startedAt,
+            SimulationTimestamp browseArrivalAt)
         {
             ProductDefinition first = CreateProduct(ProductA, "Decision A60");
             ProductDefinition second = CreateProduct(ProductB, "Decision B70");
@@ -317,15 +539,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
                 VisitId,
                 IntentId,
                 CustomerId,
-                ProductA,
+                intentProductId,
                 CustomerNeedKind.GraphicsUpgrade,
-                Time(1)).IsSuccess, Is.True);
+                startedAt).IsSuccess, Is.True);
             if (browsing)
             {
-                Assert.That(visits.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+                Assert.That(visits.MarkBrowseArrival(
+                    VisitId,
+                    browseArrivalAt).IsSuccess, Is.True);
             }
 
-            return new Fixture(inventory, offers, visits);
+            CustomerConsultationAuthority consultations =
+                CustomerConsultationAuthority.Create(visits).Value;
+            return new Fixture(inventory, offers, visits, consultations);
         }
 
         private static ProductDefinition CreateProduct(
@@ -375,6 +601,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             return visit;
         }
 
+        private static CustomerConsultationRecord RecordConsultation(
+            Fixture fixture,
+            CustomerVisitRecord visit,
+            SimulationTimestamp recordedAt)
+        {
+            Assert.That(fixture.Consultations.RecordConsultation(
+                ConsultationId,
+                visit,
+                recordedAt).IsSuccess, Is.True);
+            Assert.That(fixture.Consultations.TryGetForVisit(
+                visit.Id,
+                out CustomerConsultationRecord consultation), Is.True);
+            return consultation;
+        }
+
         private static ShelfPrice Price(string currency, long minorUnits)
         {
             return ShelfPrice.Create(currency, minorUnits).Value;
@@ -390,11 +631,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             public Fixture(
                 InventoryAuthority inventory,
                 ShelfOfferAuthority offers,
-                CustomerVisitAuthority visits)
+                CustomerVisitAuthority visits,
+                CustomerConsultationAuthority consultations)
             {
                 Inventory = inventory;
                 Offers = offers;
                 Visits = visits;
+                Consultations = consultations;
             }
 
             public InventoryAuthority Inventory { get; }
@@ -402,6 +645,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             public ShelfOfferAuthority Offers { get; }
 
             public CustomerVisitAuthority Visits { get; }
+
+            public CustomerConsultationAuthority Consultations { get; }
         }
 
         private readonly struct Snapshot

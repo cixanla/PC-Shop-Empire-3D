@@ -183,6 +183,7 @@ namespace PCShopEmpire3D.Retail
         private readonly ShelfOfferAuthority _offers;
         private readonly RetailBasketAuthority _baskets;
         private readonly CustomerVisitAuthority _visits;
+        private readonly CustomerConsultationAuthority _consultations;
         private readonly Dictionary<StableId<CustomerOfferDecisionActionIdScope>,
             CustomerOfferDecisionActionRecord> _actions =
                 new Dictionary<StableId<CustomerOfferDecisionActionIdScope>,
@@ -195,11 +196,13 @@ namespace PCShopEmpire3D.Retail
         private CustomerOfferDecisionActionAuthority(
             ShelfOfferAuthority offers,
             RetailBasketAuthority baskets,
-            CustomerVisitAuthority visits)
+            CustomerVisitAuthority visits,
+            CustomerConsultationAuthority consultations)
         {
             _offers = offers;
             _baskets = baskets;
             _visits = visits;
+            _consultations = consultations;
         }
 
         public long Revision { get; private set; }
@@ -209,16 +212,23 @@ namespace PCShopEmpire3D.Retail
         public static OperationResult<CustomerOfferDecisionActionAuthority> Create(
             ShelfOfferAuthority offers,
             RetailBasketAuthority baskets,
-            CustomerVisitAuthority visits)
+            CustomerVisitAuthority visits,
+            CustomerConsultationAuthority consultations)
         {
             return offers == null ||
                    baskets == null ||
                    visits == null ||
+                   consultations == null ||
+                   !ReferenceEquals(visits, consultations.VisitAuthority) ||
                    !ReferenceEquals(offers, baskets.OfferAuthority)
                 ? OperationResult<CustomerOfferDecisionActionAuthority>.Fail(
                     CustomerOfferDecisionActionFailures.InputInvalid)
                 : OperationResult<CustomerOfferDecisionActionAuthority>.Success(
-                    new CustomerOfferDecisionActionAuthority(offers, baskets, visits));
+                    new CustomerOfferDecisionActionAuthority(
+                        offers,
+                        baskets,
+                        visits,
+                        consultations));
         }
 
         public OperationResult ApplyBuy(
@@ -301,6 +311,13 @@ namespace PCShopEmpire3D.Retail
                     CustomerOfferDecisionActionFailures.CustomerBindingMismatch);
             }
 
+            if (!_consultations.Owns(sourceDecision.Consultation) ||
+                !appliedAt.IsAtOrAfter(sourceDecision.Consultation.RecordedAt))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.DecisionStale);
+            }
+
             if (!_offers.TryGetOffer(
                 sourceDecision.OfferId,
                 out ShelfOfferRecord currentOffer))
@@ -312,6 +329,7 @@ namespace PCShopEmpire3D.Retail
             OperationResult<CustomerOfferDecision> currentDecision =
                 CustomerOfferDecisionEvaluator.Evaluate(
                     currentVisit,
+                    sourceDecision.Consultation,
                     currentOffer,
                     sourceDecision.MaximumAcceptedPrice);
             if (currentDecision.IsFailure ||
@@ -446,6 +464,13 @@ namespace PCShopEmpire3D.Retail
                     CustomerOfferDecisionActionFailures.CustomerBindingMismatch);
             }
 
+            if (!_consultations.Owns(sourceDecision.Consultation) ||
+                !appliedAt.IsAtOrAfter(sourceDecision.Consultation.RecordedAt))
+            {
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.DecisionStale);
+            }
+
             if (!_offers.TryGetOffer(
                 sourceDecision.OfferId,
                 out ShelfOfferRecord currentOffer))
@@ -457,6 +482,7 @@ namespace PCShopEmpire3D.Retail
             OperationResult<CustomerOfferDecision> currentDecision =
                 CustomerOfferDecisionEvaluator.Evaluate(
                     currentVisit,
+                    sourceDecision.Consultation,
                     currentOffer,
                     sourceDecision.MaximumAcceptedPrice);
             if (currentDecision.IsFailure ||
@@ -537,6 +563,9 @@ namespace PCShopEmpire3D.Retail
                     !HasValidActionPayload(action) ||
                     action.SourceDecision.CustomerId !=
                         action.CustomerBinding.ActorCustomerId ||
+                    !_consultations.Owns(action.SourceDecision.Consultation) ||
+                    !action.AppliedAt.IsAtOrAfter(
+                        action.SourceDecision.Consultation.RecordedAt) ||
                     !IsStrictlyAfter(
                         action.AppliedAt,
                         action.SourceDecision.VisitLastUpdatedAt) ||

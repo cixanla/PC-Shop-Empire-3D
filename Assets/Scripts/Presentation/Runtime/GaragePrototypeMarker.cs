@@ -17,7 +17,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-cash-settlement-r19-v1";
+        public const string Version = "garage-customer-consultation-r20-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -120,6 +120,9 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerVisitAuthority = hasArrivedStockFlow &&
                                              stockFlow.Session.CustomerVisits != null &&
                                              stockFlow.Session.CustomerVisits.Count == 0;
+            bool hasCustomerConsultationAuthority = hasCustomerVisitAuthority &&
+                                                    stockFlow.Session.CustomerConsultations != null &&
+                                                    !stockFlow.Session.PrototypeCustomerConsultationId.IsEmpty;
             bool hasCustomerBuyActionAuthority = hasArrivedStockFlow &&
                                                  stockFlow.Session.CustomerOfferActions != null &&
                                                  stockFlow.Session.CustomerOfferActions.Count == 0;
@@ -153,6 +156,8 @@ namespace PCShopEmpire3D.Presentation
                 $"economy-settlement={(hasEconomySettlementAuthority ? "ready" : "missing")} " +
                 $"cash-ledger={(hasCashLedgerAuthority ? "ready" : "missing")} " +
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
+                $"customer-consultation={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
+                $"consultation-decision-gate={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -639,6 +644,7 @@ namespace PCShopEmpire3D.Presentation
             long isolatedBasketRevision = session.RetailBaskets.Revision;
             long isolatedCheckoutRevision = session.RetailCheckouts.Revision;
             long isolatedEconomyRevision = session.CheckoutSettlements.Revision;
+            long isolatedConsultationRevision = session.CustomerConsultations.Revision;
             float customerAgentSpeed = customerFlow.CustomerAgent.speed;
             customerFlow.CustomerAgent.speed = Mathf.Min(customerAgentSpeed, 0.10f);
             playerMotor.SetPaused(false);
@@ -719,6 +725,9 @@ namespace PCShopEmpire3D.Presentation
                                  session.RetailBaskets.Revision == isolatedBasketRevision &&
                                  session.RetailCheckouts.Revision == isolatedCheckoutRevision &&
                                  session.CheckoutSettlements.Revision == isolatedEconomyRevision;
+            browseReached = browseReached &&
+                            session.CustomerConsultations.Revision ==
+                                isolatedConsultationRevision;
             if (!browseReached)
             {
                 LogCustomerFlowSmokeFailure("smoke.browse-route-or-authority-drift");
@@ -731,6 +740,60 @@ namespace PCShopEmpire3D.Presentation
             long decisionOfferRevision = session.RetailOffers.Revision;
             long decisionBasketRevision = session.RetailBaskets.Revision;
             long decisionCheckoutRevision = session.RetailCheckouts.Revision;
+            long decisionEconomyRevision = session.CheckoutSettlements.Revision;
+            long consultationRevision = session.CustomerConsultations.Revision;
+            OperationResult<CustomerOfferDecision> gatedDecision =
+                session.EvaluatePrototypeCustomerOffer();
+            bool decisionGated = gatedDecision.Error ==
+                                 CustomerOfferDecisionFailures.ConsultationRequired &&
+                                 customerFlow.CurrentOfferDecision == null &&
+                                 session.CustomerConsultations.Revision == consultationRevision &&
+                                 session.CustomerVisits.Revision == decisionCustomerRevision &&
+                                 session.Inventory.Revision == decisionInventoryRevision &&
+                                 session.Orders.Revision == decisionOrderRevision &&
+                                 session.RetailOffers.Revision == decisionOfferRevision &&
+                                 session.RetailBaskets.Revision == decisionBasketRevision &&
+                                 session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                                 session.CheckoutSettlements.Revision == decisionEconomyRevision;
+            if (!decisionGated)
+            {
+                LogCustomerFlowSmokeFailure("smoke.consultation-decision-gate-mismatch");
+                yield break;
+            }
+
+            OperationResult consultation = session.ConsultPrototypeCustomer(
+                customerFlow.CurrentConsultationTime);
+            OperationResult consultationReplay = session.ConsultPrototypeCustomer(
+                customerFlow.CurrentConsultationTime);
+            CustomerConsultationRecord consultationRecord = null;
+            bool consultationRecorded = consultation.IsSuccess &&
+                                        consultationReplay.IsSuccess &&
+                                        session.CustomerConsultations.Revision ==
+                                            consultationRevision + 1 &&
+                                        session.TryGetPrototypeCustomerConsultation(
+                                            out consultationRecord) &&
+                                        consultationRecord.VisitId == browsingVisit.Id &&
+                                        consultationRecord.IntentId == browsingVisit.Intent.Id &&
+                                        consultationRecord.Need == browsingVisit.Intent.Need &&
+                                        consultationRecord.ProductId == browsingVisit.Intent.ProductId &&
+                                        session.CustomerVisits.Revision == decisionCustomerRevision &&
+                                        session.Inventory.Revision == decisionInventoryRevision &&
+                                        session.Orders.Revision == decisionOrderRevision &&
+                                        session.RetailOffers.Revision == decisionOfferRevision &&
+                                        session.RetailBaskets.Revision == decisionBasketRevision &&
+                                        session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                                        session.CheckoutSettlements.Revision == decisionEconomyRevision;
+            if (!consultationRecorded)
+            {
+                LogCustomerFlowSmokeFailure(
+                    consultation.IsFailure
+                        ? consultation.Error.Code
+                        : consultationReplay.IsFailure
+                            ? consultationReplay.Error.Code
+                            : "smoke.consultation-provenance-mismatch");
+                yield break;
+            }
+
             OperationResult<CustomerOfferDecision> offerDecisionResult =
                 session.EvaluatePrototypeCustomerOffer();
             CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
@@ -742,6 +805,8 @@ namespace PCShopEmpire3D.Presentation
                                  offerDecisionResult.Value.ReasonCode ==
                                  CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit &&
                                  offerDecisionResult.Value.VisitId == browsingVisit.Id &&
+                                 offerDecisionResult.Value.Consultation.Id ==
+                                     consultationRecord.Id &&
                                  offerDecisionResult.Value.OfferRevision == 1 &&
                                  offerDecisionResult.Value.OfferPrice.MinorUnits ==
                                  GarageStockFlowSession.PrototypePriceMinorUnits &&
@@ -759,6 +824,9 @@ namespace PCShopEmpire3D.Presentation
                                  session.RetailOffers.Revision == decisionOfferRevision &&
                                  session.RetailBaskets.Revision == decisionBasketRevision &&
                                  session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                                 session.CheckoutSettlements.Revision == decisionEconomyRevision &&
+                                 session.CustomerConsultations.Revision ==
+                                     consultationRevision + 1 &&
                                  session.RetailBaskets.Count == 0 &&
                                  session.RetailCheckouts.Count == 0;
             if (!offerDecision)
@@ -782,6 +850,8 @@ namespace PCShopEmpire3D.Presentation
                               session.Orders.Revision == decisionOrderRevision &&
                               session.RetailOffers.Revision == decisionOfferRevision &&
                               session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                              session.CustomerConsultations.Revision ==
+                                  consultationRevision + 1 &&
                               session.TryGetPrototypeCustomerBuyAction(out _) &&
                               session.TryGetPrototypeBasketLine(out RetailBasketLineRecord actionLine) &&
                               actionLine.IsActionOwned;
@@ -871,6 +941,8 @@ namespace PCShopEmpire3D.Presentation
                 SimulationTimestamp.Create(1, 20));
             OperationResult staleBrowse = staleSession.MarkPrototypeCustomerBrowseArrival(
                 SimulationTimestamp.Create(2, 40));
+            OperationResult staleConsultation = staleSession.ConsultPrototypeCustomer(
+                SimulationTimestamp.Create(3, 60));
             OperationResult<CustomerOfferDecision> staleDecisionResult =
                 staleSession.EvaluatePrototypeCustomerOffer();
             OperationResult staleOfferDrift = staleSession.RetailOffers.SetOffer(
@@ -886,16 +958,18 @@ namespace PCShopEmpire3D.Presentation
             long staleOfferRevision = staleSession.RetailOffers.Revision;
             long staleCheckoutRevision = staleSession.RetailCheckouts.Revision;
             long staleOrderRevision = staleSession.Orders.Revision;
+            long staleConsultationRevision = staleSession.CustomerConsultations.Revision;
             OperationResult staleApply = staleDecisionResult.IsSuccess
                 ? staleSession.ApplyPrototypeCustomerBuy(
                     staleDecisionResult.Value,
-                    SimulationTimestamp.Create(3, 60))
+                    SimulationTimestamp.Create(4, 80))
                 : OperationResult.Fail(staleDecisionResult.Error);
             bool staleBlocked = staleAccept.IsSuccess &&
                                 staleShelf.IsSuccess &&
                                 stalePublish.IsSuccess &&
                                 staleStart.IsSuccess &&
                                 staleBrowse.IsSuccess &&
+                                staleConsultation.IsSuccess &&
                                 staleDecisionResult.IsSuccess &&
                                 staleOfferDrift.IsSuccess &&
                                 staleApply.Error ==
@@ -907,6 +981,8 @@ namespace PCShopEmpire3D.Presentation
                                 staleSession.RetailOffers.Revision == staleOfferRevision &&
                                 staleSession.RetailCheckouts.Revision == staleCheckoutRevision &&
                                 staleSession.Orders.Revision == staleOrderRevision &&
+                                staleSession.CustomerConsultations.Revision ==
+                                    staleConsultationRevision &&
                                 staleSession.CustomerOfferActions.Count == 0 &&
                                 staleSession.RetailBaskets.Count == 0 &&
                                 staleSession.Inventory.ReservationCount == 0 &&
@@ -917,6 +993,108 @@ namespace PCShopEmpire3D.Presentation
                     staleApply.IsFailure
                         ? staleApply.Error.Code
                         : "smoke.stale-decision-mutated-authority");
+                yield break;
+            }
+
+            GarageStockFlowSession foreignReceiptSession =
+                GarageStockFlowSession.CreateArrived();
+            OperationResult foreignReceiptAccept =
+                foreignReceiptSession.AcceptArrivedDelivery();
+            OperationResult foreignReceiptShelf = foreignReceiptSession.TransferItem(
+                foreignReceiptSession.ShelfContainerId);
+            OperationResult foreignReceiptPublish =
+                foreignReceiptSession.PublishShelfOffer();
+            OperationResult foreignReceiptStart =
+                foreignReceiptSession.StartPrototypeCustomerVisit(
+                    SimulationTimestamp.Create(1, 20));
+            OperationResult foreignReceiptBrowse =
+                foreignReceiptSession.MarkPrototypeCustomerBrowseArrival(
+                    SimulationTimestamp.Create(2, 40));
+            OperationResult foreignReceiptConsult =
+                foreignReceiptSession.ConsultPrototypeCustomer(
+                    SimulationTimestamp.Create(3, 60));
+            bool hasForeignReceipt =
+                foreignReceiptSession.TryGetPrototypeCustomerConsultation(
+                    out CustomerConsultationRecord foreignReceipt);
+
+            GarageStockFlowSession receiptOwnerSession =
+                GarageStockFlowSession.CreateArrived();
+            OperationResult receiptOwnerAccept = receiptOwnerSession.AcceptArrivedDelivery();
+            OperationResult receiptOwnerShelf = receiptOwnerSession.TransferItem(
+                receiptOwnerSession.ShelfContainerId);
+            OperationResult receiptOwnerPublish = receiptOwnerSession.PublishShelfOffer();
+            OperationResult receiptOwnerStart = receiptOwnerSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult receiptOwnerBrowse =
+                receiptOwnerSession.MarkPrototypeCustomerBrowseArrival(
+                    SimulationTimestamp.Create(2, 40));
+            bool hasReceiptOwnerVisit = receiptOwnerSession.TryGetPrototypeCustomerVisit(
+                out CustomerVisitRecord receiptOwnerVisit);
+            bool hasReceiptOwnerOffer = receiptOwnerSession.TryGetShelfOffer(
+                out ShelfOfferRecord receiptOwnerOffer);
+            OperationResult<CustomerOfferDecision> foreignReceiptDecision =
+                hasForeignReceipt && hasReceiptOwnerVisit && hasReceiptOwnerOffer
+                    ? CustomerOfferDecisionEvaluator.Evaluate(
+                        receiptOwnerVisit,
+                        foreignReceipt,
+                        receiptOwnerOffer,
+                        ShelfPrice.Create(
+                            GarageStockFlowSession.PrototypeCurrencyCode,
+                            GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits).Value)
+                    : OperationResult<CustomerOfferDecision>.Fail(
+                        CustomerOfferDecisionFailures.InputInvalid);
+            long receiptOwnerActionRevision = receiptOwnerSession.CustomerOfferActions.Revision;
+            long receiptOwnerVisitRevision = receiptOwnerSession.CustomerVisits.Revision;
+            long receiptOwnerInventoryRevision = receiptOwnerSession.Inventory.Revision;
+            long receiptOwnerBasketRevision = receiptOwnerSession.RetailBaskets.Revision;
+            long receiptOwnerOfferRevision = receiptOwnerSession.RetailOffers.Revision;
+            long receiptOwnerCheckoutRevision = receiptOwnerSession.RetailCheckouts.Revision;
+            long receiptOwnerOrderRevision = receiptOwnerSession.Orders.Revision;
+            long receiptOwnerConsultationRevision =
+                receiptOwnerSession.CustomerConsultations.Revision;
+            bool staleConsultationBlocked = foreignReceiptAccept.IsSuccess &&
+                                            foreignReceiptShelf.IsSuccess &&
+                                            foreignReceiptPublish.IsSuccess &&
+                                            foreignReceiptStart.IsSuccess &&
+                                            foreignReceiptBrowse.IsSuccess &&
+                                            foreignReceiptConsult.IsSuccess &&
+                                            hasForeignReceipt &&
+                                            receiptOwnerAccept.IsSuccess &&
+                                            receiptOwnerShelf.IsSuccess &&
+                                            receiptOwnerPublish.IsSuccess &&
+                                            receiptOwnerStart.IsSuccess &&
+                                            receiptOwnerBrowse.IsSuccess &&
+                                            foreignReceiptDecision.Error ==
+                                                CustomerOfferDecisionFailures.ConsultationMismatch &&
+                                            !receiptOwnerSession.CustomerConsultations.Owns(
+                                                foreignReceipt) &&
+                                            receiptOwnerSession.CustomerOfferActions.Revision ==
+                                                receiptOwnerActionRevision &&
+                                            receiptOwnerSession.CustomerVisits.Revision ==
+                                                receiptOwnerVisitRevision &&
+                                            receiptOwnerSession.Inventory.Revision ==
+                                                receiptOwnerInventoryRevision &&
+                                            receiptOwnerSession.RetailBaskets.Revision ==
+                                                receiptOwnerBasketRevision &&
+                                            receiptOwnerSession.RetailOffers.Revision ==
+                                                receiptOwnerOfferRevision &&
+                                            receiptOwnerSession.RetailCheckouts.Revision ==
+                                                receiptOwnerCheckoutRevision &&
+                                            receiptOwnerSession.Orders.Revision ==
+                                                receiptOwnerOrderRevision &&
+                                            receiptOwnerSession.CustomerConsultations.Revision ==
+                                                receiptOwnerConsultationRevision &&
+                                            receiptOwnerSession.CustomerOfferActions.Count == 0 &&
+                                            receiptOwnerSession.RetailBaskets.Count == 0 &&
+                                            receiptOwnerSession.Inventory.ReservationCount == 0 &&
+                                            receiptOwnerSession.ValidateInvariants().IsSuccess &&
+                                            foreignReceiptSession.ValidateInvariants().IsSuccess;
+            if (!staleConsultationBlocked)
+            {
+                LogCustomerFlowSmokeFailure(
+                    foreignReceiptDecision.IsFailure
+                        ? foreignReceiptDecision.Error.Code
+                        : "smoke.foreign-consultation-not-blocked");
                 yield break;
             }
 
@@ -935,6 +1113,8 @@ namespace PCShopEmpire3D.Presentation
                 SimulationTimestamp.Create(1, 20));
             OperationResult leaveBrowse = leaveSession.MarkPrototypeCustomerBrowseArrival(
                 SimulationTimestamp.Create(2, 40));
+            OperationResult leaveConsultation = leaveSession.ConsultPrototypeCustomer(
+                SimulationTimestamp.Create(3, 60));
             OperationResult<CustomerOfferDecision> leaveDecision =
                 leaveSession.EvaluatePrototypeCustomerOffer();
             long leaveActionRevision = leaveSession.CustomerOfferActions.Revision;
@@ -944,14 +1124,15 @@ namespace PCShopEmpire3D.Presentation
             long leaveOfferRevision = leaveSession.RetailOffers.Revision;
             long leaveCheckoutRevision = leaveSession.RetailCheckouts.Revision;
             long leaveOrderRevision = leaveSession.Orders.Revision;
+            long leaveConsultationRevision = leaveSession.CustomerConsultations.Revision;
             OperationResult leaveApply = leaveDecision.IsSuccess
                 ? leaveSession.ApplyPrototypeCustomerLeave(
                     leaveDecision.Value,
-                    SimulationTimestamp.Create(3, 60))
+                    SimulationTimestamp.Create(4, 80))
                 : OperationResult.Fail(leaveDecision.Error);
             OperationResult leaveExit = leaveApply.IsSuccess
                 ? leaveSession.MarkPrototypeCustomerExitArrival(
-                    SimulationTimestamp.Create(4, 80))
+                    SimulationTimestamp.Create(5, 100))
                 : OperationResult.Fail(leaveApply.Error);
             bool leaveAction = leaveAccept.IsSuccess &&
                                leaveShelf.IsSuccess &&
@@ -959,6 +1140,7 @@ namespace PCShopEmpire3D.Presentation
                                leavePrice.IsSuccess &&
                                leaveStart.IsSuccess &&
                                leaveBrowse.IsSuccess &&
+                               leaveConsultation.IsSuccess &&
                                leaveDecision.IsSuccess &&
                                leaveDecision.Value.DecisionKind ==
                                    CustomerOfferDecisionKind.Leave &&
@@ -973,6 +1155,8 @@ namespace PCShopEmpire3D.Presentation
                                leaveSession.RetailOffers.Revision == leaveOfferRevision &&
                                leaveSession.RetailCheckouts.Revision == leaveCheckoutRevision &&
                                leaveSession.Orders.Revision == leaveOrderRevision &&
+                               leaveSession.CustomerConsultations.Revision ==
+                                   leaveConsultationRevision &&
                                leaveSession.TryGetPrototypeCustomerLeaveAction(
                                    out CustomerOfferDecisionActionRecord leaveRecord) &&
                                leaveRecord.IsLeave &&
@@ -1012,6 +1196,9 @@ namespace PCShopEmpire3D.Presentation
             OperationResult staleLeaveBrowse =
                 staleLeaveSession.MarkPrototypeCustomerBrowseArrival(
                     SimulationTimestamp.Create(2, 40));
+            OperationResult staleLeaveConsultation =
+                staleLeaveSession.ConsultPrototypeCustomer(
+                    SimulationTimestamp.Create(3, 60));
             OperationResult<CustomerOfferDecision> staleLeaveDecision =
                 staleLeaveSession.EvaluatePrototypeCustomerOffer();
             OperationResult staleLeaveDrift = staleLeaveSession.RetailOffers.SetOffer(
@@ -1027,10 +1214,12 @@ namespace PCShopEmpire3D.Presentation
             long staleLeaveOfferRevision = staleLeaveSession.RetailOffers.Revision;
             long staleLeaveCheckoutRevision = staleLeaveSession.RetailCheckouts.Revision;
             long staleLeaveOrderRevision = staleLeaveSession.Orders.Revision;
+            long staleLeaveConsultationRevision =
+                staleLeaveSession.CustomerConsultations.Revision;
             OperationResult staleLeaveApply = staleLeaveDecision.IsSuccess
                 ? staleLeaveSession.ApplyPrototypeCustomerLeave(
                     staleLeaveDecision.Value,
-                    SimulationTimestamp.Create(3, 60))
+                    SimulationTimestamp.Create(4, 80))
                 : OperationResult.Fail(staleLeaveDecision.Error);
             bool staleLeaveBlocked = staleLeaveAccept.IsSuccess &&
                                      staleLeaveShelf.IsSuccess &&
@@ -1038,6 +1227,7 @@ namespace PCShopEmpire3D.Presentation
                                      staleLeavePrice.IsSuccess &&
                                      staleLeaveStart.IsSuccess &&
                                      staleLeaveBrowse.IsSuccess &&
+                                     staleLeaveConsultation.IsSuccess &&
                                      staleLeaveDecision.IsSuccess &&
                                      staleLeaveDecision.Value.DecisionKind ==
                                          CustomerOfferDecisionKind.Leave &&
@@ -1057,6 +1247,8 @@ namespace PCShopEmpire3D.Presentation
                                      staleLeaveSession.RetailCheckouts.Revision ==
                                          staleLeaveCheckoutRevision &&
                                      staleLeaveSession.Orders.Revision == staleLeaveOrderRevision &&
+                                     staleLeaveSession.CustomerConsultations.Revision ==
+                                         staleLeaveConsultationRevision &&
                                      staleLeaveSession.CustomerOfferActions.Count == 0 &&
                                      staleLeaveSession.RetailBaskets.Count == 0 &&
                                      staleLeaveSession.Inventory.ReservationCount == 0 &&
@@ -1079,6 +1271,8 @@ namespace PCShopEmpire3D.Presentation
             long fallbackOfferRevision = routeFallbackSession.RetailOffers.Revision;
             long fallbackBasketRevision = routeFallbackSession.RetailBaskets.Revision;
             long fallbackCheckoutRevision = routeFallbackSession.RetailCheckouts.Revision;
+            long fallbackConsultationRevision =
+                routeFallbackSession.CustomerConsultations.Revision;
             OperationResult fallbackStart = routeFallbackSession.StartPrototypeCustomerVisit(
                 SimulationTimestamp.Create(1, 20));
             OperationResult routeFailureOne = routeFallbackSession.ReportPrototypeCustomerRouteFailure(
@@ -1105,6 +1299,8 @@ namespace PCShopEmpire3D.Presentation
                                  routeFallbackSession.RetailOffers.Revision == fallbackOfferRevision &&
                                  routeFallbackSession.RetailBaskets.Revision == fallbackBasketRevision &&
                                  routeFallbackSession.RetailCheckouts.Revision == fallbackCheckoutRevision &&
+                                 routeFallbackSession.CustomerConsultations.Revision ==
+                                     fallbackConsultationRevision &&
                                  routeFallbackSession.ValidateInvariants().IsSuccess;
             if (!routeFallback)
             {
@@ -1118,6 +1314,8 @@ namespace PCShopEmpire3D.Presentation
             long timeoutOfferRevision = timeoutSession.RetailOffers.Revision;
             long timeoutBasketRevision = timeoutSession.RetailBaskets.Revision;
             long timeoutCheckoutRevision = timeoutSession.RetailCheckouts.Revision;
+            long timeoutConsultationRevision =
+                timeoutSession.CustomerConsultations.Revision;
             OperationResult timeoutStart = timeoutSession.StartPrototypeCustomerVisit(
                 SimulationTimestamp.Create(1, 20));
             OperationResult patienceTimeout = timeoutSession.AdvanceCustomerTime(
@@ -1137,6 +1335,8 @@ namespace PCShopEmpire3D.Presentation
                                    timeoutSession.RetailOffers.Revision == timeoutOfferRevision &&
                                    timeoutSession.RetailBaskets.Revision == timeoutBasketRevision &&
                                    timeoutSession.RetailCheckouts.Revision == timeoutCheckoutRevision &&
+                                   timeoutSession.CustomerConsultations.Revision ==
+                                       timeoutConsultationRevision &&
                                    timeoutSession.ValidateInvariants().IsSuccess;
             if (!timeoutFallback)
             {
@@ -1146,7 +1346,9 @@ namespace PCShopEmpire3D.Presentation
 
             Debug.Log(
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
-                "pause=ok offer-decision=ok buy-action=ok stale-blocked=ok fulfilled=ok " +
+                "pause=ok consultation=ok consultation-replay=ok decision-gated=ok " +
+                "stale-consultation-blocked=ok offer-decision=ok buy-action=ok " +
+                "stale-blocked=ok fulfilled=ok " +
                 "cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok " +
                 "leave-action=ok stale-leave-blocked=ok " +
                 "domain-route-fallback=ok domain-timeout-fallback=ok " +

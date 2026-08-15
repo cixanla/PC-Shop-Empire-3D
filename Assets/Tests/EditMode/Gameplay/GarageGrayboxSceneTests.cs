@@ -145,8 +145,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.EconomyStatusText, Is.EqualTo("HAREKET YOK"));
                 Assert.That(marker.StockFlow.StatusText, Does.Contain("MUHASEBE: HAREKET YOK"));
                 Assert.That(marker.StockFlow.Session.CustomerVisits.Count, Is.Zero);
+                Assert.That(marker.StockFlow.Session.CustomerConsultations, Is.Not.Null);
+                Assert.That(marker.StockFlow.Session.CustomerConsultations.Revision, Is.Zero);
+                Assert.That(marker.StockFlow.Session.TryGetPrototypeCustomerConsultation(out _),
+                    Is.False);
                 Assert.That(marker.CustomerFlow, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(marker.CustomerFlow.PlayerInput, Is.SameAs(marker.PlayerInput));
+                Assert.That(marker.CustomerFlow.PlayerCamera, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.NavigationSurface, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.NavigationSurface.collectObjects,
                     Is.EqualTo(CollectObjects.Volume));
@@ -156,8 +162,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.CustomerFlow.CustomerAgent.speed, Is.EqualTo(2.2f).Within(0.001f));
                 Assert.That(marker.CustomerFlow.CustomerAgent.radius, Is.EqualTo(0.28f).Within(0.001f));
                 Assert.That(marker.CustomerFlow.CustomerVisualRoot.activeSelf, Is.False);
+                Assert.That(marker.CustomerFlow.CustomerVisualRoot.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(marker.CustomerFlow.CustomerVisualRoot.GetComponent<CapsuleCollider>(),
+                    Is.Not.Null);
                 Assert.That(marker.CustomerFlow.CustomerStatusText.text,
                     Does.Contain("MÜŞTERİ AKIŞI: TEKLİF BEKLİYOR"));
+                Assert.That(marker.CustomerFlow.CustomerSpeechText, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.CustomerSpeechText.text,
+                    Does.Contain("MÜŞTERİ 001"));
                 Assert.That(marker.CustomerFlow.EntranceWaypoint, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.BrowseWaypoint, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.CheckoutWaypoint, Is.Not.Null);
@@ -248,7 +261,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-cash-settlement-r19-v1"));
+                    Is.EqualTo("garage-customer-consultation-r20-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

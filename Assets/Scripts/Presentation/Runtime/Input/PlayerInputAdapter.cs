@@ -20,7 +20,10 @@ namespace PCShopEmpire3D.Presentation.Input
         private InputAction _drop;
         private InputAction _rotatePlacement;
         private InputAction _pause;
+        private InputAction _subscribedInteract;
         private bool _ownsRuntimeActions;
+        private long _interactPressVersion;
+        private long _interactConsumedVersion = -1;
 
         public InputActionAsset Actions => actions;
 
@@ -32,7 +35,9 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public bool PrimaryActionPressedThisFrame => _primaryAction?.WasPressedThisFrame() ?? false;
 
-        public bool InteractPressedThisFrame => _interact?.WasPressedThisFrame() ?? false;
+        public bool InteractPressedThisFrame =>
+            (_interact?.WasPressedThisFrame() ?? false) &&
+            _interactConsumedVersion != _interactPressVersion;
 
         public bool DropPressedThisFrame => _drop?.WasPressedThisFrame() ?? false;
 
@@ -52,11 +57,31 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public string PrimaryBindingPrompt => GetBindingPrompt(_primaryAction, "Mouse Left", "RT");
 
+        public bool TryConsumeInteractPressThisFrame()
+        {
+            if (!InteractPressedThisFrame)
+            {
+                return false;
+            }
+
+            _interactConsumedVersion = _interactPressVersion;
+            return true;
+        }
+
         public void Configure(InputActionAsset inputActions)
         {
-            actions = inputActions != null
-                ? inputActions
-                : throw new ArgumentNullException(nameof(inputActions));
+            if (inputActions == null)
+            {
+                throw new ArgumentNullException(nameof(inputActions));
+            }
+
+            if (!ReferenceEquals(actions, inputActions) || !_ownsRuntimeActions)
+            {
+                ReplaceActions(inputActions, Application.isPlaying);
+            }
+
+            _interactPressVersion = 0;
+            _interactConsumedVersion = -1;
             CacheActions();
         }
 
@@ -64,10 +89,7 @@ namespace PCShopEmpire3D.Presentation.Input
         {
             if (Application.isPlaying && actions != null)
             {
-                string sourceName = actions.name;
-                actions = Instantiate(actions);
-                actions.name = sourceName;
-                _ownsRuntimeActions = true;
+                ReplaceActions(actions, cloneForRuntime: true);
             }
 
             CacheActions();
@@ -86,9 +108,46 @@ namespace PCShopEmpire3D.Presentation.Input
 
         private void OnDestroy()
         {
+            SetInteractSubscription(null);
             if (_ownsRuntimeActions && actions != null)
             {
                 Destroy(actions);
+            }
+        }
+
+        private void ReplaceActions(InputActionAsset source, bool cloneForRuntime)
+        {
+            InputActionAsset previousActions = actions;
+            bool destroyPreviousActions = _ownsRuntimeActions && previousActions != null;
+
+            _playerMap?.Disable();
+            SetInteractSubscription(null);
+            _playerMap = null;
+            _move = null;
+            _look = null;
+            _primaryAction = null;
+            _interact = null;
+            _sprint = null;
+            _drop = null;
+            _rotatePlacement = null;
+            _pause = null;
+
+            if (cloneForRuntime)
+            {
+                string sourceName = source.name;
+                actions = Instantiate(source);
+                actions.name = sourceName;
+                _ownsRuntimeActions = true;
+            }
+            else
+            {
+                actions = source;
+                _ownsRuntimeActions = false;
+            }
+
+            if (destroyPreviousActions && !ReferenceEquals(previousActions, actions))
+            {
+                Destroy(previousActions);
             }
         }
 
@@ -104,6 +163,7 @@ namespace PCShopEmpire3D.Presentation.Input
             _look = _playerMap.FindAction(PlayerInputContract.Look, true);
             _primaryAction = _playerMap.FindAction(PlayerInputContract.PrimaryAction, true);
             _interact = _playerMap.FindAction(PlayerInputContract.Interact, true);
+            SetInteractSubscription(_interact);
             _sprint = _playerMap.FindAction(PlayerInputContract.Sprint, true);
             _drop = _playerMap.FindAction(PlayerInputContract.Drop, true);
             _rotatePlacement = _playerMap.FindAction(PlayerInputContract.RotatePlacement, true);
@@ -112,6 +172,37 @@ namespace PCShopEmpire3D.Presentation.Input
             {
                 _playerMap.Enable();
             }
+        }
+
+        private void SetInteractSubscription(InputAction interact)
+        {
+            if (ReferenceEquals(_subscribedInteract, interact))
+            {
+                return;
+            }
+
+            if (_subscribedInteract != null)
+            {
+                _subscribedInteract.performed -= OnInteractPerformed;
+            }
+
+            _subscribedInteract = interact;
+            if (_subscribedInteract != null)
+            {
+                _subscribedInteract.performed += OnInteractPerformed;
+            }
+        }
+
+        private void OnInteractPerformed(InputAction.CallbackContext context)
+        {
+            if (_interactPressVersion == long.MaxValue)
+            {
+                _interactPressVersion = 0;
+                _interactConsumedVersion = -1;
+                return;
+            }
+
+            _interactPressVersion++;
         }
 
         private static string GetBindingPrompt(

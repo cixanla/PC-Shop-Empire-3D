@@ -40,7 +40,14 @@ namespace PCShopEmpire3D.Presentation
                     status);
             }
 
-            string prompt = carryController != null ? carryController.PromptText : string.Empty;
+            string customerPrompt = customerFlow != null
+                ? customerFlow.ContextualPromptText
+                : string.Empty;
+            string prompt = !string.IsNullOrEmpty(customerPrompt)
+                ? customerPrompt
+                : carryController != null
+                    ? carryController.PromptText
+                    : string.Empty;
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
                 float promptWidth = Mathf.Min(900f, Screen.width - 24f);

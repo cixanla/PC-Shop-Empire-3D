@@ -73,6 +73,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 NavMeshAgent customerAgent,
                 GameObject customerVisualRoot,
                 TextMesh customerStatusText,
+                TextMesh customerSpeechText,
                 Transform entranceWaypoint,
                 Transform browseWaypoint,
                 Transform checkoutWaypoint,
@@ -82,6 +83,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 CustomerAgent = customerAgent;
                 CustomerVisualRoot = customerVisualRoot;
                 CustomerStatusText = customerStatusText;
+                CustomerSpeechText = customerSpeechText;
                 EntranceWaypoint = entranceWaypoint;
                 BrowseWaypoint = browseWaypoint;
                 CheckoutWaypoint = checkoutWaypoint;
@@ -95,6 +97,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public GameObject CustomerVisualRoot { get; }
 
             public TextMesh CustomerStatusText { get; }
+
+            public TextMesh CustomerSpeechText { get; }
 
             public Transform EntranceWaypoint { get; }
 
@@ -344,6 +348,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             FirstPersonMotor motor = playerInstance.GetComponent<FirstPersonMotor>();
             Require(motor != null, "The PlayerRig prefab is missing FirstPersonMotor.");
             PlayerInputAdapter input = motor.GetComponent<PlayerInputAdapter>();
+            Camera playerCamera = motor.GetComponentInChildren<Camera>(true);
+            Require(input != null, "The PlayerRig prefab is missing PlayerInputAdapter.");
+            Require(playerCamera != null, "The PlayerRig prefab is missing its player Camera.");
             PlayerCarryController carry = motor.GetComponent<PlayerCarryController>();
             Require(carry != null, "The PlayerRig prefab is missing PlayerCarryController.");
 
@@ -361,10 +368,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             customerFlow.Configure(
                 stockFlow,
                 motor,
+                input,
+                playerCamera,
                 customerFlowBuild.NavigationSurface,
                 customerFlowBuild.CustomerAgent,
                 customerFlowBuild.CustomerVisualRoot,
                 customerFlowBuild.CustomerStatusText,
+                customerFlowBuild.CustomerSpeechText,
                 customerFlowBuild.EntranceWaypoint,
                 customerFlowBuild.BrowseWaypoint,
                 customerFlowBuild.CheckoutWaypoint,
@@ -1589,6 +1599,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             customer.transform.SetParent(parent, false);
             customer.transform.position = entrance.position;
             customer.transform.rotation = Quaternion.identity;
+            customer.layer = LayerMask.NameToLayer(InteractableLayerName);
+            CapsuleCollider customerFocusCollider = customer.AddComponent<CapsuleCollider>();
+            customerFocusCollider.center = new Vector3(0f, 0.90f, 0f);
+            customerFocusCollider.radius = 0.34f;
+            customerFocusCollider.height = 1.80f;
 
             CreateBeveledCube(
                 "CustomerTorso",
@@ -1669,10 +1684,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             identityText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             identityText.anchor = TextAnchor.MiddleCenter;
             identityText.alignment = TextAlignment.Center;
-            identityText.characterSize = 0.035f;
+            identityText.characterSize = 0.032f;
             identityText.fontSize = 40;
             identityText.color = new Color(0.90f, 0.94f, 0.96f);
-            identityText.text = "MÜŞTERİ 001";
+            identityText.text = "MÜŞTERİ 001\nYARDIM BEKLİYOR";
 
             NavMeshAgent agent = customer.AddComponent<NavMeshAgent>();
             agent.radius = 0.28f;
@@ -1692,6 +1707,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 agent,
                 customer,
                 flowText,
+                identityText,
                 entrance,
                 browse,
                 checkout,

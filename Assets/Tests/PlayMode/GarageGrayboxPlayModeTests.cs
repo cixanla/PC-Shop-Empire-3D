@@ -58,6 +58,69 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeInputReconfigurationOwnsOnlyRuntimeClones()
+        {
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            InputActionAsset firstSource = Object.Instantiate(marker.PlayerInput.Actions);
+            InputActionAsset secondSource = Object.Instantiate(marker.PlayerInput.Actions);
+            firstSource.name = "InputReconfigureSourceA";
+            secondSource.name = "InputReconfigureSourceB";
+            firstSource.Disable();
+            secondSource.Disable();
+
+            GameObject adapterObject = new GameObject("RuntimeInputReconfigureProbe");
+            PlayerInputAdapter adapter = adapterObject.AddComponent<PlayerInputAdapter>();
+            adapter.Configure(firstSource);
+            InputActionAsset firstRuntimeClone = adapter.Actions;
+            Assert.That(firstRuntimeClone, Is.Not.SameAs(firstSource));
+            Assert.That(
+                firstRuntimeClone.FindActionMap(PlayerInputContract.PlayerMap, true).enabled,
+                Is.True);
+            Assert.That(
+                firstSource.FindActionMap(PlayerInputContract.PlayerMap, true).enabled,
+                Is.False);
+
+            adapter.Configure(secondSource);
+            InputActionAsset secondRuntimeClone = adapter.Actions;
+            Assert.That(secondRuntimeClone, Is.Not.SameAs(secondSource));
+            Assert.That(secondRuntimeClone, Is.Not.SameAs(firstRuntimeClone));
+            yield return null;
+            Assert.That(firstRuntimeClone == null, Is.True);
+            Assert.That(firstSource, Is.Not.Null);
+            Assert.That(secondSource, Is.Not.Null);
+
+            adapterObject.SetActive(false);
+            Assert.That(
+                secondRuntimeClone.FindActionMap(PlayerInputContract.PlayerMap, true).enabled,
+                Is.False);
+            adapterObject.SetActive(true);
+            Assert.That(
+                secondRuntimeClone.FindActionMap(PlayerInputContract.PlayerMap, true).enabled,
+                Is.True);
+
+            DefaultExecutionOrder executionOrder =
+                (DefaultExecutionOrder)System.Attribute.GetCustomAttribute(
+                    typeof(GarageCustomerFlowRuntime),
+                    typeof(DefaultExecutionOrder));
+            Assert.That(executionOrder, Is.Not.Null);
+            Assert.That(executionOrder.order, Is.GreaterThan(0));
+
+            Object.Destroy(adapterObject);
+            yield return null;
+            Assert.That(secondRuntimeClone == null, Is.True);
+            Assert.That(firstSource, Is.Not.Null);
+            Assert.That(secondSource, Is.Not.Null);
+            Object.Destroy(firstSource);
+            Object.Destroy(secondSource);
+        }
+
+        [UnityTest]
         public IEnumerator KeyboardMouseAndGamepadDriveTheLiveMotor()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1136,8 +1199,88 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(resumedFrom.ElapsedMilliseconds + 20));
             Assert.That(customerFlow.CustomerAgent.isStopped, Is.False);
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
-            Assert.That(customerFlow.StateText, Does.Contain("RAF ÜRÜNÜNÜ İNCELİYOR"));
+            Assert.That(customerFlow.StateText, Does.Contain("YARDIM BEKLİYOR"));
+            Assert.That(customerFlow.CurrentOfferDecision, Is.Null);
+            Assert.That(stockFlow.Session.CustomerConsultations.Revision, Is.Zero);
+            MovePlayerToOpenDropArea(marker);
+            customerFlow.RefreshPresentation();
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.False);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            customerFlow.ProcessInputFrame();
+            Assert.That(customerFlow.ConsultationCompleted, Is.False);
+            MovePlayerToCustomer(marker, customerFlow);
+            customerFlow.RefreshPresentation();
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
+            Vector3 focusTarget = customerFlow.CustomerVisualRoot.transform.position +
+                                  (Vector3.up * 1.35f);
+            Vector3 cameraPosition = customerFlow.PlayerCamera.transform.position;
+            GameObject consultationBlocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            consultationBlocker.name = "CustomerConsultationLosBlocker";
+            consultationBlocker.transform.position = Vector3.Lerp(
+                cameraPosition,
+                focusTarget,
+                0.50f);
+            consultationBlocker.transform.localScale = new Vector3(0.55f, 0.75f, 0.18f);
+            consultationBlocker.transform.rotation = Quaternion.LookRotation(
+                focusTarget - cameraPosition,
+                Vector3.up);
+            Physics.SyncTransforms();
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.False);
+            Object.DestroyImmediate(consultationBlocker);
+            Physics.SyncTransforms();
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
+            marker.PlayerMotor.SetPaused(true);
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.False);
+            customerFlow.ProcessInputFrame();
+            Assert.That(customerFlow.ConsultationCompleted, Is.False);
+            marker.PlayerMotor.SetPaused(false);
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
+            Assert.That(customerFlow.ContextualPromptText,
+                Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+            Vector3 speechTowardCamera = customerFlow.PlayerCamera.transform.position -
+                                         customerFlow.CustomerSpeechText.transform.position;
+            speechTowardCamera.y = 0f;
+            Assert.That(Vector3.Dot(
+                    -customerFlow.CustomerSpeechText.transform.forward,
+                    speechTowardCamera.normalized),
+                Is.GreaterThan(0.995f));
+            Assert.That(customerFlow.CustomerSpeechText.text,
+                Does.Contain("İHTİYACI SOR"));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            PhysicalItemProjection overlapItem = CreateConsultationOverlapItem(
+                marker,
+                customerFlow);
+            customerFlow.RefreshPresentation();
+            Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(overlapItem));
+            string carryFailureBeforeConsultation = marker.PlayerCarry.LastFailureCode;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            customerFlow.ProcessInputFrame();
+            Assert.That(customerFlow.ConsultationCompleted, Is.True);
+            Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(overlapItem.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(carryFailureBeforeConsultation));
+            Object.DestroyImmediate(overlapItem.gameObject);
+            Physics.SyncTransforms();
+            Assert.That(stockFlow.Session.CustomerConsultations.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.TryGetPrototypeCustomerConsultation(
+                out CustomerConsultationRecord consultation), Is.True);
+            Assert.That(consultation.VisitId, Is.EqualTo(customerFlow.CurrentVisit.Id));
+            Assert.That(consultation.Need, Is.EqualTo(CustomerNeedKind.GraphicsUpgrade));
+            Assert.That(customerFlow.CustomerSpeechText.text,
+                Does.Contain("YÜKSELTMEK İSTİYORUM"));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
             long actorRevisionBeforeDecision = stockFlow.Session.CustomerVisits.Revision;
+            long consultationRevisionBeforeDecision =
+                stockFlow.Session.CustomerConsultations.Revision;
             long inventoryRevisionBeforeDecision = stockFlow.Session.Inventory.Revision;
             long orderRevisionBeforeDecision = stockFlow.Session.Orders.Revision;
             long offerRevisionBeforeDecision = stockFlow.Session.RetailOffers.Revision;
@@ -1156,6 +1299,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(customerFlow.CustomerStatusText.text, Does.Contain("KARAR: SATIN AL"));
             Assert.That(stockFlow.Session.CustomerVisits.Revision,
                 Is.EqualTo(actorRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.CustomerConsultations.Revision,
+                Is.EqualTo(consultationRevisionBeforeDecision));
             Assert.That(stockFlow.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforeDecision));
             Assert.That(stockFlow.Session.Orders.Revision,
@@ -1511,7 +1656,34 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 CustomerVisitState.Browsing);
             Assert.That(gamepadCustomerFlow.VisitStarted, Is.True);
             Assert.That(gamepadCustomerFlow.CustomerVisible, Is.True);
+            Assert.That(gamepadCustomerFlow.CurrentOfferDecision, Is.Null);
+            MovePlayerToCustomer(marker, gamepadCustomerFlow);
+            gamepadCustomerFlow.RefreshPresentation();
+            Assert.That(gamepadCustomerFlow.CanConsultCurrentCustomer, Is.True);
+            Assert.That(gamepadCustomerFlow.ContextualPromptText,
+                Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+            string carryFailureBeforeConsultation = marker.PlayerCarry.LastFailureCode;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            gamepadCustomerFlow.ProcessInputFrame();
+            Assert.That(gamepadCustomerFlow.ConsultationCompleted, Is.True);
+            Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(carryFailureBeforeConsultation));
+            Assert.That(stockFlow.Session.CustomerConsultations.Revision, Is.EqualTo(1));
+            Assert.That(gamepadCustomerFlow.CustomerSpeechText.text,
+                Does.Contain("YÜKSELTMEK İSTİYORUM"));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
             long actorRevisionBeforeDecision = stockFlow.Session.CustomerVisits.Revision;
+            long consultationRevisionBeforeDecision =
+                stockFlow.Session.CustomerConsultations.Revision;
             long inventoryRevisionBeforeDecision = stockFlow.Session.Inventory.Revision;
             long orderRevisionBeforeDecision = stockFlow.Session.Orders.Revision;
             long offerRevisionBeforeDecision = stockFlow.Session.RetailOffers.Revision;
@@ -1528,6 +1700,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Does.Contain(decision.ReasonCode));
             Assert.That(stockFlow.Session.CustomerVisits.Revision,
                 Is.EqualTo(actorRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.CustomerConsultations.Revision,
+                Is.EqualTo(consultationRevisionBeforeDecision));
             Assert.That(stockFlow.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforeDecision));
             Assert.That(stockFlow.Session.Orders.Revision,
@@ -1725,6 +1899,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.PublishShelfOffer().IsSuccess, Is.True);
             stockFlow.RefreshPresentation();
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            ConsultCurrentCustomerDirectly(customerFlow);
 
             CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
             Assert.That(displayedDecision, Is.Not.Null);
@@ -1821,6 +1996,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.True);
             stockFlow.RefreshPresentation();
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            ConsultCurrentCustomerDirectly(customerFlow);
 
             CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
             customerFlow.RefreshPresentation();
@@ -1921,6 +2097,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.True);
             stockFlow.RefreshPresentation();
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            ConsultCurrentCustomerDirectly(customerFlow);
             Assert.That(customerFlow.CurrentOfferDecision.DecisionKind,
                 Is.EqualTo(CustomerOfferDecisionKind.Leave));
 
@@ -1996,6 +2173,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.True);
             stockFlow.RefreshPresentation();
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            ConsultCurrentCustomerDirectly(customerFlow);
 
             CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
             Assert.That(displayedDecision, Is.Not.Null);
@@ -2159,6 +2337,71 @@ namespace PCShopEmpire3D.Tests.PlayMode
             PhysicalItemProjection item)
         {
             AimPlayerAtItem(marker, item, -Vector3.right);
+        }
+
+        private static void MovePlayerToCustomer(
+            GaragePrototypeMarker marker,
+            GarageCustomerFlowRuntime customerFlow)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            Vector3 target = customerFlow.CustomerVisualRoot.transform.position +
+                             (Vector3.up * 1.35f);
+            Vector3 playerPosition = target - (Vector3.right * 1.55f);
+            playerPosition.y = 0.05f;
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(Vector3.right, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static PhysicalItemProjection CreateConsultationOverlapItem(
+            GaragePrototypeMarker marker,
+            GarageCustomerFlowRuntime customerFlow)
+        {
+            Vector3 target = customerFlow.CustomerVisualRoot.transform.position +
+                             (Vector3.up * 1.35f);
+            Vector3 cameraPosition = customerFlow.PlayerCamera.transform.position;
+            Vector3 direct = (target - cameraPosition).normalized;
+            Vector3 itemDirection = Quaternion.AngleAxis(15f, Vector3.up) * direct;
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(itemDirection, Vector3.up);
+
+            GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            itemObject.name = "ConsultationInteractConsumptionItem";
+            itemObject.layer = LayerMask.NameToLayer("Interactable");
+            itemObject.transform.position = cameraPosition + (itemDirection * 1.05f);
+            itemObject.transform.localScale = Vector3.one * 0.18f;
+            Rigidbody body = itemObject.AddComponent<Rigidbody>();
+            body.useGravity = false;
+            body.isKinematic = true;
+            PhysicalItemProjection item = itemObject.AddComponent<PhysicalItemProjection>();
+            item.Configure(
+                "physical-item.consultation-consumption-test",
+                "Consultation Consumption Test Item",
+                body,
+                Vector3.one * 0.09f,
+                Vector3.zero,
+                Vector3.zero);
+            Physics.SyncTransforms();
+            return item;
+        }
+
+        private static void ConsultCurrentCustomerDirectly(
+            GarageCustomerFlowRuntime customerFlow)
+        {
+            GarageStockFlowSession session = customerFlow.StockFlow.EnsureInitialized();
+            OperationResult result = session.ConsultPrototypeCustomer(
+                customerFlow.CurrentConsultationTime);
+            Assert.That(result.IsSuccess, Is.True,
+                result.IsFailure ? result.Error.Code : string.Empty);
+            Assert.That(session.TryGetPrototypeCustomerConsultation(out _), Is.True);
+            customerFlow.RefreshPresentation();
         }
 
         private static void AimPlayerAtItem(

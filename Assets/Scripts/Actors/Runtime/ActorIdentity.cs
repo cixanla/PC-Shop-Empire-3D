@@ -13,4 +13,8 @@ namespace PCShopEmpire3D.Actors
     public sealed class CustomerVisitIdScope : IStableIdScope
     {
     }
+
+    public sealed class CustomerConsultationIdScope : IStableIdScope
+    {
+    }
 }

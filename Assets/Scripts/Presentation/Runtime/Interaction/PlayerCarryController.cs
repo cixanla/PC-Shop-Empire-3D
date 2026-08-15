@@ -556,7 +556,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     OperationResult<TransportCartProjection> cartTarget =
                         resolver.ResolveTransportCart();
                     FocusedCart = cartTarget.IsSuccess ? cartTarget.Value : null;
-                    if (input.InteractPressedThisFrame && FocusedCart != null)
+                    if (FocusedCart != null && input.TryConsumeInteractPressThisFrame())
                     {
                         TryLoadHeldItem(FocusedCart);
                         return;
@@ -633,7 +633,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 {
                     TryBeginCartDrive(FocusedCart);
                 }
-                else if (input.InteractPressedThisFrame && FocusedCart.HasCargo)
+                else if (FocusedCart.HasCargo && input.TryConsumeInteractPressThisFrame())
                 {
                     TryUnloadCart(FocusedCart);
                 }
@@ -679,7 +679,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
             }
 
-            if (input.InteractPressedThisFrame)
+            if (input.TryConsumeInteractPressThisFrame())
             {
                 TryPickup(FocusedItem);
             }

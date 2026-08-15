@@ -27,8 +27,14 @@ namespace PCShopEmpire3D.Retail
     {
         public static readonly Failure InputInvalid =
             Failure.FromCode("retail.offer-decision.input-invalid");
+        public static readonly Failure ConsultationRequired =
+            Failure.FromCode("retail.offer-decision.consultation-required");
         public static readonly Failure VisitNotBrowsing =
             Failure.FromCode("retail.offer-decision.visit-not-browsing");
+        public static readonly Failure ConsultationMismatch =
+            Failure.FromCode("retail.offer-decision.consultation-mismatch");
+        public static readonly Failure ConsultationStale =
+            Failure.FromCode("retail.offer-decision.consultation-stale");
         public static readonly Failure NeedUnsupported =
             Failure.FromCode("retail.offer-decision.need-unsupported");
         public static readonly Failure CurrencyMismatch =
@@ -49,6 +55,7 @@ namespace PCShopEmpire3D.Retail
             SimulationTimestamp visitLastUpdatedAt,
             CustomerNeedKind need,
             StableId<ProductDefinitionIdScope> intentProductId,
+            CustomerConsultationRecord consultation,
             StableId<ShelfOfferIdScope> offerId,
             long offerRevision,
             StableId<ContainerIdScope> shelfContainerId,
@@ -65,6 +72,7 @@ namespace PCShopEmpire3D.Retail
             VisitLastUpdatedAt = visitLastUpdatedAt;
             Need = need;
             IntentProductId = intentProductId;
+            Consultation = consultation;
             OfferId = offerId;
             OfferRevision = offerRevision;
             ShelfContainerId = shelfContainerId;
@@ -88,6 +96,8 @@ namespace PCShopEmpire3D.Retail
         public CustomerNeedKind Need { get; }
 
         public StableId<ProductDefinitionIdScope> IntentProductId { get; }
+
+        public CustomerConsultationRecord Consultation { get; }
 
         public StableId<ShelfOfferIdScope> OfferId { get; }
 
@@ -115,6 +125,7 @@ namespace PCShopEmpire3D.Retail
                    VisitLastUpdatedAt == other.VisitLastUpdatedAt &&
                    Need == other.Need &&
                    IntentProductId == other.IntentProductId &&
+                   Equals(Consultation, other.Consultation) &&
                    OfferId == other.OfferId &&
                    OfferRevision == other.OfferRevision &&
                    ShelfContainerId == other.ShelfContainerId &&
@@ -141,6 +152,7 @@ namespace PCShopEmpire3D.Retail
                 hash = (hash * 397) ^ VisitLastUpdatedAt.GetHashCode();
                 hash = (hash * 397) ^ (int)Need;
                 hash = (hash * 397) ^ IntentProductId.GetHashCode();
+                hash = (hash * 397) ^ (Consultation?.GetHashCode() ?? 0);
                 hash = (hash * 397) ^ OfferId.GetHashCode();
                 hash = (hash * 397) ^ OfferRevision.GetHashCode();
                 hash = (hash * 397) ^ ShelfContainerId.GetHashCode();
@@ -161,6 +173,7 @@ namespace PCShopEmpire3D.Retail
     {
         public static OperationResult<CustomerOfferDecision> Evaluate(
             CustomerVisitRecord visit,
+            CustomerConsultationRecord consultation,
             ShelfOfferRecord offer,
             ShelfPrice maximumAcceptedPrice)
         {
@@ -170,10 +183,39 @@ namespace PCShopEmpire3D.Retail
                     CustomerOfferDecisionFailures.InputInvalid);
             }
 
+            if (consultation == null)
+            {
+                return OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.ConsultationRequired);
+            }
+
             if (visit.State != CustomerVisitState.Browsing)
             {
                 return OperationResult<CustomerOfferDecision>.Fail(
                     CustomerOfferDecisionFailures.VisitNotBrowsing);
+            }
+
+            if (consultation.CustomerId != visit.Intent.CustomerId ||
+                consultation.VisitId != visit.Id ||
+                consultation.IntentId != visit.Intent.Id ||
+                consultation.Need != visit.Intent.Need ||
+                consultation.ProductId != visit.Intent.ProductId ||
+                consultation.VisitState != visit.State)
+            {
+                return OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.ConsultationMismatch);
+            }
+
+            if (consultation.VisitLastUpdatedAt != visit.LastUpdatedAt)
+            {
+                return OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.ConsultationStale);
+            }
+
+            if (!consultation.IsOwnedFor(visit))
+            {
+                return OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.ConsultationMismatch);
             }
 
             if (visit.Intent.Need != CustomerNeedKind.GraphicsUpgrade)
@@ -215,6 +257,7 @@ namespace PCShopEmpire3D.Retail
                     visit.LastUpdatedAt,
                     visit.Intent.Need,
                     visit.Intent.ProductId,
+                    consultation,
                     offer.Id,
                     offer.OfferRevision,
                     offer.ShelfContainerId,
