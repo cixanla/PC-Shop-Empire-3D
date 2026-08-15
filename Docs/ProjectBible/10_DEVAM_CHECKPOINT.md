@@ -48,6 +48,7 @@
 - Branch: `main`
 - Feature commit: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`
 - Tree: `1d48b75c74e5ae14ee92d4f0687a68ec35182ddd`
+- Checkpoint docs commit: `148c6d1f2936307268237ae2c484743146f7e639`
 - Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#37](https://github.com/cixanla/PC-Shop-Empire-3D/issues/37)
 - Karar: `Docs/ADR-0015-LOADED-TRANSPORT-CART-GRAYBOX.md`.
 - Kanıt: `Docs/Evidence/LOADED-TRANSPORT-CART-CHECKPOINT-2026-08-15.md`.
@@ -55,6 +56,7 @@
 - Builder güvenliği, connected prefab, build-scene sırası, stable item ID, physics snapshot ve pickup/drop/placement/rotation/stacking/large-carry invariantları korundu.
 - Çoklu slot/palet, büyük-kutu placement/istif, gerçek raf container'ı ve authoritative Inventory bu checkpoint'in dışında kaldı.
 - Remote feature Repository Guard: [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692), başarılı.
+- Remote checkpoint Repository Guard: [31860208560](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31860208560), başarılı.
 
 ## Test ve build kanıtı
 
@@ -98,8 +100,9 @@ Korunan milestone kayıtları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_SMALL_BOX_STACKING`
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`
 
-Güncel küçük-kutu istifleme snapshot'ı final tracked kaynak ile test/build/runtime kanıtlarını ayrı `SOURCE` ve `EVIDENCE` dizinlerinde tutar. SHA-256 manifest readback ve source→USB checksum dry-run doğrulandı; `.git`, cache, build uygulaması ve credential kapsam dışıdır. USB bu paket tamamlandıktan sonra güvenle çıkarılabilir.
+Güncel yüklü taşıma arabası snapshot'ı `148c6d1` tracked kaynağını ve 6 test/build/runtime kanıtını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 396 kaynak dosyası birebir karşılaştırıldı; 403 manifest satırında hash/boyut hatası `0`, manifest SHA-256 `a9e1d8e5188d85503dbff923127ac3bd71c6d9e023acf17003beddadfe0444c3`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket tamamlandıktan sonra güvenle çıkarılabilir.
 
 ## Devam sırası
 

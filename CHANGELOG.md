@@ -36,6 +36,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Repository Guard checkout action, Node.js 20 deprecation uyarısını kaldırmak için resmî güncel major `actions/checkout@v7`ye yükseltildi.
 - Pickup/drop + kontrollü placement milestone'ı ayrı USB hedefinde 336 tracked dosya ve SHA-256 manifest ile geri okunarak doğrulandı.
 - Kontrollü küçük-kutu istifleme milestone'ı final tracked kaynak ve test/build/runtime kanıtlarıyla ayrı USB hedefinde SHA-256 manifest/readback kapısından geçirildi.
+- Yüklü taşıma arabası milestone'ı 396 tracked kaynak ve 6 test/build/runtime kanıtıyla ayrı USB hedefinde 403 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi.
 
 ## 2026-08-11 — Stage B Core Foundation
 

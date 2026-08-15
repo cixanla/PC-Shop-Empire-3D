@@ -22,6 +22,10 @@ GarageGraybox artık dört tekerli, metal/rubber yüzeyli tek platform arabası 
 
 Ham kanıtlar repository dışındaki `../TestResults` klasöründedir. Feature Repository Guard [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692) başarılıdır.
 
+## USB milestone
+
+`/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART` hedefi checkpoint docs commit'i `148c6d1f2936307268237ae2c484743146f7e639` üzerinden oluşturuldu. `SOURCE` içinde 396 tracked dosya, `EVIDENCE` içinde 6 kanıt vardır. `SOURCE_COMMIT.txt` ile birlikte 403 satırlı manifest dosya hash'i ve boyutunu doğrular; manifest SHA-256 değeri `a9e1d8e5188d85503dbff923127ac3bd71c6d9e023acf17003beddadfe0444c3`dür. Source→USB birebir karşılaştırma, manifest readback ve yasak cache/build/credential taraması sıfır hatayla geçti.
+
 ## Korunan invariantlar ve sınır
 
 - Küçük-kutu pickup/drop/placement/rotation/istif ile büyük-kutu elde taşıma regresyonları geçti.
