@@ -3,6 +3,7 @@ using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Presentation.Player;
+using PCShopEmpire3D.Retail;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
@@ -91,6 +92,44 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public CustomerOfferDecision CurrentOfferDecision
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
+                    : null;
+                if (session == null)
+                {
+                    return null;
+                }
+
+                OperationResult<CustomerOfferDecision> result =
+                    session.EvaluatePrototypeCustomerOffer();
+                return result.TryGetValue(out CustomerOfferDecision decision)
+                    ? decision
+                    : null;
+            }
+        }
+
+        public string OfferDecisionText
+        {
+            get
+            {
+                CustomerOfferDecision decision = CurrentOfferDecision;
+                if (decision == null)
+                {
+                    return string.Empty;
+                }
+
+                return decision.DecisionKind == CustomerOfferDecisionKind.Buy
+                    ? "KARAR: SATIN AL"
+                    : "KARAR: AYRIL";
+            }
+        }
+
+        public string OfferDecisionReasonCode => CurrentOfferDecision?.ReasonCode ?? string.Empty;
+
         public string StateText
         {
             get
@@ -106,7 +145,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     case CustomerVisitState.Entering:
                         return "MAĞAZAYA GİRİYOR";
                     case CustomerVisitState.Browsing:
-                        return "RAF ÜRÜNÜNÜ İNCELİYOR";
+                        string decisionText = OfferDecisionText;
+                        return string.IsNullOrEmpty(decisionText)
+                            ? "RAF ÜRÜNÜNÜ İNCELİYOR • KARAR HAZIRLANIYOR"
+                            : $"RAF ÜRÜNÜNÜ İNCELİYOR • {decisionText}";
                     case CustomerVisitState.NavigatingToCheckout:
                         return "KASAYA İLERLİYOR";
                     case CustomerVisitState.AwaitingCheckout:
@@ -133,7 +175,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     : visit != null && IsRouteState(visit.State)
                         ? (_routeAssigned ? "ROTA AKTİF" : "ROTA HAZIRLANIYOR")
                         : "ROTA BEKLEMEDE";
-                return $"MÜŞTERİ AKIŞI: {StateText}\n{route}";
+                string reasonCode = OfferDecisionReasonCode;
+                return string.IsNullOrEmpty(reasonCode)
+                    ? $"MÜŞTERİ AKIŞI: {StateText}\n{route}"
+                    : $"MÜŞTERİ AKIŞI: {StateText}\n{route}\n{reasonCode}";
             }
         }
 

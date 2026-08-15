@@ -40,6 +40,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.claim.retail-basket-demo-001";
         public const string PrototypeCurrencyCode = "EUR";
         public const long PrototypePriceMinorUnits = 54_999;
+        public const long PrototypeMaximumAcceptedPriceMinorUnits = 60_000;
         public const string ProductDisplayName = "Northstar A60 Ekran Kartı";
 
         private GarageStockFlowSession(
@@ -251,6 +252,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ShelfContainerId,
                 ProductId,
                 out offer);
+        }
+
+        public OperationResult<CustomerOfferDecision> EvaluatePrototypeCustomerOffer()
+        {
+            if (!TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit) ||
+                !TryGetShelfOffer(out ShelfOfferRecord offer))
+            {
+                return OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.InputInvalid);
+            }
+
+            OperationResult<ShelfPrice> maximumAcceptedPrice = ShelfPrice.Create(
+                PrototypeCurrencyCode,
+                PrototypeMaximumAcceptedPriceMinorUnits);
+            return maximumAcceptedPrice.IsFailure
+                ? OperationResult<CustomerOfferDecision>.Fail(
+                    CustomerOfferDecisionFailures.InputInvalid)
+                : CustomerOfferDecisionEvaluator.Evaluate(
+                    visit,
+                    offer,
+                    maximumAcceptedPrice.Value);
         }
 
         public OperationResult ReservePrototypeCustomerBasket()

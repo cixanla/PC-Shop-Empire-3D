@@ -16,7 +16,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-customer-visit-r15-v1";
+        public const string Version = "garage-offer-decision-r16-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -622,6 +622,48 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            long decisionCustomerRevision = session.CustomerVisits.Revision;
+            long decisionInventoryRevision = session.Inventory.Revision;
+            long decisionOrderRevision = session.Orders.Revision;
+            long decisionOfferRevision = session.RetailOffers.Revision;
+            long decisionBasketRevision = session.RetailBaskets.Revision;
+            long decisionCheckoutRevision = session.RetailCheckouts.Revision;
+            OperationResult<CustomerOfferDecision> offerDecisionResult =
+                session.EvaluatePrototypeCustomerOffer();
+            bool offerDecision = offerDecisionResult.IsSuccess &&
+                                 offerDecisionResult.Value.DecisionKind ==
+                                 CustomerOfferDecisionKind.Buy &&
+                                 offerDecisionResult.Value.ReasonCode ==
+                                 CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit &&
+                                 offerDecisionResult.Value.VisitId == browsingVisit.Id &&
+                                 offerDecisionResult.Value.OfferRevision == 1 &&
+                                 offerDecisionResult.Value.OfferPrice.MinorUnits ==
+                                 GarageStockFlowSession.PrototypePriceMinorUnits &&
+                                 offerDecisionResult.Value.MaximumAcceptedPrice.MinorUnits ==
+                                 GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits &&
+                                 customerFlow.StateText.Contains("KARAR: SATIN AL") &&
+                                 customerFlow.OfferDecisionReasonCode ==
+                                 CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit &&
+                                 session.TryGetPrototypeCustomerVisit(
+                                     out CustomerVisitRecord decisionVisit) &&
+                                 decisionVisit.State == CustomerVisitState.Browsing &&
+                                 session.CustomerVisits.Revision == decisionCustomerRevision &&
+                                 session.Inventory.Revision == decisionInventoryRevision &&
+                                 session.Orders.Revision == decisionOrderRevision &&
+                                 session.RetailOffers.Revision == decisionOfferRevision &&
+                                 session.RetailBaskets.Revision == decisionBasketRevision &&
+                                 session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                                 session.RetailBaskets.Count == 0 &&
+                                 session.RetailCheckouts.Count == 0;
+            if (!offerDecision)
+            {
+                LogCustomerFlowSmokeFailure(
+                    offerDecisionResult.IsFailure
+                        ? offerDecisionResult.Error.Code
+                        : "smoke.offer-decision-mismatch");
+                yield break;
+            }
+
             OperationResult reserve = session.ReservePrototypeCustomerBasket();
             if (reserve.IsFailure)
             {
@@ -755,7 +797,8 @@ namespace PCShopEmpire3D.Presentation
 
             Debug.Log(
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
-                "pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok " +
+                "pause=ok offer-decision=ok fulfilled=ok " +
+                "domain-route-fallback=ok domain-timeout-fallback=ok " +
                 "authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok " +
                 "customer-hidden=ok");
             yield return new WaitForEndOfFrame();

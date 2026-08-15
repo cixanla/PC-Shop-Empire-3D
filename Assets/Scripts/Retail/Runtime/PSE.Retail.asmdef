@@ -4,6 +4,7 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
+    "PSE.Actors",
     "PSE.Inventory"
   ],
   "includePlatforms": [],

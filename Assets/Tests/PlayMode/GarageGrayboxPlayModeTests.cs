@@ -1136,6 +1136,38 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(customerFlow.CustomerAgent.isStopped, Is.False);
             yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
             Assert.That(customerFlow.StateText, Does.Contain("RAF ÜRÜNÜNÜ İNCELİYOR"));
+            long actorRevisionBeforeDecision = stockFlow.Session.CustomerVisits.Revision;
+            long inventoryRevisionBeforeDecision = stockFlow.Session.Inventory.Revision;
+            long orderRevisionBeforeDecision = stockFlow.Session.Orders.Revision;
+            long offerRevisionBeforeDecision = stockFlow.Session.RetailOffers.Revision;
+            long basketRevisionBeforeDecision = stockFlow.Session.RetailBaskets.Revision;
+            long checkoutRevisionBeforeDecision = stockFlow.Session.RetailCheckouts.Revision;
+            CustomerOfferDecision decision = customerFlow.CurrentOfferDecision;
+            customerFlow.RefreshPresentation();
+            Assert.That(decision, Is.Not.Null);
+            Assert.That(decision.DecisionKind, Is.EqualTo(CustomerOfferDecisionKind.Buy));
+            Assert.That(decision.ReasonCode,
+                Is.EqualTo(CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit));
+            Assert.That(decision.MaximumAcceptedPrice.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypeMaximumAcceptedPriceMinorUnits));
+            Assert.That(customerFlow.StateText, Does.Contain("KARAR: SATIN AL"));
+            Assert.That(customerFlow.StatusText, Does.Contain(decision.ReasonCode));
+            Assert.That(customerFlow.CustomerStatusText.text, Does.Contain("KARAR: SATIN AL"));
+            Assert.That(stockFlow.Session.CustomerVisits.Revision,
+                Is.EqualTo(actorRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.Orders.Revision,
+                Is.EqualTo(orderRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision,
+                Is.EqualTo(offerRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.RetailCheckouts.Count, Is.Zero);
+            Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Browsing));
             MovePlayerToShelfItem(marker, item);
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
@@ -1451,6 +1483,37 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 CustomerVisitState.Browsing);
             Assert.That(gamepadCustomerFlow.VisitStarted, Is.True);
             Assert.That(gamepadCustomerFlow.CustomerVisible, Is.True);
+            long actorRevisionBeforeDecision = stockFlow.Session.CustomerVisits.Revision;
+            long inventoryRevisionBeforeDecision = stockFlow.Session.Inventory.Revision;
+            long orderRevisionBeforeDecision = stockFlow.Session.Orders.Revision;
+            long offerRevisionBeforeDecision = stockFlow.Session.RetailOffers.Revision;
+            long basketRevisionBeforeDecision = stockFlow.Session.RetailBaskets.Revision;
+            long checkoutRevisionBeforeDecision = stockFlow.Session.RetailCheckouts.Revision;
+            CustomerOfferDecision decision = gamepadCustomerFlow.CurrentOfferDecision;
+            gamepadCustomerFlow.RefreshPresentation();
+            Assert.That(decision, Is.Not.Null);
+            Assert.That(decision.DecisionKind, Is.EqualTo(CustomerOfferDecisionKind.Buy));
+            Assert.That(decision.ReasonCode,
+                Is.EqualTo(CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit));
+            Assert.That(gamepadCustomerFlow.StateText, Does.Contain("KARAR: SATIN AL"));
+            Assert.That(gamepadCustomerFlow.CustomerStatusText.text,
+                Does.Contain(decision.ReasonCode));
+            Assert.That(stockFlow.Session.CustomerVisits.Revision,
+                Is.EqualTo(actorRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.Orders.Revision,
+                Is.EqualTo(orderRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailOffers.Revision,
+                Is.EqualTo(offerRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeDecision));
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.RetailCheckouts.Count, Is.Zero);
+            Assert.That(gamepadCustomerFlow.CurrentVisit.State,
+                Is.EqualTo(CustomerVisitState.Browsing));
             MovePlayerToShelfItem(marker, item);
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
