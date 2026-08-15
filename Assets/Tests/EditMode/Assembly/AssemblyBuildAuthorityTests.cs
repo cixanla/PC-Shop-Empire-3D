@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
@@ -181,17 +182,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
-        public void OccupiedWorkbenchAndSeatFailuresAreFailClosed()
+        public void OccupiedSeatAndEmptyDetachFailuresAreFailClosed()
         {
-            Fixture fullWorkbench = Fixture.Create(fillWorkbench: true);
-            AssertFailureWithoutMutation(
-                fullWorkbench,
-                fullWorkbench.Authority.AttachMotherboard(
-                    OperationId("operation.full-workbench"),
-                    fullWorkbench.ItemId,
-                    fullWorkbench.SlotId),
-                AssemblyFailures.WorkbenchCapacityExceeded);
-
             Fixture occupiedSeat = Fixture.Create();
             occupiedSeat.Authority.AttachMotherboard(
                 OperationId("operation.first-seat"),
@@ -220,6 +212,173 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
+        public void CreateRejectsOccupiedWorkbenchWithoutClaimingInventory()
+        {
+            Fixture fixture = Fixture.CreateUnclaimed(fillWorkbench: true);
+            StableId<ItemInstanceIdScope> occupiedItem =
+                StableId<ItemInstanceIdScope>.Parse("item.workbench-occupied");
+            long revision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result = fixture.TryCreateAuthority();
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.SlotOccupied));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(revision));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                occupiedItem, out InventoryItemRecord occupied), Is.True);
+            Assert.That(occupied.ContainerId, Is.EqualTo(fixture.WorkbenchId));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                occupiedItem, fixture.StorageId).IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                occupiedItem, out InventoryItemRecord recovered), Is.True);
+            Assert.That(recovered.ContainerId, Is.EqualTo(fixture.StorageId));
+        }
+
+        [Test]
+        public void SecondAuthorityClaimingSameWorkbenchReturnsPlanForeignWithoutMutation()
+        {
+            Fixture fixture = Fixture.CreateUnclaimed();
+            OperationResult<AssemblyBuildAuthority> first = fixture.TryCreateAuthority();
+            Assert.That(first.IsSuccess, Is.True);
+            long revision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> second = fixture.TryCreateAuthority();
+
+            Assert.That(second.Error, Is.EqualTo(AssemblyFailures.PlanForeign));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(revision));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(first.Value.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void FullHandsDetachReturnsStableCapacityFailureWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            Assert.That(fixture.Authority.AttachMotherboard(
+                OperationId("operation.attach-before-full-hands"),
+                fixture.ItemId,
+                fixture.SlotId).IsSuccess, Is.True);
+            for (int index = 0; index < 2; index++)
+            {
+                Assert.That(fixture.Inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse($"item.hands-blocker-{index}"),
+                    fixture.ItemProductId,
+                    fixture.HandsId,
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create("EUR", 1).Value).IsSuccess, Is.True);
+            }
+
+            long assemblyRevision = fixture.Authority.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult<AssemblyOperationReceipt> result =
+                fixture.Authority.DetachMotherboard(
+                    OperationId("operation.detach-to-full-hands"),
+                    fixture.ItemId,
+                    fixture.SlotId);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.HandsCapacityExceeded));
+            Assert.That(result.Error.Code, Is.EqualTo("assembly.hands.capacity"));
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(fixture.Authority.MotherboardItemId, Is.EqualTo(fixture.ItemId));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.ContainerId, Is.EqualTo(fixture.WorkbenchId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void InventoryRevisionOverflowMapsToCanonicalRevisionOverflowWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            PropertyInfo revisionProperty = typeof(InventoryAuthority).GetProperty(
+                nameof(InventoryAuthority.Revision));
+            revisionProperty.GetSetMethod(nonPublic: true).Invoke(
+                fixture.Inventory,
+                new object[] { long.MaxValue });
+
+            OperationResult<AssemblyOperationReceipt> result =
+                fixture.Authority.AttachMotherboard(
+                    OperationId("operation.inventory-revision-overflow"),
+                    fixture.ItemId,
+                    fixture.SlotId);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.RevisionOverflow));
+            Assert.That(result.Error.Code, Is.EqualTo("assembly.revision-overflow"));
+            Assert.That(fixture.Authority.Revision, Is.Zero);
+            Assert.That(fixture.Authority.ReceiptCount, Is.Zero);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(fixture.HandsId));
+        }
+
+        [Test]
+        public void CreateAtInventoryRevisionMaxReturnsCanonicalOverflowAndDoesNotClaimWorkbench()
+        {
+            Fixture fixture = Fixture.CreateUnclaimed();
+            PropertyInfo revisionProperty = typeof(InventoryAuthority).GetProperty(
+                nameof(InventoryAuthority.Revision));
+            revisionProperty.GetSetMethod(nonPublic: true).Invoke(
+                fixture.Inventory,
+                new object[] { long.MaxValue });
+
+            OperationResult<AssemblyBuildAuthority> first = fixture.TryCreateAuthority();
+            OperationResult<AssemblyBuildAuthority> retry = fixture.TryCreateAuthority();
+
+            Assert.That(first.Error, Is.EqualTo(AssemblyFailures.RevisionOverflow));
+            Assert.That(retry.Error, Is.EqualTo(AssemblyFailures.RevisionOverflow));
+            Assert.That(first.Error.Code, Is.EqualTo("assembly.revision-overflow"));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void WrongDetachItemIdentityReturnsIdentityConflictWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            fixture.Authority.AttachMotherboard(
+                OperationId("operation.attach-before-wrong-detach"),
+                fixture.ItemId,
+                fixture.SlotId);
+            long assemblyRevision = fixture.Authority.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult<AssemblyOperationReceipt> result =
+                fixture.Authority.DetachMotherboard(
+                    StableId<AssemblyOperationIdScope>.Parse(
+                        "operation.wrong-detach-identity"),
+                    StableId<ItemInstanceIdScope>.Parse("item.motherboard-foreign"),
+                    fixture.SlotId);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.IdentityConflict));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+            Assert.That(fixture.Authority.MotherboardItemId, Is.EqualTo(fixture.ItemId));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId, out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.ContainerId, Is.EqualTo(fixture.WorkbenchId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void BenchmarkRemainsBlockedBeforeAndAfterUnsecuredMotherboardSeat()
         {
             Fixture fixture = Fixture.Create();
@@ -235,28 +394,192 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
-        public void ExternalInventoryDriftIsDetectedAndCannotDetachSilently()
+        public void ManagedWorkbenchRejectsRawTransferAndExactDetachStillSucceeds()
         {
             Fixture fixture = Fixture.Create();
             fixture.Authority.AttachMotherboard(
-                OperationId("operation.attach-before-drift"),
+                OperationId("operation.attach-before-custody-check"),
                 fixture.ItemId,
                 fixture.SlotId);
-            Assert.That(fixture.Inventory.TransferSerializedItem(
-                fixture.ItemId,
-                fixture.StorageId).IsSuccess, Is.True);
             long assemblyRevision = fixture.Authority.Revision;
             long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
 
-            Assert.That(fixture.Authority.ValidateInvariants().Error,
-                Is.EqualTo(AssemblyFailures.InvariantViolation));
-            Assert.That(fixture.Authority.DetachMotherboard(
-                    OperationId("operation.detach-after-drift"),
-                    fixture.ItemId,
-                    fixture.SlotId).Error,
-                Is.EqualTo(AssemblyFailures.ItemNotOnWorkbench));
+            OperationResult rawTransfer = fixture.Inventory.TransferSerializedItem(
+                fixture.ItemId,
+                fixture.StorageId);
+
+            Assert.That(rawTransfer.Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.ContainerId, Is.EqualTo(fixture.WorkbenchId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
             Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
             Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+
+            OperationResult<AssemblyOperationReceipt> detach =
+                fixture.Authority.DetachMotherboard(
+                    OperationId("operation.detach-after-custody-check"),
+                    fixture.ItemId,
+                    fixture.SlotId);
+
+            Assert.That(detach.IsSuccess, Is.True);
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision + 1));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision + 1));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount + 1));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord detached), Is.True);
+            Assert.That(detached.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedWorkbenchRejectsRawTransferBeforeAttachWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult result = fixture.Inventory.TransferSerializedItem(
+                fixture.ItemId,
+                fixture.WorkbenchId);
+
+            Assert.That(result.Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.Revision, Is.Zero);
+            Assert.That(fixture.Authority.ReceiptCount, Is.Zero);
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(fixture.HandsId));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ReservedMotherboardCannotAttachUntilReservationIsReleased()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<ReservationIdScope> reservationId =
+                StableId<ReservationIdScope>.Parse("reservation.motherboard-seat");
+            StableId<InventoryClaimIdScope> claimId =
+                StableId<InventoryClaimIdScope>.Parse("claim.motherboard-seat");
+            Assert.That(fixture.Inventory.ReserveSerializedItem(
+                reservationId,
+                claimId,
+                fixture.ItemId).IsSuccess, Is.True);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> blocked =
+                fixture.Authority.AttachMotherboard(
+                    OperationId("operation.attach-reserved"),
+                    fixture.ItemId,
+                    fixture.SlotId);
+
+            Assert.That(blocked.Error, Is.EqualTo(AssemblyFailures.ItemNotInActorHands));
+            Assert.That(fixture.Authority.Revision, Is.Zero);
+            Assert.That(fixture.Authority.ReceiptCount, Is.Zero);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.ReservationCount, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord reserved), Is.True);
+            Assert.That(reserved.ContainerId, Is.EqualTo(fixture.HandsId));
+
+            Assert.That(fixture.Inventory.ReleaseReservation(reservationId).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.AttachMotherboard(
+                OperationId("operation.attach-after-release"),
+                fixture.ItemId,
+                fixture.SlotId).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SeatedMotherboardCannotBeReservedWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            fixture.Authority.AttachMotherboard(
+                OperationId("operation.attach-before-reservation"),
+                fixture.ItemId,
+                fixture.SlotId);
+            long assemblyRevision = fixture.Authority.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult reservation = fixture.Inventory.ReserveSerializedItem(
+                StableId<ReservationIdScope>.Parse("reservation.seated-motherboard"),
+                StableId<InventoryClaimIdScope>.Parse("claim.seated-motherboard"),
+                fixture.ItemId);
+
+            Assert.That(reservation.Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+            Assert.That(fixture.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CreateRejectsValueEqualForeignCatalogAuthority()
+        {
+            Fixture fixture = Fixture.Create();
+            ProductCatalog valueEqualForeign = ProductCatalog.Create(
+                fixture.Products.Definitions).Value;
+            InventoryAuthority foreignInventory = InventoryAuthority.Create(
+                valueEqualForeign).Value;
+            foreignInventory.RegisterContainer(InventoryContainerDefinition.Create(
+                fixture.HandsId,
+                InventoryContainerKind.ActorHands,
+                2).Value);
+            foreignInventory.RegisterContainer(InventoryContainerDefinition.Create(
+                fixture.WorkbenchId,
+                InventoryContainerKind.Workbench,
+                1).Value);
+
+            OperationResult<AssemblyBuildAuthority> result = AssemblyBuildAuthority.Create(
+                fixture.Components,
+                foreignInventory,
+                StableId<PcBuildIdScope>.Parse("build.foreign-catalog"),
+                StableId<ChassisIdScope>.Parse("chassis.foreign-catalog"),
+                fixture.SlotId,
+                fixture.HandsId,
+                fixture.WorkbenchId,
+                MotherboardFormFactor.MicroAtx);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.CatalogAuthorityMismatch));
+            Assert.That(foreignInventory.Revision, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void PublicFailureCodesMatchIssue53AssemblyContract()
+        {
+            Assert.That(AssemblyFailures.InvalidBuildId.Code, Is.EqualTo("assembly.invalid-build"));
+            Assert.That(AssemblyFailures.InvalidChassisId.Code, Is.EqualTo("assembly.invalid-chassis"));
+            Assert.That(AssemblyFailures.InvalidSlotId.Code, Is.EqualTo("assembly.invalid-slot"));
+            Assert.That(AssemblyFailures.InvalidComponent.Code, Is.EqualTo("assembly.invalid-component"));
+            Assert.That(AssemblyFailures.ComponentKindMismatch.Code,
+                Is.EqualTo("assembly.component-kind-mismatch"));
+            Assert.That(AssemblyFailures.FormFactorMismatch.Code,
+                Is.EqualTo("assembly.form-factor-mismatch"));
+            Assert.That(AssemblyFailures.SlotOccupied.Code, Is.EqualTo("assembly.slot-occupied"));
+            Assert.That(AssemblyFailures.ComponentNotInActorHands.Code,
+                Is.EqualTo("assembly.component-not-in-hands"));
+            Assert.That(AssemblyFailures.ComponentNotSeated.Code,
+                Is.EqualTo("assembly.component-not-seated"));
+            Assert.That(AssemblyFailures.IdentityConflict.Code,
+                Is.EqualTo("assembly.identity-conflict"));
+            Assert.That(AssemblyFailures.PlanForeign.Code, Is.EqualTo("assembly.plan-foreign"));
+            Assert.That(AssemblyFailures.PlanStale.Code, Is.EqualTo("assembly.plan-stale"));
+            Assert.That(AssemblyFailures.RevisionOverflow.Code,
+                Is.EqualTo("assembly.revision-overflow"));
+            Assert.That(AssemblyFailures.HandsCapacityExceeded.Code,
+                Is.EqualTo("assembly.hands.capacity"));
+            Assert.That(AssemblyFailures.InventoryRevisionOverflow,
+                Is.EqualTo(AssemblyFailures.RevisionOverflow));
         }
 
         [Test]
@@ -341,7 +664,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
 
             public StableId<ProductDefinitionIdScope> ItemProductId { get; private set; }
 
-            public static Fixture Create(
+            public static Fixture Create(string itemProductId = "component.motherboard-matx")
+            {
+                Fixture fixture = CreateUnclaimed(itemProductId);
+                fixture.Authority = fixture.TryCreateAuthority().Value;
+                return fixture;
+            }
+
+            public static Fixture CreateUnclaimed(
                 string itemProductId = "component.motherboard-matx",
                 bool fillWorkbench = false)
             {
@@ -413,16 +743,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                         InventoryUnitCost.Create("EUR", 9_900).Value);
                 }
 
-                fixture.Authority = AssemblyBuildAuthority.Create(
-                    fixture.Components,
-                    fixture.Inventory,
-                    fixture.BuildId,
-                    fixture.ChassisId,
-                    fixture.SlotId,
-                    fixture.HandsId,
-                    fixture.WorkbenchId,
-                    MotherboardFormFactor.MicroAtx).Value;
                 return fixture;
+            }
+
+            public OperationResult<AssemblyBuildAuthority> TryCreateAuthority()
+            {
+                return AssemblyBuildAuthority.Create(
+                    Components,
+                    Inventory,
+                    BuildId,
+                    ChassisId,
+                    SlotId,
+                    HandsId,
+                    WorkbenchId,
+                    MotherboardFormFactor.MicroAtx);
             }
 
             private static ProductDefinition Definition(string id, string displayName)

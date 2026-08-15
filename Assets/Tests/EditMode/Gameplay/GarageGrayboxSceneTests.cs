@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
+using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
@@ -89,7 +90,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(4));
+                Assert.That(physicalItems.Length, Is.EqualTo(5));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -104,6 +105,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
                 PhysicalItemProjection deliveryItem = physicalItems.Single(
                     item => item.ItemIdValue == GarageStockFlowSession.ItemInstanceIdValue);
+                PhysicalItemProjection motherboard = physicalItems.Single(
+                    item => item.CarryProfile == PhysicalCarryProfile.PcComponent);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -131,12 +134,39 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(deliveryParcel.OpenedShellVisualRoot.transform.parent,
                     Is.SameAs(deliveryItem.transform.parent));
                 Assert.That(deliveryBinding.InventoryItemId.Value, Is.EqualTo(deliveryItem.ItemIdValue));
+                MotherboardAssemblyItemBinding motherboardBinding =
+                    motherboard.GetComponent<MotherboardAssemblyItemBinding>();
+                Assert.That(motherboardBinding, Is.Not.Null);
+                Assert.That(motherboard.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.MotherboardDisplayName));
+                Assert.That(motherboard.SupportsPlacement, Is.False);
+                Assert.That(motherboard.Body.mass, Is.EqualTo(0.9f).Within(0.001f));
+                Assert.That(Vector3.Distance(
+                    motherboard.DropHalfExtents,
+                    new Vector3(0.127f, 0.127f, 0.045f)), Is.LessThan(0.0001f));
+                Assert.That(marker.MotherboardSeat, Is.Not.Null);
+                Assert.That(marker.MotherboardSeat.IsConfigured, Is.True);
+                Assert.That(marker.MotherboardBinding, Is.SameAs(motherboardBinding));
+                Assert.That(motherboardBinding.PhysicalItem, Is.SameAs(motherboard));
+                Assert.That(motherboardBinding.Seat, Is.SameAs(marker.MotherboardSeat));
+                Assert.That(motherboardBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(motherboardBinding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MotherboardItemInstanceIdValue));
+                Assert.That(motherboard.ItemIdValue,
+                    Is.EqualTo(motherboardBinding.InventoryItemIdValue));
                 Assert.That(marker.StockFlow, Is.Not.Null);
                 Assert.That(marker.StockFlow.ItemBinding, Is.SameAs(deliveryBinding));
                 Assert.That(marker.StockFlow.Parcel, Is.SameAs(deliveryParcel));
                 Assert.That(marker.StockFlow.EnsureInitialized().Order.Status,
                     Is.EqualTo(PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived));
                 Assert.That(marker.StockFlow.Session.TryGetItem(out _), Is.False);
+                Assert.That(marker.StockFlow.Session.TryGetMotherboardItem(
+                    out InventoryItemRecord motherboardItem), Is.True);
+                Assert.That(motherboardItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.MotherboardSeatState,
+                    Is.EqualTo(AssemblySeatState.Empty));
+                Assert.That(motherboardBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -293,7 +323,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-physical-checkout-station-r21-v1"));
+                    Is.EqualTo("garage-motherboard-seating-r22-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -310,6 +340,85 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     benchmark.GetComponentsInChildren<Transform>(true)
                         .Select(transform => transform.name),
                     Does.Contain("ShelfPartsBox"));
+
+                Transform assemblySlice = benchmark.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "PrototypeMotherboardAssemblySlice");
+                Transform openChassis = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeOpenChassis");
+                Transform snapAnchor = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardSnapAnchor");
+                Transform tray = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardTray");
+                Transform standoffMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "StandoffMarkArray");
+                Transform statusPlate = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardSeatStatusPlate");
+                Transform ioKey = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardIoKey");
+                Transform cpuSocket = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardCpuSocket");
+                Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardConnectorMarks");
+                MotherboardSeatProjection seat =
+                    assemblySlice.GetComponentInChildren<MotherboardSeatProjection>(true);
+                MotherboardAssemblyItemBinding binding =
+                    assemblySlice.GetComponentInChildren<MotherboardAssemblyItemBinding>(true);
+                Assert.That(openChassis, Is.Not.Null);
+                Assert.That(seat, Is.Not.Null);
+                Assert.That(binding, Is.Not.Null);
+                Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
+                Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
+                Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
+                Assert.That(seat.SnapPose.position,
+                    Is.EqualTo(new Vector3(-0.75f, 1.30f, 4.35f)));
+                Assert.That(Quaternion.Angle(
+                    seat.SnapPose.rotation,
+                    Quaternion.Euler(0f, 180f, 0f)), Is.LessThan(0.1f));
+                Assert.That(Vector3.Distance(
+                    tray.localPosition,
+                    new Vector3(-0.75f, 1.305f, 4.387f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    tray.GetComponent<BoxCollider>().size,
+                    new Vector3(0.454f, 0.534f, 0.050f)), Is.LessThan(0.0001f));
+                Assert.That(tray.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("DarkMetal"));
+                Assert.That(Vector3.Distance(
+                    statusPlate.localPosition,
+                    new Vector3(-0.75f, 1.105f, 4.353f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    ioKey.localPosition,
+                    new Vector3(-0.085f, 0.070f, 0.022f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    cpuSocket.localPosition,
+                    new Vector3(0.015f, 0.025f, 0.012f)), Is.LessThan(0.0001f));
+
+                Bounds standoffBounds = standoffMarks.GetComponent<MeshFilter>().sharedMesh.bounds;
+                Assert.That(Vector3.Distance(
+                    standoffBounds.center,
+                    new Vector3(-0.75f, 1.30f, 4.359f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    standoffBounds.size,
+                    new Vector3(0.192f, 0.192f, 0.006f)), Is.LessThan(0.0001f));
+
+                Bounds connectorBounds = connectorMarks.GetComponent<MeshFilter>().sharedMesh.bounds;
+                Assert.That(Vector3.Distance(
+                    connectorBounds.center,
+                    new Vector3(0.0255f, 0.014f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    connectorBounds.size,
+                    new Vector3(0.171f, 0.182f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
+                    Is.EqualTo(12));
+                Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
+                    Is.EqualTo(8));
+                Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
+                Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true), Is.Empty);
+                Assert.That(assemblySlice.GetComponentsInChildren<NavMeshObstacle>(true), Is.Empty);
+                Assert.That(
+                    benchmark.GetComponentsInChildren<Transform>(true)
+                        .Select(transform => transform.name),
+                    Does.Not.Contain("BenchPcCase"));
 
                 Material concrete = AssetDatabase.LoadAssetAtPath<Material>(
                     "Assets/Art/Prototype/Materials/Concrete.mat");

@@ -9,6 +9,21 @@ using PCShopEmpire3D.Core.Primitives;
 
 namespace PCShopEmpire3D.Inventory
 {
+    internal sealed class InventorySerializedTransferAccess
+    {
+        internal InventorySerializedTransferAccess(
+            InventoryAuthority owner,
+            StableId<ContainerIdScope> managedContainerId)
+        {
+            Owner = owner;
+            ManagedContainerId = managedContainerId;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal StableId<ContainerIdScope> ManagedContainerId { get; }
+    }
+
     /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
@@ -20,16 +35,20 @@ namespace PCShopEmpire3D.Inventory
             long expectedRevision,
             StableId<ItemInstanceIdScope> itemId,
             StableId<ContainerIdScope> sourceContainerId,
-            StableId<ContainerIdScope> targetContainerId)
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedTransferAccess access = null)
         {
             Owner = owner;
             ExpectedRevision = expectedRevision;
             ItemId = itemId;
             SourceContainerId = sourceContainerId;
             TargetContainerId = targetContainerId;
+            Access = access;
         }
 
         internal InventoryAuthority Owner { get; }
+
+        internal InventorySerializedTransferAccess Access { get; }
 
         public long ExpectedRevision { get; }
 
@@ -143,6 +162,9 @@ namespace PCShopEmpire3D.Inventory
             new Dictionary<BatchPositionKey, int>();
         private readonly Dictionary<StableId<ReservationIdScope>, InventoryReservation> _reservations =
             new Dictionary<StableId<ReservationIdScope>, InventoryReservation>();
+        private readonly Dictionary<StableId<ContainerIdScope>, InventorySerializedTransferAccess>
+            _managedSerializedTransferContainers =
+                new Dictionary<StableId<ContainerIdScope>, InventorySerializedTransferAccess>();
 
         private InventoryAuthority(ProductCatalog catalog)
         {
@@ -164,6 +186,11 @@ namespace PCShopEmpire3D.Inventory
             return catalog == null
                 ? OperationResult<InventoryAuthority>.Fail(InventoryFailures.MissingCatalog)
                 : OperationResult<InventoryAuthority>.Success(new InventoryAuthority(catalog));
+        }
+
+        internal bool UsesCatalog(ProductCatalog catalog)
+        {
+            return ReferenceEquals(_catalog, catalog);
         }
 
         public OperationResult RegisterContainer(InventoryContainerDefinition definition)
@@ -191,6 +218,40 @@ namespace PCShopEmpire3D.Inventory
             _containers.Add(definition.Id, definition);
             AdvanceRevision();
             return OperationResult.Success();
+        }
+
+        internal OperationResult<InventorySerializedTransferAccess>
+            ClaimManagedSerializedTransferContainer(StableId<ContainerIdScope> containerId)
+        {
+            if (!_containers.ContainsKey(containerId))
+            {
+                return OperationResult<InventorySerializedTransferAccess>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(containerId))
+            {
+                return OperationResult<InventorySerializedTransferAccess>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
+            if (GetContainerLoadUnsafe(containerId) != 0 ||
+                HasReservationTargetingContainerUnsafe(containerId))
+            {
+                return OperationResult<InventorySerializedTransferAccess>.Fail(
+                    InventoryFailures.SerializedTransferContainerOccupied);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccess>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var access = new InventorySerializedTransferAccess(this, containerId);
+            _managedSerializedTransferContainers.Add(containerId, access);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccess>.Success(access);
         }
 
         public OperationResult ReceiveSerializedItem(
@@ -224,6 +285,12 @@ namespace PCShopEmpire3D.Inventory
             if (!_containers.ContainsKey(containerId))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(containerId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
             }
 
             if (_items.ContainsKey(itemId))
@@ -283,6 +350,12 @@ namespace PCShopEmpire3D.Inventory
                 return OperationResult.Fail(InventoryFailures.UnknownContainer);
             }
 
+            if (_managedSerializedTransferContainers.ContainsKey(containerId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
             if (_batches.ContainsKey(batchId))
             {
                 return OperationResult.Fail(InventoryFailures.DuplicateBatch);
@@ -315,6 +388,12 @@ namespace PCShopEmpire3D.Inventory
             if (!_containers.ContainsKey(containerId))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(containerId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
             }
 
             long addedQuantity = 0;
@@ -457,6 +536,14 @@ namespace PCShopEmpire3D.Inventory
             StableId<ItemInstanceIdScope> itemId,
             StableId<ContainerIdScope> targetContainerId)
         {
+            return PrepareSerializedItemTransfer(itemId, targetContainerId, null);
+        }
+
+        internal OperationResult<InventorySerializedTransferPlan> PrepareSerializedItemTransfer(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedTransferAccess access)
+        {
             if (!_items.TryGetValue(itemId, out InventoryItemRecord item))
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
@@ -473,6 +560,21 @@ namespace PCShopEmpire3D.Inventory
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
                     InventoryFailures.SameContainer);
+            }
+
+            Failure accessFailure = ValidateSerializedTransferAccess(
+                item.ContainerId,
+                targetContainerId,
+                access);
+            if (!accessFailure.IsNone)
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(accessFailure);
+            }
+
+            if (access != null && IsSerializedItemReserved(itemId))
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.ReservedQuantity);
             }
 
             Failure capacityFailure = ValidateCapacity(targetContainerId, 1);
@@ -493,7 +595,8 @@ namespace PCShopEmpire3D.Inventory
                     Revision,
                     itemId,
                     item.ContainerId,
-                    targetContainerId));
+                    targetContainerId,
+                    access));
         }
 
         internal OperationResult CommitPreparedSerializedItemTransfer(
@@ -514,8 +617,16 @@ namespace PCShopEmpire3D.Inventory
                 return OperationResult.Fail(InventoryFailures.SerializedTransferPlanStale);
             }
 
+            if (!ValidateSerializedTransferAccess(
+                    plan.SourceContainerId,
+                    plan.TargetContainerId,
+                    plan.Access).IsNone)
+            {
+                return OperationResult.Fail(InventoryFailures.SerializedTransferPlanInvalid);
+            }
+
             OperationResult<InventorySerializedTransferPlan> current =
-                PrepareSerializedItemTransfer(plan.ItemId, plan.TargetContainerId);
+                PrepareSerializedItemTransfer(plan.ItemId, plan.TargetContainerId, plan.Access);
             if (current.IsFailure)
             {
                 return current.Error == InventoryFailures.RevisionOverflow
@@ -558,6 +669,13 @@ namespace PCShopEmpire3D.Inventory
             if (!_containers.ContainsKey(sourceContainerId) || !_containers.ContainsKey(targetContainerId))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(sourceContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(targetContainerId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
             }
 
             if (sourceContainerId == targetContainerId)
@@ -673,6 +791,12 @@ namespace PCShopEmpire3D.Inventory
                     InventoryFailures.UnknownItem);
             }
 
+            if (_managedSerializedTransferContainers.ContainsKey(_items[itemId].ContainerId))
+            {
+                return OperationResult<InventorySerializedReservationPlan>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
             foreach (InventoryReservation existing in _reservations.Values)
             {
                 if (existing.TargetKind == InventoryReservationTargetKind.SerializedItem &&
@@ -766,6 +890,12 @@ namespace PCShopEmpire3D.Inventory
             if (!_batches.ContainsKey(batchId))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownBatch);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(containerId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
             }
 
             var position = new BatchPositionKey(batchId, containerId);
@@ -946,11 +1076,17 @@ namespace PCShopEmpire3D.Inventory
                 if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
                 {
                     if (reservation.Quantity != 1 ||
-                        !_items.ContainsKey(reservation.ItemId) ||
+                        !_items.TryGetValue(reservation.ItemId, out InventoryItemRecord item) ||
                         !serializedItems.Add(reservation.ItemId))
                     {
                         return OperationResult<ReservationConsumptionSelection>.Fail(
                             InventoryFailures.InvariantViolation);
+                    }
+
+                    if (_managedSerializedTransferContainers.ContainsKey(item.ContainerId))
+                    {
+                        return OperationResult<ReservationConsumptionSelection>.Fail(
+                            InventoryFailures.SerializedTransferContainerManaged);
                     }
                 }
                 else if (reservation.TargetKind == InventoryReservationTargetKind.BatchPosition)
@@ -964,6 +1100,12 @@ namespace PCShopEmpire3D.Inventory
                     {
                         return OperationResult<ReservationConsumptionSelection>.Fail(
                             InventoryFailures.InvariantViolation);
+                    }
+
+                    if (_managedSerializedTransferContainers.ContainsKey(reservation.ContainerId))
+                    {
+                        return OperationResult<ReservationConsumptionSelection>.Fail(
+                            InventoryFailures.SerializedTransferContainerManaged);
                     }
 
                     batchConsumption.TryGetValue(position, out long selectedQuantity);
@@ -1205,6 +1347,19 @@ namespace PCShopEmpire3D.Inventory
                 containerLoads.Add(entry.Key, 0);
             }
 
+            foreach (KeyValuePair<StableId<ContainerIdScope>, InventorySerializedTransferAccess> entry
+                     in _managedSerializedTransferContainers)
+            {
+                InventorySerializedTransferAccess access = entry.Value;
+                if (!_containers.ContainsKey(entry.Key) ||
+                    access == null ||
+                    !ReferenceEquals(access.Owner, this) ||
+                    access.ManagedContainerId != entry.Key)
+                {
+                    return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                }
+            }
+
             var reservedItems = new HashSet<StableId<ItemInstanceIdScope>>();
             var reservedBatches = new Dictionary<BatchPositionKey, long>();
 
@@ -1246,7 +1401,8 @@ namespace PCShopEmpire3D.Inventory
                     entry.Key.ContainerId.IsEmpty ||
                     entry.Value <= 0 ||
                     !_batches.ContainsKey(entry.Key.BatchId) ||
-                    !containerLoads.ContainsKey(entry.Key.ContainerId))
+                    !containerLoads.ContainsKey(entry.Key.ContainerId) ||
+                    _managedSerializedTransferContainers.ContainsKey(entry.Key.ContainerId))
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
                 }
@@ -1270,7 +1426,8 @@ namespace PCShopEmpire3D.Inventory
                 if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
                 {
                     if (reservation.Quantity != 1 ||
-                        !_items.ContainsKey(reservation.ItemId) ||
+                        !_items.TryGetValue(reservation.ItemId, out InventoryItemRecord item) ||
+                        _managedSerializedTransferContainers.ContainsKey(item.ContainerId) ||
                         !reservedItems.Add(reservation.ItemId))
                     {
                         return OperationResult.Fail(InventoryFailures.InvariantViolation);
@@ -1279,7 +1436,9 @@ namespace PCShopEmpire3D.Inventory
                 else if (reservation.TargetKind == InventoryReservationTargetKind.BatchPosition)
                 {
                     var key = new BatchPositionKey(reservation.BatchId, reservation.ContainerId);
-                    if (reservation.Quantity <= 0 || !_batchQuantities.ContainsKey(key))
+                    if (reservation.Quantity <= 0 ||
+                        _managedSerializedTransferContainers.ContainsKey(reservation.ContainerId) ||
+                        !_batchQuantities.ContainsKey(key))
                     {
                         return OperationResult.Fail(InventoryFailures.InvariantViolation);
                     }
@@ -1359,6 +1518,85 @@ namespace PCShopEmpire3D.Inventory
             return load > container.UnitCapacity - (long)addedQuantity
                 ? InventoryFailures.ContainerCapacityExceeded
                 : Failure.None;
+        }
+
+        private Failure ValidateSerializedTransferAccess(
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedTransferAccess access)
+        {
+            _managedSerializedTransferContainers.TryGetValue(
+                sourceContainerId,
+                out InventorySerializedTransferAccess sourceAccess);
+            _managedSerializedTransferContainers.TryGetValue(
+                targetContainerId,
+                out InventorySerializedTransferAccess targetAccess);
+
+            if (sourceAccess != null &&
+                targetAccess != null &&
+                !ReferenceEquals(sourceAccess, targetAccess))
+            {
+                return InventoryFailures.SerializedTransferAccessInvalid;
+            }
+
+            InventorySerializedTransferAccess requiredAccess = sourceAccess ?? targetAccess;
+
+            if (requiredAccess == null)
+            {
+                return access == null
+                    ? Failure.None
+                    : InventoryFailures.SerializedTransferAccessInvalid;
+            }
+
+            if (access == null)
+            {
+                return InventoryFailures.SerializedTransferContainerManaged;
+            }
+
+            return ReferenceEquals(access.Owner, this) &&
+                   ReferenceEquals(access, requiredAccess) &&
+                   access.ManagedContainerId == requiredAccess.ManagedContainerId
+                ? Failure.None
+                : InventoryFailures.SerializedTransferAccessInvalid;
+        }
+
+        private bool IsSerializedItemReserved(StableId<ItemInstanceIdScope> itemId)
+        {
+            foreach (InventoryReservation reservation in _reservations.Values)
+            {
+                if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem &&
+                    reservation.ItemId == itemId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasReservationTargetingContainerUnsafe(
+            StableId<ContainerIdScope> containerId)
+        {
+            foreach (InventoryReservation reservation in _reservations.Values)
+            {
+                if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
+                {
+                    if (_items.TryGetValue(
+                            reservation.ItemId,
+                            out InventoryItemRecord item) &&
+                        item.ContainerId == containerId)
+                    {
+                        return true;
+                    }
+                }
+                else if (reservation.TargetKind == InventoryReservationTargetKind.BatchPosition &&
+                         reservation.ContainerId == containerId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private Failure ValidateReservationIdentity(

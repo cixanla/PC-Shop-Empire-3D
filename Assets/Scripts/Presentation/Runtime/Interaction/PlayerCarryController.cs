@@ -10,12 +10,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
     [DisallowMultipleComponent]
     public sealed class PlayerCarryController : MonoBehaviour
     {
+        private static readonly Vector3 MotherboardSeatPreviewSize =
+            new Vector3(0.244f, 0.244f, 0.012f);
+
         [SerializeField] private PlayerInputAdapter input;
         [SerializeField] private FirstPersonMotor motor;
         [SerializeField] private PhysicalInteractionResolver resolver;
         [SerializeField] private Transform carryAnchor;
         [SerializeField] private VisibleHandsPresenter hands;
         [SerializeField] private PlacementPreview placementPreview;
+        [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private LayerMask supportMask;
         [SerializeField] private LayerMask stackSupportMask;
         [SerializeField] private LayerMask obstructionMask;
@@ -42,9 +46,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsPlacementMode { get; private set; }
 
+        public bool IsMotherboardSeatMode { get; private set; }
+
         public bool PlacementValid { get; private set; }
 
         public PlacementStatus CurrentPlacementStatus { get; private set; } = PlacementStatus.ContextMissing;
+
+        public MotherboardSeatStatus CurrentMotherboardSeatStatus { get; private set; } =
+            MotherboardSeatStatus.ContextMissing;
 
         public PlacementPreview PlacementPreview => placementPreview;
 
@@ -68,6 +77,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string rotate = input != null
                         ? input.RotatePlacementBindingPrompt
                         : "R / Right Shoulder";
+                    MotherboardAssemblyItemBinding motherboardBinding =
+                        GetMotherboardBinding(HeldItem);
+                    if (motherboardBinding != null)
+                    {
+                        if (!IsMotherboardSeatMode)
+                        {
+                            return $"{placement}: kasaya hizala • " +
+                                   $"{drop}: güvenli bırak • HASSAS PARÇA";
+                        }
+
+                        string state = GetMotherboardSeatStatusLabel(
+                            CurrentMotherboardSeatStatus);
+                        return PlacementValid
+                            ? $"[OK] HİZALI • {drop}: oturt • {rotate}: döndür • " +
+                              $"{placement}: çık"
+                            : $"[X] {state} • {rotate}: döndür • {placement}: çık";
+                    }
+
                     if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
                     {
                         string load = FocusedCart != null && FocusedCart.CanLoad(HeldItem)
@@ -122,6 +149,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (FocusedItem == null)
                 {
                     return string.Empty;
+                }
+
+                MotherboardAssemblyItemBinding focusedMotherboard =
+                    GetMotherboardBinding(FocusedItem);
+                if (focusedMotherboard != null)
+                {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    return focusedMotherboard.IsSeated
+                        ? $"{interact}: anakartı sök • OTURDU, VİDALANMADI"
+                        : $"{interact}: {FocusedItem.DisplayName} al • HASSAS PARÇA";
                 }
 
                 InventoryItemWorldBinding binding = GetInventoryBinding(FocusedItem);
@@ -231,6 +270,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
             heldItemLayer = heldLayer;
         }
 
+        public void ConfigureMotherboardSeat(MotherboardSeatProjection seatProjection)
+        {
+            motherboardSeat = seatProjection != null
+                ? seatProjection
+                : throw new ArgumentNullException(nameof(seatProjection));
+        }
+
+        public OperationResult TrySetMotherboardSeatMode(bool enabled)
+        {
+            MotherboardAssemblyItemBinding binding = GetMotherboardBinding(HeldItem);
+            if (HeldItem == null || binding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.nothing-held")));
+            }
+
+            if (motor != null && motor.IsPaused)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.paused")));
+            }
+
+            SetMotherboardSeatMode(enabled);
+            if (enabled)
+            {
+                UpdateMotherboardSeatPreview(binding);
+            }
+
+            return Remember(OperationResult.Success());
+        }
+
         public OperationResult TryPickup(PhysicalItemProjection item)
         {
             if (item == null)
@@ -241,6 +311,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (HeldItem != null)
             {
                 return Remember(OperationResult.Fail(Failure.FromCode("pickup.slot-occupied")));
+            }
+
+            MotherboardAssemblyItemBinding motherboardBinding =
+                GetMotherboardBinding(item);
+            if (motherboardBinding != null)
+            {
+                return TryPickupMotherboard(item, motherboardBinding);
             }
 
             InventoryItemWorldBinding binding = GetInventoryBinding(item);
@@ -453,7 +530,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(pose.Error));
             }
 
+            MotherboardAssemblyItemBinding motherboardBinding =
+                GetMotherboardBinding(HeldItem);
+            if (motherboardBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(
+                        Failure.FromCode("assembly-seat.paused")));
+                }
+
+                OperationResult drop = motherboardBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess)
+                {
+                    CompleteHeldItemRelease();
+                }
+                else
+                {
+                    SetCarryHandsState(blocked: true);
+                }
+
+                return Remember(drop);
+            }
+
             return ReleaseHeldItem(pose.Value, stabilizePlacement: false, placementSurface: null);
+        }
+
+        public OperationResult TryConfirmMotherboardSeat()
+        {
+            MotherboardAssemblyItemBinding binding = GetMotherboardBinding(HeldItem);
+            if (HeldItem == null || binding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.nothing-held")));
+            }
+
+            if (!IsMotherboardSeatMode)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.mode-inactive")));
+            }
+
+            MotherboardSeatEvaluation evaluation = EvaluateMotherboardSeat(binding);
+            ApplyMotherboardSeatEvaluation(evaluation);
+            if (!evaluation.IsValid)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode)));
+            }
+
+            OperationResult attach = binding.TryAttachAt(evaluation.Pose);
+            if (attach.IsSuccess)
+            {
+                CompleteHeldItemRelease();
+            }
+            else
+            {
+                SetCarryHandsState(blocked: true);
+            }
+
+            return Remember(attach);
         }
 
         public OperationResult TryConfirmPlacement()
@@ -536,12 +672,48 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (input == null || motor == null || resolver == null || motor.IsPaused)
             {
                 placementPreview?.Hide();
+                motherboardSeat?.ResetFeedback();
                 return;
             }
 
             if (HeldItem != null)
             {
                 FocusedCart = null;
+                MotherboardAssemblyItemBinding motherboardBinding =
+                    GetMotherboardBinding(HeldItem);
+                if (motherboardBinding != null)
+                {
+                    if (input.TryConsumePrimaryActionPressThisFrame())
+                    {
+                        TrySetMotherboardSeatMode(!IsMotherboardSeatMode);
+                        input.TryConsumeDropPressThisFrame();
+                        UpdateMotherboardSeatPreview(motherboardBinding);
+                        return;
+                    }
+
+                    if (IsMotherboardSeatMode && input.RotatePlacementPressedThisFrame)
+                    {
+                        _placementRotationQuarterTurns =
+                            (_placementRotationQuarterTurns + 1) % 4;
+                        LastFailureCode = string.Empty;
+                    }
+
+                    UpdateMotherboardSeatPreview(motherboardBinding);
+                    if (input.TryConsumeDropPressThisFrame())
+                    {
+                        if (IsMotherboardSeatMode)
+                        {
+                            TryConfirmMotherboardSeat();
+                        }
+                        else
+                        {
+                            TryDrop();
+                        }
+                    }
+
+                    return;
+                }
+
                 if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
                 {
                     OperationResult<TransportCartProjection> cartTarget =
@@ -554,7 +726,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                 }
 
-                if (HeldItem.SupportsPlacement && input.PrimaryActionPressedThisFrame)
+                if (HeldItem.SupportsPlacement &&
+                    input.TryConsumePrimaryActionPressThisFrame())
                 {
                     SetPlacementMode(!IsPlacementMode);
                 }
@@ -566,7 +739,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 UpdatePlacementPreview();
-                if (input.DropPressedThisFrame)
+                if (input.TryConsumeDropPressThisFrame())
                 {
                     if (IsPlacementMode)
                     {
@@ -586,7 +759,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 FocusedItem = null;
                 FocusedCart = ActiveCart;
                 SetHandsState(VisibleHandsState.DrivingTransportCart);
-                if (input.PrimaryActionPressedThisFrame)
+                if (input.TryConsumePrimaryActionPressThisFrame())
                 {
                     TryEndCartDrive();
                     return;
@@ -620,7 +793,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 FocusedItem = null;
                 SetHandsState(VisibleHandsState.TargetFocused);
-                if (input.PrimaryActionPressedThisFrame)
+                if (input.TryConsumePrimaryActionPressThisFrame())
                 {
                     TryBeginCartDrive(FocusedCart);
                 }
@@ -640,7 +813,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             InventoryItemWorldBinding focusedBinding = GetInventoryBinding(FocusedItem);
 
-            if (focusedBinding != null && input.DropPressedThisFrame)
+            if (focusedBinding != null && input.TryConsumeDropPressThisFrame())
             {
                 if (focusedBinding.IsCustomerReserved)
                 {
@@ -678,6 +851,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (!item.enabled)
             {
                 item.enabled = true;
+            }
+
+            MotherboardAssemblyItemBinding motherboardBinding =
+                GetMotherboardBinding(item);
+            if (motherboardBinding != null)
+            {
+                OperationResult recovery = motherboardBinding.TryRecoverHeld(
+                    carryAnchor,
+                    heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                return Remember(recovery);
             }
 
             InventoryItemWorldBinding binding = GetInventoryBinding(item);
@@ -759,13 +948,148 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             Physics.SyncTransforms();
+            CompleteHeldItemRelease();
+            return result;
+        }
+
+        private OperationResult TryPickupMotherboard(
+            PhysicalItemProjection item,
+            MotherboardAssemblyItemBinding binding)
+        {
+            if (motor != null && motor.IsPaused)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.paused")));
+            }
+
+            bool wasSeated = binding.IsSeated;
+            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+            if (physicalPickup.IsFailure)
+            {
+                return Remember(physicalPickup);
+            }
+
+            OperationResult authority = wasSeated
+                ? binding.TryCommitSeatedDetach()
+                : binding.TryCommitLoosePickup();
+            if (authority.IsFailure)
+            {
+                OperationResult rollback = item.RecoverToLastSafePose();
+                if (rollback.IsFailure)
+                {
+                    Debug.LogError(
+                        $"ASSEMBLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                }
+
+                return Remember(authority);
+            }
+
+            HeldItem = item;
+            _heldItemId = item.ItemIdValue;
+            FocusedItem = null;
+            ResetPlacementState();
+            LastFailureCode = string.Empty;
+            motor?.ApplyCarryProfile(item.CarryProfile);
+            SetCarryHandsState(blocked: false);
+            return physicalPickup;
+        }
+
+        private void SetMotherboardSeatMode(bool enabled)
+        {
+            IsMotherboardSeatMode = enabled &&
+                                    HeldItem != null &&
+                                    GetMotherboardBinding(HeldItem) != null;
+            IsPlacementMode = false;
+            PlacementValid = false;
+            CurrentStackSupport = null;
+            CurrentPlacementStatus = PlacementStatus.ContextMissing;
+            CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
+            LastFailureCode = string.Empty;
+            if (!IsMotherboardSeatMode)
+            {
+                _placementRotationQuarterTurns = 0;
+                placementPreview?.Hide();
+                motherboardSeat?.ResetFeedback();
+                SetCarryHandsState(blocked: false);
+            }
+        }
+
+        private void UpdateMotherboardSeatPreview(
+            MotherboardAssemblyItemBinding binding)
+        {
+            if (!IsMotherboardSeatMode || HeldItem == null)
+            {
+                PlacementValid = false;
+                placementPreview?.Hide();
+                motherboardSeat?.ResetFeedback();
+                return;
+            }
+
+            ApplyMotherboardSeatEvaluation(EvaluateMotherboardSeat(binding));
+        }
+
+        private MotherboardSeatEvaluation EvaluateMotherboardSeat(
+            MotherboardAssemblyItemBinding binding)
+        {
+            MotherboardSeatProjection seatProjection = binding?.Seat ?? motherboardSeat;
+            if (seatProjection == null)
+            {
+                return new MotherboardSeatEvaluation(
+                    MotherboardSeatStatus.ContextMissing,
+                    default,
+                    false);
+            }
+
+            return seatProjection.Evaluate(
+                resolver != null ? resolver.Origin : null,
+                transform,
+                HeldItem,
+                obstructionMask,
+                _placementRotationQuarterTurns,
+                motor == null || motor.IsPaused,
+                binding.IsAuthorityInHands && !binding.IsSeated);
+        }
+
+        private void ApplyMotherboardSeatEvaluation(
+            MotherboardSeatEvaluation evaluation)
+        {
+            CurrentMotherboardSeatStatus = evaluation.Status;
+            PlacementValid = evaluation.IsValid;
+            CurrentPlacementStatus = evaluation.IsValid
+                ? PlacementStatus.Valid
+                : PlacementStatus.Blocked;
+            CurrentStackSupport = null;
+            LastFailureCode = evaluation.IsValid
+                ? string.Empty
+                : evaluation.FailureCode;
+
+            if (evaluation.HasPose && HeldItem != null)
+            {
+                PlacementEvaluation previewEvaluation = new PlacementEvaluation(
+                    evaluation.IsValid ? PlacementStatus.Valid : PlacementStatus.Blocked,
+                    evaluation.Pose,
+                    true);
+                placementPreview?.Show(
+                    HeldItem,
+                    previewEvaluation,
+                    MotherboardSeatPreviewSize);
+            }
+            else
+            {
+                placementPreview?.Hide();
+            }
+
+            SetCarryHandsState(blocked: !evaluation.IsValid);
+        }
+
+        private void CompleteHeldItemRelease()
+        {
             HeldItem = null;
             _heldItemId = string.Empty;
             ResetPlacementState();
             motor?.ClearCarryProfile();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.Empty);
-            return result;
         }
 
         private void SetPlacementMode(bool enabled)
@@ -815,11 +1139,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void ResetPlacementState()
         {
             IsPlacementMode = false;
+            IsMotherboardSeatMode = false;
             _placementRotationQuarterTurns = 0;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
+            CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
             placementPreview?.Hide();
+            motherboardSeat?.ResetFeedback();
         }
 
         private void OnDisable()
@@ -879,6 +1206,32 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private static InventoryItemWorldBinding GetInventoryBinding(PhysicalItemProjection item)
         {
             return item != null ? item.GetComponent<InventoryItemWorldBinding>() : null;
+        }
+
+        private static MotherboardAssemblyItemBinding GetMotherboardBinding(
+            PhysicalItemProjection item)
+        {
+            return item != null
+                ? item.GetComponent<MotherboardAssemblyItemBinding>()
+                : null;
+        }
+
+        private static string GetMotherboardSeatStatusLabel(
+            MotherboardSeatStatus status)
+        {
+            return status switch
+            {
+                MotherboardSeatStatus.Valid => "HİZALI",
+                MotherboardSeatStatus.OutOfRange => "YAKLAŞ",
+                MotherboardSeatStatus.NotFocused => "SLOTU HEDEFLE",
+                MotherboardSeatStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
+                MotherboardSeatStatus.OrientationInvalid => "YÖN",
+                MotherboardSeatStatus.Unsupported => "TABLA YOK",
+                MotherboardSeatStatus.Obstructed => "SLOT DOLU",
+                MotherboardSeatStatus.Paused => "DURAKLATILDI",
+                MotherboardSeatStatus.AuthorityBlocked => "İŞLEM YOK",
+                _ => "BAĞLANTI YOK"
+            };
         }
 
         private static string GetStockStateSuffix(PhysicalItemProjection item)

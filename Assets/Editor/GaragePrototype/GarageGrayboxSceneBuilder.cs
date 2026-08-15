@@ -27,6 +27,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
         private const string MaterialRoot = "Assets/Art/Prototype/Materials";
         private const string TextureRoot = "Assets/Art/Prototype/Textures";
+        private const string MeshRoot = "Assets/Art/Prototype/Meshes";
         private const string LookdevProfilePath = "Assets/Art/Prototype/GarageLookdevProfile.asset";
         private const string PlayerPrefabPath = "Assets/Prefabs/Prototype/PlayerRig.prefab";
         private const string PlayerLayerName = "Player";
@@ -119,6 +120,25 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public Transform CheckoutWaypoint { get; }
 
             public Transform ExitWaypoint { get; }
+        }
+
+        private readonly struct AssemblyBuildResult
+        {
+            public AssemblyBuildResult(
+                MotherboardSeatProjection seat,
+                MotherboardAssemblyItemBinding binding,
+                PhysicalItemProjection motherboard)
+            {
+                Seat = seat;
+                Binding = binding;
+                Motherboard = motherboard;
+            }
+
+            public MotherboardSeatProjection Seat { get; }
+
+            public MotherboardAssemblyItemBinding Binding { get; }
+
+            public PhysicalItemProjection Motherboard { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -223,6 +243,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Color(0.035f, 0.045f, 0.05f),
                 0f,
                 0.24f);
+            Material motherboardPcb = GetOrCreateMaterial(
+                "MotherboardPcb",
+                new Color(0.035f, 0.16f, 0.105f),
+                0.06f,
+                0.28f);
             Material labelPaper = GetOrCreateMaterial(
                 "LabelPaper",
                 new Color(0.82f, 0.79f, 0.68f),
@@ -313,6 +338,17 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 screenGlass,
                 lightDiffuser,
                 stockPlacement);
+            AssemblyBuildResult assemblyBuild = BuildMotherboardAssembly(
+                environment,
+                metal,
+                brushedSteel,
+                accent,
+                rubber,
+                motherboardPcb,
+                labelPaper,
+                screenGlass,
+                placementValid,
+                placementInvalid);
             BuildStarterPickups(environment, cardboard, metal, accent, labelPaper, rubber);
             StockFlowBuildResult stockFlowBuild = BuildAuthoritativeStockFlow(
                 environment,
@@ -374,7 +410,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlowBuild.StatusIndicator,
                 deliveryArrived,
                 deliveryAccepted,
-                deliveryShelved);
+                deliveryShelved,
+                seedAssemblyPrototype: true);
+            assemblyBuild.Binding.Configure(
+                stockFlow,
+                assemblyBuild.Motherboard,
+                assemblyBuild.Seat,
+                GarageStockFlowSession.MotherboardItemInstanceIdValue);
+            carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -407,7 +450,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 transportCart,
                 stockFlow,
                 customerFlow,
-                customerFlowBuild.CheckoutStation);
+                customerFlowBuild.CheckoutStation,
+                assemblyBuild.Seat,
+                assemblyBuild.Binding);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -742,23 +787,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 rubber,
                 false);
 
-            CreateBeveledCube(
-                "BenchPcCase",
-                workshop,
-                new Vector3(1.30f, 1.31f, 4.35f),
-                new Vector3(0.42f, 0.62f, 0.55f),
-                0.035f,
-                metal);
-            for (int vent = 0; vent < 5; vent++)
-            {
-                CreateDetailCube(
-                    $"BenchPcVent_{vent + 1}",
-                    workshop,
-                    new Vector3(1.30f, 1.16f + (vent * 0.075f), 4.064f),
-                    new Vector3(0.25f, 0.025f, 0.012f),
-                    rubber);
-            }
-
             CreateDetailCube(
                 "WorkbenchLightHousing",
                 workshop,
@@ -866,6 +894,208 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             }
         }
 
+        private static AssemblyBuildResult BuildMotherboardAssembly(
+            Transform environment,
+            Material metal,
+            Material brushedSteel,
+            Material accent,
+            Material rubber,
+            Material motherboardPcb,
+            Material labelPaper,
+            Material readyMaterial,
+            Material validMaterial,
+            Material invalidMaterial)
+        {
+            Transform workshop = environment.Find(
+                "VisualBenchmarkCorner/WorkshopCorner");
+            Require(workshop != null, "WorkshopCorner is missing for motherboard assembly.");
+
+            Transform slice = new GameObject(
+                "PrototypeMotherboardAssemblySlice").transform;
+            slice.SetParent(workshop, false);
+
+            Transform chassis = new GameObject("PrototypeOpenChassis").transform;
+            chassis.SetParent(slice, false);
+
+            int interactableLayer = RequireLayer(InteractableLayerName);
+            GameObject chassisBase = CreateBeveledCube(
+                "ChassisBase",
+                chassis,
+                new Vector3(-0.75f, 1.015f, 4.25f),
+                new Vector3(0.55f, 0.05f, 0.42f),
+                0.012f,
+                metal);
+            GameObject chassisBack = CreateBeveledCube(
+                "ChassisBack",
+                chassis,
+                new Vector3(-0.75f, 1.31f, 4.435f),
+                new Vector3(0.55f, 0.62f, 0.05f),
+                0.012f,
+                metal);
+            GameObject chassisLeft = CreateBeveledCube(
+                "ChassisLeftRail",
+                chassis,
+                new Vector3(-1f, 1.31f, 4.25f),
+                new Vector3(0.05f, 0.62f, 0.32f),
+                0.012f,
+                metal);
+            GameObject chassisRight = CreateBeveledCube(
+                "ChassisRightRail",
+                chassis,
+                new Vector3(-0.50f, 1.31f, 4.25f),
+                new Vector3(0.05f, 0.62f, 0.32f),
+                0.012f,
+                metal);
+            GameObject chassisTop = CreateBeveledCube(
+                "ChassisTopRail",
+                chassis,
+                new Vector3(-0.75f, 1.595f, 4.25f),
+                new Vector3(0.45f, 0.05f, 0.32f),
+                0.012f,
+                metal,
+                false);
+            GameObject tray = CreateBeveledCube(
+                "MotherboardTray",
+                chassis,
+                new Vector3(-0.75f, 1.305f, 4.387f),
+                new Vector3(0.454f, 0.534f, 0.050f),
+                0.006f,
+                metal);
+
+            SetLayerRecursively(chassisBase, interactableLayer);
+            SetLayerRecursively(chassisBack, interactableLayer);
+            SetLayerRecursively(chassisLeft, interactableLayer);
+            SetLayerRecursively(chassisRight, interactableLayer);
+            SetLayerRecursively(chassisTop, interactableLayer);
+            SetLayerRecursively(tray, interactableLayer);
+
+            CreateCombinedBoxDetails(
+                "StandoffMarkArray",
+                chassis,
+                new[]
+                {
+                    new Vector3(-0.84f, 1.21f, 4.359f),
+                    new Vector3(-0.66f, 1.21f, 4.359f),
+                    new Vector3(-0.84f, 1.30f, 4.359f),
+                    new Vector3(-0.66f, 1.30f, 4.359f),
+                    new Vector3(-0.84f, 1.39f, 4.359f),
+                    new Vector3(-0.66f, 1.39f, 4.359f)
+                },
+                new[]
+                {
+                    new Vector3(0.012f, 0.012f, 0.006f),
+                    new Vector3(0.012f, 0.012f, 0.006f),
+                    new Vector3(0.012f, 0.012f, 0.006f),
+                    new Vector3(0.012f, 0.012f, 0.006f),
+                    new Vector3(0.012f, 0.012f, 0.006f),
+                    new Vector3(0.012f, 0.012f, 0.006f)
+                },
+                brushedSteel);
+
+            Transform seatRoot = new GameObject("MotherboardSeat").transform;
+            seatRoot.SetParent(chassis, false);
+            Transform snapAnchor = new GameObject("MotherboardSnapAnchor").transform;
+            snapAnchor.SetParent(seatRoot, false);
+            snapAnchor.localPosition = new Vector3(-0.75f, 1.30f, 4.350f);
+            snapAnchor.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+            GameObject statusPlate = CreateBeveledCube(
+                "MotherboardSeatStatusPlate",
+                seatRoot,
+                new Vector3(-0.75f, 1.105f, 4.353f),
+                new Vector3(0.24f, 0.035f, 0.018f),
+                0.005f,
+                metal);
+            SetLayerRecursively(statusPlate, interactableLayer);
+            Renderer statusRenderer = statusPlate.GetComponent<Renderer>();
+            statusRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            statusRenderer.receiveShadows = false;
+
+            MotherboardSeatProjection seat = seatRoot.gameObject.AddComponent<
+                MotherboardSeatProjection>();
+            seat.Configure(
+                snapAnchor,
+                statusPlate.GetComponent<Collider>(),
+                tray.GetComponent<Collider>(),
+                chassis,
+                statusRenderer,
+                readyMaterial,
+                validMaterial,
+                invalidMaterial,
+                2f,
+                0.94f);
+
+            GameObject motherboardRoot = new GameObject("PrototypeMotherboard");
+            motherboardRoot.transform.SetParent(slice, false);
+            motherboardRoot.transform.localPosition = new Vector3(-1.35f, 0.996f, 4.20f);
+            motherboardRoot.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            motherboardRoot.layer = interactableLayer;
+
+            Rigidbody body = motherboardRoot.AddComponent<Rigidbody>();
+            body.mass = 0.9f;
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject pcb = CreateBeveledCube(
+                "MotherboardPcb",
+                motherboardRoot.transform,
+                Vector3.zero,
+                new Vector3(0.244f, 0.244f, 0.012f),
+                0.004f,
+                motherboardPcb);
+            GameObject ioKey = CreateBeveledCube(
+                "MotherboardIoKey",
+                motherboardRoot.transform,
+                new Vector3(-0.085f, 0.070f, 0.022f),
+                new Vector3(0.07f, 0.10f, 0.035f),
+                0.004f,
+                brushedSteel);
+            CreateBeveledCube(
+                "MotherboardCpuSocket",
+                motherboardRoot.transform,
+                new Vector3(0.015f, 0.025f, 0.012f),
+                new Vector3(0.085f, 0.075f, 0.012f),
+                0.003f,
+                brushedSteel,
+                false);
+            CreateCombinedBoxDetails(
+                "MotherboardConnectorMarks",
+                motherboardRoot.transform,
+                new[]
+                {
+                    new Vector3(0.085f, 0.045f, 0.012f),
+                    new Vector3(0.105f, 0.045f, 0.012f),
+                    new Vector3(0.02f, -0.07f, 0.012f)
+                },
+                new[]
+                {
+                    new Vector3(0.012f, 0.12f, 0.012f),
+                    new Vector3(0.012f, 0.12f, 0.012f),
+                    new Vector3(0.16f, 0.014f, 0.012f)
+                },
+                rubber);
+            SetLayerRecursively(pcb, interactableLayer);
+            SetLayerRecursively(ioKey, interactableLayer);
+            SetLayerRecursively(motherboardRoot, interactableLayer);
+
+            PhysicalItemProjection motherboard = motherboardRoot.AddComponent<
+                PhysicalItemProjection>();
+            motherboard.Configure(
+                GarageStockFlowSession.MotherboardItemInstanceIdValue,
+                GarageStockFlowSession.MotherboardDisplayName,
+                body,
+                new Vector3(0.127f, 0.127f, 0.045f),
+                new Vector3(0f, -0.05f, 0f),
+                new Vector3(0f, 180f, 0f),
+                PhysicalCarryProfile.PcComponent);
+            MotherboardAssemblyItemBinding binding = motherboardRoot.AddComponent<
+                MotherboardAssemblyItemBinding>();
+
+            return new AssemblyBuildResult(seat, binding, motherboard);
+        }
+
         private static void BuildLighting(
             Transform parent,
             Material metal,
@@ -911,11 +1141,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 parent,
                 "WorkbenchTaskLight",
                 new Vector3(0f, 2.34f, 4.44f),
-                new Vector3(0f, 1.05f, 4.12f),
+                new Vector3(-0.55f, 1.12f, 4.28f),
                 new Color(1f, 0.77f, 0.55f),
                 3.8f,
                 3.4f,
-                68f);
+                74f);
 
             GameObject reflectionObject = new GameObject("GarageReflectionProbe");
             reflectionObject.transform.SetParent(parent, false);
@@ -2043,6 +2273,73 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             return cube;
         }
 
+        private static GameObject CreateCombinedBoxDetails(
+            string name,
+            Transform parent,
+            IReadOnlyList<Vector3> centers,
+            IReadOnlyList<Vector3> sizes,
+            Material material)
+        {
+            Require(centers != null && sizes != null && centers.Count == sizes.Count,
+                $"Combined detail geometry is invalid: {name}");
+            Require(centers.Count > 0, $"Combined detail geometry is empty: {name}");
+
+            string meshPath = $"{MeshRoot}/{name}.asset";
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            bool createAsset = mesh == null;
+            mesh ??= new Mesh { name = name };
+            mesh.Clear();
+
+            var vertices = new List<Vector3>(centers.Count * 8);
+            var triangles = new List<int>(centers.Count * 36);
+            int[] boxTriangles =
+            {
+                0, 2, 1, 0, 3, 2,
+                4, 5, 6, 4, 6, 7,
+                0, 1, 5, 0, 5, 4,
+                2, 3, 7, 2, 7, 6,
+                1, 2, 6, 1, 6, 5,
+                3, 0, 4, 3, 4, 7
+            };
+            for (int boxIndex = 0; boxIndex < centers.Count; boxIndex++)
+            {
+                Vector3 center = centers[boxIndex];
+                Vector3 half = sizes[boxIndex] * 0.5f;
+                int vertexOffset = vertices.Count;
+                vertices.Add(center + new Vector3(-half.x, -half.y, -half.z));
+                vertices.Add(center + new Vector3(half.x, -half.y, -half.z));
+                vertices.Add(center + new Vector3(half.x, half.y, -half.z));
+                vertices.Add(center + new Vector3(-half.x, half.y, -half.z));
+                vertices.Add(center + new Vector3(-half.x, -half.y, half.z));
+                vertices.Add(center + new Vector3(half.x, -half.y, half.z));
+                vertices.Add(center + new Vector3(half.x, half.y, half.z));
+                vertices.Add(center + new Vector3(-half.x, half.y, half.z));
+                foreach (int triangleIndex in boxTriangles)
+                {
+                    triangles.Add(vertexOffset + triangleIndex);
+                }
+            }
+
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(mesh, meshPath);
+            }
+            else
+            {
+                EditorUtility.SetDirty(mesh);
+            }
+
+            GameObject detail = new GameObject(name);
+            detail.transform.SetParent(parent, false);
+            detail.AddComponent<MeshFilter>().sharedMesh = mesh;
+            detail.AddComponent<MeshRenderer>().sharedMaterial = material;
+            return detail;
+        }
+
         private static GameObject CreateCylinder(
             string name,
             Transform parent,
@@ -2351,6 +2648,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 "Assets/Scenes/Prototypes",
                 MaterialRoot,
                 TextureRoot,
+                MeshRoot,
                 "Assets/Prefabs/Prototype"
             };
 

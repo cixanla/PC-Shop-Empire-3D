@@ -65,6 +65,41 @@ namespace PCShopEmpire3D.World.Interaction
 
         public Vector3 DropHalfExtents => Vector3.Scale(carryHalfExtents, Abs(transform.lossyScale));
 
+        public Vector3 InteractionCenter
+        {
+            get
+            {
+                EnsureRuntimeReferences();
+                bool hasBounds = false;
+                Bounds combined = default;
+                foreach (Collider itemCollider in _colliders)
+                {
+                    if (itemCollider == null ||
+                        !itemCollider.enabled ||
+                        !itemCollider.gameObject.activeInHierarchy)
+                    {
+                        continue;
+                    }
+
+                    if (!hasBounds)
+                    {
+                        combined = itemCollider.bounds;
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        combined.Encapsulate(itemCollider.bounds);
+                    }
+                }
+
+                return hasBounds
+                    ? combined.center
+                    : body != null
+                        ? body.position
+                        : transform.position;
+            }
+        }
+
         public PhysicalItemOwnership Ownership { get; private set; } = PhysicalItemOwnership.World;
 
         public bool IsCarried => Ownership == PhysicalItemOwnership.PlayerHands;
@@ -153,8 +188,7 @@ namespace PCShopEmpire3D.World.Interaction
             DetachFromStackSupport();
             Ownership = PhysicalItemOwnership.PlayerHands;
 
-            body.linearVelocity = Vector3.zero;
-            body.angularVelocity = Vector3.zero;
+            ClearDynamicMotion();
             body.useGravity = false;
             body.isKinematic = true;
             body.detectCollisions = false;
@@ -261,15 +295,16 @@ namespace PCShopEmpire3D.World.Interaction
             }
 
             transform.SetParent(_worldParent, true);
-            transform.SetPositionAndRotation(worldPose.position, worldPose.rotation);
+            SetWorldPose(worldPose);
             RestoreWorldState();
             if (stabilizePlacement)
             {
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
+                ClearDynamicMotion();
                 body.useGravity = false;
                 body.isKinematic = true;
             }
+
+            Physics.SyncTransforms();
 
             Ownership = PhysicalItemOwnership.World;
             _hasCarrySnapshot = false;
@@ -294,7 +329,7 @@ namespace PCShopEmpire3D.World.Interaction
                 transform.SetParent(_worldParent, true);
             }
 
-            transform.SetPositionAndRotation(_lastSafePosition, _lastSafeRotation);
+            SetWorldPose(new Pose(_lastSafePosition, _lastSafeRotation));
             if (_hasCarrySnapshot)
             {
                 RestoreWorldState();
@@ -302,9 +337,11 @@ namespace PCShopEmpire3D.World.Interaction
             else
             {
                 EnsureRuntimeReferences();
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-                body.WakeUp();
+                ClearDynamicMotion();
+                if (!body.isKinematic)
+                {
+                    body.WakeUp();
+                }
             }
 
             Physics.SyncTransforms();
@@ -386,9 +423,29 @@ namespace PCShopEmpire3D.World.Interaction
             body.detectCollisions = _worldDetectCollisions;
             body.collisionDetectionMode = _worldCollisionMode;
             body.interpolation = _worldInterpolation;
+            ClearDynamicMotion();
+            if (!body.isKinematic)
+            {
+                body.WakeUp();
+            }
+        }
+
+        private void SetWorldPose(Pose worldPose)
+        {
+            transform.SetPositionAndRotation(worldPose.position, worldPose.rotation);
+            body.position = worldPose.position;
+            body.rotation = worldPose.rotation;
+        }
+
+        private void ClearDynamicMotion()
+        {
+            if (body == null || body.isKinematic)
+            {
+                return;
+            }
+
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
-            body.WakeUp();
         }
 
         private void SetColliderState(bool enabled, int layer)

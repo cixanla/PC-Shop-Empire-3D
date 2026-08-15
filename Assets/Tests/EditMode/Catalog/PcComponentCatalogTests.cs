@@ -101,6 +101,24 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Is.EqualTo(CatalogFailures.DuplicateComponentSpecification));
         }
 
+        [Test]
+        public void ComponentCatalogRejectsSpecificationFromValueEqualForeignProductCatalog()
+        {
+            ProductCatalog first = CreateProducts();
+            ProductCatalog valueEqualForeign = CreateProducts();
+            PcComponentSpecification specification = Specification(
+                first,
+                "component.motherboard-matx",
+                MotherboardFormFactor.MicroAtx);
+
+            OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
+                valueEqualForeign,
+                new[] { specification });
+
+            Assert.That(result.Error,
+                Is.EqualTo(CatalogFailures.ComponentProductCatalogMismatch));
+        }
+
         private static ProductCatalog CreateProducts()
         {
             return ProductCatalog.Create(new[]

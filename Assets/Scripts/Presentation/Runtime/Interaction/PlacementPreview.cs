@@ -28,14 +28,26 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public void Show(PhysicalItemProjection source, PlacementEvaluation evaluation)
         {
-            if (source == null || !evaluation.HasPose)
+            Show(source, evaluation, source != null ? source.DropHalfExtents * 2f : Vector3.zero);
+        }
+
+        public void Show(
+            PhysicalItemProjection source,
+            PlacementEvaluation evaluation,
+            Vector3 visualSize)
+        {
+            if (source == null ||
+                !evaluation.HasPose ||
+                visualSize.x <= 0f ||
+                visualSize.y <= 0f ||
+                visualSize.z <= 0f)
             {
                 Hide();
                 return;
             }
 
             transform.SetPositionAndRotation(evaluation.Pose.position, evaluation.Pose.rotation);
-            transform.localScale = source.DropHalfExtents * 2f;
+            transform.localScale = visualSize;
             IsShowingValidPose = evaluation.IsValid;
             Material material = evaluation.IsValid ? validMaterial : invalidMaterial;
             PrepareRenderers();

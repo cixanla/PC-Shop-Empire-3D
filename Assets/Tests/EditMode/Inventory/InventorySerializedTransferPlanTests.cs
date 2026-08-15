@@ -122,6 +122,55 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(item.ContainerId, Is.EqualTo(Hands));
         }
 
+        [Test]
+        public void ManagedContainerClaimAdvancesRevisionStalesPreparedPlanAndDuplicateIsNoOp()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            InventorySerializedTransferPlan prepared =
+                authority.PrepareSerializedItemTransfer(Item, Workbench).Value;
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccess> claim =
+                authority.ClaimManagedSerializedTransferContainer(Workbench);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.CommitPreparedSerializedItemTransfer(prepared).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferPlanStale));
+            Assert.That(authority.TransferSerializedItem(Item, Workbench).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            long claimedRevision = authority.Revision;
+
+            Assert.That(authority.ClaimManagedSerializedTransferContainer(Workbench).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.Revision, Is.EqualTo(claimedRevision));
+            Assert.That(authority.TryGetSerializedItem(Item, out InventoryItemRecord unchanged),
+                Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerClaimRejectsOccupiedContainerWithoutGhostCustody()
+        {
+            InventoryAuthority authority = CreateAuthority(fillWorkbench: true);
+            StableId<ItemInstanceIdScope> occupied =
+                StableId<ItemInstanceIdScope>.Parse("item.motherboard-occupied");
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccess> claim =
+                authority.ClaimManagedSerializedTransferContainer(Workbench);
+
+            Assert.That(claim.Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TransferSerializedItem(occupied, Hands).IsSuccess, Is.True);
+            Assert.That(authority.TryGetSerializedItem(
+                occupied, out InventoryItemRecord moved), Is.True);
+            Assert.That(moved.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static InventoryAuthority CreateAuthority(
             int workbenchCapacity = 2,
             bool fillWorkbench = false)

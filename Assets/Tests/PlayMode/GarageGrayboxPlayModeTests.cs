@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
+using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Economy;
@@ -27,6 +28,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
         private const string LargeBoxId = "prototype.garage-large-box-001";
         private const string TransportCartId = "prototype.garage-transport-cart-001";
         private const string DeliveryItemId = GarageStockFlowSession.ItemInstanceIdValue;
+        private const string MotherboardPhysicalItemId =
+            GarageStockFlowSession.MotherboardItemInstanceIdValue;
 
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
@@ -342,6 +345,364 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator KeyboardMouseSeatsDetachesAndRecoversSameMotherboardIdentity()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            int physicalIdentity = motherboard.GetInstanceID();
+            marker.PlayerMotor.SetPaused(false);
+            AimPlayerAtItem(marker, motherboard, -Vector3.forward);
+            AssertMotherboardIsResolvable(marker, motherboard);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(motherboard));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("HASSAS PARÇA"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToMotherboardSeat(marker);
+            long assemblyRevisionBeforeCoEdge = session.AssemblyBuild.Revision;
+            long inventoryRevisionBeforeCoEdge = session.Inventory.Revision;
+            int receiptCountBeforeCoEdge = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsMotherboardSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevisionBeforeCoEdge));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeCoEdge));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(receiptCountBeforeCoEdge));
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.Valid), marker.PlayerCarry.LastFailureCode);
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.True);
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.False);
+            Assert.That(marker.PlayerInput.InteractBindingPrompt, Is.EqualTo("E"));
+            Assert.That(marker.PlayerInput.DropBindingPrompt, Is.EqualTo("G"));
+            Assert.That(marker.PlayerInput.RotatePlacementBindingPrompt, Is.EqualTo("R"));
+            Assert.That(marker.PlayerInput.PrimaryBindingPrompt, Is.EqualTo("LMB"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Is.EqualTo("[OK] HİZALI • G: oturt • R: döndür • LMB: çık"));
+            Assert.That(Vector3.Distance(
+                marker.PlayerCarry.PlacementPreview.transform.localScale,
+                new Vector3(0.244f, 0.244f, 0.012f)), Is.LessThan(0.0001f));
+            Assert.That(Vector3.Distance(
+                marker.PlayerCarry.PlacementPreview.CurrentPose.position,
+                marker.MotherboardSeat.SnapPose.position), Is.LessThan(0.0001f));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(session.AssemblyBuild.MotherboardItemId,
+                Is.EqualTo(session.MotherboardItemId));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.MotherboardUnsecured));
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            AimPlayerAtItem(marker, motherboard, -Vector3.forward);
+            AssertMotherboardIsResolvable(marker, motherboard);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(motherboard));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+
+            OperationResult recovery = marker.PlayerCarry.TryRecoverHeldItem();
+            Assert.That(recovery.IsSuccess, Is.True,
+                recovery.IsFailure ? recovery.Error.Code : string.Empty);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(motherboard.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadRotatesSeatsDetachesAndSafelyDropsSameMotherboard()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            string inventoryIdentity = marker.MotherboardBinding.InventoryItemIdValue;
+            marker.PlayerMotor.SetPaused(false);
+            AimPlayerAtItem(marker, motherboard, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+            Assert.That(marker.PlayerInput.InteractBindingPrompt, Is.EqualTo("A"));
+            Assert.That(marker.PlayerInput.DropBindingPrompt, Is.EqualTo("B"));
+            Assert.That(marker.PlayerInput.RotatePlacementBindingPrompt, Is.EqualTo("RB"));
+            Assert.That(marker.PlayerInput.PrimaryBindingPrompt, Is.EqualTo("RT"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.False);
+            Assert.That(marker.PlayerInput.DropBindingPrompt, Is.EqualTo("G"));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToMotherboardSeat(marker);
+            long assemblyRevisionBeforeCoEdge = session.AssemblyBuild.Revision;
+            long inventoryRevisionBeforeCoEdge = session.Inventory.Revision;
+            int receiptCountBeforeCoEdge = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    rightTrigger = 1f,
+                    buttons = 1u << (int)GamepadButton.East
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsMotherboardSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevisionBeforeCoEdge));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeCoEdge));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(receiptCountBeforeCoEdge));
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.Valid), marker.PlayerCarry.LastFailureCode);
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText,
+                Is.EqualTo("[OK] HİZALI • B: oturt • RB: döndür • RT: çık"));
+            Assert.That(Vector3.Distance(
+                marker.PlayerCarry.PlacementPreview.transform.localScale,
+                new Vector3(0.244f, 0.244f, 0.012f)), Is.LessThan(0.0001f));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    rightTrigger = 1f,
+                    buttons = 1u << (int)GamepadButton.East
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsMotherboardSeatMode, Is.False);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevisionBeforeCoEdge));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeCoEdge));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(receiptCountBeforeCoEdge));
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.False);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsMotherboardSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.Valid), marker.PlayerCarry.LastFailureCode);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = 1u << (int)GamepadButton.RightShoulder
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.EqualTo(1));
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.OrientationInvalid));
+
+            for (int turn = 0; turn < 3; turn++)
+            {
+                InputSystem.QueueStateEvent(gamepad, new GamepadState());
+                InputSystem.Update();
+                InputSystem.QueueStateEvent(
+                    gamepad,
+                    new GamepadState
+                    {
+                        buttons = 1u << (int)GamepadButton.RightShoulder
+                    });
+                InputSystem.Update();
+                marker.PlayerCarry.ProcessInputFrame();
+            }
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.Valid), marker.PlayerCarry.LastFailureCode);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            AimPlayerAtItem(marker, motherboard, -Vector3.forward);
+            AssertMotherboardIsResolvable(marker, motherboard);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToOpenDropArea(marker);
+            Vector3 safeSeatPosition = motherboard.LastSafePosition;
+            Quaternion safeSeatRotation = motherboard.LastSafeRotation;
+            StableId<ItemInstanceIdScope> firstBlocker = default;
+            for (int index = 0; index < 8; index++)
+            {
+                StableId<ItemInstanceIdScope> blocker =
+                    StableId<ItemInstanceIdScope>.Parse(
+                        $"inventory.item.motherboard-drop-blocker-{index}");
+                if (index == 0)
+                {
+                    firstBlocker = blocker;
+                }
+
+                Assert.That(session.Inventory.ReceiveSerializedItem(
+                    blocker,
+                    session.ProductId,
+                    session.WorldFloorContainerId,
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        GarageStockFlowSession.PrototypeCurrencyCode,
+                        GarageStockFlowSession.PrototypeUnitCostMinorUnits).Value).IsSuccess,
+                    Is.True);
+            }
+
+            long blockedAssemblyRevision = session.AssemblyBuild.Revision;
+            long blockedInventoryRevision = session.Inventory.Revision;
+            int blockedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded.Code));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(motherboard.Ownership, Is.EqualTo(PhysicalItemOwnership.PlayerHands));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(Vector3.Distance(
+                motherboard.LastSafePosition,
+                safeSeatPosition), Is.LessThan(0.0001f));
+            Assert.That(Quaternion.Angle(
+                motherboard.LastSafeRotation,
+                safeSeatRotation), Is.LessThan(0.0001f));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(blockedAssemblyRevision));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(blockedInventoryRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(blockedReceiptCount));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            Assert.That(session.Inventory.TransferSerializedItem(
+                firstBlocker,
+                session.ShelfContainerId).IsSuccess, Is.True);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(marker.MotherboardBinding.IsAuthorityLooseWorld, Is.True);
+            Assert.That(marker.MotherboardBinding.InventoryItemIdValue,
+                Is.EqualTo(inventoryIdentity));
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
         [UnityTest]
@@ -1650,7 +2011,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.TryGetMotherboardItem(
+                out InventoryItemRecord remainingMotherboard), Is.True);
+            Assert.That(remainingMotherboard.ContainerId,
+                Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
             Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
             Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
@@ -2044,7 +2409,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.TryGetMotherboardItem(
+                out InventoryItemRecord remainingMotherboard), Is.True);
+            Assert.That(remainingMotherboard.ContainerId,
+                Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
             Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
             Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
@@ -2581,6 +2950,26 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Physics.SyncTransforms();
         }
 
+        private static void MovePlayerToMotherboardSeat(GaragePrototypeMarker marker)
+        {
+            Collider targetCollider = marker.MotherboardSeat.FocusCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
         private static long[] CaptureAuthorityRevisions(GarageStockFlowSession session)
         {
             return new[]
@@ -2668,9 +3057,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Vector3 approachDirection)
         {
             CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
-            Vector3 target = item.Body != null
-                ? item.Body.worldCenterOfMass
-                : item.transform.position;
+            Vector3 target = item.InteractionCenter;
             Vector3 playerPosition = target + (approachDirection.normalized * 1.25f);
             playerPosition.y = 0.05f;
             Vector3 horizontalLook = target - playerPosition;
@@ -2685,6 +3072,30 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void AssertMotherboardIsResolvable(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection motherboard)
+        {
+            PhysicalInteractionResolver resolver =
+                marker.PlayerMotor.GetComponent<PhysicalInteractionResolver>();
+            OperationResult<PhysicalItemProjection> resolved = resolver.Resolve();
+            string hits = string.Join(
+                ",",
+                Physics.RaycastAll(
+                        resolver.Origin.position,
+                        resolver.Origin.forward,
+                        resolver.MaximumRange + 0.10f,
+                        resolver.QueryMask,
+                        QueryTriggerInteraction.Ignore)
+                    .OrderBy(hit => hit.distance)
+                    .Select(hit => $"{hit.collider.name}@{hit.distance:0.000}"));
+            Assert.That(
+                resolved.IsSuccess && resolved.Value == motherboard,
+                Is.True,
+                $"code={(resolved.IsFailure ? resolved.Error.Code : "wrong-target")} " +
+                $"hits={hits}");
         }
 
         private static IEnumerator WaitForCustomerRoute(

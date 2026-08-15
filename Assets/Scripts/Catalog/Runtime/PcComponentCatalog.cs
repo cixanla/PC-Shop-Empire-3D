@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using PCShopEmpire3D.Core.Primitives;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Assembly")]
+
 namespace PCShopEmpire3D.Catalog
 {
     /// <summary>
@@ -29,14 +31,18 @@ namespace PCShopEmpire3D.Catalog
     public sealed class PcComponentSpecification
     {
         private PcComponentSpecification(
+            ProductCatalog ownerCatalog,
             StableId<ProductDefinitionIdScope> productId,
             PcComponentKind kind,
             MotherboardFormFactor motherboardFormFactor)
         {
+            OwnerCatalog = ownerCatalog;
             ProductId = productId;
             Kind = kind;
             MotherboardFormFactor = motherboardFormFactor;
         }
+
+        internal ProductCatalog OwnerCatalog { get; }
 
         public StableId<ProductDefinitionIdScope> ProductId { get; }
 
@@ -87,7 +93,11 @@ namespace PCShopEmpire3D.Catalog
             }
 
             return OperationResult<PcComponentSpecification>.Success(
-                new PcComponentSpecification(productId, kind, motherboardFormFactor));
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    kind,
+                    motherboardFormFactor));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
@@ -113,12 +123,16 @@ namespace PCShopEmpire3D.Catalog
         private readonly IReadOnlyList<PcComponentSpecification> _specifications;
 
         private PcComponentCatalog(
+            ProductCatalog ownerCatalog,
             Dictionary<StableId<ProductDefinitionIdScope>, PcComponentSpecification> byProductId,
             IReadOnlyList<PcComponentSpecification> specifications)
         {
+            OwnerCatalog = ownerCatalog;
             _byProductId = byProductId;
             _specifications = specifications;
         }
+
+        internal ProductCatalog OwnerCatalog { get; }
 
         public int Count => _specifications.Count;
 
@@ -151,6 +165,12 @@ namespace PCShopEmpire3D.Catalog
                         CatalogFailures.NullComponentSpecification);
                 }
 
+                if (!ReferenceEquals(specification.OwnerCatalog, productCatalog))
+                {
+                    return OperationResult<PcComponentCatalog>.Fail(
+                        CatalogFailures.ComponentProductCatalogMismatch);
+                }
+
                 if (!productCatalog.TryGet(specification.ProductId, out ProductDefinition definition) ||
                     definition.TrackingPolicy != ProductTrackingPolicy.SerializedInstance)
                 {
@@ -179,7 +199,10 @@ namespace PCShopEmpire3D.Catalog
                 right.ProductId.Value,
                 StringComparison.Ordinal));
             return OperationResult<PcComponentCatalog>.Success(
-                new PcComponentCatalog(byProductId, Array.AsReadOnly(ordered.ToArray())));
+                new PcComponentCatalog(
+                    productCatalog,
+                    byProductId,
+                    Array.AsReadOnly(ordered.ToArray())));
         }
 
         public bool TryGet(

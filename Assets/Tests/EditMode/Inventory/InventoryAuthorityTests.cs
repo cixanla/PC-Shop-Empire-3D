@@ -424,6 +424,43 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
+        public void ManagedSerializedContainerRejectsBatchIngressAndReservationWithoutMutation()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<BatchIdScope> batch = BatchId("batch.managed-container");
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 10, BatchCost);
+            Assert.That(authority.ClaimManagedSerializedTransferContainer(Shelf).IsSuccess,
+                Is.True);
+            long revision = authority.Revision;
+
+            Assert.That(authority.TransferBatch(batch, Receiving, Shelf, 4).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.ReceiveBatch(
+                    BatchId("batch.managed-receive"),
+                    BatchProduct,
+                    Shelf,
+                    InventoryCondition.New,
+                    1,
+                    BatchCost).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.ReserveBatch(
+                    ReservationId("reservation.managed-batch"),
+                    ClaimId("claim.managed-batch"),
+                    batch,
+                    Shelf,
+                    1).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.GetBatchQuantity(batch, Receiving).Value, Is.EqualTo(10));
+            Assert.That(authority.GetBatchQuantity(batch, Shelf).Error,
+                Is.EqualTo(InventoryFailures.UnknownBatchPosition));
+            Assert.That(authority.ReservationCount, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void ReservedBatchQuantityCannotBeMovedFromItsPosition()
         {
             InventoryAuthority authority = CreateAuthority();

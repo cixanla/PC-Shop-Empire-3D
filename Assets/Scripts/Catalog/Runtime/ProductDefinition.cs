@@ -133,6 +133,8 @@ namespace PCShopEmpire3D.Catalog
             Failure.FromCode("catalog.component.product-id.invalid");
         public static readonly Failure UnknownComponentProduct =
             Failure.FromCode("catalog.component.product.unknown");
+        public static readonly Failure ComponentProductCatalogMismatch =
+            Failure.FromCode("catalog.component.product-catalog.mismatch");
         public static readonly Failure ComponentTrackingMismatch =
             Failure.FromCode("catalog.component.tracking-mismatch");
         public static readonly Failure InvalidComponentKind =

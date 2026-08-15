@@ -19,6 +19,10 @@ namespace PCShopEmpire3D.World.Interaction
 
         public float MaximumRange => maximumRange;
 
+        public Transform Origin => origin;
+
+        public LayerMask QueryMask => queryMask;
+
         public void Configure(
             Transform interactionOrigin,
             Transform rootToIgnore,
@@ -179,10 +183,7 @@ namespace PCShopEmpire3D.World.Interaction
 
         private bool HasLineOfSight(PhysicalItemProjection candidate, Vector3 assistHitPoint)
         {
-            Vector3 target = candidate.Body != null
-                ? candidate.Body.worldCenterOfMass
-                : assistHitPoint;
-            Vector3 direction = target - origin.position;
+            Vector3 direction = assistHitPoint - origin.position;
             float distance = direction.magnitude;
             if (distance <= Mathf.Epsilon || distance > maximumRange + assistRadius)
             {

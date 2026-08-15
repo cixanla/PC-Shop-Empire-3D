@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Assembly
         private readonly InventoryAuthority _inventory;
         private readonly StableId<ContainerIdScope> _handsContainerId;
         private readonly StableId<ContainerIdScope> _workbenchContainerId;
+        private readonly InventorySerializedTransferAccess _inventoryTransferAccess;
         private readonly MotherboardFormFactor _supportedMotherboardFormFactor;
         private readonly Dictionary<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt> _receipts =
             new Dictionary<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt>();
@@ -33,7 +34,8 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblySlotIdScope> motherboardSlotId,
             StableId<ContainerIdScope> handsContainerId,
             StableId<ContainerIdScope> workbenchContainerId,
-            MotherboardFormFactor supportedMotherboardFormFactor)
+            MotherboardFormFactor supportedMotherboardFormFactor,
+            InventorySerializedTransferAccess inventoryTransferAccess)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -43,6 +45,7 @@ namespace PCShopEmpire3D.Assembly
             _handsContainerId = handsContainerId;
             _workbenchContainerId = workbenchContainerId;
             _supportedMotherboardFormFactor = supportedMotherboardFormFactor;
+            _inventoryTransferAccess = inventoryTransferAccess;
         }
 
         public StableId<PcBuildIdScope> BuildId { get; }
@@ -92,6 +95,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.MissingInventoryAuthority);
             }
 
+            if (!inventory.UsesCatalog(componentCatalog.OwnerCatalog))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.CatalogAuthorityMismatch);
+            }
+
             if (buildId.IsEmpty)
             {
                 return OperationResult<AssemblyBuildAuthority>.Fail(AssemblyFailures.InvalidBuildId);
@@ -136,6 +145,18 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidMotherboardFormFactor);
             }
 
+            OperationResult<InventorySerializedTransferAccess> access =
+                inventory.ClaimManagedSerializedTransferContainer(workbenchContainerId);
+            if (access.IsFailure)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    access.Error == InventoryFailures.RevisionOverflow
+                        ? AssemblyFailures.RevisionOverflow
+                        : access.Error == InventoryFailures.SerializedTransferContainerOccupied
+                            ? AssemblyFailures.SlotOccupied
+                            : AssemblyFailures.PlanForeign);
+            }
+
             return OperationResult<AssemblyBuildAuthority>.Success(
                 new AssemblyBuildAuthority(
                     componentCatalog,
@@ -145,7 +166,8 @@ namespace PCShopEmpire3D.Assembly
                     motherboardSlotId,
                     handsContainerId,
                     workbenchContainerId,
-                    supportedMotherboardFormFactor));
+                    supportedMotherboardFormFactor,
+                    access.Value));
         }
 
         public OperationResult<AssemblyOperationReceipt> AttachMotherboard(
@@ -175,7 +197,10 @@ namespace PCShopEmpire3D.Assembly
 
             InventoryItemRecord item = GetItem(itemId);
             OperationResult<InventorySerializedTransferPlan> prepared =
-                _inventory.PrepareSerializedItemTransfer(itemId, _workbenchContainerId);
+                _inventory.PrepareSerializedItemTransfer(
+                    itemId,
+                    _workbenchContainerId,
+                    _inventoryTransferAccess);
             if (prepared.IsFailure)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
@@ -243,7 +268,10 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceAttachOperationId =
                 _installedByOperationId;
             OperationResult<InventorySerializedTransferPlan> prepared =
-                _inventory.PrepareSerializedItemTransfer(item.Id, _handsContainerId);
+                _inventory.PrepareSerializedItemTransfer(
+                    item.Id,
+                    _handsContainerId,
+                    _inventoryTransferAccess);
             if (prepared.IsFailure)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
@@ -491,7 +519,7 @@ namespace PCShopEmpire3D.Assembly
 
             if (itemId != _motherboardItemId)
             {
-                return AssemblyFailures.UnknownItem;
+                return AssemblyFailures.IdentityConflict;
             }
 
             if (!_inventory.TryGetSerializedItem(
@@ -530,6 +558,17 @@ namespace PCShopEmpire3D.Assembly
             if (failure == InventoryFailures.SerializedTransferPlanStale)
             {
                 return AssemblyFailures.InventoryTransferStale;
+            }
+
+            if (failure == InventoryFailures.SerializedTransferAccessInvalid ||
+                failure == InventoryFailures.SerializedTransferContainerManaged)
+            {
+                return AssemblyFailures.PlanForeign;
+            }
+
+            if (failure == InventoryFailures.ReservedQuantity)
+            {
+                return AssemblyFailures.ItemNotInActorHands;
             }
 
             return AssemblyFailures.InventoryTransferRejected;

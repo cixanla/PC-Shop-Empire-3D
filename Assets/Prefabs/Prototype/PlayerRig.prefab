@@ -668,6 +668,7 @@ MonoBehaviour:
   carryAnchor: {fileID: 3341718980112006147}
   hands: {fileID: 7308969347253619572}
   placementPreview: {fileID: 8900820186128037393}
+  motherboardSeat: {fileID: 0}
   supportMask:
     serializedVersion: 2
     m_Bits: 1

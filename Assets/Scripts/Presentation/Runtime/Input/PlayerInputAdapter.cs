@@ -22,11 +22,16 @@ namespace PCShopEmpire3D.Presentation.Input
         private InputAction _pause;
         private InputAction _subscribedPrimaryAction;
         private InputAction _subscribedInteract;
+        private InputAction _subscribedDrop;
+        private InputActionMap _subscribedDeviceMap;
         private bool _ownsRuntimeActions;
+        private bool _usesGamepadPrompts;
         private long _primaryPressVersion;
         private long _primaryConsumedVersion = -1;
         private long _interactPressVersion;
         private long _interactConsumedVersion = -1;
+        private long _dropPressVersion;
+        private long _dropConsumedVersion = -1;
 
         public InputActionAsset Actions => actions;
 
@@ -44,7 +49,9 @@ namespace PCShopEmpire3D.Presentation.Input
             (_interact?.WasPressedThisFrame() ?? false) &&
             _interactConsumedVersion != _interactPressVersion;
 
-        public bool DropPressedThisFrame => _drop?.WasPressedThisFrame() ?? false;
+        public bool DropPressedThisFrame =>
+            (_drop?.WasPressedThisFrame() ?? false) &&
+            _dropConsumedVersion != _dropPressVersion;
 
         public bool RotatePlacementPressedThisFrame =>
             _rotatePlacement?.WasPressedThisFrame() ?? false;
@@ -53,14 +60,16 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public bool IsPointerLook => _look?.activeControl?.device is Pointer;
 
+        public bool UsesGamepadPrompts => _usesGamepadPrompts;
+
         public string InteractBindingPrompt => GetBindingPrompt(_interact, "E", "A");
 
         public string DropBindingPrompt => GetBindingPrompt(_drop, "G", "B");
 
         public string RotatePlacementBindingPrompt =>
-            GetBindingPrompt(_rotatePlacement, "R", "Right Shoulder");
+            GetBindingPrompt(_rotatePlacement, "R", "RB");
 
-        public string PrimaryBindingPrompt => GetBindingPrompt(_primaryAction, "Mouse Left", "RT");
+        public string PrimaryBindingPrompt => GetBindingPrompt(_primaryAction, "LMB", "RT");
 
         public bool TryConsumeInteractPressThisFrame()
         {
@@ -84,6 +93,17 @@ namespace PCShopEmpire3D.Presentation.Input
             return true;
         }
 
+        public bool TryConsumeDropPressThisFrame()
+        {
+            if (!DropPressedThisFrame)
+            {
+                return false;
+            }
+
+            _dropConsumedVersion = _dropPressVersion;
+            return true;
+        }
+
         public void Configure(InputActionAsset inputActions)
         {
             if (inputActions == null)
@@ -100,6 +120,9 @@ namespace PCShopEmpire3D.Presentation.Input
             _primaryConsumedVersion = -1;
             _interactPressVersion = 0;
             _interactConsumedVersion = -1;
+            _dropPressVersion = 0;
+            _dropConsumedVersion = -1;
+            _usesGamepadPrompts = false;
             CacheActions();
         }
 
@@ -126,8 +149,10 @@ namespace PCShopEmpire3D.Presentation.Input
 
         private void OnDestroy()
         {
+            SetDeviceMapSubscription(null);
             SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
+            SetDropSubscription(null);
             if (_ownsRuntimeActions && actions != null)
             {
                 Destroy(actions);
@@ -140,8 +165,10 @@ namespace PCShopEmpire3D.Presentation.Input
             bool destroyPreviousActions = _ownsRuntimeActions && previousActions != null;
 
             _playerMap?.Disable();
+            SetDeviceMapSubscription(null);
             SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
+            SetDropSubscription(null);
             _playerMap = null;
             _move = null;
             _look = null;
@@ -179,6 +206,7 @@ namespace PCShopEmpire3D.Presentation.Input
             }
 
             _playerMap = actions.FindActionMap(PlayerInputContract.PlayerMap, true);
+            SetDeviceMapSubscription(_playerMap);
             _move = _playerMap.FindAction(PlayerInputContract.Move, true);
             _look = _playerMap.FindAction(PlayerInputContract.Look, true);
             _primaryAction = _playerMap.FindAction(PlayerInputContract.PrimaryAction, true);
@@ -187,6 +215,7 @@ namespace PCShopEmpire3D.Presentation.Input
             SetInteractSubscription(_interact);
             _sprint = _playerMap.FindAction(PlayerInputContract.Sprint, true);
             _drop = _playerMap.FindAction(PlayerInputContract.Drop, true);
+            SetDropSubscription(_drop);
             _rotatePlacement = _playerMap.FindAction(PlayerInputContract.RotatePlacement, true);
             _pause = _playerMap.FindAction(PlayerInputContract.Pause, true);
             if (isActiveAndEnabled)
@@ -233,6 +262,61 @@ namespace PCShopEmpire3D.Presentation.Input
             }
         }
 
+        private void SetDropSubscription(InputAction dropAction)
+        {
+            if (ReferenceEquals(_subscribedDrop, dropAction))
+            {
+                return;
+            }
+
+            if (_subscribedDrop != null)
+            {
+                _subscribedDrop.performed -= OnDropPerformed;
+            }
+
+            _subscribedDrop = dropAction;
+            if (_subscribedDrop != null)
+            {
+                _subscribedDrop.performed += OnDropPerformed;
+            }
+        }
+
+        private void SetDeviceMapSubscription(InputActionMap playerMap)
+        {
+            if (ReferenceEquals(_subscribedDeviceMap, playerMap))
+            {
+                return;
+            }
+
+            if (_subscribedDeviceMap != null)
+            {
+                _subscribedDeviceMap.actionTriggered -= OnPlayerActionTriggered;
+            }
+
+            _subscribedDeviceMap = playerMap;
+            if (_subscribedDeviceMap != null)
+            {
+                _subscribedDeviceMap.actionTriggered += OnPlayerActionTriggered;
+            }
+        }
+
+        private void OnPlayerActionTriggered(InputAction.CallbackContext context)
+        {
+            if (context.phase != InputActionPhase.Performed || context.control == null)
+            {
+                return;
+            }
+
+            if (context.control.device is Gamepad)
+            {
+                _usesGamepadPrompts = true;
+            }
+            else if (context.control.device is Keyboard || context.control.device is Mouse)
+            {
+                _usesGamepadPrompts = false;
+            }
+        }
+
         private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
         {
             if (_primaryPressVersion == long.MaxValue)
@@ -257,38 +341,53 @@ namespace PCShopEmpire3D.Presentation.Input
             _interactPressVersion++;
         }
 
-        private static string GetBindingPrompt(
+        private void OnDropPerformed(InputAction.CallbackContext context)
+        {
+            if (_dropPressVersion == long.MaxValue)
+            {
+                _dropPressVersion = 0;
+                _dropConsumedVersion = -1;
+                return;
+            }
+
+            _dropPressVersion++;
+        }
+
+        private string GetBindingPrompt(
             InputAction action,
             string keyboardFallback,
             string gamepadFallback)
         {
+            string fallback = _usesGamepadPrompts
+                ? gamepadFallback
+                : keyboardFallback;
             if (action == null)
             {
-                return $"{keyboardFallback} / {gamepadFallback}";
+                return fallback;
             }
 
-            string keyboard = null;
-            string gamepad = null;
+            string bindingGroup = _usesGamepadPrompts
+                ? PlayerInputContract.GamepadScheme
+                : PlayerInputContract.KeyboardAndMouseScheme;
             for (int index = 0; index < action.bindings.Count; index++)
             {
                 InputBinding binding = action.bindings[index];
-                if (binding.isComposite || binding.isPartOfComposite || string.IsNullOrEmpty(binding.effectivePath))
+                if (binding.isComposite ||
+                    binding.isPartOfComposite ||
+                    string.IsNullOrEmpty(binding.effectivePath) ||
+                    binding.groups?.Contains(bindingGroup) != true)
                 {
                     continue;
                 }
 
                 string display = action.GetBindingDisplayString(index);
-                if (binding.groups?.Contains(PlayerInputContract.KeyboardAndMouseScheme) == true)
+                if (!string.IsNullOrWhiteSpace(display))
                 {
-                    keyboard ??= display;
-                }
-                else if (binding.groups?.Contains(PlayerInputContract.GamepadScheme) == true)
-                {
-                    gamepad ??= display;
+                    return display;
                 }
             }
 
-            return $"{keyboard ?? keyboardFallback} / {gamepad ?? gamepadFallback}";
+            return fallback;
         }
     }
 }

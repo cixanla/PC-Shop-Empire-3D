@@ -1,6 +1,8 @@
 using System.Reflection;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
+using PCShopEmpire3D.Assembly;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Economy;
@@ -40,6 +42,91 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.ItemId));
             Assert.That(session.TryGetItem(out _), Is.False);
             Assert.That(session.Inventory.GetTotalQuantity(session.ProductId).Value, Is.Zero);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void AssemblyPrototypeSeedsOneCanonicalLooseMicroAtxMotherboard()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+
+            Assert.That(session.Catalog.Count, Is.EqualTo(2));
+            Assert.That(session.Components.Count, Is.EqualTo(1));
+            OperationResult<PcComponentSpecification> specification =
+                session.Components.Get(session.MotherboardProductId);
+            Assert.That(specification.IsSuccess, Is.True);
+            Assert.That(specification.Value.Kind,
+                Is.EqualTo(PcComponentKind.Motherboard));
+            Assert.That(specification.Value.MotherboardFormFactor,
+                Is.EqualTo(MotherboardFormFactor.MicroAtx));
+            Assert.That(session.TryGetMotherboardItem(out InventoryItemRecord item), Is.True);
+            Assert.That(item.Id, Is.EqualTo(session.MotherboardItemId));
+            Assert.That(item.ProductId, Is.EqualTo(session.MotherboardProductId));
+            Assert.That(item.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(1));
+            Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
+                Is.EqualTo(1));
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(session.AssemblyBuild.MotherboardItemId.IsEmpty, Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void MotherboardWorldHandsAndSeatFlowPreservesIdentityAndRejectsBypass()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            long inventoryRevision = session.Inventory.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult prematureDrop = session.DropHeldMotherboardToWorld();
+            Assert.That(prematureDrop.Error.Code, Is.EqualTo("assembly-seat.world-drop-invalid"));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.TryGetMotherboardItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            long heldInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.PickupLooseMotherboardToHands().Error.Code,
+                Is.EqualTo("assembly-seat.loose-pickup-invalid"));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(heldInventoryRevision));
+
+            StableId<AssemblyOperationIdScope> attachId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.presentation-attach-001");
+            OperationResult<AssemblyOperationReceipt> attach =
+                session.AttachMotherboard(attachId);
+            Assert.That(attach.IsSuccess, Is.True);
+            Assert.That(attach.Value.ItemId, Is.EqualTo(session.MotherboardItemId));
+            Assert.That(attach.Value.ResultingSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(session.TryGetMotherboardItem(out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.ContainerId, Is.EqualTo(session.WorkbenchContainerId));
+
+            long seatedInventoryRevision = session.Inventory.Revision;
+            long seatedAssemblyRevision = session.AssemblyBuild.Revision;
+            Assert.That(session.DropHeldMotherboardToWorld().Error.Code,
+                Is.EqualTo("assembly-seat.world-drop-invalid"));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(seatedInventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedAssemblyRevision));
+
+            StableId<AssemblyOperationIdScope> detachId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.presentation-detach-001");
+            OperationResult<AssemblyOperationReceipt> detach =
+                session.DetachMotherboard(detachId);
+            Assert.That(detach.IsSuccess, Is.True);
+            Assert.That(detach.Value.ItemId, Is.EqualTo(session.MotherboardItemId));
+            Assert.That(session.DropHeldMotherboardToWorld().IsSuccess, Is.True);
+            Assert.That(session.TryGetMotherboardItem(out InventoryItemRecord loose), Is.True);
+            Assert.That(loose.Id, Is.EqualTo(session.MotherboardItemId));
+            Assert.That(loose.ProductId, Is.EqualTo(session.MotherboardProductId));
+            Assert.That(loose.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
+                Is.EqualTo(1));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

@@ -31,10 +31,15 @@ namespace PCShopEmpire3D.Presentation
         private void OnGUI()
         {
             GUI.color = Color.white;
-            GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
-            GUI.Label(new Rect(18f, 36f, 760f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
+            bool motherboardSeatMode = carryController != null &&
+                                       carryController.IsMotherboardSeatMode;
+            if (!motherboardSeatMode)
+            {
+                GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
+                GUI.Label(new Rect(18f, 36f, 760f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
+            }
 
-            if (stockFlow != null)
+            if (stockFlow != null && !motherboardSeatMode)
             {
                 const float panelWidth = 370f;
                 string status = customerFlow != null
@@ -51,22 +56,28 @@ namespace PCShopEmpire3D.Presentation
             string customerPrompt = customerFlow != null
                 ? customerFlow.ContextualPromptText
                 : string.Empty;
-            string prompt = !string.IsNullOrEmpty(stationPrompt)
-                ? stationPrompt
-                : !string.IsNullOrEmpty(customerPrompt)
-                ? customerPrompt
-                : carryController != null
-                    ? carryController.PromptText
-                    : string.Empty;
+            string prompt = motherboardSeatMode
+                ? carryController.PromptText
+                : !string.IsNullOrEmpty(stationPrompt)
+                    ? stationPrompt
+                    : !string.IsNullOrEmpty(customerPrompt)
+                        ? customerPrompt
+                        : carryController != null
+                            ? carryController.PromptText
+                            : string.Empty;
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
-                float promptWidth = Mathf.Min(900f, Screen.width - 24f);
+                float promptWidth = Mathf.Min(
+                    motherboardSeatMode ? 680f : 900f,
+                    Screen.width - 24f);
                 GUI.Box(
                     new Rect(
                         (Screen.width - promptWidth) * 0.5f,
-                        (Screen.height * 0.5f) + 34f,
+                        motherboardSeatMode
+                            ? Screen.height - 56f
+                            : (Screen.height * 0.5f) + 34f,
                         promptWidth,
-                        34f),
+                        motherboardSeatMode ? 30f : 34f),
                     prompt);
             }
 

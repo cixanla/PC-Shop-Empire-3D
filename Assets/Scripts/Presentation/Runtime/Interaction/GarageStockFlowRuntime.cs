@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private Material arrivedMaterial;
         [SerializeField] private Material acceptedMaterial;
         [SerializeField] private Material shelvedMaterial;
+        [SerializeField] private bool includeAssemblyPrototype;
 
         public GarageStockFlowSession Session { get; private set; }
 
@@ -129,7 +130,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Renderer indicator,
             Material waitingMaterial,
             Material receivingMaterial,
-            Material shelfMaterial)
+            Material shelfMaterial,
+            bool seedAssemblyPrototype = false)
         {
             itemBinding = binding != null
                 ? binding
@@ -140,6 +142,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             arrivedMaterial = waitingMaterial;
             acceptedMaterial = receivingMaterial;
             shelvedMaterial = shelfMaterial;
+            includeAssemblyPrototype = seedAssemblyPrototype;
+            Session = null;
             itemBinding.Configure(
                 this,
                 itemBinding.GetComponent<PCShopEmpire3D.World.Interaction.PhysicalItemProjection>(),
@@ -148,7 +152,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public GarageStockFlowSession EnsureInitialized()
         {
-            Session ??= GarageStockFlowSession.CreateArrived();
+            Session ??= GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype);
             return Session;
         }
 

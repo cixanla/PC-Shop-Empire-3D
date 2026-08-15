@@ -5,7 +5,8 @@ namespace PCShopEmpire3D.World.Interaction
     public enum PhysicalCarryProfile
     {
         SmallBox = 0,
-        LargeBox = 1
+        LargeBox = 1,
+        PcComponent = 2
     }
 
     public readonly struct PhysicalCarryProfileDefinition
@@ -38,6 +39,8 @@ namespace PCShopEmpire3D.World.Interaction
         public const float MaximumFieldOfViewPenalty = 8f;
         public const float LargeBoxMovementSpeedMultiplier = 0.65f;
         public const float LargeBoxFieldOfViewPenalty = 6f;
+        public const float PcComponentMovementSpeedMultiplier = 0.9f;
+        public const float PcComponentFieldOfViewPenalty = 1.5f;
 
         private static readonly PhysicalCarryProfileDefinition SmallBox = new(
             MaximumMovementSpeedMultiplier,
@@ -51,12 +54,19 @@ namespace PCShopEmpire3D.World.Interaction
             allowsSprint: false,
             supportsPlacement: false);
 
+        private static readonly PhysicalCarryProfileDefinition PcComponent = new(
+            PcComponentMovementSpeedMultiplier,
+            PcComponentFieldOfViewPenalty,
+            allowsSprint: false,
+            supportsPlacement: false);
+
         public static PhysicalCarryProfileDefinition Resolve(PhysicalCarryProfile profile)
         {
             return profile switch
             {
                 PhysicalCarryProfile.SmallBox => SmallBox,
                 PhysicalCarryProfile.LargeBox => LargeBox,
+                PhysicalCarryProfile.PcComponent => PcComponent,
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(profile),
                     profile,

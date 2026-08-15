@@ -1,4 +1,5 @@
 using PCShopEmpire3D.Actors;
+using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
@@ -56,10 +57,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const long PrototypeUnitCostMinorUnits = 42_000;
         public const long PrototypeMaximumAcceptedPriceMinorUnits = 60_000;
         public const string ProductDisplayName = "Northstar A60 Ekran Kartı";
+        public const string MotherboardProductIdValue = "catalog.motherboard.northstar-mb-matx";
+        public const string MotherboardCategoryIdValue = "catalog.category.motherboards";
+        public const string MotherboardItemInstanceIdValue =
+            "inventory.item.northstar-mb-matx-001";
+        public const string WorkbenchContainerIdValue =
+            "inventory.container.assembly-workbench";
+        public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
+        public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
+        public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
+        public const string MotherboardDisplayName = "Northstar M-ATX Anakart";
+        public const long MotherboardUnitCostMinorUnits = 8_500;
 
         private GarageStockFlowSession(
             ProductCatalog catalog,
+            PcComponentCatalog components,
             InventoryAuthority inventory,
+            AssemblyBuildAuthority assemblyBuild,
             PurchaseOrderAuthority orders,
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
@@ -71,7 +85,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CustomerRetailIdentityBinding prototypeCustomerBinding)
         {
             Catalog = catalog;
+            Components = components;
             Inventory = inventory;
+            AssemblyBuild = assemblyBuild;
             Orders = orders;
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
@@ -85,7 +101,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public ProductCatalog Catalog { get; }
 
+        public PcComponentCatalog Components { get; }
+
         public InventoryAuthority Inventory { get; }
+
+        public AssemblyBuildAuthority AssemblyBuild { get; }
 
         public PurchaseOrderAuthority Orders { get; }
 
@@ -110,6 +130,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<ItemInstanceIdScope> ItemId =>
             StableId<ItemInstanceIdScope>.Parse(ItemInstanceIdValue);
+
+        public StableId<ProductDefinitionIdScope> MotherboardProductId =>
+            StableId<ProductDefinitionIdScope>.Parse(MotherboardProductIdValue);
+
+        public StableId<ItemInstanceIdScope> MotherboardItemId =>
+            StableId<ItemInstanceIdScope>.Parse(MotherboardItemInstanceIdValue);
+
+        public StableId<ContainerIdScope> WorkbenchContainerId =>
+            StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue);
+
+        public StableId<PcBuildIdScope> PrototypeBuildId =>
+            StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue);
+
+        public StableId<ChassisIdScope> PrototypeChassisId =>
+            StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue);
+
+        public StableId<AssemblySlotIdScope> MotherboardSlotId =>
+            StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue);
 
         public StableId<PurchaseOrderIdScope> OrderId =>
             StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
@@ -197,7 +235,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
-        public static GarageStockFlowSession CreateArrived()
+        public static GarageStockFlowSession CreateArrived(
+            bool includeAssemblyPrototype = false)
         {
             ProductDefinition product = ProductDefinition.Create(
                 StableId<ProductDefinitionIdScope>.Parse(ProductIdValue),
@@ -205,7 +244,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProductDisplayName,
                 ProductTrackingPolicy.SerializedInstance,
                 1095).Value;
-            ProductCatalog catalog = ProductCatalog.Create(new[] { product }).Value;
+            ProductDefinition motherboardProduct = ProductDefinition.Create(
+                StableId<ProductDefinitionIdScope>.Parse(MotherboardProductIdValue),
+                StableId<ProductCategoryIdScope>.Parse(MotherboardCategoryIdValue),
+                MotherboardDisplayName,
+                ProductTrackingPolicy.SerializedInstance,
+                1095).Value;
+            ProductCatalog catalog = ProductCatalog.Create(
+                new[] { product, motherboardProduct }).Value;
+            PcComponentSpecification motherboardSpecification =
+                PcComponentSpecification.Create(
+                    catalog,
+                    motherboardProduct.Id,
+                    PcComponentKind.Motherboard,
+                    MotherboardFormFactor.MicroAtx).Value;
+            PcComponentCatalog components = PcComponentCatalog.Create(
+                catalog,
+                new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
             RegisterContainer(
                 inventory,
@@ -227,6 +282,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 WorldFloorContainerIdValue,
                 InventoryContainerKind.WorldFloor,
                 8);
+            RegisterContainer(
+                inventory,
+                WorkbenchContainerIdValue,
+                InventoryContainerKind.Workbench,
+                1);
+
+            AssemblyBuildAuthority assemblyBuild = AssemblyBuildAuthority.Create(
+                components,
+                inventory,
+                StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
+                StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue),
+                StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue),
+                StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
+                StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
+                MotherboardFormFactor.MicroAtx).Value;
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
@@ -284,9 +354,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RequireSuccess(orders.DispatchOrder(orderId, Time(3)));
             RequireSuccess(orders.RegisterArrival(orderId, manifest, Time(4)));
 
+            if (includeAssemblyPrototype)
+            {
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(MotherboardItemInstanceIdValue),
+                    motherboardProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        MotherboardUnitCostMinorUnits).Value));
+            }
+
             var session = new GarageStockFlowSession(
                 catalog,
+                components,
                 inventory,
+                assemblyBuild,
                 orders,
                 retailOffers,
                 retailBaskets,
@@ -313,6 +397,57 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool TryGetItem(out InventoryItemRecord item)
         {
             return Inventory.TryGetSerializedItem(ItemId, out item);
+        }
+
+        public bool TryGetMotherboardItem(out InventoryItemRecord item)
+        {
+            return Inventory.TryGetSerializedItem(MotherboardItemId, out item);
+        }
+
+        public OperationResult PickupLooseMotherboardToHands()
+        {
+            if (AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
+                !TryGetMotherboardItem(out InventoryItemRecord item) ||
+                item.ContainerId != WorldFloorContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.loose-pickup-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(MotherboardItemId, HandsContainerId);
+        }
+
+        public OperationResult DropHeldMotherboardToWorld()
+        {
+            if (AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
+                !TryGetMotherboardItem(out InventoryItemRecord item) ||
+                item.ContainerId != HandsContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-seat.world-drop-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(
+                MotherboardItemId,
+                WorldFloorContainerId);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> AttachMotherboard(
+            StableId<AssemblyOperationIdScope> operationId)
+        {
+            return AssemblyBuild.AttachMotherboard(
+                operationId,
+                MotherboardItemId,
+                MotherboardSlotId);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> DetachMotherboard(
+            StableId<AssemblyOperationIdScope> operationId)
+        {
+            return AssemblyBuild.DetachMotherboard(
+                operationId,
+                MotherboardItemId,
+                MotherboardSlotId);
         }
 
         public OperationResult PublishShelfOffer()
@@ -696,9 +831,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             OperationResult consultationResult =
                 CustomerConsultations.ValidateInvariants();
-            return consultationResult.IsFailure
-                ? consultationResult
-                : CustomerOfferActions.ValidateInvariants();
+            if (consultationResult.IsFailure)
+            {
+                return consultationResult;
+            }
+
+            OperationResult actionResult = CustomerOfferActions.ValidateInvariants();
+            return actionResult.IsFailure
+                ? actionResult
+                : AssemblyBuild.ValidateInvariants();
         }
 
         private bool IsCanonicalPrototypeSettlement(CheckoutSettlementReceipt receipt)

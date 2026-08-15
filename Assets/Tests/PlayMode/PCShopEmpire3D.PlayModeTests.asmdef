@@ -9,6 +9,7 @@
     "PSE.Orders",
     "PSE.Retail",
     "PSE.Economy",
+    "PSE.Assembly",
     "PSE.Presentation",
     "PSE.World",
     "Unity.InputSystem",

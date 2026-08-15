@@ -156,9 +156,11 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.component-catalog.missing");
         public static readonly Failure MissingInventoryAuthority =
             Failure.FromCode("assembly.inventory.missing");
-        public static readonly Failure InvalidBuildId = Failure.FromCode("assembly.build-id.invalid");
-        public static readonly Failure InvalidChassisId = Failure.FromCode("assembly.chassis-id.invalid");
-        public static readonly Failure InvalidSlotId = Failure.FromCode("assembly.slot-id.invalid");
+        public static readonly Failure CatalogAuthorityMismatch =
+            Failure.FromCode("assembly.catalog-authority.mismatch");
+        public static readonly Failure InvalidBuildId = Failure.FromCode("assembly.invalid-build");
+        public static readonly Failure InvalidChassisId = Failure.FromCode("assembly.invalid-chassis");
+        public static readonly Failure InvalidSlotId = Failure.FromCode("assembly.invalid-slot");
         public static readonly Failure InvalidOperationId = Failure.FromCode("assembly.operation-id.invalid");
         public static readonly Failure InvalidHandsContainer =
             Failure.FromCode("assembly.hands-container.invalid");
@@ -168,33 +170,38 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.inventory-container.same");
         public static readonly Failure InvalidMotherboardFormFactor =
             Failure.FromCode("assembly.motherboard-form-factor.invalid");
-        public static readonly Failure UnknownSlot = Failure.FromCode("assembly.slot.unknown");
-        public static readonly Failure OperationConflict =
-            Failure.FromCode("assembly.operation.conflict");
+        public static readonly Failure UnknownSlot = InvalidSlotId;
+        public static readonly Failure IdentityConflict =
+            Failure.FromCode("assembly.identity-conflict");
+        public static readonly Failure OperationConflict = IdentityConflict;
         public static readonly Failure RevisionOverflow = Failure.FromCode("assembly.revision-overflow");
-        public static readonly Failure SlotOccupied = Failure.FromCode("assembly.slot.occupied");
-        public static readonly Failure SlotEmpty = Failure.FromCode("assembly.slot.empty");
-        public static readonly Failure UnknownItem = Failure.FromCode("assembly.item.unknown");
-        public static readonly Failure ItemNotInActorHands =
-            Failure.FromCode("assembly.item.not-in-actor-hands");
-        public static readonly Failure ItemNotOnWorkbench =
-            Failure.FromCode("assembly.item.not-on-workbench");
-        public static readonly Failure UnknownComponentSpecification =
-            Failure.FromCode("assembly.component-specification.unknown");
-        public static readonly Failure UnsupportedComponentKind =
-            Failure.FromCode("assembly.component-kind.unsupported");
-        public static readonly Failure MotherboardFormFactorMismatch =
-            Failure.FromCode("assembly.motherboard-form-factor.mismatch");
+        public static readonly Failure SlotOccupied = Failure.FromCode("assembly.slot-occupied");
+        public static readonly Failure InvalidComponent = Failure.FromCode("assembly.invalid-component");
+        public static readonly Failure UnknownItem = InvalidComponent;
+        public static readonly Failure ComponentNotInActorHands =
+            Failure.FromCode("assembly.component-not-in-hands");
+        public static readonly Failure ItemNotInActorHands = ComponentNotInActorHands;
+        public static readonly Failure ComponentNotSeated =
+            Failure.FromCode("assembly.component-not-seated");
+        public static readonly Failure SlotEmpty = ComponentNotSeated;
+        public static readonly Failure ItemNotOnWorkbench = ComponentNotSeated;
+        public static readonly Failure UnknownComponentSpecification = InvalidComponent;
+        public static readonly Failure ComponentKindMismatch =
+            Failure.FromCode("assembly.component-kind-mismatch");
+        public static readonly Failure UnsupportedComponentKind = ComponentKindMismatch;
+        public static readonly Failure FormFactorMismatch =
+            Failure.FromCode("assembly.form-factor-mismatch");
+        public static readonly Failure MotherboardFormFactorMismatch = FormFactorMismatch;
         public static readonly Failure WorkbenchCapacityExceeded =
             Failure.FromCode("assembly.workbench.capacity");
         public static readonly Failure HandsCapacityExceeded =
             Failure.FromCode("assembly.hands.capacity");
-        public static readonly Failure InventoryRevisionOverflow =
-            Failure.FromCode("assembly.inventory.revision-overflow");
-        public static readonly Failure InventoryTransferStale =
-            Failure.FromCode("assembly.inventory-transfer.stale");
+        public static readonly Failure InventoryRevisionOverflow = RevisionOverflow;
+        public static readonly Failure PlanStale = Failure.FromCode("assembly.plan-stale");
+        public static readonly Failure InventoryTransferStale = PlanStale;
         public static readonly Failure InventoryTransferRejected =
             Failure.FromCode("assembly.inventory-transfer.rejected");
+        public static readonly Failure PlanForeign = Failure.FromCode("assembly.plan-foreign");
         public static readonly Failure MotherboardMissing =
             Failure.FromCode("assembly.benchmark.motherboard-missing");
         public static readonly Failure MotherboardUnsecured =
