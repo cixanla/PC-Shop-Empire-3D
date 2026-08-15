@@ -52,8 +52,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `347/347` passed.
-- Play Mode `23/23` passed.
+- Edit Mode `352/352` passed.
+- Play Mode `24/24` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -100,8 +100,9 @@ Tamamlanan saf Core sözleşmeleri:
 - Aynı Interact binding'i acceptance → unpack → pickup olarak sıralanır; HUD/dünya panosu/prompt parcel durumunu klavye ve gamepad için dinamik gösterir.
 - Exact ürün RAF A Shelf container'ındayken aynı Interact binding'i kasıtlı offer publish yapar; etiket authority başarısından önce `FİYAT YOK`, sonra `549,99 EUR` gösterir. Publish Inventory/Orders revision veya quantity değiştirmez.
 - Fiyatlanmış RAF A ürününde `G / Gamepad East` exact item'ı demo customer basket için ayırır; available quantity `0`, total quantity `1` kalır. Etiket/pano reservation'ı gösterir, `E / Gamepad South` pickup fail-closed olur ve aynı `G / East` release sonrası available quantity `1`e döner.
-- Ayrılmış RAF A ürününde `Mouse Left / Gamepad RT` bütün basket satırlarını exact offer/item/reservation ile preflight edip integer price/currency/total'i immutable checkout snapshot'ına alır. Sonraki offer update'i açık `549,99 EUR` fiyatını değiştirmez; checkout aktif release ve pickup fail-closed kalır.
-- Aktif checkout'ta ikinci `Mouse Left / Gamepad RT`, `nakit ödemeyi al` eylemidir. Exact tutarı immutable checkout snapshot'ından, COGS'u authoritative unit-cost provenance'ından alır; Inventory/Basket/Checkout prepared planını tek Economy settlement sınırında commit eder ve stable receipt + dört dengeli ledger posting'i bırakır. Shelf/HUD `ÖDEME BEKLİYOR → NAKİT ALINDI`; projection, stok ve fulfilled müşteri çıkışı yalnız receipt sonrası tamamlanır. Exact tekrar idempotent, yanlış tutar/currency/payment method, stale plan ve identity conflict bütün authority'lerde no-mutation'dır.
+- Ayrılmış RAF A ürününde primary action checkout veya ödeme başlatmaz; dinamik prompt `KASA İSTASYONUNA GİT` gösterir. Checkout/payment authority yalnız stable `world.checkout-station.garage-001` fiziksel hedefinden, pause kapalıyken `2,75 m` range + `24°` focus + raycast LOS ve exact matching current customer `AwaitingCheckout` gate'iyle açılır.
+- Station'daki ilk `Mouse Left / Gamepad RT` edge'i bütün basket satırlarını exact customer/visit/offer/item/reservation/Buy-action provenance'ıyla preflight edip integer price/currency/total ve unit cost'u immutable checkout snapshot'ına alır. Sonraki offer update'i açık `549,99 EUR` fiyatını değiştirmez; checkout aktif release ve pickup fail-closed kalır.
+- Held/same-frame input ödeme değildir. Release/repress sonrasındaki ikinci `Mouse Left / Gamepad RT`, exact-cash `nakit ödemeyi al` eylemidir. Inventory/Basket/Checkout prepared planını tek Economy settlement sınırında commit eder ve stable receipt + dört dengeli ledger posting'i bırakır. Projection, stok ve fulfilled müşteri çıkışı yalnız matching canonical receipt sonrası tamamlanır. Exact tekrar idempotent; yanlış access/state/provenance/tutar/currency/payment method, stale plan ve identity conflict bütün authority'lerde no-mutation'dır.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -119,13 +120,14 @@ Tamamlanan saf Core sözleşmeleri:
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - `GarageCustomerFlowRuntime`, runtime `NavMeshSurface` üzerinde explicit giriş/RAF A/checkout/çıkış anchor'larını izler; offer ziyareti başlatır, Buy reservation checkout'a, Economy settlement receipt'i `Fulfilled` çıkışına ve Leave `OfferDeclined` ile doğrudan Browse→Exit rotasına götürür. Mere completion kaydı müşteriyi çıkışa göndermez.
 - `Browsing` müşteri; pause kapalıyken `2,75 m` range, `24°` focus ve raycast LOS içinde gerçek `E / Gamepad South` ile danışılabilir. Dinamik prompt ve kısa Türkçe ihtiyaç cevabı görünür; tek-consumer Interact versionı aynı basışın carry/pickup'a sızmasını engeller. Customer runtime motor `Update`ından sonra, carry `LateUpdate`ından önce çalışır; runtime input reconfigure source asset yerine owned clone kullanır.
+- Customer focus CapsuleCollider trigger'dır; station çevresinde player ile fiziksel olarak kilitlenmez. Consultation raycast'i trigger hedefini bilinçli olarak görür; checkout/exit runtime akışı art arda üç final koşuda güvenle tamamlanır.
 - Pause integer simulation clock ve NavMeshAgent'ı dondurur. Route/patience fallback'i Inventory/Retail/Orders revision'larını değiştirmez; terminal müşteri projection'ı güvenle gizlenir.
 - Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current Buy/Leave kararını action authority'ye uygular; stale Buy `SATIN ALMA ENGELLİ`, stale Leave `AYRILMA ENGELLİ` stable metniyle engellenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, tree `9052d219f013fe007dd2bf16d4fc06726b2914eb` ve [Repository Guard 31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) ile doğrulandı. EditMode `347/347`, PlayMode `23/23`, failed/skipped `0`; Universal macOS build `327837998` bayt ve Mach-O `x86_64 + arm64`tır.
-- Apple M4/Metal 1280×720 `garage-customer-consultation-r20-v1` stock/customer smoke'ları consultation/replay, decision gate, stale receipt engeli, mevcut Buy/Leave, exact-cash settlement, stok tüketimi ve authority isolation kapılarını geçti. Scene ve final kanıt SHA-256 değerleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
-- Issue #51 source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98` ve [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) ile kapandı. USB milestone 578/578 manifest, 572/572 Git-blob ve 5/5 evidence kapısını geçti; acceptance `16/16`, Issue kapalı ve Roadmap `Done`dır. Parent Epic #9 açık/`In Progress` kalır.
+- Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6` ve [Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) ile doğrulandı. EditMode `352/352`, PlayMode `24/24`, failed/skipped `0`; Universal macOS build `327864494` bayt ve Mach-O `x86_64 + arm64`tır.
+- Apple M4/Metal 1280×720 `garage-physical-checkout-station-r21-v1` stock r4 ve art arda üç customer r6/r7/r8 smoke; station access, shelf bypass, release/repress checkout+cash, receipt, Economy/ledger, authority isolation, stock projection ve safe customer exit kapılarını geçti. Scene ve final kanıt SHA-256 değerleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
+- Issue #52 source/docs, USB ve GitHub closure kapıları şu anda tamamlanmaktadır. Önceki Issue #51 source/docs `f9bc38d`, başarılı Guard `31888842125`, doğrulanmış USB ve acceptance `16/16` ile kapalı/Done tarihsel checkpoint olarak korunur.
 - Önceki Issue #50 feature `547cf97`, source/docs `aea6e2b`, iki başarılı Guard ve doğrulanmış `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT` USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur.
 
 Henüz yapılmayanlar:
@@ -134,11 +136,11 @@ Henüz yapılmayanlar:
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, ilk exact-cash satış settlement'ı ötesindeki Economy kapsamı ve diğer domain assembly'leri; Catalog/Inventory/Orders/Economy event-save bağlantısı.
 - Sayısal fiyat düzenleme UI'si, açıklanabilir çoklu-offer müşteri kararı, vergi/indirim/para üstü/kart/çoklu ödeme, receipt belgesi/fatura/refund/supplier payment/opening balance, gerçek fiziksel sepet transferi ve daha geniş item/cart container projection'ı.
-- Görünür fiziksel checkout station ve yalnız matching müşteri `AwaitingCheckout` iken station üzerinden etkinleşen exact-cash ödeme projection'ı.
+- Final checkout POS/scanner/cash-drawer artı, fiziksel receipt, çoklu checkout station ve queue.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş Epic #9 altında görünür fiziksel checkout station projection'ı ve yalnız matching müşteri `AwaitingCheckout` durumundayken station interaction üzerinden exact-cash ödeme alan bounded pakettir. Hazır Actors/Retail/Inventory/Economy authority'lerini yeniden kullan; raf/uzak ödeme bypass'ını kapat ve vergi/indirim/çoklu ödeme, kontrolsüz çoklu müşteri, Save veya final sanat kapsamını gizlice büyütme.
+Sıradaki immediate kapı Issue #52 source/docs → Guard → exact USB snapshot/readback → GitHub acceptance/Done/close ve parent Epic #9 denetimidir. Ardından Epic #10 altında ayrı issue ile ilk fiziksel PC assembly dilimi açılır: tek açık kasa, tek component ve tek doğru slot; kasıtlı al/tak/sök, stable identity ve no-mutation yanlış-slot/replay sözleşmesi. Tam PC kataloğu, Save veya final sanat kapsamını gizlice büyütme.
 
 ## 7. Çalışma akışı
 

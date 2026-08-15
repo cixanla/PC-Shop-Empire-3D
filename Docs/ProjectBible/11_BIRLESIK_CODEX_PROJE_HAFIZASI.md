@@ -152,21 +152,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `846eb5d9912150a6ef3aae9a37678d71348f92a3`, tree `9052d219f013fe007dd2bf16d4fc06726b2914eb`; [Repository Guard 31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) başarılıdır.
-- Issue #51, current canonical `Browsing` visit için exact customer/visit/intent/need/product/time provenance taşıyan immutable one-per-visit consultation receipt ekledi. Exact replay idempotent; shadow authority, foreign/historical/stale receipt, ikinci consultation ve non-monotonic time no-mutation fail-closed'dur.
-- Matching owned receipt olmadan `CustomerOfferDecisionEvaluator` ve downstream `Buy/Leave` action kilitlidir. Görüşme ve salt decision okuması Actors visit, Inventory, Orders, Offer, Basket, Checkout ve Economy authority'lerini değiştirmez.
-- Garage'da müşteri yalnız pause kapalı, `2,75 m` range, `24°` focus ve gerçek LOS içinde `E / Gamepad South` ile danışılabilir. Dinamik `İHTİYACI SOR` promptu ve kısa Türkçe ihtiyaç cevabı görünürdür.
-- Tek-consumer Interact press versionı, `[DefaultExecutionOrder(100)]` ve runtime-owned input clone reconfigure sözleşmesi aynı basışın carry etkileşimine sızmasını ve source action asset mutationını engeller.
-- EditMode `347/347`, gerçek Input System PlayMode `23/23` geçti; failed/skipped `0`. XML SHA-256 değerleri `a2d0861c…ecc1` ve `d4a8711b…e90c`tur.
-- Universal macOS development build `327837998` bayt, Mach-O `x86_64 + arm64`; build log SHA-256 `680c690e…75c9`, executable SHA-256 `2c9db944…1f86`dır.
-- Apple M4/Metal 1280×720 runtime markerı `garage-customer-consultation-r20-v1`dir. Stock ve customer smoke consultation/replay, decision gate, stale receipt engeli, mevcut Buy/Leave, exact-cash settlement, stok tüketimi ve authority isolation kapılarını geçti.
-- `GarageGraybox.unity` `1378085` bayt, SHA-256 `353424cd…cbbaf`tır. Primitive müşteri, speech text ve büyük status panoları final karakter/UI değildir.
-- Source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98` ve [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılıdır. Issue #51 acceptance `16/16`, kapalı/Roadmap `Done`; parent Epic #9 açık/`In Progress` kalır.
-- Önceki Issue #50 feature `547cf97`, source/docs `aea6e2b`, iki başarılı Guard ve doğrulanmış USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur.
+- Son doğrulanmış kaynak feature: `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`; [Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) başarılıdır.
+- Issue #52 stable `world.checkout-station.garage-001` fiziksel checkout station ekledi. Station pause kapalı, `2,75 m` range, `24°` focus ve raycast LOS gerektirir; RAF A üzerindeki checkout/payment primary action bypass'ı kapalıdır.
+- Yalnız exact matching current customer/visit/basket/offer/item/reservation/Buy-action provenance'ı ve `AwaitingCheckout` state'i station'ı yetkilendirir. Stale, foreign, historical veya forged/value-equal zincir bütün authority'lerde no-mutation fail-closed'dur.
+- İlk `Mouse Left / Gamepad RT` edge'i immutable checkout snapshotını bir kez üretir; fiyat/currency/unit cost donar. Held/same-frame/replay ödeme değildir; release/repress sonrasındaki ikinci edge exact-cash Economy settlement'ını bir kez üretir.
+- Canonical receipt exact settlement/transaction/completion/checkout/customer/payment/currency/amount/COGS/action/line/ledger/time provenance'ını kapılar. Stock projection ve customer fulfillment yalnız matching receipt sonrasında ilerler.
+- Customer focus collider'ı trigger yapılarak station çevresindeki fiziksel player/NPC stall'ı kaldırıldı; consultation LOS trigger hedefini görür. Üç ardışık final customer smoke güvenli exit'i kanıtladı.
+- EditMode `352/352`, gerçek Input System PlayMode `24/24` geçti; failed/skipped `0`. XML SHA-256 değerleri `c6bd6e4f…ac6d` ve `8c05afec…9230`dur.
+- Universal macOS development build `327864494` bayt, Mach-O `x86_64 + arm64`; build log SHA-256 `c9a0780e…69c`, executable SHA-256 `cf66c67f…79b2`dir.
+- Apple M4/Metal 1280×720 runtime markerı `garage-physical-checkout-station-r21-v1`dir. Stock r4 ve customer r6/r7/r8 smoke station access, shelf bypass, checkout-start, cash-payment, receipt/Economy/ledger, authority isolation, stock projection ve customer safe-exit kapılarını geçti.
+- `GarageGraybox.unity` `1397931` bayt, SHA-256 `509e6c25…d3fe`dir. Primitive checkout terminali, müşteri ve büyük diagnostic/status textleri final POS/karakter/UI değildir.
+- Source/docs, USB ve GitHub closure kapıları şu anda tamamlanmaktadır. Önceki Issue #51 feature `846eb5d`, source/docs `f9bc38d`, iki başarılı Guard ve doğrulanmış USB ile acceptance `16/16`, kapalı/Done tarihsel checkpoint olarak korunur.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
-Issue #51 kaynak/test/build/runtime/CI/USB ve Issue metadata zinciri tamamlandı; acceptance `16/16`, kapalı/Done. Sonraki bounded paket Epic #9 altında görünür fiziksel checkout station ve yalnız matching müşteri `AwaitingCheckout` iken station interaction üzerinden exact-cash ödeme almaktır. Raf/uzak ödeme bypass'ı kapatılır; vergi/indirim/fiş, çoklu ödeme, kontrolsüz çoklu ürün/müşteri, Save ve final sanat bu küçük pakete gizlice alınmaz.
+Issue #52 kaynak/test/build/runtime ve feature CI zinciri tamamlandı. Sıradaki güvenli kapılar source/docs + Guard → exact USB snapshot/readback → acceptance `17/17` + Roadmap `Done` + Issue close → parent Epic #9 geniş kabul denetimidir. Bundan sonraki bounded geliştirme Epic #10 altında ilk fiziksel PC assembly dilimidir; tek açık kasa/tek component/tek slot dışına, tam katalog/Save/final sanat kapsamına gizlice büyütülmez.
 
 Sonraki ana geliştirme sırası:
 
@@ -252,4 +252,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, başarılı Guard `31888842125`, EditMode 347/347, PlayMode 23/23, Universal Mac `327837998` bayt, `garage-customer-consultation-r20-v1` smoke ve `f8d3ce98…ccf20` manifestli USB checkpointiyle tamamlandı; acceptance 16/16, Issue kapalı/Done. Epic #9 altında sıradaki bounded paket fiziksel checkout station ve yalnız `AwaitingCheckout` durumunda station-gated exact-cash ödemedir.
+> Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6`, başarılı feature Guard `31892420515`, EditMode 352/352, PlayMode 24/24, Universal Mac `327864494` bayt ve `garage-physical-checkout-station-r21-v1` stock r4/customer r6-r8 smoke ile kaynak/test/build/runtime olarak tamamlandı. Source/docs + Guard, exact USB snapshot ve GitHub kapanışından sonra sıradaki bounded geliştirme Epic #10 ilk fiziksel PC assembly dilimidir.
