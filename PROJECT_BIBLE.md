@@ -243,7 +243,7 @@ Monotonluğu azaltma ilkeleri:
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
-| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout, deterministic müşteri ziyareti + runtime NavMesh, stale-safe tek-offer `Buy/Leave` ve exact-cash ilk `PSE.Economy` settlement paketi tamamlandı; Issue #50 kapalı/Done |
+| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout, deterministic müşteri ziyareti + runtime NavMesh, stale-safe tek-offer `Buy/Leave`, exact-cash ilk `PSE.Economy` settlement ve bounded tek-müşteri danışmanlık/öneri kapısı tamamlandı; Issue #51 feature/test/build/runtime/feature Guard doğrulaması tamam, source/docs/Guard/USB kapanış kaydı bekleniyor |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
@@ -285,8 +285,9 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Atomik checkout fulfillment | Owner/revision-bound Inventory/Basket/Checkout prepared planı; side-effect-free tam preflight, tek Inventory/Basket/Checkout revision, public completion bypass'ı kapalı, exact repeat idempotency ve drift no-mutation |
 | Atomik nakit ve ilk Economy settlement | Downstream Unity bağımsız `PSE.Economy`; immutable checkout fiyatı + alış maliyeti, exact cash, stable receipt, dengeli Cash/SalesRevenue/COGS/InventoryAsset postingleri, replay/conflict/no-mutation ve receipt-gated müşteri çıkışı |
 | Deterministic müşteri ziyareti | Unity bağımsız `PSE.Actors`; stable customer/intent/visit, monotonik state + bounded receipt ledger, iki denemeli route fallback, patience/exit timeout ve Inventory/Retail/Orders izolasyonu |
-| Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A, reservation sonrası checkout, fulfillment sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
-| Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
+| Bounded tek-müşteri danışmanlık/öneri kapısı | Unity bağımsız `CustomerConsultationAuthority`; current canonical `Browsing` ziyareti için tek immutable customer/visit/intent/need/product/timestamp provenance'ı, exact replay idempotency ve foreign/stale/non-browsing/conflict yollarında no-mutation |
+| Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A ve görünür yardım bekleme; odaklı `E / Gamepad South` danışmanlığı sonrası karar, Buy reservation sonrası checkout, Economy receipt sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
+| Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; owned current consultation + immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
 | Stale-safe müşteri Buy eylemi | Explicit Actors↔Retail kimlik bağı, current visit/offer yeniden doğrulaması, exact serialized action-owned reservation, `Browsing → NavigatingToCheckout`, idempotent replay ve stale no-mutation |
 | Stale-safe müşteri Leave eylemi | Aynı kind-discriminated action ledger'ında current visit/offer revalidation, internal Actors prepared planı, `Browsing → Exiting`, stable `OfferDeclined`, Browse→Exit NavMesh ve bütün commerce authority'lerinde no-mutation |
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
@@ -298,17 +299,19 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Yüklü taşıma arabası | Tek `LargeBox` kapasitesi, hands→cart→hands stable ownership, dört noktalı destek + swept obstruction, 0,85× yüklü hız, sprint kilidi, dinamik prompt ve fail-closed recovery |
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
-| Son tamamlanmış USB milestone | `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; Issue #50 source/docs `aea6e2b`, 566 tracked kaynak + 5 final kanıt + source kaydı, 572 satırlı `b3168162…ecf8` SHA-256 manifest/readback, 566/566 Git-blob ve 5/5 evidence eşliği, güvenlik mismatch `0` |
+| Son tamamlanmış USB milestone (Issue #50) | `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; Issue #50 source/docs `aea6e2b`, 566 tracked kaynak + 5 final kanıt + source kaydı, 572 satırlı `b3168162…ecf8` SHA-256 manifest/readback, 566/566 Git-blob ve 5/5 evidence eşliği, güvenlik mismatch `0` |
 | Issue #50 kapanış checkpoint'i | Feature `547cf971882239c912d8221f344706afc993a37b`, source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, tree `84b14646fd549ce93e390bc33a626a8a7a6335fb`; [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638) başarılı; acceptance `18/18`, Issue kapalı ve Roadmap `Done` |
-| Son test/build | Issue #50 sonrası Edit Mode `328/328`, Play Mode `22/22`, failed/skipped `0`; Universal macOS build `327809376` bayt ve Apple M4/Metal 1280×720 `garage-cash-settlement-r19-v1` stock/customer exact-cash, receipt, ledger, replay/conflict ve authority-isolation smoke'ları geçti |
+| Issue #51 feature checkpoint'i | Bounded single-customer consultation/recommendation gate feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, tree `9052d219f013fe007dd2bf16d4fc06726b2914eb`; [feature Repository Guard 31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) başarılı; source/docs commit, source/docs Guard ve USB milestone değerleri **kapanışta eklenecek** |
+| Son test/build | Issue #51 sonrası Edit Mode `347/347` (`editmode-issue51-r7.xml`), Play Mode `23/23` (`playmode-issue51-r6.xml`), failed/skipped `0`; Universal macOS build `327837998` bayt ve Apple M4/Metal 1280×720 `garage-customer-consultation-r20-v1` stock/customer danışmanlık, karar gate'i, stale-consultation engeli ve authority-isolation smoke'ları geçti; scene SHA-256 `353424cd5d4a1e48d4b632f21e7343eb211762e4d1468b1e5bf9e45ebc8cbbaf` |
 
-Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #49 kapanışı tarihsel olarak korunur. Issue #50'nin tam test/build/runtime, CI ve USB hash kanıtları `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50 kapanışı tarihsel olarak korunur. Issue #51'in doğrulanmış feature/test/build/runtime kanıtları ile henüz üretilmemiş source/docs, Guard ve USB kapanış alanları `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. Epic #9 altındaki sıradaki küçük, uçtan uca müşteri/kasa paketini GitHub bağımlılık sırasından seç; çoklu müşteri/offer, utility scoring, memnuniyet ve Save sınırlarını hazır authority'lerden önce büyütme.
-2. Yeni pakette domain authority → gerçek Input System → Garage projection → EditMode/PlayMode → Mac build/runtime zincirini aynı bounded issue içinde kapat.
-3. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. Epic #9 altındaki sıradaki bounded pakette görünür fiziksel checkout station kur ve exact-cash ödeme eylemini yalnız current müşteri `AwaitingCheckout` durumundayken bu station etkileşiminden yetkilendir.
+2. Hazır Checkout/Economy settlement authority'lerini yeniden kullan; raf üzerinden veya yalnız aktif checkout bulunduğu için uzaktan ödeme alma yolunu kapat. Çoklu kasa/kuyruk/müşteri, vergi/indirim/para üstü/kart, receipt belgesi, Save ve final sanat kapsamını büyütme.
+3. Yeni pakette domain authority → gerçek Input System → Garage projection → EditMode/PlayMode → Mac build/runtime zincirini aynı bounded issue içinde kapat.
+4. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -351,7 +354,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 267/267 ve Play Mode 18/18 baseline testlerini doğrula.
+5. Edit Mode 347/347 ve Play Mode 23/23 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

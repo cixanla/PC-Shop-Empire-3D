@@ -114,7 +114,7 @@ Eski oyunu bozmadan neyin var olduğunu, yeni oyunun ne olacağını ve hangi ka
 
 ## 5. Faz 1 — Proje temeli ve graybox etkileşim
 
-**Durum:** Devam ediyor; teknik temel, garaj fiziksel akışı, Catalog + Inventory authority ve atomik purchase-order receiving tamamlandı; sırada görünür teslimat/raf projection dilimi var.<br>
+**Durum:** Devam ediyor; authoritative order-to-sale, deterministic customer visit, exact-cash settlement ve bounded consultation gate tamamlandı; sırada fiziksel checkout station ile `AwaitingCheckout`-gated cash payment var.<br>
 **Öncelik:** P0  
 **Bağımlılık:** Faz 0 onayı ve kurulum kapısı  
 **Zorluk:** L  
@@ -137,13 +137,13 @@ Boş Unity projesinden, Windows'ta da açılan; yürüyüş, eller, etkileşim v
 9. Tek odalı performans referans sahnesi.
 10. macOS editöründeki Windows Build Support (Mono) ile yalnız erken taşınabilirlik/smoke build'i; ilk oynanabilirden önce gerçek Windows x64 makinede Windows Unity Editor + gerekli C++ Build Tools/Windows SDK ile IL2CPP baseline build'i ve temiz makinede açılış. Mac'ten alınan Mono çıktısı DirectX, Windows IL2CPP, Steam veya native eklenti kanıtı sayılmaz.
 
-**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail` ve `PSE.Actors` Unity bağımsız derlenir. Exact manifest atomik Receiving intake üretir; `PSE.Presentation` aynı serialized item'ı görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer basket reserve/release → checkout begin → fulfillment zincirine bağlar. Checkout bütün basket satırlarını exact offer+item+Inventory claim ile doğrular, immutable fiyat snapshot'ı ve atomik completion üretir. Stable müşteri ziyareti offer sonrası giriş→RAF A, reservation sonrası checkout ve fulfillment sonrası çıkış projection'ını sürer; state başına iki route denemesi, patience/exit timeout ve Inventory/Retail/Orders izolasyonu vardır. Edit Mode 255/255, gerçek device-state Play Mode 18/18, Universal macOS ve Apple M4/Metal `runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` runtime geçer. Ödeme/Economy, Save, çoklu müşteri/ürün, derin danışmanlık ve final art ayrı kalır; sıradaki bounded alan tek customer + tek offer açıklanabilir satın-al/ayrıl değerlendirmesidir.
+**Güncel teknik kanıt:** `PSE.Core`, `PSE.Catalog`, `PSE.Inventory`, `PSE.Orders`, `PSE.Retail`, `PSE.Actors` ve `PSE.Economy` Unity bağımsız domain sınırlarını korur. Exact manifestten RAF A offer/reservation/immutable checkout'a uzanan serialized item; exact-cash settlement, receipt ve dengeli Cash/SalesRevenue/COGS/InventoryAsset postingleriyle atomik tüketilir. Stable müşteri ziyareti iki denemeli route/patience/exit fallback taşır. Issue #51, current `Browsing` visit'e one-per-visit canonical consultation receipt ekler; matching receipt olmadan tek RAF A `Buy/Leave` kararı ve action kilitlidir. Garage görüşmesi `2,75 m` range+LOS içinde gerçek `E / Gamepad South` kullanır; versioned single-consumer input, positive execution order ve runtime-only `InputActionAsset` clone ownership aynı basışın carry etkileşimine sızmasını engeller. Görüşme hidden Inventory enumerate etmez ve yalnız consultation revisionını ilerletir. Edit Mode 347/347, Play Mode 23/23, Universal macOS 327.837.998 bayt ve Apple M4/Metal 1280×720 stock/customer r4 smoke `consultation=ok decision-gated=ok stale-consultation-blocked=ok authority-isolated=ok` ile geçmiştir. Sıradaki bounded paket fiziksel checkout station ve yalnız matching visit `AwaitingCheckout` iken etkin cash payment'tır; henüz uygulanmadı. Save/Guardian, çoklu müşteri/ürün ve final art ayrı kalır.
 
 ### Kapsam dışı
 
 - Güzel final mağaza sanatı.
 - Tam müşteri AI.
-- Gerçek ekonomi.
+- Tam ekonomi; mevcut kapsam yalnız bounded exact-cash satış settlement'ı ve ilk ledger deltalarıdır.
 - Ayrıntılı PC montajı.
 - Steam entegrasyonu.
 

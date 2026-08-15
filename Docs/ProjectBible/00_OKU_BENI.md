@@ -1,6 +1,6 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B deterministic customer-visit checkpoint'i 0.16<br>
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B bounded customer-consultation checkpoint'i 0.17<br>
 **Tarih:** 15 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
@@ -92,6 +92,8 @@ Yapıldı:
 - Yirmi dördüncü bounded paket tamamlandı: pure tek-offer evaluator immutable visit/offer/accepted-price provenance ile açıklanabilir `Buy/Leave` üretir; karar okuması authority mutate etmez. Edit Mode 267/267, Play Mode 18/18 ve Mac `offer-decision=ok authority-isolated=ok` geçti.
 - Yirmi beşinci bounded paket tamamlandı: explicit Actors↔Retail binding sonrası stale-safe current `Buy`, exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout` üretir; stale bütün authority'lerde no-mutation kalır. Edit Mode 287/287, Play Mode 19/19 ve Mac `buy-action=ok stale-blocked=ok` geçti.
 - Yirmi altıncı bounded paket tamamlandı: aynı kind-discriminated ledger'da stale-safe current `Leave`, internal Actors planıyla `Browsing → Exiting/OfferDeclined` üretir; stok/kasa değişmez ve Browse→Exit NavMesh çalışır. Edit Mode 298/298, Play Mode 22/22 ve Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` geçti.
+- Yirmi yedinci bounded paket tamamlandı: authoritative acquisition-cost provenance, downstream `PSE.Economy`, exact-cash settlement receipt'i ve dengeli dört ledger postingi Inventory→Basket→Checkout fulfillment ile tek production sınırında bağlandı; müşteri yalnız matching payment receipt sonrası `Fulfilled` çıkar. Edit Mode 328/328, Play Mode 22/22 ve Mac `cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok ledger-balanced=ok` geçti.
+- Yirmi sekizinci bounded paket tamamlandı: `Browsing` müşterisi için one-per-visit canonical consultation receipt, existing tek RAF A `Buy/Leave` recommendation önünde matching provenance gate, `2,75 m` range+LOS, gerçek `E / Gamepad South`, single-consumer input ve runtime clone ownership eklendi. Görüşme hidden Inventory aramaz ve yalnız consultation revisionını ilerletir. Edit Mode 347/347, Play Mode 23/23, Universal macOS 327.837.998 bayt ve iki 1280×720 r4 smoke `consultation=ok decision-gated=ok stale-consultation-blocked=ok authority-isolated=ok` ile geçti; source/docs/USB kapanış kimlikleri ana ajan için `TBD`dir.
 - Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
@@ -99,7 +101,7 @@ Yapıldı:
 
 Yapılmadı:
 
-- Guardian runtime, final 3D sanat, mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; ürün kataloğunun yalnız saf domain sözleşmesi ve çalışan küçük/büyük kutu etkileşimi lisanssız graybox/prototip varlıklarla kuruldu.
+- Guardian runtime, final 3D sanat, tam mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; yalnız bounded exact-cash satış ledger'ı ile saf domain sözleşmeleri ve çalışan graybox/prototip akışları kuruldu.
 - Blender, Steamworks SDK, Xcode, ücretli araç veya üçüncü taraf oyun asset'i kurulmadı.
 - Eski proje, kayıtlar ve USB'deki legacy klasörler değiştirilmedi; yalnız onaylı yeni `90_BACKUPS/PCShopEmpire3D` hedefi yazıldı.
 - Ücretli araç veya lisans satın alınmadı.
@@ -138,6 +140,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj, Catalog + Inventory, atomik purchase-order receiving, görünür Receiving→eller→RAF A projection, idempotent koli açma, authoritative fiyat, customer basket, immutable checkout/fulfillment ve deterministic stale-safe Buy/Leave müşteri zinciri hazırdır: Edit Mode 298/298, Play Mode 22/22 geçti; Universal Mac build ve Apple M4/Metal runtime smoke başarılıdır. Bir sonraki bounded alan checkout completion'ı atomik payment receipt ve ilk Economy nakit/gelir/COGS settlement'ına bağlamaktır; vergi/indirim, çoklu ürün/müşteri ve Save ayrı kalır.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; authoritative order-to-sale stok zinciri, deterministic customer visit, consultation-gated tek-offer `Buy/Leave` ve exact-cash Economy settlement'ını birlikte taşır. Issue #51 feature kanıtı 347/347 Edit Mode, 23/23 Play Mode, 327.837.998 bayt Universal macOS build ve Apple M4/Metal 1280×720 stock/customer r4 smoke ile geçmiştir; marker `garage-customer-consultation-r20-v1`dir. Sıradaki Epic #9 bounded paketi fiziksel checkout station ve yalnız matching müşteri `AwaitingCheckout` iken etkin cash payment'tır; henüz uygulanmadı. Vergi/indirim, çoklu ürün/müşteri, Save ve Guardian ayrı kalır.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.
