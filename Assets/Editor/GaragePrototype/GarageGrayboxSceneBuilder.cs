@@ -200,6 +200,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 lightDiffuser,
                 stockPlacement);
             BuildStarterPickups(environment, cardboard, metal, accent, labelPaper, rubber);
+            TransportCartProjection transportCart = BuildTransportCart(
+                environment,
+                metal,
+                brushedSteel,
+                accent,
+                rubber,
+                labelPaper);
             BuildLighting(lighting, metal, lightDiffuser);
             FirstPersonMotor prefabSource = BuildPlayer(
                 gameplay,
@@ -224,7 +231,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Require(carry != null, "The PlayerRig prefab is missing PlayerCarryController.");
 
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
-            marker.Configure(motor, input, carry);
+            marker.Configure(motor, input, carry, transportCart);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(motor, carry);
 
@@ -1125,6 +1132,116 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PhysicalCarryProfile.LargeBox);
         }
 
+        private static TransportCartProjection BuildTransportCart(
+            Transform parent,
+            Material metal,
+            Material brushedSteel,
+            Material accent,
+            Material rubber,
+            Material labelPaper)
+        {
+            int interactableLayer = RequireLayer(InteractableLayerName);
+            Transform cartRoot = new GameObject("TransportCart").transform;
+            cartRoot.SetParent(parent, false);
+            cartRoot.localPosition = new Vector3(-2.90f, 0f, -2.10f);
+            cartRoot.localRotation = Quaternion.identity;
+
+            CreateBeveledCube(
+                "CartPlatform",
+                cartRoot,
+                new Vector3(0f, 0.30f, 0f),
+                new Vector3(1.16f, 0.16f, 1.34f),
+                0.025f,
+                metal);
+            CreateBeveledCube(
+                "CartDeckMat",
+                cartRoot,
+                new Vector3(0f, 0.392f, 0f),
+                new Vector3(1.02f, 0.025f, 1.18f),
+                0.008f,
+                rubber,
+                false);
+
+            foreach (float x in new[] { -0.49f, 0.49f })
+            {
+                CreateBeveledCube(
+                    x < 0f ? "CartHandlePost_Left" : "CartHandlePost_Right",
+                    cartRoot,
+                    new Vector3(x, 0.95f, -0.60f),
+                    new Vector3(0.075f, 1.20f, 0.075f),
+                    0.015f,
+                    brushedSteel);
+            }
+
+            CreateBeveledCube(
+                "CartHandleGrip",
+                cartRoot,
+                new Vector3(0f, 1.55f, -0.60f),
+                new Vector3(1.05f, 0.11f, 0.11f),
+                0.025f,
+                rubber);
+            CreateDetailCube(
+                "CartSafetyPlate",
+                cartRoot,
+                new Vector3(0f, 0.78f, -0.645f),
+                new Vector3(0.44f, 0.22f, 0.018f),
+                accent);
+            CreateDetailCube(
+                "CartIdentityLabel",
+                cartRoot,
+                new Vector3(0f, 0.78f, -0.657f),
+                new Vector3(0.28f, 0.10f, 0.008f),
+                labelPaper);
+
+            foreach (float x in new[] { -0.53f, 0.53f })
+            {
+                foreach (float z in new[] { -0.49f, 0.49f })
+                {
+                    GameObject wheel = CreateCylinder(
+                        $"CartWheel_{(x < 0f ? "L" : "R")}_{(z < 0f ? "Rear" : "Front")}",
+                        cartRoot,
+                        new Vector3(x, 0.15f, z),
+                        new Vector3(0.28f, 0.06f, 0.28f),
+                        Quaternion.Euler(0f, 0f, 90f),
+                        rubber);
+                    Collider wheelCollider = wheel.GetComponent<Collider>();
+                    if (wheelCollider != null)
+                    {
+                        UnityEngine.Object.DestroyImmediate(wheelCollider);
+                    }
+
+                    CreateDetailCube(
+                        $"CartWheelHub_{(x < 0f ? "L" : "R")}_{(z < 0f ? "Rear" : "Front")}",
+                        cartRoot,
+                        new Vector3(x, 0.15f, z),
+                        new Vector3(0.10f, 0.10f, 0.10f),
+                        brushedSteel).transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                }
+            }
+
+            Transform cargoAnchor = new GameObject("CartCargoAnchor").transform;
+            cargoAnchor.SetParent(cartRoot, false);
+            cargoAnchor.localPosition = new Vector3(0f, 0.80f, 0.02f);
+
+            SetLayerRecursively(cartRoot.gameObject, interactableLayer);
+            Rigidbody cartBody = cartRoot.gameObject.AddComponent<Rigidbody>();
+            cartBody.mass = 18f;
+            cartBody.useGravity = false;
+            cartBody.isKinematic = true;
+            cartBody.interpolation = RigidbodyInterpolation.Interpolate;
+            cartBody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            TransportCartProjection cart = cartRoot.gameObject.AddComponent<TransportCartProjection>();
+            cart.Configure(
+                "prototype.garage-transport-cart-001",
+                "Platform Arabası",
+                cartBody,
+                cargoAnchor,
+                new Vector3(0.61f, 0.74f, 0.72f),
+                new Vector3(0.61f, 0.84f, 0.72f));
+            return cart;
+        }
+
         private static void CreateCeilingFixture(
             Transform parent,
             string name,
@@ -1228,6 +1345,24 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             cube.transform.localScale = localScale;
             cube.GetComponent<Renderer>().sharedMaterial = material;
             return cube;
+        }
+
+        private static GameObject CreateCylinder(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Quaternion localRotation,
+            Material material)
+        {
+            GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            cylinder.name = name;
+            cylinder.transform.SetParent(parent, false);
+            cylinder.transform.localPosition = localPosition;
+            cylinder.transform.localRotation = localRotation;
+            cylinder.transform.localScale = localScale;
+            cylinder.GetComponent<Renderer>().sharedMaterial = material;
+            return cylinder;
         }
 
         private static GameObject CreateDetailCube(

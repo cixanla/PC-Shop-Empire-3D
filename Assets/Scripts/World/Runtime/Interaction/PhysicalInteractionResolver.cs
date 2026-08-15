@@ -78,7 +78,9 @@ namespace PCShopEmpire3D.World.Interaction
                 }
 
                 PhysicalItemProjection candidate = hit.collider.GetComponentInParent<PhysicalItemProjection>();
-                if (candidate == null || !candidate.isActiveAndEnabled || candidate.IsCarried)
+                if (candidate == null ||
+                    !candidate.isActiveAndEnabled ||
+                    candidate.Ownership != PhysicalItemOwnership.World)
                 {
                     continue;
                 }
@@ -102,6 +104,77 @@ namespace PCShopEmpire3D.World.Interaction
             return best != null
                 ? OperationResult<PhysicalItemProjection>.Success(best)
                 : OperationResult<PhysicalItemProjection>.Fail(Failure.FromCode("interaction.no-target"));
+        }
+
+        public OperationResult<TransportCartProjection> ResolveTransportCart()
+        {
+            if (origin == null)
+            {
+                return OperationResult<TransportCartProjection>.Fail(
+                    Failure.FromCode("interaction.origin-missing"));
+            }
+
+            int count = assistRadius > 0f
+                ? Physics.SphereCastNonAlloc(
+                    origin.position,
+                    assistRadius,
+                    origin.forward,
+                    _hits,
+                    maximumRange,
+                    queryMask,
+                    QueryTriggerInteraction.Ignore)
+                : Physics.RaycastNonAlloc(
+                    origin.position,
+                    origin.forward,
+                    _hits,
+                    maximumRange,
+                    queryMask,
+                    QueryTriggerInteraction.Ignore);
+
+            if (count >= HitCapacity)
+            {
+                return OperationResult<TransportCartProjection>.Fail(
+                    Failure.FromCode("interaction.query-capacity"));
+            }
+
+            TransportCartProjection best = null;
+            float bestDistance = float.PositiveInfinity;
+            string bestId = null;
+            for (int index = 0; index < count; index++)
+            {
+                RaycastHit hit = _hits[index];
+                if (hit.collider == null || IsIgnored(hit.collider.transform))
+                {
+                    continue;
+                }
+
+                TransportCartProjection candidate =
+                    hit.collider.GetComponentInParent<TransportCartProjection>();
+                if (candidate == null || !candidate.isActiveAndEnabled)
+                {
+                    continue;
+                }
+
+                if (!HasLineOfSight(candidate, hit.point))
+                {
+                    continue;
+                }
+
+                string candidateId = candidate.CartIdValue;
+                if (hit.distance < bestDistance - 0.0001f ||
+                    (Mathf.Abs(hit.distance - bestDistance) <= 0.0001f &&
+                     string.CompareOrdinal(candidateId, bestId) < 0))
+                {
+                    best = candidate;
+                    bestDistance = hit.distance;
+                    bestId = candidateId;
+                }
+            }
+
+            return best != null
+                ? OperationResult<TransportCartProjection>.Success(best)
+                : OperationResult<TransportCartProjection>.Fail(
+                    Failure.FromCode("interaction.no-cart-target"));
         }
 
         private bool HasLineOfSight(PhysicalItemProjection candidate, Vector3 assistHitPoint)
@@ -128,6 +201,29 @@ namespace PCShopEmpire3D.World.Interaction
             }
 
             return lineHit.collider.GetComponentInParent<PhysicalItemProjection>() == candidate;
+        }
+
+        private bool HasLineOfSight(TransportCartProjection candidate, Vector3 assistHitPoint)
+        {
+            Vector3 direction = assistHitPoint - origin.position;
+            float distance = direction.magnitude;
+            if (distance <= Mathf.Epsilon || distance > maximumRange + assistRadius)
+            {
+                return false;
+            }
+
+            if (!Physics.Raycast(
+                    origin.position,
+                    direction / distance,
+                    out RaycastHit lineHit,
+                    distance + 0.02f,
+                    queryMask,
+                    QueryTriggerInteraction.Ignore))
+            {
+                return false;
+            }
+
+            return lineHit.collider.GetComponentInParent<TransportCartProjection>() == candidate;
         }
 
         private bool IsIgnored(Transform candidate)

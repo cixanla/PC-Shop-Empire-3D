@@ -11,7 +11,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         DropBlocked = 3,
         Recovering = 4,
         CarryingLargeItem = 5,
-        LargeDropBlocked = 6
+        LargeDropBlocked = 6,
+        DrivingTransportCart = 7
     }
 
     [DisallowMultipleComponent]
@@ -65,6 +66,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     rightOffset = new Vector3(0.18f, 0.06f, 0.33f);
                     leftEuler = new Vector3(-12f, -28f, 10f);
                     rightEuler = new Vector3(-12f, 28f, -10f);
+                    break;
+                case VisibleHandsState.DrivingTransportCart:
+                    leftOffset = new Vector3(-0.08f, 0.12f, 0.40f);
+                    rightOffset = new Vector3(0.08f, 0.12f, 0.40f);
+                    leftEuler = new Vector3(-24f, -12f, 8f);
+                    rightEuler = new Vector3(-24f, 12f, -8f);
                     break;
                 case VisibleHandsState.Recovering:
                     leftOffset = new Vector3(0f, -0.05f, -0.04f);

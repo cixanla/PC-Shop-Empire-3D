@@ -23,15 +23,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool _applicationQuitting;
         private string _heldItemId = string.Empty;
+        private string _activeCartId = string.Empty;
         private int _placementRotationQuarterTurns;
 
         public PhysicalItemProjection FocusedItem { get; private set; }
 
         public PhysicalItemProjection HeldItem { get; private set; }
 
+        public TransportCartProjection FocusedCart { get; private set; }
+
+        public TransportCartProjection ActiveCart { get; private set; }
+
         public string LastFailureCode { get; private set; } = string.Empty;
 
         public bool IsCarrying => HeldItem != null;
+
+        public bool IsDrivingCart => ActiveCart != null && ActiveCart.IsDriven;
 
         public bool IsPlacementMode { get; private set; }
 
@@ -62,12 +69,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : "R / Right Shoulder";
                     if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
                     {
+                        string load = FocusedCart != null && FocusedCart.CanLoad(HeldItem)
+                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                              $"{FocusedCart.DisplayName} üzerine yükle   |   "
+                            : string.Empty;
                         string blocked = LastFailureCode.StartsWith(
                             "drop.",
                             StringComparison.Ordinal)
                             ? "   |   BIRAKMA ENGELLİ"
                             : string.Empty;
-                        return $"{drop}: {HeldItem.DisplayName} güvenli bırak   |   " +
+                        return load +
+                               $"{drop}: {HeldItem.DisplayName} güvenli bırak   |   " +
                                $"AĞIR YÜK — sprint kapalı{blocked}";
                     }
 
@@ -78,6 +90,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
                               ? (CurrentStackSupport != null ? "İSTİF GEÇERLİ" : "GEÇERLİ")
                               : "ENGELLİ")
                         : $"{placement}: yerleştirme önizlemesi   |   {drop}: güvenli bırak";
+                }
+
+                if (ActiveCart != null)
+                {
+                    string cargo = ActiveCart.HasCargo
+                        ? $"YÜKLÜ: {ActiveCart.Cargo.DisplayName}"
+                        : "BOŞ";
+                    return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
+                           $"arabayı bırak   |   {cargo}   |   sprint kapalı";
+                }
+
+                if (FocusedCart != null)
+                {
+                    string unload = FocusedCart.HasCargo
+                        ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                          $"{FocusedCart.Cargo.DisplayName} yükünü al   |   "
+                        : string.Empty;
+                    string blocked = LastFailureCode.StartsWith(
+                        "cart.",
+                        StringComparison.Ordinal)
+                        ? "   |   ARABA ENGELLİ"
+                        : string.Empty;
+                    return unload +
+                           $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
+                           $"{FocusedCart.DisplayName} tut{blocked}";
                 }
 
                 return FocusedItem != null
@@ -144,6 +181,124 @@ namespace PCShopEmpire3D.Presentation.Interaction
             LastFailureCode = string.Empty;
             motor.ApplyCarryProfile(item.CarryProfile);
             SetCarryHandsState(blocked: false);
+            return result;
+        }
+
+        public OperationResult TryLoadHeldItem(TransportCartProjection cart)
+        {
+            if (HeldItem == null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.load-nothing-held")));
+            }
+
+            if (cart == null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.load-no-target")));
+            }
+
+            PhysicalItemProjection item = HeldItem;
+            OperationResult result = cart.TryLoad(item, heldItemLayer);
+            if (result.IsFailure)
+            {
+                SetCarryHandsState(blocked: true);
+                return Remember(result);
+            }
+
+            HeldItem = null;
+            _heldItemId = string.Empty;
+            FocusedItem = null;
+            FocusedCart = cart;
+            ResetPlacementState();
+            motor?.ClearCarryProfile();
+            LastFailureCode = string.Empty;
+            SetHandsState(VisibleHandsState.TargetFocused);
+            return result;
+        }
+
+        public OperationResult TryUnloadCart(TransportCartProjection cart)
+        {
+            if (HeldItem != null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("pickup.slot-occupied")));
+            }
+
+            if (cart == null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.unload-no-target")));
+            }
+
+            OperationResult<PhysicalItemProjection> result = cart.TryUnload(
+                carryAnchor,
+                heldItemLayer);
+            if (result.IsFailure)
+            {
+                return Remember(OperationResult.Fail(result.Error));
+            }
+
+            HeldItem = result.Value;
+            _heldItemId = HeldItem.ItemIdValue;
+            FocusedItem = null;
+            FocusedCart = null;
+            ResetPlacementState();
+            motor?.ApplyCarryProfile(HeldItem.CarryProfile);
+            LastFailureCode = string.Empty;
+            SetCarryHandsState(blocked: false);
+            return OperationResult.Success();
+        }
+
+        public OperationResult TryBeginCartDrive(TransportCartProjection cart)
+        {
+            if (HeldItem != null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.driver-hands-occupied")));
+            }
+
+            if (ActiveCart != null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.driver-slot-occupied")));
+            }
+
+            if (cart == null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.driver-no-target")));
+            }
+
+            OperationResult result = cart.BeginDrive(transform);
+            if (result.IsFailure)
+            {
+                return Remember(result);
+            }
+
+            ActiveCart = cart;
+            _activeCartId = cart.CartIdValue;
+            FocusedCart = cart;
+            FocusedItem = null;
+            motor?.ApplyTransportCartDriveProfile(cart.MovementSpeedMultiplier);
+            LastFailureCode = string.Empty;
+            SetHandsState(VisibleHandsState.DrivingTransportCart);
+            return result;
+        }
+
+        public OperationResult TryEndCartDrive()
+        {
+            if (ActiveCart == null)
+            {
+                return Remember(OperationResult.Fail(Failure.FromCode("cart.driver-inactive")));
+            }
+
+            TransportCartProjection cart = ActiveCart;
+            OperationResult result = cart.EndDrive();
+            if (result.IsFailure)
+            {
+                return Remember(result);
+            }
+
+            ActiveCart = null;
+            _activeCartId = string.Empty;
+            FocusedCart = cart;
+            motor?.ClearTransportCartDriveProfile();
+            LastFailureCode = string.Empty;
+            SetHandsState(VisibleHandsState.TargetFocused);
             return result;
         }
 
@@ -217,6 +372,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
+            if (ActiveCart == null && !string.IsNullOrEmpty(_activeCartId))
+            {
+                LastFailureCode = "cart.projection-missing";
+                _activeCartId = string.Empty;
+                motor?.ClearTransportCartDriveProfile();
+                SetHandsState(VisibleHandsState.Recovering);
+                Debug.LogError("CART_RECOVERY_FAILED code=cart.projection-missing");
+                return;
+            }
+
+            if (ActiveCart != null && (!ActiveCart.isActiveAndEnabled || !ActiveCart.IsDriven))
+            {
+                ActiveCart = null;
+                _activeCartId = string.Empty;
+                FocusedCart = null;
+                motor?.ClearTransportCartDriveProfile();
+                LastFailureCode = "cart.driver-interrupted";
+                SetHandsState(VisibleHandsState.Recovering);
+                return;
+            }
+
             if (HeldItem != null && (!HeldItem.isActiveAndEnabled || !HeldItem.IsCarried))
             {
                 TryRecoverHeldItem();
@@ -231,6 +407,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HeldItem != null)
             {
+                FocusedCart = null;
+                if (HeldItem.CarryProfile == PhysicalCarryProfile.LargeBox)
+                {
+                    OperationResult<TransportCartProjection> cartTarget =
+                        resolver.ResolveTransportCart();
+                    FocusedCart = cartTarget.IsSuccess ? cartTarget.Value : null;
+                    if (input.InteractPressedThisFrame && FocusedCart != null)
+                    {
+                        TryLoadHeldItem(FocusedCart);
+                        return;
+                    }
+                }
+
                 if (HeldItem.SupportsPlacement && input.PrimaryActionPressedThisFrame)
                 {
                     SetPlacementMode(!IsPlacementMode);
@@ -253,6 +442,57 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     {
                         TryDrop();
                     }
+                }
+
+                return;
+            }
+
+            if (ActiveCart != null)
+            {
+                FocusedItem = null;
+                FocusedCart = ActiveCart;
+                SetHandsState(VisibleHandsState.DrivingTransportCart);
+                if (input.PrimaryActionPressedThisFrame)
+                {
+                    TryEndCartDrive();
+                    return;
+                }
+
+                OperationResult motion = ActiveCart.TryFollowDriver(supportMask, obstructionMask);
+                if (motion.IsFailure)
+                {
+                    string failureCode = motion.Error.Code;
+                    Debug.LogWarning($"TRANSPORT_CART_DRIVE_STOPPED code={failureCode}");
+                    TransportCartProjection blockedCart = ActiveCart;
+                    if (blockedCart.IsDriven)
+                    {
+                        blockedCart.EndDrive();
+                    }
+
+                    ActiveCart = null;
+                    _activeCartId = string.Empty;
+                    FocusedCart = blockedCart;
+                    motor.ClearTransportCartDriveProfile();
+                    Remember(OperationResult.Fail(Failure.FromCode(failureCode)));
+                    SetHandsState(VisibleHandsState.TargetFocused);
+                }
+
+                return;
+            }
+
+            OperationResult<TransportCartProjection> resolvedCart = resolver.ResolveTransportCart();
+            FocusedCart = resolvedCart.IsSuccess ? resolvedCart.Value : null;
+            if (FocusedCart != null)
+            {
+                FocusedItem = null;
+                SetHandsState(VisibleHandsState.TargetFocused);
+                if (input.PrimaryActionPressedThisFrame)
+                {
+                    TryBeginCartDrive(FocusedCart);
+                }
+                else if (input.InteractPressedThisFrame && FocusedCart.HasCargo)
+                {
+                    TryUnloadCart(FocusedCart);
                 }
 
                 return;
@@ -390,6 +630,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void OnDisable()
         {
             placementPreview?.Hide();
+            if (Application.isPlaying && !_applicationQuitting && ActiveCart != null)
+            {
+                if (ActiveCart.IsDriven)
+                {
+                    ActiveCart.EndDrive();
+                }
+
+                ActiveCart = null;
+                _activeCartId = string.Empty;
+                FocusedCart = null;
+                motor?.ClearTransportCartDriveProfile();
+            }
+
             if (Application.isPlaying && !_applicationQuitting && HeldItem != null)
             {
                 TryRecoverHeldItem();

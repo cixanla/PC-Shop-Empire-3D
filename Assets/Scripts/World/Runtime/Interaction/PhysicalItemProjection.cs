@@ -13,7 +13,8 @@ namespace PCShopEmpire3D.World.Interaction
     {
         World = 0,
         PlayerHands = 1,
-        Recovery = 2
+        Recovery = 2,
+        TransportCart = 3
     }
 
     [DisallowMultipleComponent]
@@ -67,6 +68,8 @@ namespace PCShopEmpire3D.World.Interaction
         public PhysicalItemOwnership Ownership { get; private set; } = PhysicalItemOwnership.World;
 
         public bool IsCarried => Ownership == PhysicalItemOwnership.PlayerHands;
+
+        public bool IsMountedOnTransportCart => Ownership == PhysicalItemOwnership.TransportCart;
 
         public Vector3 LastSafePosition => _lastSafePosition;
 
@@ -167,6 +170,69 @@ namespace PCShopEmpire3D.World.Interaction
             return ReleaseInternal(worldPose, stabilizePlacement: false);
         }
 
+        public OperationResult MountOnTransportCart(Transform loadAnchor, int mountedLayer)
+        {
+            if (loadAnchor == null)
+            {
+                return OperationResult.Fail(Failure.FromCode("cart.load-anchor-missing"));
+            }
+
+            if (Ownership != PhysicalItemOwnership.PlayerHands || !_hasCarrySnapshot)
+            {
+                return OperationResult.Fail(Failure.FromCode("cart.load-item-not-held"));
+            }
+
+            if (carryProfile != PhysicalCarryProfile.LargeBox)
+            {
+                return OperationResult.Fail(Failure.FromCode("cart.load-profile-unsupported"));
+            }
+
+            Ownership = PhysicalItemOwnership.TransportCart;
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.detectCollisions = false;
+            SetColliderState(false, mountedLayer);
+            transform.SetParent(_worldParent, true);
+            transform.SetPositionAndRotation(loadAnchor.position, loadAnchor.rotation);
+            return OperationResult.Success();
+        }
+
+        public OperationResult SyncTransportCartPose(Pose worldPose)
+        {
+            if (Ownership != PhysicalItemOwnership.TransportCart || !_hasCarrySnapshot)
+            {
+                return OperationResult.Fail(Failure.FromCode("cart.cargo-unavailable"));
+            }
+
+            transform.SetPositionAndRotation(worldPose.position, worldPose.rotation);
+            return OperationResult.Success();
+        }
+
+        public OperationResult TransferFromTransportCartToCarry(
+            Transform carryAnchor,
+            int heldLayer)
+        {
+            if (carryAnchor == null)
+            {
+                return OperationResult.Fail(Failure.FromCode("pickup.anchor-missing"));
+            }
+
+            if (Ownership != PhysicalItemOwnership.TransportCart || !_hasCarrySnapshot)
+            {
+                return OperationResult.Fail(Failure.FromCode("cart.unload-item-unavailable"));
+            }
+
+            Ownership = PhysicalItemOwnership.PlayerHands;
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.detectCollisions = false;
+            SetColliderState(false, heldLayer);
+            transform.SetParent(carryAnchor, false);
+            transform.localPosition = carryLocalPosition;
+            transform.localRotation = Quaternion.Euler(carryLocalEulerAngles);
+            return OperationResult.Success();
+        }
+
         public OperationResult PlaceAt(Pose worldPose)
         {
             return PlaceAt(worldPose, null);
@@ -217,7 +283,7 @@ namespace PCShopEmpire3D.World.Interaction
 
         public OperationResult RecoverToLastSafePose()
         {
-            if (Ownership == PhysicalItemOwnership.PlayerHands && !_hasCarrySnapshot)
+            if (Ownership != PhysicalItemOwnership.World && !_hasCarrySnapshot)
             {
                 return OperationResult.Fail(Failure.FromCode("carry.item-not-held"));
             }

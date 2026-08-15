@@ -64,6 +64,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection[] physicalItems = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<PhysicalItemProjection>(true))
                     .ToArray();
+                TransportCartProjection[] transportCarts = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<TransportCartProjection>(true))
+                    .ToArray();
                 PlacementSurface[] placementSurfaces = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<PlacementSurface>(true))
                     .ToArray();
@@ -109,6 +112,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     physicalItems.All(item =>
                         item.GetComponentsInChildren<Collider>().Length >= 1),
                     Is.True);
+                Assert.That(transportCarts.Length, Is.EqualTo(1));
+                TransportCartProjection cart = transportCarts[0];
+                Assert.That(cart.CartIdValue, Is.EqualTo("prototype.garage-transport-cart-001"));
+                Assert.That(cart.DisplayName, Is.EqualTo("Platform Arabası"));
+                Assert.That(cart.Body, Is.Not.Null);
+                Assert.That(cart.Body.isKinematic, Is.True);
+                Assert.That(cart.Body.useGravity, Is.False);
+                Assert.That(cart.CargoAnchor, Is.Not.Null);
+                Assert.That(cart.HasCargo, Is.False);
+                Assert.That(marker.TransportCart, Is.SameAs(cart));
+                Assert.That(
+                    cart.GetComponentsInChildren<Collider>(true).Length,
+                    Is.GreaterThanOrEqualTo(3));
                 Assert.That(placementSurfaces.Length, Is.EqualTo(1));
                 Assert.That(placementSurfaces[0].SurfaceId, Is.EqualTo("prototype.stock-floor-small-box-a"));
                 Assert.That(placementSurfaces[0].GridSize, Is.EqualTo(0.25f).Within(0.001f));
@@ -163,7 +179,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             {
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
-                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-small-box-stacking-g7-v1"));
+                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-loaded-transport-cart-g8-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

@@ -18,6 +18,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         private const string SmallBoxId = "prototype.garage-box-001";
         private const string StackBaseBoxId = "prototype.garage-box-002";
         private const string LargeBoxId = "prototype.garage-large-box-001";
+        private const string TransportCartId = "prototype.garage-transport-cart-001";
 
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
@@ -623,6 +624,219 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardLoadsDrivesBlocksAndUnloadsTheSameLargeBox()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(LargeBoxId);
+            TransportCartProjection cart = FindTransportCart();
+            VisibleHandsPresenter hands = marker.PlayerMotor.GetComponentInChildren<VisibleHandsPresenter>(true);
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToLargeBox(marker);
+            string identity = item.ItemIdValue;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToCartHandle(marker, cart);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedCart, Is.SameAs(cart));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("üzerine yükle"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(cart.Cargo, Is.SameAs(item));
+            Assert.That(item.IsMountedOnTransportCart, Is.True);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.Body.isKinematic, Is.True);
+            Assert.That(item.Body.detectCollisions, Is.False);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.ActiveCart, Is.SameAs(cart));
+            Assert.That(cart.IsDriven, Is.True);
+            Assert.That(marker.PlayerMotor.IsDrivingTransportCart, Is.True);
+            Assert.That(marker.PlayerMotor.MovementAllowsSprint, Is.False);
+            Assert.That(
+                marker.PlayerMotor.CurrentHorizontalSpeed,
+                Is.EqualTo(3.5f * TransportCartRules.LoadedMovementSpeedMultiplier).Within(0.001f));
+            Assert.That(
+                marker.PlayerMotor.CurrentHorizontalSpeed,
+                Is.GreaterThan(3.5f * PhysicalCarryProfileRules.LargeBoxMovementSpeedMultiplier));
+            Assert.That(hands.State, Is.EqualTo(VisibleHandsState.DrivingTransportCart));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("YÜKLÜ"));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.LeftShift));
+            InputSystem.Update();
+            Vector3 cartStart = cart.transform.position;
+            yield return null;
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(cart.transform.position.z, Is.GreaterThan(cartStart.z));
+            Assert.That(
+                Vector3.Distance(item.transform.position, cart.CargoAnchor.position),
+                Is.LessThan(0.001f));
+            Vector3 cartSafePosition = cart.transform.position;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = "TransportCartPlayModeBlocker";
+            blocker.layer = LayerMask.NameToLayer("Interactable");
+            blocker.transform.position = cart.transform.position +
+                                         (cart.transform.forward * 0.82f) +
+                                         (Vector3.up * 0.88f);
+            blocker.transform.localScale = new Vector3(1.5f, 1.75f, 0.25f);
+            MovePlayerBy(marker, cart.transform.forward * 1.0f);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.ActiveCart, Is.Null);
+            Assert.That(cart.IsDriven, Is.False);
+            Assert.That(marker.PlayerMotor.IsDrivingTransportCart, Is.False);
+            Assert.That(marker.PlayerCarry.LastFailureCode, Is.EqualTo("cart.drive-blocked"));
+            Assert.That(Vector3.Distance(cart.transform.position, cartSafePosition), Is.LessThan(0.001f));
+            Assert.That(cart.Cargo, Is.SameAs(item));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+
+            Object.Destroy(blocker);
+            yield return null;
+            Physics.SyncTransforms();
+            MovePlayerToCartHandle(marker, cart);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedCart, Is.SameAs(cart));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("yükünü al"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(cart.HasCargo, Is.False);
+            Assert.That(item.IsCarried, Is.True);
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(marker.PlayerMotor.ActiveCarryProfile, Is.EqualTo(PhysicalCarryProfile.LargeBox));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerAwayFromCart(marker);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.Body.detectCollisions, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadCartFlowUsesLiveBindingsAndDisabledCartRecoversCargo()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(LargeBoxId);
+            TransportCartProjection cart = FindTransportCart();
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToLargeBox(marker);
+            string identity = item.ItemIdValue;
+            Vector3 itemSafePosition = item.LastSafePosition;
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToCartHandle(marker, cart);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(cart.Cargo, Is.SameAs(item));
+            Assert.That(item.IsMountedOnTransportCart, Is.True);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.ActiveCart, Is.SameAs(cart));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up });
+            InputSystem.Update();
+            Vector3 cartStart = cart.transform.position;
+            yield return null;
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(cart.transform.position.z, Is.GreaterThan(cartStart.z));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.ActiveCart, Is.Null);
+            Assert.That(cart.IsDriven, Is.False);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToCartHandle(marker, cart);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(cart.HasCargo, Is.False);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(cart.Cargo, Is.SameAs(item));
+
+            cart.gameObject.SetActive(false);
+            Assert.That(cart.HasCargo, Is.False);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(Vector3.Distance(item.transform.position, itemSafePosition), Is.LessThan(0.001f));
+            Assert.That(item.Body.detectCollisions, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator DisablingCarryControllerRecoversHeldItemToItsSafeWorldPose()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -709,6 +923,48 @@ namespace PCShopEmpire3D.Tests.PlayMode
         {
             return Object.FindObjectsByType<PhysicalItemProjection>(FindObjectsSortMode.None)
                 .Single(item => item.ItemIdValue == itemId);
+        }
+
+        private static TransportCartProjection FindTransportCart()
+        {
+            return Object.FindObjectsByType<TransportCartProjection>(FindObjectsSortMode.None)
+                .Single(cart => cart.CartIdValue == TransportCartId);
+        }
+
+        private static void MovePlayerToCartHandle(
+            GaragePrototypeMarker marker,
+            TransportCartProjection cart)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            Vector3 handle = cart.transform.TransformPoint(new Vector3(0f, 0f, -0.60f));
+            Vector3 playerPosition = handle - (cart.transform.forward * 1.35f);
+            playerPosition.y = 0.05f;
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.Euler(0f, cart.transform.eulerAngles.y, 0f));
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerBy(GaragePrototypeMarker marker, Vector3 delta)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.position += delta;
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerAwayFromCart(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(0f, 0.05f, -2.5f),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
         }
 
         private static GameObject CreateLargeDropBlocker(GaragePrototypeMarker marker)

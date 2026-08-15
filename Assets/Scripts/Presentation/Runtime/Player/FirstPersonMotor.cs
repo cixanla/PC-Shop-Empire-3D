@@ -28,6 +28,7 @@ namespace PCShopEmpire3D.Presentation.Player
         private float _pitch;
         private PhysicalCarryProfileDefinition _carryProfileDefinition =
             PhysicalCarryProfileRules.Resolve(PhysicalCarryProfile.SmallBox);
+        private float _transportCartMovementSpeedMultiplier = 1f;
 
         public bool IsPaused { get; private set; }
 
@@ -51,6 +52,13 @@ namespace PCShopEmpire3D.Presentation.Player
 
         public bool CarryAllowsSprint =>
             !ActiveCarryProfile.HasValue || _carryProfileDefinition.AllowsSprint;
+
+        public bool IsDrivingTransportCart { get; private set; }
+
+        public float TransportCartMovementSpeedMultiplier =>
+            IsDrivingTransportCart ? _transportCartMovementSpeedMultiplier : 1f;
+
+        public bool MovementAllowsSprint => !IsDrivingTransportCart && CarryAllowsSprint;
 
         public float TargetFieldOfView => Mathf.Clamp(
             viewSettings.FieldOfView - AppliedCarryFieldOfViewPenalty,
@@ -109,11 +117,26 @@ namespace PCShopEmpire3D.Presentation.Player
             }
         }
 
+        public void ApplyTransportCartDriveProfile(float movementSpeedMultiplier)
+        {
+            _transportCartMovementSpeedMultiplier = Mathf.Clamp(
+                movementSpeedMultiplier,
+                PhysicalCarryProfileRules.MinimumMovementSpeedMultiplier,
+                PhysicalCarryProfileRules.MaximumMovementSpeedMultiplier);
+            IsDrivingTransportCart = true;
+        }
+
+        public void ClearTransportCartDriveProfile()
+        {
+            _transportCartMovementSpeedMultiplier = 1f;
+            IsDrivingTransportCart = false;
+        }
+
         public float ResolveHorizontalSpeed(bool sprintRequested)
         {
-            bool sprint = sprintRequested && CarryAllowsSprint;
+            bool sprint = sprintRequested && MovementAllowsSprint;
             float baseSpeed = sprint ? sprintSpeed : walkSpeed;
-            return baseSpeed * CarryMovementSpeedMultiplier;
+            return baseSpeed * CarryMovementSpeedMultiplier * TransportCartMovementSpeedMultiplier;
         }
 
         public void SetPaused(bool paused)
@@ -225,6 +248,8 @@ namespace PCShopEmpire3D.Presentation.Player
             {
                 playerCamera.fieldOfView = viewSettings.FieldOfView;
             }
+
+            ClearTransportCartDriveProfile();
         }
 
         private void OnValidate()
