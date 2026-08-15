@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #46 kapsamındaki deterministik tek-müşteri ziyaret ve runtime NavMesh graybox dilimi teknik olarak tamamlandı; yaşayan belge, Issue/Project ve USB kapanışı sürüyor<br>
+**Durum:** Issue #46 tamamlandı/kapatıldı ve Roadmap'te Done; deterministik tek-müşteri ziyaret + runtime NavMesh graybox dilimi source/docs/CI/USB checkpointiyle kapandı<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #46 / Epic #9
@@ -28,7 +28,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; feature checkpointte yerel HEAD ile `origin/main` eşittir.
+- Branch: `main`; source/docs checkpointte yerel HEAD ile `origin/main` eşittir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, parcel açma, shelf offer, basket reservation, checkout snapshot ve atomik fulfillment katmanlarını içerir.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback ve receipt ledger'ını içerir.
@@ -43,7 +43,9 @@
 - Feature commit: `b37b056271fac317e99ec47df0833b8ef219cf83`.
 - Feature tree: `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
 - Feature Repository Guard: [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147), başarılı.
-- Source/docs checkpoint: bu belgeyi taşıyan kapanış commitinde oluşturulacak; exact SHA ve Guard sonucu USB kapanışında buraya yazılacaktır.
+- Source/docs checkpoint: `d163328be3df4f2cf8b3314d39cf3ab122ff6300`; tree `47ad5f925bea0e55c0b4e95f9f69fab3b10f522a`.
+- Source/docs Repository Guard: [31875627062](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875627062), başarılı.
+- Issue #46 kapalı/Done; Epic #9 açık/In Progress.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-customer46-r17-final.xml`; `255/255`; SHA-256 `8e4e8ab5f628214f07ccd7955e31788c95a64d3a031433df746b1eeaa7d6c6a8`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-customer46-r17-final.xml`; `18/18`; SHA-256 `3787c37f5871866b1e4926fcaa070a65a79e31bcf2fc3bd3abf9c49edfe9c811`.
 - Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-customer46-macos-r17-final.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327697921`; SHA-256 `3b6b2338469bf2b1957fff74b7826579bd55fcb60f64383d08d2f3344ebd6378`.
@@ -63,9 +65,11 @@
 
 ## USB güvenli checkpoint durumu
 
-- Son tamamlanmış USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`.
-- Issue #46 için yeni snapshot, source/docs checkpoint commitinden üretilecektir; `.git`, Unity cache/build, token, parola, credential ve AppleDouble dosyaları dahil edilmeyecektir.
-- Snapshot tamamlanmadan path, dosya sayısı, bayt ve manifest hash'i kesin kanıt olarak yazılmaz.
+- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`.
+- Source/docs `d163328`; 535 tracked `SOURCE`, 5 `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 541 manifest payload satırı ve 9.715.834 payload baytı.
+- `MANIFEST.tsv` SHA-256: `c82fc76dcf7b12f60e5106fb9dc78cf7f942824777b5a0db3902144125bb2cfd`.
+- Hash/boyut/path readback, 535/535 Git-blob eşliği geçti; forbidden/credential/AppleDouble `0`.
+- `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
 
 ## Sıradaki bounded paket
 
@@ -78,4 +82,4 @@ Issue #9 altında tek müşterinin tek shelf offer için deterministik ve açık
 
 ## Güvenli devam komutu
 
-Önce bu checkpointi taşıyan docs commitini oluşturup push/Repository Guard ile doğrula; Issue #46'yı Done yap; exact Git kaynağından doğrulanmış USB snapshotını üret; kapanış commitini ve Guard'ı kaydet. Ardından Issue #9 altındaki tek-offer `buy/leave` paketine geç.
+Issue #46 kapanışı tamamdır. Önce temiz `main`/`origin/main` ve açık Epic #9'u doğrula; ardından tek-offer `buy/leave` issue'sunu oluşturup domain-first küçük paket olarak uygula. Inventory/Retail/Economy/Save sınırlarını karıştırma.

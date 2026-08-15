@@ -118,7 +118,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Pause integer simulation clock ve NavMeshAgent'ı dondurur. Route/patience fallback'i Inventory/Retail/Orders revision'larını değiştirmez; terminal müşteri projection'ı güvenle gizlenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`: source/docs checkpoint `80eea8f`, 510 tracked kaynak, 4 Unity test/build/runtime kanıtı ve source kaydı; 515 satırlı `ce72122a…db50b` SHA-256 manifest/readback ile doğrulandı. Hash/boyut/path/Git-blob mismatch, forbidden/credential ve AppleDouble sayısı `0`dır.
+- Güncel USB milestone `2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`: source/docs checkpoint `d163328`, 535 tracked kaynak, 5 Unity test/build/runtime kanıtı ve source kaydı; 541 satırlı `c82fc76d…cfd` SHA-256 manifest/readback ile doğrulandı. 535/535 Git-blob eşliği geçti; hash/boyut/path mismatch, forbidden/credential ve AppleDouble sayısı `0`dır; payload 9.715.834 bayttır.
 
 Henüz yapılmayanlar:
 

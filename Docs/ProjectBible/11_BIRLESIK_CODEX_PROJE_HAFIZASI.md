@@ -149,7 +149,8 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `b37b056271fac317e99ec47df0833b8ef219cf83`, tree `cca44dcf50f262e64fa9d6b43b48d25722978f64`.
-- Issue #46 kapsamındaki ilk deterministic customer visit ve runtime NavMesh graybox dilimi teknik olarak tamamlandı; feature Repository Guard [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147) başarılıdır. Yaşayan belge/Issue/Project/USB kapanışı bu checkpoint turunda tamamlanmaktadır.
+- Issue #46 kapsamındaki ilk deterministic customer visit ve runtime NavMesh graybox dilimi tamamlandı; Issue kapalı, Roadmap item'ı Done; Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147) ve source/docs checkpoint `d163328` Guard'ı [31875627062](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875627062) başarılıdır.
 - EditMode `255/255`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
 - Universal macOS development build `327.697.921` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `customer-visit=ok runtime-route=ok pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok` geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
@@ -160,10 +161,9 @@ Tamamlanan oynanabilir sistemler:
 
 En yakın bounded paket:
 
-1. Önce Issue #46 yaşayan belge, Project ve doğrulanmış USB kapanışını bitir.
-2. Issue #9 altında tek müşterinin tek immutable shelf offer/product snapshot'ını deterministic ve revision-aware değerlendiren küçük bir `buy/leave` sözleşmesi kur.
-3. Kararı stable reason code ve idempotent receipt ile açıkla; stok, sepet, checkout, Economy veya Save'i değerlendirme authority'sinden doğrudan mutate etme.
-4. Garaj presentation'ını yalnız explicit adapter üzerinden mevcut reservation/checkout zincirine bağla; çoklu ürün/müşteri, price optimization, memnuniyet ve final sanat ayrı bounded paketler olarak kalsın.
+1. Issue #9 altında tek müşterinin tek immutable shelf offer/product snapshot'ını deterministic ve revision-aware değerlendiren küçük bir `buy/leave` sözleşmesi kur.
+2. Kararı stable reason code ve idempotent receipt ile açıkla; stok, sepet, checkout, Economy veya Save'i değerlendirme authority'sinden doğrudan mutate etme.
+3. Garaj presentation'ını yalnız explicit adapter üzerinden mevcut reservation/checkout zincirine bağla; çoklu ürün/müşteri, price optimization, memnuniyet ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -224,6 +224,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`; source `109237a`, 498 tracked source + 4 test/build/runtime evidence + source kaydı, 503 satırlı `ff868e4c…20d7` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`; source `0936cc0`, 508 tracked source + 4 test/build/runtime evidence + source kaydı, 513 satırlı `30c1e7fa…16efa` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`; source `80eea8f`, 510 tracked source + 4 test/build/runtime evidence + source kaydı, 515 satırlı `ce72122a…db50b` manifest, 9.373.684 bayt; tam readback/source path+Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`; source/docs `d163328`, 535 tracked source + 5 test/build/runtime evidence + source kaydı, 541 satırlı `c82fc76d…cfd` manifest, 9.715.834 payload baytı; tam hash/boyut/path readback, 535/535 Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -243,4 +244,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Deterministik customer visit checkpointinden devam et. Önce `b37b056` feature'ının yaşayan belge, Issue #46/Project ve doğrulanmış USB kapanışını tamamla. Sonraki bounded paket tek müşteri + tek shelf offer için açıklanabilir `buy/leave` değerlendirmesidir; Inventory/Retail/Economy/Save authority sınırlarını karıştırma. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Deterministik customer visit checkpointi kapandı: feature `b37b056`, source/docs `d163328`, Issue #46 Done ve doğrulanmış USB milestone kayıtlıdır. Sonraki bounded paket Epic #9 altında tek müşteri + tek shelf offer için açıklanabilir `buy/leave` değerlendirmesidir; Inventory/Retail/Economy/Save authority sınırlarını karıştırma. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

@@ -60,4 +60,9 @@ Normal ve leakdiag runtime loglarında `customer-visit=failed`, `GARAGE_CUSTOMER
 ## Uzak ve USB kapanışı
 
 - Feature Repository Guard [31875039147](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875039147): başarılı.
-- Source/docs checkpoint, Issue/Project kapanışı ve doğrulanmış USB manifest bilgileri kapanış commitinde bu bölüme eklenecektir.
+- Source/docs checkpoint `d163328be3df4f2cf8b3314d39cf3ab122ff6300`, tree `47ad5f925bea0e55c0b4e95f9f69fab3b10f522a`; Repository Guard [31875627062](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31875627062): başarılı.
+- Issue [#46](https://github.com/cixanla/PC-Shop-Empire-3D/issues/46) kapalı ve Roadmap item'ı `Done`; Epic [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) açık ve `In Progress` kalır.
+- USB: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`.
+- Snapshot: 535 tracked `SOURCE` + 5 `EVIDENCE` + `SOURCE_COMMIT.txt`; `MANIFEST.tsv` 541 payload satırı, 9.715.834 payload baytı; toplam 543 dosya ve 9.785.309 bayt.
+- Manifest SHA-256: `c82fc76dcf7b12f60e5106fb9dc78cf7f942824777b5a0db3902144125bb2cfd`.
+- Readback hash/boyut/path ve 535/535 Git-blob eşliği geçti; forbidden path, credential dosyası/içerik izi ve AppleDouble sayıları `0`dır.
