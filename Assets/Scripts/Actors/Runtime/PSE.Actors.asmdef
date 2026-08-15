@@ -1,0 +1,17 @@
+{
+  "name": "PSE.Actors",
+  "rootNamespace": "PCShopEmpire3D.Actors",
+  "references": [
+    "PSE.Core",
+    "PSE.Catalog"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

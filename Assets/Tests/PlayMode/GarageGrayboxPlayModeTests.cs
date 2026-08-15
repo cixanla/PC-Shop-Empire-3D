@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation;
@@ -896,6 +898,51 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator DisabledCustomerAgentUsesExactlyTwoAttemptsPerRouteThenDespawnsSafely()
+        {
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            marker.PlayerMotor.SetPaused(false);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            Assert.That(session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(session.PublishShelfOffer().IsSuccess, Is.True);
+            marker.StockFlow.RefreshPresentation();
+
+            GarageCustomerFlowRuntime customerFlow = marker.CustomerFlow;
+            Assert.That(customerFlow, Is.Not.Null);
+            Assert.That(customerFlow.NavigationReady, Is.True);
+            yield return WaitForCustomerRoute(customerFlow);
+            long inventoryRevision = session.Inventory.Revision;
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+
+            customerFlow.CustomerAgent.enabled = false;
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Exited);
+
+            CustomerVisitRecord visit = customerFlow.CurrentVisit;
+            Assert.That(visit.ExitReason, Is.EqualTo(CustomerVisitExitReason.RouteUnavailable));
+            Assert.That(visit.RouteFallbackUsed, Is.True);
+            Assert.That(visit.RouteFailureCount, Is.EqualTo(2));
+            Assert.That(visit.TotalRouteFailureCount, Is.EqualTo(4));
+            Assert.That(customerFlow.CustomerVisible, Is.False);
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator KeyboardAcceptsExactDeliveryThenPlacesSameAuthoritativeItemOnShelf()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1040,6 +1087,58 @@ namespace PCShopEmpire3D.Tests.PlayMode
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
+            GarageCustomerFlowRuntime customerFlow = marker.CustomerFlow;
+            Assert.That(customerFlow, Is.Not.Null);
+            Assert.That(customerFlow.NavigationReady, Is.True);
+            yield return new WaitForFixedUpdate();
+            Assert.That(customerFlow.VisitStarted, Is.True);
+            Assert.That(customerFlow.CustomerVisible, Is.True);
+            Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Entering));
+            yield return WaitForCustomerRoute(customerFlow);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame();
+            Assert.That(marker.PlayerMotor.IsPaused, Is.True);
+            yield return new WaitForFixedUpdate();
+            Assert.That(customerFlow.CustomerAgent.isStopped, Is.True);
+            yield return null;
+            Vector3 pausedCustomerPosition = customerFlow.CustomerAgent.transform.position;
+            CustomerVisitRecord pausedVisit = customerFlow.CurrentVisit;
+            SimulationTimestamp pausedSimulationTime = customerFlow.CurrentSimulationTime;
+            for (int step = 0; step < 5; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(Vector3.Distance(
+                customerFlow.CustomerAgent.transform.position,
+                pausedCustomerPosition), Is.LessThan(0.001f));
+            Assert.That(customerFlow.CurrentVisit.LastUpdatedAt,
+                Is.EqualTo(pausedVisit.LastUpdatedAt));
+            Assert.That(customerFlow.CurrentSimulationTime,
+                Is.EqualTo(pausedSimulationTime));
+            Assert.That(customerFlow.CustomerAgent.isStopped, Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame();
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            SimulationTimestamp resumedFrom = customerFlow.CurrentSimulationTime;
+            yield return new WaitForFixedUpdate();
+            Assert.That(customerFlow.CurrentSimulationTime.Tick,
+                Is.EqualTo(resumedFrom.Tick + 1));
+            Assert.That(customerFlow.CurrentSimulationTime.ElapsedMilliseconds,
+                Is.EqualTo(resumedFrom.ElapsedMilliseconds + 20));
+            Assert.That(customerFlow.CustomerAgent.isStopped, Is.False);
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Browsing);
+            Assert.That(customerFlow.StateText, Does.Contain("RAF ÜRÜNÜNÜ İNCELİYOR"));
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             long inventoryRevisionBeforeReservation = stockFlow.Session.Inventory.Revision;
             long basketRevisionBeforeReservation = stockFlow.Session.RetailBaskets.Revision;
             long retailOfferRevisionBeforeReservation = stockFlow.Session.RetailOffers.Revision;
@@ -1114,6 +1213,15 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("kasayı başlat"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return WaitForCustomerState(
+                customerFlow,
+                CustomerVisitState.AwaitingCheckout);
+            Assert.That(customerFlow.StateText, Does.Contain("KASADA BEKLİYOR"));
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             long inventoryRevisionBeforeCheckout = stockFlow.Session.Inventory.Revision;
             long basketRevisionBeforeCheckout = stockFlow.Session.RetailBaskets.Revision;
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
@@ -1190,6 +1298,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • TAMAMLANDI"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain("MÜŞTERİYE TESLİM EDİLDİ • STOK 0"));
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return WaitForCustomerState(customerFlow, CustomerVisitState.Exited);
+            Assert.That(customerFlow.CurrentVisit.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.Fulfilled));
+            Assert.That(customerFlow.CurrentVisit.RouteFailureCount, Is.Zero);
+            Assert.That(customerFlow.CurrentVisit.TotalRouteFailureCount, Is.Zero);
+            Assert.That(customerFlow.CurrentVisit.RouteFallbackUsed, Is.False);
+            Assert.That(customerFlow.CustomerVisible, Is.False);
+            Assert.That(customerFlow.StateText, Does.Contain("SATIŞ TAMAMLANDI"));
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1324,6 +1443,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
+            GarageCustomerFlowRuntime gamepadCustomerFlow = marker.CustomerFlow;
+            Assert.That(gamepadCustomerFlow, Is.Not.Null);
+            Assert.That(gamepadCustomerFlow.NavigationReady, Is.True);
+            yield return WaitForCustomerState(
+                gamepadCustomerFlow,
+                CustomerVisitState.Browsing);
+            Assert.That(gamepadCustomerFlow.VisitStarted, Is.True);
+            Assert.That(gamepadCustomerFlow.CustomerVisible, Is.True);
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             long inventoryRevisionBeforeReservation = stockFlow.Session.Inventory.Revision;
             long basketRevisionBeforeReservation = stockFlow.Session.RetailBaskets.Revision;
             InputSystem.QueueStateEvent(
@@ -1368,6 +1498,14 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(stockFlow.ItemBinding.RequiresCheckoutStart, Is.True);
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("kasayı başlat"));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            yield return WaitForCustomerState(
+                gamepadCustomerFlow,
+                CustomerVisitState.AwaitingCheckout);
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             long inventoryRevisionBeforeCheckout = stockFlow.Session.Inventory.Revision;
             long basketRevisionBeforeCheckout = stockFlow.Session.RetailBaskets.Revision;
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
@@ -1443,6 +1581,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Does.Contain("TAMAMLANDI"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain("MÜŞTERİYE TESLİM EDİLDİ • STOK 0"));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            yield return WaitForCustomerState(
+                gamepadCustomerFlow,
+                CustomerVisitState.Exited);
+            Assert.That(gamepadCustomerFlow.CurrentVisit.ExitReason,
+                Is.EqualTo(CustomerVisitExitReason.Fulfilled));
+            Assert.That(gamepadCustomerFlow.CurrentVisit.RouteFailureCount, Is.Zero);
+            Assert.That(gamepadCustomerFlow.CurrentVisit.TotalRouteFailureCount, Is.Zero);
+            Assert.That(gamepadCustomerFlow.CurrentVisit.RouteFallbackUsed, Is.False);
+            Assert.That(gamepadCustomerFlow.CustomerVisible, Is.False);
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1579,6 +1728,69 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static IEnumerator WaitForCustomerRoute(
+            GarageCustomerFlowRuntime customerFlow)
+        {
+            const int MaximumFixedSteps = 100;
+            for (int step = 0; step < MaximumFixedSteps; step++)
+            {
+                if (customerFlow.HasAssignedRoute &&
+                    customerFlow.CustomerAgent != null &&
+                    customerFlow.CustomerAgent.isOnNavMesh &&
+                    !customerFlow.CustomerAgent.pathPending &&
+                    customerFlow.CustomerAgent.remainingDistance >
+                    customerFlow.CustomerAgent.stoppingDistance + 0.10f)
+                {
+                    yield break;
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.Fail(
+                $"Customer did not receive a moving route in {MaximumFixedSteps} fixed steps; " +
+                $"assigned={customerFlow.HasAssignedRoute} " +
+                $"on-navmesh={customerFlow.CustomerAgent != null && customerFlow.CustomerAgent.isOnNavMesh} " +
+                $"remaining={customerFlow.CustomerAgent?.remainingDistance.ToString() ?? "missing"}");
+        }
+
+        private static IEnumerator WaitForCustomerState(
+            GarageCustomerFlowRuntime customerFlow,
+            CustomerVisitState expectedState)
+        {
+            const int MaximumFixedSteps = 650;
+            for (int step = 0; step < MaximumFixedSteps; step++)
+            {
+                CustomerVisitRecord visit = customerFlow.CurrentVisit;
+                if (visit != null && visit.State == expectedState)
+                {
+                    yield break;
+                }
+
+                if (visit != null && visit.State == CustomerVisitState.Exited &&
+                    expectedState != CustomerVisitState.Exited)
+                {
+                    Assert.Fail(
+                        $"Customer exited before {expectedState}: reason={visit.ExitReason} " +
+                        $"fallback={visit.RouteFallbackUsed}");
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+
+            CustomerVisitRecord finalVisit = customerFlow.CurrentVisit;
+            Assert.Fail(
+                $"Customer did not reach {expectedState} in {MaximumFixedSteps} fixed steps; " +
+                $"actual={finalVisit?.State.ToString() ?? "missing"} " +
+                $"reason={finalVisit?.ExitReason.ToString() ?? "missing"} " +
+                $"route-failures={finalVisit?.RouteFailureCount.ToString() ?? "missing"}/" +
+                $"{finalVisit?.TotalRouteFailureCount.ToString() ?? "missing"} " +
+                $"time={customerFlow.CurrentSimulationTime.ElapsedMilliseconds} " +
+                $"nav-ready={customerFlow.NavigationReady} assigned={customerFlow.HasAssignedRoute} " +
+                $"path={customerFlow.CustomerAgent?.pathStatus.ToString() ?? "missing"} " +
+                $"remaining={customerFlow.CustomerAgent?.remainingDistance.ToString() ?? "missing"}");
         }
 
         private static void AssertInventoryLocation(

@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -54,6 +56,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
             AssertLocation(session, session.ShelfContainerId);
             Assert.That(session.Inventory.GetTotalQuantity(session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CustomerVisitLifecycleCannotMutateStockOrderOrRetailAuthorities()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
+            long inventoryRevision = session.Inventory.Revision;
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+
+            Assert.That(session.StartPrototypeCustomerVisit(Timestamp(10)).IsSuccess, Is.True);
+            Assert.That(session.MarkPrototypeCustomerBrowseArrival(Timestamp(11)).IsSuccess, Is.True);
+            Assert.That(
+                session.BeginPrototypeCustomerCheckoutNavigation(Timestamp(12)).IsSuccess,
+                Is.True);
+            Assert.That(session.MarkPrototypeCustomerCheckoutArrival(Timestamp(13)).IsSuccess, Is.True);
+            Assert.That(session.BeginPrototypeCustomerExit(
+                CustomerVisitExitReason.Fulfilled,
+                Timestamp(14)).IsSuccess, Is.True);
+            Assert.That(session.MarkPrototypeCustomerExitArrival(Timestamp(15)).IsSuccess, Is.True);
+
+            Assert.That(session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit), Is.True);
+            Assert.That(visit.State, Is.EqualTo(CustomerVisitState.Exited));
+            Assert.That(visit.ExitReason, Is.EqualTo(CustomerVisitExitReason.Fulfilled));
+            Assert.That(session.CustomerVisits.Revision, Is.EqualTo(6));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Arrived));
+            Assert.That(session.TryGetItem(out _), Is.False);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -541,6 +578,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(session.TryGetItem(out InventoryItemRecord item), Is.True);
             Assert.That(item.Id, Is.EqualTo(session.ItemId));
             Assert.That(item.ContainerId, Is.EqualTo(expectedContainer));
+        }
+
+        private static SimulationTimestamp Timestamp(long tick)
+        {
+            return SimulationTimestamp.Create(tick, tick * 1000L);
         }
 
         private readonly struct Fixture

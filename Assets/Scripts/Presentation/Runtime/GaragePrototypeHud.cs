@@ -9,15 +9,18 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private FirstPersonMotor motor;
         [SerializeField] private PlayerCarryController carryController;
         [SerializeField] private GarageStockFlowRuntime stockFlow;
+        [SerializeField] private GarageCustomerFlowRuntime customerFlow;
 
         public void Configure(
             FirstPersonMotor playerMotor,
             PlayerCarryController playerCarryController,
-            GarageStockFlowRuntime garageStockFlow = null)
+            GarageStockFlowRuntime garageStockFlow = null,
+            GarageCustomerFlowRuntime garageCustomerFlow = null)
         {
             motor = playerMotor;
             carryController = playerCarryController;
             stockFlow = garageStockFlow;
+            customerFlow = garageCustomerFlow;
         }
 
         private void OnGUI()
@@ -29,9 +32,12 @@ namespace PCShopEmpire3D.Presentation
             if (stockFlow != null)
             {
                 const float panelWidth = 370f;
+                string status = customerFlow != null
+                    ? $"{stockFlow.StatusText}\n{customerFlow.StatusText}"
+                    : stockFlow.StatusText;
                 GUI.Box(
-                    new Rect(Screen.width - panelWidth - 18f, 14f, panelWidth, 112f),
-                    stockFlow.StatusText);
+                    new Rect(Screen.width - panelWidth - 18f, 14f, panelWidth, 158f),
+                    status);
             }
 
             string prompt = carryController != null ? carryController.PromptText : string.Empty;

@@ -4,6 +4,7 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
+    "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",
     "PSE.Retail",
@@ -11,6 +12,7 @@
     "PSE.World",
     "Unity.InputSystem",
     "Unity.InputSystem.TestFramework",
+    "Unity.AI.Navigation",
     "UnityEngine.TestRunner"
   ],
   "includePlatforms": [],

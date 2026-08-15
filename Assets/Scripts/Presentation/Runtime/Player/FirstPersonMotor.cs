@@ -164,6 +164,11 @@ namespace PCShopEmpire3D.Presentation.Player
 
         private void Update()
         {
+            ProcessInputFrame();
+        }
+
+        public void ProcessInputFrame()
+        {
             if (input == null || characterController == null || cameraPivot == null)
             {
                 return;

@@ -8,10 +8,12 @@ using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
 using PCShopEmpire3D.World.Interaction;
+using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.AI;
 using UnityEngine.ProBuilder;
 using UnityEngine.ProBuilder.MeshOperations;
 using UnityEngine.Rendering;
@@ -62,6 +64,45 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public TextMesh ShelfOfferText { get; }
 
             public Renderer StatusIndicator { get; }
+        }
+
+        private readonly struct CustomerFlowBuildResult
+        {
+            public CustomerFlowBuildResult(
+                NavMeshSurface navigationSurface,
+                NavMeshAgent customerAgent,
+                GameObject customerVisualRoot,
+                TextMesh customerStatusText,
+                Transform entranceWaypoint,
+                Transform browseWaypoint,
+                Transform checkoutWaypoint,
+                Transform exitWaypoint)
+            {
+                NavigationSurface = navigationSurface;
+                CustomerAgent = customerAgent;
+                CustomerVisualRoot = customerVisualRoot;
+                CustomerStatusText = customerStatusText;
+                EntranceWaypoint = entranceWaypoint;
+                BrowseWaypoint = browseWaypoint;
+                CheckoutWaypoint = checkoutWaypoint;
+                ExitWaypoint = exitWaypoint;
+            }
+
+            public NavMeshSurface NavigationSurface { get; }
+
+            public NavMeshAgent CustomerAgent { get; }
+
+            public GameObject CustomerVisualRoot { get; }
+
+            public TextMesh CustomerStatusText { get; }
+
+            public Transform EntranceWaypoint { get; }
+
+            public Transform BrowseWaypoint { get; }
+
+            public Transform CheckoutWaypoint { get; }
+
+            public Transform ExitWaypoint { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -188,6 +229,21 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Color(0.10f, 0.25f, 0.31f),
                 0.02f,
                 0.29f);
+            Material customerJacket = GetOrCreateMaterial(
+                "CustomerJacket",
+                new Color(0.055f, 0.12f, 0.19f),
+                0.03f,
+                0.31f);
+            Material customerSkin = GetOrCreateMaterial(
+                "CustomerSkin",
+                new Color(0.54f, 0.32f, 0.21f),
+                0f,
+                0.24f);
+            Material customerDenim = GetOrCreateMaterial(
+                "CustomerDenim",
+                new Color(0.075f, 0.14f, 0.21f),
+                0f,
+                0.20f);
             Material stockPlacement = GetOrCreateMaterial(
                 "StockPlacementSurface",
                 new Color(0.08f, 0.42f, 0.48f),
@@ -252,6 +308,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 rubber,
                 stockPlacement,
                 deliveryArrived);
+            CustomerFlowBuildResult customerFlowBuild = BuildCustomerFlow(
+                gameplay,
+                customerJacket,
+                customerSkin,
+                customerDenim,
+                rubber,
+                wood,
+                metal,
+                screenGlass);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -291,10 +356,23 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 deliveryArrived,
                 deliveryAccepted,
                 deliveryShelved);
+            GarageCustomerFlowRuntime customerFlow =
+                systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
+            customerFlow.Configure(
+                stockFlow,
+                motor,
+                customerFlowBuild.NavigationSurface,
+                customerFlowBuild.CustomerAgent,
+                customerFlowBuild.CustomerVisualRoot,
+                customerFlowBuild.CustomerStatusText,
+                customerFlowBuild.EntranceWaypoint,
+                customerFlowBuild.BrowseWaypoint,
+                customerFlowBuild.CheckoutWaypoint,
+                customerFlowBuild.ExitWaypoint);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
-            marker.Configure(motor, input, carry, transportCart, stockFlow);
+            marker.Configure(motor, input, carry, transportCart, stockFlow, customerFlow);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
-            hud.Configure(motor, carry, stockFlow);
+            hud.Configure(motor, carry, stockFlow, customerFlow);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",
@@ -1417,6 +1495,260 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 statusText,
                 shelfLabel,
                 indicator.GetComponent<Renderer>());
+        }
+
+        private static CustomerFlowBuildResult BuildCustomerFlow(
+            Transform parent,
+            Material jacket,
+            Material skin,
+            Material denim,
+            Material shoes,
+            Material counterTop,
+            Material counterBody,
+            Material statusScreen)
+        {
+            Transform navigation = new GameObject("CustomerNavigation").transform;
+            navigation.SetParent(parent, false);
+
+            NavMeshSurface surface = navigation.gameObject.AddComponent<NavMeshSurface>();
+            surface.collectObjects = CollectObjects.Volume;
+            surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+            surface.layerMask = 1 << LayerMask.NameToLayer("Default");
+            surface.center = new Vector3(0f, 1.45f, 0f);
+            surface.size = new Vector3(7.8f, 3f, 9.6f);
+
+            Transform waypoints = new GameObject("CustomerRouteWaypoints").transform;
+            waypoints.SetParent(navigation, false);
+            Transform entrance = CreateWaypoint(
+                "CustomerEntranceWaypoint",
+                waypoints,
+                new Vector3(-0.15f, 0f, -4.25f));
+            Transform browse = CreateWaypoint(
+                "CustomerBrowseWaypoint",
+                waypoints,
+                new Vector3(2.35f, 0f, 0.55f));
+            Transform checkout = CreateWaypoint(
+                "CustomerCheckoutWaypoint",
+                waypoints,
+                new Vector3(0.65f, 0f, 2.35f));
+            Transform exit = CreateWaypoint(
+                "CustomerExitWaypoint",
+                waypoints,
+                new Vector3(0.20f, 0f, -4.20f));
+
+            Transform checkoutStation = new GameObject("CustomerCheckoutStation").transform;
+            checkoutStation.SetParent(parent, false);
+            CreateBeveledCube(
+                "CheckoutCounterBody",
+                checkoutStation,
+                new Vector3(0.65f, 0.48f, 3.05f),
+                new Vector3(1.65f, 0.96f, 0.62f),
+                0.035f,
+                counterBody);
+            CreateBeveledCube(
+                "CheckoutCounterTop",
+                checkoutStation,
+                new Vector3(0.65f, 1.00f, 3.05f),
+                new Vector3(1.82f, 0.10f, 0.72f),
+                0.025f,
+                counterTop);
+            CreateBeveledCube(
+                "CheckoutDisplay",
+                checkoutStation,
+                new Vector3(0.65f, 1.32f, 3.25f),
+                new Vector3(0.54f, 0.42f, 0.08f),
+                0.018f,
+                statusScreen,
+                false);
+            CreateDetailCube(
+                "CheckoutDisplayStand",
+                checkoutStation,
+                new Vector3(0.65f, 1.10f, 3.24f),
+                new Vector3(0.07f, 0.22f, 0.07f),
+                counterBody);
+
+            GameObject flowBoard = CreateBeveledCube(
+                "CustomerFlowStatusBoard",
+                checkoutStation,
+                new Vector3(-0.55f, 1.72f, 3.38f),
+                new Vector3(1.52f, 0.62f, 0.06f),
+                0.018f,
+                counterBody,
+                false);
+            TextMesh flowText = new GameObject("CustomerFlowStatusText").AddComponent<TextMesh>();
+            flowText.transform.SetParent(flowBoard.transform, false);
+            flowText.transform.localPosition = new Vector3(0f, 0f, -0.038f);
+            flowText.anchor = TextAnchor.MiddleCenter;
+            flowText.alignment = TextAlignment.Center;
+            flowText.characterSize = 0.044f;
+            flowText.fontSize = 44;
+            flowText.color = new Color(0.82f, 0.93f, 0.96f);
+            flowText.text = "MÜŞTERİ AKIŞI: TEKLİF BEKLİYOR\nROTA BEKLEMEDE";
+
+            GameObject customer = new GameObject("PrototypeCustomer");
+            customer.transform.SetParent(parent, false);
+            customer.transform.position = entrance.position;
+            customer.transform.rotation = Quaternion.identity;
+
+            CreateBeveledCube(
+                "CustomerTorso",
+                customer.transform,
+                new Vector3(0f, 1.16f, 0f),
+                new Vector3(0.56f, 0.76f, 0.32f),
+                0.055f,
+                jacket,
+                false);
+            CreateBeveledCube(
+                "CustomerWaist",
+                customer.transform,
+                new Vector3(0f, 0.76f, 0f),
+                new Vector3(0.50f, 0.18f, 0.30f),
+                0.035f,
+                denim,
+                false);
+            CreateVisualCylinder(
+                "CustomerLeg_Left",
+                customer.transform,
+                new Vector3(-0.15f, 0.39f, 0f),
+                new Vector3(0.12f, 0.37f, 0.12f),
+                Quaternion.identity,
+                denim);
+            CreateVisualCylinder(
+                "CustomerLeg_Right",
+                customer.transform,
+                new Vector3(0.15f, 0.39f, 0f),
+                new Vector3(0.12f, 0.37f, 0.12f),
+                Quaternion.identity,
+                denim);
+            CreateBeveledCube(
+                "CustomerShoe_Left",
+                customer.transform,
+                new Vector3(-0.15f, 0.09f, 0.07f),
+                new Vector3(0.24f, 0.16f, 0.38f),
+                0.035f,
+                shoes,
+                false);
+            CreateBeveledCube(
+                "CustomerShoe_Right",
+                customer.transform,
+                new Vector3(0.15f, 0.09f, 0.07f),
+                new Vector3(0.24f, 0.16f, 0.38f),
+                0.035f,
+                shoes,
+                false);
+            CreateVisualCylinder(
+                "CustomerArm_Left",
+                customer.transform,
+                new Vector3(-0.38f, 1.12f, 0f),
+                new Vector3(0.10f, 0.37f, 0.10f),
+                Quaternion.Euler(0f, 0f, -7f),
+                jacket);
+            CreateVisualCylinder(
+                "CustomerArm_Right",
+                customer.transform,
+                new Vector3(0.38f, 1.12f, 0f),
+                new Vector3(0.10f, 0.37f, 0.10f),
+                Quaternion.Euler(0f, 0f, 7f),
+                jacket);
+            CreateVisualSphere(
+                "CustomerHead",
+                customer.transform,
+                new Vector3(0f, 1.73f, 0f),
+                new Vector3(0.34f, 0.40f, 0.34f),
+                skin);
+            CreateVisualSphere(
+                "CustomerHair",
+                customer.transform,
+                new Vector3(0f, 1.89f, -0.015f),
+                new Vector3(0.35f, 0.17f, 0.35f),
+                shoes);
+
+            TextMesh identityText = new GameObject("CustomerIdentityText").AddComponent<TextMesh>();
+            identityText.transform.SetParent(customer.transform, false);
+            identityText.transform.localPosition = new Vector3(0f, 2.18f, 0f);
+            identityText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            identityText.anchor = TextAnchor.MiddleCenter;
+            identityText.alignment = TextAlignment.Center;
+            identityText.characterSize = 0.035f;
+            identityText.fontSize = 40;
+            identityText.color = new Color(0.90f, 0.94f, 0.96f);
+            identityText.text = "MÜŞTERİ 001";
+
+            NavMeshAgent agent = customer.AddComponent<NavMeshAgent>();
+            agent.radius = 0.28f;
+            agent.height = 1.80f;
+            agent.baseOffset = 0f;
+            agent.speed = 2.20f;
+            agent.angularSpeed = 540f;
+            agent.acceleration = 8f;
+            agent.stoppingDistance = 0.12f;
+            agent.autoBraking = true;
+            agent.autoRepath = false;
+            agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
+            customer.SetActive(false);
+
+            return new CustomerFlowBuildResult(
+                surface,
+                agent,
+                customer,
+                flowText,
+                entrance,
+                browse,
+                checkout,
+                exit);
+        }
+
+        private static Transform CreateWaypoint(
+            string name,
+            Transform parent,
+            Vector3 localPosition)
+        {
+            Transform waypoint = new GameObject(name).transform;
+            waypoint.SetParent(parent, false);
+            waypoint.localPosition = localPosition;
+            return waypoint;
+        }
+
+        private static void CreateVisualCylinder(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Quaternion localRotation,
+            Material material)
+        {
+            GameObject visual = CreateCylinder(
+                name,
+                parent,
+                localPosition,
+                localScale,
+                localRotation,
+                material);
+            Collider collider = visual.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
+        }
+
+        private static void CreateVisualSphere(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Material material)
+        {
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.name = name;
+            sphere.transform.SetParent(parent, false);
+            sphere.transform.localPosition = localPosition;
+            sphere.transform.localScale = localScale;
+            sphere.GetComponent<Renderer>().sharedMaterial = material;
+            Collider collider = sphere.GetComponent<Collider>();
+            if (collider != null)
+            {
+                UnityEngine.Object.DestroyImmediate(collider);
+            }
         }
 
         private static TransportCartProjection BuildTransportCart(

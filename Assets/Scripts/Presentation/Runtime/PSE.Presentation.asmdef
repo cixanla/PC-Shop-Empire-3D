@@ -4,11 +4,13 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
+    "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",
     "PSE.Retail",
     "PSE.World",
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "Unity.AI.Navigation"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

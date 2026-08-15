@@ -4,6 +4,7 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
+    "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",
     "PSE.Retail",
@@ -11,6 +12,7 @@
     "PSE.Presentation",
     "PSE.GaragePrototype.Editor",
     "Unity.InputSystem",
+    "Unity.AI.Navigation",
     "Unity.RenderPipelines.Core.Runtime",
     "Unity.RenderPipelines.Universal.Runtime",
     "UnityEngine.TestRunner",

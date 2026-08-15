@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -14,13 +16,14 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-sale-completion-r14-v1";
+        public const string Version = "garage-customer-visit-r15-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
         [SerializeField] private PlayerCarryController playerCarry;
         [SerializeField] private TransportCartProjection transportCart;
         [SerializeField] private GarageStockFlowRuntime stockFlow;
+        [SerializeField] private GarageCustomerFlowRuntime customerFlow;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -32,18 +35,22 @@ namespace PCShopEmpire3D.Presentation
 
         public GarageStockFlowRuntime StockFlow => stockFlow;
 
+        public GarageCustomerFlowRuntime CustomerFlow => customerFlow;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
             PlayerCarryController carry,
             TransportCartProjection cart,
-            GarageStockFlowRuntime garageStockFlow = null)
+            GarageStockFlowRuntime garageStockFlow = null,
+            GarageCustomerFlowRuntime garageCustomerFlow = null)
         {
             playerMotor = motor;
             playerInput = input;
             playerCarry = carry;
             transportCart = cart;
             stockFlow = garageStockFlow;
+            customerFlow = garageCustomerFlow;
         }
 
         private void Start()
@@ -104,6 +111,12 @@ namespace PCShopEmpire3D.Presentation
                                         stockFlow.Session.RetailCheckouts.Count == 0;
             bool hasCheckoutCompletionAuthority = hasCheckoutAuthority &&
                                                   stockFlow.Session.RetailCheckouts.CompletionCount == 0;
+            bool hasCustomerVisitAuthority = hasArrivedStockFlow &&
+                                             stockFlow.Session.CustomerVisits != null &&
+                                             stockFlow.Session.CustomerVisits.Count == 0;
+            bool hasCustomerNavigation = customerFlow != null &&
+                                         customerFlow.NavigationReady &&
+                                         customerFlow.CustomerAgent != null;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -122,17 +135,37 @@ namespace PCShopEmpire3D.Presentation
                 $"basket-reservation={(hasBasketAuthority ? "ready" : "missing")} " +
                 $"checkout-snapshot={(hasCheckoutAuthority ? "ready" : "missing")} " +
                 $"checkout-completion={(hasCheckoutCompletionAuthority ? "ready" : "missing")} " +
+                $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
+                $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
-            if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
+            bool runCartSmoke = Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke");
+            bool runStockFlowSmoke = HasCommandLineArgument("-pse-stock-flow-smoke");
+            bool runCustomerFlowSmoke = HasCommandLineArgument("-pse-customer-flow-smoke");
+            int smokeCount = (runCartSmoke ? 1 : 0) +
+                             (runStockFlowSmoke ? 1 : 0) +
+                             (runCustomerFlowSmoke ? 1 : 0);
+            if (smokeCount > 1)
+            {
+                Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
+                return;
+            }
+
+            if (runCartSmoke)
             {
                 StartCoroutine(RunTransportCartSmoke());
             }
 
-            if (HasCommandLineArgument("-pse-stock-flow-smoke"))
+            if (runStockFlowSmoke)
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunStockFlowSmoke());
+            }
+
+            if (runCustomerFlowSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunCustomerFlowSmoke());
             }
         }
 
@@ -456,6 +489,282 @@ namespace PCShopEmpire3D.Presentation
                 $"completed-quantity={checkoutSession.Inventory.GetTotalQuantity(checkoutSession.ProductId).Value} " +
                 $"projection-quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();
+        }
+
+        private IEnumerator RunCustomerFlowSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(true);
+            yield return new WaitForFixedUpdate();
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            InventoryItemWorldBinding liveBinding = stockFlow != null
+                ? stockFlow.ItemBinding
+                : null;
+            if (playerMotor == null || session == null || customerFlow == null ||
+                liveBinding == null || liveBinding.Projection == null ||
+                !customerFlow.NavigationReady || customerFlow.CustomerAgent == null)
+            {
+                playerMotor?.SetPaused(false);
+                LogCustomerFlowSmokeFailure("smoke.context-missing");
+                yield break;
+            }
+
+            OperationResult accept = session.AcceptArrivedDelivery();
+            OperationResult shelfTransfer = session.TransferItem(session.ShelfContainerId);
+            OperationResult publishOffer = session.PublishShelfOffer();
+            stockFlow.RefreshPresentation();
+            if (accept.IsFailure || shelfTransfer.IsFailure || publishOffer.IsFailure ||
+                session.Inventory.GetTotalQuantity(session.ProductId).Value != 1 ||
+                !session.TryGetShelfOffer(out _))
+            {
+                playerMotor.SetPaused(false);
+                string code = accept.IsFailure
+                    ? accept.Error.Code
+                    : shelfTransfer.IsFailure
+                        ? shelfTransfer.Error.Code
+                        : publishOffer.IsFailure
+                            ? publishOffer.Error.Code
+                            : "smoke.stock-setup-mismatch";
+                LogCustomerFlowSmokeFailure(code);
+                yield break;
+            }
+
+            long isolatedInventoryRevision = session.Inventory.Revision;
+            long isolatedOrderRevision = session.Orders.Revision;
+            long isolatedOfferRevision = session.RetailOffers.Revision;
+            long isolatedBasketRevision = session.RetailBaskets.Revision;
+            long isolatedCheckoutRevision = session.RetailCheckouts.Revision;
+            float customerAgentSpeed = customerFlow.CustomerAgent.speed;
+            customerFlow.CustomerAgent.speed = Mathf.Min(customerAgentSpeed, 0.10f);
+            playerMotor.SetPaused(false);
+
+            const int routeStepLimit = 900;
+            int waitSteps = 0;
+            while (!customerFlow.VisitStarted && waitSteps < 100)
+            {
+                waitSteps++;
+                yield return new WaitForFixedUpdate();
+            }
+
+            if (!customerFlow.VisitStarted || !customerFlow.CustomerVisible ||
+                !session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord enteringVisit) ||
+                enteringVisit.State != CustomerVisitState.Entering)
+            {
+                customerFlow.CustomerAgent.speed = customerAgentSpeed;
+                playerMotor.SetPaused(false);
+                LogCustomerFlowSmokeFailure("smoke.visit-start-mismatch");
+                yield break;
+            }
+
+            waitSteps = 0;
+            while (!customerFlow.HasAssignedRoute && waitSteps < 100)
+            {
+                waitSteps++;
+                yield return new WaitForFixedUpdate();
+            }
+
+            if (!customerFlow.HasAssignedRoute ||
+                customerFlow.CustomerAgent.remainingDistance <=
+                customerFlow.CustomerAgent.stoppingDistance + 0.10f)
+            {
+                customerFlow.CustomerAgent.speed = customerAgentSpeed;
+                playerMotor.SetPaused(false);
+                LogCustomerFlowSmokeFailure("smoke.moving-route-missing");
+                yield break;
+            }
+
+            playerMotor.SetPaused(true);
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            Vector3 pausedPosition = customerFlow.CustomerAgent.transform.position;
+            SimulationTimestamp pausedTime = customerFlow.CurrentSimulationTime;
+            for (int step = 0; step < 5; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            bool pauseFrozen = customerFlow.CurrentSimulationTime == pausedTime &&
+                               Vector3.Distance(
+                                   customerFlow.CustomerAgent.transform.position,
+                                   pausedPosition) < 0.001f;
+            customerFlow.CustomerAgent.speed = customerAgentSpeed;
+            playerMotor.SetPaused(false);
+            yield return new WaitForFixedUpdate();
+            if (!pauseFrozen)
+            {
+                LogCustomerFlowSmokeFailure("smoke.pause-drift");
+                yield break;
+            }
+
+            waitSteps = 0;
+            while (waitSteps < routeStepLimit &&
+                   session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord browseCandidate) &&
+                   browseCandidate.State != CustomerVisitState.Browsing)
+            {
+                waitSteps++;
+                yield return new WaitForFixedUpdate();
+            }
+
+            bool browseReached = session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord browsingVisit) &&
+                                 browsingVisit.State == CustomerVisitState.Browsing &&
+                                 browsingVisit.TotalRouteFailureCount == 0 &&
+                                 session.Inventory.Revision == isolatedInventoryRevision &&
+                                 session.Orders.Revision == isolatedOrderRevision &&
+                                 session.RetailOffers.Revision == isolatedOfferRevision &&
+                                 session.RetailBaskets.Revision == isolatedBasketRevision &&
+                                 session.RetailCheckouts.Revision == isolatedCheckoutRevision;
+            if (!browseReached)
+            {
+                LogCustomerFlowSmokeFailure("smoke.browse-route-or-authority-drift");
+                yield break;
+            }
+
+            OperationResult reserve = session.ReservePrototypeCustomerBasket();
+            if (reserve.IsFailure)
+            {
+                LogCustomerFlowSmokeFailure(reserve.Error.Code);
+                yield break;
+            }
+
+            waitSteps = 0;
+            while (waitSteps < routeStepLimit &&
+                   session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord checkoutCandidate) &&
+                   checkoutCandidate.State != CustomerVisitState.AwaitingCheckout)
+            {
+                waitSteps++;
+                yield return new WaitForFixedUpdate();
+            }
+
+            if (!session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord awaitingVisit) ||
+                awaitingVisit.State != CustomerVisitState.AwaitingCheckout ||
+                awaitingVisit.TotalRouteFailureCount != 0)
+            {
+                LogCustomerFlowSmokeFailure("smoke.checkout-route-mismatch");
+                yield break;
+            }
+
+            OperationResult beginCheckout = liveBinding.TryBeginCheckout();
+            OperationResult completeCheckout = liveBinding.TryCompleteCheckout();
+            if (beginCheckout.IsFailure || completeCheckout.IsFailure)
+            {
+                LogCustomerFlowSmokeFailure(
+                    beginCheckout.IsFailure ? beginCheckout.Error.Code : completeCheckout.Error.Code);
+                yield break;
+            }
+
+            waitSteps = 0;
+            while (waitSteps < routeStepLimit &&
+                   session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord exitCandidate) &&
+                   exitCandidate.State != CustomerVisitState.Exited)
+            {
+                waitSteps++;
+                yield return new WaitForFixedUpdate();
+            }
+
+            stockFlow.RefreshPresentation();
+            bool fulfilled = session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord exitedVisit) &&
+                             exitedVisit.State == CustomerVisitState.Exited &&
+                             exitedVisit.ExitReason == CustomerVisitExitReason.Fulfilled &&
+                             !exitedVisit.RouteFallbackUsed &&
+                             exitedVisit.TotalRouteFailureCount == 0 &&
+                             !customerFlow.CustomerVisible &&
+                             session.Inventory.GetTotalQuantity(session.ProductId).Value == 0 &&
+                             session.RetailBaskets.Count == 0 &&
+                             session.RetailCheckouts.CompletionCount == 1 &&
+                             !liveBinding.Projection.gameObject.activeSelf &&
+                             session.ValidateInvariants().IsSuccess;
+            if (!fulfilled)
+            {
+                LogCustomerFlowSmokeFailure("smoke.fulfilled-exit-mismatch");
+                yield break;
+            }
+
+            GarageStockFlowSession routeFallbackSession = GarageStockFlowSession.CreateArrived();
+            long fallbackInventoryRevision = routeFallbackSession.Inventory.Revision;
+            long fallbackOrderRevision = routeFallbackSession.Orders.Revision;
+            long fallbackOfferRevision = routeFallbackSession.RetailOffers.Revision;
+            long fallbackBasketRevision = routeFallbackSession.RetailBaskets.Revision;
+            long fallbackCheckoutRevision = routeFallbackSession.RetailCheckouts.Revision;
+            OperationResult fallbackStart = routeFallbackSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult routeFailureOne = routeFallbackSession.ReportPrototypeCustomerRouteFailure(
+                SimulationTimestamp.Create(2, 40));
+            OperationResult routeFailureTwo = routeFallbackSession.ReportPrototypeCustomerRouteFailure(
+                SimulationTimestamp.Create(3, 60));
+            OperationResult exitFailureOne = routeFallbackSession.ReportPrototypeCustomerRouteFailure(
+                SimulationTimestamp.Create(4, 80));
+            OperationResult exitFailureTwo = routeFallbackSession.ReportPrototypeCustomerRouteFailure(
+                SimulationTimestamp.Create(5, 100));
+            bool routeFallback = fallbackStart.IsSuccess &&
+                                 routeFailureOne.IsSuccess &&
+                                 routeFailureTwo.IsSuccess &&
+                                 exitFailureOne.IsSuccess &&
+                                 exitFailureTwo.IsSuccess &&
+                                 routeFallbackSession.TryGetPrototypeCustomerVisit(
+                                     out CustomerVisitRecord fallbackVisit) &&
+                                 fallbackVisit.State == CustomerVisitState.Exited &&
+                                 fallbackVisit.ExitReason == CustomerVisitExitReason.RouteUnavailable &&
+                                 fallbackVisit.RouteFallbackUsed &&
+                                 fallbackVisit.TotalRouteFailureCount == 4 &&
+                                 routeFallbackSession.Inventory.Revision == fallbackInventoryRevision &&
+                                 routeFallbackSession.Orders.Revision == fallbackOrderRevision &&
+                                 routeFallbackSession.RetailOffers.Revision == fallbackOfferRevision &&
+                                 routeFallbackSession.RetailBaskets.Revision == fallbackBasketRevision &&
+                                 routeFallbackSession.RetailCheckouts.Revision == fallbackCheckoutRevision &&
+                                 routeFallbackSession.ValidateInvariants().IsSuccess;
+            if (!routeFallback)
+            {
+                LogCustomerFlowSmokeFailure("smoke.route-fallback-mismatch");
+                yield break;
+            }
+
+            GarageStockFlowSession timeoutSession = GarageStockFlowSession.CreateArrived();
+            long timeoutInventoryRevision = timeoutSession.Inventory.Revision;
+            long timeoutOrderRevision = timeoutSession.Orders.Revision;
+            long timeoutOfferRevision = timeoutSession.RetailOffers.Revision;
+            long timeoutBasketRevision = timeoutSession.RetailBaskets.Revision;
+            long timeoutCheckoutRevision = timeoutSession.RetailCheckouts.Revision;
+            OperationResult timeoutStart = timeoutSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult patienceTimeout = timeoutSession.AdvanceCustomerTime(
+                SimulationTimestamp.Create(3001, 60_020));
+            OperationResult exitTimeout = timeoutSession.AdvanceCustomerTime(
+                SimulationTimestamp.Create(6001, 120_020));
+            bool timeoutFallback = timeoutStart.IsSuccess &&
+                                   patienceTimeout.IsSuccess &&
+                                   exitTimeout.IsSuccess &&
+                                   timeoutSession.TryGetPrototypeCustomerVisit(
+                                       out CustomerVisitRecord timeoutVisit) &&
+                                   timeoutVisit.State == CustomerVisitState.Exited &&
+                                   timeoutVisit.ExitReason == CustomerVisitExitReason.PatienceExpired &&
+                                   timeoutVisit.RouteFallbackUsed &&
+                                   timeoutSession.Inventory.Revision == timeoutInventoryRevision &&
+                                   timeoutSession.Orders.Revision == timeoutOrderRevision &&
+                                   timeoutSession.RetailOffers.Revision == timeoutOfferRevision &&
+                                   timeoutSession.RetailBaskets.Revision == timeoutBasketRevision &&
+                                   timeoutSession.RetailCheckouts.Revision == timeoutCheckoutRevision &&
+                                   timeoutSession.ValidateInvariants().IsSuccess;
+            if (!timeoutFallback)
+            {
+                LogCustomerFlowSmokeFailure("smoke.timeout-fallback-mismatch");
+                yield break;
+            }
+
+            Debug.Log(
+                "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
+                "pause=ok fulfilled=ok domain-route-fallback=ok domain-timeout-fallback=ok " +
+                "authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok " +
+                "customer-hidden=ok");
+            yield return new WaitForEndOfFrame();
+        }
+
+        private static void LogCustomerFlowSmokeFailure(string code)
+        {
+            Debug.LogError(
+                $"GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=failed code={code}");
         }
 
         private IEnumerator RunTransportCartSmoke()

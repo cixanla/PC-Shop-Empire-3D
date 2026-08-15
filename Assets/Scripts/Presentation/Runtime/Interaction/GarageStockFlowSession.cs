@@ -1,3 +1,4 @@
+using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
@@ -25,6 +26,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string WorldFloorContainerIdValue = "inventory.container.world-floor";
         public const string ShelfOfferIdValue = "retail.offer.garage-shelf-a-northstar-a60";
         public const string PrototypeCustomerIdValue = "retail.customer.demo-walk-in-001";
+        public const string PrototypeActorCustomerIdValue = "actors.customer.demo-walk-in-001";
+        public const string PrototypeCustomerIntentIdValue = "actors.intent.demo-a60-001";
+        public const string PrototypeCustomerVisitIdValue = "actors.visit.demo-walk-in-001";
         public const string PrototypeBasketIdValue = "retail.basket.demo-customer-001";
         public const string PrototypeBasketLineIdValue = "retail.basket-line.demo-a60-001";
         public const string PrototypeCheckoutIdValue = "retail.checkout.demo-customer-001";
@@ -44,7 +48,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PurchaseOrderAuthority orders,
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
-            RetailCheckoutAuthority retailCheckouts)
+            RetailCheckoutAuthority retailCheckouts,
+            CustomerVisitAuthority customerVisits)
         {
             Catalog = catalog;
             Inventory = inventory;
@@ -52,6 +57,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
             RetailCheckouts = retailCheckouts;
+            CustomerVisits = customerVisits;
         }
 
         public ProductCatalog Catalog { get; }
@@ -65,6 +71,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public RetailBasketAuthority RetailBaskets { get; }
 
         public RetailCheckoutAuthority RetailCheckouts { get; }
+
+        public CustomerVisitAuthority CustomerVisits { get; }
 
         public StableId<ProductDefinitionIdScope> ProductId =>
             StableId<ProductDefinitionIdScope>.Parse(ProductIdValue);
@@ -92,6 +100,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<RetailCustomerIdScope> PrototypeCustomerId =>
             StableId<RetailCustomerIdScope>.Parse(PrototypeCustomerIdValue);
+
+        public StableId<CustomerIdScope> PrototypeActorCustomerId =>
+            StableId<CustomerIdScope>.Parse(PrototypeActorCustomerIdValue);
+
+        public StableId<CustomerIntentIdScope> PrototypeCustomerIntentId =>
+            StableId<CustomerIntentIdScope>.Parse(PrototypeCustomerIntentIdValue);
+
+        public StableId<CustomerVisitIdScope> PrototypeCustomerVisitId =>
+            StableId<CustomerVisitIdScope>.Parse(PrototypeCustomerVisitIdValue);
 
         public StableId<RetailBasketIdScope> PrototypeBasketId =>
             StableId<RetailBasketIdScope>.Parse(PrototypeBasketIdValue);
@@ -162,6 +179,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 RetailBasketAuthority.Create(retailOffers, inventory).Value;
             RetailCheckoutAuthority retailCheckouts =
                 RetailCheckoutAuthority.Create(retailOffers, retailBaskets, inventory).Value;
+            CustomerVisitAuthority customerVisits = CustomerVisitAuthority.Create(
+                catalog,
+                SimulationDuration.FromMilliseconds(60_000),
+                CustomerVisitAuthority.RequiredRouteAttemptLimit).Value;
             StableId<PurchaseOrderIdScope> orderId =
                 StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
             StableId<DeliveryIdScope> deliveryId =
@@ -193,7 +214,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 orders,
                 retailOffers,
                 retailBaskets,
-                retailCheckouts);
+                retailCheckouts,
+                customerVisits);
             RequireSuccess(session.ValidateInvariants());
             return session;
         }
@@ -288,6 +310,59 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 out completion);
         }
 
+        public OperationResult StartPrototypeCustomerVisit(SimulationTimestamp at)
+        {
+            return CustomerVisits.StartVisit(
+                PrototypeCustomerVisitId,
+                PrototypeCustomerIntentId,
+                PrototypeActorCustomerId,
+                ProductId,
+                CustomerNeedKind.GraphicsUpgrade,
+                at);
+        }
+
+        public OperationResult MarkPrototypeCustomerBrowseArrival(SimulationTimestamp at)
+        {
+            return CustomerVisits.MarkBrowseArrival(PrototypeCustomerVisitId, at);
+        }
+
+        public OperationResult BeginPrototypeCustomerCheckoutNavigation(SimulationTimestamp at)
+        {
+            return CustomerVisits.BeginCheckoutNavigation(PrototypeCustomerVisitId, at);
+        }
+
+        public OperationResult MarkPrototypeCustomerCheckoutArrival(SimulationTimestamp at)
+        {
+            return CustomerVisits.MarkCheckoutArrival(PrototypeCustomerVisitId, at);
+        }
+
+        public OperationResult BeginPrototypeCustomerExit(
+            CustomerVisitExitReason reason,
+            SimulationTimestamp at)
+        {
+            return CustomerVisits.BeginExit(PrototypeCustomerVisitId, reason, at);
+        }
+
+        public OperationResult MarkPrototypeCustomerExitArrival(SimulationTimestamp at)
+        {
+            return CustomerVisits.MarkExitArrival(PrototypeCustomerVisitId, at);
+        }
+
+        public OperationResult ReportPrototypeCustomerRouteFailure(SimulationTimestamp at)
+        {
+            return CustomerVisits.ReportRouteFailure(PrototypeCustomerVisitId, at);
+        }
+
+        public OperationResult AdvanceCustomerTime(SimulationTimestamp now)
+        {
+            return CustomerVisits.AdvanceTime(now);
+        }
+
+        public bool TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit)
+        {
+            return CustomerVisits.TryGetVisit(PrototypeCustomerVisitId, out visit);
+        }
+
         public OperationResult ValidateInvariants()
         {
             OperationResult orderResult = Orders.ValidateInvariants();
@@ -309,9 +384,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             OperationResult basketResult = RetailBaskets.ValidateInvariants();
-            return basketResult.IsFailure
-                ? basketResult
-                : RetailCheckouts.ValidateInvariants();
+            if (basketResult.IsFailure)
+            {
+                return basketResult;
+            }
+
+            OperationResult checkoutResult = RetailCheckouts.ValidateInvariants();
+            return checkoutResult.IsFailure
+                ? checkoutResult
+                : CustomerVisits.ValidateInvariants();
         }
 
         private static void RegisterContainer(

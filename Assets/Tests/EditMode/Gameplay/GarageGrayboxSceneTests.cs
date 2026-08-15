@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
@@ -10,7 +11,9 @@ using PCShopEmpire3D.World.Interaction;
 using PCShopEmpire3D.Editor.GaragePrototype;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Unity.AI.Navigation;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
@@ -135,6 +138,24 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.CompletionCount, Is.Zero);
+                Assert.That(marker.StockFlow.Session.CustomerVisits.Count, Is.Zero);
+                Assert.That(marker.CustomerFlow, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(marker.CustomerFlow.NavigationSurface, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.NavigationSurface.collectObjects,
+                    Is.EqualTo(CollectObjects.Volume));
+                Assert.That(marker.CustomerFlow.NavigationSurface.useGeometry,
+                    Is.EqualTo(NavMeshCollectGeometry.PhysicsColliders));
+                Assert.That(marker.CustomerFlow.CustomerAgent, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.CustomerAgent.speed, Is.EqualTo(2.2f).Within(0.001f));
+                Assert.That(marker.CustomerFlow.CustomerAgent.radius, Is.EqualTo(0.28f).Within(0.001f));
+                Assert.That(marker.CustomerFlow.CustomerVisualRoot.activeSelf, Is.False);
+                Assert.That(marker.CustomerFlow.CustomerStatusText.text,
+                    Does.Contain("MÜŞTERİ AKIŞI: TEKLİF BEKLİYOR"));
+                Assert.That(marker.CustomerFlow.EntranceWaypoint, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.BrowseWaypoint, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.CheckoutWaypoint, Is.Not.Null);
+                Assert.That(marker.CustomerFlow.ExitWaypoint, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -221,7 +242,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-sale-completion-r14-v1"));
+                    Is.EqualTo("garage-customer-visit-r15-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
