@@ -243,7 +243,7 @@ Monotonluğu azaltma ilkeleri:
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
-| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout/fulfillment, deterministic müşteri ziyareti + runtime NavMesh ve stale-safe tek-offer `Buy/Leave` eylemleri tamam; ödeme/Economy settlement sırada |
+| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout, deterministic müşteri ziyareti + runtime NavMesh, stale-safe tek-offer `Buy/Leave` ve exact-cash ilk `PSE.Economy` settlement feature'ı tamam; Issue #50 docs/USB kapanışı bekliyor |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
@@ -276,13 +276,14 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Event dispatch | Correlation/causation, global FIFO, breadth-first nested enqueue, duplicate/conflict, bounded drain ve handler hata izolasyonu |
 | Catalog çekirdeği | Unity bağımsız `PSE.Catalog`; stable ürün/kategori kimliği, serialized/batch tracking policy, doğrulanmış görünür ad, bounded garanti ve immutable sıralı katalog |
 | Inventory authority | Unity bağımsız `PSE.Inventory`; serialized item, bölünebilir batch position, unit-capacity container, atomik transfer, claim reservation, consume/release, revision ve invariant audit |
-| Purchase order receiving | Unity bağımsız `PSE.Orders`; stable order/supplier/delivery, monotonik lifecycle, exact manifest ve tek-revision Inventory intake |
+| Purchase order receiving | Unity bağımsız `PSE.Orders`; stable order/supplier/delivery, monotonik lifecycle, exact manifest, immutable unit-cost provenance ve tek-revision Inventory intake |
 | Authoritative dünya/stok projection'ı | Görünür teslimat kabulü; aynı serialized item için Receiving→ActorHands→Shelf/WorldFloor domain-first transfer, rollback ve recovery |
 | Fiziksel teslimat kolisi açma | Kapalı dış parcel → idempotent exact ürün reveal; opening domain revision/quantity değiştirmez, açık kabuk Receiving'de kalır |
 | Authoritative RAF A teklifi | Unity bağımsız `PSE.Retail`; stable offer/product/shelf kimliği, 3 harf currency, pozitif integer minor-unit fiyat, idempotent publish/update revision ve failure no-mutation |
 | Customer basket rezervasyonu | Stable customer/basket/line, exact offer + serialized item + Inventory claim; duplicate engeli, idempotent reserve, release, cross-authority no-mutation ve reserved pickup kilidi |
 | Immutable checkout başlangıcı | Stable checkout/basket/customer ve deterministic line snapshot; exact offer/item/reservation preflight, integer minor-unit currency/total, idempotent begin, fiyat güncellemesine karşı immutable kayıt ve aktif checkout release/pickup kilidi |
-| Atomik checkout fulfillment | Stable completion kimliği/kaydı; çoklu reservation tam preflight + tek Inventory revision, Basket/Checkout tek revision, exact repeat idempotency, drift no-mutation ve tamamlanmış historical snapshot invariantı |
+| Atomik checkout fulfillment | Owner/revision-bound Inventory/Basket/Checkout prepared planı; side-effect-free tam preflight, tek Inventory/Basket/Checkout revision, public completion bypass'ı kapalı, exact repeat idempotency ve drift no-mutation |
+| Atomik nakit ve ilk Economy settlement | Downstream Unity bağımsız `PSE.Economy`; immutable checkout fiyatı + alış maliyeti, exact cash, stable receipt, dengeli Cash/SalesRevenue/COGS/InventoryAsset postingleri, replay/conflict/no-mutation ve receipt-gated müşteri çıkışı |
 | Deterministic müşteri ziyareti | Unity bağımsız `PSE.Actors`; stable customer/intent/visit, monotonik state + bounded receipt ledger, iki denemeli route fallback, patience/exit timeout ve Inventory/Retail/Orders izolasyonu |
 | Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A, reservation sonrası checkout, fulfillment sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
 | Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
@@ -297,18 +298,19 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Yüklü taşıma arabası | Tek `LargeBox` kapasitesi, hands→cart→hands stable ownership, dört noktalı destek + swept obstruction, 0,85× yüklü hız, sprint kilidi, dinamik prompt ve fail-closed recovery |
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
-| Güncel USB milestone | `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; source/docs `868885a`, 549 tracked kaynak + 4 final test/build/runtime kanıtı + source kaydı, 554 satırlı `d685de7a…4209` SHA-256 manifest/readback, 549/549 Git-blob ve 4/4 evidence eşliği, forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0`; payload 10.003.704 bayt |
-| Son test/build | Issue #49 sonrası Edit Mode `298/298`, Play Mode `22/22`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-leave-action-r18-v1`, `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` gerçek player smoke geçti |
+| Son tamamlanmış USB milestone | `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; Issue #49 source/docs `868885a`, 549 tracked kaynak + 4 final kanıt + source kaydı, 554 satırlı `d685de7a…4209` SHA-256 manifest/readback, 549/549 Git-blob ve 4/4 evidence eşliği, güvenlik mismatch `0`; Issue #50 USB milestone'u henüz oluşturulmadı |
+| Issue #50 feature checkpoint | Commit `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`; [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılı; source/docs commit, final Guard, USB ve Issue kapanışı pending |
+| Son test/build | Issue #50 sonrası Edit Mode `328/328`, Play Mode `22/22`, failed/skipped `0`; Universal macOS build `327809376` bayt ve Apple M4/Metal 1280×720 `garage-cash-settlement-r19-v1` stock/customer exact-cash, receipt, ledger, replay/conflict ve authority-isolation smoke'ları geçti |
 
-Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #49 kapanışı tarihsel olarak korunur. Issue #50'nin tam test/build/runtime hash'leri ile henüz oluşmamış kapanış kimliklerinin durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) altında checkout completion'ı atomik ödeme ve ilk `PSE.Economy` nakit/gelir/COGS ledger settlement'ına bağlayan ayrı bounded paketi aç; fiyat snapshotı ve stok tüketimi mevcut authority'lerde kalsın.
-2. Ödeme başarısızlığı, exact replay, conflict ve cross-authority no-mutation kapılarını settlement receipt'iyle kilitle; vergi/indirim/fiş/fatura ve çoklu ödeme yöntemini büyütme.
-3. Çoklu müşteri/offer seçimi, utility scoring, memnuniyet ve Save sınırlarını authority'leri hazır olana kadar ayrı tut.
-4. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma.
-5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. Issue #50 yaşayan source/docs değişikliklerini ayrı commit'e alıp private `main`e push et; oluşacak gerçek commit/tree kimliğini kaydet.
+2. Source/docs Repository Guard sonucunu doğrula; ardından kaynak ve final test/build/runtime kanıtlarını manifest/readback doğrulanmış ayrı USB milestone'una al.
+3. Issue #50 acceptance listesini kanıtla kapatıp Roadmap durumunu `Done` yap; source/docs, final Guard ve USB kimliklerini kapanış belgelerine gerçek değerleriyle işle.
+4. Ancak bu kapanıştan sonra Epic #9 altındaki sıradaki bounded paketi GitHub bağımlılık sırasından seç; çoklu müşteri/offer, utility scoring, memnuniyet ve Save sınırlarını hazır authority'lerden önce büyütme.
+5. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 

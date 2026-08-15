@@ -63,6 +63,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Exact Leave replay, conflicting/cross-kind replay, aynı visit için ikinci action, historical terminal receipt, owner/revision/watermark-bound plan ve route-fallback reason korunumu domain testleriyle kilitlendi.
 - Garage'da gerçek `G / Gamepad East` current Leave'i uygular; `Browse → Exit` NavMesh kontratı, `TEKLİF REDDEDİLDİ` başarı ve `AYRILMA ENGELLİ • <stable-code>` stale geri bildirimi klavye/gamepad testleriyle doğrulandı.
 - Edit Mode baseline `298/298`, Play Mode baseline `22/22` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-leave-action-r18-v1 leave-action=ok stale-leave-blocked=ok authority-isolated=ok` gerçek player smoke geçti.
+- Purchase order satırından teslimat manifesti ve Inventory intake üzerinden serialized item/batch kaydına uzanan immutable acquisition unit-cost provenance eklendi; transferler maliyeti koruyor, maliyet uyuşmazlığı iki authority'de de mutasyonsuz engelleniyor.
+- Downstream Unity bağımsız `PSE.Economy`, exact-cash ödeme makbuzu ve dengeli `Cash / Sales Revenue / COGS / Inventory Asset` dört-posting işlemiyle eklendi; gelir, satılan mal maliyeti ve brüt marj integer minor-unit sözleşmesiyle izleniyor.
+- Inventory/Basket/Checkout için authority-owner ve revision-bound atomik prepared planlar eklendi; stale/foreign planlar mutasyonsuz reddediliyor ve public checkout-fulfillment bypass'ı Economy settlement sınırının arkasına kapatıldı.
+- Garage `garage-cash-settlement-r19-v1` akışı ikinci Mouse Left/Gamepad RT ile nakit ödemeyi alıyor; müşteri çıkışı completion yerine settlement receipt'e bağlandı ve replay/conflict yolları stok ile muhasebeyi değiştirmeden sonuçlanıyor.
+- Issue #50 feature checkpoint'i `547cf97` ve başarılı [Repository Guard `31884497043`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) ile doğrulandı: 328/328 EditMode, 22/22 PlayMode, Universal macOS build ve Apple M4/Metal 1280×720 stock/customer smoke; `cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok ledger-balanced=ok authority-isolated=ok`.
 
 ### Changed
 

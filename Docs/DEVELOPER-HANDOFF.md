@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `298/298` passed.
+- Edit Mode `328/328` passed.
 - Play Mode `22/22` passed.
 - `0` failed.
 - `0` skipped.
@@ -83,10 +83,11 @@ Tamamlanan saf Core sözleşmeleri:
 - `sha256-framed-be-pcg32-v1`, canonical root seed, stable domain/context stream derivation ve reload-reroll engeli.
 - Event correlation/direct-causation, global FIFO ve breadth-first nested enqueue uygulayan bounded in-memory dispatcher.
 - `PSE.Catalog` assembly: immutable product definition, stable product/category kimliği, serialized/batch tracking policy, doğrulanmış görünür ad ve bounded garanti.
-- `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
-- Catalog yalnız Core; Inventory yalnız Core + Catalog; Orders Core + Catalog + Inventory; Actors yalnız Core + Catalog; Retail ise Core + Catalog + Inventory + Actors referanslıdır. `Retail → Actors` tek yönlüdür ve beş assembly de Unity/Editor bağımlılığı taşımaz.
-- `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
-- `PSE.Retail` assembly: stable shelf-offer, customer basket reservation, immutable checkout ve checkout completion authority'leri; exact serialized item/claim bağları, deterministic sorgu/snapshot, idempotent komutlar, drift denetimi ve failure no-mutation.
+- `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, immutable currency + integer minor-unit `InventoryUnitCost`, unit capacity, atomik transfer, claim reservation, prepared consumption, release/consume, deterministic sorgu, revision ve invariant audit.
+- Catalog yalnız Core; Inventory yalnız Core + Catalog; Orders Core + Catalog + Inventory; Actors yalnız Core + Catalog; Retail Core + Catalog + Inventory + Actors; Economy ise downstream Core + Inventory + Retail referanslıdır. `Retail → Actors` tek yönlüdür; Retail/Inventory/Orders Economy'ye ters referans taşımaz ve bu domain assembly'leri Unity/Editor bağımlılığı taşımaz.
+- `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, alış maliyeti provenance'ı, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
+- `PSE.Retail` assembly: stable shelf-offer, customer basket reservation, immutable checkout ve internal checkout completion authority'leri; exact serialized item/claim/maliyet bağları, owner/revision-bound prepared planlar, deterministic sorgu/snapshot, idempotent komutlar, drift denetimi ve failure no-mutation.
+- `PSE.Economy` assembly: exact-cash checkout settlement, stable receipt ve immutable ledger transaction/entry kayıtları; Cash, SalesRevenue, COGS ve InventoryAsset hesaplarında dört dengeli posting, account delta/gross-margin sorgusu, replay/conflict/no-mutation ve invariant audit.
 - `PSE.Actors` assembly: stable customer/intent/visit kimlikleri, immutable state/deadline/route kayıtları, bounded exact command receipt ledger'ı, deterministic query/revision ve invariant audit.
 - Customer visit zinciri `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited`; route state başına iki deneme, `RouteUnavailable`, `OfferDeclined`, patience/exit timeout ve güvenli terminal fallback kullanır.
 - `CustomerOfferDecisionEvaluator`, yalnız immutable Browsing visit + tek shelf offer + accepted price girdisiyle stable `Buy/Leave` ve exact provenance üretir. Exact replay value-equal; historical snapshot action yetkisi değildir ve değerlendirme hiçbir authority'yi mutate etmez.
@@ -100,7 +101,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Exact ürün RAF A Shelf container'ındayken aynı Interact binding'i kasıtlı offer publish yapar; etiket authority başarısından önce `FİYAT YOK`, sonra `549,99 EUR` gösterir. Publish Inventory/Orders revision veya quantity değiştirmez.
 - Fiyatlanmış RAF A ürününde `G / Gamepad East` exact item'ı demo customer basket için ayırır; available quantity `0`, total quantity `1` kalır. Etiket/pano reservation'ı gösterir, `E / Gamepad South` pickup fail-closed olur ve aynı `G / East` release sonrası available quantity `1`e döner.
 - Ayrılmış RAF A ürününde `Mouse Left / Gamepad RT` bütün basket satırlarını exact offer/item/reservation ile preflight edip integer price/currency/total'i immutable checkout snapshot'ına alır. Sonraki offer update'i açık `549,99 EUR` fiyatını değiştirmez; checkout aktif release ve pickup fail-closed kalır.
-- Aktif checkout'ta ikinci `Mouse Left / Gamepad RT`, exact reservation setini tek Inventory revision'ında atomik tüketir; Basket ve Checkout revision'larını birer kez ilerletir, stable fulfillment kaydı bırakır ve ürün projection'ını raftan kaldırır. Shelf/HUD `TAMAMLANDI`, stok/sepet/reservation `0`; exact tekrar idempotent, drift failure no-mutation'dır. Bu kayıt ödeme/Economy settlement değildir.
+- Aktif checkout'ta ikinci `Mouse Left / Gamepad RT`, `nakit ödemeyi al` eylemidir. Exact tutarı immutable checkout snapshot'ından, COGS'u authoritative unit-cost provenance'ından alır; Inventory/Basket/Checkout prepared planını tek Economy settlement sınırında commit eder ve stable receipt + dört dengeli ledger posting'i bırakır. Shelf/HUD `ÖDEME BEKLİYOR → NAKİT ALINDI`; projection, stok ve fulfilled müşteri çıkışı yalnız receipt sonrası tamamlanır. Exact tekrar idempotent, yanlış tutar/currency/payment method, stale plan ve identity conflict bütün authority'lerde no-mutation'dır.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -116,24 +117,26 @@ Tamamlanan saf Core sözleşmeleri:
 - Stable küçük kutu desteğinde merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidi vardır; gerçek keyboard/mouse ve gamepad zinciri testlidir.
 - Stable platform arabası tek `LargeBox` kabul eder; `E / Gamepad South` ile hands→cart→hands transferi, `Mouse Left / Gamepad RT` ile tut/bırak, 0,85× yüklü ve 0,90× boş hız, sprint kilidi ve dinamik prompt uygulanır.
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
-- `GarageCustomerFlowRuntime`, runtime `NavMeshSurface` üzerinde explicit giriş/RAF A/checkout/çıkış anchor'larını izler; offer ziyareti başlatır, Buy reservation checkout'a, fulfillment `Fulfilled` çıkışına ve Leave `OfferDeclined` ile doğrudan Browse→Exit rotasına götürür.
+- `GarageCustomerFlowRuntime`, runtime `NavMeshSurface` üzerinde explicit giriş/RAF A/checkout/çıkış anchor'larını izler; offer ziyareti başlatır, Buy reservation checkout'a, Economy settlement receipt'i `Fulfilled` çıkışına ve Leave `OfferDeclined` ile doğrudan Browse→Exit rotasına götürür. Mere completion kaydı müşteriyi çıkışa göndermez.
 - Pause integer simulation clock ve NavMeshAgent'ı dondurur. Route/patience fallback'i Inventory/Retail/Orders revision'larını değiştirmez; terminal müşteri projection'ı güvenle gizlenir.
 - Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current Buy/Leave kararını action authority'ye uygular; stale Buy `SATIN ALMA ENGELLİ`, stale Leave `AYRILMA ENGELLİ` stable metniyle engellenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Issue #49 feature `67d858a`, source/docs `868885a`, Repository Guard `31882228394` + `31882508496`, EditMode `298/298`, PlayMode `22/22` ve Mac runtime `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı; Issue `15/15` acceptance ile kapalı/Done, Epic #9 açık/In Progress kalıyor.
-- Güncel USB milestone `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`: source/docs checkpoint `868885a`, 549 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 554 satırlı `d685de7a…4209` SHA-256 manifest/readback ile doğrulandı. 549/549 Git-blob ve 4/4 evidence eşliği geçti; hash/boyut/path/evidence mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 10.003.704 bayttır.
+- Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8` ve [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) ile doğrulandı. EditMode `328/328`, PlayMode `22/22`, failed/skipped `0`; Universal macOS build `327809376` bayt ve Mach-O `x86_64 + arm64`tır.
+- Apple M4/Metal 1280×720 `garage-cash-settlement-r19-v1` stock/customer smoke'ları exact cash, receipt, Economy settlement, dengeli ledger, revenue/COGS/inventory asset, replay/conflict, stock consumption ve authority isolation kapılarını geçti. Ayrıntılı dosya boyutu/SHA-256 kanıtı `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
+- Issue #50 source/docs commit'i, final Guard'ı, USB milestone'u ve Issue close/Done işlemi henüz pendingdir; kimlikleri uydurulmaz.
+- Önceki Issue #49 feature `67d858a`, source/docs `868885a`, iki başarılı Guard ve doğrulanmış `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT` USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur. Bu snapshot Issue #50 kapanışı değildir.
 
 Henüz yapılmayanlar:
 
 - Gelişmiş el animasyonu, çok satırlı/çok adetli parcel unpack layout'u, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
-- Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Sayısal fiyat düzenleme UI'si, açıklanabilir çoklu-offer müşteri kararı, ödeme/Economy settlement, gerçek fiziksel sepet transferi ve item/cart projection'ının daha geniş container tiplerine yayılması.
+- Orders'ın satış/servis varyantları, ilk exact-cash satış settlement'ı ötesindeki Economy kapsamı ve diğer domain assembly'leri; Catalog/Inventory/Orders/Economy event-save bağlantısı.
+- Sayısal fiyat düzenleme UI'si, açıklanabilir çoklu-offer müşteri kararı, vergi/indirim/para üstü/kart/çoklu ödeme, receipt belgesi/fatura/refund/supplier payment/opening balance, gerçek fiziksel sepet transferi ve daha geniş item/cart container projection'ı.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #9 altında immutable checkout completion'ı atomik payment receipt ve ilk `PSE.Economy` nakit/gelir/COGS settlement'ına bağlayan sınırdır. Tamamlanan stok tüketimi ve Buy/Leave lifecycle korunur; vergi/indirim/fiş, çoklu ödeme yöntemi, çoklu müşteri/ürün, derin danışmanlık, Save ve final UI ayrı kalır.
+Sıradaki immediate iş yeni feature değildir: yaşayan source/docs değişikliklerini commit/push et → source/docs Repository Guard'ını doğrula → Issue #50 kaynak ve final kanıtlarını manifest/readback doğrulanmış USB milestone'una al → acceptance listesini kapatıp Issue/Project'i `Done` yap. Source/docs commit/tree, final Guard, USB milestone/manifest ve kapanış kimlikleri oluşmadan yazılmaz. Yeni bounded gameplay paketi bu kapanıştan sonra GitHub bağımlılık sırasından seçilir.
 
 ## 7. Çalışma akışı
 
@@ -187,7 +190,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 267 Edit Mode ve 18 Play Mode baseline testi geçti.
+2. Repo guard, 328 Edit Mode ve 22 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

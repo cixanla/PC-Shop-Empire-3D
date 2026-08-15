@@ -1,21 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #49 stale-safe `Leave/OfferDeclined` paketi source/docs/CI/USB dahil tamamlandı; Issue kapalı/Done, Epic #9 açık/In Progress<br>
+**Durum:** Issue #50 atomik nakit checkout ve ilk Economy settlement feature'ı uygulanıp doğrulandı; source/docs commit, final Repository Guard, USB milestone ve Issue kapanışı henüz bekliyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #49 / Epic #9
+## En yeni checkpoint — Issue #50 / Epic #9
 
-- Feature commit `67d858aff773610cff6d6c221c792cd793f27a1b`, tree `dc76a89a5a9f0f9349509aca7374f30518b1c308`; Repository Guard `31882228394` başarılı.
-- Source/docs commit `868885af9065d4e9fb274c3862fd525b040e1cc2`, tree `66c44529a5bb2cde92903d8fee06ef4d2ed7f667`; Repository Guard `31882508496` başarılı. Issue #49 `15/15` acceptance ile kapalı ve Roadmap'te `Done`dır.
-- Ortak `CustomerOfferDecisionActionAuthority`, immutable `Leave` kararını current visit ve current RAF A offer'ıyla tam value-equal yeniden değerlendirir; stale karar `retail.offer-action.decision-stale` ile bütün authority'lerde no-mutation kalır.
-- Actors↔Retail customer kimliği immutable typed binding ile explicit eşlenir. Leave hiçbir line/basket/item/reservation/claim kimliği taşımaz; stok ve kasa authority'leri değişmez.
-- `PSE.Actors` internal friend prepared planı `Browsing → Exiting` ve stable `OfferDeclined` geçişini side-effect-free preflight sonrası uygular. Public Presentation bypass'ı ve cross-kind replay kapalıdır.
-- Exact action replay idempotent; conflicting/cross-kind replay ve aynı visit için ikinci ActionId fail-closed'dur. Historical receipt exit sonrası invariant-safe kalır; route fallback/timeout `OfferDeclined` nedenini korur.
-- Garage'da gerçek `G / Gamepad East` current `Leave` eylemini uygular; başarı/stale failure renkten bağımsız stable metinle görünür. NavMesh kontratı `Browse → Exit` yolunu kapsar.
-- EditMode `298/298`, gerçek Input System PlayMode `22/22`; failed/skipped `0`.
-- Universal macOS development build ve Apple M4/Metal 1280×720 native runtime `garage-leave-action-r18-v1`, `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile başarılıdır.
-- Karar: `Docs/ADR-0027-STALE-SAFE-LEAVE-ACTION-AND-OFFER-DECLINED-EXIT.md`; kanıt: `Docs/Evidence/STALE-SAFE-LEAVE-ACTION-AND-OFFER-DECLINED-EXIT-CHECKPOINT-2026-08-15.md`.
+- Feature commit `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`; [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılıdır.
+- Issue #50 source/docs commit'i, bu commit'in final Guard kimliği, USB milestone kimliği/manifesti ve Issue kapanış durumu henüz oluşmadı; uydurulmadan pending bırakılmıştır.
+- `InventoryUnitCost`, alış maliyetini purchase-order satırı → teslim manifesti/intake → serialized item/batch → immutable checkout line snapshot zincirinde currency + integer minor-unit olarak korur. Eksik veya uyuşmayan maliyet bütün ilgili authority'lerde no-mutation ile reddedilir.
+- Inventory, Basket ve Checkout katmanlarındaki owner/revision-bound prepared planlar bütün preflight'ı side-effect-free yapar. Yabancı owner, stale revision veya drift commit başlamadan fail-closed olur; public fulfillment bypass'ı kapalıdır.
+- Unity bağımsız downstream `PSE.Economy`, exact cash'i tek atomik settlement içinde checkout completion ve stok tüketimiyle birleştirir. Başarıda stable receipt ve dört dengeli posting oluşur: Cash/Sales Revenue ile COGS/Inventory Asset.
+- Eksik/fazla tutar, yanlış currency/payment method, stale plan ve settlement/transaction kimlik çatışmaları Inventory/Basket/Checkout/Economy state'ini değiştirmez. Exact replay idempotenttir.
+- Garage'da aktif checkout'taki ikinci `Mouse Left / Gamepad RT`, `nakit ödemeyi al` eylemidir. Ödeme öncesi `ÖDEME BEKLİYOR`, receipt sonrası `NAKİT ALINDI` görünür; ürün projection'ı ve müşteri çıkışı yalnız settlement receipt sonrası tamamlanır.
+- EditMode `328/328`, gerçek Input System PlayMode `22/22`; failed/skipped `0`.
+- Universal macOS development build ve Apple M4/Metal 1280×720 iki gerçek runtime smoke'u `garage-cash-settlement-r19-v1` markerıyla başarılıdır.
+- Stock smoke: `cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok revenue=ok cogs=ok inventory-asset=ok ledger-balanced=ok payment-replay=ok payment-conflict-blocked=ok stock-consumed=ok`.
+- Customer smoke: `fulfilled=ok cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok authority-isolated=ok`.
 
 ## Kullanım güvenliği protokolü
 
@@ -28,56 +29,63 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; source/docs checkpointte yerel HEAD ile `origin/main` eşittir.
+- Branch: `main`; feature checkpointte yerel `HEAD` ile `origin/main` `547cf971882239c912d8221f344706afc993a37b` üzerinde eşittir. Yaşayan belge değişiklikleri henüz commit edilmemiştir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
-- Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, parcel açma, shelf offer, basket reservation, checkout snapshot, atomik fulfillment, saf tek-offer kararı ve stale-safe Buy/Leave action katmanlarını içerir.
-- Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined` ve receipt ledger'ını içerir.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-leave-action-r18-v1`.
+- Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve stale-safe Buy/Leave action katmanlarını içerir.
+- Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
+- Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined` ve receipt ledger'ını içerir. Fulfilled müşteri çıkışı Economy settlement receipt'ine bağlıdır.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-cash-settlement-r19-v1`.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
 
 ## Feature checkpoint ve doğrulama kanıtı
 
-- Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#49](https://github.com/cixanla/PC-Shop-Empire-3D/issues/49).
-- Feature commit: `67d858aff773610cff6d6c221c792cd793f27a1b`.
-- Feature tree: `dc76a89a5a9f0f9349509aca7374f30518b1c308`.
-- Feature Repository Guard: [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394), başarılı.
-- Source/docs commit: `868885af9065d4e9fb274c3862fd525b040e1cc2`; tree: `66c44529a5bb2cde92903d8fee06ef4d2ed7f667`; Repository Guard: [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496), başarılı.
-- EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-action49-r2.xml`; `298/298`; SHA-256 `be7e56fad9418de9883100653bdf90722ebd13bc896fcf5432ee86a195d1feea`.
-- PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-action49-r2.xml`; `22/22`; SHA-256 `8856709e0fc3c193359d9e3576960512aa261d9a9efdff7b1b775b5ae0658ece`.
-- Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-action49-macos-r1.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327750560`; SHA-256 `c1e317068753a9668ec3737ca0cd69b0c6a37a77c77ea03653a4debd56a75df8`.
-- Universal app executable: Mach-O `x86_64 + arm64`; SHA-256 `ec4bbd1a532f1cafb92baec1401c71a874576e4db441046f90238d94b0db605d`.
-- Runtime log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/runtime-action49-macos-r1.log`; Apple M4/Metal 1280×720; SHA-256 `02c2ed8900937c0693cf867486f746923920ec048990397e1a2db3374fed6891`.
-- Sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; SHA-256 `16376412909b92e06eceae83e412111770ca06a6503c9cbd975427d8d25ed685`.
-- Runtime ready: `garage-leave-action-r18-v1 customer-buy-action=ready customer-leave-action=ready customer-visit=ready customer-navmesh=ready lookdev=ok`.
-- Runtime smoke: `customer-visit=ok runtime-route=ok pause=ok offer-decision=ok buy-action=ok stale-blocked=ok fulfilled=ok leave-action=ok stale-leave-blocked=ok domain-route-fallback=ok domain-timeout-fallback=ok authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok customer-hidden=ok`.
+- Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#50](https://github.com/cixanla/PC-Shop-Empire-3D/issues/50).
+- Feature commit: `547cf971882239c912d8221f344706afc993a37b`.
+- Feature tree: `2df21fe7c9b836eb189f12f211c58d06027a1ae8`.
+- Feature Repository Guard: [31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043), başarılı.
+- EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-issue50-r2.xml`; `328/328`, failed/skipped `0`; `275608` bayt; SHA-256 `018955608d04377739b44316d63ba88bc7b75970cde5e698b7748c45c41e4389`.
+- PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-issue50-r1.xml`; `22/22`, failed/skipped `0`; `34359` bayt; SHA-256 `f5d139d7aff945a23566a60e999426a2f761eb972c83bbfd22b6a759038029a1`.
+- Universal macOS build: `327809376` bayt. Build log `596600` bayt; SHA-256 `c8be9f9d35728305b0eb827c845dbf4ff3df6da45d8814e1a2fe5fc660a58ad0`.
+- Universal app executable: Mach-O `x86_64 + arm64`; `117179` bayt; SHA-256 `c4d5f040be9486dfa5063e60f733c97e4e44dad10c24cd68c17b23ff5a217bb5`.
+- Stock runtime log: `11519` bayt; SHA-256 `ffad5af03ba760d19bf65aa7d5112a378c512d96c8405c679ca55ab366353568`.
+- Customer runtime log: `4945` bayt; SHA-256 `0c228a31ea5229b8ed898fea1559a7a218d86ca9dcbf1ea0aeb2bef1a56877bf`.
+- Runtime host: Apple M4/Metal, 1280×720. Marker: `garage-cash-settlement-r19-v1`.
+- Stock smoke: `cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok revenue=ok cogs=ok inventory-asset=ok ledger-balanced=ok payment-replay=ok payment-conflict-blocked=ok stock-consumed=ok`.
+- Customer smoke: `fulfilled=ok cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok authority-isolated=ok`.
+- Sahne değişmedi: `Assets/Scenes/Prototypes/GarageGraybox.unity`; `1377364` bayt; SHA-256 `16376412909b92e06eceae83e412111770ca06a6503c9cbd975427d8d25ed685`.
 - Final loglarda assertion, unhandled exception, smoke failure veya `JobTempAlloc` sızıntısı yoktur.
 
 ## Bilinçli kapsam dışı
 
+- Vergi, indirim, para üstü, kart/çoklu ödeme yöntemi, receipt belgesi/fatura, refund ve supplier payment.
+- Opening balance, kalıcı Save/journal/migration, final ekonomi UI/raporlama ve genel ledger entegrasyonu.
 - Utility scoring, çoklu ürün/offer seçimi, çoklu müşteri ve sıra kapasitesi.
-- Ödeme yöntemi, Economy ledger, nakit, gelir, COGS, vergi, indirim ve fiş/fatura.
-- Memnuniyet/itibar, çalışan AI, Save/Guardian, final model/animasyon/ses ve gerçek Windows doğrulaması.
+- Memnuniyet/itibar, çalışan AI, final model/animasyon/ses ve gerçek Windows doğrulaması.
+- İlk settlement yalnız satış anındaki delta'yı authoritative kaydeder; tam şirket muhasebesi veya başlangıç bilançosu iddiası taşımaz.
+
+## Önceki tamamlanmış checkpoint — Issue #49
+
+- Issue #49 feature `67d858aff773610cff6d6c221c792cd793f27a1b`, source/docs `868885af9065d4e9fb274c3862fd525b040e1cc2`, Repository Guard `31882228394` + `31882508496`, EditMode `298/298`, PlayMode `22/22` ve Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile kapalı/Done'dır.
+- Bu tarihsel checkpointin ayrıntılı ADR/Evidence kayıtları ve aşağıdaki doğrulanmış USB milestone'u korunur; Issue #50'nin yeni source/docs veya USB kimliği olarak yorumlanmaz.
 
 ## USB güvenli checkpoint durumu
 
-- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`.
-- Source/docs `868885af9065d4e9fb274c3862fd525b040e1cc2`; 549 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 554 manifest payload satırı, toplam 556 dosya ve 10.003.704 payload baytı.
-- `MANIFEST.tsv` SHA-256: `d685de7afdd8df0dcba16369d2232c48725a365db15d67ad1cbdae78269a4209`.
-- 554/554 hash/boyut/path readback, 549/549 Git-blob ve 4/4 evidence eşliği geçti; forbidden/cache/credential/AppleDouble ve sibling sidecar mismatch sayıları `0`.
-- `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
-- Snapshot bağımsız salt-okunur denetimde de aynı sayım, manifest, Git-blob ve güvenlik kapılarıyla başarılı bulundu.
+- Son tamamlanmış milestone hâlâ `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`tir.
+- Issue #49 source/docs `868885af9065d4e9fb274c3862fd525b040e1cc2`; 549 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 554 manifest payload satırı, toplam 556 dosya ve 10.003.704 payload baytı.
+- `MANIFEST.tsv` SHA-256: `d685de7afdd8df0dcba16369d2232c48725a365db15d67ad1cbdae78269a4209`; 554/554 readback, 549/549 Git-blob ve 4/4 evidence eşliği geçti; güvenlik mismatch sayıları `0`dır.
+- Issue #50 USB milestone'u henüz oluşturulmadı. Adı, dosya sayımı, manifest hash'i ve source/docs commit'i kapanış aşamasında gerçek değerleriyle kaydedilecektir.
 
-## Sıradaki bounded paket
+## Sıradaki immediate kapanış işi
 
-Issue #9 altında atomik ödeme ve ilk Economy settlement sınırı:
+1. Bu yaşayan belgeleri ve ilgili source/docs kayıtlarını ayrı commit'te kaydetmek ve private `main`e push etmek.
+2. Source/docs commit'inin Repository Guard sonucunu başarıyla doğrulamak.
+3. Issue #50 kaynak + final test/build/runtime kanıtlarını ayrı, manifest/readback doğrulanmış USB milestone'una almak.
+4. Issue #50 acceptance listesini gerçek kanıtla kapatıp Project durumunu `Done` yapmak.
 
-1. Immutable checkout completion snapshot'ını exact payment/settlement receipt'ine bağlamak.
-2. Nakit, gelir ve COGS double-entry etkisini tek preflight sonrası atomik ve idempotent uygulamak.
-3. Payment failure/conflict/stale replay'de Inventory/Basket/Checkout/Orders/Actors/Economy no-mutation kanıtlamak.
-4. Vergi/indirim/fiş/fatura, çoklu ödeme yöntemi, çoklu customer/offer, Save ve final UI'ı ayrı tutmak.
+Yeni geliştirme paketi bu dört kapanış kapısından önce başlatılmaz. Source/docs commit/tree, final Guard run, USB milestone/manifest ve Issue kapanış kimlikleri oluşana kadar uydurulmaz.
 
 ## Güvenli devam komutu
 
-Issue #49 feature `67d858a`, source/docs `868885a`, iki başarılı Guard, EditMode `298/298`, PlayMode `22/22`, Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ve doğrulanmış USB milestone ile kapalı/Done'dır. Epic #9 altında atomik payment/ilk Economy settlement dilimine geç; vergi/indirim/Save sınırlarını karıştırma.
+Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`, başarılı Guard `31884497043`, EditMode `328/328`, PlayMode `22/22` ve Mac `garage-cash-settlement-r19-v1` exact-cash/receipt/ledger smoke kanıtlarıyla uygulanmış ve doğrulanmıştır. Şimdi yalnız source/docs commit → final Guard → USB milestone → Issue #50 close/Done kapanış zincirini tamamla; bilinmeyen kimlikleri uydurma.
