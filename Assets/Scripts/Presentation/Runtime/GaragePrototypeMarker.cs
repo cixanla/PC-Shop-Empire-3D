@@ -13,7 +13,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-customer-reservation-r12-v1";
+        public const string Version = "garage-checkout-snapshot-r13-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -98,6 +98,9 @@ namespace PCShopEmpire3D.Presentation
             bool hasBasketAuthority = hasArrivedStockFlow &&
                                       stockFlow.Session.RetailBaskets != null &&
                                       stockFlow.Session.RetailBaskets.Count == 0;
+            bool hasCheckoutAuthority = hasArrivedStockFlow &&
+                                        stockFlow.Session.RetailCheckouts != null &&
+                                        stockFlow.Session.RetailCheckouts.Count == 0;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -114,6 +117,7 @@ namespace PCShopEmpire3D.Presentation
                 $"parcel={(stockFlow?.Parcel != null && stockFlow.Parcel.IsSealed ? "sealed" : "missing")} " +
                 $"shelf-offer={(hasShelfOfferAuthority ? "ready" : "missing")} " +
                 $"basket-reservation={(hasBasketAuthority ? "ready" : "missing")} " +
+                $"checkout-snapshot={(hasCheckoutAuthority ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
@@ -299,6 +303,85 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            GarageStockFlowSession checkoutSession = GarageStockFlowSession.CreateArrived();
+            OperationResult checkoutAccept = checkoutSession.AcceptArrivedDelivery();
+            OperationResult checkoutShelfTransfer = checkoutSession.TransferItem(
+                checkoutSession.ShelfContainerId);
+            OperationResult checkoutOffer = checkoutSession.PublishShelfOffer();
+            OperationResult checkoutReserve = checkoutSession.ReservePrototypeCustomerBasket();
+            long checkoutInventoryBefore = checkoutSession.Inventory.Revision;
+            long checkoutBasketBefore = checkoutSession.RetailBaskets.Revision;
+            long checkoutOffersBefore = checkoutSession.RetailOffers.Revision;
+            long checkoutOrdersBefore = checkoutSession.Orders.Revision;
+            long checkoutRevisionBefore = checkoutSession.RetailCheckouts.Revision;
+            OperationResult checkoutBegin = checkoutSession.BeginPrototypeCheckout();
+            OperationResult checkoutRepeat = checkoutSession.BeginPrototypeCheckout();
+            bool snapshotCreated =
+                checkoutAccept.IsSuccess &&
+                checkoutShelfTransfer.IsSuccess &&
+                checkoutOffer.IsSuccess &&
+                checkoutReserve.IsSuccess &&
+                checkoutBegin.IsSuccess &&
+                checkoutRepeat.IsSuccess &&
+                checkoutSession.TryGetPrototypeCheckout(out var checkoutRecord) &&
+                checkoutRecord.BasketId == checkoutSession.PrototypeBasketId &&
+                checkoutRecord.CustomerId == checkoutSession.PrototypeCustomerId &&
+                checkoutRecord.Currency.Value == GarageStockFlowSession.PrototypeCurrencyCode &&
+                checkoutRecord.TotalMinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                checkoutRecord.Lines.Count == 1 &&
+                checkoutRecord.Lines[0].ItemId == checkoutSession.ItemId &&
+                checkoutRecord.Lines[0].OfferId == checkoutSession.ShelfOfferId &&
+                checkoutRecord.Lines[0].UnitPrice.MinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                checkoutRecord.Lines[0].SourceOfferRevision == 1 &&
+                checkoutSession.RetailCheckouts.Revision == checkoutRevisionBefore + 1 &&
+                checkoutSession.Inventory.Revision == checkoutInventoryBefore &&
+                checkoutSession.RetailBaskets.Revision == checkoutBasketBefore &&
+                checkoutSession.RetailOffers.Revision == checkoutOffersBefore &&
+                checkoutSession.Orders.Revision == checkoutOrdersBefore;
+            if (!snapshotCreated)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(checkoutBegin.IsFailure ? checkoutBegin.Error.Code : "smoke.checkout-contract")}");
+                yield break;
+            }
+
+            const long updatedPriceMinorUnits = 59_999;
+            OperationResult updatePrice = checkoutSession.RetailOffers.SetOffer(
+                checkoutSession.ShelfOfferId,
+                checkoutSession.ProductId,
+                checkoutSession.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                updatedPriceMinorUnits);
+            OperationResult repeatAfterPriceChange = checkoutSession.BeginPrototypeCheckout();
+            bool priceFrozen =
+                updatePrice.IsSuccess &&
+                repeatAfterPriceChange.IsSuccess &&
+                checkoutSession.TryGetPrototypeCheckout(out checkoutRecord) &&
+                checkoutSession.TryGetShelfOffer(out var updatedOffer) &&
+                checkoutRecord.TotalMinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                checkoutRecord.Lines[0].UnitPrice.MinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                checkoutRecord.Lines[0].SourceOfferRevision == 1 &&
+                updatedOffer.Price.MinorUnits == updatedPriceMinorUnits &&
+                updatedOffer.OfferRevision == 2 &&
+                checkoutSession.RetailCheckouts.Revision == checkoutRevisionBefore + 1 &&
+                checkoutSession.Inventory.Revision == checkoutInventoryBefore &&
+                checkoutSession.RetailBaskets.Revision == checkoutBasketBefore &&
+                checkoutSession.RetailOffers.Revision == checkoutOffersBefore + 1 &&
+                checkoutSession.Orders.Revision == checkoutOrdersBefore &&
+                checkoutSession.ValidateInvariants().IsSuccess;
+            if (!priceFrozen)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(repeatAfterPriceChange.IsFailure ? repeatAfterPriceChange.Error.Code : "smoke.checkout-price-drift")}");
+                yield break;
+            }
+
             Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
             if (cameraPivot != null)
             {
@@ -310,6 +393,7 @@ namespace PCShopEmpire3D.Presentation
                 $"world-floor=ok shelf-offer=ok price-minor={offer.Price.MinorUnits} " +
                 $"currency={offer.Price.Currency.Value} " +
                 "basket-reservation=ok release=ok " +
+                "checkout-snapshot=ok price-frozen=ok " +
                 $"stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
                 $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();

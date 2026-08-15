@@ -17260,7 +17260,7 @@ TextMesh:
   m_GameObject: {fileID: 1213438151}
   m_Text: "S\u0130PAR\u0130\u015E: GELD\u0130 \u2022 KABUL BEKL\u0130YOR\nKOL\u0130:
     KAPALI\n\xDCR\xDCN: KABUL BEKL\u0130YOR \u2022 STOK 0\nF\u0130YAT: F\u0130YAT
-    YOK\nSEPET: BO\u015E"
+    YOK\nSEPET: BO\u015E\nKASA: BEKL\u0130YOR"
   m_OffsetZ: 0
   m_CharacterSize: 0.047
   m_LineSpacing: 1
@@ -20931,7 +20931,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441998761}
-  m_Text: "RAF A\nF\u0130YAT YOK\nM\xDC\u015ETER\u0130: BO\u015E"
+  m_Text: "RAF A\nF\u0130YAT YOK\nM\xDC\u015ETER\u0130: BO\u015E\nKASA: BEKL\u0130YOR"
   m_OffsetZ: 0
   m_CharacterSize: 0.06
   m_LineSpacing: 1

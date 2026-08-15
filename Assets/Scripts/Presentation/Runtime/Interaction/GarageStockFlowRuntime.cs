@@ -40,8 +40,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ? "1 ÜRÜN • AYRILDI"
                 : "BOŞ";
 
+        public string CheckoutStatusText
+        {
+            get
+            {
+                GarageStockFlowSession session = EnsureInitialized();
+                return session.TryGetPrototypeCheckout(out RetailCheckoutRecord checkout)
+                    ? $"{FormatMoney(checkout.Currency, checkout.TotalMinorUnits)} • DONDURULDU"
+                    : "BEKLİYOR";
+            }
+        }
+
         public string ShelfOfferLabelText =>
-            $"RAF A\n{ShelfOfferPriceText}\nMÜŞTERİ: {CustomerBasketStatusText}";
+            $"RAF A\n{ShelfOfferPriceText}\nMÜŞTERİ: {CustomerBasketStatusText}\n" +
+            $"KASA: {CheckoutStatusText}";
 
         public static string PrototypePriceText => FormatPrice(
             ShelfPrice.Create(
@@ -60,7 +72,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return $"SİPARİŞ: {order}\nKOLİ: {parcel}\n" +
                        $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}\n" +
                        $"FİYAT: {ShelfOfferPriceText}\n" +
-                       $"SEPET: {CustomerBasketStatusText}";
+                       $"SEPET: {CustomerBasketStatusText}\n" +
+                       $"KASA: {CheckoutStatusText}";
             }
         }
 
@@ -137,9 +150,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public static string FormatPrice(ShelfPrice price)
         {
-            long majorUnits = price.MinorUnits / 100;
-            long minorUnits = price.MinorUnits % 100;
-            return $"{majorUnits},{minorUnits:00} {price.Currency.Value}";
+            return FormatMoney(price.Currency, price.MinorUnits);
+        }
+
+        public static string FormatMoney(CurrencyCode currency, long minorUnitAmount)
+        {
+            long majorUnits = minorUnitAmount / 100;
+            long minorUnits = minorUnitAmount % 100;
+            return $"{majorUnits},{minorUnits:00} {currency.Value}";
         }
     }
 }

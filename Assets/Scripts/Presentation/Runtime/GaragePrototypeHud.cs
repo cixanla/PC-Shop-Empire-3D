@@ -30,7 +30,7 @@ namespace PCShopEmpire3D.Presentation
             {
                 const float panelWidth = 370f;
                 GUI.Box(
-                    new Rect(Screen.width - panelWidth - 18f, 14f, panelWidth, 82f),
+                    new Rect(Screen.width - panelWidth - 18f, 14f, panelWidth, 112f),
                     stockFlow.StatusText);
             }
 

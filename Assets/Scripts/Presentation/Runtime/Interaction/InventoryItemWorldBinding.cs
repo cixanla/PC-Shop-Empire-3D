@@ -95,6 +95,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool IsCheckoutStarted
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null && session.TryGetPrototypeCheckout(out _);
+            }
+        }
+
+        public bool RequiresCheckoutStart => IsCustomerReserved && !IsCheckoutStarted;
+
         public string LocationLabel
         {
             get
@@ -128,7 +139,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (container.Kind == InventoryContainerKind.Shelf && IsCustomerReserved)
                 {
-                    return "RAF A • MÜŞTERİ İÇİN AYRILDI • STOK 1";
+                    return IsCheckoutStarted
+                        ? "RAF A • KASA FİYATI DONDURULDU • STOK 1"
+                        : "RAF A • MÜŞTERİ İÇİN AYRILDI • STOK 1";
                 }
 
                 return ContainerLabel(container.Kind);
@@ -315,6 +328,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             GarageStockFlowSession session = Session;
+            if (IsCheckoutStarted)
+            {
+                return OperationResult.Fail(StockProjectionFailures.CheckoutActive);
+            }
+
             if (!session.TryGetPrototypeBasketLine(out _))
             {
                 return OperationResult.Fail(
@@ -322,6 +340,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             OperationResult result = session.ReleasePrototypeCustomerBasket();
+            if (result.IsSuccess)
+            {
+                runtime.RefreshPresentation();
+            }
+
+            return result;
+        }
+
+        public OperationResult TryBeginCheckout()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            GarageStockFlowSession session = Session;
+            if (!session.TryGetPrototypeBasketLine(out _))
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CustomerReservationMissing);
+            }
+
+            if (!session.TryGetItem(out InventoryItemRecord item) ||
+                item.Id != InventoryItemId ||
+                item.ContainerId != session.ShelfContainerId)
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CheckoutUnavailable);
+            }
+
+            OperationResult result = session.BeginPrototypeCheckout();
             if (result.IsSuccess)
             {
                 runtime.RefreshPresentation();
@@ -539,6 +589,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public static readonly Failure CustomerReservationLocationMismatch = Failure.FromCode("stock-projection.customer-reservation-location-mismatch");
         public static readonly Failure CustomerReservationMissing = Failure.FromCode("stock-projection.customer-reservation-missing");
         public static readonly Failure CustomerReserved = Failure.FromCode("stock-projection.customer-reserved");
+        public static readonly Failure CheckoutUnavailable = Failure.FromCode("stock-projection.checkout-unavailable");
+        public static readonly Failure CheckoutActive = Failure.FromCode("stock-projection.checkout-active");
         public static readonly Failure PlacementZoneMissing = Failure.FromCode("stock-projection.placement-zone-missing");
         public static readonly Failure RecoveryContainerMissing = Failure.FromCode("stock-projection.recovery-container-missing");
         public static readonly Failure TransactionPending = Failure.FromCode("stock-projection.transaction-pending");

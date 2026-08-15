@@ -3,6 +3,7 @@ using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -322,6 +323,90 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             AssertLocation(fixture.Session, fixture.Session.HandsContainerId);
             Assert.That(fixture.Binding.RollbackPreparedTransfer().IsSuccess, Is.True);
             AssertLocation(fixture.Session, fixture.Session.ShelfContainerId);
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PrototypeCheckoutFreezesPriceWithoutMutatingStockBasketOfferOrOrder()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
+            Assert.That(session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
+            long inventoryRevision = session.Inventory.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long orderRevision = session.Orders.Revision;
+
+            Assert.That(session.BeginPrototypeCheckout().IsSuccess, Is.True);
+            Assert.That(session.BeginPrototypeCheckout().IsSuccess, Is.True);
+
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(session.RetailCheckouts.Count, Is.EqualTo(1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(session.TryGetPrototypeCheckout(out RetailCheckoutRecord checkout), Is.True);
+            Assert.That(checkout.TotalMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(checkout.Lines.Count, Is.EqualTo(1));
+            Assert.That(checkout.Lines[0].ItemId, Is.EqualTo(session.ItemId));
+            Assert.That(checkout.Lines[0].UnitPrice.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(checkout.Lines[0].SourceOfferRevision, Is.EqualTo(1));
+
+            Assert.That(session.RetailOffers.SetOffer(
+                session.ShelfOfferId,
+                session.ProductId,
+                session.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                59_999).IsSuccess, Is.True);
+            Assert.That(session.BeginPrototypeCheckout().IsSuccess, Is.True);
+            Assert.That(session.TryGetPrototypeCheckout(out checkout), Is.True);
+            Assert.That(checkout.TotalMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(checkout.Lines[0].UnitPrice.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void BindingStartsCheckoutOnceAndLocksReservationAndPickup()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+            Assert.That(fixture.Session.TransferItem(fixture.Session.ShelfContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryBeginCheckout().Error,
+                Is.EqualTo(StockProjectionFailures.CustomerReservationMissing));
+            Assert.That(fixture.Binding.TryReserveForCustomer().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.RequiresCheckoutStart, Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long basketRevision = fixture.Session.RetailBaskets.Revision;
+            long offerRevision = fixture.Session.RetailOffers.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            Assert.That(fixture.Binding.TryBeginCheckout().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryBeginCheckout().IsSuccess, Is.True);
+
+            Assert.That(fixture.Binding.IsCheckoutStarted, Is.True);
+            Assert.That(fixture.Binding.RequiresCheckoutStart, Is.False);
+            Assert.That(fixture.Session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Binding.TryReleaseCustomerReservation().Error,
+                Is.EqualTo(StockProjectionFailures.CheckoutActive));
+            Assert.That(fixture.Session.ReleasePrototypeCustomerBasket().Error,
+                Is.EqualTo(StockProjectionFailures.CheckoutActive));
+            Assert.That(fixture.Binding.TryPreparePickupTransfer().Error,
+                Is.EqualTo(StockProjectionFailures.CustomerReserved));
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 

@@ -149,9 +149,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (binding != null && binding.IsCustomerReserved)
                 {
-                    return $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
-                           "müşteri rezervasyonunu kaldır   |   " +
-                           "MÜŞTERİ İÇİN AYRILDI";
+                    if (binding.IsCheckoutStarted)
+                    {
+                        return $"KASA: {binding.Runtime.CheckoutStatusText}   |   " +
+                               "MÜŞTERİ REZERVASYONU KİLİTLİ";
+                    }
+
+                    return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
+                           "kasayı başlat   |   " +
+                           $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
+                           "müşteri rezervasyonunu kaldır   |   MÜŞTERİ İÇİN AYRILDI";
                 }
 
                 if (binding != null && binding.RequiresCustomerReservation)
@@ -608,6 +615,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : VisibleHandsState.Empty);
 
             InventoryItemWorldBinding focusedBinding = GetInventoryBinding(FocusedItem);
+            if (focusedBinding != null &&
+                focusedBinding.RequiresCheckoutStart &&
+                input.PrimaryActionPressedThisFrame)
+            {
+                Remember(focusedBinding.TryBeginCheckout());
+                return;
+            }
+
             if (focusedBinding != null && input.DropPressedThisFrame)
             {
                 if (focusedBinding.IsCustomerReserved)
