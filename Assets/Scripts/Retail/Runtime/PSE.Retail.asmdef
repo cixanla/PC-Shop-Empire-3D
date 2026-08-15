@@ -1,22 +1,18 @@
 {
-  "name": "PSE.Presentation",
-  "rootNamespace": "PCShopEmpire3D.Presentation",
+  "name": "PSE.Retail",
+  "rootNamespace": "PCShopEmpire3D.Retail",
   "references": [
     "PSE.Core",
     "PSE.Catalog",
-    "PSE.Inventory",
-    "PSE.Orders",
-    "PSE.Retail",
-    "PSE.World",
-    "Unity.InputSystem"
+    "PSE.Inventory"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
-  "overrideReferences": false,
+  "overrideReferences": true,
   "precompiledReferences": [],
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": false
+  "noEngineReferences": true
 }

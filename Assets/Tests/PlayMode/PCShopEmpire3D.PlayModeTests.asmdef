@@ -6,6 +6,7 @@
     "PSE.Catalog",
     "PSE.Inventory",
     "PSE.Orders",
+    "PSE.Retail",
     "PSE.Presentation",
     "PSE.World",
     "Unity.InputSystem",

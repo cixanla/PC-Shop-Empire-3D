@@ -5514,6 +5514,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.GarageStockFlowRuntime
   itemBinding: {fileID: 1328954699}
   worldStatusText: {fileID: 1213438153}
+  shelfOfferText: {fileID: 1441998763}
   statusIndicator: {fileID: 1190968045}
   arrivedMaterial: {fileID: 2100000, guid: 504f1ed5a6ed0412d8b75b66c668bb6c, type: 2}
   acceptedMaterial: {fileID: 2100000, guid: 5724d060684f844fa9a66b1ae238646a, type: 2}
@@ -20929,9 +20930,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441998761}
-  m_Text: 'RAF A
-
-    AUTHORITATIVE STOK'
+  m_Text: "RAF A\nF\u0130YAT YOK"
   m_OffsetZ: 0
   m_CharacterSize: 0.06
   m_LineSpacing: 1

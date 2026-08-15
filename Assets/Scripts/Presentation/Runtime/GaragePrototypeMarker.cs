@@ -12,7 +12,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-delivery-unpacking-r10-v1";
+        public const string Version = "garage-shelf-offer-r11-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -91,6 +91,9 @@ namespace PCShopEmpire3D.Presentation
                                        stockFlow.Session != null &&
                                        stockFlow.Session.Order.Status ==
                                        PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived;
+            bool hasShelfOfferAuthority = hasArrivedStockFlow &&
+                                          stockFlow.Session.RetailOffers != null &&
+                                          stockFlow.Session.RetailOffers.Count == 0;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -105,6 +108,7 @@ namespace PCShopEmpire3D.Presentation
                 $"transport-cart={(transportCart != null ? "ok" : "missing")} " +
                 $"inventory-flow={(hasArrivedStockFlow ? "arrived" : "missing")} " +
                 $"parcel={(stockFlow?.Parcel != null && stockFlow.Parcel.IsSealed ? "sealed" : "missing")} " +
+                $"shelf-offer={(hasShelfOfferAuthority ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
@@ -202,6 +206,32 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            long inventoryRevisionBeforeOffer = session.Inventory.Revision;
+            long orderRevisionBeforeOffer = session.Orders.Revision;
+            long retailRevisionBeforeOffer = session.RetailOffers.Revision;
+            OperationResult publishOffer = session.PublishShelfOffer();
+            OperationResult repeatedOffer = session.PublishShelfOffer();
+            stockFlow.RefreshPresentation();
+            PCShopEmpire3D.Retail.ShelfOfferRecord offer = null;
+            bool validOffer = publishOffer.IsSuccess &&
+                              repeatedOffer.IsSuccess &&
+                              session.TryGetShelfOffer(out offer) &&
+                              offer.Id == session.ShelfOfferId &&
+                              offer.Price.MinorUnits == GarageStockFlowSession.PrototypePriceMinorUnits &&
+                              offer.Price.Currency.Value == GarageStockFlowSession.PrototypeCurrencyCode &&
+                              session.RetailOffers.Revision == retailRevisionBeforeOffer + 1 &&
+                              session.Inventory.Revision == inventoryRevisionBeforeOffer &&
+                              session.Orders.Revision == orderRevisionBeforeOffer &&
+                              stockFlow.ShelfOfferText != null &&
+                              stockFlow.ShelfOfferText.text == stockFlow.ShelfOfferLabelText;
+            if (!validOffer)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(publishOffer.IsFailure ? publishOffer.Error.Code : "smoke.shelf-offer-contract")}");
+                yield break;
+            }
+
             Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
             if (cameraPivot != null)
             {
@@ -210,7 +240,9 @@ namespace PCShopEmpire3D.Presentation
 
             Debug.Log(
                 $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=ok accepted=ok parcel-open=ok carry=ok " +
-                $"world-floor=ok stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
+                $"world-floor=ok shelf-offer=ok price-minor={offer.Price.MinorUnits} " +
+                $"currency={offer.Price.Currency.Value} " +
+                $"stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
                 $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();
         }

@@ -56,6 +56,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool RequiresShelfOffer
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.TryGetItem(out InventoryItemRecord item) &&
+                       item.Id == InventoryItemId &&
+                       item.ProductId == session.ProductId &&
+                       item.ContainerId == session.ShelfContainerId &&
+                       !session.TryGetShelfOffer(out _);
+            }
+        }
+
         public string LocationLabel
         {
             get
@@ -184,6 +198,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (result.IsSuccess)
             {
                 projection.RecordSafePose();
+                runtime.RefreshPresentation();
+            }
+
+            return result;
+        }
+
+        public OperationResult TryPublishShelfOffer()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            GarageStockFlowSession session = Session;
+            if (!session.TryGetItem(out InventoryItemRecord item))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ItemNotAccepted);
+            }
+
+            if (item.Id != InventoryItemId || item.ProductId != session.ProductId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.IdentityMismatch);
+            }
+
+            if (item.ContainerId != session.ShelfContainerId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ShelfOfferLocationMismatch);
+            }
+
+            OperationResult result = session.PublishShelfOffer();
+            if (result.IsSuccess)
+            {
                 runtime.RefreshPresentation();
             }
 
@@ -389,6 +436,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public static readonly Failure ParcelSealed = Failure.FromCode("stock-projection.parcel-sealed");
         public static readonly Failure ParcelManifestMismatch = Failure.FromCode("stock-projection.parcel-manifest-mismatch");
         public static readonly Failure ParcelLocationMismatch = Failure.FromCode("stock-projection.parcel-location-mismatch");
+        public static readonly Failure ShelfOfferLocationMismatch = Failure.FromCode("stock-projection.shelf-offer-location-mismatch");
         public static readonly Failure PlacementZoneMissing = Failure.FromCode("stock-projection.placement-zone-missing");
         public static readonly Failure RecoveryContainerMissing = Failure.FromCode("stock-projection.recovery-container-missing");
         public static readonly Failure TransactionPending = Failure.FromCode("stock-projection.transaction-pending");

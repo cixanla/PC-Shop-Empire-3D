@@ -131,6 +131,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.EnsureInitialized().Order.Status,
                     Is.EqualTo(PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived));
                 Assert.That(marker.StockFlow.Session.TryGetItem(out _), Is.False);
+                Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
+                Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
+                Assert.That(marker.StockFlow.ShelfOfferText.text, Is.EqualTo("RAF A\nFİYAT YOK"));
                 Assert.That(physicalItems.All(item => item.Body != null), Is.True);
                 Assert.That(
                     physicalItems.All(item =>
@@ -214,7 +217,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-delivery-unpacking-r10-v1"));
+                    Is.EqualTo("garage-shelf-offer-r11-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

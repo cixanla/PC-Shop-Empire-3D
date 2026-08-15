@@ -46,16 +46,20 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public StockFlowBuildResult(
                 InventoryItemWorldBinding binding,
                 TextMesh statusText,
+                TextMesh shelfOfferText,
                 Renderer statusIndicator)
             {
                 Binding = binding;
                 StatusText = statusText;
+                ShelfOfferText = shelfOfferText;
                 StatusIndicator = statusIndicator;
             }
 
             public InventoryItemWorldBinding Binding { get; }
 
             public TextMesh StatusText { get; }
+
+            public TextMesh ShelfOfferText { get; }
 
             public Renderer StatusIndicator { get; }
         }
@@ -282,6 +286,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             stockFlow.Configure(
                 stockFlowBuild.Binding,
                 stockFlowBuild.StatusText,
+                stockFlowBuild.ShelfOfferText,
                 stockFlowBuild.StatusIndicator,
                 deliveryArrived,
                 deliveryAccepted,
@@ -1337,7 +1342,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             statusText.fontSize = 46;
             statusText.color = new Color(0.90f, 0.94f, 0.96f);
             statusText.text = "SİPARİŞ: GELDİ • KABUL BEKLİYOR\nKOLİ: KAPALI\n" +
-                              "ÜRÜN: KABUL BEKLİYOR • STOK 0";
+                              "ÜRÜN: KABUL BEKLİYOR • STOK 0\nFİYAT: FİYAT YOK";
 
             GameObject indicator = CreateDetailCube(
                 "ReceivingStatusIndicator",
@@ -1404,11 +1409,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             shelfLabel.characterSize = 0.06f;
             shelfLabel.fontSize = 48;
             shelfLabel.color = Color.white;
-            shelfLabel.text = "RAF A\nAUTHORITATIVE STOK";
+            shelfLabel.text = "RAF A\nFİYAT YOK";
 
             return new StockFlowBuildResult(
                 binding,
                 statusText,
+                shelfLabel,
                 indicator.GetComponent<Renderer>());
         }
 

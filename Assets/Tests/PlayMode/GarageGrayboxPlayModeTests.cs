@@ -994,6 +994,41 @@ namespace PCShopEmpire3D.Tests.PlayMode
             AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(stockFlow.StatusText, Does.Contain("RAF A"));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.Zero);
+            Assert.That(stockFlow.ShelfOfferText.text, Is.EqualTo("RAF A\nFİYAT YOK"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            yield return new WaitForFixedUpdate();
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("fiyatını yayınla"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain(GarageStockFlowRuntime.PrototypePriceText));
+            long inventoryRevisionBeforeOffer = stockFlow.Session.Inventory.Revision;
+            long orderRevisionBeforeOffer = stockFlow.Session.Orders.Revision;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
+            Assert.That(stockFlow.Session.TryGetShelfOffer(out var offer), Is.True);
+            Assert.That(offer.Id, Is.EqualTo(stockFlow.Session.ShelfOfferId));
+            Assert.That(offer.Price.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeOffer));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOffer));
+            Assert.That(stockFlow.ShelfOfferText.text,
+                Is.EqualTo($"RAF A\n{GarageStockFlowRuntime.PrototypePriceText}"));
+            Assert.That(stockFlow.StatusText,
+                Does.Contain($"FİYAT: {GarageStockFlowRuntime.PrototypePriceText}"));
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1060,6 +1095,71 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.ItemIdValue, Is.EqualTo(GarageStockFlowSession.ItemInstanceIdValue));
             AssertInventoryLocation(stockFlow, stockFlow.Session.WorldFloorContainerId);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToWorldItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.HandsContainerId);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToAuthoritativeShelf(marker);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
+            Assert.That(marker.PlayerCarry.PlacementValid, Is.True,
+                marker.PlayerCarry.LastFailureCode);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            yield return new WaitForFixedUpdate();
+            MovePlayerToShelfItem(marker, item);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("fiyatını yayınla"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+            long inventoryRevisionBeforeOffer = stockFlow.Session.Inventory.Revision;
+            long orderRevisionBeforeOffer = stockFlow.Session.Orders.Revision;
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(stockFlow.Session.TryGetShelfOffer(out var offer), Is.True);
+            Assert.That(offer.Price.Currency.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(offer.Price.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(stockFlow.Session.RetailOffers.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeOffer));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOffer));
+            Assert.That(stockFlow.ShelfOfferText.text,
+                Does.Contain(GarageStockFlowRuntime.PrototypePriceText));
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1155,6 +1255,45 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerMotor.transform.SetPositionAndRotation(
                 new Vector3(0f, 0.05f, -2.50f),
                 Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToWorldItem(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection item)
+        {
+            AimPlayerAtItem(marker, item, -Vector3.forward);
+        }
+
+        private static void MovePlayerToShelfItem(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection item)
+        {
+            AimPlayerAtItem(marker, item, -Vector3.right);
+        }
+
+        private static void AimPlayerAtItem(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection item,
+            Vector3 approachDirection)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            Vector3 target = item.Body != null
+                ? item.Body.worldCenterOfMass
+                : item.transform.position;
+            Vector3 playerPosition = target + (approachDirection.normalized * 1.25f);
+            playerPosition.y = 0.05f;
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
         }

@@ -204,6 +204,42 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             AssertLocation(fixture.Session, fixture.Session.HandsContainerId);
         }
 
+        [Test]
+        public void ShelfOfferPublishesOnceOnlyForExactShelvedItemWithoutStockOrOrderMutation()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+
+            long inventoryBeforeRejected = fixture.Session.Inventory.Revision;
+            long ordersBeforeRejected = fixture.Session.Orders.Revision;
+            OperationResult rejected = fixture.Binding.TryPublishShelfOffer();
+            Assert.That(rejected.Error,
+                Is.EqualTo(StockProjectionFailures.ShelfOfferLocationMismatch));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.Zero);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryBeforeRejected));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(ordersBeforeRejected));
+
+            Assert.That(fixture.Session.TransferItem(fixture.Session.ShelfContainerId).IsSuccess,
+                Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            Assert.That(fixture.Binding.RequiresShelfOffer, Is.True);
+            Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
+
+            Assert.That(fixture.Binding.RequiresShelfOffer, Is.False);
+            Assert.That(fixture.Session.TryGetShelfOffer(out var offer), Is.True);
+            Assert.That(offer.Id, Is.EqualTo(fixture.Session.ShelfOfferId));
+            Assert.That(offer.Price.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private Fixture CreateBindingFixture()
         {
             _root = new GameObject("StockFlowTestRoot");
@@ -241,7 +277,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             parcel.Configure(item, sealedVisual, productVisual, openedShell);
             InventoryItemWorldBinding binding = itemObject.AddComponent<InventoryItemWorldBinding>();
             GarageStockFlowRuntime runtime = _root.AddComponent<GarageStockFlowRuntime>();
-            runtime.Configure(binding, null, null, null, null, null);
+            runtime.Configure(binding, null, null, null, null, null, null);
             GarageStockFlowSession session = runtime.EnsureInitialized();
             return new Fixture(session, binding, item, parcel, anchor);
         }

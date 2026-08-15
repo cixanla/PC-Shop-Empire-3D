@@ -4,6 +4,7 @@ using NUnit.Framework;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
+using PCShopEmpire3D.Retail;
 
 namespace PCShopEmpire3D.Tests.EditMode.Inventory
 {
@@ -49,6 +50,22 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(references, Does.Contain("PSE.Core"));
             Assert.That(references, Does.Contain("PSE.Catalog"));
             Assert.That(references, Does.Contain("PSE.Inventory"));
+            AssertNoUnityReferences(references);
+        }
+
+        [Test]
+        public void RetailHasStableNameAndDependsOnlyOnCoreCatalogAndInventoryDomains()
+        {
+            string[] references = typeof(RetailAssembly).Assembly
+                .GetReferencedAssemblies()
+                .Select(reference => reference.Name ?? string.Empty)
+                .ToArray();
+
+            Assert.That(typeof(RetailAssembly).Assembly.GetName().Name, Is.EqualTo(RetailAssembly.Name));
+            Assert.That(references, Does.Contain("PSE.Core"));
+            Assert.That(references, Does.Contain("PSE.Catalog"));
+            Assert.That(references, Does.Contain("PSE.Inventory"));
+            Assert.That(references, Does.Not.Contain("PSE.Orders"));
             AssertNoUnityReferences(references);
         }
 

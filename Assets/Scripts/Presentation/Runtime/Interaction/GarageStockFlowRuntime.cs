@@ -1,5 +1,6 @@
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
+using PCShopEmpire3D.Retail;
 using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation.Interaction
@@ -9,6 +10,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     {
         [SerializeField] private InventoryItemWorldBinding itemBinding;
         [SerializeField] private TextMesh worldStatusText;
+        [SerializeField] private TextMesh shelfOfferText;
         [SerializeField] private Renderer statusIndicator;
         [SerializeField] private Material arrivedMaterial;
         [SerializeField] private Material acceptedMaterial;
@@ -20,6 +22,26 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public DeliveryParcelProjection Parcel => itemBinding != null ? itemBinding.Parcel : null;
 
+        public TextMesh ShelfOfferText => shelfOfferText;
+
+        public string ShelfOfferPriceText
+        {
+            get
+            {
+                GarageStockFlowSession session = EnsureInitialized();
+                return session.TryGetShelfOffer(out ShelfOfferRecord offer)
+                    ? FormatPrice(offer.Price)
+                    : "FİYAT YOK";
+            }
+        }
+
+        public string ShelfOfferLabelText => $"RAF A\n{ShelfOfferPriceText}";
+
+        public static string PrototypePriceText => FormatPrice(
+            ShelfPrice.Create(
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits).Value);
+
         public string StatusText
         {
             get
@@ -30,13 +52,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     : "KABUL EDİLDİ";
                 string parcel = Parcel != null ? Parcel.StateLabel : "PROJECTION EKSİK";
                 return $"SİPARİŞ: {order}\nKOLİ: {parcel}\n" +
-                       $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}";
+                       $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}\n" +
+                       $"FİYAT: {ShelfOfferPriceText}";
             }
         }
 
         public void Configure(
             InventoryItemWorldBinding binding,
             TextMesh statusTextMesh,
+            TextMesh shelfOfferTextMesh,
             Renderer indicator,
             Material waitingMaterial,
             Material receivingMaterial,
@@ -46,6 +70,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ? binding
                 : throw new System.ArgumentNullException(nameof(binding));
             worldStatusText = statusTextMesh;
+            shelfOfferText = shelfOfferTextMesh;
             statusIndicator = indicator;
             arrivedMaterial = waitingMaterial;
             acceptedMaterial = receivingMaterial;
@@ -68,6 +93,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (worldStatusText != null)
             {
                 worldStatusText.text = StatusText;
+            }
+
+            if (shelfOfferText != null)
+            {
+                shelfOfferText.text = ShelfOfferLabelText;
             }
 
             if (statusIndicator == null)
@@ -96,6 +126,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             EnsureInitialized();
             RefreshPresentation();
+        }
+
+        public static string FormatPrice(ShelfPrice price)
+        {
+            long majorUnits = price.MinorUnits / 100;
+            long minorUnits = price.MinorUnits % 100;
+            return $"{majorUnits},{minorUnits:00} {price.Currency.Value}";
         }
     }
 }

@@ -3,6 +3,7 @@ using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
+using PCShopEmpire3D.Retail;
 
 namespace PCShopEmpire3D.Presentation.Interaction
 {
@@ -22,16 +23,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string HandsContainerIdValue = "inventory.container.player-hands";
         public const string ShelfContainerIdValue = "inventory.container.retail-shelf-a";
         public const string WorldFloorContainerIdValue = "inventory.container.world-floor";
+        public const string ShelfOfferIdValue = "retail.offer.garage-shelf-a-northstar-a60";
+        public const string PrototypeCurrencyCode = "EUR";
+        public const long PrototypePriceMinorUnits = 54_999;
         public const string ProductDisplayName = "Northstar A60 Ekran Kartı";
 
         private GarageStockFlowSession(
             ProductCatalog catalog,
             InventoryAuthority inventory,
-            PurchaseOrderAuthority orders)
+            PurchaseOrderAuthority orders,
+            ShelfOfferAuthority retailOffers)
         {
             Catalog = catalog;
             Inventory = inventory;
             Orders = orders;
+            RetailOffers = retailOffers;
         }
 
         public ProductCatalog Catalog { get; }
@@ -39,6 +45,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public InventoryAuthority Inventory { get; }
 
         public PurchaseOrderAuthority Orders { get; }
+
+        public ShelfOfferAuthority RetailOffers { get; }
 
         public StableId<ProductDefinitionIdScope> ProductId =>
             StableId<ProductDefinitionIdScope>.Parse(ProductIdValue);
@@ -60,6 +68,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<ContainerIdScope> WorldFloorContainerId =>
             StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue);
+
+        public StableId<ShelfOfferIdScope> ShelfOfferId =>
+            StableId<ShelfOfferIdScope>.Parse(ShelfOfferIdValue);
 
         public PurchaseOrderRecord Order
         {
@@ -106,6 +117,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 8);
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
+            ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
             StableId<PurchaseOrderIdScope> orderId =
                 StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
             StableId<DeliveryIdScope> deliveryId =
@@ -131,7 +143,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RequireSuccess(orders.DispatchOrder(orderId, Time(3)));
             RequireSuccess(orders.RegisterArrival(orderId, manifest, Time(4)));
 
-            var session = new GarageStockFlowSession(catalog, inventory, orders);
+            var session = new GarageStockFlowSession(catalog, inventory, orders, retailOffers);
             RequireSuccess(session.ValidateInvariants());
             return session;
         }
@@ -151,10 +163,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Inventory.TryGetSerializedItem(ItemId, out item);
         }
 
+        public OperationResult PublishShelfOffer()
+        {
+            return RetailOffers.SetOffer(
+                ShelfOfferId,
+                ProductId,
+                ShelfContainerId,
+                PrototypeCurrencyCode,
+                PrototypePriceMinorUnits);
+        }
+
+        public bool TryGetShelfOffer(out ShelfOfferRecord offer)
+        {
+            return RetailOffers.TryGetOfferForShelfProduct(
+                ShelfContainerId,
+                ProductId,
+                out offer);
+        }
+
         public OperationResult ValidateInvariants()
         {
             OperationResult orderResult = Orders.ValidateInvariants();
-            return orderResult.IsFailure ? orderResult : Inventory.ValidateInvariants();
+            if (orderResult.IsFailure)
+            {
+                return orderResult;
+            }
+
+            OperationResult inventoryResult = Inventory.ValidateInvariants();
+            return inventoryResult.IsFailure
+                ? inventoryResult
+                : RetailOffers.ValidateInvariants();
         }
 
         private static void RegisterContainer(

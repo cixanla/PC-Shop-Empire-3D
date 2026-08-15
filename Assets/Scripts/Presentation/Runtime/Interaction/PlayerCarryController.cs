@@ -139,6 +139,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            binding.LocationLabel;
                 }
 
+                if (binding != null && binding.RequiresShelfOffer)
+                {
+                    return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                           $"RAF A fiyatını yayınla • " +
+                           $"{GarageStockFlowRuntime.PrototypePriceText}   |   " +
+                           binding.LocationLabel;
+                }
+
                 return FocusedItem.HasStackedItem
                     ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
                     : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
@@ -211,6 +219,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 return Remember(unpack);
+            }
+
+            if (binding != null && binding.RequiresShelfOffer)
+            {
+                OperationResult publish = binding.TryPublishShelfOffer();
+                if (publish.IsSuccess)
+                {
+                    LastFailureCode = string.Empty;
+                    SetHandsState(VisibleHandsState.TargetFocused);
+                }
+
+                return Remember(publish);
             }
 
             OperationResult authorityTransfer = binding != null
