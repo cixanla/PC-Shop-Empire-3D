@@ -1,7 +1,7 @@
 # ADR-0033 — Deterministic CPU Socket Seating and Retention
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Kabul edildi; kaynak, test, Universal macOS build, Apple M4/Metal native runtime, private push, Repository Guard ve Issue/Project `Done` kapıları tamamlandı; USB yeniden bağlandı ve snapshot final metadata commit sonrası alınır<br>
+**Durum:** Kabul edildi; kaynak, test, Universal macOS build, Apple M4/Metal native runtime, private push, Repository Guard, Issue/Project `Done` ve doğrulanmış Issue #53–#55 USB milestone kapıları tamamlandı<br>
 **Bağlam:** Epic #10 / Issue #55 — tek CPU için bounded fiziksel socket ve retention dilimi
 
 ## Bağlam
@@ -40,4 +40,4 @@ Issue #53–#54 tek serialized `MicroAtx` anakartı açık kasaya oturtup Assemb
 - EditMode `430/430`; gerçek Input System PlayMode `31/31`; failed/skipped/inconclusive `0`.
 - Universal macOS Development/StrictMode Player; Mach-O `x86_64 + arm64`.
 - Apple M4/Metal, 1280×720 native runtime; `garage-cpu-socket-retention-r24-v1` readiness ve exact CPU socket smoke başarılı.
-- Ayrıntılı boyut, SHA-256, marker, commit, GitHub ve USB durumu tarihli Issue #55 evidence/checkpoint belgesinde tutulur.
+- Issue #53–#55 birleşik USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; ayrıntılı boyut, SHA-256, marker, commit ve GitHub durumu tarihli evidence/checkpoint belgelerinde tutulur.

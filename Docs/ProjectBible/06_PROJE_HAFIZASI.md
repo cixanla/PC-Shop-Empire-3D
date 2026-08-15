@@ -476,7 +476,7 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Karar: seat solver preview ve commit için tek deterministic pose üretir; pause/range/focus/LOS/orientation/support/obstruction fail-closed'dur. Reset/disabled projection valid sayılamaz.
 - Karar: aynı-frame Primary+Drop içinde Primary tek state-transition sahibidir; Drop consume/no-op olur. Klavye/fare ve gamepad dynamic promptları gerçek Input System testlidir.
 - Kanıt: EditMode `394/394`, PlayMode `26/26`, Universal macOS `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok`.
-- USB bağlı değildir; final evidence repo dışı yerel build arşivinde korunur ve USB yeniden bağlandığında manifest/readback milestone'una alınır.
+- Gecikmiş USB kapısı 16 Ağustos 2026'da Issue #53–#55 birleşik milestone'uyla kapandı: source `07364b79`, 640 tracked source + 12 final evidence + source kaydı, 653/653 readback ve `0b5f3c61…aaba9e` manifesti; güvenlik mismatch `0`.
 - Bu tarihsel checkpointin sonraki kararı Issue #54 motherboard fastener secure/unsecure idi; aşağıdaki güncel kayıtla tamamlandı.
 
 ## Güncel uygulama kaydı — Issue #54 deterministic motherboard fastener
@@ -488,7 +488,7 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Karar: screw/screwdriver/plate yalnız projection'dır. Exact 4 mm secured depth ve tool rotation görsel okunabilirlik sağlar; transform drift'i `assembly-seat.projection-invariant` üretir fakat domain'e geri okunmaz.
 - Karar: valid ve blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Cached evaluation tek NonAlloc raycast'i korur; pause ve blocker aynı-frame replay'i drain eder, release–repress zorunludur.
 - Kanıt: EditMode `411/411`, gerçek Input System PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok`.
-- USB bağlı değildir; final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur ve USB yeniden bağlandığında Issue #53–#54 ayrı manifest/readback milestone'una alınır.
+- Issue #54 kanıtları aynı doğrulanmış Issue #53–#55 USB milestone'undadır; 12/12 evidence eşliği ve AppleDouble/sibling-sidecar `0`dır.
 - Bu tarihsel checkpointin sonraki kararı Issue #55 CPU socket seating + retention idi; aşağıdaki güncel kayıtla doğrulandı.
 
 ## Güncel uygulama kaydı — Issue #55 deterministic CPU socket seating ve retention
@@ -501,5 +501,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Karar: guided mode kapalıyken ghost veya seat PhysX query çalışmaz. Dynamic compact HUD gerçek ilk input consumer'ı gösterir; real Input System co-edge/pause/release–repress sözleşmesi keyboard/mouse ve gamepad için testlidir.
 - Karar: r24 CPU/socket/load-plate/lever geometri ve materyali okunaklı yarı-gerçekçi graybox kanıtıdır. Hard-surface UV/normaller, matching triangular key ve simetrik aperture vardır; `21 Renderer / 11 Collider / 1 TextMesh` bütçesi değişmez.
 - Kanıt: EditMode `430/430`, gerçek Input System PlayMode `31/31`, Universal macOS `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable`.
-- USB yeniden bağlıdır; final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur ve Issue #53–#55 final metadata commit sonrası ayrı manifest/readback milestone'una alınır.
+- Issue #53–#55 birleşik USB milestone'u `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` altında doğrulandı: source `07364b79`, 653 satırlı `0b5f3c61…aaba9e` manifest, 13.500.119 payload baytı ve bütün mismatch sayaçları `0`.
 - Sıradaki küçük karar: yalnız dual-latch DIMM/RAM seating. GPU/cooler/storage, tam build/benchmark, genel Inventory revision-max hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.

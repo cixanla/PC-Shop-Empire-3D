@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Issue #55 feature `99cadad`, source/docs `d9d0722`, 430/430 EditMode, 31/31 PlayMode, Universal macOS/Apple M4 runtime ve başarılı Repository Guard `31914774370` ile kapandı; acceptance `20/20`, Issue kapalı/Roadmap `Done`; USB yeniden bağlandı, snapshot final metadata commit sonrası alınır<br>
+**Durum:** Issue #53–#55 kaynak/test/build/runtime/CI zinciri kapalıdır; birleşik USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; Issue #53 acceptance `18/18`, kapalı/Roadmap `Done`; sıradaki bounded paket yalnız dual-latch DIMM/RAM seating<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #55 / Epic #10
@@ -18,7 +18,7 @@
 - Universal macOS Development/StrictMode build `328144884` bayttır; ana executable Universal Mach-O `x86_64 + arm64`, SHA-256 `d87710b6…24f0`.
 - Apple M4/Metal 1280×720 runtime readiness ve exact `GARAGE_CPU_SOCKET_RUNTIME_SMOKE ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` marker'ı geçti.
 - Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; ayrıntı `Docs/Evidence/DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION-CHECKPOINT-2026-08-16.md` içindedir.
-- USB `/Volumes/cixanla` üzerinde yeniden bağlıdır; Issue #53–#55 source/evidence snapshotı final metadata commit sabitlenince ayrı manifest/readback milestone'u olarak alınacaktır.
+- Issue #53–#55 birleşik USB milestone'u `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` altında doğrulandı: source `07364b79`, 640 tracked source + 12 final evidence + source kaydı, 653 satırlı `0b5f3c61…aaba9e` manifest, 13.500.119 payload baytı; bütün mismatch sayaçları `0`.
 - Sıradaki bounded Epic #10 child adayı tek dual-latch DIMM/RAM seating akışıdır. GPU/cooler/storage, tam build benchmarkı, Inventory genişlemesi ve Windows/Steam ayrı kapılardır.
 
 ## Önceki checkpoint — Issue #54 / Epic #10
@@ -139,13 +139,16 @@
 - Source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`; 576 tracked `SOURCE`, 7 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 584 manifest payload satırı, toplam 586 dosya ve 10.485.924 payload baytı.
 - `MANIFEST.tsv` SHA-256: `7fbb5f0ce2bdd0aa32f0baa943e12d1dcf331b4ea05a85c81e0215c969531fbd`.
 - Tam geri okuma 584/584 hash+boyut+path, 576/576 exact Git source ve 7/7 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
+- En yeni milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION`.
+- Source `07364b79ad111aa778493c8936a7709c84b48464`, tree `bec3a18af5842b3b68bdfdebf38eddd44bc4dfc7`; 640 tracked `SOURCE`, 12 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt`; 653 manifest payload satırı ve 13.500.119 payload baytı.
+- `MANIFEST.tsv` SHA-256: `0b5f3c6100abeb3dc28e292ed515186fffabaa17f4c3ec66aef3399572aaba9e`.
+- Tam geri okuma 653/653 hash+boyut+path, 640/640 exact Git source ve 12/12 evidence eşliğiyle geçti. Forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
 
 ## Sıradaki immediate geliştirme işi
 
-1. Final metadata commit sabitlenince Issue #53–#55 source/evidence kanıtlarını bağlı USB'ye ayrı SHA-256 manifest/readback milestone'u olarak almak.
-2. Sonraki Epic #10 child paketini tek dual-latch DIMM/RAM seating akışıyla sınırlamak; slot/channel identity, keyed orientation, latch sırası, sökme ve recovery dışına büyütmemek.
-3. Inventory revision-max hardening, GPU/cooler/storage, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Sonraki Epic #10 child paketini tek dual-latch DIMM/RAM seating akışıyla sınırlamak; slot/channel identity, keyed orientation, latch sırası, sökme ve recovery dışına büyütmemek.
+2. Inventory revision-max hardening, GPU/cooler/storage, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb`, EditMode `430/430`, PlayMode `31/31`, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok ... retained-remove-gate=ok replay=ok identity=stable` ve Guard `31914774370` ile tamamlandı; acceptance `20/20`, Issue kapalı/Roadmap `Done`, USB yeniden bağlı ve snapshot final metadata commit sonrası alınır. Sıradaki bounded child yalnız tek dual-latch DIMM/RAM seating akışıdır.
+Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb`, EditMode `430/430`, PlayMode `31/31`, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok ... retained-remove-gate=ok replay=ok identity=stable` ve Guard `31914774370` ile tamamlandı; acceptance `20/20`, Issue kapalı/Roadmap `Done`dur. Issue #53–#55 USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; Issue #53 de acceptance `18/18`, kapalı/Roadmap `Done`dur. Sıradaki bounded child yalnız tek dual-latch DIMM/RAM seating akışıdır.

@@ -75,4 +75,6 @@ Native player exact başarı marker'ı kaydedildikten sonra yalnız kaydedilen P
 ## GitHub ve USB durumu
 
 - Feature ve source/docs private `main`e ulaştı; Repository Guard `31914774370` başarılıdır. Acceptance `20/20`, Issue kapalı ve Development Roadmap `Done`dur.
-- Kullanıcı USB'nin yeniden bağlandığını bildirdi; mount `/Volumes/cixanla` üzerinde salt-okunur preflight ile doğrulandı. Issue #53–#55 source/evidence snapshotı final metadata commit sabitlendikten sonra ayrı SHA-256 manifest/readback milestone'una alınır.
+- Final metadata source `07364b79ad111aa778493c8936a7709c84b48464`, tree `bec3a18af5842b3b68bdfdebf38eddd44bc4dfc7` ve Repository Guard `31914933915` başarılıdır.
+- Issue #53–#55 birleşik milestone'u `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` altında 640 tracked source + 12 final evidence + source kaydıyla doğrulandı.
+- `MANIFEST.tsv` 653/653 hash/boyut/yol readback, 640/640 exact Git source ve 12/12 evidence eşliğini geçti; 13.500.119 payload baytı, SHA-256 `0b5f3c6100abeb3dc28e292ed515186fffabaa17f4c3ec66aef3399572aaba9e`; bütün güvenlik/AppleDouble mismatch sayaçları `0`.

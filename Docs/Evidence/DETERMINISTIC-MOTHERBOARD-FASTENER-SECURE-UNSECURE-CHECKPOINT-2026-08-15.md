@@ -72,5 +72,5 @@ Native player exact başarı marker'ı kaydedildikten sonra yalnız kaydedilen P
 ## GitHub ve USB durumu
 
 - Issue #54 acceptance `18/18` tamamlandı; Issue kapatıldı ve Development Roadmap durumu `Done` oldu. Feature + source/docs private `main`e ulaştı ve Repository Guard `31909940414` başarılıdır.
-- Kullanıcı USB'yi geçici olarak çıkardığını bildirdi. Bu turda `/Volumes` veya USB'ye erişilmedi; snapshot oluşturulmadı.
-- Yerel final evidence arşivi korunur. USB yeniden bağlandığında Issue #53 ve #54 source/evidence paketleri ayrı SHA-256 manifest/readback milestone'ına aktarılacaktır.
+- Issue #53–#55 birleşik milestone'u `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` altında source `07364b79`, 640 tracked source + 12 final evidence + source kaydıyla doğrulandı.
+- `MANIFEST.tsv` 653/653 hash/boyut/yol readback ve 12/12 evidence eşliğini geçti; SHA-256 `0b5f3c6100abeb3dc28e292ed515186fffabaa17f4c3ec66aef3399572aaba9e`; güvenlik ve AppleDouble mismatch `0`.

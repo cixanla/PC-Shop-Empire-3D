@@ -217,7 +217,7 @@ Tam konuşma ve dosya geçmişi:
 - GarageGraybox açık kasa/keyed tray/standoff/anakart graybox'ını içerir. Solver pause/range/focus/LOS/orientation/support/obstruction kapılarını deterministic uygular; preview ve commit pozu aynıdır.
 - Primary+Drop aynı frame'de yalnız seat-mode geçişi üretir. Gerçek Input System keyboard/mouse ve gamepad akışları, dynamic prompt ve release–repress ile testlidir.
 - Final EditMode `394/394`, PlayMode `26/26`, Universal macOS `328020817` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-seating-r22-v1 assembly-flow=ok ... recovery=ok` başarılıdır.
-- USB geçici olarak bağlı değildir ve bu checkpointte `/Volumes`e erişilmemiştir. Final evidence yerel build arşivinde korunur; USB yeniden bağlandığında ayrı manifest/readback milestone'u oluşturulur.
+- Bu tarihsel USB gecikmesi 16 Ağustos 2026'da Issue #53–#55 birleşik milestone'uyla kapandı: source `07364b79`, 640 tracked source + 12 final evidence + source kaydı, 653/653 readback ve `0b5f3c61…aaba9e` manifesti; bütün güvenlik mismatch sayaçları `0`.
 - Bu tarihsel checkpointin sonraki adımı Issue #54 motherboard fastener secure/unsecure idi; aşağıdaki güncel kayıtla tamamlandı.
 
 ## 8.2 Issue #54 deterministic motherboard fastener checkpoint'i
@@ -228,7 +228,7 @@ Tam konuşma ve dosya geçmişi:
 - GarageGraybox r23 captive screw/cross recess, solid focus target, screwdriver ve plate'e bağlı tek satır metin taşır. Solver pause/range/focus/LOS/obstruction fail-closed'dur; screw/tool pose yalnız projection'dır ve drift authority'yi mutate etmeden invariantı bozar.
 - Valid/blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Gerçek keyboard/mouse ve gamepad PlayMode testleri dynamic prompt, same-frame blocker drain, pause co-edge ve release–repress sözleşmesini taşır.
 - Final EditMode `411/411`, PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` başarılıdır.
-- USB bağlı değildir ve `/Volumes`e erişilmemiştir. Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; USB yeniden bağlandığında Issue #53–#54 ayrı manifest/readback milestone'una alınır.
+- Issue #54 final kanıtları aynı doğrulanmış Issue #53–#55 birleşik USB milestone'undadır; 12/12 evidence ve 640/640 exact Git source eşliği geçti.
 - Bu tarihsel checkpointin sonraki adımı Issue #55 CPU socket seating + retention idi; aşağıdaki güncel kayıtla doğrulandı.
 
 ## 8.3 Issue #55 deterministic CPU socket seating ve retention checkpoint'i
@@ -239,7 +239,7 @@ Tam konuşma ve dosya geçmişi:
 - GarageGraybox r24 notched LGA-style package, ayrı substrate/IHS materyali, triangular mating key, simetrik aperture load plate ve retention lever taşır. Presentation authority değildir; drift invariantı fail-closed'dur ve `21/11/1` render/physics/text bütçesi korunur.
 - Gerçek keyboard/mouse ve gamepad PlayMode testleri guided mode, keyed quarter-turn rejection, seat/retain/open/remove, CPU-installed motherboard detach gate, dynamic compact HUD, co-edge/pause drain ve recovery'yi taşır.
 - Final EditMode `430/430`, PlayMode `31/31`, Universal macOS `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` başarılıdır.
-- USB yeniden bağlıdır. Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; Issue #53–#55 final metadata commit sonrası ayrı manifest/readback milestone'una alınır.
+- Issue #53–#55 birleşik USB milestone'u `2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` adıyla doğrulandı: source `07364b79`, 653 satırlı `0b5f3c61…aaba9e` manifest, 13.500.119 payload baytı; hash/boyut/yol, Git source, evidence, forbidden, credential ve AppleDouble mismatch `0`.
 - Sonraki bounded Epic #10 adımı yalnız dual-latch DIMM/RAM seating akışıdır. GPU/cooler/storage, tam build/benchmark, genel Inventory revision-max hardening, Save/Guardian ve Windows/Steam ayrı kalır.
 
 ## 9. USB ve yedek güvenlik katmanı
@@ -285,4 +285,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb`, EditMode 430/430, PlayMode 31/31, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` ve Guard `31914774370` ile tamamlandı; acceptance 20/20, Issue kapalı/Roadmap `Done`, USB yeniden bağlı ve snapshot final metadata commit sonrasıdır. Sıradaki bounded child yalnız dual-latch DIMM/RAM seating dilimidir.
+> Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb`, EditMode 430/430, PlayMode 31/31, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` ve Guard `31914774370` ile tamamlandı; acceptance 20/20, Issue kapalı/Roadmap `Done`dur. Issue #53–#55 USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; Issue #53 de 18/18 acceptance ile kapalı/Done oldu. Sıradaki bounded child yalnız dual-latch DIMM/RAM seating dilimidir.
