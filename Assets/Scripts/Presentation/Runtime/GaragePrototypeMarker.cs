@@ -12,12 +12,13 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-loaded-transport-cart-g8-v1";
+        public const string Version = "garage-authoritative-stock-flow-r9-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
         [SerializeField] private PlayerCarryController playerCarry;
         [SerializeField] private TransportCartProjection transportCart;
+        [SerializeField] private GarageStockFlowRuntime stockFlow;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -27,16 +28,20 @@ namespace PCShopEmpire3D.Presentation
 
         public TransportCartProjection TransportCart => transportCart;
 
+        public GarageStockFlowRuntime StockFlow => stockFlow;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
             PlayerCarryController carry,
-            TransportCartProjection cart)
+            TransportCartProjection cart,
+            GarageStockFlowRuntime garageStockFlow = null)
         {
             playerMotor = motor;
             playerInput = input;
             playerCarry = carry;
             transportCart = cart;
+            stockFlow = garageStockFlow;
         }
 
         private void Start()
@@ -82,6 +87,11 @@ namespace PCShopEmpire3D.Presentation
                 hasTaskLight |= sceneTransform.name == "WorkbenchTaskLight";
             }
 
+            bool hasArrivedStockFlow = stockFlow != null &&
+                                       stockFlow.Session != null &&
+                                       stockFlow.Session.Order.Status ==
+                                       PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived;
+
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
                 $"scene={gameObject.scene.name} resolution={Screen.width}x{Screen.height} " +
@@ -93,12 +103,93 @@ namespace PCShopEmpire3D.Presentation
                 $"rotation={(hasRotationAction && hasRotationSurface ? "ok" : "missing")} " +
                 $"stacking={(smallBoxCount >= 2 ? "ok" : "missing")} " +
                 $"transport-cart={(transportCart != null ? "ok" : "missing")} " +
+                $"inventory-flow={(hasArrivedStockFlow ? "arrived" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
             {
                 StartCoroutine(RunTransportCartSmoke());
             }
+
+            if (HasCommandLineArgument("-pse-stock-flow-smoke"))
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunStockFlowSmoke());
+            }
+        }
+
+        private IEnumerator RunStockFlowSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(false);
+            yield return null;
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            InventoryItemWorldBinding binding = stockFlow != null
+                ? stockFlow.ItemBinding
+                : null;
+            PhysicalItemProjection item = binding != null ? binding.Projection : null;
+            if (playerMotor == null || playerCarry == null || session == null || item == null)
+            {
+                Debug.LogError(
+                    "GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed code=smoke.context-missing");
+                yield break;
+            }
+
+            if (session.Order.Status != PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived ||
+                session.TryGetItem(out _) ||
+                session.Inventory.GetTotalQuantity(session.ProductId).Value != 0)
+            {
+                Debug.LogError(
+                    "GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed code=smoke.arrival-contract");
+                yield break;
+            }
+
+            OperationResult accept = playerCarry.TryPickup(item);
+            if (accept.IsFailure || playerCarry.HeldItem != null)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(accept.IsFailure ? accept.Error.Code : "smoke.accept-carried")}");
+                yield break;
+            }
+
+            OperationResult pickup = playerCarry.TryPickup(item);
+            if (pickup.IsFailure || playerCarry.HeldItem != item)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(pickup.IsFailure ? pickup.Error.Code : "smoke.pickup-missing")}");
+                yield break;
+            }
+
+            SetPlayerPose(new Vector3(0f, 0.05f, -2.5f), Quaternion.identity);
+            OperationResult drop = playerCarry.TryDrop();
+            bool validInventory = session.TryGetItem(out PCShopEmpire3D.Inventory.InventoryItemRecord record) &&
+                                  record.Id == session.ItemId &&
+                                  record.ContainerId == session.WorldFloorContainerId &&
+                                  session.Inventory.GetTotalQuantity(session.ProductId).Value == 1;
+            if (drop.IsFailure || playerCarry.HeldItem != null || !validInventory)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(drop.IsFailure ? drop.Error.Code : "smoke.inventory-mismatch")}");
+                yield break;
+            }
+
+            Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
+            if (cameraPivot != null)
+            {
+                cameraPivot.localRotation = Quaternion.Euler(12f, 0f, 0f);
+            }
+
+            Debug.Log(
+                $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=ok accepted=ok carry=ok " +
+                $"world-floor=ok stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
+                $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
+            yield return new WaitForEndOfFrame();
         }
 
         private IEnumerator RunTransportCartSmoke()

@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -19,6 +22,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         private const string StackBaseBoxId = "prototype.garage-box-002";
         private const string LargeBoxId = "prototype.garage-large-box-001";
         private const string TransportCartId = "prototype.garage-transport-cart-001";
+        private const string DeliveryItemId = GarageStockFlowSession.ItemInstanceIdValue;
 
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
@@ -212,7 +216,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerCarry.ProcessInputFrame();
 
             Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
-            Assert.That(marker.PlayerCarry.PlacementValid, Is.True);
+            Assert.That(
+                marker.PlayerCarry.PlacementValid,
+                Is.True,
+                $"status={marker.PlayerCarry.CurrentPlacementStatus} " +
+                $"failure={marker.PlayerCarry.LastFailureCode}");
             Assert.That(marker.PlayerCarry.PlacementPreview.IsVisible, Is.True);
             Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.True);
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("GEÇERLİ"));
@@ -886,6 +894,183 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(Vector3.Distance(item.transform.position, safePosition), Is.LessThan(0.05f));
         }
 
+        [UnityTest]
+        public IEnumerator KeyboardAcceptsExactDeliveryThenPlacesSameAuthoritativeItemOnShelf()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            InventoryItemWorldBinding binding = stockFlow.ItemBinding;
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToAuthoritativeDelivery(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(stockFlow, Is.Not.Null);
+            Assert.That(stockFlow.Session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Arrived));
+            Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.Zero);
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("teslimatını kabul et"));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(stockFlow.Session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Accepted));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+            Assert.That(binding.LocationLabel, Does.Contain("KABUL ALANI"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            Assert.That(item.IsCarried, Is.True);
+            Assert.That(item.ItemIdValue, Is.EqualTo(binding.InventoryItemId.Value));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.HandsContainerId);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("OYUNCU ELİNDE"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToAuthoritativeShelf(marker);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.IsPlacementMode, Is.True);
+            Assert.That(
+                marker.PlayerCarry.PlacementValid,
+                Is.True,
+                $"status={marker.PlayerCarry.CurrentPlacementStatus} " +
+                $"failure={marker.PlayerCarry.LastFailureCode}");
+            Assert.That(marker.PlayerCarry.CurrentStackSupport, Is.Null);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("GEÇERLİ"));
+
+            Pose shelfPose = marker.PlayerCarry.PlacementPreview.CurrentPose;
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.Body.isKinematic, Is.True);
+            Assert.That(Vector3.Distance(item.transform.position, shelfPose.position), Is.LessThan(0.001f));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.StatusText, Does.Contain("RAF A"));
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadAcceptsCarriesAndSafelyDropsAuthoritativeItemToWorldFloor()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToAuthoritativeDelivery(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(item));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.HandsContainerId);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.DropBindingPrompt));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToOpenDropArea(marker);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.ItemIdValue, Is.EqualTo(GarageStockFlowSession.ItemInstanceIdValue));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.WorldFloorContainerId);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator FullHandsAuthorityRejectsPickupBeforePhysicalOwnershipChanges()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            GarageStockFlowRuntime stockFlow = marker.StockFlow;
+            PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            marker.PlayerMotor.SetPaused(false);
+            MovePlayerToAuthoritativeDelivery(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+            Assert.That(stockFlow.Session.Inventory.ReceiveSerializedItem(
+                StableId<ItemInstanceIdScope>.Parse("inventory.item.hands-blocker"),
+                stockFlow.Session.ProductId,
+                stockFlow.Session.HandsContainerId,
+                InventoryCondition.New).IsSuccess,
+                Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded.Code));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.transform.parent.name, Is.EqualTo("AuthoritativeReceivingBay"));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+            Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void MovePlayerToStockSurface(GaragePrototypeMarker marker)
         {
             CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
@@ -895,6 +1080,48 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Quaternion.identity);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToAuthoritativeDelivery(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(2.55f, 0.05f, -1.95f),
+                Quaternion.Euler(0f, 180f, 0f));
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToAuthoritativeShelf(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(2.32f, 0.05f, 0.55f),
+                Quaternion.Euler(0f, 90f, 0f));
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToOpenDropArea(GaragePrototypeMarker marker)
+        {
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                new Vector3(0f, 0.05f, -2.50f),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void AssertInventoryLocation(
+            GarageStockFlowRuntime stockFlow,
+            PCShopEmpire3D.Core.Primitives.StableId<ContainerIdScope> expectedContainer)
+        {
+            Assert.That(stockFlow.Session.TryGetItem(out InventoryItemRecord record), Is.True);
+            Assert.That(record.Id, Is.EqualTo(stockFlow.Session.ItemId));
+            Assert.That(record.ContainerId, Is.EqualTo(expectedContainer));
         }
 
         private static void MovePlayerToLargeBox(GaragePrototypeMarker marker)

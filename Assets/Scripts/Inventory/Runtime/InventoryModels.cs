@@ -21,7 +21,8 @@ namespace PCShopEmpire3D.Inventory
         TransportCart = 5,
         Workbench = 6,
         CustomerBasket = 7,
-        Quarantine = 8
+        Quarantine = 8,
+        WorldFloor = 9
     }
 
     public enum InventoryReservationTargetKind
@@ -222,7 +223,8 @@ namespace PCShopEmpire3D.Inventory
                    kind == InventoryContainerKind.TransportCart ||
                    kind == InventoryContainerKind.Workbench ||
                    kind == InventoryContainerKind.CustomerBasket ||
-                   kind == InventoryContainerKind.Quarantine;
+                   kind == InventoryContainerKind.Quarantine ||
+                   kind == InventoryContainerKind.WorldFloor;
         }
     }
 

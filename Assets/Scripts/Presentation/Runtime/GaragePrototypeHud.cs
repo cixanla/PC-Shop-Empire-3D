@@ -8,11 +8,16 @@ namespace PCShopEmpire3D.Presentation
     {
         [SerializeField] private FirstPersonMotor motor;
         [SerializeField] private PlayerCarryController carryController;
+        [SerializeField] private GarageStockFlowRuntime stockFlow;
 
-        public void Configure(FirstPersonMotor playerMotor, PlayerCarryController playerCarryController)
+        public void Configure(
+            FirstPersonMotor playerMotor,
+            PlayerCarryController playerCarryController,
+            GarageStockFlowRuntime garageStockFlow = null)
         {
             motor = playerMotor;
             carryController = playerCarryController;
+            stockFlow = garageStockFlow;
         }
 
         private void OnGUI()
@@ -20,6 +25,14 @@ namespace PCShopEmpire3D.Presentation
             GUI.color = Color.white;
             GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
             GUI.Label(new Rect(18f, 36f, 760f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
+
+            if (stockFlow != null)
+            {
+                const float panelWidth = 370f;
+                GUI.Box(
+                    new Rect(Screen.width - panelWidth - 18f, 14f, panelWidth, 62f),
+                    stockFlow.StatusText);
+            }
 
             string prompt = carryController != null ? carryController.PromptText : string.Empty;
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))

@@ -60,6 +60,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 if (HeldItem != null)
                 {
+                    string stockState = GetStockStateSuffix(HeldItem);
                     string placement = input != null
                         ? input.PrimaryBindingPrompt
                         : "Mouse Left / RT";
@@ -80,7 +81,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             : string.Empty;
                         return load +
                                $"{drop}: {HeldItem.DisplayName} güvenli bırak   |   " +
-                               $"AĞIR YÜK — sprint kapalı{blocked}";
+                               $"AĞIR YÜK — sprint kapalı{blocked}{stockState}";
                     }
 
                     return IsPlacementMode
@@ -88,8 +89,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                           $"[{PlacementRotationDegrees:0}°]   |   {placement}: iptal   |   " +
                           (PlacementValid
                               ? (CurrentStackSupport != null ? "İSTİF GEÇERLİ" : "GEÇERLİ")
-                              : "ENGELLİ")
-                        : $"{placement}: yerleştirme önizlemesi   |   {drop}: güvenli bırak";
+                              : "ENGELLİ") + stockState
+                        : $"{placement}: yerleştirme önizlemesi   |   " +
+                          $"{drop}: güvenli bırak{stockState}";
                 }
 
                 if (ActiveCart != null)
@@ -117,12 +119,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            $"{FocusedCart.DisplayName} tut{blocked}";
                 }
 
-                return FocusedItem != null
-                    ? (FocusedItem.HasStackedItem
-                        ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
-                        : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
-                          $"{FocusedItem.DisplayName} al")
-                    : string.Empty;
+                if (FocusedItem == null)
+                {
+                    return string.Empty;
+                }
+
+                InventoryItemWorldBinding binding = GetInventoryBinding(FocusedItem);
+                if (binding != null && binding.RequiresAcceptance)
+                {
+                    return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                           $"{FocusedItem.DisplayName} teslimatını kabul et   |   " +
+                           binding.LocationLabel;
+                }
+
+                return FocusedItem.HasStackedItem
+                    ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
+                    : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                      $"{FocusedItem.DisplayName} al{GetStockStateSuffix(FocusedItem)}";
             }
         }
 
@@ -168,10 +181,44 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(Failure.FromCode("pickup.slot-occupied")));
             }
 
+            InventoryItemWorldBinding binding = GetInventoryBinding(item);
+            if (binding != null && binding.RequiresAcceptance)
+            {
+                OperationResult acceptance = binding.TryAcceptDelivery();
+                if (acceptance.IsSuccess)
+                {
+                    LastFailureCode = string.Empty;
+                    SetHandsState(VisibleHandsState.TargetFocused);
+                }
+
+                return Remember(acceptance);
+            }
+
+            OperationResult authorityTransfer = binding != null
+                ? binding.TryPreparePickupTransfer()
+                : OperationResult.Success();
+            if (authorityTransfer.IsFailure)
+            {
+                SetHandsState(VisibleHandsState.TargetFocused);
+                return Remember(authorityTransfer);
+            }
+
             OperationResult result = item.BeginCarry(carryAnchor, heldItemLayer);
             if (result.IsFailure)
             {
+                RollbackAuthorityTransfer(binding);
                 return Remember(result);
+            }
+
+            if (binding != null)
+            {
+                OperationResult commit = binding.CommitPreparedTransfer(targetIsWorld: false);
+                if (commit.IsFailure)
+                {
+                    item.RecoverToLastSafePose();
+                    RollbackAuthorityTransfer(binding);
+                    return Remember(commit);
+                }
             }
 
             HeldItem = item;
@@ -320,7 +367,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(pose.Error));
             }
 
-            return ReleaseHeldItem(pose.Value, stabilizePlacement: false);
+            return ReleaseHeldItem(pose.Value, stabilizePlacement: false, placementSurface: null);
         }
 
         public OperationResult TryConfirmPlacement()
@@ -356,7 +403,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return ReleaseHeldItem(
                 evaluation.Pose,
                 stabilizePlacement: true,
-                evaluation.StackSupport);
+                evaluation.StackSupport,
+                evaluation.Surface);
         }
 
         public void ProcessInputFrame()
@@ -529,10 +577,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 item.enabled = true;
             }
 
+            InventoryItemWorldBinding binding = GetInventoryBinding(item);
+            OperationResult authorityTransfer = binding != null
+                ? binding.TryPrepareRecoveryTransfer()
+                : OperationResult.Success();
+            if (authorityTransfer.IsFailure)
+            {
+                return Remember(authorityTransfer);
+            }
+
             OperationResult result = item.RecoverToLastSafePose();
             if (result.IsFailure)
             {
+                RollbackAuthorityTransfer(binding);
                 return Remember(result);
+            }
+
+            if (binding != null)
+            {
+                OperationResult commit = binding.CommitPreparedTransfer(targetIsWorld: true);
+                if (commit.IsFailure)
+                {
+                    RollbackAuthorityTransfer(binding);
+                    return Remember(commit);
+                }
             }
 
             HeldItem = null;
@@ -552,15 +620,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private OperationResult ReleaseHeldItem(
             Pose pose,
             bool stabilizePlacement,
-            PhysicalItemProjection stackSupport = null)
+            PhysicalItemProjection stackSupport = null,
+            PlacementSurface placementSurface = null)
         {
             PhysicalItemProjection releasedItem = HeldItem;
+            InventoryItemWorldBinding binding = GetInventoryBinding(releasedItem);
+            OperationResult authorityTransfer = binding == null
+                ? OperationResult.Success()
+                : stabilizePlacement
+                    ? binding.TryPreparePlacementTransfer(placementSurface)
+                    : binding.TryPrepareDropTransfer();
+            if (authorityTransfer.IsFailure)
+            {
+                SetCarryHandsState(blocked: true);
+                return Remember(authorityTransfer);
+            }
+
             OperationResult result = stabilizePlacement
                 ? releasedItem.PlaceAt(pose, stackSupport)
                 : releasedItem.ReleaseTo(pose);
             if (result.IsFailure)
             {
+                RollbackAuthorityTransfer(binding);
                 return Remember(result);
+            }
+
+            if (binding != null)
+            {
+                OperationResult commit = binding.CommitPreparedTransfer(targetIsWorld: true);
+                if (commit.IsFailure)
+                {
+                    RollbackAuthorityTransfer(binding);
+                    return Remember(commit);
+                }
             }
 
             Physics.SyncTransforms();
@@ -679,6 +771,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetHandsState(carryingLarge
                 ? (blocked ? VisibleHandsState.LargeDropBlocked : VisibleHandsState.CarryingLargeItem)
                 : (blocked ? VisibleHandsState.DropBlocked : VisibleHandsState.CarryingSmallItem));
+        }
+
+        private static InventoryItemWorldBinding GetInventoryBinding(PhysicalItemProjection item)
+        {
+            return item != null ? item.GetComponent<InventoryItemWorldBinding>() : null;
+        }
+
+        private static string GetStockStateSuffix(PhysicalItemProjection item)
+        {
+            InventoryItemWorldBinding binding = GetInventoryBinding(item);
+            return binding != null ? $"   |   {binding.LocationLabel}" : string.Empty;
+        }
+
+        private static void RollbackAuthorityTransfer(InventoryItemWorldBinding binding)
+        {
+            if (binding == null || !binding.HasPreparedTransfer)
+            {
+                return;
+            }
+
+            OperationResult rollback = binding.RollbackPreparedTransfer();
+            if (rollback.IsFailure)
+            {
+                Debug.LogError($"STOCK_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+            }
         }
     }
 }

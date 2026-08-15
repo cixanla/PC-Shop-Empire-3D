@@ -21,12 +21,14 @@ namespace PCShopEmpire3D.World.Interaction
             PlacementStatus status,
             Pose pose,
             bool hasPose,
-            PhysicalItemProjection stackSupport = null)
+            PhysicalItemProjection stackSupport = null,
+            PlacementSurface surface = null)
         {
             Status = status;
             Pose = pose;
             HasPose = hasPose;
             StackSupport = stackSupport;
+            Surface = surface;
         }
 
         public PlacementStatus Status { get; }
@@ -36,6 +38,8 @@ namespace PCShopEmpire3D.World.Interaction
         public bool HasPose { get; }
 
         public PhysicalItemProjection StackSupport { get; }
+
+        public PlacementSurface Surface { get; }
 
         public bool IsValid => Status == PlacementStatus.Valid;
 
@@ -190,7 +194,8 @@ namespace PCShopEmpire3D.World.Interaction
                     PlacementStatus.Valid,
                     snappedPose,
                     true,
-                    hasStackSupport ? stackSupport : null);
+                    hasStackSupport ? stackSupport : null,
+                    hasSurface ? surface : null);
             }
 
             return firstInvalid ?? new PlacementEvaluation(

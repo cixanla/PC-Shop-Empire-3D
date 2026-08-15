@@ -3,6 +3,9 @@
   "rootNamespace": "PCShopEmpire3D.Tests.PlayMode",
   "references": [
     "PSE.Core",
+    "PSE.Catalog",
+    "PSE.Inventory",
+    "PSE.Orders",
     "PSE.Presentation",
     "PSE.World",
     "Unity.InputSystem",

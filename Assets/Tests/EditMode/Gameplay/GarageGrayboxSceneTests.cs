@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -82,19 +83,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(3));
+                Assert.That(physicalItems.Length, Is.EqualTo(4));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
                 PhysicalItemProjection[] smallBoxes = physicalItems.Where(
                     item => item.CarryProfile == PhysicalCarryProfile.SmallBox).ToArray();
-                Assert.That(smallBoxes.Length, Is.EqualTo(2));
+                Assert.That(smallBoxes.Length, Is.EqualTo(3));
                 PhysicalItemProjection smallBox = smallBoxes.Single(
                     item => item.ItemIdValue == "prototype.garage-box-001");
                 PhysicalItemProjection stackBase = smallBoxes.Single(
                     item => item.ItemIdValue == "prototype.garage-box-002");
                 PhysicalItemProjection largeBox = physicalItems.Single(
                     item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
+                PhysicalItemProjection deliveryItem = physicalItems.Single(
+                    item => item.ItemIdValue == GarageStockFlowSession.ItemInstanceIdValue);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -107,6 +110,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(largeBox.SupportsPlacement, Is.False);
                 Assert.That(largeBox.Body.mass, Is.EqualTo(9f).Within(0.001f));
                 Assert.That(largeBox.DropHalfExtents, Is.EqualTo(new Vector3(0.55f, 0.4f, 0.35f)));
+                Assert.That(deliveryItem.DisplayName, Is.EqualTo(GarageStockFlowSession.ProductDisplayName));
+                Assert.That(deliveryItem.IsStablePlacement, Is.True);
+                InventoryItemWorldBinding deliveryBinding =
+                    deliveryItem.GetComponent<InventoryItemWorldBinding>();
+                Assert.That(deliveryBinding, Is.Not.Null);
+                Assert.That(deliveryBinding.InventoryItemId.Value, Is.EqualTo(deliveryItem.ItemIdValue));
+                Assert.That(marker.StockFlow, Is.Not.Null);
+                Assert.That(marker.StockFlow.ItemBinding, Is.SameAs(deliveryBinding));
+                Assert.That(marker.StockFlow.EnsureInitialized().Order.Status,
+                    Is.EqualTo(PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived));
+                Assert.That(marker.StockFlow.Session.TryGetItem(out _), Is.False);
                 Assert.That(physicalItems.All(item => item.Body != null), Is.True);
                 Assert.That(
                     physicalItems.All(item =>
@@ -125,10 +139,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(
                     cart.GetComponentsInChildren<Collider>(true).Length,
                     Is.GreaterThanOrEqualTo(3));
-                Assert.That(placementSurfaces.Length, Is.EqualTo(1));
-                Assert.That(placementSurfaces[0].SurfaceId, Is.EqualTo("prototype.stock-floor-small-box-a"));
-                Assert.That(placementSurfaces[0].GridSize, Is.EqualTo(0.25f).Within(0.001f));
-                Assert.That(placementSurfaces[0].YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
+                Assert.That(placementSurfaces.Length, Is.EqualTo(2));
+                PlacementSurface floorSurface = placementSurfaces.Single(
+                    surface => surface.SurfaceId == "prototype.stock-floor-small-box-a");
+                PlacementSurface shelfSurface = placementSurfaces.Single(
+                    surface => surface.SurfaceId == "prototype.retail-shelf-a");
+                Assert.That(floorSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
+                Assert.That(floorSurface.YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
+                Assert.That(shelfSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
+                InventoryPlacementZone shelfZone = shelfSurface.GetComponent<InventoryPlacementZone>();
+                Assert.That(shelfZone, Is.Not.Null);
+                Assert.That(shelfZone.ContainerId.Value,
+                    Is.EqualTo(GarageStockFlowSession.ShelfContainerIdValue));
+                Assert.That(shelfZone.ContainerKind, Is.EqualTo(InventoryContainerKind.Shelf));
                 Assert.That(placementPreview, Is.Not.Null);
                 Assert.That(placementPreview.IsVisible, Is.False);
                 Assert.That(marker.PlayerCarry.PlacementPreview, Is.SameAs(placementPreview));
@@ -179,7 +202,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             {
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
-                Assert.That(GaragePrototypeMarker.Version, Is.EqualTo("garage-loaded-transport-cart-g8-v1"));
+                Assert.That(
+                    GaragePrototypeMarker.Version,
+                    Is.EqualTo("garage-authoritative-stock-flow-r9-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -209,12 +234,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     "Assets/Art/Prototype/Materials/Cardboard.mat");
                 Material screen = AssetDatabase.LoadAssetAtPath<Material>(
                     "Assets/Art/Prototype/Materials/ScreenGlass.mat");
+                Material deliveryArrived = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/DeliveryStatusArrived.mat");
+                Material deliveryAccepted = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/DeliveryStatusAccepted.mat");
+                Material deliveryShelved = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/DeliveryStatusShelved.mat");
                 Assert.That(concrete, Is.Not.Null);
                 Assert.That(metal, Is.Not.Null);
                 Assert.That(steel, Is.Not.Null);
                 Assert.That(wood, Is.Not.Null);
                 Assert.That(cardboard, Is.Not.Null);
                 Assert.That(screen, Is.Not.Null);
+                Assert.That(deliveryArrived, Is.Not.Null);
+                Assert.That(deliveryAccepted, Is.Not.Null);
+                Assert.That(deliveryShelved, Is.Not.Null);
                 Assert.That(concrete.GetTexture("_BaseMap"), Is.Not.Null);
                 Assert.That(metal.GetTexture("_BaseMap"), Is.Not.Null);
                 Assert.That(steel.GetTexture("_BaseMap"), Is.Not.Null);
@@ -224,6 +258,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(steel.GetFloat("_Metallic"), Is.GreaterThan(0.8f));
                 Assert.That(screen.GetFloat("_Smoothness"), Is.GreaterThan(0.75f));
                 Assert.That(screen.IsKeywordEnabled("_EMISSION"), Is.True);
+                Assert.That(deliveryArrived.IsKeywordEnabled("_EMISSION"), Is.True);
+                Assert.That(deliveryAccepted.IsKeywordEnabled("_EMISSION"), Is.True);
+                Assert.That(deliveryShelved.IsKeywordEnabled("_EMISSION"), Is.True);
 
                 Volume volume = FindInScene<Volume>(scene);
                 Assert.That(volume, Is.Not.Null);

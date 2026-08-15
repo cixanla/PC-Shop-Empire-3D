@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -38,6 +39,25 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             BrushedMetal,
             Cardboard,
             WoodLaminate
+        }
+
+        private readonly struct StockFlowBuildResult
+        {
+            public StockFlowBuildResult(
+                InventoryItemWorldBinding binding,
+                TextMesh statusText,
+                Renderer statusIndicator)
+            {
+                Binding = binding;
+                StatusText = statusText;
+                StatusIndicator = statusIndicator;
+            }
+
+            public InventoryItemWorldBinding Binding { get; }
+
+            public TextMesh StatusText { get; }
+
+            public Renderer StatusIndicator { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -176,6 +196,24 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material placementInvalid = GetOrCreateGhostMaterial(
                 "PlacementGhostInvalid",
                 new Color(1f, 0.16f, 0.10f, 0.48f));
+            Material deliveryArrived = GetOrCreateEmissiveMaterial(
+                "DeliveryStatusArrived",
+                new Color(0.82f, 0.39f, 0.06f),
+                0.1f,
+                0.35f,
+                new Color(1f, 0.26f, 0.02f) * 2.4f);
+            Material deliveryAccepted = GetOrCreateEmissiveMaterial(
+                "DeliveryStatusAccepted",
+                new Color(0.06f, 0.42f, 0.55f),
+                0.1f,
+                0.42f,
+                new Color(0.02f, 0.55f, 0.78f) * 2.2f);
+            Material deliveryShelved = GetOrCreateEmissiveMaterial(
+                "DeliveryStatusShelved",
+                new Color(0.08f, 0.55f, 0.22f),
+                0.1f,
+                0.38f,
+                new Color(0.03f, 0.78f, 0.20f) * 2.2f);
 
             Transform systems = CreateRoot("__Systems").transform;
             Transform environment = CreateRoot("Environment").transform;
@@ -200,6 +238,16 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 lightDiffuser,
                 stockPlacement);
             BuildStarterPickups(environment, cardboard, metal, accent, labelPaper, rubber);
+            StockFlowBuildResult stockFlowBuild = BuildAuthoritativeStockFlow(
+                environment,
+                cardboard,
+                metal,
+                brushedSteel,
+                accent,
+                labelPaper,
+                rubber,
+                stockPlacement,
+                deliveryArrived);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -230,10 +278,18 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             PlayerCarryController carry = motor.GetComponent<PlayerCarryController>();
             Require(carry != null, "The PlayerRig prefab is missing PlayerCarryController.");
 
+            GarageStockFlowRuntime stockFlow = systems.gameObject.AddComponent<GarageStockFlowRuntime>();
+            stockFlow.Configure(
+                stockFlowBuild.Binding,
+                stockFlowBuild.StatusText,
+                stockFlowBuild.StatusIndicator,
+                deliveryArrived,
+                deliveryAccepted,
+                deliveryShelved);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
-            marker.Configure(motor, input, carry, transportCart);
+            marker.Configure(motor, input, carry, transportCart, stockFlow);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
-            hud.Configure(motor, carry);
+            hud.Configure(motor, carry, stockFlow);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",
@@ -364,15 +420,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 cardboard,
                 labelPaper,
                 rubber);
-            BuildStaticShippingBox(
-                "DeliveryBox",
-                parent,
-                new Vector3(2.4f, 0.4f, -3.8f),
-                new Vector3(1.1f, 0.8f, 0.9f),
-                cardboard,
-                labelPaper,
-                rubber);
-
             for (int stripe = -3; stripe <= 3; stripe++)
             {
                 GameObject stripeObject = CreateCube(
@@ -1130,6 +1177,174 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(0f, -0.30f, -0.32f),
                 Vector3.zero,
                 PhysicalCarryProfile.LargeBox);
+        }
+
+        private static StockFlowBuildResult BuildAuthoritativeStockFlow(
+            Transform parent,
+            Material cardboard,
+            Material metal,
+            Material brushedSteel,
+            Material accent,
+            Material labelPaper,
+            Material rubber,
+            Material shelfSurfaceMaterial,
+            Material arrivedStatusMaterial)
+        {
+            int interactableLayer = RequireLayer(InteractableLayerName);
+            Transform receiving = new GameObject("AuthoritativeReceivingBay").transform;
+            receiving.SetParent(parent, false);
+
+            CreateBeveledCube(
+                "ReceivingPallet",
+                receiving,
+                new Vector3(2.55f, 0.58f, -3.55f),
+                new Vector3(1.15f, 1.16f, 0.92f),
+                0.025f,
+                brushedSteel);
+            CreateDetailCube(
+                "ReceivingPalletMat",
+                receiving,
+                new Vector3(2.55f, 1.172f, -3.55f),
+                new Vector3(1.02f, 0.024f, 0.79f),
+                rubber);
+
+            GameObject itemRoot = new GameObject("ArrivedNorthstarA60Delivery");
+            itemRoot.transform.SetParent(receiving, false);
+            itemRoot.transform.localPosition = new Vector3(2.55f, 1.43f, -3.55f);
+            itemRoot.layer = interactableLayer;
+            GameObject visual = CreateCube(
+                "NorthstarA60Carton",
+                itemRoot.transform,
+                Vector3.zero,
+                new Vector3(0.72f, 0.46f, 0.52f),
+                cardboard);
+            visual.layer = interactableLayer;
+            CreateDetailCube(
+                "NorthstarA60Tape",
+                itemRoot.transform,
+                new Vector3(0f, 0.236f, 0f),
+                new Vector3(0.13f, 0.012f, 0.50f),
+                rubber);
+            CreateDetailCube(
+                "NorthstarA60ManifestLabel",
+                itemRoot.transform,
+                new Vector3(0.16f, 0.01f, -0.266f),
+                new Vector3(0.30f, 0.18f, 0.012f),
+                labelPaper);
+            CreateDetailCube(
+                "NorthstarA60IdentityBand",
+                itemRoot.transform,
+                new Vector3(0f, -0.07f, -0.268f),
+                new Vector3(0.68f, 0.07f, 0.014f),
+                accent);
+
+            Rigidbody body = itemRoot.AddComponent<Rigidbody>();
+            body.mass = 2.4f;
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            PhysicalItemProjection projection = itemRoot.AddComponent<PhysicalItemProjection>();
+            projection.Configure(
+                GarageStockFlowSession.ItemInstanceIdValue,
+                GarageStockFlowSession.ProductDisplayName,
+                body,
+                new Vector3(0.36f, 0.23f, 0.26f),
+                Vector3.zero,
+                Vector3.zero,
+                PhysicalCarryProfile.SmallBox);
+            InventoryItemWorldBinding binding = itemRoot.AddComponent<InventoryItemWorldBinding>();
+
+            GameObject statusBoard = CreateBeveledCube(
+                "ReceivingStatusBoard",
+                receiving,
+                new Vector3(2.55f, 2.20f, -4.73f),
+                new Vector3(2.35f, 0.72f, 0.06f),
+                0.018f,
+                metal,
+                false);
+            TextMesh statusText = new GameObject("ReceivingStatusText").AddComponent<TextMesh>();
+            statusText.transform.SetParent(statusBoard.transform, false);
+            statusText.transform.localPosition = new Vector3(0f, 0f, -0.038f);
+            statusText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            statusText.anchor = TextAnchor.MiddleCenter;
+            statusText.alignment = TextAlignment.Center;
+            statusText.characterSize = 0.055f;
+            statusText.fontSize = 46;
+            statusText.color = new Color(0.90f, 0.94f, 0.96f);
+            statusText.text = "SİPARİŞ: GELDİ • KABUL BEKLİYOR\nÜRÜN: KABUL BEKLİYOR • STOK 0";
+
+            GameObject indicator = CreateDetailCube(
+                "ReceivingStatusIndicator",
+                receiving,
+                new Vector3(3.56f, 2.20f, -4.68f),
+                new Vector3(0.16f, 0.38f, 0.08f),
+                arrivedStatusMaterial);
+
+            Transform shelf = new GameObject("AuthoritativeRetailShelfA").transform;
+            shelf.SetParent(parent, false);
+            CreateBeveledCube(
+                "RetailShelfDeck",
+                shelf,
+                new Vector3(3.48f, 0.73f, 0.55f),
+                new Vector3(0.82f, 0.10f, 1.62f),
+                0.018f,
+                brushedSteel);
+            CreateBeveledCube(
+                "RetailShelfBack",
+                shelf,
+                new Vector3(3.90f, 1.22f, 0.55f),
+                new Vector3(0.07f, 1.05f, 1.68f),
+                0.012f,
+                metal);
+            foreach (float z in new[] { -0.18f, 1.28f })
+            {
+                CreateBeveledCube(
+                    z < 0f ? "RetailShelfLegFront" : "RetailShelfLegBack",
+                    shelf,
+                    new Vector3(3.72f, 0.35f, z),
+                    new Vector3(0.10f, 0.70f, 0.10f),
+                    0.014f,
+                    metal);
+            }
+
+            GameObject shelfSurfaceObject = CreateCube(
+                "AuthoritativeShelfPlacementSurface",
+                shelf,
+                new Vector3(3.47f, 0.805f, 0.55f),
+                new Vector3(0.72f, 0.05f, 1.48f),
+                shelfSurfaceMaterial);
+            BoxCollider shelfCollider = shelfSurfaceObject.GetComponent<BoxCollider>();
+            PlacementSurface shelfSurface = shelfSurfaceObject.AddComponent<PlacementSurface>();
+            shelfSurface.Configure("prototype.retail-shelf-a", shelfCollider, 0.25f, 90f);
+            InventoryPlacementZone shelfZone = shelfSurfaceObject.AddComponent<InventoryPlacementZone>();
+            shelfZone.Configure(
+                GarageStockFlowSession.ShelfContainerIdValue,
+                InventoryContainerKind.Shelf,
+                "RAF A",
+                shelfSurface);
+
+            GameObject shelfLabelBoard = CreateDetailCube(
+                "RetailShelfLabelBoard",
+                shelf,
+                new Vector3(3.03f, 1.58f, 0.55f),
+                new Vector3(0.05f, 0.32f, 1.30f),
+                accent);
+            TextMesh shelfLabel = new GameObject("RetailShelfLabel").AddComponent<TextMesh>();
+            shelfLabel.transform.SetParent(shelfLabelBoard.transform, false);
+            shelfLabel.transform.localPosition = new Vector3(-0.56f, 0f, 0f);
+            shelfLabel.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            shelfLabel.anchor = TextAnchor.MiddleCenter;
+            shelfLabel.alignment = TextAlignment.Center;
+            shelfLabel.characterSize = 0.06f;
+            shelfLabel.fontSize = 48;
+            shelfLabel.color = Color.white;
+            shelfLabel.text = "RAF A\nAUTHORITATIVE STOK";
+
+            return new StockFlowBuildResult(
+                binding,
+                statusText,
+                indicator.GetComponent<Renderer>());
         }
 
         private static TransportCartProjection BuildTransportCart(

@@ -3,6 +3,9 @@
   "rootNamespace": "PCShopEmpire3D.Presentation",
   "references": [
     "PSE.Core",
+    "PSE.Catalog",
+    "PSE.Inventory",
+    "PSE.Orders",
     "PSE.World",
     "Unity.InputSystem"
   ],
