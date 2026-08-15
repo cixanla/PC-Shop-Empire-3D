@@ -45,7 +45,7 @@
 - Branch: `main`
 - Feature commit: `9d75573a86e395d2fa74f3808d43310e4d65f760`
 - Tree: `6779e31aaa6ad186acfa3b1143653d51f47e75b7`
-- Checkpoint docs commit: bu belge commitlendiğinde güncellenecek.
+- USB snapshot source/docs checkpoint commit: `f20fd1741a7d51b1350e7c1e2785e72c0718be84`.
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#40](https://github.com/cixanla/PC-Shop-Empire-3D/issues/40)
 - Repository Guard: [31864259779](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31864259779), başarılı.
 
@@ -77,7 +77,7 @@ PlayMode klavye tam raf akışını, gamepad WorldFloor akışını ve ActorHand
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Son doğrulanmış snapshot şimdilik `2026-08-15_STAGE_B_ORDER_RECEIVING`dir: 449 tracked kaynak + 4 test kanıtı + source kaydı, 454 manifest satırı, manifest SHA-256 `07480d15d2f2b187d7e84383c6f45f011be1f8a0056c4075f06103d92f485cff`, mismatch/forbidden/AppleDouble `0`. Issue #40 checkpoint commitinden sonra yeni authoritative-stock-flow snapshotı oluşturulup bu kayıt güncellenecektir.
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_AUTHORITATIVE_STOCK_FLOW`, source commit `f20fd1741a7d51b1350e7c1e2785e72c0718be84` taşır. İçerik 467 tracked kaynak + 4 test/build/runtime kanıtı + source kaydıdır; 472 manifest satırı ve manifest SHA-256 `5521f869703d1ec480912f21fb70e21fdf0b235f7c15e4be65431e1fc0ae22a3` tam readback/source checksum ile doğrulandı. Hash/boyut mismatch, source mismatch, forbidden dir, credential filename ve AppleDouble sayısı `0`dır. Büyük `.app`, cache, build çıktısı ve credential snapshot dışındadır; USB güvenle çıkarılabilir.
 
 ## Sıradaki bounded paket
 

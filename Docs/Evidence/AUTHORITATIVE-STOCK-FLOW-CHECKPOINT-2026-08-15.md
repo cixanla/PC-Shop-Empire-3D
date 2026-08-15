@@ -62,3 +62,12 @@ macOS oturumu kilitli olduğu için bu turda oynanabilir pencerenin güvenilir e
 - Save/journal/crash atomikliği.
 - Final sanat, gelişmiş el animasyonu ve ses.
 - Gerçek Windows x64 IL2CPP/DirectX/Steam doğrulaması.
+
+## Uzak ve USB kapanışı
+
+- Feature Repository Guard [31864259779](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31864259779): başarılı.
+- Docs checkpoint commit `f20fd1741a7d51b1350e7c1e2785e72c0718be84`; Repository Guard [31864541173](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31864541173): başarılı.
+- Issue #40 completed olarak kapatıldı ve Roadmap item'ı Done yapıldı; Epic #8 In Progress kaldı.
+- USB: `2026-08-15_STAGE_B_AUTHORITATIVE_STOCK_FLOW`; 467 tracked source + 4 evidence + source kaydı, 472 manifest satırı.
+- Manifest SHA-256: `5521f869703d1ec480912f21fb70e21fdf0b235f7c15e4be65431e1fc0ae22a3`.
+- Tam readback/hash/boyut ve Git source karşılaştırmasında mismatch `0`; forbidden directory, credential filename ve AppleDouble `0`.
