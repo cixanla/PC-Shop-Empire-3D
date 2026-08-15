@@ -494,12 +494,12 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 ## Güncel uygulama kaydı — Issue #55 deterministic CPU socket seating ve retention
 
 - Epic #10'un üçüncü bounded child'ı Issue #55'tir. Feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad`; tek canonical serialized CPU, stable processor slot/retention kimliği ve `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` state'ini ekledi.
-- Feature [Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır; source/docs ve Issue/Project final metadata turu checkpoint kapanışını bağlar.
+- Source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb` ve [Repository Guard 31914774370](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914774370) başarılıdır; acceptance `20/20`, Issue kapalı/Roadmap `Done`dur.
 - Karar: Workbench + capacity-1 ProcessorSocket container'ı atomik pair claim ile Assembly planına aittir. Seat/remove exact custody'yi değiştirir; close/open Inventory revision'ını değiştirmez. Pair conflict/overflow ghost claim oluşturmaz.
 - Karar: seat yalnız secured host ve canonical keyed 0° orientation üzerinde geçerlidir. CPU installed iken motherboard detach kilitlidir; unsecured host retained CPU'yu açabilir fakat seated-open CPU'yu tekrar kapatamaz.
 - Karar: seat/close/open/remove immutable receipt'leri exact attach/secure/seat/retention lineage'ını taşır. Immediate ve delayed replay aynı reference'ı döndürür; wrong orientation, retained remove, full hands, stale/conflict/overflow bütün authority/projectionlarda no-mutation kalır.
 - Karar: guided mode kapalıyken ghost veya seat PhysX query çalışmaz. Dynamic compact HUD gerçek ilk input consumer'ı gösterir; real Input System co-edge/pause/release–repress sözleşmesi keyboard/mouse ve gamepad için testlidir.
 - Karar: r24 CPU/socket/load-plate/lever geometri ve materyali okunaklı yarı-gerçekçi graybox kanıtıdır. Hard-surface UV/normaller, matching triangular key ve simetrik aperture vardır; `21 Renderer / 11 Collider / 1 TextMesh` bütçesi değişmez.
 - Kanıt: EditMode `430/430`, gerçek Input System PlayMode `31/31`, Universal macOS `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable`.
-- USB bağlı değildir; final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur ve USB yeniden bağlandığında Issue #53–#55 ayrı manifest/readback milestone'una alınır.
+- USB yeniden bağlıdır; final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur ve Issue #53–#55 final metadata commit sonrası ayrı manifest/readback milestone'una alınır.
 - Sıradaki küçük karar: yalnız dual-latch DIMM/RAM seating. GPU/cooler/storage, tam build/benchmark, genel Inventory revision-max hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.

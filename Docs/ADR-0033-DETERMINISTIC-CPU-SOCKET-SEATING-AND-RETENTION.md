@@ -1,7 +1,7 @@
 # ADR-0033 — Deterministic CPU Socket Seating and Retention
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Kabul edildi; kaynak, test, Universal macOS build, Apple M4/Metal native runtime ve feature Repository Guard tamamlandı; final source/docs ile Issue/Project kapanışı checkpoint akışında bağlanır; USB kullanıcı talimatıyla ertelendi<br>
+**Durum:** Kabul edildi; kaynak, test, Universal macOS build, Apple M4/Metal native runtime, private push, Repository Guard ve Issue/Project `Done` kapıları tamamlandı; USB yeniden bağlandı ve snapshot final metadata commit sonrası alınır<br>
 **Bağlam:** Epic #10 / Issue #55 — tek CPU için bounded fiziksel socket ve retention dilimi
 
 ## Bağlam

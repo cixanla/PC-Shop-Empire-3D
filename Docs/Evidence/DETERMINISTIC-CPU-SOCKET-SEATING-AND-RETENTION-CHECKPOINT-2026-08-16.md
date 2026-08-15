@@ -19,7 +19,8 @@ Issue [#55](https://github.com/cixanla/PC-Shop-Empire-3D/issues/55), Epic [#10](
 - Feature commit: `99cadad414789d3f440e08cc6e42e727c2b7a2ad`
 - Feature tree: `fea116af021d66efb31b96b4f3e7523929f8b8ad`
 - Feature Repository Guard: [31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537), başarılı
-- Source/docs commit ve final Guard: checkpoint metadata turunda bağlanır
+- Source/docs commit: `d9d0722a1592a83b89938529f72b3170f17e94eb`
+- Source/docs Repository Guard: [31914774370](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914774370), başarılı
 - ADR: `Docs/ADR-0033-DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION.md`
 - Marker: `garage-cpu-socket-retention-r24-v1`
 - Feature-tree yerel Repository Guard: `REPOSITORY_GUARD_OK unity=6000.3.21f1 legacy=26 project_bible_docs=12 tracked=624`
@@ -73,6 +74,5 @@ Native player exact başarı marker'ı kaydedildikten sonra yalnız kaydedilen P
 
 ## GitHub ve USB durumu
 
-- Feature private `main`e ulaştı ve Repository Guard `31914489537` başarılıdır. Acceptance/Issue/Project ve source/docs final metadata turunda bağlanır.
-- Kullanıcı USB'yi geçici olarak çıkardığını bildirdi. Bu turda `/Volumes` veya USB'ye erişilmedi; snapshot oluşturulmadı.
-- Yerel final evidence arşivi korunur. USB yeniden bağlandığında Issue #53, #54 ve #55 source/evidence paketleri ayrı SHA-256 manifest/readback milestone'una aktarılacaktır.
+- Feature ve source/docs private `main`e ulaştı; Repository Guard `31914774370` başarılıdır. Acceptance `20/20`, Issue kapalı ve Development Roadmap `Done`dur.
+- Kullanıcı USB'nin yeniden bağlandığını bildirdi; mount `/Volumes/cixanla` üzerinde salt-okunur preflight ile doğrulandı. Issue #53–#55 source/evidence snapshotı final metadata commit sabitlendikten sonra ayrı SHA-256 manifest/readback milestone'una alınır.

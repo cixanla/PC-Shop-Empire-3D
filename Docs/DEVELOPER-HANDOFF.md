@@ -23,7 +23,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Gerçek Input System guided mode/rotate/seat/retain/open/remove akışı; dynamic keyboard/gamepad prompt, compact HUD ownership, pause/co-edge drain ve release–repress sözleşmeleri testlidir. Mode kapalıyken ghost veya seat PhysX sorgusu çalışmaz.
 - Final EditMode `430/430`, PlayMode `31/31`; Universal macOS build `328144884` bayt ve Apple M4/Metal 1280×720 exact CPU smoke başarılıdır.
 - Ayrıntı: `Docs/ADR-0033-DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION-CHECKPOINT-2026-08-16.md`.
-- USB bağlı değildir; bu checkpointte `/Volumes`e erişilmedi. USB yeniden bağlanınca Issue #53–#55 evidence ayrı manifest/readback snapshotına alınır.
+- USB yeniden bağlıdır; Issue #53–#55 evidence final metadata commit sonrası ayrı manifest/readback snapshotına alınır.
 - Sonraki bounded Epic #10 child adayı yalnız dual-latch DIMM/RAM seating akışıdır.
 
 ## 2. Gereken temel araçlar
@@ -152,7 +152,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş yalnız dual-latch DIMM/RAM seating bounded child'ını açmaktır. USB yeniden bağlandığında Issue #53–#55 manifest/readback checkpointi alınır. GPU/cooler/storage, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Sıradaki immediate iş final metadata commit sonrası bağlı USB'ye Issue #53–#55 manifest/readback checkpointini almak, ardından yalnız dual-latch DIMM/RAM seating bounded child'ını açmaktır. GPU/cooler/storage, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 
