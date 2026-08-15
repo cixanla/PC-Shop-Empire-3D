@@ -29,3 +29,11 @@ Ham Unity raporları repository dışında `/Users/cixanla/Developer/PCShopEmpir
 ## Provenans ve platform sınırı
 
 Yeni asset, paket, marka verisi veya üçüncü taraf bağımlılık eklenmedi. Uygulama mevcut Unity/.NET ve `PSE.Core` primitives üzerine kuruldu. Native Windows x64/IL2CPP kapısı bu saf domain checkpointiyle çözülmüş sayılmaz.
+
+## Remote ve USB kapanışı
+
+- Checkpoint commit: `9e0cb2d6476ab0bfac8918368454a0917744ee36`.
+- Repository Guard: [31861777253](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31861777253), başarılı.
+- Issue #38 ve Epic #7 Closed/Done.
+- USB: `2026-08-15_STAGE_B_CATALOG_INVENTORY`; 428 tracked source, 4 test evidence, 1 source kaydı ve 433 manifest satırı.
+- USB manifest SHA-256: `f481ddfaf6627bdd34137225fe754e90065b85e7cfc012a1a19c651337c49dc9`; manifest/source mismatch, yasak yol ve AppleDouble sayısı `0`.

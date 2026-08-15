@@ -50,12 +50,13 @@
 - Branch: `main`
 - Feature commit: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`
 - Tree: `8f51b1e6e32a351ae187467a340ec10e7337d06d`
+- Checkpoint docs commit: `9e0cb2d6476ab0bfac8918368454a0917744ee36`
 - Epic/issue: [#7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) / [#38](https://github.com/cixanla/PC-Shop-Empire-3D/issues/38)
 - Karar: `Docs/ADR-0016-AUTHORITATIVE-CATALOG-INVENTORY-CORE.md`.
 - Kanıt: `Docs/Evidence/CATALOG-INVENTORY-CHECKPOINT-2026-08-15.md`.
 - Kapsam: Catalog, serialized item, batch positions, logical container capacity, transfer, claim reservation, consume/release, deterministic query ve invariant audit.
 - Sahne projection'ı, raf UI/planogram, acquisition cost/fiyat/para, Orders, event publication ve persistence açıkça kapsam dışında kaldı.
-- Remote Repository Guard bağlantıları push sonrası bu checkpoint'e eklenecektir.
+- Remote Repository Guard: [31861777253](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31861777253), başarılı.
 
 ## Test ve build kanıtı
 
@@ -103,8 +104,9 @@ Korunan milestone kayıtları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_SMALL_BOX_STACKING`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CATALOG_INVENTORY`
 
-Güncel yüklü taşıma arabası snapshot'ı `148c6d1` tracked kaynağını ve 6 test/build/runtime kanıtını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 396 kaynak dosyası birebir karşılaştırıldı; 403 manifest satırında hash/boyut hatası `0`, manifest SHA-256 `a9e1d8e5188d85503dbff923127ac3bd71c6d9e023acf17003beddadfe0444c3`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket tamamlandıktan sonra güvenle çıkarılabilir.
+Güncel Catalog/Inventory snapshot'ı `9e0cb2d` checkpointindeki 428 tracked kaynağı, 4 EditMode/PlayMode rapor-log kanıtını ve source kaydını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 433 manifest satırında hash/boyut hatası `0`, source mismatch `0`, manifest SHA-256 `f481ddfaf6627bdd34137225fe754e90065b85e7cfc012a1a19c651337c49dc9`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket için güvenle çıkarılabilir.
 
 ## Devam sırası
 

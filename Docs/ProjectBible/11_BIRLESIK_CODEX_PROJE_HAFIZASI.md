@@ -210,6 +210,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`.
 - Issue #35 stacking için 15 Ağustos 2026 tarihli doğrulanmış USB checkpointi yaşayan checkpoint belgesinde kayıtlıdır.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`; 396 tracked source + 6 evidence, 403 satırlı manifest ve SHA-256/readback doğrulaması geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CATALOG_INVENTORY`; 428 tracked source + 4 test evidence + source kaydı, 433 satırlı `f481ddfa…49dc9` manifest, tam readback/source checksum ve AppleDouble `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 

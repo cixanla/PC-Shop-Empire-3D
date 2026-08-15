@@ -40,6 +40,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Pickup/drop + kontrollü placement milestone'ı ayrı USB hedefinde 336 tracked dosya ve SHA-256 manifest ile geri okunarak doğrulandı.
 - Kontrollü küçük-kutu istifleme milestone'ı final tracked kaynak ve test/build/runtime kanıtlarıyla ayrı USB hedefinde SHA-256 manifest/readback kapısından geçirildi.
 - Yüklü taşıma arabası milestone'ı 396 tracked kaynak ve 6 test/build/runtime kanıtıyla ayrı USB hedefinde 403 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi.
+- Catalog/Inventory milestone'ı 428 tracked kaynak, 4 test kanıtı ve source kaydıyla ayrı USB hedefinde 433 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi; AppleDouble `0` olarak doğrulandı.
 
 ## 2026-08-11 — Stage B Core Foundation
 
