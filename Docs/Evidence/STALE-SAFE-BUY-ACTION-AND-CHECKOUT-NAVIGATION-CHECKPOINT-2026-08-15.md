@@ -17,8 +17,11 @@ Issue [#48](https://github.com/cixanla/PC-Shop-Empire-3D/issues/48), Epic [#9](h
 - Branch: `main`
 - Feature commit: `6951869c4a9f33662f322c02348fa4282b9cdbb6`
 - Tree: `5f4c956423bbc07b9087d47f7886ab36cc6992f1`
+- Source/docs commit: `aa617006448a146a5a8a6b151ad66224a6a56301`
+- Source/docs tree: `88912c4ed915801ac6725b45526dbce41320c359`
 - Marker: `garage-buy-action-r17-v1`
 - Feature Repository Guard: [31880394269](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880394269), başarılı
+- Source/docs Repository Guard: [31880730059](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880730059), başarılı
 
 ## Otomatik doğrulama
 
@@ -62,6 +65,9 @@ Final test/build/runtime kanıtlarında failed/skipped test, assertion, smoke fa
 
 ## Uzak ve USB kapanışı
 
-- Feature push ve Repository Guard başarılıdır.
-- Source/docs push, Issue #48 kapatma, Roadmap `Done` ve ayrı SHA-256 USB milestone'ı bu checkpointin kalan kapanış adımlarıdır.
-- Epic #9 açık ve `In Progress` kalır.
+- Feature ve source/docs pushları ile iki Repository Guard koşusu başarılıdır.
+- Issue #48, 15/15 acceptance ile `Completed` kapatıldı ve Roadmap'te `Done` yapıldı. Epic #9 açık ve `In Progress` kalır.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`.
+- Snapshot; 547 exact `SOURCE`, 4 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt` ile 552 manifest payload satırı/554 toplam dosya taşır; payload 9.902.727 bayttır.
+- `MANIFEST.tsv` SHA-256 `05ed8205457c18413d90482854bd923186c1140309436c46c57622da798e76f6`; 552/552 hash/boyut/path readback ve 547/547 Git-blob eşliği geçti.
+- Evidence mismatch, forbidden/cache/credential/AppleDouble ve sibling sidecar sayısı `0`dır.

@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #48 stale-safe `Buy` özelliği kod/test/build/runtime/feature CI ile tamamlandı; source/docs, USB ve GitHub kapanışı yürütülüyor<br>
+**Durum:** Issue #48 tamamlandı/kapatıldı ve Roadmap'te Done; stale-safe `Buy` action source/docs/CI/USB checkpointiyle kapandı<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #48 / Epic #9
@@ -43,7 +43,8 @@
 - Feature commit: `6951869c4a9f33662f322c02348fa4282b9cdbb6`.
 - Feature tree: `5f4c956423bbc07b9087d47f7886ab36cc6992f1`.
 - Feature Repository Guard: [31880394269](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880394269), başarılı.
-- Source/docs commit, USB milestone ve Issue/Project kapanışı bu checkpointten sonra tamamlanacaktır.
+- Source/docs commit `aa617006448a146a5a8a6b151ad66224a6a56301`, tree `88912c4ed915801ac6725b45526dbce41320c359`; Repository Guard [31880730059](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880730059), başarılı.
+- Issue #48 `Completed` olarak kapalı ve Roadmap'te `Done`; Epic #9 açık/In Progress kalır.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-action48-r6-final.xml`; `287/287`; SHA-256 `3bd1e3169cfda36a8b13e6b4d5bbf5f4f7fa7b9c5e9b5ccc2acc0aebc32c9bd3`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-action48-r7-full.xml`; `19/19`; SHA-256 `caee9b22125f698c6b3e6758c6f983e2be84b7cf25276e1e391a4b867df8735e`.
 - Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-action48-macos-r2-final.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327737593`; SHA-256 `404bd6148bcc7a268f54d39e34722ae8701fe27bf0c8e547389af220dd0ef35c`.
@@ -63,10 +64,10 @@
 
 ## USB güvenli checkpoint durumu
 
-- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`.
-- Source/docs `8832c1372566ede623f08e04b5d9385b6ad23739`; 541 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 546 manifest payload satırı, toplam 548 dosya ve 9.780.828 payload baytı.
-- `MANIFEST.tsv` SHA-256: `d46e2433a7729587c71904479c09ec2e24f6df1f956794880d627a6448c0d1b1`.
-- 546/546 hash/boyut/path readback ve 541/541 Git-blob eşliği geçti; forbidden/cache/credential/AppleDouble ve sibling sidecar `0`.
+- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`.
+- Source/docs `aa617006448a146a5a8a6b151ad66224a6a56301`; 547 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 552 manifest payload satırı, toplam 554 dosya ve 9.902.727 payload baytı.
+- `MANIFEST.tsv` SHA-256: `05ed8205457c18413d90482854bd923186c1140309436c46c57622da798e76f6`.
+- 552/552 hash/boyut/path readback ve 547/547 Git-blob eşliği geçti; evidence mismatch, forbidden/cache/credential/AppleDouble ve sibling sidecar `0`.
 - `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
 - Snapshot bağımsız salt-okunur denetimde de aynı sayım, manifest, Git-blob ve güvenlik kapılarıyla başarılı bulundu.
 
@@ -81,4 +82,4 @@ Issue #9 altında `Leave` kararını güvenli eyleme dönüştüren ayrı bounde
 
 ## Güvenli devam komutu
 
-Issue #48 feature `6951869`, Guard `31880394269`, EditMode `287/287`, PlayMode `19/19` ve `garage-buy-action-r17-v1 buy-action=ok stale-blocked=ok authority-isolated=ok` ile doğrulandı. Önce source/docs + USB + Issue/Project kapanışını bitir; sonra Epic #9 altında bounded `Leave/OfferDeclined` action dilimine geç. Checkout/payment/Economy/Save sınırlarını karıştırma.
+Issue #48 kapandı: feature `6951869`, source/docs `aa61700`, Guard koşuları `31880394269`/`31880730059`, EditMode `287/287`, PlayMode `19/19`, Mac `buy-action=ok stale-blocked=ok authority-isolated=ok` ve doğrulanmış `STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION` USB milestone'ı kayıtlıdır. Epic #9 altında bounded `Leave/OfferDeclined` action dilimine geç; checkout/payment/Economy/Save sınırlarını karıştırma.

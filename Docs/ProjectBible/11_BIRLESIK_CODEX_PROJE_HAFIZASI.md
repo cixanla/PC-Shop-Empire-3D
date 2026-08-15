@@ -149,8 +149,8 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `6951869c4a9f33662f322c02348fa4282b9cdbb6`, tree `5f4c956423bbc07b9087d47f7886ab36cc6992f1`.
-- Issue #48 kapsamındaki stale-safe current `Buy`, exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout` Garage graybox dilimi kod/test/build/runtime/feature CI ile tamamlandı; source/docs, USB ve Issue/Project kapanışı yürütülüyor. Epic #9 açık/In Progress kalır.
-- Feature Repository Guard [31880394269](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880394269) başarılıdır.
+- Issue #48 kapsamındaki stale-safe current `Buy`, exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout` Garage graybox dilimi source/docs/CI/USB ile tamamlandı; issue `Completed`, Roadmap `Done`. Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31880394269](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880394269) ve source/docs `aa617006448a146a5a8a6b151ad66224a6a56301` Guard [31880730059](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880730059) başarılıdır.
 - EditMode `287/287`, gerçek Input System PlayMode `19/19` geçti; failed/skipped `0`.
 - Universal macOS development build `327.737.593` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-buy-action-r17-v1 buy-action=ok stale-blocked=ok authority-isolated=ok` ile geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
@@ -162,9 +162,8 @@ Tamamlanan oynanabilir sistemler:
 
 En yakın bounded paket:
 
-1. Önce Issue #48 source/docs/USB/Issue/Project kapanışını tamamla.
-2. Ardından Issue #9 altında `Leave` kararını current visit/offer snapshotıyla fail-closed yeniden doğrulayan, explicit binding sonrası `OfferDeclined` ile `Browsing → Exiting` uygulayan ayrı bounded action sözleşmesi kur.
-3. Checkout başlatma, ödeme/Economy, çoklu ürün/müşteri, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
+1. Issue #9 altında `Leave` kararını current visit/offer snapshotıyla fail-closed yeniden doğrulayan, explicit binding sonrası `OfferDeclined` ile `Browsing → Exiting` uygulayan ayrı bounded action sözleşmesi kur.
+2. Checkout başlatma, ödeme/Economy, çoklu ürün/müşteri, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -227,6 +226,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`; source `80eea8f`, 510 tracked source + 4 test/build/runtime evidence + source kaydı, 515 satırlı `ce72122a…db50b` manifest, 9.373.684 bayt; tam readback/source path+Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`; source/docs `d163328`, 535 tracked source + 5 test/build/runtime evidence + source kaydı, 541 satırlı `c82fc76d…cfd` manifest, 9.715.834 payload baytı; tam hash/boyut/path readback, 535/535 Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked source + 4 final test/build/runtime evidence + source kaydı, 546 satırlı `d46e2433…d1b1` manifest, 9.780.828 payload baytı; 546/546 hash/boyut/path readback, 541/541 Git-blob ve forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`; source/docs `aa61700`, 547 tracked source + 4 final test/build/runtime evidence + source kaydı, 552 satırlı `05ed8205…e76f6` manifest, 9.902.727 payload baytı; 552/552 hash/boyut/path readback, 547/547 Git-blob ve evidence/forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -246,4 +246,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #48 feature `6951869`, Guard `31880394269`, EditMode 287/287, PlayMode 19/19 ve Mac `buy-action=ok stale-blocked=ok authority-isolated=ok` ile doğrulandı. Source/docs + USB + Issue/Project kapanışını tamamlamadan yeni paket açma; sonra Epic #9 altında bounded `Leave/OfferDeclined` action dilimine geç. Checkout/payment/Economy/Save authority sınırlarını karıştırma.
+> Issue #48 kapandı: feature `6951869`, source/docs `aa61700`, Guard koşuları `31880394269`/`31880730059`, EditMode 287/287, PlayMode 19/19, Mac `buy-action=ok stale-blocked=ok authority-isolated=ok` ve `05ed8205…e76f6` manifestli USB milestone kayıtlıdır. Epic #9 altında bounded `Leave/OfferDeclined` action dilimine geç; checkout/payment/Economy/Save authority sınırlarını karıştırma.

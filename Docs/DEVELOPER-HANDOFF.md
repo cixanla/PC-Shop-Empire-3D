@@ -121,7 +121,8 @@ Tamamlanan saf Core sözleşmeleri:
 - Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current `Buy` kararını action authority'ye uygular; stale karar stable failure metniyle engellenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`: source/docs checkpoint `8832c13`, 541 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 546 satırlı `d46e2433…d1b1` SHA-256 manifest/readback ile doğrulandı. 541/541 Git-blob eşliği geçti; hash/boyut/path mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 9.780.828 bayttır.
+- Issue #48 feature `6951869`, source/docs `aa61700` ve Repository Guard koşuları `31880394269`/`31880730059` ile kapandı; issue Completed, Roadmap Done, Epic #9 açık/In Progress durumundadır.
+- Güncel USB milestone `2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`: source/docs checkpoint `aa61700`, 547 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 552 satırlı `05ed8205…e76f6` SHA-256 manifest/readback ile doğrulandı. 547/547 Git-blob eşliği geçti; hash/boyut/path/evidence mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 9.902.727 bayttır.
 
 Henüz yapılmayanlar:
 
