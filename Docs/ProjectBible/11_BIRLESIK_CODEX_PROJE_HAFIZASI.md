@@ -229,7 +229,18 @@ Tam konuşma ve dosya geçmişi:
 - Valid/blocked fastener context Primary/Interact/Drop edge'lerinin tek sahibidir. Gerçek keyboard/mouse ve gamepad PlayMode testleri dynamic prompt, same-frame blocker drain, pause co-edge ve release–repress sözleşmesini taşır.
 - Final EditMode `411/411`, PlayMode `29/29`, Universal macOS `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` başarılıdır.
 - USB bağlı değildir ve `/Volumes`e erişilmemiştir. Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; USB yeniden bağlandığında Issue #53–#54 ayrı manifest/readback milestone'una alınır.
-- Sonraki bounded Epic #10 adımı yalnız CPU socket seating + retention lever akışıdır. RAM/GPU/cooler, tam build/benchmark, genel Inventory revision-max hardening, Save/Guardian ve Windows/Steam ayrı kalır.
+- Bu tarihsel checkpointin sonraki adımı Issue #55 CPU socket seating + retention idi; aşağıdaki güncel kayıtla doğrulandı.
+
+## 8.3 Issue #55 deterministic CPU socket seating ve retention checkpoint'i
+
+- Epic #10'un üçüncü child paketi [Issue #55](https://github.com/cixanla/PC-Shop-Empire-3D/issues/55) ile tek canonical serialized CPU, tek capacity-1 socket ve tek retention mechanism akışına sınırlandı.
+- Feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad`; atomik managed container pair claim, four-operation Assembly authority/receipt lineage, secured-host gate ve same-instance recovery ekledi.
+- [Feature Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır; source/docs ve Issue/Project final metadata turu bu checkpointi bağlar.
+- GarageGraybox r24 notched LGA-style package, ayrı substrate/IHS materyali, triangular mating key, simetrik aperture load plate ve retention lever taşır. Presentation authority değildir; drift invariantı fail-closed'dur ve `21/11/1` render/physics/text bütçesi korunur.
+- Gerçek keyboard/mouse ve gamepad PlayMode testleri guided mode, keyed quarter-turn rejection, seat/retain/open/remove, CPU-installed motherboard detach gate, dynamic compact HUD, co-edge/pause drain ve recovery'yi taşır.
+- Final EditMode `430/430`, PlayMode `31/31`, Universal macOS `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` başarılıdır.
+- USB bağlı değildir ve `/Volumes`e erişilmemiştir. Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; USB yeniden bağlandığında Issue #53–#55 ayrı manifest/readback milestone'una alınır.
+- Sonraki bounded Epic #10 adımı yalnız dual-latch DIMM/RAM seating akışıdır. GPU/cooler/storage, tam build/benchmark, genel Inventory revision-max hardening, Save/Guardian ve Windows/Steam ayrı kalır.
 
 ## 9. USB ve yedek güvenlik katmanı
 
@@ -274,4 +285,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, EditMode 411/411, PlayMode 29/29, Universal Mac `328057977` bayt, Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` ve Guard `31909940414` ile tamamlandı; acceptance 18/18, Issue kapalı/Roadmap `Done`, USB bağlı değildir. Sıradaki bounded child yalnız CPU socket seating + retention lever dilimidir.
+> Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, EditMode 430/430, PlayMode 31/31, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` ve feature Guard `31914489537` ile doğrulandı; source/docs ve Issue/Project kapanış metadata'sı final turda bağlanır, USB bağlı değildir. Sıradaki bounded child yalnız dual-latch DIMM/RAM seating dilimidir.

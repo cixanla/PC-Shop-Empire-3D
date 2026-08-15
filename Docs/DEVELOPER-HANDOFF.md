@@ -14,17 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #54
+### Güncel checkpoint — Issue #55
 
-- Feature commit `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6` deterministic motherboard fastener secure/unsecure dilimini taşır.
-- Source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, tree `214381bd6c9d06a7ab2b2c5ea5e902437dca5914` ve [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılıdır; acceptance `18/18`, Issue kapalı/Roadmap `Done`dur.
-- `PSE.Assembly` stable fastener sub-identity, `SeatedUnsecured ↔ SeatedSecured` state'i, immutable secure/unsecure receipt'i, historical replay ve direct secured detach gate'ini taşır. Secure/unsecure Inventory custody/revision'ını değiştirmez.
-- GarageGraybox marker'ı `garage-motherboard-fastener-r23-v1`dir. Görünür captive screw, screwdriver ve plate'e bağlı tek satır status metni vardır; transformlar presentation'dır ve pose drift invariantı fail-closed'dur.
-- Gerçek Input System valid/blocked tek-consumer, dynamic keyboard/gamepad prompt, pause co-edge ve release–repress sözleşmeleri testlidir.
-- Final EditMode `411/411`, PlayMode `29/29`; Universal macOS build `328057977` bayt ve Apple M4/Metal 1280×720 exact assembly smoke başarılıdır.
-- Ayrıntı: `Docs/ADR-0032-DETERMINISTIC-MOTHERBOARD-FASTENER-SECURE-UNSECURE-GATE.md` ve `Docs/Evidence/DETERMINISTIC-MOTHERBOARD-FASTENER-SECURE-UNSECURE-CHECKPOINT-2026-08-15.md`.
-- USB bağlı değildir; bu checkpointte `/Volumes`e erişilmedi. USB yeniden bağlanınca Issue #53–#54 evidence ayrı manifest/readback snapshotına alınır.
-- Sonraki bounded Epic #10 child adayı yalnız CPU socket seating + retention lever akışıdır.
+- Feature commit `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad` deterministic CPU socket seating + retention dilimini taşır; [Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır.
+- `PSE.Assembly` stable processor slot/retention identity, `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` state'i, four-operation immutable receipt/historical replay fold'u ve installed-CPU motherboard detach gate'ini taşır.
+- Inventory atomik managed Workbench + capacity-1 ProcessorSocket pair claim'i kullanır. Seat/remove exact serialized custody'yi değiştirir; close/open Inventory revision'ını değiştirmez ve bütün failure yolları no-mutation kalır.
+- GarageGraybox marker'ı `garage-cpu-socket-retention-r24-v1`dir. Tek canonical 45 × 37,5 mm notched CPU; ayrı substrate/IHS materyali, matching socket key, aperture load plate ve retention lever ile görünürdür.
+- Gerçek Input System guided mode/rotate/seat/retain/open/remove akışı; dynamic keyboard/gamepad prompt, compact HUD ownership, pause/co-edge drain ve release–repress sözleşmeleri testlidir. Mode kapalıyken ghost veya seat PhysX sorgusu çalışmaz.
+- Final EditMode `430/430`, PlayMode `31/31`; Universal macOS build `328144884` bayt ve Apple M4/Metal 1280×720 exact CPU smoke başarılıdır.
+- Ayrıntı: `Docs/ADR-0033-DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION-CHECKPOINT-2026-08-16.md`.
+- USB bağlı değildir; bu checkpointte `/Volumes`e erişilmedi. USB yeniden bağlanınca Issue #53–#55 evidence ayrı manifest/readback snapshotına alınır.
+- Sonraki bounded Epic #10 child adayı yalnız dual-latch DIMM/RAM seating akışıdır.
 
 ## 2. Gereken temel araçlar
 
@@ -152,7 +152,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş yalnız CPU socket seating + retention lever bounded child'ını açmaktır. USB yeniden bağlandığında Issue #53–#54 manifest/readback checkpointi alınır. RAM/GPU/cooler, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Sıradaki immediate iş yalnız dual-latch DIMM/RAM seating bounded child'ını açmaktır. USB yeniden bağlandığında Issue #53–#55 manifest/readback checkpointi alınır. GPU/cooler/storage, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 

@@ -44,3 +44,17 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır; imzalı/notarize yayın pake
 - Test kapıları: EditMode `394/394`, PlayMode `26/26`; failed/skipped `0`.
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. Gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ve yayın imzası henüz tamamlanmamıştır.
+
+## Stage B deterministic CPU socket seating ve retention doğrulaması — 16 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #55 feature `99cadad` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`).
+- Unity build raporu: `328.144.884` bayt.
+- Ana executable: `117.179` bayt; SHA-256 `d87710b6c5f12fc832bd0a8a1eba317e1074e913beae24daa3d39436737e24f0`.
+- Runtime: Apple M4/Metal, pencereli 1280×720; `garage-cpu-socket-retention-r24-v1` readiness ve exact CPU socket smoke başarılı.
+- Test kapıları: EditMode `430/430`, PlayMode `31/31`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue55-r2.log`, `582.457` bayt, SHA-256 `042ffeeb60f45013dcf5c0c03a1d0a308e1cf1406fd5d3daa83e5e38c17ac34f`.
+- Runtime log: `runtime-processor-issue55-r2.log`, `5.000` bayt, SHA-256 `b9d0fd1dff5d702f3c74d67e09c1b11dc5e30028effaece3045cd7993581e799`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.

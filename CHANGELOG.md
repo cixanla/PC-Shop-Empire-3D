@@ -6,6 +6,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Tek canonical serialized CPU, capacity-1 managed ProcessorSocket container ve atomik Workbench+Socket pair claim'i; `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` Assembly authority'si, exact seat/close/open/remove receipt lineage'ı ve delayed replay ile eklendi.
+- CPU yalnız secured motherboard üzerinde keyed orientation ile oturur; retained remove, installed-CPU motherboard detach, unsecured-host retention close, wrong orientation, stale/conflict/full-hands ve recovery failure yolları cross-authority no-mutation fail-closed'dur.
+- GarageGraybox r24'e 45 × 37,5 mm notched LGA-style CPU, ayrı PCB/IHS PBR materyalleri, hard-surface UV/normaller, matching triangular socket key, simetrik aperture load plate ve görünür retention lever eklendi; `21 Renderer / 11 Collider / 1 TextMesh` bütçesi korunur.
+- Gerçek keyboard/mouse ve gamepad pickup→guided mode→rotate→seat→retain→open→remove→recovery akışı, compact dynamic HUD prompt ownership'i, mode-kapalı ghost/PhysX sıfır sorgu sözleşmesi ve co-edge/pause drain testleriyle kilitlendi.
+- Issue #55 feature checkpoint'i `99cadad`, tree `fea116a`, [Repository Guard `31914489537`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537), EditMode 430/430, PlayMode 31/31, 328144884 bayt Universal macOS build ve Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` kanıtıyla oluşturuldu; USB kullanıcı talimatıyla ertelendi.
 - Assembly-owned stable motherboard fastener kimliği, `SeatedUnsecured ↔ SeatedSecured` secure/unsecure komutları, immutable receipt/historical replay fold'u, Inventory-isolated revision ve secured direct detach gate'i eklendi.
 - GarageGraybox r23'e görünür captive screw, deterministic 4 mm secured depth, cross recess, screwdriver, fiziksel tek-satır status plate ve renk dışı compact keyboard/gamepad promptları eklendi; büyük/yüzen fastener debug metni kullanılmadı.
 - NonAlloc range/focus/LOS/pause/obstruction solver, near-hit deterministic tie-break, projection drift invariantı, blocked/pause same-frame edge drain'i ve gerçek Input System release–repress testleri eklendi.

@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Yaşayan Proje Bible ve Ana Handoff
 
 **Belge rolü:** Projenin ana fikrini, güncel durumunu, teknik sınırlarını, yapılmış ve yapılacak işleri tek giriş noktasında tutar.  
-**Son kapsam güncellemesi:** 15 Ağustos 2026
+**Son kapsam güncellemesi:** 16 Ağustos 2026
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
@@ -290,6 +290,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Fiziksel checkout station | Stable `world.checkout-station.garage-001`; `2,75 m` range, `24°` focus, LOS ve pause gate'i; RAF A ödeme bypass'ı kapalı; ilk `Mouse Left / Gamepad RT` immutable checkout, release/repress sonrası ikinci edge exact-cash settlement; canonical receipt-gated stock/customer completion |
 | İlk authoritative PC assembly dilimi | Unity bağımsız `PSE.Assembly`; mevcut Catalog/Inventory ile tek serialized `MicroAtx` anakartın ActorHands↔managed Workbench transferi, immutable attach/detach receipt'i, stable identity/replay ve GarageGraybox'ta range/focus/LOS/support/obstruction gated `SeatedUnsecured` fiziksel slot akışı |
 | Deterministic motherboard fastener | Assembly-owned stable fastener ID, exact secure/unsecure receipt ve historical replay; secured detach kilidi, Inventory-isolated revision, NonAlloc range/focus/LOS/pause/obstruction solver, gerçek keyboard/gamepad input ownership'i ve görünür screw/screwdriver/status-plate projection'ı |
+| Deterministic CPU socket ve retention | Tek canonical serialized CPU için capacity-1 managed socket; `EmptyOpen → ProcessorSeatedOpen → ProcessorRetained` reversible authority, keyed 90° orientation, secured-host close gate'i, exact four-operation replay/lineage, aynı fiziksel instance recovery'si, gerçek keyboard/gamepad input ve r24 yarı-gerçekçi LGA package/load-plate/lever projection'ı |
 | Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; owned current consultation + immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
 | Stale-safe müşteri Buy eylemi | Explicit Actors↔Retail kimlik bağı, current visit/offer yeniden doğrulaması, exact serialized action-owned reservation, `Browsing → NavigatingToCheckout`, idempotent replay ve stale no-mutation |
 | Stale-safe müşteri Leave eylemi | Aynı kind-discriminated action ledger'ında current visit/offer revalidation, internal Actors prepared planı, `Browsing → Exiting`, stable `OfferDeclined`, Browse→Exit NavMesh ve bütün commerce authority'lerinde no-mutation |
@@ -308,14 +309,15 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Issue #52 kapanış checkpoint'i | Feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496`; [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) başarılı; acceptance `17/17`, Issue kapalı/Roadmap `Done`; parent Epic #9 kapalı/Done |
 | Issue #53 kaynak checkpoint'i | Feature `582a3cf3e81a2905e39148065bd5f6c7e35bbc06`, source/docs `8c6abe45d1f9b6c72def9b686b9c81bf3704d10d`, tree `387bcba701b8a959681e92bf29dc48a4d09f0ab7`; [Repository Guard 31905540378](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31905540378) başarılı; authoritative tek-anakart al/hizala/oturt/sök/recovery dilimi doğrulandı; USB milestone'u kullanıcı talimatıyla ertelendi |
 | Issue #54 kapanış checkpoint'i | Feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, tree `214381bd6c9d06a7ab2b2c5ea5e902437dca5914`; [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılı; acceptance `18/18`, Issue kapalı/Roadmap `Done`; USB ertelendi |
-| Son test/build | Issue #54 sonrası Edit Mode `411/411` (`editmode-issue54-r4.xml`), gerçek Input System Play Mode `29/29` (`playmode-issue54-r4.xml`), failed/skipped `0`; Universal macOS build `328057977` bayt ve Apple M4/Metal 1280×720 `garage-motherboard-fastener-r23-v1` readiness + delayed replay/authority detach içeren exact assembly smoke geçti; scene SHA-256 `2358218819984b78274afd898e771299be3b6df83b83d69d5767f08b417bb0e4` |
+| Issue #55 feature checkpoint'i | Feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad`; [Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılı; source/docs ve Issue/Project kapanış metadata'sı bu checkpoint akışının final turunda bağlanır; USB ertelendi |
+| Son test/build | Issue #55 sonrası Edit Mode `430/430` (`editmode-issue55-r11.xml`), gerçek Input System Play Mode `31/31` (`playmode-issue55-r6.xml`), failed/skipped `0`; Universal macOS build `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1` readiness + keyed orientation/retention/recovery/delayed replay içeren exact CPU smoke geçti; scene SHA-256 `84b10221c389ceda35170456300584b7415737fd28d3c2e5d36ad5ee87e03b4f` |
 
-Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50–#53 checkpointleri tarihsel olarak korunur. Issue #54'ün kaynak/test/build/runtime ve ertelenen USB durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` ile tarihli evidence belgesinde kayıtlıdır.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #50–#54 checkpointleri tarihsel olarak korunur. Issue #55'in kaynak/test/build/runtime ve ertelenen USB durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` ile tarihli evidence belgesinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. USB yeniden bağlandığında Issue #53–#54 source/evidence dosyalarını ayrı SHA-256 manifest/readback milestone'una al; o zamana kadar `/Volumes`e erişme.
-2. Epic #10'un sıradaki bounded child'ını tek CPU socket seating + retention lever akışıyla sınırla. CPU uyumluluğu, keyed orientation, socket cover/lever sırası ve no-mutation sökme/recovery kanıtlanmadan RAM/GPU/cooler kapsamına geçme.
+1. USB yeniden bağlandığında Issue #53–#55 source/evidence dosyalarını ayrı SHA-256 manifest/readback milestone'una al; o zamana kadar `/Volumes`e erişme.
+2. Epic #10'un sıradaki bounded child'ını tek dual-latch DIMM/RAM seating akışıyla sınırla. Slot/channel kimliği, keyed orientation, kapasite, latch sırası ve no-mutation sökme/recovery kanıtlanmadan GPU/cooler/storage kapsamına geçme.
 3. Genel Inventory revision-max hardening'ini ayrı P1 teknik issue olarak kaydet; Issue #54'e geri bağlama. Graybox/debug metinlerini bağlamsal prompt ve fiziksel terminal katmanına kademeli taşı; mevcut sahneyi final art sayma.
 4. İlk gerçek Windows x64 test cihazında IL2CPP/DirectX/Steam kapısını ayrı dış-platform acceptance olarak çalıştır.
 
@@ -360,7 +362,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 352/352 ve Play Mode 24/24 baseline testlerini doğrula.
+5. Edit Mode 430/430 ve Play Mode 31/31 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

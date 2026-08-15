@@ -1,10 +1,26 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
-**Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #54 feature `b681239`, source/docs `7cec7cc`, 411/411 EditMode, 29/29 PlayMode, Universal macOS/Apple M4 runtime ve başarılı Repository Guard `31909940414` ile kapandı; acceptance `18/18`, Issue kapalı/Roadmap `Done`; USB kullanıcı talimatıyla ertelendi<br>
+**Tarih:** 16 Ağustos 2026<br>
+**Durum:** Issue #55 feature `99cadad`, 430/430 EditMode, 31/31 PlayMode, Universal macOS/Apple M4 runtime ve başarılı feature Repository Guard `31914489537` ile doğrulandı; source/docs ve Issue/Project kapanış metadata'sı final checkpoint turunda bağlanıyor; USB kullanıcı talimatıyla ertelendi<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #54 / Epic #10
+## En yeni checkpoint — Issue #55 / Epic #10
+
+- Feature commit `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad`; yerel Repository Guard `tracked=624` ve [feature Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır.
+- Tek canonical serialized CPU, Inventory'nin atomik managed Workbench + capacity-1 ProcessorSocket pair claim'iyle korunur. Raw transfer bypass'ları kapanır; pair conflict/revision failure kısmi claim veya ghost custody üretmez.
+- Assembly state'i `EmptyOpen → ProcessorSeatedOpen → ProcessorRetained` ve tersidir. Seat/close/open/remove operation'ları stable slot/retention/item/product ile attach/secure/seat/retention lineage'ını doğrular; immediate ve delayed replay aynı receipt referansını döndürür.
+- CPU seat yalnız secured motherboard üzerinde geçerlidir. Motherboard CPU takılıyken unsecure olabilir; detach `assembly.processor-installed` ile kilitlenir. Retained CPU açılabilir, unsecured host üzerinde yeniden kapatılamaz ve seated-open CPU çıkarılabilir.
+- Guided mode `Mouse Left / Gamepad RT`, keyed rotation `R / Right Shoulder`, seat `G / Gamepad East`, remove `E / Gamepad South` kullanır. Mode kapalıyken ghost ve PhysX seat sorgusu yoktur; co-edge'ler tek tüketicili ve pause-safe'dir.
+- GarageGraybox `garage-cpu-socket-retention-r24-v1`; 45 × 37,5 × 4 mm notched LGA package, ayrı PCB/IHS materyalleri, hard-surface UV/normaller, matching triangular key, dört kenarda 2 mm aperture toleranslı load plate ve görünür lever taşır. Bütçe `21 Renderer / 11 Collider / 1 TextMesh` olarak sabittir.
+- Pickup/seat/retain/unsecure/open/remove/recovery aynı Unity instance, stable item ID, parent, authored loose pose, Rigidbody/safe pose ve canonical projection sayısını korur. Wrong orientation ve retained remove gate'i Assembly/Inventory/receipt/pose no-mutation ile fail-closed'dur.
+- Final EditMode `430/430`, gerçek Input System PlayMode `31/31`; failed/skipped/inconclusive `0`.
+- Universal macOS Development/StrictMode build `328144884` bayttır; ana executable Universal Mach-O `x86_64 + arm64`, SHA-256 `d87710b6…24f0`.
+- Apple M4/Metal 1280×720 runtime readiness ve exact `GARAGE_CPU_SOCKET_RUNTIME_SMOKE ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable` marker'ı geçti.
+- Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; ayrıntı `Docs/Evidence/DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION-CHECKPOINT-2026-08-16.md` içindedir.
+- USB bağlı değildir; `/Volumes` erişimi veya snapshot yazımı yapılmadı. USB yeniden bağlandığında Issue #53–#55 için ayrı manifest/readback milestone'u alınacaktır.
+- Sıradaki bounded Epic #10 child adayı tek dual-latch DIMM/RAM seating akışıdır. GPU/cooler/storage, tam build benchmarkı, Inventory genişlemesi ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #54 / Epic #10
 
 - Feature commit `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, tree `192f9d8f1334cf9e1ff1d21382c44a847bbfa7e6`; yerel Repository Guard `tracked=616` ile başarılıdır.
 - Source/docs commit `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, tree `214381bd6c9d06a7ab2b2c5ea5e902437dca5914`; [Repository Guard 31909940414](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31909940414) başarılıdır. Acceptance `18/18`, Issue kapalı/Roadmap `Done`dur.
@@ -63,14 +79,14 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1` ve source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad` private remote'a ulaştı; Guard başarılıdır.
+- Branch: `main`; Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad` private remote'a ulaştı ve feature Guard başarılıdır; source/docs final metadata turu bu checkpoint'i tamamlar.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-motherboard-fastener-r23-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-cpu-socket-retention-r24-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
-- PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e oturtur; Assembly-owned fastener ile `SeatedUnsecured ↔ SeatedSecured` geçişi, secured detach kilidi, attach/secure/detach/recovery receipt lineage'ı ve stable world identity korunur.
+- PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e oturtur; Assembly-owned fastener ile `SeatedUnsecured ↔ SeatedSecured` geçişini ve exact serialized CPU ile capacity-1 socket'te `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` döngüsünü korur. Attach/secure/seat/retention/detach/recovery lineage'ı ve stable world identity authoritative'dir.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
@@ -125,10 +141,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. USB yeniden bağlandığında Issue #53–#54 source/evidence kanıtlarını ayrı SHA-256 manifest/readback milestone'una almak; o zamana kadar `/Volumes`e erişmemek.
-2. Sonraki Epic #10 child paketini tek CPU socket seating + retention lever akışıyla sınırlamak; keyed orientation, compatibility, lever sırası, sökme ve recovery dışına büyütmemek.
-3. Inventory revision-max hardening, RAM/GPU/cooler, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. USB yeniden bağlandığında Issue #53–#55 source/evidence kanıtlarını ayrı SHA-256 manifest/readback milestone'una almak; o zamana kadar `/Volumes`e erişmemek.
+2. Sonraki Epic #10 child paketini tek dual-latch DIMM/RAM seating akışıyla sınırlamak; slot/channel identity, keyed orientation, latch sırası, sökme ve recovery dışına büyütmemek.
+3. Inventory revision-max hardening, GPU/cooler/storage, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #54 feature `b6812394f835d64d5bf8422d8e7996ec433cd0f1`, source/docs `7cec7cc4b6fd80997acd0dc2d6943ef08850f4ad`, EditMode `411/411`, PlayMode `29/29`, Universal Mac `328057977` bayt, Apple M4/Metal `garage-motherboard-fastener-r23-v1 assembly-flow=ok ... secure-delayed-replay=ok ... detach-authority-blocked=ok ... recovery=ok` ve Guard `31909940414` ile tamamlandı; acceptance 18/18, Issue kapalı/Roadmap `Done`, USB bağlı değildir. Sıradaki bounded child yalnız tek CPU socket seating + retention lever akışıdır.
+Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, EditMode `430/430`, PlayMode `31/31`, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok ... retained-remove-gate=ok replay=ok identity=stable` ve feature Guard `31914489537` ile doğrulandı; source/docs ve Issue/Project kapanış metadata'sı final turda bağlanır, USB bağlı değildir. Sıradaki bounded child yalnız tek dual-latch DIMM/RAM seating akışıdır.
