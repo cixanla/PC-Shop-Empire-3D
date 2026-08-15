@@ -52,6 +52,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Catalog/Inventory milestone'ı 428 tracked kaynak, 4 test kanıtı ve source kaydıyla ayrı USB hedefinde 433 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi; AppleDouble `0` olarak doğrulandı.
 - Order Receiving milestone'ı 449 tracked kaynak, 4 test kanıtı ve source kaydıyla ayrı USB hedefinde 454 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi; AppleDouble `0` olarak doğrulandı.
 - Authoritative Stock Flow milestone'ı 467 tracked kaynak, 4 test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 472 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi; forbidden/credential/AppleDouble `0` olarak doğrulandı.
+- Delivery Parcel Unpacking milestone'ı 471 tracked kaynak, 5 scene/test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 477 satırlı SHA-256 manifest/readback ve source checksum kapısından geçirildi; forbidden/credential/AppleDouble `0` olarak doğrulandı.
 
 ## 2026-08-11 — Stage B Core Foundation
 

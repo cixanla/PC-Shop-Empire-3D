@@ -57,3 +57,12 @@ macOS oturumu kilitli olduğu için yeni pencere ekran görüntüsü alınmadı;
 - Fiyat/etiket authority'si, para/ledger, müşteri ve checkout/satış.
 - Save/journal/crash atomikliği, final model/animasyon/ses.
 - Gerçek Windows x64 IL2CPP/DirectX/Steam doğrulaması.
+
+## Uzak ve USB kapanışı
+
+- Feature Repository Guard [31865403562](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31865403562): başarılı.
+- Docs checkpoint commit `756547f42298b7aeaf01075cbf6d000cbb97ddaa`; Repository Guard [31865626606](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31865626606): başarılı.
+- Issue #41 completed olarak kapatıldı ve Roadmap item'ı Done yapıldı; Epic #8 In Progress kaldı.
+- USB: `2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`; 471 tracked source + 5 evidence + source kaydı, 477 manifest satırı.
+- Manifest SHA-256: `37f95b3ccc6fd8cca19d2e1068d06d2b3072223c6bbb8a13b5e856ce768e58ac`.
+- Tam readback/hash/boyut ve Git source karşılaştırmasında mismatch `0`; forbidden directory, credential filename ve AppleDouble `0`.
