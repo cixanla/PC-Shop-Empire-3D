@@ -143,21 +143,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`.
-- Issue #43 feature'ı tamamlandı; Epic #8 checkout snapshot/satış alt işleriyle sürüyor.
-- EditMode `220/220`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
-- Universal macOS development build `327.531.969` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok basket-reservation=ok release=ok stable=ok quantity=1` geçti.
-- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer reserve/release zincirinde taşınır.
-- Basket line stable customer/basket/line + exact offer/item/Inventory claim taşır. Duplicate/mismatch/drift failure no-mutation, exact tekrar idempotent ve reserved pickup fail-closed kalır; fiyat snapshot'ı henüz basket line'a kopyalanmaz.
+- Son doğrulanmış kaynak feature: `294999f6ad48d4831f56031cc542cf43cac09d3e`.
+- Issue #44 feature'ı tamamlandı; Epic #8 reservation consume/satış completion alt işiyle sürüyor.
+- EditMode `233/233`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
+- Universal macOS development build `327.551.161` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `checkout-snapshot=ok price-frozen=ok stable=ok quantity=1` geçti.
+- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer reserve/release → checkout begin zincirinde taşınır.
+- Checkout bütün aktif basket satırlarını exact offer/item/Inventory claim ile preflight eder; integer price/currency/total ve source offer revision immutable snapshot'tır. Exact tekrar idempotent, duplicate/mixed-currency/stale/drift failure no-mutation; sonradan offer update'i açık fiyatı değiştirmez ve checkout aktif release/pickup fail-closed kalır.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8 altında basket line + exact offer + Inventory reservation'ı doğrulayan Unity-bağımsız checkout transaction başlangıç sözleşmesini kur.
-2. Offer fiyatını integer minor-unit immutable snapshot olarak dondur; sonradan raf fiyatı update'i açık transaction'ı değiştirmesin.
-3. Exact tekrar idempotent; missing/stale reservation, unknown line/offer ve drift failure yolları bütün authority'lerde no-mutation kalsın.
-4. Reservation consume/sale commit, fiziksel müşteri AI, ödeme/Economy ledger, vergi/indirim, Save ve final UI'ı bu ilk snapshot paketine ekleme.
+1. Issue #8 altında exact checkout basket/reservation bağını yeniden preflight eden Unity-bağımsız completion sözleşmesini kur.
+2. Başarıda Inventory reservation'ı bir kez consume et, basket line'ı tamamla ve serialized item için stable sold/fulfilled sonucu üret.
+3. Exact tekrar idempotent; stale/drift/conflict ve kısmi cross-authority mutation yolları no-mutation veya açık atomik rollback sözleşmesinde kalsın.
+4. Fiziksel müşteri AI, ödeme/Economy ledger/COGS/nakit, vergi/indirim, Save ve final UI'ı bu completion paketine ekleme.
 
 Sonraki ana geliştirme sırası:
 
@@ -235,4 +235,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Customer basket serialized reservation checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket basket line + exact offer + Inventory reservation'ı doğrulayıp checkout başlangıcında integer offer fiyatını immutable snapshot olarak donduran Unity-bağımsız transaction sözleşmesidir. Reservation consume, ödeme/ledger, müşteri AI ve Save ayrı kalsın; failure no-mutation korunsun. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Immutable checkout price snapshot checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket exact checkout reservation'ını atomik consume edip serialized item için stable satış/fulfilled sonucu üretir. Ödeme/Economy ledger, müşteri AI ve Save ayrı kalsın; idempotency ve cross-authority failure no-mutation korunsun. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

@@ -243,7 +243,7 @@ Monotonluğu azaltma ilkeleri:
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
-| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer ve customer basket reservation tamam; checkout snapshot sırada |
+| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, customer basket reservation ve immutable checkout price snapshot tamam; atomik satış commit'i sırada |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
@@ -281,6 +281,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Fiziksel teslimat kolisi açma | Kapalı dış parcel → idempotent exact ürün reveal; opening domain revision/quantity değiştirmez, açık kabuk Receiving'de kalır |
 | Authoritative RAF A teklifi | Unity bağımsız `PSE.Retail`; stable offer/product/shelf kimliği, 3 harf currency, pozitif integer minor-unit fiyat, idempotent publish/update revision ve failure no-mutation |
 | Customer basket rezervasyonu | Stable customer/basket/line, exact offer + serialized item + Inventory claim; duplicate engeli, idempotent reserve, release, cross-authority no-mutation ve reserved pickup kilidi |
+| Immutable checkout başlangıcı | Stable checkout/basket/customer ve deterministic line snapshot; exact offer/item/reservation preflight, integer minor-unit currency/total, idempotent begin, fiyat güncellemesine karşı immutable kayıt ve aktif checkout release/pickup kilidi |
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
@@ -291,14 +292,14 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
 | Güncel USB milestone | `2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`; source `109237a`, 498 tracked kaynak + 4 test/build/runtime kanıtı + source kaydı, 503 satırlı `ff868e4c…20d7` SHA-256 manifest/readback ve source checksum ile doğrulandı; cache/build/credential/AppleDouble dışarıda |
-| Son test/build | Customer basket reservation sonrası Edit Mode `220/220`, Play Mode `17/17`; Universal macOS build ve Apple M4/Metal 1280×720 `shelf-offer=ok basket-reservation=ok release=ok stable=ok quantity=1` gerçek player smoke geçti |
+| Son test/build | Immutable checkout snapshot sonrası Edit Mode `233/233`, Play Mode `17/17`; Universal macOS build ve Apple M4/Metal 1280×720 `checkout-snapshot=ok price-frozen=ok stable=ok quantity=1` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) altında basket line + exact offer + Inventory reservation'ı doğrulayıp fiyatı satış başlangıcında donduran Unity-bağımsız checkout transaction snapshot'ını kur.
-2. Reservation consume/sale commit sınırını ayrı bounded pakette kur; ödeme, ledger ve Save sınırını açık tut.
+1. [Issue #8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) altında exact checkout reservation'ını atomik tüketen ve serialized item için tek satış/fulfilled sonucu üreten bounded commit sözleşmesini kur.
+2. Ödeme, Economy ledger/COGS/nakit, vergi/indirim ve Save sınırlarını authority'leri hazır olana kadar ayrı tut.
 3. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yay; bütün sahneyi henüz final art sayma.
 4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
@@ -343,7 +344,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 220/220 ve Play Mode 17/17 baseline testlerini doğrula.
+5. Edit Mode 233/233 ve Play Mode 17/17 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.
