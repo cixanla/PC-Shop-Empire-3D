@@ -277,6 +277,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Catalog çekirdeği | Unity bağımsız `PSE.Catalog`; stable ürün/kategori kimliği, serialized/batch tracking policy, doğrulanmış görünür ad, bounded garanti ve immutable sıralı katalog |
 | Inventory authority | Unity bağımsız `PSE.Inventory`; serialized item, bölünebilir batch position, unit-capacity container, atomik transfer, claim reservation, consume/release, revision ve invariant audit |
 | Purchase order receiving | Unity bağımsız `PSE.Orders`; stable order/supplier/delivery, monotonik lifecycle, exact manifest ve tek-revision Inventory intake |
+| Authoritative dünya/stok projection'ı | Görünür teslimat kabulü; aynı serialized item için Receiving→ActorHands→Shelf/WorldFloor domain-first transfer, rollback ve recovery |
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
@@ -287,16 +288,17 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
 | Güncel USB milestone | `2026-08-15_STAGE_B_ORDER_RECEIVING`; 449 tracked kaynak + 4 test kanıtı + checkpoint kaydı, 454 satırlı SHA-256 manifest/readback ve source checksum ile doğrulandı; cache/build/credential/AppleDouble dışarıda |
-| Son test/build | Orders/receiving sonrası Edit Mode `184/184`, Play Mode `14/14`; son Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, ayrıca `cart-flow=ok loaded=ok stable=ok` gerçek player smoke geçerliliğini koruyor |
+| Son test/build | Authoritative stock flow sonrası Edit Mode `188/188`, Play Mode `17/17`; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok carry=ok world-floor=ok stable=ok quantity=1` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) için gelmiş manifesti görünür teslimat kutusuna ve authoritative receiving kaydına bağlayan fiziksel kabul dilimini kur.
-2. Receiving stokunu küçük kutu taşıma/placement üzerinden gerçek raf container'ına aktar; dünya nesnesini authoritative miktar kaynağı yapma.
-3. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yay; bütün sahneyi henüz final art sayma.
-4. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. [Issue #8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) altında fiziksel teslimat kolisini açıp exact manifest item'larını duplicate üretmeden Receiving world projection'ına çıkar.
+2. Raf ürününe authoritative fiyat/etiket sözleşmesi ekle; fiyat ve para authority'sini dünya nesnesine verme.
+3. Müşteri seçimi ve checkout/satış zincirini ayrı bounded paketlerle kur; Save/Guardian kapsamını kendi issue'larında tut.
+4. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yay; bütün sahneyi henüz final art sayma.
+5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
@@ -339,7 +341,7 @@ GitHub Issues iş birimi, [PC Shop Empire 3D — Development Roadmap](https://gi
 2. Private depoyu clone et; `main` üzerinde doğrudan deneme yapma.
 3. Unity Hub ile tam `ProjectSettings/ProjectVersion.txt` sürümünü kur.
 4. `./Tools/verify-repository.sh` çalıştır.
-5. Edit Mode 184/184 ve Play Mode 14/14 baseline testlerini doğrula.
+5. Edit Mode 188/188 ve Play Mode 17/17 baseline testlerini doğrula.
 6. GitHub Project'te atanmış issue'yu ve kabul ölçütünü oku.
 7. Küçük branch aç; gameplay ile mimari migration'ı aynı PR'a yığma.
 8. Test, `PROJECT_BIBLE`, ilgili ADR/provenans ve changelog kontrolünü tamamla.

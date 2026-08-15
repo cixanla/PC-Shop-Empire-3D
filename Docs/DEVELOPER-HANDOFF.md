@@ -52,8 +52,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `184/184` passed.
-- Play Mode `14/14` passed.
+- Edit Mode `188/188` passed.
+- Play Mode `17/17` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -87,6 +87,9 @@ Tamamlanan saf Core sözleşmeleri:
 - Catalog yalnız Core; Inventory yalnız Core + Catalog referanslıdır. İki assembly de Unity/Editor bağımlılığı taşımaz.
 - `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
 - `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
+- `GarageStockFlowSession` exact serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` prototype composition'ını kurar.
+- `InventoryItemWorldBinding` aynı Inventory item/world item kimliğini, `InventoryPlacementZone` ise doğrulanmış surface/container eşlemesini taşır.
+- `PlayerCarryController` bound item'larda domain-first world mutation uygular; world failure domain rollback yapar, recovery authoritative container ve fiziksel pozu birlikte düzeltir.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -104,18 +107,18 @@ Tamamlanan saf Core sözleşmeleri:
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_ORDER_RECEIVING`: checkpoint commitindeki 449 tracked kaynak, 4 Unity test kanıtı ve source kayıt dosyası; 454 satırlı SHA-256 manifest/readback ile doğrulandı. Mismatch, yasak cache/build/credential ve AppleDouble sayısı `0`dır.
+- Son doğrulanmış USB milestone `2026-08-15_STAGE_B_ORDER_RECEIVING`: checkpoint commitindeki 449 tracked kaynak, 4 Unity test kanıtı ve source kayıt dosyası; 454 satırlı SHA-256 manifest/readback ile doğrulandı. Issue #40 snapshotı docs checkpointinden sonra ayrıca kaydedilecektir.
 
 Henüz yapılmayanlar:
 
-- Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve çoklu/palet taşıma.
+- Gelişmiş el animasyonu, çok satırlı koli açma/projection, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Fiziksel item/cart projeksiyonlarının authoritative Inventory kayıtlarına açık adaptörle bağlanması.
+- Fiyat/etiket, müşteri checkout/satış ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #8 altında `Arrived` teslimat manifestini görünür kutu/receiving projection'ına ve ardından gerçek raf container transferine bağlar. Dünya projection'ı ekonomik stok gerçeği değildir; yalnız açık Orders/Inventory komutu başarılı olduğunda sahiplik değişir.
+Sıradaki bounded paket Issue #8 altında fiziksel teslimat kolisini açar ve exact manifest item'larını duplicate üretmeden Receiving world projection'ına çıkarır. Mevcut dünya projection'ı ekonomik stok gerçeği değildir; yalnız açık Orders/Inventory komutu başarılı olduğunda sahiplik değişir.
 
 ## 7. Çalışma akışı
 
@@ -169,7 +172,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 184 Edit Mode ve 14 Play Mode baseline testi geçti.
+2. Repo guard, 188 Edit Mode ve 17 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

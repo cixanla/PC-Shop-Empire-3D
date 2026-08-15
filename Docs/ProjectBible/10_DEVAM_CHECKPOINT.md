@@ -1,126 +1,93 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #39 purchase order + atomik receiving tamamlandı; Epic #8 fiziksel teslimat/raf alt işleriyle devam ediyor<br>
+**Durum:** Issue #40 görünür teslimat ve authoritative raf transferi tamamlandı; Epic #8 koli açma/fiyat/satış alt işleriyle devam ediyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #39 / Epic #8
+## En yeni checkpoint — Issue #40 / Epic #8
 
-- Feature commit `e596e079d90b6d5b9d94714d7821502574eba3c9`, tree `14865dc87d8ad86447e73d8596042d085f52d73f`.
-- `PSE.Orders` stable purchase order/supplier/delivery kimliği ve `Placed → Confirmed → InTransit → Arrived → Accepted` durum zinciri sağlar.
-- Exact manifest serialized `ItemInstanceId` ve batch `BatchId` + quantity taşır; order product/adet/tracking toplamı birebir eşleşmeden arrival kaydı oluşmaz.
-- `InventoryIntake` bütün satırları identity/tracking/capacity açısından preflight eder ve başarıda tek Inventory revision'ında receiving container'a yazar.
-- Sipariş, onay, dispatch ve arrival stok yaratmaz; yalnız fiziksel kabul komutu authoritative quantity ekler. Her failure iki authority'yi de değiştirmeden bırakır.
-- EditMode `184/184`, regresyon PlayMode `14/14` geçti; önceki fiziksel etkileşim zinciri bozulmadı.
-- Yeni sahne/prefab/runtime sunumu olmadığı için player yeniden build edilmedi; son Universal macOS ve Apple M4/Metal cart smoke kanıtı geçerlidir.
-- Karar: `Docs/ADR-0017-ATOMIC-PURCHASE-ORDER-RECEIVING.md`; kanıt: `Docs/Evidence/ORDERS-RECEIVING-CHECKPOINT-2026-08-15.md`.
-- Dashboard, kurye/spawn, kutu açma, partial/damaged claim, fiyat/para ve fiziksel raf projection'ı sonraki Issue #8 alt işlerindedir.
+- Feature commit `9d75573a86e395d2fa74f3808d43310e4d65f760`, tree `6779e31aaa6ad186acfa3b1143653d51f47e75b7`.
+- GarageGraybox'ta exact Northstar A60 teslimatı `Arrived` başlar; stok kabulden önce `0`dır.
+- İlk `E / Gamepad South` order manifestini authoritative Receiving'e kabul eder. İkinci etkileşim aynı serialized item'ı Receiving → ActorHands taşır ve ancak sonra fiziksel pickup yapar.
+- RAF A üzerindeki geçerli placement ActorHands → Shelf transferini fiziksel world mutation'dan önce tamamlar. Güvenli bırakma ActorHands → WorldFloor kullanır.
+- Domain failure fiziksel sahipliği değiştirmez; domain sonrası fiziksel failure transferi geri alır. Recovery Inventory container'ı ve görünür nesneyi aynı son güvenli dünya durumuna döndürür.
+- Teslimat alanı, carton, durum panosu/ışığı ve authoritative RAF A görünürdür; HUD order/konum durumunu dinamik gösterir.
+- EditMode `188/188`, gerçek Input System PlayMode `17/17`, Universal macOS build ve Apple M4/Metal runtime smoke geçti.
+- Karar: `Docs/ADR-0018-TRANSACTIONAL-WORLD-INVENTORY-PROJECTION.md`; kanıt: `Docs/Evidence/AUTHORITATIVE-STOCK-FLOW-CHECKPOINT-2026-08-15.md`.
+- Çok satırlı koli açma, fiyat/para, müşteri checkout/satış, save ve final sanat sonraki bounded paketlerdir.
 
 ## Kullanım güvenliği protokolü
 
-- Kalan kullanım yüzdesini model doğrudan okuyamaz; kullanıcı/panel bildirimi authoritative kabul edilir.
-- Her bounded paket test → Git commit → private push → CI → gerektiğinde ayrı USB milestone sırasıyla kapanır.
-- Kullanıcı yeniden çok düşük kullanım bildirirse uzun işe başlanmaz; en yakın temiz commit sınırında bu belge güncellenir.
+- Kullanıcı durdurana veya ortam kapanana kadar bağımlılık sırasındaki küçük paketler soru gerektirmeden sürdürülür.
+- Her bounded paket kod/test → Git commit → private push → CI → yaşayan belgeler → gerektiğinde ayrı USB milestone sırasıyla kapanır.
 - Büyük indirme, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset ve motor/proje migration'ı ayrı açıklama/onay kapısıdır.
+- Kullanıcı değişikliği, token/credential, legacy canonical kaynak ve ilgisiz çalışma ağacı değişiklikleri korunur.
 
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 - Unity `6000.3.21f1`, URP `17.3.0`, C#.
 - Core: stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministik event dispatcher tamam.
-- Catalog: stable ürün/kategori ID, serialized/batch tracking policy, fail-closed immutable ürün kataloğu tamam.
-- Inventory: serialized item, batch position, container capacity, atomik transfer, claim reservation, consume/release, deterministic query ve invariant audit tamam.
-- Orders: exact purchase order manifesti, monotonik delivery lifecycle ve atomik receiving kabulü tamam.
-- Gameplay sınırları: `PSE.World` ve `PSE.Presentation`.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`.
-- Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
-- Küçük kutu `E / Gamepad South` ile alınır; `Mouse Left / Gamepad RT` placement önizlemesini açar; `G / Gamepad East` yerleştirir veya mod kapalıyken güvenli bırakır.
-- Küçük kutu placement'ı işaretli stock surface üzerinde `0,25 m` grid/`90°` yaw snap, tam destek ve overlap doğrulaması kullanır; geçerli sonuç stabil kinematic pozdur.
-- Küçük kutu placement modunda `R / Right Shoulder` ile clockwise `90°` döner. Etkin binding ve mevcut açı prompt'ta görünür; ghost/confirm aynı pozu, döndürülmüş footprint aynı fail-closed güvenlik kontrolünü kullanır.
-- GarageGraybox iki küçük kutu taşır. Stable kinematic küçük kutu üstünde `İSTİF GEÇERLİ` önizlemesi, merkez/90° snap, beş noktalı tam destek, tek kat/tek üst ilişki ve dolu taban pickup kilidi çalışır.
-- Turuncu bantlı büyük kutu ayrı stable kimlik/boyut ve carry profili taşır. Alındığında iki-el pozu, `0,65×` hareket ve sprint kilidi uygulanır.
-- Büyük kutunun istenen FOV bedeli `6°`, üst sınırı `8°`dir. Varsayılan `motionReduced` açıkken lens değişmez; görünür kutu/eller görüş maliyetini taşır. Ayar kapalıysa FOV yumuşak geçişle uygulanır.
-- Büyük kutu küçük-kutu placement moduna giremez. Etkin `G / Gamepad East` promptuyla gerçek yarı boyutlarına göre güvenli bırakılır; obstruction durumunda `BIRAKMA ENGELLİ` gösterir ve elde kalır.
-- Platform arabası tek büyük kutuyu aynı stable ID ve ilk physics snapshot'ıyla taşır. Dört teker desteği ve swept obstruction geçmeden pose uygulanmaz; yük world-parent kinematic olarak anchor'a senkronlanır.
-- Yüklü/boş araba etkin binding prompt'u, ayrı iki-el tutuş pozu, sprint kilidi ve `0,85×`/`0,90×` hareket profili taşır. Engel, driver/controller veya cart disable recovery'si fail-closed davranır.
-- Tek slot, stable item ID, physics snapshot, disable/world-floor recovery ve küçük-kutu davranışları korunur.
-- Görsel hedef okunaklı yarı gerçekçiliktir: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; mevcut primitive garaj/kutular/eller final sanat değildir.
-- Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi hâlâ dış platform kapısıdır.
+- Catalog: stable ürün/kategori ID, serialized/batch tracking policy ve immutable deterministic katalog tamam.
+- Inventory: serialized item, batch position, container capacity, atomik transfer, reservation, consume/release, deterministic query ve invariant audit tamam.
+- Orders: exact purchase-order manifesti, monotonik delivery lifecycle ve atomik receiving kabulü tamam.
+- Explicit Presentation adaptörü: Receiving → ActorHands → Shelf/WorldFloor container zinciri ile fiziksel dünya projeksiyonu tamam.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; marker `garage-authoritative-stock-flow-r9-v1`.
+- Küçük kutu `E / Gamepad South` ile alınır; `Mouse Left / Gamepad RT` placement önizlemesini açar; `R / Right Shoulder` 90° döndürür; `G / Gamepad East` yerleştirir veya güvenli bırakır.
+- Placement 0,25 m grid/90° yaw, tam footprint desteği, overlap, stable stacking ve açık `InventoryPlacementZone` doğrulaması kullanır.
+- Büyük kutu ayrı `0,65×` carry profili ve fail-closed drop kullanır. Platform arabası aynı stable item'ı hands→cart→hands taşır; yüklü/boş `0,85×`/`0,90×`, sprint kilitlidir.
+- Tek slot, stable item ID, physics snapshot, disable/world-floor recovery ve önceki bağımsız prototype davranışları korunur.
+- Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj/kutular/eller final sanat değildir.
+- Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
 
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `e596e079d90b6d5b9d94714d7821502574eba3c9`
-- Tree: `14865dc87d8ad86447e73d8596042d085f52d73f`
-- Checkpoint docs commit: `c4aed4b050dd92c1f5aaa65261d4d1bc009528b3`
-- Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#39](https://github.com/cixanla/PC-Shop-Empire-3D/issues/39)
-- Karar: `Docs/ADR-0017-ATOMIC-PURCHASE-ORDER-RECEIVING.md`.
-- Kanıt: `Docs/Evidence/ORDERS-RECEIVING-CHECKPOINT-2026-08-15.md`.
-- Kapsam: purchase order lines, delivery/ETA lifecycle, exact manifest, generic Inventory intake ve receiving acceptance.
-- Kısmi/hasarlı claim, Economy, Dashboard, event/save ve dünya projection'ı açıkça kapsam dışında kaldı.
-- Remote Repository Guard: [31862730318](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31862730318), başarılı.
+- Feature commit: `9d75573a86e395d2fa74f3808d43310e4d65f760`
+- Tree: `6779e31aaa6ad186acfa3b1143653d51f47e75b7`
+- Checkpoint docs commit: bu belge commitlendiğinde güncellenecek.
+- Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#40](https://github.com/cixanla/PC-Shop-Empire-3D/issues/40)
+- Repository Guard: [31864259779](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31864259779), başarılı.
 
-## Test ve build kanıtı
+## Test, build ve runtime kanıtı
 
-Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
+Ham çıktılar Git dışındaki `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `orders-receiving-editmode.xml` | 184/184 geçti | `4114e3483ed820f5061210402599bedc0e2116cdcdd7cf21305793024f2d42df` |
-| `orders-receiving-playmode.xml` | 14/14 geçti | `1e2bbae00d8116b363d7dc069bb677973a6264c2dbc6840cf34e1706435ef07b` |
-| `catalog-inventory-editmode.xml` | 161/161 geçti | `626757772e5cae48ce1531ddca35b544ebba986bd34a9f32ddea6b7f758663f0` |
-| `catalog-inventory-playmode.xml` | 14/14 geçti | `69d89a0f7d2943ceb2793cf75db2cffd689bed37ae54d6303e013510835d21f8` |
-| `cart-editmode-final.xml` | 136/136 geçti | `6de78a3e7be6d47e9780962bdabef4a64d5efe153bf3b572fee90c5da98c9bca` |
-| `cart-playmode-final.xml` | 14/14 geçti | `87b3c4e42d73186191740b69971b482bb49ab68c882105f48e7aee39628ccea3` |
-| `cart-macos-build.log` | Universal development build, 327.282.300 bayt | `1511e285a0cb051b1216c11d455efba7334fdda22ef75456e627451a7677f347` |
-| Player executable | Mach-O `x86_64 + arm64` | `d6d5e7afdf5cae9d39c6696507bf9ea8c181b22a58299de31b8968889739ba27` |
-| `cart-macos-runtime-final.log` | Apple M4/Metal, `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` | `e2a5c113f28db09d4746182bb062031b29b601b0e188d8737fe5967ca5ef2a56` |
-| `cart-macos-runtime-final.png` | 1280×748 yüklü araba ve HUD | `816fec72ed909be4a5ab9244a888adbddce0743b1b42450ec27cabcf72bfc5d2` |
+| `stock-flow-editmode-final.xml` | 188/188 geçti; failed/skipped 0 | `a68f13ed6ad0acded29bbd2bb9f7d2022d33640d8e4d139eec3ac9dea6b61932` |
+| `stock-flow-playmode-final.xml` | 17/17 geçti; failed/skipped 0 | `199a022b9e45556c23e7c2e6bcf5d68fdc5102c832c78445f10644522aff81b4` |
+| `stock-flow-macos-build.log` | Universal development build, 327.462.869 bayt | `0cedd45fb8bf69cba64f2e2f991f42c1d2b009060bcfb6dc47d91dd150b39ab9` |
+| Player executable | Mach-O `x86_64 + arm64` | `53cf8ab1e929fc0aace8f5eedbc4314ad29a05f33cf83690ab56c6406e71a642` |
+| `stock-flow-macos-runtime.log` | Apple M4/Metal 1280×720; `stock-flow=ok accepted=ok carry=ok world-floor=ok stable=ok quantity=1` | `83991ad781087259a0426ead6eb9a2dd65c6764c7d170db4382b9817108d0c0b` |
 
-Yeni EditMode paketi Orders assembly sınırını, lifecycle/exact manifest/bulk intake ve iki-authority no-mutation davranışını doğrular. PlayMode gerçek Input System fiziksel etkileşim regresyonlarını korur. Önceki Mac player kanıtı Windows native doğrulamasının yerine geçmez.
+PlayMode klavye tam raf akışını, gamepad WorldFloor akışını ve ActorHands capacity failure no-mutation davranışını gerçek device state ile doğrular. Kilitli macOS oturumu nedeniyle bu turda güvenilir pencere ekran görüntüsü alınmadı; test/build/native runtime log kanıtı başarılıdır. Mac kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
 - Stage A: `b7ac8c36d9fb7be1eacf08b8f2b273d9c2574166`, tag `stage-a-baseline-2026-08-11`.
-- Core assembly: `8ecb05df48257d22dc7f4549c8dbfe7b261772a9`.
-- Stable identity/result: `4cd2d928dbfda1886632bacce4a141c2a43161df`.
-- Deterministic time/event: `8af2ad3d05906839c4b607e4958650e723060465`.
-- PCG32: `bbb3648c6e34eedd77e1bec948d5ee630f89679c`.
-- Seed derivation: `43e92174ca3866dfde436fb180785a615772a886`.
-- Event dispatcher hardening: `3d819e533fd3635bc9b32787730d6dd9be110875`.
-- First playable garage: `c7a3a26075998252d9ae8b88824d8285e5067069`.
-- Safe physical pickup/drop: `44b816289f942e57fc176b26b203711090d0e61c`.
-- Controlled small-box placement: `720e6d4ac2b2afad9ee86f907c533cbabb1bf5ed`.
-- Safe large-box carry: `e94419862b04f6f03f97ef2e43c9da393c5d30a9`.
-- Controlled small-box rotation: `661f2dcc64246a8282fd63fbf303454ec856ea40`.
-- Readable lookdev benchmark: `c7214afab81a360a3ca10a88cbdd29f67e741994`.
-- Controlled small-box stacking: `2e11e30a1a4b3435046ae18001004cacc170079e`.
-- Loaded transport cart: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
-- Authoritative Catalog + Inventory core: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
-- Atomic purchase order receiving: `e596e079d90b6d5b9d94714d7821502574eba3c9`.
+- Core/time/event: `8af2ad3d05906839c4b607e4958650e723060465`.
+- PCG32/seed/dispatcher: `bbb3648`, `43e9217`, `3d819e5`.
+- İlk oynanabilir garaj: `c7a3a26075998252d9ae8b88824d8285e5067069`.
+- Safe pickup/drop, placement, large carry, rotation: `44b8162`, `720e6d4`, `e944198`, `661f2dc`.
+- Lookdev benchmark, stacking, loaded cart: `c7214af`, `2e11e30`, `82bf74f`.
+- Catalog + Inventory: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
+- Atomic purchase-order receiving: `e596e079d90b6d5b9d94714d7821502574eba3c9`.
+- Authoritative stock-flow projection: `9d75573a86e395d2fa74f3808d43310e4d65f760`.
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları:
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Son doğrulanmış snapshot şimdilik `2026-08-15_STAGE_B_ORDER_RECEIVING`dir: 449 tracked kaynak + 4 test kanıtı + source kaydı, 454 manifest satırı, manifest SHA-256 `07480d15d2f2b187d7e84383c6f45f011be1f8a0056c4075f06103d92f485cff`, mismatch/forbidden/AppleDouble `0`. Issue #40 checkpoint commitinden sonra yeni authoritative-stock-flow snapshotı oluşturulup bu kayıt güncellenecektir.
 
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_STAGE_A_BASELINE`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-11_GITHUB_HANDOFF`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_RNG`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-13_STAGE_B_SMALL_BOX_PLACEMENT`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_SMALL_BOX_STACKING`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CATALOG_INVENTORY`
-- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ORDER_RECEIVING`
+## Sıradaki bounded paket
 
-Güncel Order Receiving snapshot'ı `c4aed4b` checkpointindeki 449 tracked kaynağı, 4 EditMode/PlayMode rapor-log kanıtını ve source kaydını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 454 manifest satırında hash/boyut hatası `0`, source mismatch `0`, manifest SHA-256 `07480d15d2f2b187d7e84383c6f45f011be1f8a0056c4075f06103d92f485cff`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket için güvenle çıkarılabilir.
+1. Epic #8 altında fiziksel teslimat kolisini açma ve exact manifest içeriğini birim birim, duplicate üretmeden Receiving world projection'ına çıkarma.
+2. Sonra raf ürünü için authoritative fiyatlandırma/etiket sözleşmesini küçük saf domain paketi olarak kurma.
+3. Ardından müşteri seçimi ve checkout/satış zincirine geçme; Save/Guardian sınırlarını kendi issue'larında tutma.
+4. Benchmark görsel dilini yalnız tamamlanan gameplay alanlarına kademeli yayma; graybox'ı final art saymama.
 
-## Devam sırası
+Her adım ayrı issue, test, commit, CI ve checkpoint ile kapanır. Inventory quantity hiçbir aşamada dünya nesnesinden türetilmez.
 
-1. Issue #8 altında `Arrived` manifesti görünür teslimat kutusuna bağlayan fiziksel kabul/prompt akışını oluştur.
-2. Receiving stokunu küçük kutu taşıma/placement üzerinden gerçek raf container'ına aktar; başarısız domain komutunda dünya ownership'ini değiştirme.
-3. Benchmark görsel dilini tamamlanan gameplay alanlarına kademeli yay; sahneyi final art ilan etme.
-4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
+## Güvenli devam komutu
 
-## Düşük kullanımda bırakılacak mesaj
-
-> Kalan kullanım düşük seviyeye indi. Yeni uzun iş başlatmadım. Son tamamlanan commit, açık değişiklikler, test/build sonucu, remote CI ve devam sırası bu checkpoint dosyasında kayıtlı; ek kredi geldikten sonra buradan güvenle devam edilebilir.
+> Authoritative stock-flow checkpointinden devam et. Önce bu belgeyi, `PROJECT_BIBLE.md`, birleşik hafızayı, temiz `origin/main` eşitliğini ve Epic #8'i doğrula. Sıradaki bounded paket fiziksel teslimat kolisini açıp exact manifest item'larını duplicate üretmeden Receiving projection'ına çıkarmaktır. Test, build/runtime uygunluk kanıtı, commit/push/CI ve yaşayan kayıt olmadan tamamlandı sayma.

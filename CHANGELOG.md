@@ -33,7 +33,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Unity bağımsız `PSE.Orders`; stable purchase order/supplier/delivery kimliği, deterministic satırlar, monotonik lifecycle ve exact delivery manifest ile eklendi.
 - Mixed serialized+batch `InventoryIntake`, tam preflight sonrası bütün teslimatı tek Inventory revision'ında receiving container'a kabul edecek şekilde eklendi.
 - Sipariş/onay/yol/arrival aşamalarında stok yaratmama; manifest/capacity/identity failure'ında order+Inventory no-mutation ve duplicate acceptance engeli testlerle kilitlendi.
-- Edit Mode baseline `184/184`, Play Mode baseline `14/14` teste yükseldi; son Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçerliliğini koruyor.
+- GarageGraybox'a görünür authoritative teslimat alanı, carton, durum panosu ve gerçek RAF A stock surface eklendi; HUD order/container durumunu dinamik gösteriyor.
+- Aynı serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` zinciri açık Presentation adaptörüyle bağlandı; domain-first world mutation, rollback ve recovery ile çift/kayıp stok engellendi.
+- `InventoryContainerKind.WorldFloor`, `InventoryItemWorldBinding`, `InventoryPlacementZone` ve deterministik `GarageStockFlowSession` eklendi; binding bulunmayan önceki prototype item davranışı korunuyor.
+- Edit Mode baseline `188/188`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok carry=ok world-floor=ok stable=ok quantity=1` gerçek player smoke geçti.
 
 ### Changed
 

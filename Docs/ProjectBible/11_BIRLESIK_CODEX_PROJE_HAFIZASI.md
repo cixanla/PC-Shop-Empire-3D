@@ -143,21 +143,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `e596e079d90b6d5b9d94714d7821502574eba3c9`.
-- Issue #39 tamamlandı; Epic #8 visible delivery/receiving/raf alt işleriyle sürüyor. Unity bağımsız Orders lifecycle ve exact manifest hazırdır.
-- EditMode `184/184`, gerçek Input System regresyon PlayMode `14/14` geçti; failed/skipped `0`.
-- Önceki Universal macOS development build `327.282.300` bayt, Mach-O `x86_64 + arm64` ve Apple M4/Metal `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, `cart-flow=ok loaded=ok stable=ok` kanıtı geçerlidir.
-- Product/instance/batch/container/transfer/reservation invariantlarına purchase-order lifecycle ve atomik receiving intake eklendi; failure iki authority'yi de değiştirmez.
-- Dünya projection'ı Orders/Inventory'ye kendiliğinden yazmaz; explicit visible delivery/raf adaptörü sıradadır.
+- Son doğrulanmış kaynak feature: `9d75573a86e395d2fa74f3808d43310e4d65f760`.
+- Issue #40 tamamlandı; Epic #8 fiziksel koli açma, fiyat/etiket ve satış alt işleriyle sürüyor.
+- EditMode `188/188`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
+- Universal macOS development build `327.462.869` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok carry=ok world-floor=ok stable=ok quantity=1` geçti.
+- Exact serialized item görünür teslimat → Receiving → ActorHands → RAF A Shelf/WorldFloor zincirinde açık Presentation adaptörüyle taşınır.
+- Domain transferi world mutation'dan önce gelir; domain failure fiziksel sahipliği değiştirmez, fiziksel failure domain rollback yapar, recovery iki projection'ı birlikte son güvenli duruma döndürür.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8 altında `Arrived` manifesti görünür teslimat kutusu ve dinamik kabul promptuna bağla.
-2. Dünya item stable ID ile Inventory item/batch kimliğini açık adaptörde eşle; domain komutu başarısızsa fiziksel ownership'i değiştirme.
-3. Receivingden gerçek raf container'ına güvenli transferi kanıtla; fiyat/para ve müşteri AI ekleme.
-4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula.
+1. Issue #8 altında fiziksel teslimat kolisini açma eylemini ve dinamik promptu kur.
+2. Exact manifest içeriğini birim birim, deterministik ve duplicate üretmeden Receiving world projection'ına çıkar.
+3. Açma/çıkarma failure'ında order, Inventory ve dünya nesnelerini no-mutation bırak; yarım projection üretme.
+4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula; fiyat/para ve müşteri AI ekleme.
 
 Sonraki ana geliştirme sırası:
 
@@ -171,7 +171,7 @@ Sonraki ana geliştirme sırası:
 
 Henüz tamamlanmayan önemli alanlar:
 
-- Gerçek raf ve dünya↔authoritative Inventory adaptörü.
+- Çok satırlı teslimat kolisi açma ve Receiving birim projection'ı.
 - Çoklu slot/palet taşıma arabası ve lojistik ekipmanı.
 - Çok katlı veya palet istifi.
 - Gelişmiş el modeli/animasyonu.
@@ -212,6 +212,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`; 396 tracked source + 6 evidence, 403 satırlı manifest ve SHA-256/readback doğrulaması geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CATALOG_INVENTORY`; 428 tracked source + 4 test evidence + source kaydı, 433 satırlı `f481ddfa…49dc9` manifest, tam readback/source checksum ve AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ORDER_RECEIVING`; 449 tracked source + 4 test evidence + source kaydı, 454 satırlı `07480d15…485cff` manifest, tam readback/source checksum ve AppleDouble `0` kapısı geçti.
+- Issue #40 authoritative-stock-flow snapshotı docs checkpointinden sonra oluşturulacak ve yaşayan checkpointte tam manifest/hash ile kaydedilecektir.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -231,4 +232,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Purchase-order receiving checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket `Arrived` manifestin görünür teslimat kutusu/accept promptu ve receiving→raf transfer adaptörüdür. Dünya projection'ı yalnız explicit Orders/Inventory komutu başarılı olursa ownership değiştirsin. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Authoritative stock-flow checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket fiziksel teslimat kolisini açıp exact manifest item'larını duplicate üretmeden Receiving world projection'ına çıkarmaktır. Domain/world işlemleri fail-closed ve rollback'li kalsın. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
