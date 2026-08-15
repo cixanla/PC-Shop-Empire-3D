@@ -1,4 +1,5 @@
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Retail;
@@ -151,10 +152,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool IsCheckoutSettled
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.TryGetPrototypeCheckoutSettlement(out _);
+            }
+        }
+
         public bool RequiresCheckoutStart => IsCustomerReserved && !IsCheckoutStarted;
 
         public bool RequiresCheckoutCompletion =>
-            IsCustomerReserved && IsCheckoutStarted && !IsCheckoutCompleted;
+            IsCustomerReserved && IsCheckoutStarted && !IsCheckoutSettled;
 
         public string LocationLabel
         {
@@ -168,7 +179,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (!session.TryGetItem(out InventoryItemRecord item))
                 {
-                    if (IsCheckoutCompleted)
+                    if (IsCheckoutSettled)
                     {
                         return "MÜŞTERİYE TESLİM EDİLDİ • STOK 0";
                     }
@@ -535,6 +546,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult TryCompleteCheckout()
         {
+            return TrySettleCashCheckout();
+        }
+
+        public OperationResult TrySettleCashCheckout()
+        {
             OperationResult contract = ValidateContract();
             if (contract.IsFailure)
             {
@@ -542,9 +558,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             GarageStockFlowSession session = Session;
-            if (IsCheckoutCompleted)
+            if (IsCheckoutSettled)
             {
-                OperationResult repeated = session.CompletePrototypeCheckout();
+                OperationResult repeated = session.SettlePrototypeCashCheckout();
                 if (repeated.IsSuccess)
                 {
                     runtime.RefreshPresentation();
@@ -565,9 +581,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StockProjectionFailures.CheckoutCompletionUnavailable);
             }
 
-            OperationResult result = session.CompletePrototypeCheckout();
+            OperationResult result = session.SettlePrototypeCashCheckout();
             if (result.IsSuccess)
             {
+                if (!session.TryGetPrototypeCheckoutCompletion(out _) ||
+                    !session.TryGetPrototypeCheckoutSettlement(out CheckoutSettlementReceipt receipt) ||
+                    receipt.CheckoutId != session.PrototypeCheckoutId ||
+                    receipt.CompletionId != session.PrototypeCheckoutCompletionId)
+                {
+                    return OperationResult.Fail(
+                        CheckoutSettlementFailures.InvariantViolation);
+                }
+
                 runtime.RefreshPresentation();
                 projection.gameObject.SetActive(false);
                 Physics.SyncTransforms();

@@ -80,6 +80,11 @@ namespace PCShopEmpire3D.Orders
                     return OperationResult.Fail(OrderFailures.InvalidQuantity);
                 }
 
+                if (!line.UnitCost.IsValid)
+                {
+                    return OperationResult.Fail(OrderFailures.InvalidUnitCost);
+                }
+
                 if (!_catalog.TryGet(line.ProductId, out _))
                 {
                     return OperationResult.Fail(OrderFailures.UnknownProduct);
@@ -326,6 +331,7 @@ namespace PCShopEmpire3D.Orders
                     if (line == null ||
                         line.ProductId.IsEmpty ||
                         line.Quantity <= 0 ||
+                        !line.UnitCost.IsValid ||
                         !_catalog.TryGet(line.ProductId, out _) ||
                         !products.Add(line.ProductId))
                     {
@@ -380,6 +386,12 @@ namespace PCShopEmpire3D.Orders
         private Failure ValidateManifest(PurchaseOrderRecord order, DeliveryManifest manifest)
         {
             var deliveredQuantities = new Dictionary<StableId<ProductDefinitionIdScope>, long>();
+            var orderLines = new Dictionary<StableId<ProductDefinitionIdScope>, PurchaseOrderLine>();
+            for (int index = 0; index < order.Lines.Count; index++)
+            {
+                PurchaseOrderLine line = order.Lines[index];
+                orderLines.Add(line.ProductId, line);
+            }
 
             for (int index = 0; index < manifest.Intake.SerializedItems.Count; index++)
             {
@@ -392,6 +404,16 @@ namespace PCShopEmpire3D.Orders
                 if (definition.TrackingPolicy != ProductTrackingPolicy.SerializedInstance)
                 {
                     return OrderFailures.TrackingMismatch;
+                }
+
+                if (!orderLines.TryGetValue(item.ProductId, out PurchaseOrderLine orderLine))
+                {
+                    return OrderFailures.QuantityMismatch;
+                }
+
+                if (item.UnitCost != orderLine.UnitCost)
+                {
+                    return OrderFailures.UnitCostMismatch;
                 }
 
                 deliveredQuantities.TryGetValue(item.ProductId, out long quantity);
@@ -409,6 +431,16 @@ namespace PCShopEmpire3D.Orders
                 if (definition.TrackingPolicy != ProductTrackingPolicy.BatchQuantity)
                 {
                     return OrderFailures.TrackingMismatch;
+                }
+
+                if (!orderLines.TryGetValue(batch.ProductId, out PurchaseOrderLine orderLine))
+                {
+                    return OrderFailures.QuantityMismatch;
+                }
+
+                if (batch.UnitCost != orderLine.UnitCost)
+                {
+                    return OrderFailures.UnitCostMismatch;
                 }
 
                 deliveredQuantities.TryGetValue(batch.ProductId, out long quantity);

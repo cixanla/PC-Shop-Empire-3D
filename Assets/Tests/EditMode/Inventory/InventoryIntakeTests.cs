@@ -10,6 +10,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         private static readonly StableId<ProductDefinitionIdScope> SerializedProduct = ProductId("intake.serialized");
         private static readonly StableId<ProductDefinitionIdScope> BatchProduct = ProductId("intake.batch");
         private static readonly StableId<ContainerIdScope> Receiving = ContainerId("intake.receiving");
+        private static readonly InventoryUnitCost SerializedCost = UnitCost("EUR", 42_000);
+        private static readonly InventoryUnitCost BatchCost = UnitCost("EUR", 25);
 
         [Test]
         public void IntakeOrdersEntriesByStableStockIdentity()
@@ -52,6 +54,27 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
+        public void IntakeEntriesRequireValidatedUnitCost()
+        {
+            OperationResult<InventorySerializedIntake> serialized =
+                InventorySerializedIntake.Create(
+                    ItemId("item.invalid-cost"),
+                    SerializedProduct,
+                    InventoryCondition.New,
+                    default);
+            OperationResult<InventoryBatchIntake> batch =
+                InventoryBatchIntake.Create(
+                    BatchId("batch.invalid-cost"),
+                    BatchProduct,
+                    InventoryCondition.New,
+                    2,
+                    default);
+
+            Assert.That(serialized.Error, Is.EqualTo(InventoryFailures.InvalidUnitCost));
+            Assert.That(batch.Error, Is.EqualTo(InventoryFailures.InvalidUnitCost));
+        }
+
+        [Test]
         public void MixedIntakeCommitsAllStockWithOneRevision()
         {
             InventoryAuthority authority = CreateAuthority(20);
@@ -70,6 +93,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.GetTotalQuantity(SerializedProduct).Value, Is.EqualTo(2));
             Assert.That(authority.GetTotalQuantity(BatchProduct).Value, Is.EqualTo(5));
             Assert.That(authority.GetContainerQuantity(Receiving).Value, Is.EqualTo(7));
+            Assert.That(authority.TryGetSerializedItem(
+                ItemId("item.one"), out InventoryItemRecord item), Is.True);
+            Assert.That(item.UnitCost, Is.EqualTo(SerializedCost));
+            Assert.That(authority.TryGetBatch(
+                BatchId("batch.one"), out InventoryBatchRecord batch), Is.True);
+            Assert.That(batch.UnitCost, Is.EqualTo(BatchCost));
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -96,7 +125,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         {
             InventoryAuthority authority = CreateAuthority(20);
             authority.ReceiveSerializedItem(
-                ItemId("item.existing"), SerializedProduct, Receiving, InventoryCondition.New);
+                ItemId("item.existing"),
+                SerializedProduct,
+                Receiving,
+                InventoryCondition.New,
+                SerializedCost);
             InventoryIntake intake = InventoryIntake.Create(
                 new[]
                 {
@@ -161,7 +194,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ProductDefinitionIdScope> productId)
         {
             return InventorySerializedIntake.Create(
-                ItemId(itemId), productId, InventoryCondition.New).Value;
+                ItemId(itemId), productId, InventoryCondition.New, SerializedCost).Value;
         }
 
         private static InventoryBatchIntake Batch(
@@ -170,7 +203,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             int quantity)
         {
             return InventoryBatchIntake.Create(
-                BatchId(batchId), productId, InventoryCondition.New, quantity).Value;
+                BatchId(batchId), productId, InventoryCondition.New, quantity, BatchCost).Value;
         }
 
         private static StableId<ProductDefinitionIdScope> ProductId(string value) =>
@@ -187,5 +220,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
 
         private static StableId<BatchIdScope> BatchId(string value) =>
             StableId<BatchIdScope>.Parse(value);
+
+        private static InventoryUnitCost UnitCost(string currencyCode, long minorUnits) =>
+            InventoryUnitCost.Create(currencyCode, minorUnits).Value;
     }
 }

@@ -151,10 +151,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 {
                     if (binding.RequiresCheckoutCompletion)
                     {
+                        string paymentFailure = LastFailureCode.StartsWith(
+                            "economy.checkout-settlement.",
+                            StringComparison.Ordinal)
+                            ? $"   |   ÖDEME ENGELLİ: {LastFailureCode}"
+                            : string.Empty;
                         return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
-                               "satışı tamamla   |   " +
+                               "nakit ödemeyi al   |   " +
                                $"KASA: {binding.Runtime.CheckoutStatusText}   |   " +
-                               "REZERVASYON KİLİTLİ";
+                               "REZERVASYON KİLİTLİ" + paymentFailure;
                     }
 
                     if (binding.IsCustomerReservationActionOwned)
@@ -647,7 +652,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 focusedBinding.RequiresCheckoutCompletion &&
                 input.PrimaryActionPressedThisFrame)
             {
-                Remember(focusedBinding.TryCompleteCheckout());
+                Remember(focusedBinding.TrySettleCashCheckout());
                 return;
             }
 

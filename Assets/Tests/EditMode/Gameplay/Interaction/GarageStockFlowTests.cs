@@ -2,6 +2,7 @@ using NUnit.Framework;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -392,6 +393,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(checkout.Lines[0].ItemId, Is.EqualTo(session.ItemId));
             Assert.That(checkout.Lines[0].UnitPrice.MinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(checkout.Lines[0].UnitCost.CurrencyCode,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(checkout.Lines[0].UnitCost.MinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
             Assert.That(checkout.Lines[0].SourceOfferRevision, Is.EqualTo(1));
 
             Assert.That(session.RetailOffers.SetOffer(
@@ -448,7 +453,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void BindingCompletesSaleConsumesStockAndHidesShelfProjectionExactlyOnce()
+        public void BindingSettlesExactCashPostsBalancedLedgerAndReplaysWithoutMutation()
         {
             Fixture fixture = CreateBindingFixture();
             Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
@@ -464,11 +469,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             long checkoutRevision = fixture.Session.RetailCheckouts.Revision;
             long offerRevision = fixture.Session.RetailOffers.Revision;
             long orderRevision = fixture.Session.Orders.Revision;
+            long economyRevision = fixture.Session.CheckoutSettlements.Revision;
 
-            OperationResult result = fixture.Binding.TryCompleteCheckout();
+            OperationResult result = fixture.Binding.TrySettleCashCheckout();
 
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(fixture.Binding.IsCheckoutCompleted, Is.True);
+            Assert.That(fixture.Binding.IsCheckoutSettled, Is.True);
             Assert.That(fixture.Binding.IsCustomerReserved, Is.False);
             Assert.That(fixture.Binding.RequiresCheckoutCompletion, Is.False);
             Assert.That(fixture.Item.gameObject.activeSelf, Is.False);
@@ -487,12 +494,79 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(fixture.Session.PrototypeCheckoutCompletionId));
             Assert.That(completion.TotalMinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(fixture.Session.TryGetPrototypeCheckoutSettlement(
+                out CheckoutSettlementReceipt receipt), Is.True);
+            Assert.That(receipt.Id,
+                Is.EqualTo(fixture.Session.PrototypeCheckoutSettlementId));
+            Assert.That(receipt.TransactionId,
+                Is.EqualTo(fixture.Session.PrototypeLedgerTransactionId));
+            Assert.That(receipt.CompletionId, Is.EqualTo(completion.Id));
+            Assert.That(receipt.CheckoutId, Is.EqualTo(completion.CheckoutId));
+            Assert.That(receipt.CustomerId, Is.EqualTo(completion.CustomerId));
+            Assert.That(receipt.PaymentMethod, Is.EqualTo(CheckoutPaymentMethod.Cash));
+            Assert.That(receipt.Currency.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(receipt.GrossMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(receipt.CostOfGoodsSoldMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+            Assert.That(receipt.GrossMarginMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits -
+                           GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+            Assert.That(fixture.Session.TryGetPrototypeLedgerTransaction(
+                out EconomyLedgerTransactionRecord transaction), Is.True);
+            Assert.That(transaction.Id,
+                Is.EqualTo(fixture.Session.PrototypeLedgerTransactionId));
+            Assert.That(transaction.SettlementId, Is.EqualTo(receipt.Id));
+            Assert.That(transaction.Entries.Count, Is.EqualTo(4));
+            AssertLedgerEntry(
+                transaction.Entries[0],
+                EconomyAccountKind.Cash,
+                EconomyEntryDirection.Debit,
+                GarageStockFlowSession.PrototypePriceMinorUnits);
+            AssertLedgerEntry(
+                transaction.Entries[1],
+                EconomyAccountKind.SalesRevenue,
+                EconomyEntryDirection.Credit,
+                GarageStockFlowSession.PrototypePriceMinorUnits);
+            AssertLedgerEntry(
+                transaction.Entries[2],
+                EconomyAccountKind.CostOfGoodsSold,
+                EconomyEntryDirection.Debit,
+                GarageStockFlowSession.PrototypeUnitCostMinorUnits);
+            AssertLedgerEntry(
+                transaction.Entries[3],
+                EconomyAccountKind.InventoryAsset,
+                EconomyEntryDirection.Credit,
+                GarageStockFlowSession.PrototypeUnitCostMinorUnits);
+            Assert.That(
+                transaction.Entries[0].MinorUnits + transaction.Entries[2].MinorUnits,
+                Is.EqualTo(
+                    transaction.Entries[1].MinorUnits + transaction.Entries[3].MinorUnits));
+            CurrencyCode currency = CurrencyCode.Create(
+                GarageStockFlowSession.PrototypeCurrencyCode).Value;
+            Assert.That(fixture.Session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.Cash, currency).Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(fixture.Session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.SalesRevenue, currency).Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(fixture.Session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.CostOfGoodsSold, currency).Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+            Assert.That(fixture.Session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.InventoryAsset, currency).Value,
+                Is.EqualTo(-GarageStockFlowSession.PrototypeUnitCostMinorUnits));
             Assert.That(fixture.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevision + 1));
             Assert.That(fixture.Session.RetailBaskets.Revision,
                 Is.EqualTo(basketRevision + 1));
             Assert.That(fixture.Session.RetailCheckouts.Revision,
                 Is.EqualTo(checkoutRevision + 1));
+            Assert.That(fixture.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevision + 1));
+            Assert.That(fixture.Session.CheckoutSettlements.SettlementCount, Is.EqualTo(1));
+            Assert.That(fixture.Session.CheckoutSettlements.TransactionCount, Is.EqualTo(1));
             Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
             Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
             Assert.That(fixture.Binding.LocationLabel,
@@ -500,20 +574,46 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Binding.Runtime.CustomerBasketStatusText,
                 Is.EqualTo("TESLİM EDİLDİ"));
             Assert.That(fixture.Binding.Runtime.CheckoutStatusText,
-                Is.EqualTo($"{GarageStockFlowRuntime.PrototypePriceText} • TAMAMLANDI"));
+                Is.EqualTo($"{GarageStockFlowRuntime.PrototypePriceText} • NAKİT ALINDI"));
             Assert.That(fixture.Binding.Runtime.ShelfOfferLabelText,
-                Does.Contain("TAMAMLANDI"));
+                Does.Contain("NAKİT ALINDI"));
+            Assert.That(fixture.Binding.Runtime.EconomyStatusText,
+                Does.Contain("NAKİT +"));
+            Assert.That(fixture.Binding.Runtime.EconomyStatusText,
+                Does.Contain("GELİR +"));
+            Assert.That(fixture.Binding.Runtime.EconomyStatusText,
+                Does.Contain("COGS"));
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
 
             inventoryRevision = fixture.Session.Inventory.Revision;
             basketRevision = fixture.Session.RetailBaskets.Revision;
             checkoutRevision = fixture.Session.RetailCheckouts.Revision;
-            Assert.That(fixture.Binding.TryCompleteCheckout().IsSuccess, Is.True);
+            offerRevision = fixture.Session.RetailOffers.Revision;
+            orderRevision = fixture.Session.Orders.Revision;
+            economyRevision = fixture.Session.CheckoutSettlements.Revision;
+            Assert.That(fixture.Binding.TrySettleCashCheckout().IsSuccess, Is.True);
+            OperationResult conflict = fixture.Session.CheckoutSettlements.SettleCashCheckout(
+                fixture.Session.PrototypeCheckoutSettlementId,
+                StableId<EconomyLedgerTransactionIdScope>.Parse(
+                    "economy.ledger-transaction.editmode-conflict"),
+                fixture.Session.PrototypeCheckoutCompletionId,
+                fixture.Session.PrototypeCheckoutId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits,
+                receipt.PaidAt);
+            Assert.That(conflict.Error,
+                Is.EqualTo(CheckoutSettlementFailures.SettlementIdentityConflict));
             Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
             Assert.That(fixture.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
             Assert.That(fixture.Session.RetailCheckouts.Revision,
                 Is.EqualTo(checkoutRevision));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Session.CheckoutSettlements.Revision, Is.EqualTo(economyRevision));
             Assert.That(fixture.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(fixture.Session.CheckoutSettlements.SettlementCount, Is.EqualTo(1));
+            Assert.That(fixture.Session.CheckoutSettlements.TransactionCount, Is.EqualTo(1));
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
         private Fixture CreateBindingFixture()
@@ -560,15 +660,32 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
 
         private static void FillShelf(GarageStockFlowSession session)
         {
+            InventoryUnitCost unitCost = InventoryUnitCost.Create(
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypeUnitCostMinorUnits).Value;
             for (int index = 0; index < 8; index++)
             {
                 Assert.That(session.Inventory.ReceiveSerializedItem(
                     StableId<ItemInstanceIdScope>.Parse($"inventory.item.shelf-filler-{index:00}"),
                     session.ProductId,
                     session.ShelfContainerId,
-                    InventoryCondition.New).IsSuccess,
+                    InventoryCondition.New,
+                    unitCost).IsSuccess,
                     Is.True);
             }
+        }
+
+        private static void AssertLedgerEntry(
+            EconomyLedgerEntryRecord entry,
+            EconomyAccountKind account,
+            EconomyEntryDirection direction,
+            long minorUnits)
+        {
+            Assert.That(entry.Account, Is.EqualTo(account));
+            Assert.That(entry.Direction, Is.EqualTo(direction));
+            Assert.That(entry.Currency.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(entry.MinorUnits, Is.EqualTo(minorUnits));
         }
 
         private static void AssertLocation(

@@ -2,6 +2,7 @@ using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Retail;
@@ -40,12 +41,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string PrototypeCheckoutIdValue = "retail.checkout.demo-customer-001";
         public const string PrototypeCheckoutCompletionIdValue =
             "retail.checkout-completion.demo-customer-001";
+        public const string PrototypeCheckoutSettlementIdValue =
+            "economy.checkout-settlement.demo-customer-001";
+        public const string PrototypeLedgerTransactionIdValue =
+            "economy.ledger-transaction.demo-customer-001";
         public const string PrototypeReservationIdValue =
             "inventory.reservation.demo-basket-a60-001";
         public const string PrototypeClaimIdValue =
             "inventory.claim.retail-basket-demo-001";
         public const string PrototypeCurrencyCode = "EUR";
         public const long PrototypePriceMinorUnits = 54_999;
+        public const long PrototypeUnitCostMinorUnits = 42_000;
         public const long PrototypeMaximumAcceptedPriceMinorUnits = 60_000;
         public const string ProductDisplayName = "Northstar A60 Ekran Kartı";
 
@@ -56,6 +62,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
             RetailCheckoutAuthority retailCheckouts,
+            CheckoutSettlementAuthority checkoutSettlements,
             CustomerVisitAuthority customerVisits,
             CustomerOfferDecisionActionAuthority customerOfferActions,
             CustomerRetailIdentityBinding prototypeCustomerBinding)
@@ -66,6 +73,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
             RetailCheckouts = retailCheckouts;
+            CheckoutSettlements = checkoutSettlements;
             CustomerVisits = customerVisits;
             CustomerOfferActions = customerOfferActions;
             PrototypeCustomerBinding = prototypeCustomerBinding;
@@ -82,6 +90,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public RetailBasketAuthority RetailBaskets { get; }
 
         public RetailCheckoutAuthority RetailCheckouts { get; }
+
+        public CheckoutSettlementAuthority CheckoutSettlements { get; }
 
         public CustomerVisitAuthority CustomerVisits { get; }
 
@@ -150,6 +160,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             StableId<RetailCheckoutCompletionIdScope>.Parse(
                 PrototypeCheckoutCompletionIdValue);
 
+        public StableId<EconomyCheckoutSettlementIdScope> PrototypeCheckoutSettlementId =>
+            StableId<EconomyCheckoutSettlementIdScope>.Parse(
+                PrototypeCheckoutSettlementIdValue);
+
+        public StableId<EconomyLedgerTransactionIdScope> PrototypeLedgerTransactionId =>
+            StableId<EconomyLedgerTransactionIdScope>.Parse(
+                PrototypeLedgerTransactionIdValue);
+
         public StableId<ReservationIdScope> PrototypeReservationId =>
             StableId<ReservationIdScope>.Parse(PrototypeReservationIdValue);
 
@@ -206,6 +224,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 RetailBasketAuthority.Create(retailOffers, inventory).Value;
             RetailCheckoutAuthority retailCheckouts =
                 RetailCheckoutAuthority.Create(retailOffers, retailBaskets, inventory).Value;
+            CheckoutSettlementAuthority checkoutSettlements =
+                CheckoutSettlementAuthority.Create(retailCheckouts).Value;
             CustomerVisitAuthority customerVisits = CustomerVisitAuthority.Create(
                 catalog,
                 SimulationDuration.FromMilliseconds(60_000),
@@ -228,11 +248,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 StableId<DeliveryIdScope>.Parse(DeliveryIdValue);
             StableId<ProductDefinitionIdScope> productId =
                 StableId<ProductDefinitionIdScope>.Parse(ProductIdValue);
-            PurchaseOrderLine line = PurchaseOrderLine.Create(productId, 1).Value;
+            InventoryUnitCost unitCost = InventoryUnitCost.Create(
+                PrototypeCurrencyCode,
+                PrototypeUnitCostMinorUnits).Value;
+            PurchaseOrderLine line = PurchaseOrderLine.Create(productId, 1, unitCost).Value;
             InventorySerializedIntake serialized = InventorySerializedIntake.Create(
                 StableId<ItemInstanceIdScope>.Parse(ItemInstanceIdValue),
                 productId,
-                InventoryCondition.New).Value;
+                InventoryCondition.New,
+                unitCost).Value;
             InventoryIntake intake = InventoryIntake.Create(
                 new[] { serialized },
                 System.Array.Empty<InventoryBatchIntake>()).Value;
@@ -254,6 +278,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 retailOffers,
                 retailBaskets,
                 retailCheckouts,
+                checkoutSettlements,
                 customerVisits,
                 customerOfferActions,
                 prototypeCustomerBinding);
@@ -401,9 +426,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult CompletePrototypeCheckout()
         {
-            return RetailCheckouts.CompleteCheckout(
+            return SettlePrototypeCashCheckout();
+        }
+
+        public OperationResult SettlePrototypeCashCheckout()
+        {
+            return CheckoutSettlements.SettleCashCheckout(
+                PrototypeCheckoutSettlementId,
+                PrototypeLedgerTransactionId,
                 PrototypeCheckoutCompletionId,
                 PrototypeCheckoutId,
+                PrototypeCurrencyCode,
+                PrototypePriceMinorUnits,
                 Time(7));
         }
 
@@ -413,6 +447,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return RetailCheckouts.TryGetCompletion(
                 PrototypeCheckoutCompletionId,
                 out completion);
+        }
+
+        public bool TryGetPrototypeCheckoutSettlement(
+            out CheckoutSettlementReceipt receipt)
+        {
+            return CheckoutSettlements.TryGetSettlement(
+                PrototypeCheckoutSettlementId,
+                out receipt);
+        }
+
+        public bool TryGetPrototypeLedgerTransaction(
+            out EconomyLedgerTransactionRecord transaction)
+        {
+            return CheckoutSettlements.TryGetTransaction(
+                PrototypeLedgerTransactionId,
+                out transaction);
         }
 
         public OperationResult StartPrototypeCustomerVisit(SimulationTimestamp at)
@@ -498,6 +548,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (checkoutResult.IsFailure)
             {
                 return checkoutResult;
+            }
+
+            OperationResult settlementResult = CheckoutSettlements.ValidateInvariants();
+            if (settlementResult.IsFailure)
+            {
+                return settlementResult;
             }
 
             OperationResult visitResult = CustomerVisits.ValidateInvariants();

@@ -4,6 +4,9 @@ using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Economy")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.EditModeTests")]
+
 namespace PCShopEmpire3D.Retail
 {
     /// <summary>
@@ -142,24 +145,21 @@ namespace PCShopEmpire3D.Retail
             return OperationResult.Success();
         }
 
-        /// <summary>
-        /// Fulfills one immutable checkout by consuming every matching Inventory reservation and
-        /// basket line as one preflighted commit. The completion record is stable and does not
-        /// claim payment or Economy settlement.
-        /// </summary>
-        public OperationResult CompleteCheckout(
+        internal OperationResult<RetailCheckoutCompletionPlan> PrepareCheckoutCompletion(
             StableId<RetailCheckoutCompletionIdScope> completionId,
             StableId<RetailCheckoutIdScope> checkoutId,
             SimulationTimestamp completedAt)
         {
             if (completionId.IsEmpty)
             {
-                return OperationResult.Fail(RetailCheckoutFailures.InvalidCompletionId);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.InvalidCompletionId);
             }
 
             if (checkoutId.IsEmpty)
             {
-                return OperationResult.Fail(RetailCheckoutFailures.InvalidCheckoutId);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.InvalidCheckoutId);
             }
 
             if (_completions.TryGetValue(
@@ -168,46 +168,56 @@ namespace PCShopEmpire3D.Retail
             {
                 if (existing.CheckoutId != checkoutId || existing.CompletedAt != completedAt)
                 {
-                    return OperationResult.Fail(
+                    return OperationResult<RetailCheckoutCompletionPlan>.Fail(
                         RetailCheckoutFailures.CompletionIdentityConflict);
                 }
 
                 if (!_checkouts.TryGetValue(checkoutId, out RetailCheckoutRecord completedCheckout))
                 {
-                    return OperationResult.Fail(
+                    return OperationResult<RetailCheckoutCompletionPlan>.Fail(
                         RetailCheckoutFailures.CompletionInvariantViolation);
                 }
 
                 Failure consistency = ValidateCompletedRecord(completedCheckout, existing);
                 return consistency.IsNone
-                    ? OperationResult.Success()
-                    : OperationResult.Fail(consistency);
+                    ? OperationResult<RetailCheckoutCompletionPlan>.Success(
+                        new RetailCheckoutCompletionPlan(
+                            this,
+                            Revision,
+                            existing,
+                            null,
+                            true))
+                    : OperationResult<RetailCheckoutCompletionPlan>.Fail(consistency);
             }
 
             if (!_checkouts.TryGetValue(checkoutId, out RetailCheckoutRecord checkout))
             {
-                return OperationResult.Fail(RetailCheckoutFailures.UnknownCheckout);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.UnknownCheckout);
             }
 
             if (TryGetCompletionForCheckout(checkoutId, out _))
             {
-                return OperationResult.Fail(RetailCheckoutFailures.CheckoutAlreadyCompleted);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.CheckoutAlreadyCompleted);
             }
 
             if (!completedAt.IsAtOrAfter(checkout.StartedAt))
             {
-                return OperationResult.Fail(RetailCheckoutFailures.CompletionBeforeCheckout);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.CompletionBeforeCheckout);
             }
 
             Failure activeFailure = ValidateActiveRecord(checkout);
             if (!activeFailure.IsNone)
             {
-                return OperationResult.Fail(activeFailure);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(activeFailure);
             }
 
             if (Revision == long.MaxValue)
             {
-                return OperationResult.Fail(RetailCheckoutFailures.RevisionOverflow);
+                return OperationResult<RetailCheckoutCompletionPlan>.Fail(
+                    RetailCheckoutFailures.RevisionOverflow);
             }
 
             var completion = new RetailCheckoutCompletionRecord(
@@ -219,15 +229,82 @@ namespace PCShopEmpire3D.Retail
                 checkout.Currency,
                 checkout.TotalMinorUnits,
                 checkout.Lines);
-            OperationResult consume = _baskets.ConsumeCheckoutLines(checkout);
+            OperationResult<RetailCheckoutConsumptionPlan> basketPlan =
+                _baskets.PrepareCheckoutConsumption(checkout);
+            return basketPlan.IsFailure
+                ? OperationResult<RetailCheckoutCompletionPlan>.Fail(basketPlan.Error)
+                : OperationResult<RetailCheckoutCompletionPlan>.Success(
+                    new RetailCheckoutCompletionPlan(
+                        this,
+                        Revision,
+                        completion,
+                        basketPlan.Value,
+                        false));
+        }
+
+        internal OperationResult CommitPreparedCheckoutCompletion(
+            RetailCheckoutCompletionPlan plan)
+        {
+            if (plan == null ||
+                !ReferenceEquals(plan.Owner, this) ||
+                plan.Completion == null ||
+                plan.Completion.Id.IsEmpty ||
+                plan.Completion.CheckoutId.IsEmpty)
+            {
+                return OperationResult.Fail(RetailCheckoutFailures.CompletionPlanInvalid);
+            }
+
+            if (plan.IsReplay)
+            {
+                return _completions.TryGetValue(
+                           plan.Completion.Id,
+                           out RetailCheckoutCompletionRecord existing) &&
+                       ReferenceEquals(existing, plan.Completion) &&
+                       _checkouts.TryGetValue(
+                           existing.CheckoutId,
+                           out RetailCheckoutRecord checkout) &&
+                       ValidateCompletedRecord(checkout, existing).IsNone
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(
+                        RetailCheckoutFailures.CompletionPlanInvalid);
+            }
+
+            if (plan.ExpectedRevision != Revision)
+            {
+                return OperationResult.Fail(RetailCheckoutFailures.CompletionPlanStale);
+            }
+
+            if (plan.BasketPlan == null)
+            {
+                return OperationResult.Fail(RetailCheckoutFailures.CompletionPlanInvalid);
+            }
+
+            OperationResult consume =
+                _baskets.CommitPreparedCheckoutConsumption(plan.BasketPlan);
             if (consume.IsFailure)
             {
                 return consume;
             }
 
-            _completions.Add(completionId, completion);
+            _completions.Add(plan.Completion.Id, plan.Completion);
             Revision++;
             return OperationResult.Success();
+        }
+
+        /// <summary>
+        /// Internal compatibility path for domain tests. Production gameplay completes stock
+        /// only through PSE.Economy's atomic cash-settlement coordinator.
+        /// </summary>
+        internal OperationResult CompleteCheckout(
+            StableId<RetailCheckoutCompletionIdScope> completionId,
+            StableId<RetailCheckoutIdScope> checkoutId,
+            SimulationTimestamp completedAt)
+        {
+            OperationResult<RetailCheckoutCompletionPlan> prepared =
+                PrepareCheckoutCompletion(completionId, checkoutId, completedAt);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedCheckoutCompletion(prepared.Value);
         }
 
         public bool TryGetCheckout(
@@ -436,6 +513,19 @@ namespace PCShopEmpire3D.Retail
                 return RetailCheckoutFailures.ItemNotOnOfferShelf;
             }
 
+            if (!item.UnitCost.IsValid)
+            {
+                return RetailCheckoutFailures.CostBasisInvalid;
+            }
+
+            if (!string.Equals(
+                    item.UnitCost.CurrencyCode,
+                    offer.Price.Currency.Value,
+                    StringComparison.Ordinal))
+            {
+                return RetailCheckoutFailures.CostCurrencyMismatch;
+            }
+
             if (!_inventory.TryGetReservation(
                     line.InventoryReservationId,
                     out InventoryReservation reservation) ||
@@ -452,6 +542,7 @@ namespace PCShopEmpire3D.Retail
                 line.InventoryClaimId,
                 offer.ProductId,
                 offer.ShelfContainerId,
+                item.UnitCost,
                 offer.Price,
                 offer.OfferRevision);
             return Failure.None;
@@ -486,6 +577,11 @@ namespace PCShopEmpire3D.Retail
                     snapshot.InventoryClaimId.IsEmpty ||
                     snapshot.ProductId.IsEmpty ||
                     snapshot.ShelfContainerId.IsEmpty ||
+                    !snapshot.UnitCost.IsValid ||
+                    !string.Equals(
+                        snapshot.UnitCost.CurrencyCode,
+                        checkout.Currency.Value,
+                        StringComparison.Ordinal) ||
                     snapshot.SourceOfferRevision <= 0 ||
                     !lineIds.Add(snapshot.BasketLineId) ||
                     !itemIds.Add(snapshot.ItemId) ||
@@ -567,7 +663,8 @@ namespace PCShopEmpire3D.Retail
                         snapshot.ItemId,
                         out InventoryItemRecord item) ||
                     item.ProductId != snapshot.ProductId ||
-                    item.ContainerId != snapshot.ShelfContainerId)
+                    item.ContainerId != snapshot.ShelfContainerId ||
+                    item.UnitCost != snapshot.UnitCost)
                 {
                     return RetailCheckoutFailures.CheckoutItemDrift;
                 }
@@ -658,6 +755,7 @@ namespace PCShopEmpire3D.Retail
                     left.InventoryClaimId != right.InventoryClaimId ||
                     left.ProductId != right.ProductId ||
                     left.ShelfContainerId != right.ShelfContainerId ||
+                    left.UnitCost != right.UnitCost ||
                     left.UnitPrice != right.UnitPrice ||
                     left.SourceOfferRevision != right.SourceOfferRevision)
                 {
@@ -698,6 +796,8 @@ namespace PCShopEmpire3D.Retail
         public static readonly Failure UnknownItem = Failure.FromCode("retail.checkout.item-unknown");
         public static readonly Failure OfferProductMismatch = Failure.FromCode("retail.checkout.product-mismatch");
         public static readonly Failure ItemNotOnOfferShelf = Failure.FromCode("retail.checkout.shelf-mismatch");
+        public static readonly Failure CostBasisInvalid = Failure.FromCode("retail.checkout.cost-basis-invalid");
+        public static readonly Failure CostCurrencyMismatch = Failure.FromCode("retail.checkout.cost-currency-mismatch");
         public static readonly Failure InventoryReservationDrift = Failure.FromCode("retail.checkout.reservation-drift");
         public static readonly Failure MixedCurrency = Failure.FromCode("retail.checkout.currency-mixed");
         public static readonly Failure TotalOverflow = Failure.FromCode("retail.checkout.total-overflow");
@@ -708,6 +808,8 @@ namespace PCShopEmpire3D.Retail
         public static readonly Failure CheckoutAlreadyCompleted = Failure.FromCode("retail.checkout.already-completed");
         public static readonly Failure CompletionBeforeCheckout = Failure.FromCode("retail.checkout.completion-before-start");
         public static readonly Failure CompletionInvariantViolation = Failure.FromCode("retail.checkout.completion-invariant");
+        public static readonly Failure CompletionPlanInvalid = Failure.FromCode("retail.checkout.completion-plan-invalid");
+        public static readonly Failure CompletionPlanStale = Failure.FromCode("retail.checkout.completion-plan-stale");
         public static readonly Failure RevisionOverflow = Failure.FromCode("retail.checkout.revision-overflow");
         public static readonly Failure InvariantViolation = Failure.FromCode("retail.checkout.invariant");
     }

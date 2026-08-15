@@ -4,6 +4,7 @@ using NUnit.Framework;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation;
@@ -943,7 +944,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator KeyboardAcceptsExactDeliveryThenPlacesSameAuthoritativeItemOnShelf()
+        public IEnumerator KeyboardMouseCompletesPhysicalFlowAndSettlesExactCash()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             Mouse mouse = InputSystem.AddDevice<Mouse>();
@@ -1274,6 +1275,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             long basketRevisionBeforeCheckout = stockFlow.Session.RetailBaskets.Revision;
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
             long orderRevisionBeforeCheckout = stockFlow.Session.Orders.Revision;
+            long economyRevisionBeforeCheckout = stockFlow.Session.CheckoutSettlements.Revision;
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
@@ -1295,10 +1297,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(offerRevisionBeforeCheckout));
             Assert.That(stockFlow.Session.Orders.Revision,
                 Is.EqualTo(orderRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.Zero);
             Assert.That(stockFlow.ShelfOfferText.text,
-                Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • DONDURULDU"));
+                Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • ÖDEME BEKLİYOR"));
             Assert.That(marker.PlayerCarry.PromptText,
-                Does.Contain("satışı tamamla"));
+                Does.Contain("nakit ödemeyi al"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
 
@@ -1318,6 +1323,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerCarry.ProcessInputFrame();
 
             Assert.That(binding.IsCheckoutCompleted, Is.True);
+            Assert.That(binding.IsCheckoutSettled, Is.True);
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
@@ -1330,6 +1336,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 stockFlow.Session.ProductId).Value, Is.Zero);
             Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(2));
             Assert.That(stockFlow.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout + 1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.TransactionCount, Is.EqualTo(1));
             Assert.That(stockFlow.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforeCheckout + 1));
             Assert.That(stockFlow.Session.RetailBaskets.Revision,
@@ -1342,10 +1352,12 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 out RetailCheckoutCompletionRecord completion), Is.True);
             Assert.That(completion.TotalMinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            AssertPrototypeCashSettlement(stockFlow.Session);
             Assert.That(stockFlow.ShelfOfferText.text,
-                Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • TAMAMLANDI"));
+                Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • NAKİT ALINDI"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain("MÜŞTERİYE TESLİM EDİLDİ • STOK 0"));
+            Assert.That(stockFlow.StatusText, Does.Contain("MUHASEBE: NAKİT +"));
             InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
@@ -1361,7 +1373,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator GamepadAcceptsCarriesAndSafelyDropsAuthoritativeItemToWorldFloor()
+        public IEnumerator GamepadCompletesPhysicalFlowAndSettlesExactCash()
         {
             Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
             AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
@@ -1593,6 +1605,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             long basketRevisionBeforeCheckout = stockFlow.Session.RetailBaskets.Revision;
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
             long orderRevisionBeforeCheckout = stockFlow.Session.Orders.Revision;
+            long economyRevisionBeforeCheckout = stockFlow.Session.CheckoutSettlements.Revision;
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
@@ -1613,8 +1626,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(offerRevisionBeforeCheckout));
             Assert.That(stockFlow.Session.Orders.Revision,
                 Is.EqualTo(orderRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.Zero);
             Assert.That(marker.PlayerCarry.PromptText,
-                Does.Contain("satışı tamamla"));
+                Does.Contain("nakit ödemeyi al"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
 
@@ -1636,6 +1652,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerCarry.ProcessInputFrame();
 
             Assert.That(stockFlow.ItemBinding.IsCheckoutCompleted, Is.True);
+            Assert.That(stockFlow.ItemBinding.IsCheckoutSettled, Is.True);
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
@@ -1648,6 +1665,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 stockFlow.Session.ProductId).Value, Is.Zero);
             Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(2));
             Assert.That(stockFlow.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout + 1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.TransactionCount, Is.EqualTo(1));
             Assert.That(stockFlow.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforeCheckout + 1));
             Assert.That(stockFlow.Session.RetailBaskets.Revision,
@@ -1660,10 +1681,12 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 out RetailCheckoutCompletionRecord completion), Is.True);
             Assert.That(completion.TotalMinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            AssertPrototypeCashSettlement(stockFlow.Session);
             Assert.That(stockFlow.ShelfOfferText.text,
-                Does.Contain("TAMAMLANDI"));
+                Does.Contain("NAKİT ALINDI"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain("MÜŞTERİYE TESLİM EDİLDİ • STOK 0"));
+            Assert.That(stockFlow.StatusText, Does.Contain("MUHASEBE: NAKİT +"));
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
             yield return WaitForCustomerState(
@@ -2059,7 +2082,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 StableId<ItemInstanceIdScope>.Parse("inventory.item.hands-blocker"),
                 stockFlow.Session.ProductId,
                 stockFlow.Session.HandsContainerId,
-                InventoryCondition.New).IsSuccess,
+                InventoryCondition.New,
+                InventoryUnitCost.Create(
+                    GarageStockFlowSession.PrototypeCurrencyCode,
+                    GarageStockFlowSession.PrototypeUnitCostMinorUnits).Value).IsSuccess,
                 Is.True);
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
@@ -2221,6 +2247,133 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 $"nav-ready={customerFlow.NavigationReady} assigned={customerFlow.HasAssignedRoute} " +
                 $"path={customerFlow.CustomerAgent?.pathStatus.ToString() ?? "missing"} " +
                 $"remaining={customerFlow.CustomerAgent?.remainingDistance.ToString() ?? "missing"}");
+        }
+
+        private static void AssertPrototypeCashSettlement(GarageStockFlowSession session)
+        {
+            Assert.That(session.TryGetPrototypeCheckoutSettlement(
+                out CheckoutSettlementReceipt receipt), Is.True);
+            Assert.That(receipt.Id, Is.EqualTo(session.PrototypeCheckoutSettlementId));
+            Assert.That(receipt.TransactionId, Is.EqualTo(session.PrototypeLedgerTransactionId));
+            Assert.That(receipt.CompletionId, Is.EqualTo(session.PrototypeCheckoutCompletionId));
+            Assert.That(receipt.CheckoutId, Is.EqualTo(session.PrototypeCheckoutId));
+            Assert.That(receipt.CustomerId, Is.EqualTo(session.PrototypeCustomerId));
+            Assert.That(receipt.PaymentMethod, Is.EqualTo(CheckoutPaymentMethod.Cash));
+            Assert.That(receipt.Currency.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(receipt.GrossMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(receipt.CostOfGoodsSoldMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+            Assert.That(receipt.GrossMarginMinorUnits,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits -
+                           GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+
+            Assert.That(session.TryGetPrototypeLedgerTransaction(
+                out EconomyLedgerTransactionRecord transaction), Is.True);
+            Assert.That(transaction.Id, Is.EqualTo(session.PrototypeLedgerTransactionId));
+            Assert.That(transaction.SettlementId, Is.EqualTo(receipt.Id));
+            Assert.That(transaction.PostedAt, Is.EqualTo(receipt.PaidAt));
+            Assert.That(transaction.Entries.Count, Is.EqualTo(4));
+            AssertEconomyEntry(
+                transaction.Entries[0],
+                EconomyAccountKind.Cash,
+                EconomyEntryDirection.Debit,
+                GarageStockFlowSession.PrototypePriceMinorUnits);
+            AssertEconomyEntry(
+                transaction.Entries[1],
+                EconomyAccountKind.SalesRevenue,
+                EconomyEntryDirection.Credit,
+                GarageStockFlowSession.PrototypePriceMinorUnits);
+            AssertEconomyEntry(
+                transaction.Entries[2],
+                EconomyAccountKind.CostOfGoodsSold,
+                EconomyEntryDirection.Debit,
+                GarageStockFlowSession.PrototypeUnitCostMinorUnits);
+            AssertEconomyEntry(
+                transaction.Entries[3],
+                EconomyAccountKind.InventoryAsset,
+                EconomyEntryDirection.Credit,
+                GarageStockFlowSession.PrototypeUnitCostMinorUnits);
+            Assert.That(
+                transaction.Entries[0].MinorUnits + transaction.Entries[2].MinorUnits,
+                Is.EqualTo(
+                    transaction.Entries[1].MinorUnits + transaction.Entries[3].MinorUnits));
+
+            CurrencyCode currency = CurrencyCode.Create(
+                GarageStockFlowSession.PrototypeCurrencyCode).Value;
+            OperationResult<long> cashDelta = session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.Cash,
+                currency);
+            OperationResult<long> revenueDelta = session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.SalesRevenue,
+                currency);
+            OperationResult<long> cogsDelta = session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.CostOfGoodsSold,
+                currency);
+            OperationResult<long> inventoryDelta = session.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.InventoryAsset,
+                currency);
+            Assert.That(cashDelta.IsSuccess, Is.True);
+            Assert.That(cashDelta.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(revenueDelta.IsSuccess, Is.True);
+            Assert.That(revenueDelta.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
+            Assert.That(cogsDelta.IsSuccess, Is.True);
+            Assert.That(cogsDelta.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+            Assert.That(inventoryDelta.IsSuccess, Is.True);
+            Assert.That(inventoryDelta.Value,
+                Is.EqualTo(-GarageStockFlowSession.PrototypeUnitCostMinorUnits));
+
+            long inventoryRevision = session.Inventory.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long orderRevision = session.Orders.Revision;
+            long economyRevision = session.CheckoutSettlements.Revision;
+            long customerRevision = session.CustomerVisits.Revision;
+            long actionRevision = session.CustomerOfferActions.Revision;
+            OperationResult replay = session.SettlePrototypeCashCheckout();
+            OperationResult conflict = session.CheckoutSettlements.SettleCashCheckout(
+                session.PrototypeCheckoutSettlementId,
+                StableId<EconomyLedgerTransactionIdScope>.Parse(
+                    "economy.ledger-transaction.playmode-conflict"),
+                session.PrototypeCheckoutCompletionId,
+                session.PrototypeCheckoutId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits,
+                receipt.PaidAt);
+
+            Assert.That(replay.IsSuccess, Is.True);
+            Assert.That(conflict.Error,
+                Is.EqualTo(CheckoutSettlementFailures.SettlementIdentityConflict));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(session.RetailCheckouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(session.CheckoutSettlements.Revision, Is.EqualTo(economyRevision));
+            Assert.That(session.CustomerVisits.Revision, Is.EqualTo(customerRevision));
+            Assert.That(session.CustomerOfferActions.Revision, Is.EqualTo(actionRevision));
+            Assert.That(session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
+            Assert.That(session.CheckoutSettlements.SettlementCount, Is.EqualTo(1));
+            Assert.That(session.CheckoutSettlements.TransactionCount, Is.EqualTo(1));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        private static void AssertEconomyEntry(
+            EconomyLedgerEntryRecord entry,
+            EconomyAccountKind account,
+            EconomyEntryDirection direction,
+            long minorUnits)
+        {
+            Assert.That(entry.Account, Is.EqualTo(account));
+            Assert.That(entry.Direction, Is.EqualTo(direction));
+            Assert.That(entry.Currency.Value,
+                Is.EqualTo(GarageStockFlowSession.PrototypeCurrencyCode));
+            Assert.That(entry.MinorUnits, Is.EqualTo(minorUnits));
         }
 
         private static void AssertInventoryLocation(

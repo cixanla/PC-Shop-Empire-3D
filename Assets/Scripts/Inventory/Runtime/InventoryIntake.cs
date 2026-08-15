@@ -10,11 +10,13 @@ namespace PCShopEmpire3D.Inventory
         private InventorySerializedIntake(
             StableId<ItemInstanceIdScope> itemId,
             StableId<ProductDefinitionIdScope> productId,
-            InventoryCondition condition)
+            InventoryCondition condition,
+            InventoryUnitCost unitCost)
         {
             ItemId = itemId;
             ProductId = productId;
             Condition = condition;
+            UnitCost = unitCost;
         }
 
         public StableId<ItemInstanceIdScope> ItemId { get; }
@@ -23,10 +25,13 @@ namespace PCShopEmpire3D.Inventory
 
         public InventoryCondition Condition { get; }
 
+        public InventoryUnitCost UnitCost { get; }
+
         public static OperationResult<InventorySerializedIntake> Create(
             StableId<ItemInstanceIdScope> itemId,
             StableId<ProductDefinitionIdScope> productId,
-            InventoryCondition condition)
+            InventoryCondition condition,
+            InventoryUnitCost unitCost)
         {
             if (itemId.IsEmpty)
             {
@@ -43,8 +48,13 @@ namespace PCShopEmpire3D.Inventory
                 return OperationResult<InventorySerializedIntake>.Fail(InventoryFailures.InvalidCondition);
             }
 
+            if (!unitCost.IsValid)
+            {
+                return OperationResult<InventorySerializedIntake>.Fail(InventoryFailures.InvalidUnitCost);
+            }
+
             return OperationResult<InventorySerializedIntake>.Success(
-                new InventorySerializedIntake(itemId, productId, condition));
+                new InventorySerializedIntake(itemId, productId, condition, unitCost));
         }
     }
 
@@ -54,12 +64,14 @@ namespace PCShopEmpire3D.Inventory
             StableId<BatchIdScope> batchId,
             StableId<ProductDefinitionIdScope> productId,
             InventoryCondition condition,
-            int quantity)
+            int quantity,
+            InventoryUnitCost unitCost)
         {
             BatchId = batchId;
             ProductId = productId;
             Condition = condition;
             Quantity = quantity;
+            UnitCost = unitCost;
         }
 
         public StableId<BatchIdScope> BatchId { get; }
@@ -70,11 +82,14 @@ namespace PCShopEmpire3D.Inventory
 
         public int Quantity { get; }
 
+        public InventoryUnitCost UnitCost { get; }
+
         public static OperationResult<InventoryBatchIntake> Create(
             StableId<BatchIdScope> batchId,
             StableId<ProductDefinitionIdScope> productId,
             InventoryCondition condition,
-            int quantity)
+            int quantity,
+            InventoryUnitCost unitCost)
         {
             if (batchId.IsEmpty)
             {
@@ -96,8 +111,13 @@ namespace PCShopEmpire3D.Inventory
                 return OperationResult<InventoryBatchIntake>.Fail(InventoryFailures.InvalidQuantity);
             }
 
+            if (!unitCost.IsValid)
+            {
+                return OperationResult<InventoryBatchIntake>.Fail(InventoryFailures.InvalidUnitCost);
+            }
+
             return OperationResult<InventoryBatchIntake>.Success(
-                new InventoryBatchIntake(batchId, productId, condition, quantity));
+                new InventoryBatchIntake(batchId, productId, condition, quantity, unitCost));
         }
     }
 

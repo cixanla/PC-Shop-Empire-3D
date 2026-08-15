@@ -12,6 +12,39 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         private static readonly StableId<ProductDefinitionIdScope> BatchProduct = ProductId("shop.cable-tie");
         private static readonly StableId<ContainerIdScope> Receiving = ContainerId("container.receiving");
         private static readonly StableId<ContainerIdScope> Shelf = ContainerId("container.shelf");
+        private static readonly InventoryUnitCost SerializedCost = UnitCost("EUR", 42_000);
+        private static readonly InventoryUnitCost BatchCost = UnitCost("EUR", 25);
+
+        [Test]
+        public void UnitCostValidatesCurrencyAmountBoundAndValueEquality()
+        {
+            Assert.That(InventoryUnitCost.Create(null, 1).Error,
+                Is.EqualTo(InventoryFailures.InvalidUnitCostCurrency));
+            Assert.That(InventoryUnitCost.Create("eur", 1).Error,
+                Is.EqualTo(InventoryFailures.InvalidUnitCostCurrency));
+            Assert.That(InventoryUnitCost.Create("EURO", 1).Error,
+                Is.EqualTo(InventoryFailures.InvalidUnitCostCurrency));
+            Assert.That(InventoryUnitCost.Create("EUR", 0).Error,
+                Is.EqualTo(InventoryFailures.InvalidUnitCostAmount));
+            Assert.That(InventoryUnitCost.Create(
+                    "EUR", InventoryUnitCost.MaximumMinorUnits + 1).Error,
+                Is.EqualTo(InventoryFailures.UnitCostLimitExceeded));
+
+            InventoryUnitCost first = UnitCost("EUR", InventoryUnitCost.MaximumMinorUnits);
+            InventoryUnitCost equal = UnitCost("EUR", InventoryUnitCost.MaximumMinorUnits);
+            InventoryUnitCost differentCurrency = UnitCost("USD", InventoryUnitCost.MaximumMinorUnits);
+            InventoryUnitCost differentAmount = UnitCost("EUR", InventoryUnitCost.MaximumMinorUnits - 1);
+
+            Assert.That(first.IsValid, Is.True);
+            Assert.That(first.CurrencyCode, Is.EqualTo("EUR"));
+            Assert.That(first.MinorUnits, Is.EqualTo(InventoryUnitCost.MaximumMinorUnits));
+            Assert.That(first, Is.EqualTo(equal));
+            Assert.That(first == equal, Is.True);
+            Assert.That(first != differentCurrency, Is.True);
+            Assert.That(first != differentAmount, Is.True);
+            Assert.That(first.GetHashCode(), Is.EqualTo(equal.GetHashCode()));
+            Assert.That(default(InventoryUnitCost).IsValid, Is.False);
+        }
 
         [Test]
         public void ReceivesSerializedAndBatchStockIntoOneAuthority()
@@ -19,9 +52,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             InventoryAuthority authority = CreateAuthority();
 
             Assert.That(authority.ReceiveSerializedItem(
-                ItemId("item.gpu-001"), SerializedProduct, Receiving, InventoryCondition.New).IsSuccess, Is.True);
+                ItemId("item.gpu-001"), SerializedProduct, Receiving, InventoryCondition.New,
+                SerializedCost).IsSuccess, Is.True);
             Assert.That(authority.ReceiveBatch(
-                BatchId("batch.ties-001"), BatchProduct, Receiving, InventoryCondition.New, 12).IsSuccess, Is.True);
+                BatchId("batch.ties-001"), BatchProduct, Receiving, InventoryCondition.New, 12,
+                BatchCost).IsSuccess, Is.True);
 
             Assert.That(authority.GetTotalQuantity(SerializedProduct).Value, Is.EqualTo(1));
             Assert.That(authority.GetTotalQuantity(BatchProduct).Value, Is.EqualTo(12));
@@ -37,9 +72,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             long revision = authority.Revision;
 
             OperationResult wrongItem = authority.ReceiveSerializedItem(
-                ItemId("item.wrong"), BatchProduct, Receiving, InventoryCondition.New);
+                ItemId("item.wrong"), BatchProduct, Receiving, InventoryCondition.New,
+                SerializedCost);
             OperationResult wrongBatch = authority.ReceiveBatch(
-                BatchId("batch.wrong"), SerializedProduct, Receiving, InventoryCondition.New, 2);
+                BatchId("batch.wrong"), SerializedProduct, Receiving, InventoryCondition.New, 2,
+                BatchCost);
 
             Assert.That(wrongItem.Error, Is.EqualTo(InventoryFailures.TrackingMismatch));
             Assert.That(wrongBatch.Error, Is.EqualTo(InventoryFailures.TrackingMismatch));
@@ -54,17 +91,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             InventoryAuthority authority = CreateAuthority();
             StableId<ItemInstanceIdScope> item = ItemId("item.unique");
             Assert.That(authority.ReceiveSerializedItem(
-                item, SerializedProduct, Receiving, InventoryCondition.New).IsSuccess, Is.True);
+                item, SerializedProduct, Receiving, InventoryCondition.New, SerializedCost).IsSuccess, Is.True);
             long revision = authority.Revision;
 
             Assert.That(authority.ReceiveSerializedItem(
-                item, SerializedProduct, Shelf, InventoryCondition.New).Error,
+                item, SerializedProduct, Shelf, InventoryCondition.New, SerializedCost).Error,
                 Is.EqualTo(InventoryFailures.DuplicateItem));
             Assert.That(authority.ReceiveBatch(
-                BatchId("batch.zero"), BatchProduct, Receiving, InventoryCondition.New, 0).Error,
+                BatchId("batch.zero"), BatchProduct, Receiving, InventoryCondition.New, 0,
+                BatchCost).Error,
                 Is.EqualTo(InventoryFailures.InvalidQuantity));
             Assert.That(authority.ReceiveBatch(
-                BatchId("batch.condition"), BatchProduct, Receiving, (InventoryCondition)99, 1).Error,
+                BatchId("batch.condition"), BatchProduct, Receiving, (InventoryCondition)99, 1,
+                BatchCost).Error,
                 Is.EqualTo(InventoryFailures.InvalidCondition));
 
             Assert.That(authority.Revision, Is.EqualTo(revision));
@@ -76,13 +115,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         {
             InventoryAuthority authority = CreateAuthority(receivingCapacity: 3);
             Assert.That(authority.ReceiveSerializedItem(
-                ItemId("item.capacity"), SerializedProduct, Receiving, InventoryCondition.New).IsSuccess, Is.True);
+                ItemId("item.capacity"), SerializedProduct, Receiving, InventoryCondition.New,
+                SerializedCost).IsSuccess, Is.True);
             Assert.That(authority.ReceiveBatch(
-                BatchId("batch.capacity"), BatchProduct, Receiving, InventoryCondition.New, 2).IsSuccess, Is.True);
+                BatchId("batch.capacity"), BatchProduct, Receiving, InventoryCondition.New, 2,
+                BatchCost).IsSuccess, Is.True);
             long revision = authority.Revision;
 
             OperationResult result = authority.ReceiveSerializedItem(
-                ItemId("item.overflow"), SerializedProduct, Receiving, InventoryCondition.New);
+                ItemId("item.overflow"), SerializedProduct, Receiving, InventoryCondition.New,
+                SerializedCost);
 
             Assert.That(result.Error, Is.EqualTo(InventoryFailures.ContainerCapacityExceeded));
             Assert.That(authority.Revision, Is.EqualTo(revision));
@@ -96,7 +138,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ItemInstanceIdScope> item = ItemId("item.reserved");
             StableId<ReservationIdScope> reservation = ReservationId("reservation.sale-1");
             Assert.That(authority.ReceiveSerializedItem(
-                item, SerializedProduct, Receiving, InventoryCondition.OpenBox).IsSuccess, Is.True);
+                item, SerializedProduct, Receiving, InventoryCondition.OpenBox,
+                SerializedCost).IsSuccess, Is.True);
             Assert.That(authority.ReserveSerializedItem(
                 reservation, ClaimId("claim.customer-1"), item).IsSuccess, Is.True);
 
@@ -107,6 +150,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.TransferSerializedItem(item, Shelf).IsSuccess, Is.True);
             Assert.That(authority.TryGetSerializedItem(item, out InventoryItemRecord moved), Is.True);
             Assert.That(moved.ContainerId, Is.EqualTo(Shelf));
+            Assert.That(moved.UnitCost, Is.EqualTo(SerializedCost));
 
             Assert.That(authority.ConsumeReservation(reservation).IsSuccess, Is.True);
             Assert.That(authority.TryGetSerializedItem(item, out _), Is.False);
@@ -122,7 +166,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             InventoryAuthority authority = CreateAuthority();
             StableId<ItemInstanceIdScope> item = ItemId("item.release");
             StableId<ReservationIdScope> reservation = ReservationId("reservation.release");
-            authority.ReceiveSerializedItem(item, SerializedProduct, Receiving, InventoryCondition.New);
+            authority.ReceiveSerializedItem(
+                item, SerializedProduct, Receiving, InventoryCondition.New, SerializedCost);
             authority.ReserveSerializedItem(reservation, ClaimId("claim.release"), item);
 
             Assert.That(authority.ReleaseReservation(reservation).IsSuccess, Is.True);
@@ -141,7 +186,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                 item,
                 SerializedProduct,
                 Receiving,
-                InventoryCondition.New).IsSuccess, Is.True);
+                InventoryCondition.New,
+                SerializedCost).IsSuccess, Is.True);
             OperationResult<InventorySerializedReservationPlan> prepared =
                 authority.PrepareSerializedItemReservation(
                     reservation,
@@ -168,11 +214,201 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
+        public void CheckoutConsumptionPrepareIsSideEffectFreeAndCopiesExactReservationIds()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> firstItem = ItemId("item.checkout-prepare-a");
+            StableId<ItemInstanceIdScope> secondItem = ItemId("item.checkout-prepare-b");
+            StableId<ReservationIdScope> firstReservation =
+                ReservationId("reservation.checkout-prepare-a");
+            StableId<ReservationIdScope> secondReservation =
+                ReservationId("reservation.checkout-prepare-b");
+            AddCheckoutReservation(authority, firstItem, firstReservation);
+            AddCheckoutReservation(authority, secondItem, secondReservation);
+            var requestedIds = new[] { secondReservation, firstReservation };
+            long revision = authority.Revision;
+
+            OperationResult<InventoryCheckoutConsumptionPlan> prepared =
+                authority.PrepareCheckoutReservationConsumption(requestedIds);
+
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(prepared.Value.Owner, Is.SameAs(authority));
+            Assert.That(prepared.Value.ExpectedRevision, Is.EqualTo(revision));
+            Assert.That(prepared.Value.ReservationIds,
+                Is.EqualTo(new[] { secondReservation, firstReservation }));
+            requestedIds[0] = ReservationId("reservation.checkout-mutated-input");
+            Assert.That(prepared.Value.ReservationIds,
+                Is.EqualTo(new[] { secondReservation, firstReservation }));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.SerializedItemCount, Is.EqualTo(2));
+            Assert.That(authority.ReservationCount, Is.EqualTo(2));
+            Assert.That(authority.TryGetSerializedItem(firstItem, out _), Is.True);
+            Assert.That(authority.TryGetSerializedItem(secondItem, out _), Is.True);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CheckoutConsumptionPrepareFailuresLeaveInventoryUntouched()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.checkout-prepare-failure");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.checkout-prepare-failure");
+            AddCheckoutReservation(authority, item, reservation);
+            long revision = authority.Revision;
+
+            Assert.That(authority.PrepareCheckoutReservationConsumption(null).Error,
+                Is.EqualTo(InventoryFailures.MissingReservationSet));
+            Assert.That(authority.PrepareCheckoutReservationConsumption(
+                    System.Array.Empty<StableId<ReservationIdScope>>()).Error,
+                Is.EqualTo(InventoryFailures.EmptyReservationSet));
+            Assert.That(authority.PrepareCheckoutReservationConsumption(
+                    new[] { default(StableId<ReservationIdScope>) }).Error,
+                Is.EqualTo(InventoryFailures.InvalidReservationId));
+            Assert.That(authority.PrepareCheckoutReservationConsumption(
+                    new[] { reservation, reservation }).Error,
+                Is.EqualTo(InventoryFailures.DuplicateReservationInSet));
+            Assert.That(authority.PrepareCheckoutReservationConsumption(
+                    new[] { reservation, ReservationId("reservation.checkout-unknown") }).Error,
+                Is.EqualTo(InventoryFailures.UnknownReservation));
+            Assert.That(authority.ConsumeReservations(new[] { reservation }).Error,
+                Is.EqualTo(InventoryFailures.ReservationConsumptionRestricted));
+
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.SerializedItemCount, Is.EqualTo(1));
+            Assert.That(authority.ReservationCount, Is.EqualTo(1));
+            Assert.That(authority.TryGetSerializedItem(item, out _), Is.True);
+            Assert.That(authority.TryGetReservation(reservation, out _), Is.True);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CheckoutConsumptionCommitRejectsNullMalformedAndForeignPlansWithoutMutation()
+        {
+            InventoryAuthority owner = CreateAuthority();
+            InventoryAuthority foreign = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.checkout-foreign");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.checkout-foreign");
+            AddCheckoutReservation(owner, item, reservation);
+            InventoryCheckoutConsumptionPlan plan = owner
+                .PrepareCheckoutReservationConsumption(new[] { reservation }).Value;
+            var malformed = new InventoryCheckoutConsumptionPlan(
+                owner,
+                owner.Revision,
+                null);
+            long ownerRevision = owner.Revision;
+            long foreignRevision = foreign.Revision;
+
+            Assert.That(owner.CommitPreparedCheckoutReservationConsumption(null).Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanInvalid));
+            Assert.That(owner.CommitPreparedCheckoutReservationConsumption(malformed).Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanInvalid));
+            Assert.That(foreign.CommitPreparedCheckoutReservationConsumption(plan).Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanInvalid));
+
+            Assert.That(owner.Revision, Is.EqualTo(ownerRevision));
+            Assert.That(foreign.Revision, Is.EqualTo(foreignRevision));
+            Assert.That(owner.TryGetSerializedItem(item, out _), Is.True);
+            Assert.That(owner.TryGetReservation(reservation, out _), Is.True);
+            Assert.That(owner.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(foreign.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CheckoutConsumptionCommitRejectsStalePlanWithoutMutation()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.checkout-stale");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.checkout-stale");
+            AddCheckoutReservation(authority, item, reservation);
+            InventoryCheckoutConsumptionPlan plan = authority
+                .PrepareCheckoutReservationConsumption(new[] { reservation }).Value;
+            Assert.That(authority.TransferSerializedItem(item, Shelf).IsSuccess, Is.True);
+            long staleRevision = authority.Revision;
+
+            OperationResult result =
+                authority.CommitPreparedCheckoutReservationConsumption(plan);
+
+            Assert.That(result.Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(staleRevision));
+            Assert.That(authority.TryGetSerializedItem(item, out InventoryItemRecord record), Is.True);
+            Assert.That(record.ContainerId, Is.EqualTo(Shelf));
+            Assert.That(authority.TryGetReservation(reservation, out _), Is.True);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CheckoutConsumptionCommitConsumesExactSetOnceAndReplayIsStale()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> firstItem = ItemId("item.checkout-success-a");
+            StableId<ItemInstanceIdScope> secondItem = ItemId("item.checkout-success-b");
+            StableId<ReservationIdScope> firstReservation =
+                ReservationId("reservation.checkout-success-a");
+            StableId<ReservationIdScope> secondReservation =
+                ReservationId("reservation.checkout-success-b");
+            AddCheckoutReservation(authority, firstItem, firstReservation);
+            AddCheckoutReservation(authority, secondItem, secondReservation);
+            InventoryCheckoutConsumptionPlan plan = authority
+                .PrepareCheckoutReservationConsumption(
+                    new[] { secondReservation, firstReservation }).Value;
+            long revision = authority.Revision;
+
+            Assert.That(authority.CommitPreparedCheckoutReservationConsumption(plan).IsSuccess,
+                Is.True);
+
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.SerializedItemCount, Is.Zero);
+            Assert.That(authority.ReservationCount, Is.Zero);
+            Assert.That(authority.TryGetSerializedItem(firstItem, out _), Is.False);
+            Assert.That(authority.TryGetSerializedItem(secondItem, out _), Is.False);
+            long committedRevision = authority.Revision;
+
+            OperationResult replay =
+                authority.CommitPreparedCheckoutReservationConsumption(plan);
+            Assert.That(replay.Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(committedRevision));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CheckoutConsumptionPlanBecomesStaleWhenReservationWasAlreadyRemoved()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.checkout-removed");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.checkout-removed");
+            AddCheckoutReservation(authority, item, reservation);
+            InventoryCheckoutConsumptionPlan plan = authority
+                .PrepareCheckoutReservationConsumption(new[] { reservation }).Value;
+
+            Assert.That(authority.ConsumeCheckoutReservations(new[] { reservation }).IsSuccess,
+                Is.True);
+            long consumedRevision = authority.Revision;
+            Assert.That(authority.TryGetReservation(reservation, out _), Is.False);
+
+            OperationResult result =
+                authority.CommitPreparedCheckoutReservationConsumption(plan);
+
+            Assert.That(result.Error,
+                Is.EqualTo(InventoryFailures.CheckoutConsumptionPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(consumedRevision));
+            Assert.That(authority.SerializedItemCount, Is.Zero);
+            Assert.That(authority.ReservationCount, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void BatchTransferSplitsPositionButPreservesBatchIdentityAndTotal()
         {
             InventoryAuthority authority = CreateAuthority();
             StableId<BatchIdScope> batch = BatchId("batch.split");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 10);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 10, BatchCost);
 
             Assert.That(authority.TransferBatch(batch, Receiving, Shelf, 4).IsSuccess, Is.True);
 
@@ -180,6 +416,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.GetBatchQuantity(batch, Shelf).Value, Is.EqualTo(4));
             Assert.That(authority.GetTotalQuantity(BatchProduct).Value, Is.EqualTo(10));
             Assert.That(authority.BatchCount, Is.EqualTo(1));
+            Assert.That(authority.TryGetBatch(batch, out InventoryBatchRecord record), Is.True);
+            Assert.That(record.UnitCost, Is.EqualTo(BatchCost));
             Assert.That(authority.GetBatchPositions().Select(position => position.BatchId).Distinct().Single(),
                 Is.EqualTo(batch));
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
@@ -190,7 +428,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         {
             InventoryAuthority authority = CreateAuthority();
             StableId<BatchIdScope> batch = BatchId("batch.transfer-lock");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 10);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 10, BatchCost);
             authority.ReserveBatch(
                 ReservationId("reservation.batch-lock"),
                 ClaimId("claim.batch-lock"),
@@ -213,7 +452,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         {
             InventoryAuthority authority = CreateAuthority();
             StableId<BatchIdScope> batch = BatchId("batch.over-transfer");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 3);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 3, BatchCost);
             long revision = authority.Revision;
 
             OperationResult result = authority.TransferBatch(batch, Receiving, Shelf, 4);
@@ -230,7 +470,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             InventoryAuthority authority = CreateAuthority();
             StableId<BatchIdScope> batch = BatchId("batch.consume");
             StableId<ReservationIdScope> first = ReservationId("reservation.batch-1");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 8);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 8, BatchCost);
             Assert.That(authority.ReserveBatch(
                 first, ClaimId("claim.order-1"), batch, Receiving, 5).IsSuccess, Is.True);
             long revision = authority.Revision;
@@ -257,7 +498,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             InventoryAuthority authority = CreateAuthority();
             StableId<BatchIdScope> batch = BatchId("batch.empty");
             StableId<ReservationIdScope> reservation = ReservationId("reservation.empty");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 2);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 2, BatchCost);
             authority.ReserveBatch(reservation, ClaimId("claim.empty"), batch, Receiving, 2);
 
             Assert.That(authority.ConsumeReservation(reservation).IsSuccess, Is.True);
@@ -277,9 +519,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ReservationIdScope> secondReservation =
                 ReservationId("reservation.bulk-b");
             authority.ReceiveSerializedItem(
-                firstItem, SerializedProduct, Shelf, InventoryCondition.New);
+                firstItem, SerializedProduct, Shelf, InventoryCondition.New, SerializedCost);
             authority.ReceiveSerializedItem(
-                secondItem, SerializedProduct, Shelf, InventoryCondition.New);
+                secondItem, SerializedProduct, Shelf, InventoryCondition.New, SerializedCost);
             authority.ReserveSerializedItem(
                 firstReservation, ClaimId("claim.bulk-a"), firstItem);
             authority.ReserveSerializedItem(
@@ -304,7 +546,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<BatchIdScope> batch = BatchId("batch.bulk");
             StableId<ReservationIdScope> first = ReservationId("reservation.batch-bulk-a");
             StableId<ReservationIdScope> second = ReservationId("reservation.batch-bulk-b");
-            authority.ReceiveBatch(batch, BatchProduct, Receiving, InventoryCondition.New, 10);
+            authority.ReceiveBatch(
+                batch, BatchProduct, Receiving, InventoryCondition.New, 10, BatchCost);
             authority.ReserveBatch(first, ClaimId("claim.batch-bulk-a"), batch, Receiving, 3);
             authority.ReserveBatch(second, ClaimId("claim.batch-bulk-b"), batch, Receiving, 4);
             long revision = authority.Revision;
@@ -327,7 +570,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ReservationIdScope> reservation =
                 ReservationId("reservation.bulk-failure");
             authority.ReceiveSerializedItem(
-                item, SerializedProduct, Shelf, InventoryCondition.New);
+                item, SerializedProduct, Shelf, InventoryCondition.New, SerializedCost);
             authority.ReserveSerializedItem(
                 reservation, ClaimId("claim.bulk-failure"), item);
             long revision = authority.Revision;
@@ -355,13 +598,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         {
             InventoryAuthority authority = CreateAuthority();
             authority.ReceiveSerializedItem(
-                ItemId("item.zeta"), SerializedProduct, Receiving, InventoryCondition.New);
+                ItemId("item.zeta"), SerializedProduct, Receiving, InventoryCondition.New,
+                SerializedCost);
             authority.ReceiveSerializedItem(
-                ItemId("item.alpha"), SerializedProduct, Receiving, InventoryCondition.New);
+                ItemId("item.alpha"), SerializedProduct, Receiving, InventoryCondition.New,
+                SerializedCost);
             authority.ReceiveBatch(
-                BatchId("batch.zeta"), BatchProduct, Receiving, InventoryCondition.New, 1);
+                BatchId("batch.zeta"), BatchProduct, Receiving, InventoryCondition.New, 1,
+                BatchCost);
             authority.ReceiveBatch(
-                BatchId("batch.alpha"), BatchProduct, Shelf, InventoryCondition.New, 1);
+                BatchId("batch.alpha"), BatchProduct, Shelf, InventoryCondition.New, 1,
+                BatchCost);
 
             Assert.That(authority.GetContainers().Select(value => value.Id.Value),
                 Is.Ordered.Using<string>(System.StringComparer.Ordinal));
@@ -397,6 +644,35 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ContainerCount, Is.EqualTo(2));
         }
 
+        [Test]
+        public void InvalidUnitCostReceiptsFailWithoutAnyMutation()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            long revision = authority.Revision;
+
+            OperationResult itemResult = authority.ReceiveSerializedItem(
+                ItemId("item.invalid-cost"),
+                SerializedProduct,
+                Receiving,
+                InventoryCondition.New,
+                default);
+            OperationResult batchResult = authority.ReceiveBatch(
+                BatchId("batch.invalid-cost"),
+                BatchProduct,
+                Receiving,
+                InventoryCondition.New,
+                3,
+                default);
+
+            Assert.That(itemResult.Error, Is.EqualTo(InventoryFailures.InvalidUnitCost));
+            Assert.That(batchResult.Error, Is.EqualTo(InventoryFailures.InvalidUnitCost));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.SerializedItemCount, Is.Zero);
+            Assert.That(authority.BatchCount, Is.Zero);
+            Assert.That(authority.GetContainerQuantity(Receiving).Value, Is.Zero);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static InventoryAuthority CreateAuthority(int receivingCapacity = 100, int shelfCapacity = 100)
         {
             ProductDefinition serialized = ProductDefinition.Create(
@@ -420,6 +696,31 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             return authority;
         }
 
+        private static void AddCheckoutReservation(
+            InventoryAuthority authority,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ReservationIdScope> reservationId)
+        {
+            Assert.That(authority.ReceiveSerializedItem(
+                itemId,
+                SerializedProduct,
+                Receiving,
+                InventoryCondition.New,
+                SerializedCost).IsSuccess, Is.True);
+            OperationResult<InventorySerializedReservationPlan> prepared =
+                authority.PrepareSerializedItemReservationForConsumption(
+                    reservationId,
+                    ClaimId($"claim.{reservationId.Value}"),
+                    itemId);
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(authority.CommitPreparedSerializedItemReservation(prepared.Value).IsSuccess,
+                Is.True);
+            Assert.That(authority.TryGetReservation(
+                reservationId, out InventoryReservation reservation), Is.True);
+            Assert.That(reservation.ReleasePolicy,
+                Is.EqualTo(InventoryReservationReleasePolicy.ConsumeOnly));
+        }
+
         private static StableId<ProductDefinitionIdScope> ProductId(string value) =>
             StableId<ProductDefinitionIdScope>.Parse(value);
 
@@ -440,5 +741,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
 
         private static StableId<InventoryClaimIdScope> ClaimId(string value) =>
             StableId<InventoryClaimIdScope>.Parse(value);
+
+        private static InventoryUnitCost UnitCost(string currencyCode, long minorUnits) =>
+            InventoryUnitCost.Create(currencyCode, minorUnits).Value;
     }
 }

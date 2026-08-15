@@ -8,6 +8,7 @@
     "PSE.Inventory",
     "PSE.Orders",
     "PSE.Retail",
+    "PSE.Economy",
     "PSE.World",
     "Unity.InputSystem",
     "Unity.AI.Navigation"

@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Retail
             StableId<InventoryClaimIdScope> inventoryClaimId,
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> shelfContainerId,
+            InventoryUnitCost unitCost,
             ShelfPrice unitPrice,
             long sourceOfferRevision)
         {
@@ -26,6 +27,7 @@ namespace PCShopEmpire3D.Retail
             InventoryClaimId = inventoryClaimId;
             ProductId = productId;
             ShelfContainerId = shelfContainerId;
+            UnitCost = unitCost;
             UnitPrice = unitPrice;
             SourceOfferRevision = sourceOfferRevision;
         }
@@ -43,6 +45,8 @@ namespace PCShopEmpire3D.Retail
         public StableId<ProductDefinitionIdScope> ProductId { get; }
 
         public StableId<ContainerIdScope> ShelfContainerId { get; }
+
+        public InventoryUnitCost UnitCost { get; }
 
         public ShelfPrice UnitPrice { get; }
 
@@ -125,5 +129,36 @@ namespace PCShopEmpire3D.Retail
         public long TotalMinorUnits { get; }
 
         public IReadOnlyList<RetailCheckoutLineSnapshot> Lines { get; }
+    }
+
+    /// <summary>
+    /// Internal immutable permission to fulfill one checkout after every Basket and Inventory
+    /// preflight has succeeded. Economy is the production friend that coordinates its commit.
+    /// </summary>
+    internal sealed class RetailCheckoutCompletionPlan
+    {
+        internal RetailCheckoutCompletionPlan(
+            RetailCheckoutAuthority owner,
+            long expectedRevision,
+            RetailCheckoutCompletionRecord completion,
+            RetailCheckoutConsumptionPlan basketPlan,
+            bool isReplay)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            Completion = completion;
+            BasketPlan = basketPlan;
+            IsReplay = isReplay;
+        }
+
+        internal RetailCheckoutAuthority Owner { get; }
+
+        internal RetailCheckoutConsumptionPlan BasketPlan { get; }
+
+        public long ExpectedRevision { get; }
+
+        public RetailCheckoutCompletionRecord Completion { get; }
+
+        public bool IsReplay { get; }
     }
 }

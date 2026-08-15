@@ -16,6 +16,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         private static readonly StableId<ContainerIdScope> Shelf = ContainerId("orders.shelf");
         private static readonly StableId<PurchaseOrderIdScope> Order = OrderId("purchase-order.001");
         private static readonly StableId<DeliveryIdScope> Delivery = DeliveryId("delivery.001");
+        private static readonly InventoryUnitCost SerializedCost = UnitCost("EUR", 42_000);
+        private static readonly InventoryUnitCost BatchCost = UnitCost("EUR", 25);
 
         [Test]
         public void CompleteDeliveryEntersInventoryOnlyAfterPhysicalAcceptance()
@@ -37,6 +39,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(fixture.Inventory.GetTotalQuantity(SerializedProduct).Value, Is.EqualTo(2));
             Assert.That(fixture.Inventory.GetTotalQuantity(BatchProduct).Value, Is.EqualTo(4));
             Assert.That(fixture.Inventory.GetContainerQuantity(Receiving).Value, Is.EqualTo(6));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                ItemId("item.gpu-001"), out InventoryItemRecord serialized), Is.True);
+            Assert.That(serialized.UnitCost, Is.EqualTo(SerializedCost));
+            Assert.That(fixture.Inventory.TryGetBatch(
+                BatchId("batch.ties-001"), out InventoryBatchRecord batch), Is.True);
+            Assert.That(batch.UnitCost, Is.EqualTo(BatchCost));
             Assert.That(fixture.Orders.ValidateInvariants().IsSuccess, Is.True);
             Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
         }
@@ -175,6 +183,68 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         }
 
         [Test]
+        public void SerializedUnitCostMismatchCannotRegisterArrivalOrMutateEitherAuthority()
+        {
+            Fixture fixture = CreateFixture();
+            PlaceConfirmDispatch(fixture);
+            InventoryUnitCost mismatchedCost = UnitCost("EUR", SerializedCost.MinorUnits + 1);
+            DeliveryManifest manifest = Manifest(
+                Delivery,
+                new[]
+                {
+                    Serialized("item.gpu-001", SerializedProduct, mismatchedCost),
+                    Serialized("item.gpu-002", SerializedProduct)
+                },
+                new[] { Batch("batch.ties-001", BatchProduct, 4) });
+            long orderRevision = fixture.Orders.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult result = fixture.Orders.RegisterArrival(Order, manifest, Time(5));
+
+            Assert.That(result.Error, Is.EqualTo(OrderFailures.UnitCostMismatch));
+            Assert.That(fixture.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Orders.TryGetOrder(Order, out PurchaseOrderRecord record), Is.True);
+            Assert.That(record.Status, Is.EqualTo(PurchaseOrderStatus.InTransit));
+            Assert.That(record.Manifest, Is.Null);
+            Assert.That(fixture.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(fixture.Inventory.BatchCount, Is.Zero);
+            Assert.That(fixture.Orders.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void BatchUnitCostMismatchCannotRegisterArrivalOrMutateEitherAuthority()
+        {
+            Fixture fixture = CreateFixture();
+            PlaceConfirmDispatch(fixture);
+            InventoryUnitCost mismatchedCost = UnitCost("USD", BatchCost.MinorUnits);
+            DeliveryManifest manifest = Manifest(
+                Delivery,
+                new[]
+                {
+                    Serialized("item.gpu-001", SerializedProduct),
+                    Serialized("item.gpu-002", SerializedProduct)
+                },
+                new[] { Batch("batch.ties-001", BatchProduct, 4, mismatchedCost) });
+            long orderRevision = fixture.Orders.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult result = fixture.Orders.RegisterArrival(Order, manifest, Time(5));
+
+            Assert.That(result.Error, Is.EqualTo(OrderFailures.UnitCostMismatch));
+            Assert.That(fixture.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Orders.TryGetOrder(Order, out PurchaseOrderRecord record), Is.True);
+            Assert.That(record.Status, Is.EqualTo(PurchaseOrderStatus.InTransit));
+            Assert.That(record.Manifest, Is.Null);
+            Assert.That(fixture.Inventory.SerializedItemCount, Is.Zero);
+            Assert.That(fixture.Inventory.BatchCount, Is.Zero);
+            Assert.That(fixture.Orders.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void ReceivingCapacityFailureLeavesBothAuthoritiesUnchanged()
         {
             Fixture fixture = CreateFixture(receivingCapacity: 5);
@@ -199,7 +269,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         {
             Fixture fixture = CreateFixture();
             fixture.Inventory.ReceiveSerializedItem(
-                ItemId("item.gpu-002"), SerializedProduct, Receiving, InventoryCondition.New);
+                ItemId("item.gpu-002"),
+                SerializedProduct,
+                Receiving,
+                InventoryCondition.New,
+                SerializedCost);
             PlaceConfirmDispatch(fixture);
             fixture.Orders.RegisterArrival(Order, CompleteManifest(), Time(5));
             long orderRevision = fixture.Orders.Revision;
@@ -290,8 +364,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 SupplierId("supplier.zeta"),
                 new[]
                 {
-                    PurchaseOrderLine.Create(BatchProduct, 2).Value,
-                    PurchaseOrderLine.Create(SerializedProduct, 1).Value
+                    PurchaseOrderLine.Create(BatchProduct, 2, BatchCost).Value,
+                    PurchaseOrderLine.Create(SerializedProduct, 1, SerializedCost).Value
                 },
                 Time(1));
             fixture.Orders.PlaceOrder(
@@ -310,7 +384,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         public void DuplicateProductLinesAreRejectedWithoutCreatingOrder()
         {
             Fixture fixture = CreateFixture();
-            PurchaseOrderLine line = PurchaseOrderLine.Create(SerializedProduct, 1).Value;
+            PurchaseOrderLine line = PurchaseOrderLine.Create(
+                SerializedProduct, 1, SerializedCost).Value;
 
             OperationResult result = fixture.Orders.PlaceOrder(
                 Order, SupplierId("supplier.test"), new[] { line, line }, Time(1));
@@ -325,7 +400,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         {
             Fixture fixture = CreateFixture();
             PurchaseOrderLine unknown = PurchaseOrderLine.Create(
-                ProductId("orders.unknown"), 1).Value;
+                ProductId("orders.unknown"), 1, SerializedCost).Value;
 
             OperationResult result = fixture.Orders.PlaceOrder(
                 Order, SupplierId("supplier.test"), new[] { unknown }, Time(1));
@@ -333,6 +408,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(result.Error, Is.EqualTo(OrderFailures.UnknownProduct));
             Assert.That(fixture.Orders.Count, Is.Zero);
             Assert.That(fixture.Orders.Revision, Is.Zero);
+        }
+
+        [Test]
+        public void PurchaseOrderLineRejectsMissingUnitCost()
+        {
+            OperationResult<PurchaseOrderLine> result = PurchaseOrderLine.Create(
+                SerializedProduct,
+                1,
+                default);
+
+            Assert.That(result.Error, Is.EqualTo(OrderFailures.InvalidUnitCost));
         }
 
         private static void PlaceConfirmDispatch(Fixture fixture)
@@ -361,8 +447,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         {
             return new[]
             {
-                PurchaseOrderLine.Create(BatchProduct, 4).Value,
-                PurchaseOrderLine.Create(SerializedProduct, 2).Value
+                PurchaseOrderLine.Create(BatchProduct, 4, BatchCost).Value,
+                PurchaseOrderLine.Create(SerializedProduct, 2, SerializedCost).Value
             };
         }
 
@@ -389,19 +475,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
 
         private static InventorySerializedIntake Serialized(
             string itemId,
-            StableId<ProductDefinitionIdScope> productId)
+            StableId<ProductDefinitionIdScope> productId,
+            InventoryUnitCost? unitCost = null)
         {
             return InventorySerializedIntake.Create(
-                ItemId(itemId), productId, InventoryCondition.New).Value;
+                ItemId(itemId),
+                productId,
+                InventoryCondition.New,
+                unitCost ?? SerializedCost).Value;
         }
 
         private static InventoryBatchIntake Batch(
             string batchId,
             StableId<ProductDefinitionIdScope> productId,
-            int quantity)
+            int quantity,
+            InventoryUnitCost? unitCost = null)
         {
             return InventoryBatchIntake.Create(
-                BatchId(batchId), productId, InventoryCondition.New, quantity).Value;
+                BatchId(batchId),
+                productId,
+                InventoryCondition.New,
+                quantity,
+                unitCost ?? BatchCost).Value;
         }
 
         private static Fixture CreateFixture(int receivingCapacity = 50, bool includeExtraProduct = false)
@@ -468,6 +563,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
 
         private static StableId<DeliveryIdScope> DeliveryId(string value) =>
             StableId<DeliveryIdScope>.Parse(value);
+
+        private static InventoryUnitCost UnitCost(string currencyCode, long minorUnits) =>
+            InventoryUnitCost.Create(currencyCode, minorUnits).Value;
 
         private sealed class Fixture
         {

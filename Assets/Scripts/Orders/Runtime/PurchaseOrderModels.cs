@@ -19,19 +19,24 @@ namespace PCShopEmpire3D.Orders
     {
         private PurchaseOrderLine(
             StableId<ProductDefinitionIdScope> productId,
-            int quantity)
+            int quantity,
+            InventoryUnitCost unitCost)
         {
             ProductId = productId;
             Quantity = quantity;
+            UnitCost = unitCost;
         }
 
         public StableId<ProductDefinitionIdScope> ProductId { get; }
 
         public int Quantity { get; }
 
+        public InventoryUnitCost UnitCost { get; }
+
         public static OperationResult<PurchaseOrderLine> Create(
             StableId<ProductDefinitionIdScope> productId,
-            int quantity)
+            int quantity,
+            InventoryUnitCost unitCost)
         {
             if (productId.IsEmpty)
             {
@@ -43,8 +48,13 @@ namespace PCShopEmpire3D.Orders
                 return OperationResult<PurchaseOrderLine>.Fail(OrderFailures.InvalidQuantity);
             }
 
+            if (!unitCost.IsValid)
+            {
+                return OperationResult<PurchaseOrderLine>.Fail(OrderFailures.InvalidUnitCost);
+            }
+
             return OperationResult<PurchaseOrderLine>.Success(
-                new PurchaseOrderLine(productId, quantity));
+                new PurchaseOrderLine(productId, quantity, unitCost));
         }
     }
 
@@ -153,6 +163,7 @@ namespace PCShopEmpire3D.Orders
         public static readonly Failure InvalidProductId = Failure.FromCode("orders.product-id.invalid");
         public static readonly Failure UnknownProduct = Failure.FromCode("orders.product.unknown");
         public static readonly Failure InvalidQuantity = Failure.FromCode("orders.quantity.invalid");
+        public static readonly Failure InvalidUnitCost = Failure.FromCode("orders.line.unit-cost.invalid");
         public static readonly Failure MissingLines = Failure.FromCode("orders.lines.missing");
         public static readonly Failure EmptyLines = Failure.FromCode("orders.lines.empty");
         public static readonly Failure NullLine = Failure.FromCode("orders.line.null");
@@ -166,6 +177,8 @@ namespace PCShopEmpire3D.Orders
         public static readonly Failure DeliveryMismatch = Failure.FromCode("orders.manifest.delivery-mismatch");
         public static readonly Failure QuantityMismatch = Failure.FromCode("orders.manifest.quantity-mismatch");
         public static readonly Failure TrackingMismatch = Failure.FromCode("orders.manifest.tracking-mismatch");
+        public static readonly Failure UnitCostMismatch =
+            Failure.FromCode("orders.manifest.unit-cost-mismatch");
         public static readonly Failure InvalidReceivingContainer = Failure.FromCode("orders.receiving-container.invalid");
         public static readonly Failure InvariantViolation = Failure.FromCode("orders.invariant.failed");
     }

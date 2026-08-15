@@ -351,16 +351,13 @@ namespace PCShopEmpire3D.Retail
             return OperationResult.Success();
         }
 
-        /// <summary>
-        /// Internal checkout commit boundary. It verifies that the basket still exactly matches
-        /// the immutable checkout snapshot before asking Inventory to consume every reservation
-        /// atomically. After that successful call, removing the preflighted lines cannot fail.
-        /// </summary>
-        internal OperationResult ConsumeCheckoutLines(RetailCheckoutRecord checkout)
+        internal OperationResult<RetailCheckoutConsumptionPlan> PrepareCheckoutConsumption(
+            RetailCheckoutRecord checkout)
         {
             if (checkout == null || checkout.Lines == null || checkout.Lines.Count == 0)
             {
-                return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+                return OperationResult<RetailCheckoutConsumptionPlan>.Fail(
+                    RetailBasketFailures.CheckoutSnapshotMismatch);
             }
 
             int basketLineCount = 0;
@@ -374,7 +371,8 @@ namespace PCShopEmpire3D.Retail
 
             if (basketLineCount != checkout.Lines.Count)
             {
-                return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+                return OperationResult<RetailCheckoutConsumptionPlan>.Fail(
+                    RetailBasketFailures.CheckoutSnapshotMismatch);
             }
 
             var lineIds = new HashSet<StableId<RetailBasketLineIdScope>>();
@@ -402,12 +400,14 @@ namespace PCShopEmpire3D.Retail
                         out InventoryItemRecord item) ||
                     item.ProductId != snapshot.ProductId ||
                     item.ContainerId != snapshot.ShelfContainerId ||
+                    item.UnitCost != snapshot.UnitCost ||
                     !_inventory.TryGetReservation(
                         snapshot.InventoryReservationId,
                         out InventoryReservation reservation) ||
                     !Matches(reservation, line))
                 {
-                    return OperationResult.Fail(RetailBasketFailures.CheckoutSnapshotMismatch);
+                    return OperationResult<RetailCheckoutConsumptionPlan>.Fail(
+                        RetailBasketFailures.CheckoutSnapshotMismatch);
                 }
 
                 reservations.Add(snapshot.InventoryReservationId);
@@ -415,22 +415,79 @@ namespace PCShopEmpire3D.Retail
 
             if (Revision == long.MaxValue)
             {
-                return OperationResult.Fail(RetailBasketFailures.RevisionOverflow);
+                return OperationResult<RetailCheckoutConsumptionPlan>.Fail(
+                    RetailBasketFailures.RevisionOverflow);
             }
 
-            OperationResult consume = _inventory.ConsumeCheckoutReservations(reservations);
+            OperationResult<InventoryCheckoutConsumptionPlan> inventoryPlan =
+                _inventory.PrepareCheckoutReservationConsumption(reservations);
+            if (inventoryPlan.IsFailure)
+            {
+                return OperationResult<RetailCheckoutConsumptionPlan>.Fail(
+                    inventoryPlan.Error);
+            }
+
+            var orderedLineIds = new List<StableId<RetailBasketLineIdScope>>(lineIds);
+            orderedLineIds.Sort((left, right) => string.Compare(
+                left.Value,
+                right.Value,
+                StringComparison.Ordinal));
+            return OperationResult<RetailCheckoutConsumptionPlan>.Success(
+                new RetailCheckoutConsumptionPlan(
+                    this,
+                    Revision,
+                    checkout.Id,
+                    checkout.BasketId,
+                    Array.AsReadOnly(orderedLineIds.ToArray()),
+                    inventoryPlan.Value));
+        }
+
+        internal OperationResult CommitPreparedCheckoutConsumption(
+            RetailCheckoutConsumptionPlan plan)
+        {
+            if (plan == null ||
+                !ReferenceEquals(plan.Owner, this) ||
+                plan.CheckoutId.IsEmpty ||
+                plan.BasketId.IsEmpty ||
+                plan.LineIds == null ||
+                plan.LineIds.Count == 0 ||
+                plan.InventoryPlan == null)
+            {
+                return OperationResult.Fail(RetailBasketFailures.CheckoutPlanInvalid);
+            }
+
+            if (plan.ExpectedRevision != Revision)
+            {
+                return OperationResult.Fail(RetailBasketFailures.CheckoutPlanStale);
+            }
+
+            OperationResult consume =
+                _inventory.CommitPreparedCheckoutReservationConsumption(plan.InventoryPlan);
             if (consume.IsFailure)
             {
                 return consume;
             }
 
-            foreach (StableId<RetailBasketLineIdScope> lineId in lineIds)
+            for (int index = 0; index < plan.LineIds.Count; index++)
             {
-                _lines.Remove(lineId);
+                _lines.Remove(plan.LineIds[index]);
             }
 
             Revision++;
             return OperationResult.Success();
+        }
+
+        /// <summary>
+        /// Internal compatibility wrapper. Production checkout settlement prepares all
+        /// participating authorities before calling the commit method directly.
+        /// </summary>
+        internal OperationResult ConsumeCheckoutLines(RetailCheckoutRecord checkout)
+        {
+            OperationResult<RetailCheckoutConsumptionPlan> prepared =
+                PrepareCheckoutConsumption(checkout);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedCheckoutConsumption(prepared.Value);
         }
 
         public bool TryGetLine(
@@ -621,6 +678,10 @@ namespace PCShopEmpire3D.Retail
             Failure.FromCode("retail.basket.reservation-plan-invalid");
         public static readonly Failure ReservationPlanStale =
             Failure.FromCode("retail.basket.reservation-plan-stale");
+        public static readonly Failure CheckoutPlanInvalid =
+            Failure.FromCode("retail.basket.checkout-plan-invalid");
+        public static readonly Failure CheckoutPlanStale =
+            Failure.FromCode("retail.basket.checkout-plan-stale");
         public static readonly Failure ActionOwnedLine =
             Failure.FromCode("retail.basket.line-action-owned");
         public static readonly Failure InvariantViolation = Failure.FromCode("retail.basket.invariant");

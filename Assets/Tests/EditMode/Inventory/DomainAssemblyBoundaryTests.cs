@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Catalog;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Retail;
@@ -67,7 +68,43 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(references, Does.Contain("PSE.Catalog"));
             Assert.That(references, Does.Contain("PSE.Inventory"));
             Assert.That(references, Does.Not.Contain("PSE.Orders"));
+            Assert.That(references, Does.Not.Contain("PSE.Economy"));
             AssertNoUnityReferences(references);
+        }
+
+        [Test]
+        public void EconomyHasStableNameAndDependsDownstreamOnCoreInventoryAndRetailDomains()
+        {
+            string[] references = typeof(EconomyAssembly).Assembly
+                .GetReferencedAssemblies()
+                .Select(reference => reference.Name ?? string.Empty)
+                .ToArray();
+
+            Assert.That(typeof(EconomyAssembly).Assembly.GetName().Name,
+                Is.EqualTo(EconomyAssembly.Name));
+            Assert.That(references, Does.Contain("PSE.Core"));
+            Assert.That(references, Does.Contain("PSE.Inventory"));
+            Assert.That(references, Does.Contain("PSE.Retail"));
+            Assert.That(references, Does.Not.Contain("PSE.Orders"));
+            Assert.That(references, Does.Not.Contain("PSE.Presentation"));
+            AssertNoUnityReferences(references);
+        }
+
+        [Test]
+        public void CheckoutCompletionIsNotAProductionPublicMutationPath()
+        {
+            Assert.That(
+                typeof(RetailCheckoutAuthority).GetMethod(
+                    "CompleteCheckout",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public),
+                Is.Null);
+            Assert.That(
+                typeof(RetailCheckoutAuthority).GetMethod(
+                    "CompleteCheckout",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic),
+                Is.Not.Null);
         }
 
         [Test]

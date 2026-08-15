@@ -1,8 +1,114 @@
+using System;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 
 namespace PCShopEmpire3D.Inventory
 {
+    /// <summary>
+    /// Immutable acquisition provenance for one inventory unit. Currency metadata and
+    /// non-two-decimal currencies remain outside this bounded contract.
+    /// </summary>
+    public readonly struct InventoryUnitCost : IEquatable<InventoryUnitCost>
+    {
+        public const long MaximumMinorUnits = 999_999_999L;
+
+        private readonly string _currencyCode;
+
+        private InventoryUnitCost(string currencyCode, long minorUnits)
+        {
+            _currencyCode = currencyCode;
+            MinorUnits = minorUnits;
+        }
+
+        public string CurrencyCode => _currencyCode ?? string.Empty;
+
+        public long MinorUnits { get; }
+
+        public bool IsValid =>
+            IsValidCurrencyCode(CurrencyCode) &&
+            MinorUnits > 0 &&
+            MinorUnits <= MaximumMinorUnits;
+
+        public static OperationResult<InventoryUnitCost> Create(
+            string currencyCode,
+            long minorUnits)
+        {
+            if (!IsValidCurrencyCode(currencyCode))
+            {
+                return OperationResult<InventoryUnitCost>.Fail(
+                    InventoryFailures.InvalidUnitCostCurrency);
+            }
+
+            if (minorUnits <= 0)
+            {
+                return OperationResult<InventoryUnitCost>.Fail(
+                    InventoryFailures.InvalidUnitCostAmount);
+            }
+
+            if (minorUnits > MaximumMinorUnits)
+            {
+                return OperationResult<InventoryUnitCost>.Fail(
+                    InventoryFailures.UnitCostLimitExceeded);
+            }
+
+            return OperationResult<InventoryUnitCost>.Success(
+                new InventoryUnitCost(currencyCode, minorUnits));
+        }
+
+        public bool Equals(InventoryUnitCost other)
+        {
+            return string.Equals(_currencyCode, other._currencyCode, StringComparison.Ordinal) &&
+                   MinorUnits == other.MinorUnits;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is InventoryUnitCost other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (StringComparer.Ordinal.GetHashCode(CurrencyCode) * 397) ^
+                       MinorUnits.GetHashCode();
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{CurrencyCode} {MinorUnits}";
+        }
+
+        public static bool operator ==(InventoryUnitCost left, InventoryUnitCost right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(InventoryUnitCost left, InventoryUnitCost right)
+        {
+            return !left.Equals(right);
+        }
+
+        private static bool IsValidCurrencyCode(string value)
+        {
+            if (value == null || value.Length != 3)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < value.Length; index++)
+            {
+                if (value[index] < 'A' || value[index] > 'Z')
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
     public enum InventoryCondition
     {
         New = 1,
@@ -86,12 +192,14 @@ namespace PCShopEmpire3D.Inventory
             StableId<ItemInstanceIdScope> id,
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> containerId,
-            InventoryCondition condition)
+            InventoryCondition condition,
+            InventoryUnitCost unitCost)
         {
             Id = id;
             ProductId = productId;
             ContainerId = containerId;
             Condition = condition;
+            UnitCost = unitCost;
         }
 
         public StableId<ItemInstanceIdScope> Id { get; }
@@ -101,6 +209,8 @@ namespace PCShopEmpire3D.Inventory
         public StableId<ContainerIdScope> ContainerId { get; }
 
         public InventoryCondition Condition { get; }
+
+        public InventoryUnitCost UnitCost { get; }
     }
 
     public sealed class InventoryBatchRecord
@@ -108,11 +218,13 @@ namespace PCShopEmpire3D.Inventory
         internal InventoryBatchRecord(
             StableId<BatchIdScope> id,
             StableId<ProductDefinitionIdScope> productId,
-            InventoryCondition condition)
+            InventoryCondition condition,
+            InventoryUnitCost unitCost)
         {
             Id = id;
             ProductId = productId;
             Condition = condition;
+            UnitCost = unitCost;
         }
 
         public StableId<BatchIdScope> Id { get; }
@@ -120,6 +232,8 @@ namespace PCShopEmpire3D.Inventory
         public StableId<ProductDefinitionIdScope> ProductId { get; }
 
         public InventoryCondition Condition { get; }
+
+        public InventoryUnitCost UnitCost { get; }
     }
 
     public readonly struct InventoryBatchPosition
@@ -258,6 +372,13 @@ namespace PCShopEmpire3D.Inventory
         public static readonly Failure UnknownProduct = Failure.FromCode("inventory.product.unknown");
         public static readonly Failure TrackingMismatch = Failure.FromCode("inventory.product.tracking-mismatch");
         public static readonly Failure InvalidCondition = Failure.FromCode("inventory.condition.invalid");
+        public static readonly Failure InvalidUnitCost = Failure.FromCode("inventory.unit-cost.invalid");
+        public static readonly Failure InvalidUnitCostCurrency =
+            Failure.FromCode("inventory.unit-cost.currency.invalid");
+        public static readonly Failure InvalidUnitCostAmount =
+            Failure.FromCode("inventory.unit-cost.amount.invalid");
+        public static readonly Failure UnitCostLimitExceeded =
+            Failure.FromCode("inventory.unit-cost.limit");
         public static readonly Failure InvalidQuantity = Failure.FromCode("inventory.quantity.invalid");
         public static readonly Failure QuantityOverflow = Failure.FromCode("inventory.quantity.overflow");
         public static readonly Failure SameContainer = Failure.FromCode("inventory.transfer.same-container");
@@ -276,6 +397,10 @@ namespace PCShopEmpire3D.Inventory
             Failure.FromCode("inventory.reservation-plan-invalid");
         public static readonly Failure ReservationPlanStale =
             Failure.FromCode("inventory.reservation-plan-stale");
+        public static readonly Failure CheckoutConsumptionPlanInvalid =
+            Failure.FromCode("inventory.checkout-consumption-plan-invalid");
+        public static readonly Failure CheckoutConsumptionPlanStale =
+            Failure.FromCode("inventory.checkout-consumption-plan-stale");
         public static readonly Failure ReservationReleaseRestricted =
             Failure.FromCode("inventory.reservation.release-restricted");
         public static readonly Failure ReservationConsumptionRestricted =

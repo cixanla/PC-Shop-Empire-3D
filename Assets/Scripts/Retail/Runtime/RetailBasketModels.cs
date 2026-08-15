@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
 
@@ -81,5 +82,40 @@ namespace PCShopEmpire3D.Retail
         public RetailBasketLineRecord Line { get; }
 
         public bool IsReplay { get; }
+    }
+
+    /// <summary>
+    /// Internal, side-effect-free permission to consume the exact basket lines captured by one
+    /// checkout. Both Basket and Inventory revisions must still match when it is committed.
+    /// </summary>
+    internal sealed class RetailCheckoutConsumptionPlan
+    {
+        internal RetailCheckoutConsumptionPlan(
+            RetailBasketAuthority owner,
+            long expectedRevision,
+            StableId<RetailCheckoutIdScope> checkoutId,
+            StableId<RetailBasketIdScope> basketId,
+            IReadOnlyList<StableId<RetailBasketLineIdScope>> lineIds,
+            InventoryCheckoutConsumptionPlan inventoryPlan)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            CheckoutId = checkoutId;
+            BasketId = basketId;
+            LineIds = lineIds;
+            InventoryPlan = inventoryPlan;
+        }
+
+        internal RetailBasketAuthority Owner { get; }
+
+        internal IReadOnlyList<StableId<RetailBasketLineIdScope>> LineIds { get; }
+
+        internal InventoryCheckoutConsumptionPlan InventoryPlan { get; }
+
+        public long ExpectedRevision { get; }
+
+        public StableId<RetailCheckoutIdScope> CheckoutId { get; }
+
+        public StableId<RetailBasketIdScope> BasketId { get; }
     }
 }

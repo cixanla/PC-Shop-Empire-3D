@@ -1,3 +1,4 @@
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Retail;
@@ -43,7 +44,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             get
             {
                 GarageStockFlowSession session = EnsureInitialized();
-                if (session.TryGetPrototypeCheckoutCompletion(out _))
+                if (session.TryGetPrototypeCheckoutSettlement(out _))
                 {
                     return "TESLİM EDİLDİ";
                 }
@@ -59,15 +60,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
             get
             {
                 GarageStockFlowSession session = EnsureInitialized();
+                if (session.TryGetPrototypeCheckoutSettlement(
+                        out CheckoutSettlementReceipt settlement))
+                {
+                    return $"{FormatMoney(settlement.Currency, settlement.GrossMinorUnits)} • NAKİT ALINDI";
+                }
+
                 if (session.TryGetPrototypeCheckoutCompletion(
                         out RetailCheckoutCompletionRecord completion))
                 {
-                    return $"{FormatMoney(completion.Currency, completion.TotalMinorUnits)} • TAMAMLANDI";
+                    return $"{FormatMoney(completion.Currency, completion.TotalMinorUnits)} • ÖDEME EKSİK";
                 }
 
                 return session.TryGetPrototypeCheckout(out RetailCheckoutRecord checkout)
-                    ? $"{FormatMoney(checkout.Currency, checkout.TotalMinorUnits)} • DONDURULDU"
+                    ? $"{FormatMoney(checkout.Currency, checkout.TotalMinorUnits)} • ÖDEME BEKLİYOR"
                     : "BEKLİYOR";
+            }
+        }
+
+        public string EconomyStatusText
+        {
+            get
+            {
+                GarageStockFlowSession session = EnsureInitialized();
+                if (!session.TryGetPrototypeCheckoutSettlement(
+                        out CheckoutSettlementReceipt receipt))
+                {
+                    return "HAREKET YOK";
+                }
+
+                return $"NAKİT +{FormatMoney(receipt.Currency, receipt.GrossMinorUnits)} • " +
+                       $"GELİR +{FormatMoney(receipt.Currency, receipt.GrossMinorUnits)} • " +
+                       $"COGS {FormatMoney(receipt.Currency, receipt.CostOfGoodsSoldMinorUnits)}";
             }
         }
 
@@ -93,7 +117,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}\n" +
                        $"FİYAT: {ShelfOfferPriceText}\n" +
                        $"SEPET: {CustomerBasketStatusText}\n" +
-                       $"KASA: {CheckoutStatusText}";
+                       $"KASA: {CheckoutStatusText}\n" +
+                       $"MUHASEBE: {EconomyStatusText}";
             }
         }
 
@@ -146,7 +171,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             Material target = arrivedMaterial;
-            if (session.TryGetPrototypeCheckoutCompletion(out _))
+            if (session.TryGetPrototypeCheckoutSettlement(out _))
             {
                 target = shelvedMaterial;
             }

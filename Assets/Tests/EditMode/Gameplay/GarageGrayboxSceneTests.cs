@@ -138,6 +138,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.CompletionCount, Is.Zero);
+                Assert.That(marker.StockFlow.Session.CheckoutSettlements, Is.Not.Null);
+                Assert.That(marker.StockFlow.Session.CheckoutSettlements.Revision, Is.Zero);
+                Assert.That(marker.StockFlow.Session.CheckoutSettlements.SettlementCount, Is.Zero);
+                Assert.That(marker.StockFlow.Session.CheckoutSettlements.TransactionCount, Is.Zero);
+                Assert.That(marker.StockFlow.EconomyStatusText, Is.EqualTo("HAREKET YOK"));
+                Assert.That(marker.StockFlow.StatusText, Does.Contain("MUHASEBE: HAREKET YOK"));
                 Assert.That(marker.StockFlow.Session.CustomerVisits.Count, Is.Zero);
                 Assert.That(marker.CustomerFlow, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.StockFlow, Is.SameAs(marker.StockFlow));
@@ -242,7 +248,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-leave-action-r18-v1"));
+                    Is.EqualTo("garage-cash-settlement-r19-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

@@ -1,0 +1,18 @@
+{
+  "name": "PSE.Economy",
+  "rootNamespace": "PCShopEmpire3D.Economy",
+  "references": [
+    "PSE.Core",
+    "PSE.Inventory",
+    "PSE.Retail"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

@@ -535,7 +535,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     break;
                 case CustomerVisitState.AwaitingCheckout:
                     StopAgent();
-                    if (session.TryGetPrototypeCheckoutCompletion(out _))
+                    if (session.TryGetPrototypeCheckoutSettlement(out _))
                     {
                         ApplyTransition(session.BeginPrototypeCustomerExit(
                             CustomerVisitExitReason.Fulfilled,

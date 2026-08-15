@@ -3,6 +3,7 @@ using System.Collections;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
+using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
@@ -16,7 +17,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-leave-action-r18-v1";
+        public const string Version = "garage-cash-settlement-r19-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -111,6 +112,11 @@ namespace PCShopEmpire3D.Presentation
                                         stockFlow.Session.RetailCheckouts.Count == 0;
             bool hasCheckoutCompletionAuthority = hasCheckoutAuthority &&
                                                   stockFlow.Session.RetailCheckouts.CompletionCount == 0;
+            bool hasEconomySettlementAuthority = hasCheckoutAuthority &&
+                                                 stockFlow.Session.CheckoutSettlements != null &&
+                                                 stockFlow.Session.CheckoutSettlements.SettlementCount == 0;
+            bool hasCashLedgerAuthority = hasEconomySettlementAuthority &&
+                                          stockFlow.Session.CheckoutSettlements.TransactionCount == 0;
             bool hasCustomerVisitAuthority = hasArrivedStockFlow &&
                                              stockFlow.Session.CustomerVisits != null &&
                                              stockFlow.Session.CustomerVisits.Count == 0;
@@ -142,6 +148,10 @@ namespace PCShopEmpire3D.Presentation
                 $"basket-reservation={(hasBasketAuthority ? "ready" : "missing")} " +
                 $"checkout-snapshot={(hasCheckoutAuthority ? "ready" : "missing")} " +
                 $"checkout-completion={(hasCheckoutCompletionAuthority ? "ready" : "missing")} " +
+                $"cash-payment={(hasEconomySettlementAuthority ? "ready" : "missing")} " +
+                $"payment-receipt={(hasEconomySettlementAuthority ? "ready" : "missing")} " +
+                $"economy-settlement={(hasEconomySettlementAuthority ? "ready" : "missing")} " +
+                $"cash-ledger={(hasCashLedgerAuthority ? "ready" : "missing")} " +
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
@@ -428,20 +438,52 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
-            long completionInventoryBefore = checkoutSession.Inventory.Revision;
-            long completionBasketBefore = checkoutSession.RetailBaskets.Revision;
-            long completionCheckoutBefore = checkoutSession.RetailCheckouts.Revision;
-            long completionOfferBefore = checkoutSession.RetailOffers.Revision;
-            long completionOrdersBefore = checkoutSession.Orders.Revision;
-            OperationResult completeSale = checkoutSession.CompletePrototypeCheckout();
-            OperationResult repeatedCompletion = checkoutSession.CompletePrototypeCheckout();
+            long settlementInventoryBefore = checkoutSession.Inventory.Revision;
+            long settlementBasketBefore = checkoutSession.RetailBaskets.Revision;
+            long settlementCheckoutBefore = checkoutSession.RetailCheckouts.Revision;
+            long settlementOfferBefore = checkoutSession.RetailOffers.Revision;
+            long settlementOrdersBefore = checkoutSession.Orders.Revision;
+            long settlementEconomyBefore = checkoutSession.CheckoutSettlements.Revision;
+            OperationResult settleCash = checkoutSession.SettlePrototypeCashCheckout();
+            OperationResult repeatedSettlement = checkoutSession.SettlePrototypeCashCheckout();
+            OperationResult conflictingSettlement =
+                checkoutSession.CheckoutSettlements.SettleCashCheckout(
+                    checkoutSession.PrototypeCheckoutSettlementId,
+                    StableId<EconomyLedgerTransactionIdScope>.Parse(
+                        "economy.ledger-transaction.smoke-conflict"),
+                    checkoutSession.PrototypeCheckoutCompletionId,
+                    checkoutSession.PrototypeCheckoutId,
+                    GarageStockFlowSession.PrototypeCurrencyCode,
+                    GarageStockFlowSession.PrototypePriceMinorUnits,
+                    SimulationTimestamp.Create(7, 7_000L));
             OperationResult repeatedBeginAfterCompletion = checkoutSession.BeginPrototypeCheckout();
-            bool saleCompleted =
-                completeSale.IsSuccess &&
-                repeatedCompletion.IsSuccess &&
+            CurrencyCode settlementCurrency = CurrencyCode.Create(
+                GarageStockFlowSession.PrototypeCurrencyCode).Value;
+            OperationResult<long> cashDelta = checkoutSession.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.Cash,
+                settlementCurrency);
+            OperationResult<long> revenueDelta = checkoutSession.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.SalesRevenue,
+                settlementCurrency);
+            OperationResult<long> cogsDelta = checkoutSession.CheckoutSettlements.GetAccountDelta(
+                EconomyAccountKind.CostOfGoodsSold,
+                settlementCurrency);
+            OperationResult<long> inventoryAssetDelta =
+                checkoutSession.CheckoutSettlements.GetAccountDelta(
+                    EconomyAccountKind.InventoryAsset,
+                    settlementCurrency);
+            bool saleSettled =
+                settleCash.IsSuccess &&
+                repeatedSettlement.IsSuccess &&
+                conflictingSettlement.Error ==
+                    CheckoutSettlementFailures.SettlementIdentityConflict &&
                 repeatedBeginAfterCompletion.IsSuccess &&
                 checkoutSession.TryGetPrototypeCheckoutCompletion(
                     out RetailCheckoutCompletionRecord completionRecord) &&
+                checkoutSession.TryGetPrototypeCheckoutSettlement(
+                    out CheckoutSettlementReceipt settlementReceipt) &&
+                checkoutSession.TryGetPrototypeLedgerTransaction(
+                    out EconomyLedgerTransactionRecord ledgerTransaction) &&
                 completionRecord.CheckoutId == checkoutSession.PrototypeCheckoutId &&
                 completionRecord.BasketId == checkoutSession.PrototypeBasketId &&
                 completionRecord.CustomerId == checkoutSession.PrototypeCustomerId &&
@@ -451,6 +493,51 @@ namespace PCShopEmpire3D.Presentation
                     GarageStockFlowSession.PrototypePriceMinorUnits &&
                 completionRecord.Lines.Count == 1 &&
                 completionRecord.Lines[0].ItemId == checkoutSession.ItemId &&
+                settlementReceipt.Id == checkoutSession.PrototypeCheckoutSettlementId &&
+                settlementReceipt.TransactionId == checkoutSession.PrototypeLedgerTransactionId &&
+                settlementReceipt.CompletionId == completionRecord.Id &&
+                settlementReceipt.CheckoutId == completionRecord.CheckoutId &&
+                settlementReceipt.CustomerId == completionRecord.CustomerId &&
+                settlementReceipt.PaymentMethod == CheckoutPaymentMethod.Cash &&
+                settlementReceipt.Currency == completionRecord.Currency &&
+                settlementReceipt.GrossMinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                settlementReceipt.CostOfGoodsSoldMinorUnits ==
+                    GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                settlementReceipt.GrossMarginMinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits -
+                    GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                ledgerTransaction.Id == checkoutSession.PrototypeLedgerTransactionId &&
+                ledgerTransaction.SettlementId == settlementReceipt.Id &&
+                ledgerTransaction.Entries.Count == 4 &&
+                ledgerTransaction.Entries[0].Account == EconomyAccountKind.Cash &&
+                ledgerTransaction.Entries[0].Direction == EconomyEntryDirection.Debit &&
+                ledgerTransaction.Entries[0].MinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                ledgerTransaction.Entries[1].Account == EconomyAccountKind.SalesRevenue &&
+                ledgerTransaction.Entries[1].Direction == EconomyEntryDirection.Credit &&
+                ledgerTransaction.Entries[1].MinorUnits ==
+                    GarageStockFlowSession.PrototypePriceMinorUnits &&
+                ledgerTransaction.Entries[2].Account == EconomyAccountKind.CostOfGoodsSold &&
+                ledgerTransaction.Entries[2].Direction == EconomyEntryDirection.Debit &&
+                ledgerTransaction.Entries[2].MinorUnits ==
+                    GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                ledgerTransaction.Entries[3].Account == EconomyAccountKind.InventoryAsset &&
+                ledgerTransaction.Entries[3].Direction == EconomyEntryDirection.Credit &&
+                ledgerTransaction.Entries[3].MinorUnits ==
+                    GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                ledgerTransaction.Entries[0].MinorUnits +
+                    ledgerTransaction.Entries[2].MinorUnits ==
+                    ledgerTransaction.Entries[1].MinorUnits +
+                    ledgerTransaction.Entries[3].MinorUnits &&
+                cashDelta.IsSuccess &&
+                cashDelta.Value == GarageStockFlowSession.PrototypePriceMinorUnits &&
+                revenueDelta.IsSuccess &&
+                revenueDelta.Value == GarageStockFlowSession.PrototypePriceMinorUnits &&
+                cogsDelta.IsSuccess &&
+                cogsDelta.Value == GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                inventoryAssetDelta.IsSuccess &&
+                inventoryAssetDelta.Value == -GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
                 !checkoutSession.TryGetItem(out _) &&
                 checkoutSession.Inventory.GetTotalQuantity(
                     checkoutSession.ProductId).Value == 0 &&
@@ -460,24 +547,27 @@ namespace PCShopEmpire3D.Presentation
                 checkoutSession.RetailBaskets.Count == 0 &&
                 checkoutSession.RetailCheckouts.Count == 1 &&
                 checkoutSession.RetailCheckouts.CompletionCount == 1 &&
-                checkoutSession.Inventory.Revision == completionInventoryBefore + 1 &&
-                checkoutSession.RetailBaskets.Revision == completionBasketBefore + 1 &&
-                checkoutSession.RetailCheckouts.Revision == completionCheckoutBefore + 1 &&
-                checkoutSession.RetailOffers.Revision == completionOfferBefore &&
-                checkoutSession.Orders.Revision == completionOrdersBefore &&
+                checkoutSession.CheckoutSettlements.SettlementCount == 1 &&
+                checkoutSession.CheckoutSettlements.TransactionCount == 1 &&
+                checkoutSession.Inventory.Revision == settlementInventoryBefore + 1 &&
+                checkoutSession.RetailBaskets.Revision == settlementBasketBefore + 1 &&
+                checkoutSession.RetailCheckouts.Revision == settlementCheckoutBefore + 1 &&
+                checkoutSession.RetailOffers.Revision == settlementOfferBefore &&
+                checkoutSession.Orders.Revision == settlementOrdersBefore &&
+                checkoutSession.CheckoutSettlements.Revision == settlementEconomyBefore + 1 &&
                 checkoutSession.ValidateInvariants().IsSuccess;
-            if (!saleCompleted)
+            if (!saleSettled)
             {
-                string completionFailureCode = completeSale.IsFailure
-                    ? completeSale.Error.Code
-                    : repeatedCompletion.IsFailure
-                        ? repeatedCompletion.Error.Code
+                string settlementFailureCode = settleCash.IsFailure
+                    ? settleCash.Error.Code
+                    : repeatedSettlement.IsFailure
+                        ? repeatedSettlement.Error.Code
                         : repeatedBeginAfterCompletion.IsFailure
                             ? repeatedBeginAfterCompletion.Error.Code
-                            : "smoke.sale-completion-contract";
+                            : "smoke.cash-settlement-contract";
                 Debug.LogError(
                     $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
-                    $"code={completionFailureCode}");
+                    $"code={settlementFailureCode}");
                 yield break;
             }
 
@@ -493,7 +583,9 @@ namespace PCShopEmpire3D.Presentation
                 $"currency={offer.Price.Currency.Value} " +
                 "basket-reservation=ok release=ok " +
                 "checkout-snapshot=ok price-frozen=ok " +
-                "sale-completion=ok stock-consumed=ok " +
+                "cash-payment=ok payment-receipt=ok economy-settlement=ok " +
+                "cash-ledger=ok revenue=ok cogs=ok inventory-asset=ok ledger-balanced=ok " +
+                "payment-replay=ok payment-conflict-blocked=ok stock-consumed=ok " +
                 $"stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
                 $"completed-quantity={checkoutSession.Inventory.GetTotalQuantity(checkoutSession.ProductId).Value} " +
                 $"projection-quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
@@ -546,6 +638,7 @@ namespace PCShopEmpire3D.Presentation
             long isolatedOfferRevision = session.RetailOffers.Revision;
             long isolatedBasketRevision = session.RetailBaskets.Revision;
             long isolatedCheckoutRevision = session.RetailCheckouts.Revision;
+            long isolatedEconomyRevision = session.CheckoutSettlements.Revision;
             float customerAgentSpeed = customerFlow.CustomerAgent.speed;
             customerFlow.CustomerAgent.speed = Mathf.Min(customerAgentSpeed, 0.10f);
             playerMotor.SetPaused(false);
@@ -624,7 +717,8 @@ namespace PCShopEmpire3D.Presentation
                                  session.Orders.Revision == isolatedOrderRevision &&
                                  session.RetailOffers.Revision == isolatedOfferRevision &&
                                  session.RetailBaskets.Revision == isolatedBasketRevision &&
-                                 session.RetailCheckouts.Revision == isolatedCheckoutRevision;
+                                 session.RetailCheckouts.Revision == isolatedCheckoutRevision &&
+                                 session.CheckoutSettlements.Revision == isolatedEconomyRevision;
             if (!browseReached)
             {
                 LogCustomerFlowSmokeFailure("smoke.browse-route-or-authority-drift");
@@ -718,11 +812,11 @@ namespace PCShopEmpire3D.Presentation
             }
 
             OperationResult beginCheckout = liveBinding.TryBeginCheckout();
-            OperationResult completeCheckout = liveBinding.TryCompleteCheckout();
-            if (beginCheckout.IsFailure || completeCheckout.IsFailure)
+            OperationResult settleCash = liveBinding.TrySettleCashCheckout();
+            if (beginCheckout.IsFailure || settleCash.IsFailure)
             {
                 LogCustomerFlowSmokeFailure(
-                    beginCheckout.IsFailure ? beginCheckout.Error.Code : completeCheckout.Error.Code);
+                    beginCheckout.IsFailure ? beginCheckout.Error.Code : settleCash.Error.Code);
                 yield break;
             }
 
@@ -745,6 +839,22 @@ namespace PCShopEmpire3D.Presentation
                              session.Inventory.GetTotalQuantity(session.ProductId).Value == 0 &&
                              session.RetailBaskets.Count == 0 &&
                              session.RetailCheckouts.CompletionCount == 1 &&
+                             session.CheckoutSettlements.SettlementCount == 1 &&
+                             session.CheckoutSettlements.TransactionCount == 1 &&
+                             session.TryGetPrototypeCheckoutSettlement(
+                                 out CheckoutSettlementReceipt fulfilledReceipt) &&
+                             fulfilledReceipt.PaymentMethod == CheckoutPaymentMethod.Cash &&
+                             fulfilledReceipt.GrossMinorUnits ==
+                                 GarageStockFlowSession.PrototypePriceMinorUnits &&
+                             fulfilledReceipt.CostOfGoodsSoldMinorUnits ==
+                                 GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
+                             session.TryGetPrototypeLedgerTransaction(
+                                 out EconomyLedgerTransactionRecord fulfilledTransaction) &&
+                             fulfilledTransaction.Entries.Count == 4 &&
+                             fulfilledTransaction.Entries[0].MinorUnits +
+                                 fulfilledTransaction.Entries[2].MinorUnits ==
+                                 fulfilledTransaction.Entries[1].MinorUnits +
+                                 fulfilledTransaction.Entries[3].MinorUnits &&
                              !liveBinding.Projection.gameObject.activeSelf &&
                              session.ValidateInvariants().IsSuccess;
             if (!fulfilled)
@@ -1037,6 +1147,7 @@ namespace PCShopEmpire3D.Presentation
             Debug.Log(
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
                 "pause=ok offer-decision=ok buy-action=ok stale-blocked=ok fulfilled=ok " +
+                "cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok " +
                 "leave-action=ok stale-leave-blocked=ok " +
                 "domain-route-fallback=ok domain-timeout-fallback=ok " +
                 "authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok " +

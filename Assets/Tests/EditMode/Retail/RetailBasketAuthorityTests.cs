@@ -388,14 +388,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
                 ItemId,
                 ProductId,
                 ShelfId,
-                InventoryCondition.New).IsSuccess, Is.True);
+                InventoryCondition.New,
+                InventoryUnitCost.Create("EUR", 42_000).Value).IsSuccess, Is.True);
             if (includeOtherProductItem)
             {
                 Assert.That(inventory.ReceiveSerializedItem(
                     StableId<ItemInstanceIdScope>.Parse("inventory.item.basket-b70-001"),
                     OtherProductId,
                     ShelfId,
-                    InventoryCondition.New).IsSuccess, Is.True);
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create("EUR", 48_000).Value).IsSuccess, Is.True);
             }
 
             ShelfOfferAuthority offers = ShelfOfferAuthority.Create(catalog, inventory).Value;
