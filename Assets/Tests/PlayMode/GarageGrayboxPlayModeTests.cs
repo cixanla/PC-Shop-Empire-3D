@@ -42,6 +42,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerMotor, Is.Not.Null);
             Assert.That(marker.PlayerInput, Is.Not.Null);
             Assert.That(marker.PlayerInput.Actions, Is.Not.Null);
+            Assert.That(
+                marker.CustomerFlow.CustomerVisualRoot
+                    .GetComponent<CapsuleCollider>().isTrigger,
+                Is.True);
 
             // Batch-mode players report no window focus and intentionally pause the motor.
             // Resume explicitly and probe the authored spawn against the live floor collider.
@@ -60,6 +64,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeInputReconfigurationOwnsOnlyRuntimeClones()
         {
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
             AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
             Assert.That(load, Is.Not.Null);
             yield return load;
@@ -86,6 +91,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 firstSource.FindActionMap(PlayerInputContract.PlayerMap, true).enabled,
                 Is.False);
 
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            Assert.That(adapter.PrimaryActionPressedThisFrame, Is.True);
+            Assert.That(adapter.TryConsumePrimaryActionPressThisFrame(), Is.True);
+            Assert.That(adapter.PrimaryActionPressedThisFrame, Is.False);
+            Assert.That(adapter.TryConsumePrimaryActionPressThisFrame(), Is.False);
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+
             adapter.Configure(secondSource);
             InputActionAsset secondRuntimeClone = adapter.Actions;
             Assert.That(secondRuntimeClone, Is.Not.SameAs(secondSource));
@@ -94,6 +110,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(firstRuntimeClone == null, Is.True);
             Assert.That(firstSource, Is.Not.Null);
             Assert.That(secondSource, Is.Not.Null);
+
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            Assert.That(adapter.TryConsumePrimaryActionPressThisFrame(), Is.True);
+            Assert.That(adapter.TryConsumePrimaryActionPressThisFrame(), Is.False);
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
 
             adapterObject.SetActive(false);
             Assert.That(
@@ -118,6 +141,73 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(secondSource, Is.Not.Null);
             Object.Destroy(firstSource);
             Object.Destroy(secondSource);
+        }
+
+        [UnityTest]
+        public IEnumerator CheckoutStationRejectsInvalidPhysicalAccessWithoutCommerceMutation()
+        {
+            AsyncOperation load = SceneManager.LoadSceneAsync("GarageGraybox", LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            CheckoutStationProjection checkoutStation = marker.CheckoutStation;
+            Assert.That(checkoutStation, Is.Not.Null);
+            marker.PlayerMotor.SetPaused(false);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            long[] authorityRevisions = CaptureAuthorityRevisions(session);
+
+            MovePlayerToCheckoutStation(
+                marker,
+                checkoutStation.InteractionRange + 0.75f);
+            OperationResult outOfRange = checkoutStation.TryOperate();
+            Assert.That(outOfRange.Error, Is.EqualTo(CheckoutStationFailures.OutOfRange));
+            Assert.That(CaptureAuthorityRevisions(session), Is.EqualTo(authorityRevisions));
+
+            MovePlayerToCheckoutStation(marker);
+            marker.PlayerMotor.SetPaused(true);
+            OperationResult paused = checkoutStation.TryOperate();
+            Assert.That(paused.Error, Is.EqualTo(CheckoutStationFailures.Paused));
+            Assert.That(CaptureAuthorityRevisions(session), Is.EqualTo(authorityRevisions));
+            marker.PlayerMotor.SetPaused(false);
+            checkoutStation.RefreshPresentation();
+
+            OperationResult wrongState = checkoutStation.TryOperate();
+            Assert.That(
+                wrongState.Error,
+                Is.EqualTo(CheckoutStationFailures.CustomerNotAwaitingCheckout));
+            Assert.That(CaptureAuthorityRevisions(session), Is.EqualTo(authorityRevisions));
+
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.rotation *= Quaternion.Euler(0f, 180f, 0f);
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.localRotation = Quaternion.identity;
+            controller.enabled = true;
+            Physics.SyncTransforms();
+            OperationResult focusMissing = checkoutStation.TryOperate();
+            Assert.That(focusMissing.Error, Is.EqualTo(CheckoutStationFailures.FocusMissing));
+            Assert.That(CaptureAuthorityRevisions(session), Is.EqualTo(authorityRevisions));
+
+            MovePlayerToCheckoutStation(marker);
+            Vector3 cameraPosition = checkoutStation.PlayerCamera.transform.position;
+            Vector3 target = checkoutStation.InteractionCollider.bounds.center;
+            GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = "CheckoutStationLosBlocker";
+            blocker.transform.position = Vector3.Lerp(cameraPosition, target, 0.5f);
+            blocker.transform.localScale = Vector3.one * 0.38f;
+            Physics.SyncTransforms();
+            OperationResult lineOfSight = checkoutStation.TryOperate();
+            Assert.That(
+                lineOfSight.Error,
+                Is.EqualTo(CheckoutStationFailures.LineOfSightBlocked));
+            Assert.That(CaptureAuthorityRevisions(session), Is.EqualTo(authorityRevisions));
+            Object.Destroy(blocker);
+            yield return null;
         }
 
         [UnityTest]
@@ -1022,11 +1112,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             GarageStockFlowRuntime stockFlow = marker.StockFlow;
             InventoryItemWorldBinding binding = stockFlow.ItemBinding;
             DeliveryParcelProjection parcel = binding.Parcel;
+            CheckoutStationProjection checkoutStation = marker.CheckoutStation;
             marker.PlayerMotor.SetPaused(false);
             MovePlayerToAuthoritativeDelivery(marker);
             marker.PlayerCarry.ProcessInputFrame();
 
             Assert.That(stockFlow, Is.Not.Null);
+            Assert.That(checkoutStation, Is.Not.Null);
             Assert.That(stockFlow.Session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Arrived));
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.Zero);
@@ -1404,15 +1496,42 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             Assert.That(binding.RequiresCheckoutStart, Is.True);
-            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("kasayı başlat"));
             Assert.That(marker.PlayerCarry.PromptText,
-                Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
+                Does.Contain("KASA İSTASYONUNA GİT"));
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return WaitForCustomerState(
                 customerFlow,
                 CustomerVisitState.AwaitingCheckout);
             Assert.That(customerFlow.StateText, Does.Contain("KASADA BEKLİYOR"));
+            MovePlayerToCheckoutStation(
+                marker,
+                checkoutStation.InteractionRange + 0.75f);
+            checkoutStation.RefreshPresentation();
+            Assert.That(checkoutStation.IsFocused, Is.False);
+            Assert.That(checkoutStation.HasContextualAttention, Is.True);
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain(CheckoutStationFailures.OutOfRange.Code));
+
+            MovePlayerToCheckoutStation(marker);
+            Vector3 stationCameraPosition = checkoutStation.PlayerCamera.transform.position;
+            Vector3 stationTarget = checkoutStation.InteractionCollider.bounds.center;
+            GameObject stationBlocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            stationBlocker.name = "CheckoutStationVisibleFailureBlocker";
+            stationBlocker.transform.position = Vector3.Lerp(
+                stationCameraPosition,
+                stationTarget,
+                0.5f);
+            stationBlocker.transform.localScale = Vector3.one * 0.38f;
+            Physics.SyncTransforms();
+            checkoutStation.RefreshPresentation();
+            Assert.That(checkoutStation.IsFocused, Is.False);
+            Assert.That(checkoutStation.HasContextualAttention, Is.True);
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain(CheckoutStationFailures.LineOfSightBlocked.Code));
+            Object.Destroy(stationBlocker);
+            yield return null;
+
             MovePlayerToShelfItem(marker, item);
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
@@ -1421,14 +1540,50 @@ namespace PCShopEmpire3D.Tests.PlayMode
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
             long orderRevisionBeforeCheckout = stockFlow.Session.Orders.Revision;
             long economyRevisionBeforeCheckout = stockFlow.Session.CheckoutSettlements.Revision;
+            long checkoutRevisionBeforeCheckout = stockFlow.Session.RetailCheckouts.Revision;
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
 
+            Assert.That(binding.IsCheckoutStarted, Is.False);
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("KASA İSTASYONUNA GİT"));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            MovePlayerToCheckoutStation(marker);
+            checkoutStation.RefreshPresentation();
+            Assert.That(checkoutStation.IsFocused, Is.True);
+            Assert.That(checkoutStation.PromptText, Does.Contain("KASAYI BAŞLAT"));
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
+
+            marker.PlayerMotor.SetPaused(true);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            checkoutStation.ProcessInputFrame();
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            marker.PlayerMotor.SetPaused(false);
+            checkoutStation.RefreshPresentation();
+
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            checkoutStation.ProcessInputFrame();
+
             Assert.That(binding.IsCheckoutStarted, Is.True);
-            Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout + 1));
             Assert.That(stockFlow.Session.TryGetPrototypeCheckout(out var checkout), Is.True);
             Assert.That(checkout.TotalMinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
@@ -1447,11 +1602,31 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.Zero);
             Assert.That(stockFlow.ShelfOfferText.text,
                 Does.Contain($"KASA: {GarageStockFlowRuntime.PrototypePriceText} • ÖDEME BEKLİYOR"));
-            Assert.That(marker.PlayerCarry.PromptText,
-                Does.Contain("nakit ödemeyi al"));
-            Assert.That(marker.PlayerCarry.PromptText,
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain("NAKİT ÖDEMEYİ AL"));
+            Assert.That(checkoutStation.PromptText,
                 Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
 
+            OperationResult sameFrameReplay = checkoutStation.TryOperate();
+            Assert.That(sameFrameReplay.Error,
+                Is.EqualTo(CheckoutStationFailures.InputReplay));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout + 1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+
+            checkoutStation.ProcessInputFrame();
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout + 1));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            InputSystem.Update();
+            checkoutStation.ProcessInputFrame();
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+
+            yield return null;
+            MovePlayerToShelfItem(marker, item);
             InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
             InputSystem.Update();
@@ -1459,13 +1634,16 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.LastFailureCode,
                 Is.EqualTo(StockProjectionFailures.CheckoutActive.Code));
             Assert.That(binding.IsCustomerReserved, Is.True);
-            Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout + 1));
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
+            MovePlayerToCheckoutStation(marker);
+            checkoutStation.RefreshPresentation();
             InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
             InputSystem.Update();
-            marker.PlayerCarry.ProcessInputFrame();
+            checkoutStation.ProcessInputFrame();
 
             Assert.That(binding.IsCheckoutCompleted, Is.True);
             Assert.That(binding.IsCheckoutSettled, Is.True);
@@ -1531,6 +1709,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             GarageStockFlowRuntime stockFlow = marker.StockFlow;
             PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
             DeliveryParcelProjection parcel = stockFlow.Parcel;
+            CheckoutStationProjection checkoutStation = marker.CheckoutStation;
+            Assert.That(checkoutStation, Is.Not.Null);
             marker.PlayerMotor.SetPaused(false);
             MovePlayerToAuthoritativeDelivery(marker);
             marker.PlayerCarry.ProcessInputFrame();
@@ -1766,7 +1946,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
             Assert.That(stockFlow.ItemBinding.RequiresCheckoutStart, Is.True);
-            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("kasayı başlat"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("KASA İSTASYONUNA GİT"));
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
             yield return WaitForCustomerState(
@@ -1780,6 +1961,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             long offerRevisionBeforeCheckout = stockFlow.Session.RetailOffers.Revision;
             long orderRevisionBeforeCheckout = stockFlow.Session.Orders.Revision;
             long economyRevisionBeforeCheckout = stockFlow.Session.CheckoutSettlements.Revision;
+            long checkoutRevisionBeforeCheckout = stockFlow.Session.RetailCheckouts.Revision;
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
@@ -1787,11 +1969,31 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
 
+            Assert.That(stockFlow.ItemBinding.IsCheckoutStarted, Is.False);
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout));
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToCheckoutStation(marker);
+            checkoutStation.RefreshPresentation();
+            Assert.That(checkoutStation.IsFocused, Is.True);
+            Assert.That(checkoutStation.PromptText, Does.Contain("KASAYI BAŞLAT"));
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            checkoutStation.ProcessInputFrame();
+
             Assert.That(stockFlow.ItemBinding.IsCheckoutStarted, Is.True);
             Assert.That(stockFlow.Session.TryGetPrototypeCheckout(out var checkout), Is.True);
             Assert.That(checkout.TotalMinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypePriceMinorUnits));
-            Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.RetailCheckouts.Revision,
+                Is.EqualTo(checkoutRevisionBeforeCheckout + 1));
             Assert.That(stockFlow.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforeCheckout));
             Assert.That(stockFlow.Session.RetailBaskets.Revision,
@@ -1803,11 +2005,21 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
                 Is.EqualTo(economyRevisionBeforeCheckout));
             Assert.That(stockFlow.Session.CheckoutSettlements.SettlementCount, Is.Zero);
-            Assert.That(marker.PlayerCarry.PromptText,
-                Does.Contain("nakit ödemeyi al"));
-            Assert.That(marker.PlayerCarry.PromptText,
+            Assert.That(checkoutStation.PromptText,
+                Does.Contain("NAKİT ÖDEMEYİ AL"));
+            Assert.That(checkoutStation.PromptText,
                 Does.Contain(marker.PlayerInput.PrimaryBindingPrompt));
 
+            checkoutStation.ProcessInputFrame();
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+            InputSystem.Update();
+            checkoutStation.ProcessInputFrame();
+            Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevisionBeforeCheckout));
+
+            yield return null;
+            MovePlayerToShelfItem(marker, item);
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
             InputSystem.QueueStateEvent(
@@ -1821,9 +2033,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
+            MovePlayerToCheckoutStation(marker);
+            checkoutStation.RefreshPresentation();
             InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
             InputSystem.Update();
-            marker.PlayerCarry.ProcessInputFrame();
+            checkoutStation.ProcessInputFrame();
 
             Assert.That(stockFlow.ItemBinding.IsCheckoutCompleted, Is.True);
             Assert.That(stockFlow.ItemBinding.IsCheckoutSettled, Is.True);
@@ -2337,6 +2551,50 @@ namespace PCShopEmpire3D.Tests.PlayMode
             PhysicalItemProjection item)
         {
             AimPlayerAtItem(marker, item, -Vector3.right);
+        }
+
+        private static void MovePlayerToCheckoutStation(
+            GaragePrototypeMarker marker,
+            float distance = 1.45f)
+        {
+            CheckoutStationProjection checkoutStation = marker.CheckoutStation;
+            Collider targetCollider = checkoutStation.InteractionCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 approach = -targetCollider.transform.forward;
+            approach.y = 0f;
+            approach.Normalize();
+            Vector3 playerPosition = target + (approach * distance);
+            playerPosition.y = 0.05f;
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static long[] CaptureAuthorityRevisions(GarageStockFlowSession session)
+        {
+            return new[]
+            {
+                session.CustomerVisits.Revision,
+                session.CustomerConsultations.Revision,
+                session.CustomerOfferActions.Revision,
+                session.Inventory.Revision,
+                session.Orders.Revision,
+                session.RetailOffers.Revision,
+                session.RetailBaskets.Revision,
+                session.RetailCheckouts.Revision,
+                session.CheckoutSettlements.Revision
+            };
         }
 
         private static void MovePlayerToCustomer(

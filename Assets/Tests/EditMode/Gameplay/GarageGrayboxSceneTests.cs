@@ -74,6 +74,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PlacementSurface[] placementSurfaces = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<PlacementSurface>(true))
                     .ToArray();
+                CheckoutStationProjection[] checkoutStations = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<CheckoutStationProjection>(true))
+                    .ToArray();
                 PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
@@ -164,8 +167,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.CustomerFlow.CustomerVisualRoot.activeSelf, Is.False);
                 Assert.That(marker.CustomerFlow.CustomerVisualRoot.layer,
                     Is.EqualTo(LayerMask.NameToLayer("Interactable")));
-                Assert.That(marker.CustomerFlow.CustomerVisualRoot.GetComponent<CapsuleCollider>(),
-                    Is.Not.Null);
+                CapsuleCollider customerFocusCollider =
+                    marker.CustomerFlow.CustomerVisualRoot.GetComponent<CapsuleCollider>();
+                Assert.That(customerFocusCollider, Is.Not.Null);
+                Assert.That(customerFocusCollider.isTrigger, Is.True);
                 Assert.That(marker.CustomerFlow.CustomerStatusText.text,
                     Does.Contain("MÜŞTERİ AKIŞI: TEKLİF BEKLİYOR"));
                 Assert.That(marker.CustomerFlow.CustomerSpeechText, Is.Not.Null);
@@ -175,6 +180,33 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.CustomerFlow.BrowseWaypoint, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.CheckoutWaypoint, Is.Not.Null);
                 Assert.That(marker.CustomerFlow.ExitWaypoint, Is.Not.Null);
+                Assert.That(checkoutStations.Length, Is.EqualTo(1));
+                CheckoutStationProjection checkoutStation = checkoutStations[0];
+                Assert.That(marker.CheckoutStation, Is.SameAs(checkoutStation));
+                Assert.That(checkoutStation.StationIdValue,
+                    Is.EqualTo(CheckoutStationProjection.PrototypeStationIdValue));
+                Assert.That(checkoutStation.StationId.Value,
+                    Is.EqualTo(CheckoutStationProjection.PrototypeStationIdValue));
+                Assert.That(checkoutStation.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(checkoutStation.CustomerFlow, Is.SameAs(marker.CustomerFlow));
+                Assert.That(checkoutStation.PlayerInput, Is.SameAs(marker.PlayerInput));
+                Assert.That(checkoutStation.PlayerMotor, Is.SameAs(marker.PlayerMotor));
+                Assert.That(checkoutStation.PlayerCamera, Is.SameAs(camera));
+                Assert.That(checkoutStation.InteractionCollider, Is.Not.Null);
+                Assert.That(checkoutStation.InteractionCollider.gameObject.name,
+                    Is.EqualTo("CheckoutPlayerTerminal"));
+                Assert.That(checkoutStation.InteractionCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(checkoutStation.StationStatusText, Is.Not.Null);
+                Assert.That(checkoutStation.StationStatusText.text,
+                    Does.Contain("KASA İSTASYONU"));
+                Assert.That(checkoutStation.InteractionRange,
+                    Is.EqualTo(CheckoutStationProjection.DefaultInteractionRange).Within(0.001f));
+                Assert.That(checkoutStation.FocusDegrees,
+                    Is.EqualTo(CheckoutStationProjection.DefaultFocusDegrees).Within(0.001f));
+                GaragePrototypeHud hud = FindInScene<GaragePrototypeHud>(scene);
+                Assert.That(hud, Is.Not.Null);
+                Assert.That(hud.CheckoutStation, Is.SameAs(checkoutStation));
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -261,7 +293,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-customer-consultation-r20-v1"));
+                    Is.EqualTo("garage-physical-checkout-station-r21-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

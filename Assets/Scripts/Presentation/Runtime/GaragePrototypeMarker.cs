@@ -17,7 +17,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-customer-consultation-r20-v1";
+        public const string Version = "garage-physical-checkout-station-r21-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -25,6 +25,7 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private TransportCartProjection transportCart;
         [SerializeField] private GarageStockFlowRuntime stockFlow;
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
+        [SerializeField] private CheckoutStationProjection checkoutStation;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -38,13 +39,16 @@ namespace PCShopEmpire3D.Presentation
 
         public GarageCustomerFlowRuntime CustomerFlow => customerFlow;
 
+        public CheckoutStationProjection CheckoutStation => checkoutStation;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
             PlayerCarryController carry,
             TransportCartProjection cart,
             GarageStockFlowRuntime garageStockFlow = null,
-            GarageCustomerFlowRuntime garageCustomerFlow = null)
+            GarageCustomerFlowRuntime garageCustomerFlow = null,
+            CheckoutStationProjection physicalCheckoutStation = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -52,6 +56,7 @@ namespace PCShopEmpire3D.Presentation
             transportCart = cart;
             stockFlow = garageStockFlow;
             customerFlow = garageCustomerFlow;
+            checkoutStation = physicalCheckoutStation;
         }
 
         private void Start()
@@ -133,6 +138,11 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerNavigation = customerFlow != null &&
                                          customerFlow.NavigationReady &&
                                          customerFlow.CustomerAgent != null;
+            bool hasPhysicalCheckoutStation = checkoutStation != null &&
+                                              checkoutStation.InteractionCollider != null &&
+                                              checkoutStation.StationStatusText != null &&
+                                              checkoutStation.StationIdValue ==
+                                                  CheckoutStationProjection.PrototypeStationIdValue;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -161,6 +171,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
+                $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool runCartSmoke = Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke");
@@ -485,7 +496,8 @@ namespace PCShopEmpire3D.Presentation
                 repeatedBeginAfterCompletion.IsSuccess &&
                 checkoutSession.TryGetPrototypeCheckoutCompletion(
                     out RetailCheckoutCompletionRecord completionRecord) &&
-                checkoutSession.TryGetPrototypeCheckoutSettlement(
+                checkoutSession.CheckoutSettlements.TryGetSettlement(
+                    checkoutSession.PrototypeCheckoutSettlementId,
                     out CheckoutSettlementReceipt settlementReceipt) &&
                 checkoutSession.TryGetPrototypeLedgerTransaction(
                     out EconomyLedgerTransactionRecord ledgerTransaction) &&
@@ -609,8 +621,10 @@ namespace PCShopEmpire3D.Presentation
             InventoryItemWorldBinding liveBinding = stockFlow != null
                 ? stockFlow.ItemBinding
                 : null;
-            if (playerMotor == null || session == null || customerFlow == null ||
+            if (playerMotor == null || playerCarry == null || session == null ||
+                customerFlow == null || checkoutStation == null ||
                 liveBinding == null || liveBinding.Projection == null ||
+                checkoutStation.InteractionCollider == null ||
                 !customerFlow.NavigationReady || customerFlow.CustomerAgent == null)
             {
                 playerMotor?.SetPaused(false);
@@ -881,8 +895,52 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
-            OperationResult beginCheckout = liveBinding.TryBeginCheckout();
-            OperationResult settleCash = liveBinding.TrySettleCashCheckout();
+            long shelfCheckoutRevision = session.RetailCheckouts.Revision;
+            long shelfEconomyRevision = session.CheckoutSettlements.Revision;
+            MovePlayerToPhysicalItem(liveBinding.Projection, -Vector3.right, 1.25f);
+            playerCarry.ProcessInputFrame();
+            bool shelfBypassBlocked = playerCarry.FocusedItem == liveBinding.Projection &&
+                                      liveBinding.RequiresCheckoutStart &&
+                                      playerCarry.PromptText.Contains("KASA İSTASYONUNA GİT") &&
+                                      session.RetailCheckouts.Revision == shelfCheckoutRevision &&
+                                      session.CheckoutSettlements.Revision == shelfEconomyRevision;
+            if (!shelfBypassBlocked)
+            {
+                LogCustomerFlowSmokeFailure("smoke.shelf-checkout-bypass");
+                yield break;
+            }
+
+            MovePlayerToCheckoutStation(1.45f);
+            checkoutStation.RefreshPresentation();
+            if (!checkoutStation.IsFocused ||
+                !checkoutStation.PromptText.Contains("KASAYI BAŞLAT"))
+            {
+                LogCustomerFlowSmokeFailure(
+                    string.IsNullOrEmpty(checkoutStation.LastFailureCode)
+                        ? "smoke.checkout-station-focus-missing"
+                        : checkoutStation.LastFailureCode);
+                yield break;
+            }
+
+            OperationResult beginCheckout = checkoutStation.TryOperate();
+            bool checkoutStartedAtStation = beginCheckout.IsSuccess &&
+                                            liveBinding.RequiresCheckoutCompletion &&
+                                            session.RetailCheckouts.Revision ==
+                                                shelfCheckoutRevision + 1 &&
+                                            session.CheckoutSettlements.Revision ==
+                                                shelfEconomyRevision &&
+                                            checkoutStation.PromptText.Contains(
+                                                "NAKİT ÖDEMEYİ AL");
+            if (checkoutStartedAtStation)
+            {
+                yield return null;
+                checkoutStation.RefreshPresentation();
+            }
+
+            OperationResult settleCash = checkoutStartedAtStation
+                ? checkoutStation.TryOperate()
+                : OperationResult.Fail(
+                    Failure.FromCode("smoke.checkout-station-start-mismatch"));
             if (beginCheckout.IsFailure || settleCash.IsFailure)
             {
                 LogCustomerFlowSmokeFailure(
@@ -900,7 +958,14 @@ namespace PCShopEmpire3D.Presentation
             }
 
             stockFlow.RefreshPresentation();
-            bool fulfilled = session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord exitedVisit) &&
+            bool hasExitedVisit = session.TryGetPrototypeCustomerVisit(
+                out CustomerVisitRecord exitedVisit);
+            bool hasFulfilledReceipt = session.TryGetPrototypeCheckoutSettlement(
+                out CheckoutSettlementReceipt fulfilledReceipt);
+            bool hasFulfilledTransaction = session.TryGetPrototypeLedgerTransaction(
+                out EconomyLedgerTransactionRecord fulfilledTransaction);
+            bool invariantsValid = session.ValidateInvariants().IsSuccess;
+            bool fulfilled = hasExitedVisit &&
                              exitedVisit.State == CustomerVisitState.Exited &&
                              exitedVisit.ExitReason == CustomerVisitExitReason.Fulfilled &&
                              !exitedVisit.RouteFallbackUsed &&
@@ -911,25 +976,38 @@ namespace PCShopEmpire3D.Presentation
                              session.RetailCheckouts.CompletionCount == 1 &&
                              session.CheckoutSettlements.SettlementCount == 1 &&
                              session.CheckoutSettlements.TransactionCount == 1 &&
-                             session.TryGetPrototypeCheckoutSettlement(
-                                 out CheckoutSettlementReceipt fulfilledReceipt) &&
+                             hasFulfilledReceipt &&
                              fulfilledReceipt.PaymentMethod == CheckoutPaymentMethod.Cash &&
                              fulfilledReceipt.GrossMinorUnits ==
                                  GarageStockFlowSession.PrototypePriceMinorUnits &&
                              fulfilledReceipt.CostOfGoodsSoldMinorUnits ==
                                  GarageStockFlowSession.PrototypeUnitCostMinorUnits &&
-                             session.TryGetPrototypeLedgerTransaction(
-                                 out EconomyLedgerTransactionRecord fulfilledTransaction) &&
+                             hasFulfilledTransaction &&
                              fulfilledTransaction.Entries.Count == 4 &&
                              fulfilledTransaction.Entries[0].MinorUnits +
                                  fulfilledTransaction.Entries[2].MinorUnits ==
                                  fulfilledTransaction.Entries[1].MinorUnits +
                                  fulfilledTransaction.Entries[3].MinorUnits &&
                              !liveBinding.Projection.gameObject.activeSelf &&
-                             session.ValidateInvariants().IsSuccess;
+                             invariantsValid;
             if (!fulfilled)
             {
-                LogCustomerFlowSmokeFailure("smoke.fulfilled-exit-mismatch");
+                LogCustomerFlowSmokeFailure(
+                    "smoke.fulfilled-exit-mismatch " +
+                    $"visit={(hasExitedVisit ? exitedVisit.State.ToString() : "missing")} " +
+                    $"reason={(hasExitedVisit ? exitedVisit.ExitReason.ToString() : "missing")} " +
+                    $"fallback={(hasExitedVisit && exitedVisit.RouteFallbackUsed ? "yes" : "no")} " +
+                    $"route-failures={(hasExitedVisit ? exitedVisit.TotalRouteFailureCount.ToString() : "missing")} " +
+                    $"visible={(customerFlow.CustomerVisible ? "yes" : "no")} " +
+                    $"stock={session.Inventory.GetTotalQuantity(session.ProductId).Value} " +
+                    $"basket={session.RetailBaskets.Count} " +
+                    $"completion={session.RetailCheckouts.CompletionCount} " +
+                    $"settlement={session.CheckoutSettlements.SettlementCount} " +
+                    $"transaction={session.CheckoutSettlements.TransactionCount} " +
+                    $"receipt={(hasFulfilledReceipt ? "ok" : "missing")} " +
+                    $"ledger={(hasFulfilledTransaction ? "ok" : "missing")} " +
+                    $"projection={(liveBinding.Projection.gameObject.activeSelf ? "visible" : "hidden")} " +
+                    $"invariants={(invariantsValid ? "ok" : "failed")}");
                 yield break;
             }
 
@@ -1348,7 +1426,9 @@ namespace PCShopEmpire3D.Presentation
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
                 "pause=ok consultation=ok consultation-replay=ok decision-gated=ok " +
                 "stale-consultation-blocked=ok offer-decision=ok buy-action=ok " +
-                "stale-blocked=ok fulfilled=ok " +
+                "stale-blocked=ok awaiting-checkout-gate=ok fulfilled=ok " +
+                "checkout-station=ok station-focus=ok station-los=ok " +
+                "shelf-bypass-blocked=ok checkout-start=ok " +
                 "cash-payment=ok payment-receipt=ok economy-settlement=ok cash-ledger=ok " +
                 "leave-action=ok stale-leave-blocked=ok " +
                 "domain-route-fallback=ok domain-timeout-fallback=ok " +
@@ -1455,6 +1535,58 @@ namespace PCShopEmpire3D.Presentation
             Vector3 playerPosition = handle - (cart.transform.forward * distance);
             playerPosition.y = 0.05f;
             SetPlayerPose(playerPosition, Quaternion.Euler(0f, cart.transform.eulerAngles.y, 0f));
+        }
+
+        private void MovePlayerToCheckoutStation(float distance)
+        {
+            Collider targetCollider = checkoutStation.InteractionCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 approach = -targetCollider.transform.forward;
+            approach.y = 0f;
+            approach.Normalize();
+            Vector3 playerPosition = target + (approach * distance);
+            playerPosition.y = 0.05f;
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
+            if (cameraPivot != null)
+            {
+                cameraPivot.rotation = Quaternion.LookRotation(
+                    target - cameraPivot.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToPhysicalItem(
+            PhysicalItemProjection item,
+            Vector3 approachDirection,
+            float distance)
+        {
+            Vector3 target = item.Body != null
+                ? item.Body.worldCenterOfMass
+                : item.transform.position;
+            Vector3 approach = approachDirection.normalized;
+            Vector3 playerPosition = target + (approach * distance);
+            playerPosition.y = 0.05f;
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
+            if (cameraPivot != null)
+            {
+                cameraPivot.rotation = Quaternion.LookRotation(
+                    target - cameraPivot.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
         }
 
         private void MovePlayerBy(Vector3 delta)

@@ -74,6 +74,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 GameObject customerVisualRoot,
                 TextMesh customerStatusText,
                 TextMesh customerSpeechText,
+                CheckoutStationProjection checkoutStation,
+                Collider checkoutInteractionCollider,
+                TextMesh checkoutStatusText,
                 Transform entranceWaypoint,
                 Transform browseWaypoint,
                 Transform checkoutWaypoint,
@@ -84,6 +87,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 CustomerVisualRoot = customerVisualRoot;
                 CustomerStatusText = customerStatusText;
                 CustomerSpeechText = customerSpeechText;
+                CheckoutStation = checkoutStation;
+                CheckoutInteractionCollider = checkoutInteractionCollider;
+                CheckoutStatusText = checkoutStatusText;
                 EntranceWaypoint = entranceWaypoint;
                 BrowseWaypoint = browseWaypoint;
                 CheckoutWaypoint = checkoutWaypoint;
@@ -99,6 +105,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public TextMesh CustomerStatusText { get; }
 
             public TextMesh CustomerSpeechText { get; }
+
+            public CheckoutStationProjection CheckoutStation { get; }
+
+            public Collider CheckoutInteractionCollider { get; }
+
+            public TextMesh CheckoutStatusText { get; }
 
             public Transform EntranceWaypoint { get; }
 
@@ -379,10 +391,30 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 customerFlowBuild.BrowseWaypoint,
                 customerFlowBuild.CheckoutWaypoint,
                 customerFlowBuild.ExitWaypoint);
+            customerFlowBuild.CheckoutStation.Configure(
+                stockFlow,
+                customerFlow,
+                input,
+                motor,
+                playerCamera,
+                customerFlowBuild.CheckoutInteractionCollider,
+                customerFlowBuild.CheckoutStatusText);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
-            marker.Configure(motor, input, carry, transportCart, stockFlow, customerFlow);
+            marker.Configure(
+                motor,
+                input,
+                carry,
+                transportCart,
+                stockFlow,
+                customerFlow,
+                customerFlowBuild.CheckoutStation);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
-            hud.Configure(motor, carry, stockFlow, customerFlow);
+            hud.Configure(
+                motor,
+                carry,
+                stockFlow,
+                customerFlow,
+                customerFlowBuild.CheckoutStation);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",
@@ -1540,7 +1572,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform checkout = CreateWaypoint(
                 "CustomerCheckoutWaypoint",
                 waypoints,
-                new Vector3(0.65f, 0f, 2.35f));
+                new Vector3(1.85f, 0f, 2.45f));
             Transform exit = CreateWaypoint(
                 "CustomerExitWaypoint",
                 waypoints,
@@ -1577,6 +1609,31 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(0.07f, 0.22f, 0.07f),
                 counterBody);
 
+            GameObject checkoutTerminal = CreateBeveledCube(
+                "CheckoutPlayerTerminal",
+                checkoutStation,
+                new Vector3(0.65f, 1.34f, 2.68f),
+                new Vector3(0.68f, 0.48f, 0.055f),
+                0.014f,
+                statusScreen);
+            checkoutTerminal.layer = LayerMask.NameToLayer(InteractableLayerName);
+            Collider checkoutInteractionCollider = checkoutTerminal.GetComponent<Collider>();
+            Require(
+                checkoutInteractionCollider != null,
+                "Checkout player terminal is missing its interaction collider.");
+            TextMesh checkoutStatusText = new GameObject("CheckoutStationStatusText")
+                .AddComponent<TextMesh>();
+            checkoutStatusText.transform.SetParent(checkoutTerminal.transform, false);
+            checkoutStatusText.transform.localPosition = new Vector3(0f, 0f, -0.040f);
+            checkoutStatusText.anchor = TextAnchor.MiddleCenter;
+            checkoutStatusText.alignment = TextAlignment.Center;
+            checkoutStatusText.characterSize = 0.026f;
+            checkoutStatusText.fontSize = 42;
+            checkoutStatusText.color = new Color(0.88f, 0.96f, 0.98f);
+            checkoutStatusText.text = "KASA İSTASYONU\nMÜŞTERİYİ BEKLİYOR";
+            CheckoutStationProjection checkoutProjection =
+                checkoutStation.gameObject.AddComponent<CheckoutStationProjection>();
+
             GameObject flowBoard = CreateBeveledCube(
                 "CustomerFlowStatusBoard",
                 checkoutStation,
@@ -1604,6 +1661,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             customerFocusCollider.center = new Vector3(0f, 0.90f, 0f);
             customerFocusCollider.radius = 0.34f;
             customerFocusCollider.height = 1.80f;
+            customerFocusCollider.isTrigger = true;
 
             CreateBeveledCube(
                 "CustomerTorso",
@@ -1708,6 +1766,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 customer,
                 flowText,
                 identityText,
+                checkoutProjection,
+                checkoutInteractionCollider,
+                checkoutStatusText,
                 entrance,
                 browse,
                 checkout,

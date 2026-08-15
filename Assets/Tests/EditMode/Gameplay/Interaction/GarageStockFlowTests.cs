@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Core.Primitives;
@@ -483,7 +484,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
             Assert.That(fixture.Binding.TryBeginCheckout().Error,
                 Is.EqualTo(StockProjectionFailures.CustomerReservationMissing));
-            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
+            PreparePrototypeCustomerBuyForCheckout(fixture.Session);
             Assert.That(fixture.Binding.RequiresCheckoutStart, Is.True);
             long inventoryRevision = fixture.Session.Inventory.Revision;
             long basketRevision = fixture.Session.RetailBaskets.Revision;
@@ -518,7 +519,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Session.TransferItem(
                 fixture.Session.ShelfContainerId).IsSuccess, Is.True);
             Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
-            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
+            PreparePrototypeCustomerBuyForCheckout(fixture.Session);
             Assert.That(fixture.Binding.TryBeginCheckout().IsSuccess, Is.True);
             Assert.That(fixture.Binding.RequiresCheckoutCompletion, Is.True);
             long inventoryRevision = fixture.Session.Inventory.Revision;
@@ -673,6 +674,154 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void BindingRejectsCheckoutWithoutExactCustomerBuyProvenance()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+            Assert.That(fixture.Session.TransferItem(
+                fixture.Session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
+            Assert.That(fixture.Session.StartPrototypeCustomerVisit(Timestamp(10)).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Session.MarkPrototypeCustomerBrowseArrival(Timestamp(11)).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Session.BeginPrototypeCustomerCheckoutNavigation(
+                Timestamp(12)).IsSuccess, Is.True);
+            Assert.That(fixture.Session.MarkPrototypeCustomerCheckoutArrival(
+                Timestamp(13)).IsSuccess, Is.True);
+
+            long actorRevision = fixture.Session.CustomerVisits.Revision;
+            long consultationRevision = fixture.Session.CustomerConsultations.Revision;
+            long actionRevision = fixture.Session.CustomerOfferActions.Revision;
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+            long offerRevision = fixture.Session.RetailOffers.Revision;
+            long basketRevision = fixture.Session.RetailBaskets.Revision;
+            long checkoutRevision = fixture.Session.RetailCheckouts.Revision;
+            long economyRevision = fixture.Session.CheckoutSettlements.Revision;
+
+            OperationResult result = fixture.Binding.TryBeginCheckout();
+
+            Assert.That(result.Error,
+                Is.EqualTo(StockProjectionFailures.CheckoutProvenanceMismatch));
+            Assert.That(fixture.Session.CustomerVisits.Revision, Is.EqualTo(actorRevision));
+            Assert.That(fixture.Session.CustomerConsultations.Revision,
+                Is.EqualTo(consultationRevision));
+            Assert.That(fixture.Session.CustomerOfferActions.Revision,
+                Is.EqualTo(actionRevision));
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Session.RetailOffers.Revision, Is.EqualTo(offerRevision));
+            Assert.That(fixture.Session.RetailBaskets.Revision, Is.EqualTo(basketRevision));
+            Assert.That(fixture.Session.RetailCheckouts.Revision, Is.EqualTo(checkoutRevision));
+            Assert.That(fixture.Session.CheckoutSettlements.Revision,
+                Is.EqualTo(economyRevision));
+            Assert.That(fixture.Session.RetailCheckouts.Count, Is.Zero);
+            Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void CanonicalSettlementIdentityCannotMaskForeignCheckoutReceipt()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
+            Assert.That(session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(session.PublishShelfOffer().IsSuccess, Is.True);
+            Assert.That(session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
+
+            StableId<RetailCheckoutIdScope> foreignCheckoutId =
+                StableId<RetailCheckoutIdScope>.Parse(
+                    "retail.checkout.foreign-prototype-receipt");
+            StableId<RetailCheckoutCompletionIdScope> foreignCompletionId =
+                StableId<RetailCheckoutCompletionIdScope>.Parse(
+                    "retail.checkout-completion.foreign-prototype-receipt");
+            Assert.That(session.RetailCheckouts.BeginCheckout(
+                foreignCheckoutId,
+                session.PrototypeBasketId,
+                session.PrototypeCustomerId,
+                Timestamp(20)).IsSuccess, Is.True);
+            Assert.That(session.CheckoutSettlements.SettleCashCheckout(
+                session.PrototypeCheckoutSettlementId,
+                session.PrototypeLedgerTransactionId,
+                foreignCompletionId,
+                foreignCheckoutId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits,
+                Timestamp(21)).IsSuccess, Is.True);
+
+            Assert.That(session.CheckoutSettlements.TryGetSettlement(
+                session.PrototypeCheckoutSettlementId,
+                out CheckoutSettlementReceipt rawReceipt), Is.True);
+            Assert.That(rawReceipt.CheckoutId, Is.EqualTo(foreignCheckoutId));
+            Assert.That(rawReceipt.CompletionId, Is.EqualTo(foreignCompletionId));
+            Assert.That(session.TryGetPrototypeCheckoutSettlement(out _), Is.False);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PrototypeCheckoutMutatorsAreNotProductionPublic()
+        {
+            Assert.That(
+                typeof(GarageStockFlowSession).GetMethod(
+                    "BeginPrototypeCheckout",
+                    BindingFlags.Instance | BindingFlags.Public),
+                Is.Null);
+            Assert.That(
+                typeof(GarageStockFlowSession).GetMethod(
+                    "BeginPrototypeCheckout",
+                    BindingFlags.Instance | BindingFlags.NonPublic),
+                Is.Not.Null);
+            Assert.That(
+                typeof(CheckoutStationProjection).GetMethod(
+                    "TryOperate",
+                    BindingFlags.Instance | BindingFlags.Public),
+                Is.Null);
+            Assert.That(
+                typeof(CheckoutStationProjection).GetMethod(
+                    "TryOperate",
+                    BindingFlags.Instance | BindingFlags.NonPublic),
+                Is.Not.Null);
+        }
+
+        [TestCase(5L, 7L)]
+        [TestCase(6L, 8L)]
+        public void CanonicalSettlementRejectsForeignCheckoutOrPaymentTimestamp(
+            long checkoutTick,
+            long paymentTick)
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived();
+            Assert.That(session.AcceptArrivedDelivery().IsSuccess, Is.True);
+            Assert.That(session.TransferItem(session.ShelfContainerId).IsSuccess, Is.True);
+            Assert.That(session.PublishShelfOffer().IsSuccess, Is.True);
+            PreparePrototypeCustomerBuyForCheckout(session);
+
+            Assert.That(session.RetailCheckouts.BeginCheckout(
+                session.PrototypeCheckoutId,
+                session.PrototypeBasketId,
+                session.PrototypeCustomerId,
+                Timestamp(checkoutTick)).IsSuccess, Is.True);
+            Assert.That(session.CheckoutSettlements.SettleCashCheckout(
+                session.PrototypeCheckoutSettlementId,
+                session.PrototypeLedgerTransactionId,
+                session.PrototypeCheckoutCompletionId,
+                session.PrototypeCheckoutId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits,
+                Timestamp(paymentTick)).IsSuccess, Is.True);
+
+            Assert.That(session.CheckoutSettlements.TryGetSettlement(
+                session.PrototypeCheckoutSettlementId,
+                out _), Is.True);
+            Assert.That(session.TryGetPrototypeCheckoutSettlement(out _), Is.False);
+            Assert.That(session.TryGetPrototypeCustomerVisit(
+                out CustomerVisitRecord visit), Is.True);
+            Assert.That(visit.State, Is.EqualTo(CustomerVisitState.AwaitingCheckout));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private Fixture CreateBindingFixture()
         {
             _root = new GameObject("StockFlowTestRoot");
@@ -730,6 +879,26 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                     unitCost).IsSuccess,
                     Is.True);
             }
+        }
+
+        private static void PreparePrototypeCustomerBuyForCheckout(
+            GarageStockFlowSession session)
+        {
+            Assert.That(session.StartPrototypeCustomerVisit(Timestamp(10)).IsSuccess, Is.True);
+            Assert.That(session.MarkPrototypeCustomerBrowseArrival(Timestamp(11)).IsSuccess,
+                Is.True);
+            Assert.That(session.ConsultPrototypeCustomer(Timestamp(12)).IsSuccess, Is.True);
+            OperationResult<CustomerOfferDecision> decision =
+                session.EvaluatePrototypeCustomerOffer();
+            Assert.That(decision.IsSuccess, Is.True,
+                decision.IsFailure ? decision.Error.Code : string.Empty);
+            Assert.That(session.ApplyPrototypeCustomerBuy(
+                decision.Value,
+                Timestamp(13)).IsSuccess, Is.True);
+            Assert.That(session.MarkPrototypeCustomerCheckoutArrival(Timestamp(14)).IsSuccess,
+                Is.True);
+            Assert.That(session.ValidatePrototypeCustomerCheckoutProvenance().IsSuccess,
+                Is.True);
         }
 
         private static void AssertLedgerEntry(

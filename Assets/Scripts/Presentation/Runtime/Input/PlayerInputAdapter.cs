@@ -20,8 +20,11 @@ namespace PCShopEmpire3D.Presentation.Input
         private InputAction _drop;
         private InputAction _rotatePlacement;
         private InputAction _pause;
+        private InputAction _subscribedPrimaryAction;
         private InputAction _subscribedInteract;
         private bool _ownsRuntimeActions;
+        private long _primaryPressVersion;
+        private long _primaryConsumedVersion = -1;
         private long _interactPressVersion;
         private long _interactConsumedVersion = -1;
 
@@ -33,7 +36,9 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public bool SprintHeld => _sprint?.IsPressed() ?? false;
 
-        public bool PrimaryActionPressedThisFrame => _primaryAction?.WasPressedThisFrame() ?? false;
+        public bool PrimaryActionPressedThisFrame =>
+            (_primaryAction?.WasPressedThisFrame() ?? false) &&
+            _primaryConsumedVersion != _primaryPressVersion;
 
         public bool InteractPressedThisFrame =>
             (_interact?.WasPressedThisFrame() ?? false) &&
@@ -68,6 +73,17 @@ namespace PCShopEmpire3D.Presentation.Input
             return true;
         }
 
+        public bool TryConsumePrimaryActionPressThisFrame()
+        {
+            if (!PrimaryActionPressedThisFrame)
+            {
+                return false;
+            }
+
+            _primaryConsumedVersion = _primaryPressVersion;
+            return true;
+        }
+
         public void Configure(InputActionAsset inputActions)
         {
             if (inputActions == null)
@@ -80,6 +96,8 @@ namespace PCShopEmpire3D.Presentation.Input
                 ReplaceActions(inputActions, Application.isPlaying);
             }
 
+            _primaryPressVersion = 0;
+            _primaryConsumedVersion = -1;
             _interactPressVersion = 0;
             _interactConsumedVersion = -1;
             CacheActions();
@@ -108,6 +126,7 @@ namespace PCShopEmpire3D.Presentation.Input
 
         private void OnDestroy()
         {
+            SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
             if (_ownsRuntimeActions && actions != null)
             {
@@ -121,6 +140,7 @@ namespace PCShopEmpire3D.Presentation.Input
             bool destroyPreviousActions = _ownsRuntimeActions && previousActions != null;
 
             _playerMap?.Disable();
+            SetPrimaryActionSubscription(null);
             SetInteractSubscription(null);
             _playerMap = null;
             _move = null;
@@ -162,6 +182,7 @@ namespace PCShopEmpire3D.Presentation.Input
             _move = _playerMap.FindAction(PlayerInputContract.Move, true);
             _look = _playerMap.FindAction(PlayerInputContract.Look, true);
             _primaryAction = _playerMap.FindAction(PlayerInputContract.PrimaryAction, true);
+            SetPrimaryActionSubscription(_primaryAction);
             _interact = _playerMap.FindAction(PlayerInputContract.Interact, true);
             SetInteractSubscription(_interact);
             _sprint = _playerMap.FindAction(PlayerInputContract.Sprint, true);
@@ -191,6 +212,37 @@ namespace PCShopEmpire3D.Presentation.Input
             {
                 _subscribedInteract.performed += OnInteractPerformed;
             }
+        }
+
+        private void SetPrimaryActionSubscription(InputAction primaryAction)
+        {
+            if (ReferenceEquals(_subscribedPrimaryAction, primaryAction))
+            {
+                return;
+            }
+
+            if (_subscribedPrimaryAction != null)
+            {
+                _subscribedPrimaryAction.performed -= OnPrimaryActionPerformed;
+            }
+
+            _subscribedPrimaryAction = primaryAction;
+            if (_subscribedPrimaryAction != null)
+            {
+                _subscribedPrimaryAction.performed += OnPrimaryActionPerformed;
+            }
+        }
+
+        private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
+        {
+            if (_primaryPressVersion == long.MaxValue)
+            {
+                _primaryPressVersion = 0;
+                _primaryConsumedVersion = -1;
+                return;
+            }
+
+            _primaryPressVersion++;
         }
 
         private void OnInteractPerformed(InputAction.CallbackContext context)

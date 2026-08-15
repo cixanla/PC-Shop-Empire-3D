@@ -449,7 +449,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return RetailBaskets.TryGetLine(PrototypeBasketLineId, out line);
         }
 
-        public OperationResult BeginPrototypeCheckout()
+        internal OperationResult BeginPrototypeCheckout()
         {
             return RetailCheckouts.BeginCheckout(
                 PrototypeCheckoutId,
@@ -458,17 +458,102 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 Time(6));
         }
 
+        internal OperationResult BeginPrototypeCustomerCheckout()
+        {
+            OperationResult provenance = ValidatePrototypeCustomerCheckoutProvenance();
+            return provenance.IsFailure
+                ? provenance
+                : BeginPrototypeCheckout();
+        }
+
+        internal OperationResult ValidatePrototypeCustomerCheckoutProvenance()
+        {
+            if (!TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit) ||
+                visit.Id != PrototypeCustomerVisitId ||
+                visit.Intent == null ||
+                visit.Intent.Id != PrototypeCustomerIntentId ||
+                visit.Intent.CustomerId != PrototypeActorCustomerId ||
+                visit.Intent.ProductId != ProductId ||
+                visit.State != CustomerVisitState.AwaitingCheckout ||
+                !TryGetPrototypeCustomerBuyAction(
+                    out CustomerOfferDecisionActionRecord action) ||
+                action.Id != PrototypeCustomerBuyActionId ||
+                !action.IsBuy ||
+                !action.HasReservation ||
+                action.CustomerBinding == null ||
+                !action.CustomerBinding.Equals(PrototypeCustomerBinding) ||
+                action.CustomerBinding.Id != PrototypeCustomerBindingId ||
+                action.CustomerBinding.ActorCustomerId != PrototypeActorCustomerId ||
+                action.CustomerBinding.RetailCustomerId != PrototypeCustomerId ||
+                action.SourceDecision == null ||
+                action.SourceDecision.DecisionKind != CustomerOfferDecisionKind.Buy ||
+                action.SourceDecision.ReasonCode !=
+                    CustomerOfferDecisionReasonCodes.BuyExactProductWithinLimit ||
+                action.SourceDecision.VisitId != visit.Id ||
+                action.SourceDecision.CustomerId != visit.Intent.CustomerId ||
+                action.SourceDecision.IntentId != visit.Intent.Id ||
+                action.SourceDecision.IntentProductId != ProductId ||
+                action.SourceDecision.OfferId != ShelfOfferId ||
+                action.SourceDecision.ShelfContainerId != ShelfContainerId ||
+                action.SourceDecision.OfferProductId != ProductId ||
+                action.SourceDecision.Consultation == null ||
+                action.SourceDecision.Consultation.Id !=
+                    PrototypeCustomerConsultationId ||
+                action.SourceDecision.Consultation.VisitId != visit.Id ||
+                action.LineId != PrototypeBasketLineId ||
+                action.BasketId != PrototypeBasketId ||
+                action.ItemId != ItemId ||
+                action.ReservationId != PrototypeReservationId ||
+                action.ClaimId != PrototypeClaimId ||
+                !TryGetPrototypeBasketLine(out RetailBasketLineRecord line) ||
+                line.Id != PrototypeBasketLineId ||
+                line.BasketId != PrototypeBasketId ||
+                line.CustomerId != PrototypeCustomerId ||
+                line.OfferId != ShelfOfferId ||
+                line.ItemId != ItemId ||
+                line.InventoryReservationId != PrototypeReservationId ||
+                line.InventoryClaimId != PrototypeClaimId ||
+                line.OwnerActionId != action.Id ||
+                !TryGetShelfOffer(out ShelfOfferRecord offer) ||
+                offer.Id != ShelfOfferId ||
+                offer.ProductId != ProductId ||
+                offer.ShelfContainerId != ShelfContainerId ||
+                offer.OfferRevision != action.SourceDecision.OfferRevision ||
+                offer.Price != action.SourceDecision.OfferPrice ||
+                !TryGetItem(out InventoryItemRecord item) ||
+                item.Id != ItemId ||
+                item.ProductId != ProductId ||
+                item.ContainerId != ShelfContainerId ||
+                !Inventory.TryGetReservation(
+                    PrototypeReservationId,
+                    out InventoryReservation reservation) ||
+                reservation.Id != PrototypeReservationId ||
+                reservation.ClaimId != PrototypeClaimId ||
+                reservation.TargetKind != InventoryReservationTargetKind.SerializedItem ||
+                reservation.ItemId != ItemId ||
+                !reservation.BatchId.IsEmpty ||
+                !reservation.ContainerId.IsEmpty ||
+                reservation.Quantity != 1 ||
+                reservation.ReleasePolicy != InventoryReservationReleasePolicy.ConsumeOnly)
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CheckoutProvenanceMismatch);
+            }
+
+            return OperationResult.Success();
+        }
+
         public bool TryGetPrototypeCheckout(out RetailCheckoutRecord checkout)
         {
             return RetailCheckouts.TryGetCheckout(PrototypeCheckoutId, out checkout);
         }
 
-        public OperationResult CompletePrototypeCheckout()
+        internal OperationResult CompletePrototypeCheckout()
         {
             return SettlePrototypeCashCheckout();
         }
 
-        public OperationResult SettlePrototypeCashCheckout()
+        internal OperationResult SettlePrototypeCashCheckout()
         {
             return CheckoutSettlements.SettleCashCheckout(
                 PrototypeCheckoutSettlementId,
@@ -491,9 +576,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool TryGetPrototypeCheckoutSettlement(
             out CheckoutSettlementReceipt receipt)
         {
-            return CheckoutSettlements.TryGetSettlement(
-                PrototypeCheckoutSettlementId,
-                out receipt);
+            if (!CheckoutSettlements.TryGetSettlement(
+                    PrototypeCheckoutSettlementId,
+                    out CheckoutSettlementReceipt candidate) ||
+                !IsCanonicalPrototypeSettlement(candidate))
+            {
+                receipt = null;
+                return false;
+            }
+
+            receipt = candidate;
+            return true;
         }
 
         public bool TryGetPrototypeLedgerTransaction(
@@ -606,6 +699,113 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return consultationResult.IsFailure
                 ? consultationResult
                 : CustomerOfferActions.ValidateInvariants();
+        }
+
+        private bool IsCanonicalPrototypeSettlement(CheckoutSettlementReceipt receipt)
+        {
+            if (receipt == null ||
+                receipt.Id != PrototypeCheckoutSettlementId ||
+                receipt.TransactionId != PrototypeLedgerTransactionId ||
+                receipt.CompletionId != PrototypeCheckoutCompletionId ||
+                receipt.CheckoutId != PrototypeCheckoutId ||
+                receipt.CustomerId != PrototypeCustomerId ||
+                receipt.PaymentMethod != CheckoutPaymentMethod.Cash ||
+                receipt.PaidAt != Time(7) ||
+                receipt.Currency.Value != PrototypeCurrencyCode ||
+                receipt.GrossMinorUnits != PrototypePriceMinorUnits ||
+                receipt.CostOfGoodsSoldMinorUnits != PrototypeUnitCostMinorUnits ||
+                !TryGetPrototypeCustomerBuyAction(
+                    out CustomerOfferDecisionActionRecord action) ||
+                !TryGetPrototypeCheckout(out RetailCheckoutRecord checkout) ||
+                checkout.Id != PrototypeCheckoutId ||
+                checkout.BasketId != PrototypeBasketId ||
+                checkout.CustomerId != PrototypeCustomerId ||
+                checkout.StartedAt != Time(6) ||
+                checkout.Currency.Value != PrototypeCurrencyCode ||
+                checkout.TotalMinorUnits != PrototypePriceMinorUnits ||
+                checkout.Lines == null ||
+                checkout.Lines.Count != 1 ||
+                !IsCanonicalPrototypeCheckoutLine(checkout.Lines[0], action) ||
+                !TryGetPrototypeCheckoutCompletion(
+                    out RetailCheckoutCompletionRecord completion) ||
+                completion.Id != PrototypeCheckoutCompletionId ||
+                completion.CheckoutId != PrototypeCheckoutId ||
+                completion.BasketId != PrototypeBasketId ||
+                completion.CustomerId != PrototypeCustomerId ||
+                completion.Currency.Value != PrototypeCurrencyCode ||
+                completion.TotalMinorUnits != PrototypePriceMinorUnits ||
+                completion.Lines == null ||
+                completion.Lines.Count != 1 ||
+                !IsCanonicalPrototypeCheckoutLine(completion.Lines[0], action) ||
+                completion.CompletedAt != receipt.PaidAt ||
+                !CheckoutSettlements.TryGetSettlementForCheckout(
+                    PrototypeCheckoutId,
+                    out CheckoutSettlementReceipt checkoutReceipt) ||
+                checkoutReceipt.Id != receipt.Id ||
+                checkoutReceipt.TransactionId != receipt.TransactionId ||
+                !TryGetPrototypeLedgerTransaction(
+                    out EconomyLedgerTransactionRecord transaction) ||
+                transaction.Id != PrototypeLedgerTransactionId ||
+                transaction.SettlementId != PrototypeCheckoutSettlementId ||
+                transaction.PostedAt != receipt.PaidAt ||
+                transaction.Entries == null ||
+                transaction.Entries.Count != 4)
+            {
+                return false;
+            }
+
+            return IsCanonicalLedgerEntry(
+                       transaction.Entries[0],
+                       EconomyAccountKind.Cash,
+                       EconomyEntryDirection.Debit,
+                       PrototypePriceMinorUnits) &&
+                   IsCanonicalLedgerEntry(
+                       transaction.Entries[1],
+                       EconomyAccountKind.SalesRevenue,
+                       EconomyEntryDirection.Credit,
+                       PrototypePriceMinorUnits) &&
+                   IsCanonicalLedgerEntry(
+                       transaction.Entries[2],
+                       EconomyAccountKind.CostOfGoodsSold,
+                       EconomyEntryDirection.Debit,
+                       PrototypeUnitCostMinorUnits) &&
+                   IsCanonicalLedgerEntry(
+                       transaction.Entries[3],
+                       EconomyAccountKind.InventoryAsset,
+                       EconomyEntryDirection.Credit,
+                       PrototypeUnitCostMinorUnits);
+        }
+
+        private bool IsCanonicalPrototypeCheckoutLine(
+            RetailCheckoutLineSnapshot line,
+            CustomerOfferDecisionActionRecord action)
+        {
+            return line != null &&
+                   action != null &&
+                   line.BasketLineId == PrototypeBasketLineId &&
+                   line.OfferId == ShelfOfferId &&
+                   line.ItemId == ItemId &&
+                   line.InventoryReservationId == PrototypeReservationId &&
+                   line.InventoryClaimId == PrototypeClaimId &&
+                   line.ProductId == ProductId &&
+                   line.ShelfContainerId == ShelfContainerId &&
+                   line.UnitCost.CurrencyCode == PrototypeCurrencyCode &&
+                   line.UnitCost.MinorUnits == PrototypeUnitCostMinorUnits &&
+                   line.UnitPrice == action.SourceDecision.OfferPrice &&
+                   line.SourceOfferRevision == action.SourceDecision.OfferRevision;
+        }
+
+        private static bool IsCanonicalLedgerEntry(
+            EconomyLedgerEntryRecord entry,
+            EconomyAccountKind account,
+            EconomyEntryDirection direction,
+            long minorUnits)
+        {
+            return entry != null &&
+                   entry.Account == account &&
+                   entry.Direction == direction &&
+                   entry.Currency.Value == PrototypeCurrencyCode &&
+                   entry.MinorUnits == minorUnits;
         }
 
         private static void RegisterContainer(

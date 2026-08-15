@@ -6,6 +6,9 @@ using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.EditModeTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.PlayModeTests")]
+
 namespace PCShopEmpire3D.Presentation.Interaction
 {
     [DisallowMultipleComponent]
@@ -512,7 +515,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return result;
         }
 
-        public OperationResult TryBeginCheckout()
+        internal OperationResult TryBeginCheckout()
         {
             OperationResult contract = ValidateContract();
             if (contract.IsFailure)
@@ -535,7 +538,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StockProjectionFailures.CheckoutUnavailable);
             }
 
-            OperationResult result = session.BeginPrototypeCheckout();
+            OperationResult result = session.BeginPrototypeCustomerCheckout();
             if (result.IsSuccess)
             {
                 runtime.RefreshPresentation();
@@ -544,12 +547,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return result;
         }
 
-        public OperationResult TryCompleteCheckout()
+        internal OperationResult TryCompleteCheckout()
         {
             return TrySettleCashCheckout();
         }
 
-        public OperationResult TrySettleCashCheckout()
+        internal OperationResult TrySettleCashCheckout()
         {
             OperationResult contract = ValidateContract();
             if (contract.IsFailure)
@@ -813,6 +816,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Failure.FromCode("stock-projection.customer-reservation-action-owned");
         public static readonly Failure CustomerReserved = Failure.FromCode("stock-projection.customer-reserved");
         public static readonly Failure CheckoutUnavailable = Failure.FromCode("stock-projection.checkout-unavailable");
+        public static readonly Failure CheckoutProvenanceMismatch =
+            Failure.FromCode("stock-projection.checkout-provenance-mismatch");
         public static readonly Failure CheckoutActive = Failure.FromCode("stock-projection.checkout-active");
         public static readonly Failure CheckoutCompletionUnavailable = Failure.FromCode("stock-projection.checkout-completion-unavailable");
         public static readonly Failure PlacementZoneMissing = Failure.FromCode("stock-projection.placement-zone-missing");

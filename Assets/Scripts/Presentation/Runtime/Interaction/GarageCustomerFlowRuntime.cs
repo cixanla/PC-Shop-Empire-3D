@@ -1012,7 +1012,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     out RaycastHit hit,
                     distance + 0.15f,
                     Physics.DefaultRaycastLayers,
-                    QueryTriggerInteraction.Ignore))
+                    QueryTriggerInteraction.Collide))
             {
                 return false;
             }

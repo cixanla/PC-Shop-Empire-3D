@@ -10,17 +10,22 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private PlayerCarryController carryController;
         [SerializeField] private GarageStockFlowRuntime stockFlow;
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
+        [SerializeField] private CheckoutStationProjection checkoutStation;
+
+        public CheckoutStationProjection CheckoutStation => checkoutStation;
 
         public void Configure(
             FirstPersonMotor playerMotor,
             PlayerCarryController playerCarryController,
             GarageStockFlowRuntime garageStockFlow = null,
-            GarageCustomerFlowRuntime garageCustomerFlow = null)
+            GarageCustomerFlowRuntime garageCustomerFlow = null,
+            CheckoutStationProjection physicalCheckoutStation = null)
         {
             motor = playerMotor;
             carryController = playerCarryController;
             stockFlow = garageStockFlow;
             customerFlow = garageCustomerFlow;
+            checkoutStation = physicalCheckoutStation;
         }
 
         private void OnGUI()
@@ -40,10 +45,15 @@ namespace PCShopEmpire3D.Presentation
                     status);
             }
 
+            string stationPrompt = checkoutStation != null
+                ? checkoutStation.PromptText
+                : string.Empty;
             string customerPrompt = customerFlow != null
                 ? customerFlow.ContextualPromptText
                 : string.Empty;
-            string prompt = !string.IsNullOrEmpty(customerPrompt)
+            string prompt = !string.IsNullOrEmpty(stationPrompt)
+                ? stationPrompt
+                : !string.IsNullOrEmpty(customerPrompt)
                 ? customerPrompt
                 : carryController != null
                     ? carryController.PromptText

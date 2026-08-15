@@ -48,7 +48,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Economy
             Assert.That(completion.Lines[0].UnitCost.MinorUnits,
                 Is.EqualTo(GarageStockFlowSession.PrototypeUnitCostMinorUnits));
 
-            Assert.That(session.TryGetPrototypeCheckoutSettlement(
+            Assert.That(session.CheckoutSettlements.TryGetSettlement(
+                session.PrototypeCheckoutSettlementId,
                 out CheckoutSettlementReceipt receipt), Is.True);
             Assert.That(receipt.Id, Is.EqualTo(session.PrototypeCheckoutSettlementId));
             Assert.That(receipt.TransactionId, Is.EqualTo(session.PrototypeLedgerTransactionId));
@@ -196,7 +197,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Economy
         {
             GarageStockFlowSession session = CreateReadyCheckout();
             Assert.That(session.SettlePrototypeCashCheckout().IsSuccess, Is.True);
-            Assert.That(session.TryGetPrototypeCheckoutSettlement(
+            Assert.That(session.CheckoutSettlements.TryGetSettlement(
+                session.PrototypeCheckoutSettlementId,
                 out CheckoutSettlementReceipt originalReceipt), Is.True);
             Assert.That(session.TryGetPrototypeLedgerTransaction(
                 out EconomyLedgerTransactionRecord originalTransaction), Is.True);
@@ -206,7 +208,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Economy
 
             Assert.That(replay.IsSuccess, Is.True);
             settled.AssertUnchanged(session);
-            Assert.That(session.TryGetPrototypeCheckoutSettlement(
+            Assert.That(session.CheckoutSettlements.TryGetSettlement(
+                session.PrototypeCheckoutSettlementId,
                 out CheckoutSettlementReceipt replayedReceipt), Is.True);
             Assert.That(session.TryGetPrototypeLedgerTransaction(
                 out EconomyLedgerTransactionRecord replayedTransaction), Is.True);

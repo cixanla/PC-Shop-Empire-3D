@@ -151,27 +151,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 {
                     if (binding.RequiresCheckoutCompletion)
                     {
-                        string paymentFailure = LastFailureCode.StartsWith(
-                            "economy.checkout-settlement.",
-                            StringComparison.Ordinal)
-                            ? $"   |   ÖDEME ENGELLİ: {LastFailureCode}"
-                            : string.Empty;
-                        return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
-                               "nakit ödemeyi al   |   " +
+                        return "KASA İSTASYONUNA GİT   |   " +
                                $"KASA: {binding.Runtime.CheckoutStatusText}   |   " +
-                               "REZERVASYON KİLİTLİ" + paymentFailure;
+                               "REZERVASYON KİLİTLİ";
                     }
 
                     if (binding.IsCustomerReservationActionOwned)
                     {
-                        return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
-                               "kasayı başlat   |   SATIN ALMA ONAYLANDI   |   " +
+                        return "KASA İSTASYONUNA GİT   |   SATIN ALMA ONAYLANDI   |   " +
                                "REZERVASYON KİLİTLİ";
                     }
 
-                    return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
-                           "kasayı başlat   |   " +
-                           $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
+                    return $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
                            "müşteri rezervasyonunu kaldır   |   MÜŞTERİ İÇİN AYRILDI";
                 }
 
@@ -648,21 +639,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : VisibleHandsState.Empty);
 
             InventoryItemWorldBinding focusedBinding = GetInventoryBinding(FocusedItem);
-            if (focusedBinding != null &&
-                focusedBinding.RequiresCheckoutCompletion &&
-                input.PrimaryActionPressedThisFrame)
-            {
-                Remember(focusedBinding.TrySettleCashCheckout());
-                return;
-            }
-
-            if (focusedBinding != null &&
-                focusedBinding.RequiresCheckoutStart &&
-                input.PrimaryActionPressedThisFrame)
-            {
-                Remember(focusedBinding.TryBeginCheckout());
-                return;
-            }
 
             if (focusedBinding != null && input.DropPressedThisFrame)
             {
