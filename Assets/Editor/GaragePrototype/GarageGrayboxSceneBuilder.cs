@@ -1342,7 +1342,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             statusText.fontSize = 46;
             statusText.color = new Color(0.90f, 0.94f, 0.96f);
             statusText.text = "SİPARİŞ: GELDİ • KABUL BEKLİYOR\nKOLİ: KAPALI\n" +
-                              "ÜRÜN: KABUL BEKLİYOR • STOK 0\nFİYAT: FİYAT YOK";
+                              "ÜRÜN: KABUL BEKLİYOR • STOK 0\nFİYAT: FİYAT YOK\n" +
+                              "SEPET: BOŞ";
 
             GameObject indicator = CreateDetailCube(
                 "ReceivingStatusIndicator",
@@ -1409,7 +1410,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             shelfLabel.characterSize = 0.06f;
             shelfLabel.fontSize = 48;
             shelfLabel.color = Color.white;
-            shelfLabel.text = "RAF A\nFİYAT YOK";
+            shelfLabel.text = "RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ";
 
             return new StockFlowBuildResult(
                 binding,

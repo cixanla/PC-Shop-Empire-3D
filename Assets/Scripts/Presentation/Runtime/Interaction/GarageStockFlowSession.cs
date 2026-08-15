@@ -24,6 +24,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string ShelfContainerIdValue = "inventory.container.retail-shelf-a";
         public const string WorldFloorContainerIdValue = "inventory.container.world-floor";
         public const string ShelfOfferIdValue = "retail.offer.garage-shelf-a-northstar-a60";
+        public const string PrototypeCustomerIdValue = "retail.customer.demo-walk-in-001";
+        public const string PrototypeBasketIdValue = "retail.basket.demo-customer-001";
+        public const string PrototypeBasketLineIdValue = "retail.basket-line.demo-a60-001";
+        public const string PrototypeReservationIdValue =
+            "inventory.reservation.demo-basket-a60-001";
+        public const string PrototypeClaimIdValue =
+            "inventory.claim.retail-basket-demo-001";
         public const string PrototypeCurrencyCode = "EUR";
         public const long PrototypePriceMinorUnits = 54_999;
         public const string ProductDisplayName = "Northstar A60 Ekran Kartı";
@@ -32,12 +39,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProductCatalog catalog,
             InventoryAuthority inventory,
             PurchaseOrderAuthority orders,
-            ShelfOfferAuthority retailOffers)
+            ShelfOfferAuthority retailOffers,
+            RetailBasketAuthority retailBaskets)
         {
             Catalog = catalog;
             Inventory = inventory;
             Orders = orders;
             RetailOffers = retailOffers;
+            RetailBaskets = retailBaskets;
         }
 
         public ProductCatalog Catalog { get; }
@@ -47,6 +56,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PurchaseOrderAuthority Orders { get; }
 
         public ShelfOfferAuthority RetailOffers { get; }
+
+        public RetailBasketAuthority RetailBaskets { get; }
 
         public StableId<ProductDefinitionIdScope> ProductId =>
             StableId<ProductDefinitionIdScope>.Parse(ProductIdValue);
@@ -71,6 +82,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<ShelfOfferIdScope> ShelfOfferId =>
             StableId<ShelfOfferIdScope>.Parse(ShelfOfferIdValue);
+
+        public StableId<RetailCustomerIdScope> PrototypeCustomerId =>
+            StableId<RetailCustomerIdScope>.Parse(PrototypeCustomerIdValue);
+
+        public StableId<RetailBasketIdScope> PrototypeBasketId =>
+            StableId<RetailBasketIdScope>.Parse(PrototypeBasketIdValue);
+
+        public StableId<RetailBasketLineIdScope> PrototypeBasketLineId =>
+            StableId<RetailBasketLineIdScope>.Parse(PrototypeBasketLineIdValue);
+
+        public StableId<ReservationIdScope> PrototypeReservationId =>
+            StableId<ReservationIdScope>.Parse(PrototypeReservationIdValue);
+
+        public StableId<InventoryClaimIdScope> PrototypeClaimId =>
+            StableId<InventoryClaimIdScope>.Parse(PrototypeClaimIdValue);
 
         public PurchaseOrderRecord Order
         {
@@ -118,6 +144,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
+            RetailBasketAuthority retailBaskets =
+                RetailBasketAuthority.Create(retailOffers, inventory).Value;
             StableId<PurchaseOrderIdScope> orderId =
                 StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
             StableId<DeliveryIdScope> deliveryId =
@@ -143,7 +171,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RequireSuccess(orders.DispatchOrder(orderId, Time(3)));
             RequireSuccess(orders.RegisterArrival(orderId, manifest, Time(4)));
 
-            var session = new GarageStockFlowSession(catalog, inventory, orders, retailOffers);
+            var session = new GarageStockFlowSession(
+                catalog,
+                inventory,
+                orders,
+                retailOffers,
+                retailBaskets);
             RequireSuccess(session.ValidateInvariants());
             return session;
         }
@@ -181,6 +214,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 out offer);
         }
 
+        public OperationResult ReservePrototypeCustomerBasket()
+        {
+            return RetailBaskets.ReserveSerializedOffer(
+                PrototypeBasketLineId,
+                PrototypeBasketId,
+                PrototypeCustomerId,
+                ShelfOfferId,
+                ItemId,
+                PrototypeReservationId,
+                PrototypeClaimId);
+        }
+
+        public OperationResult ReleasePrototypeCustomerBasket()
+        {
+            return RetailBaskets.ReleaseLine(PrototypeBasketLineId);
+        }
+
+        public bool TryGetPrototypeBasketLine(out RetailBasketLineRecord line)
+        {
+            return RetailBaskets.TryGetLine(PrototypeBasketLineId, out line);
+        }
+
         public OperationResult ValidateInvariants()
         {
             OperationResult orderResult = Orders.ValidateInvariants();
@@ -190,9 +245,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             OperationResult inventoryResult = Inventory.ValidateInvariants();
-            return inventoryResult.IsFailure
-                ? inventoryResult
-                : RetailOffers.ValidateInvariants();
+            if (inventoryResult.IsFailure)
+            {
+                return inventoryResult;
+            }
+
+            OperationResult offerResult = RetailOffers.ValidateInvariants();
+            return offerResult.IsFailure
+                ? offerResult
+                : RetailBaskets.ValidateInvariants();
         }
 
         private static void RegisterContainer(

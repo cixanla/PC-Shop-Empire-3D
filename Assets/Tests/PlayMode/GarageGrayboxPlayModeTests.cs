@@ -995,7 +995,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(stockFlow.StatusText, Does.Contain("RAF A"));
             Assert.That(stockFlow.Session.RetailOffers.Revision, Is.Zero);
-            Assert.That(stockFlow.ShelfOfferText.text, Is.EqualTo("RAF A\nFİYAT YOK"));
+            Assert.That(stockFlow.ShelfOfferText.text,
+                Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ"));
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState());
@@ -1026,9 +1027,81 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(inventoryRevisionBeforeOffer));
             Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOffer));
             Assert.That(stockFlow.ShelfOfferText.text,
-                Is.EqualTo($"RAF A\n{GarageStockFlowRuntime.PrototypePriceText}"));
+                Is.EqualTo(
+                    $"RAF A\n{GarageStockFlowRuntime.PrototypePriceText}\nMÜŞTERİ: BOŞ"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain($"FİYAT: {GarageStockFlowRuntime.PrototypePriceText}"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("demo müşteri için ayır"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain(marker.PlayerInput.DropBindingPrompt));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            long inventoryRevisionBeforeReservation = stockFlow.Session.Inventory.Revision;
+            long basketRevisionBeforeReservation = stockFlow.Session.RetailBaskets.Revision;
+            long retailOfferRevisionBeforeReservation = stockFlow.Session.RetailOffers.Revision;
+            long orderRevisionBeforeReservation = stockFlow.Session.Orders.Revision;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(binding.IsCustomerReserved, Is.True);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeReservation + 1));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeReservation + 1));
+            Assert.That(stockFlow.Session.RetailOffers.Revision,
+                Is.EqualTo(retailOfferRevisionBeforeReservation));
+            Assert.That(stockFlow.Session.Orders.Revision,
+                Is.EqualTo(orderRevisionBeforeReservation));
+            Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
+                stockFlow.Session.ProductId).Value, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.ShelfOfferText.text,
+                Does.Contain("MÜŞTERİ: 1 ÜRÜN • AYRILDI"));
+            Assert.That(stockFlow.StatusText, Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("müşteri rezervasyonunu kaldır"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(StockProjectionFailures.CustomerReserved.Code));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeReservation + 1));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeReservation + 1));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(binding.IsCustomerReserved, Is.False);
+            Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeReservation + 2));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeReservation + 2));
+            Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.ShelfOfferText.text, Does.Contain("MÜŞTERİ: BOŞ"));
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1160,6 +1233,43 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOffer));
             Assert.That(stockFlow.ShelfOfferText.text,
                 Does.Contain(GarageStockFlowRuntime.PrototypePriceText));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            long inventoryRevisionBeforeReservation = stockFlow.Session.Inventory.Revision;
+            long basketRevisionBeforeReservation = stockFlow.Session.RetailBaskets.Revision;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.True);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeReservation + 1));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeReservation + 1));
+            Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
+                stockFlow.Session.ProductId).Value, Is.Zero);
+            Assert.That(marker.PlayerCarry.PromptText,
+                Does.Contain("müşteri rezervasyonunu kaldır"));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
+            Assert.That(stockFlow.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevisionBeforeReservation + 2));
+            Assert.That(stockFlow.Session.RetailBaskets.Revision,
+                Is.EqualTo(basketRevisionBeforeReservation + 2));
+            Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 

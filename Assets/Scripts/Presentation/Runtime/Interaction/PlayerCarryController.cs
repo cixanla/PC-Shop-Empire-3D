@@ -147,6 +147,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            binding.LocationLabel;
                 }
 
+                if (binding != null && binding.IsCustomerReserved)
+                {
+                    return $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
+                           "müşteri rezervasyonunu kaldır   |   " +
+                           "MÜŞTERİ İÇİN AYRILDI";
+                }
+
+                if (binding != null && binding.RequiresCustomerReservation)
+                {
+                    return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                           $"{FocusedItem.DisplayName} al   |   " +
+                           $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
+                           "demo müşteri için ayır   |   " +
+                           binding.LocationLabel;
+                }
+
                 return FocusedItem.HasStackedItem
                     ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
                     : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
@@ -590,6 +606,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetHandsState(FocusedItem != null
                 ? VisibleHandsState.TargetFocused
                 : VisibleHandsState.Empty);
+
+            InventoryItemWorldBinding focusedBinding = GetInventoryBinding(FocusedItem);
+            if (focusedBinding != null && input.DropPressedThisFrame)
+            {
+                if (focusedBinding.IsCustomerReserved)
+                {
+                    Remember(focusedBinding.TryReleaseCustomerReservation());
+                    return;
+                }
+
+                if (focusedBinding.RequiresCustomerReservation)
+                {
+                    Remember(focusedBinding.TryReserveForCustomer());
+                    return;
+                }
+            }
 
             if (input.InteractPressedThisFrame)
             {

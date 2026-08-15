@@ -35,7 +35,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
-        public string ShelfOfferLabelText => $"RAF A\n{ShelfOfferPriceText}";
+        public string CustomerBasketStatusText =>
+            EnsureInitialized().TryGetPrototypeBasketLine(out _)
+                ? "1 ÜRÜN • AYRILDI"
+                : "BOŞ";
+
+        public string ShelfOfferLabelText =>
+            $"RAF A\n{ShelfOfferPriceText}\nMÜŞTERİ: {CustomerBasketStatusText}";
 
         public static string PrototypePriceText => FormatPrice(
             ShelfPrice.Create(
@@ -53,7 +59,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 string parcel = Parcel != null ? Parcel.StateLabel : "PROJECTION EKSİK";
                 return $"SİPARİŞ: {order}\nKOLİ: {parcel}\n" +
                        $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}\n" +
-                       $"FİYAT: {ShelfOfferPriceText}";
+                       $"FİYAT: {ShelfOfferPriceText}\n" +
+                       $"SEPET: {CustomerBasketStatusText}";
             }
         }
 

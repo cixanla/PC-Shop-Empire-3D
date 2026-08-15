@@ -70,6 +70,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool RequiresCustomerReservation
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.TryGetItem(out InventoryItemRecord item) &&
+                       item.Id == InventoryItemId &&
+                       item.ProductId == session.ProductId &&
+                       item.ContainerId == session.ShelfContainerId &&
+                       session.TryGetShelfOffer(out _) &&
+                       !IsCustomerReserved;
+            }
+        }
+
+        public bool IsCustomerReserved
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.RetailBaskets.TryGetLineForItem(InventoryItemId, out _);
+            }
+        }
+
         public string LocationLabel
         {
             get
@@ -99,6 +124,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return parcel.IsOpened
                         ? "KABUL ALANI • ÜRÜN HAZIR • STOK 1"
                         : "KABUL ALANI • KOLİ KAPALI • STOK 1";
+                }
+
+                if (container.Kind == InventoryContainerKind.Shelf && IsCustomerReserved)
+                {
+                    return "RAF A • MÜŞTERİ İÇİN AYRILDI • STOK 1";
                 }
 
                 return ContainerLabel(container.Kind);
@@ -237,6 +267,69 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return result;
         }
 
+        public OperationResult TryReserveForCustomer()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            GarageStockFlowSession session = Session;
+            if (!session.TryGetItem(out InventoryItemRecord item))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ItemNotAccepted);
+            }
+
+            if (item.Id != InventoryItemId || item.ProductId != session.ProductId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.IdentityMismatch);
+            }
+
+            if (item.ContainerId != session.ShelfContainerId)
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CustomerReservationLocationMismatch);
+            }
+
+            if (!session.TryGetShelfOffer(out _))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ShelfOfferRequired);
+            }
+
+            OperationResult result = session.ReservePrototypeCustomerBasket();
+            if (result.IsSuccess)
+            {
+                runtime.RefreshPresentation();
+            }
+
+            return result;
+        }
+
+        public OperationResult TryReleaseCustomerReservation()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            GarageStockFlowSession session = Session;
+            if (!session.TryGetPrototypeBasketLine(out _))
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CustomerReservationMissing);
+            }
+
+            OperationResult result = session.ReleasePrototypeCustomerBasket();
+            if (result.IsSuccess)
+            {
+                runtime.RefreshPresentation();
+            }
+
+            return result;
+        }
+
         public OperationResult TryPreparePickupTransfer()
         {
             OperationResult contract = ValidateContract();
@@ -254,6 +347,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (parcel.IsSealed)
             {
                 return OperationResult.Fail(StockProjectionFailures.ParcelSealed);
+            }
+
+            if (IsCustomerReserved)
+            {
+                return OperationResult.Fail(StockProjectionFailures.CustomerReserved);
             }
 
             _lastWorldContainer = item.ContainerId;
@@ -437,6 +535,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public static readonly Failure ParcelManifestMismatch = Failure.FromCode("stock-projection.parcel-manifest-mismatch");
         public static readonly Failure ParcelLocationMismatch = Failure.FromCode("stock-projection.parcel-location-mismatch");
         public static readonly Failure ShelfOfferLocationMismatch = Failure.FromCode("stock-projection.shelf-offer-location-mismatch");
+        public static readonly Failure ShelfOfferRequired = Failure.FromCode("stock-projection.shelf-offer-required");
+        public static readonly Failure CustomerReservationLocationMismatch = Failure.FromCode("stock-projection.customer-reservation-location-mismatch");
+        public static readonly Failure CustomerReservationMissing = Failure.FromCode("stock-projection.customer-reservation-missing");
+        public static readonly Failure CustomerReserved = Failure.FromCode("stock-projection.customer-reserved");
         public static readonly Failure PlacementZoneMissing = Failure.FromCode("stock-projection.placement-zone-missing");
         public static readonly Failure RecoveryContainerMissing = Failure.FromCode("stock-projection.recovery-container-missing");
         public static readonly Failure TransactionPending = Failure.FromCode("stock-projection.transaction-pending");

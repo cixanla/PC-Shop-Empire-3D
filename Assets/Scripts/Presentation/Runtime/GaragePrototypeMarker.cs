@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Presentation.Player;
@@ -12,7 +13,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-shelf-offer-r11-v1";
+        public const string Version = "garage-customer-reservation-r12-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -94,6 +95,9 @@ namespace PCShopEmpire3D.Presentation
             bool hasShelfOfferAuthority = hasArrivedStockFlow &&
                                           stockFlow.Session.RetailOffers != null &&
                                           stockFlow.Session.RetailOffers.Count == 0;
+            bool hasBasketAuthority = hasArrivedStockFlow &&
+                                      stockFlow.Session.RetailBaskets != null &&
+                                      stockFlow.Session.RetailBaskets.Count == 0;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -109,6 +113,7 @@ namespace PCShopEmpire3D.Presentation
                 $"inventory-flow={(hasArrivedStockFlow ? "arrived" : "missing")} " +
                 $"parcel={(stockFlow?.Parcel != null && stockFlow.Parcel.IsSealed ? "sealed" : "missing")} " +
                 $"shelf-offer={(hasShelfOfferAuthority ? "ready" : "missing")} " +
+                $"basket-reservation={(hasBasketAuthority ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
@@ -232,6 +237,68 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            GarageStockFlowSession basketSession = GarageStockFlowSession.CreateArrived();
+            OperationResult basketAccept = basketSession.AcceptArrivedDelivery();
+            OperationResult basketShelfTransfer = basketSession.TransferItem(
+                basketSession.ShelfContainerId);
+            OperationResult basketOffer = basketSession.PublishShelfOffer();
+            long basketInventoryBefore = basketSession.Inventory.Revision;
+            long basketRetailBefore = basketSession.RetailBaskets.Revision;
+            long basketOffersBefore = basketSession.RetailOffers.Revision;
+            long basketOrdersBefore = basketSession.Orders.Revision;
+            OperationResult basketReserve = basketSession.ReservePrototypeCustomerBasket();
+            OperationResult basketRepeat = basketSession.ReservePrototypeCustomerBasket();
+            bool basketReserved =
+                basketAccept.IsSuccess &&
+                basketShelfTransfer.IsSuccess &&
+                basketOffer.IsSuccess &&
+                basketReserve.IsSuccess &&
+                basketRepeat.IsSuccess &&
+                basketSession.TryGetPrototypeBasketLine(out var basketLine) &&
+                basketLine.ItemId == basketSession.ItemId &&
+                basketLine.OfferId == basketSession.ShelfOfferId &&
+                basketLine.CustomerId == basketSession.PrototypeCustomerId &&
+                basketSession.Inventory.TryGetReservation(
+                    basketSession.PrototypeReservationId,
+                    out InventoryReservation reservation) &&
+                reservation.ItemId == basketSession.ItemId &&
+                reservation.ClaimId == basketSession.PrototypeClaimId &&
+                basketSession.Inventory.GetAvailableQuantity(basketSession.ProductId).Value == 0 &&
+                basketSession.Inventory.GetTotalQuantity(basketSession.ProductId).Value == 1 &&
+                basketSession.Inventory.Revision == basketInventoryBefore + 1 &&
+                basketSession.RetailBaskets.Revision == basketRetailBefore + 1 &&
+                basketSession.RetailOffers.Revision == basketOffersBefore &&
+                basketSession.Orders.Revision == basketOrdersBefore &&
+                basketSession.ValidateInvariants().IsSuccess;
+            if (!basketReserved)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(basketReserve.IsFailure ? basketReserve.Error.Code : "smoke.basket-reservation-contract")}");
+                yield break;
+            }
+
+            long inventoryBeforeRelease = basketSession.Inventory.Revision;
+            long retailBeforeRelease = basketSession.RetailBaskets.Revision;
+            OperationResult basketRelease = basketSession.ReleasePrototypeCustomerBasket();
+            bool basketReleased = basketRelease.IsSuccess &&
+                                  basketSession.RetailBaskets.Count == 0 &&
+                                  basketSession.Inventory.ReservationCount == 0 &&
+                                  basketSession.Inventory.GetAvailableQuantity(
+                                      basketSession.ProductId).Value == 1 &&
+                                  basketSession.Inventory.GetTotalQuantity(
+                                      basketSession.ProductId).Value == 1 &&
+                                  basketSession.Inventory.Revision == inventoryBeforeRelease + 1 &&
+                                  basketSession.RetailBaskets.Revision == retailBeforeRelease + 1 &&
+                                  basketSession.ValidateInvariants().IsSuccess;
+            if (!basketReleased)
+            {
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={(basketRelease.IsFailure ? basketRelease.Error.Code : "smoke.basket-release-contract")}");
+                yield break;
+            }
+
             Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
             if (cameraPivot != null)
             {
@@ -242,6 +309,7 @@ namespace PCShopEmpire3D.Presentation
                 $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=ok accepted=ok parcel-open=ok carry=ok " +
                 $"world-floor=ok shelf-offer=ok price-minor={offer.Price.MinorUnits} " +
                 $"currency={offer.Price.Currency.Value} " +
+                "basket-reservation=ok release=ok " +
                 $"stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
                 $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();
