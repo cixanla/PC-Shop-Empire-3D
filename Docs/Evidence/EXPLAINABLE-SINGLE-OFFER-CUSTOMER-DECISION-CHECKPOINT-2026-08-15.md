@@ -17,7 +17,10 @@ Issue [#47](https://github.com/cixanla/PC-Shop-Empire-3D/issues/47), Epic [#9](h
 - Feature commit: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`
 - Tree: `e8cddbc13166b35a081786fed895417cf6270c16`
 - Marker: `garage-offer-decision-r16-v1`
-- Repository Guard: [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251), başarılı
+- Feature Repository Guard: [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251), başarılı
+- Source/docs commit: `8832c1372566ede623f08e04b5d9385b6ad23739`
+- Source/docs tree: `f8b92d4cef306219467a5e66f37b6f24702998c8`
+- Source/docs Repository Guard: [31877488552](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31877488552), başarılı
 
 ## Otomatik doğrulama
 
@@ -58,6 +61,10 @@ Final test/build/runtime loglarında assertion, smoke failure, unhandled excepti
 
 ## Uzak ve USB kapanışı
 
-- Feature push ve Repository Guard başarılıdır.
-- Source/docs commit, source/docs Guard, Issue #47 Done/close ve doğrulanmış USB milestone bu belgenin kapanış turunda exact değerlerle eklenecektir.
+- Feature ve source/docs push/Repository Guard koşuları başarılıdır.
+- Issue #47 `Completed` olarak kapatıldı ve Roadmap'te `Done` yapıldı.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`.
+- Snapshot; 541 exact `SOURCE`, 4 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt` ile 546 manifest payload satırı/548 toplam dosya taşır; payload 9.780.828 bayttır.
+- `MANIFEST.tsv` SHA-256 `d46e2433a7729587c71904479c09ec2e24f6df1f956794880d627a6448c0d1b1`; 546/546 hash/boyut/path ve 541/541 Git-blob readback geçti.
+- Forbidden/cache/credential/AppleDouble ve sibling sidecar sayısı `0`; bağımsız salt-okunur USB denetimi aynı sonucu doğruladı.
 - Epic #9 açık ve `In Progress` kalır.

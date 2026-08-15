@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #47 feature commit/push/CI tamamlandı; açıklanabilir tek-offer `Buy/Leave` kararı için source/docs ve USB kapanışı sürüyor<br>
+**Durum:** Issue #47 tamamlandı/kapatıldı ve Roadmap'te Done; açıklanabilir tek-offer `Buy/Leave` kararı source/docs/CI/USB checkpointiyle kapandı<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #47 / Epic #9
@@ -42,8 +42,8 @@
 - Feature commit: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`.
 - Feature tree: `e8cddbc13166b35a081786fed895417cf6270c16`.
 - Feature Repository Guard: [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251), başarılı.
-- Source/docs checkpoint ve Guard: bu yaşayan belge turundaki commit/push sonrasında eklenecek.
-- Issue #47 açık/In Progress; doğrulanmış USB snapshot sonrasında Done/close yapılacak. Epic #9 açık/In Progress kalır.
+- Source/docs commit `8832c1372566ede623f08e04b5d9385b6ad23739`, tree `f8b92d4cef306219467a5e66f37b6f24702998c8`; Repository Guard [31877488552](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31877488552), başarılı.
+- Issue #47 `Completed` olarak kapalı ve Roadmap'te `Done`; Epic #9 açık/In Progress kalır.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-offer47-r3-final.xml`; `267/267`; SHA-256 `06847e5696aa29a73d99672bb00e894205c4e840a950256398d91a81b9446129`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-offer47-r2-final.xml`; `18/18`; SHA-256 `133c26469fa0c074b365be265567326bff1f84fcd25b04e71f0ccadfb960677c`.
 - Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-offer47-macos-r1.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327708376`; SHA-256 `b2c109d4232c97e6ff17229057eb207e10299c60105611e1d3341b5555c95522`.
@@ -63,12 +63,12 @@
 
 ## USB güvenli checkpoint durumu
 
-- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`.
-- Source/docs `d163328`; 535 tracked `SOURCE`, 5 `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 541 manifest payload satırı ve 9.715.834 payload baytı.
-- `MANIFEST.tsv` SHA-256: `c82fc76dcf7b12f60e5106fb9dc78cf7f942824777b5a0db3902144125bb2cfd`.
-- Hash/boyut/path readback, 535/535 Git-blob eşliği geçti; forbidden/credential/AppleDouble `0`.
+- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`.
+- Source/docs `8832c1372566ede623f08e04b5d9385b6ad23739`; 541 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 546 manifest payload satırı, toplam 548 dosya ve 9.780.828 payload baytı.
+- `MANIFEST.tsv` SHA-256: `d46e2433a7729587c71904479c09ec2e24f6df1f956794880d627a6448c0d1b1`.
+- 546/546 hash/boyut/path readback ve 541/541 Git-blob eşliği geçti; forbidden/cache/credential/AppleDouble ve sibling sidecar `0`.
 - `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
-- Issue #47 için yeni `EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION` milestone'ı source/docs commit ve Guard sonrasında oluşturulacak; tamamlanmadan #47 kapatılmayacak.
+- Snapshot bağımsız salt-okunur denetimde de aynı sayım, manifest, Git-blob ve güvenlik kapılarıyla başarılı bulundu.
 
 ## Sıradaki bounded paket
 
@@ -81,4 +81,4 @@ Issue #9 altında `Buy/Leave` kararını güvenli eyleme dönüştüren ayrı bo
 
 ## Güvenli devam komutu
 
-Issue #47 feature `f97ded3` ve Guard `31876993251` başarılıdır. Önce source/docs Guard ve USB milestone kapanışını tamamla, #47'yi Done/close yap ve temiz `main` bırak; ardından Epic #9 altındaki stale-safe karar action paketini aç. Inventory/Retail/Economy/Save sınırlarını karıştırma.
+Issue #47 kapandı: feature `f97ded3`, source/docs `8832c13`, Guard koşuları `31876993251` ve `31877488552`, doğrulanmış `EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION` USB milestone'ı kayıtlıdır. Epic #9 altında stale-safe karar action paketine geç; Inventory/Retail/Economy/Save sınırlarını karıştırma.

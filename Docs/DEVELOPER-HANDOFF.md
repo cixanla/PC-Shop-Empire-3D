@@ -120,7 +120,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Karar okumak reservation/checkout/visit transition başlatmaz; mevcut explicit input zinciri ayrı kalır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Güncel USB milestone `2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`: source/docs checkpoint `d163328`, 535 tracked kaynak, 5 Unity test/build/runtime kanıtı ve source kaydı; 541 satırlı `c82fc76d…cfd` SHA-256 manifest/readback ile doğrulandı. 535/535 Git-blob eşliği geçti; hash/boyut/path mismatch, forbidden/credential ve AppleDouble sayısı `0`dır; payload 9.715.834 bayttır.
+- Güncel USB milestone `2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`: source/docs checkpoint `8832c13`, 541 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 546 satırlı `d46e2433…d1b1` SHA-256 manifest/readback ile doğrulandı. 541/541 Git-blob eşliği geçti; hash/boyut/path mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 9.780.828 bayttır.
 
 Henüz yapılmayanlar:
 

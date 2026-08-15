@@ -73,6 +73,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Immutable Checkout Snapshot milestone'ı 508 tracked kaynak, 4 test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 513 satırlı SHA-256 manifest/readback ve source path/checksum kapısından geçirildi; forbidden/credential/AppleDouble `0` olarak doğrulandı.
 - Atomic Checkout Fulfillment milestone'ı 510 tracked kaynak, 4 test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 515 satırlı `ce72122a…db50b` SHA-256 manifest/readback ve Git blob eşliği kapısından geçirildi; hash/boyut/path/source mismatch, forbidden/credential/AppleDouble `0` olarak doğrulandı.
 - Deterministic Customer Visit milestone'ı source/docs `d163328` ile 535 tracked kaynak, 5 test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 541 satırlı `c82fc76d…cfd` SHA-256 manifest/readback kapısından geçirildi; 535/535 Git-blob eşliği, forbidden/credential/AppleDouble `0` ve 9.715.834 payload baytı doğrulandı. Issue #46 kapatılıp Roadmap'te Done yapıldı; Epic #9 açık/In Progress kaldı.
+- Explainable Single-Offer Customer Decision milestone'ı source/docs `8832c13` ile 541 tracked kaynak, 4 final test/build/runtime kanıtı ve source kaydıyla ayrı USB hedefinde 546 satırlı `d46e2433…d1b1` SHA-256 manifest/readback kapısından geçirildi; 541/541 Git-blob eşliği, forbidden/cache/credential/AppleDouble/sibling sidecar `0` ve 9.780.828 payload baytı doğrulandı. Issue #47 kapatılıp Roadmap'te Done yapıldı; Epic #9 açık/In Progress kaldı.
 
 ## 2026-08-11 — Stage B Core Foundation
 

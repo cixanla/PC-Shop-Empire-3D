@@ -295,7 +295,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Yüklü taşıma arabası | Tek `LargeBox` kapasitesi, hands→cart→hands stable ownership, dört noktalı destek + swept obstruction, 0,85× yüklü hız, sprint kilidi, dinamik prompt ve fail-closed recovery |
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
-| Güncel USB milestone | `2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`; source/docs `d163328`, 535 tracked kaynak + 5 test/build/runtime kanıtı + source kaydı, 541 satırlı `c82fc76d…cfd` SHA-256 manifest/readback, 535/535 Git-blob eşliği ve forbidden/credential/AppleDouble `0`; payload 9.715.834 bayt |
+| Güncel USB milestone | `2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked kaynak + 4 final test/build/runtime kanıtı + source kaydı, 546 satırlı `d46e2433…d1b1` SHA-256 manifest/readback, 541/541 Git-blob eşliği ve forbidden/cache/credential/AppleDouble `0`; payload 9.780.828 bayt |
 | Son test/build | Issue #47 sonrası Edit Mode `267/267`, Play Mode `18/18`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-offer-decision-r16-v1`, `offer-decision=ok authority-isolated=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.

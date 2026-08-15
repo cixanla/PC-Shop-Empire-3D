@@ -149,8 +149,8 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`, tree `e8cddbc13166b35a081786fed895417cf6270c16`.
-- Issue #47 kapsamındaki açıklanabilir tek-offer `Buy/Leave` domain + Garage graybox dilimi feature olarak tamamlandı; source/docs/USB kapanışı sürüyor. Epic #9 açık/In Progress kalır.
-- Feature Repository Guard [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251) başarılıdır; source/docs Guard bu yaşayan belge commitinden sonra kaydedilecektir.
+- Issue #47 kapsamındaki açıklanabilir tek-offer `Buy/Leave` domain + Garage graybox dilimi source/docs/CI/USB ile tamamlandı; issue `Completed`, Roadmap `Done`. Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251) ve source/docs `8832c1372566ede623f08e04b5d9385b6ad23739` Guard [31877488552](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31877488552) başarılıdır.
 - EditMode `267/267`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
 - Universal macOS development build `327.708.376` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-offer-decision-r16-v1 offer-decision=ok authority-isolated=ok` ile geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
@@ -162,9 +162,8 @@ Tamamlanan oynanabilir sistemler:
 
 En yakın bounded paket:
 
-1. Önce Issue #47 source/docs Guard, USB milestone ve GitHub Done/close kapanışını tamamla.
-2. Sonra Issue #9 altında `Buy/Leave` provenanceını current visit/offer revisionlarıyla fail-closed yeniden doğrulayan explicit action sözleşmesi kur.
-3. Actors↔Retail customer ID mapping olmadan reservation/checkout/exit başlatma; çoklu ürün/müşteri, ödeme/Economy, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
+1. Issue #9 altında `Buy/Leave` provenanceını current visit/offer revisionlarıyla fail-closed yeniden doğrulayan explicit action sözleşmesi kur.
+2. Actors↔Retail customer ID mapping olmadan reservation/checkout/exit başlatma; çoklu ürün/müşteri, ödeme/Economy, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -226,6 +225,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`; source `0936cc0`, 508 tracked source + 4 test/build/runtime evidence + source kaydı, 513 satırlı `30c1e7fa…16efa` manifest, tam readback/source path+checksum ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CHECKOUT_FULFILLMENT`; source `80eea8f`, 510 tracked source + 4 test/build/runtime evidence + source kaydı, 515 satırlı `ce72122a…db50b` manifest, 9.373.684 bayt; tam readback/source path+Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`; source/docs `d163328`, 535 tracked source + 5 test/build/runtime evidence + source kaydı, 541 satırlı `c82fc76d…cfd` manifest, 9.715.834 payload baytı; tam hash/boyut/path readback, 535/535 Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked source + 4 final test/build/runtime evidence + source kaydı, 546 satırlı `d46e2433…d1b1` manifest, 9.780.828 payload baytı; 546/546 hash/boyut/path readback, 541/541 Git-blob ve forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -245,4 +245,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Explainable single-offer feature `f97ded3` ve Guard `31876993251` başarılıdır; EditMode 267/267, PlayMode 18/18 ve Mac `offer-decision=ok` geçti. Önce source/docs + USB + Issue #47 kapanışını tamamla; sonra Epic #9 altında stale-safe decision-action sınırına geç. Inventory/Retail/Economy/Save authority sınırlarını karıştırma ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Issue #47 kapandı: feature `f97ded3`, source/docs `8832c13`, Guard koşuları `31876993251`/`31877488552`, EditMode 267/267, PlayMode 18/18, Mac `offer-decision=ok` ve doğrulanmış USB milestone kayıtlıdır. Epic #9 altında stale-safe decision-action sınırına geç; Inventory/Retail/Economy/Save authority sınırlarını karıştırma ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
