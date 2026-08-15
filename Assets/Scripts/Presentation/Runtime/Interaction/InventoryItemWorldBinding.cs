@@ -12,6 +12,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     {
         [SerializeField] private GarageStockFlowRuntime runtime;
         [SerializeField] private PhysicalItemProjection projection;
+        [SerializeField] private DeliveryParcelProjection parcel;
         [SerializeField] private string inventoryItemId = GarageStockFlowSession.ItemInstanceIdValue;
 
         private bool _hasPreparedTransfer;
@@ -22,6 +23,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public GarageStockFlowRuntime Runtime => runtime;
 
         public PhysicalItemProjection Projection => projection;
+
+        public DeliveryParcelProjection Parcel => parcel;
 
         public StableId<ItemInstanceIdScope> InventoryItemId =>
             StableId<ItemInstanceIdScope>.Parse(inventoryItemId);
@@ -36,6 +39,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return session != null &&
                        session.Order.Status == PurchaseOrderStatus.Arrived &&
                        !session.TryGetItem(out _);
+            }
+        }
+
+        public bool RequiresUnpacking
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       parcel != null &&
+                       parcel.IsSealed &&
+                       session.Order.Status == PurchaseOrderStatus.Accepted &&
+                       session.TryGetItem(out InventoryItemRecord item) &&
+                       item.ContainerId == session.ReceivingContainerId;
             }
         }
 
@@ -56,11 +73,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : "STOK KAYDI YOK";
                 }
 
-                return session.Inventory.TryGetContainer(
-                    item.ContainerId,
-                    out InventoryContainerDefinition container)
-                    ? ContainerLabel(container.Kind)
-                    : "KONUM HATASI";
+                if (!session.Inventory.TryGetContainer(
+                        item.ContainerId,
+                        out InventoryContainerDefinition container))
+                {
+                    return "KONUM HATASI";
+                }
+
+                if (container.Kind == InventoryContainerKind.Receiving && parcel != null)
+                {
+                    return parcel.IsOpened
+                        ? "KABUL ALANI • ÜRÜN HAZIR • STOK 1"
+                        : "KABUL ALANI • KOLİ KAPALI • STOK 1";
+                }
+
+                return ContainerLabel(container.Kind);
             }
         }
 
@@ -79,6 +106,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             projection = itemProjection != null
                 ? itemProjection
                 : throw new System.ArgumentNullException(nameof(itemProjection));
+            parcel = GetComponent<DeliveryParcelProjection>();
             inventoryItemId = StableId<ItemInstanceIdScope>.Parse(stableInventoryItemId).Value;
         }
 
@@ -106,6 +134,62 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return result;
         }
 
+        public OperationResult TryOpenParcel()
+        {
+            OperationResult contract = ValidateContract();
+            if (contract.IsFailure)
+            {
+                return contract;
+            }
+
+            if (parcel.IsOpened)
+            {
+                return OperationResult.Success();
+            }
+
+            GarageStockFlowSession session = Session;
+            if (session.Order.Status != PurchaseOrderStatus.Accepted)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelNotAccepted);
+            }
+
+            if (!session.TryGetItem(out InventoryItemRecord item))
+            {
+                return OperationResult.Fail(StockProjectionFailures.ItemNotAccepted);
+            }
+
+            if (item.ContainerId != session.ReceivingContainerId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelLocationMismatch);
+            }
+
+            if (session.Order.Manifest == null ||
+                session.Order.Manifest.Intake.SerializedItems.Count != 1 ||
+                session.Order.Manifest.Intake.Batches.Count != 0)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelManifestMismatch);
+            }
+
+            InventorySerializedIntake manifestItem =
+                session.Order.Manifest.Intake.SerializedItems[0];
+            if (manifestItem.ItemId != InventoryItemId ||
+                manifestItem.ProductId != session.ProductId ||
+                item.Id != InventoryItemId ||
+                item.ProductId != manifestItem.ProductId)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelManifestMismatch);
+            }
+
+            OperationResult result = parcel.TryOpen();
+            if (result.IsSuccess)
+            {
+                projection.RecordSafePose();
+                runtime.RefreshPresentation();
+            }
+
+            return result;
+        }
+
         public OperationResult TryPreparePickupTransfer()
         {
             OperationResult contract = ValidateContract();
@@ -118,6 +202,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (!session.TryGetItem(out InventoryItemRecord item))
             {
                 return OperationResult.Fail(StockProjectionFailures.ItemNotAccepted);
+            }
+
+            if (parcel.IsSealed)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelSealed);
             }
 
             _lastWorldContainer = item.ContainerId;
@@ -238,6 +327,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(StockProjectionFailures.ProjectionMissing);
             }
 
+            parcel ??= GetComponent<DeliveryParcelProjection>();
+            if (parcel == null)
+            {
+                return OperationResult.Fail(StockProjectionFailures.ParcelMissing);
+            }
+
+            OperationResult parcelContract = parcel.ValidateContract();
+            if (parcelContract.IsFailure)
+            {
+                return parcelContract;
+            }
+
+            if (parcel.ItemProjection != projection)
+            {
+                return OperationResult.Fail(StockProjectionFailures.IdentityMismatch);
+            }
+
             return projection.ItemIdValue == InventoryItemId.Value &&
                    InventoryItemId == Session.ItemId
                 ? OperationResult.Success()
@@ -254,6 +360,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void Awake()
         {
             projection ??= GetComponent<PhysicalItemProjection>();
+            parcel ??= GetComponent<DeliveryParcelProjection>();
             _ = InventoryItemId;
         }
 
@@ -277,6 +384,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public static readonly Failure IdentityMismatch = Failure.FromCode("stock-projection.identity-mismatch");
         public static readonly Failure ItemNotAccepted = Failure.FromCode("stock-projection.item-not-accepted");
         public static readonly Failure AcceptanceUnavailable = Failure.FromCode("stock-projection.acceptance-unavailable");
+        public static readonly Failure ParcelMissing = Failure.FromCode("stock-projection.parcel-missing");
+        public static readonly Failure ParcelNotAccepted = Failure.FromCode("stock-projection.parcel-not-accepted");
+        public static readonly Failure ParcelSealed = Failure.FromCode("stock-projection.parcel-sealed");
+        public static readonly Failure ParcelManifestMismatch = Failure.FromCode("stock-projection.parcel-manifest-mismatch");
+        public static readonly Failure ParcelLocationMismatch = Failure.FromCode("stock-projection.parcel-location-mismatch");
         public static readonly Failure PlacementZoneMissing = Failure.FromCode("stock-projection.placement-zone-missing");
         public static readonly Failure RecoveryContainerMissing = Failure.FromCode("stock-projection.recovery-container-missing");
         public static readonly Failure TransactionPending = Failure.FromCode("stock-projection.transaction-pending");

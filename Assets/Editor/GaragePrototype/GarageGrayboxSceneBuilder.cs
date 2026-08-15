@@ -1212,31 +1212,93 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             itemRoot.transform.SetParent(receiving, false);
             itemRoot.transform.localPosition = new Vector3(2.55f, 1.43f, -3.55f);
             itemRoot.layer = interactableLayer;
-            GameObject visual = CreateCube(
-                "NorthstarA60Carton",
-                itemRoot.transform,
+
+            GameObject sealedParcel = new GameObject("SealedDeliveryParcelVisual");
+            sealedParcel.transform.SetParent(itemRoot.transform, false);
+            GameObject parcelCarton = CreateCube(
+                "OuterDeliveryCarton",
+                sealedParcel.transform,
+                Vector3.zero,
+                new Vector3(0.90f, 0.58f, 0.70f),
+                cardboard);
+            parcelCarton.layer = interactableLayer;
+            CreateDetailCube(
+                "OuterParcelTape",
+                sealedParcel.transform,
+                new Vector3(0f, 0.296f, 0f),
+                new Vector3(0.15f, 0.012f, 0.67f),
+                rubber);
+            CreateDetailCube(
+                "OuterParcelManifestLabel",
+                sealedParcel.transform,
+                new Vector3(0.19f, 0.02f, -0.356f),
+                new Vector3(0.36f, 0.22f, 0.012f),
+                labelPaper);
+            CreateDetailCube(
+                "OuterParcelSealBand",
+                sealedParcel.transform,
+                new Vector3(0f, -0.10f, -0.358f),
+                new Vector3(0.84f, 0.08f, 0.014f),
+                accent);
+            SetLayerRecursively(sealedParcel, interactableLayer);
+
+            GameObject productVisual = new GameObject("RevealedNorthstarA60Product");
+            productVisual.transform.SetParent(itemRoot.transform, false);
+            GameObject productCarton = CreateCube(
+                "NorthstarA60RetailCarton",
+                productVisual.transform,
                 Vector3.zero,
                 new Vector3(0.72f, 0.46f, 0.52f),
                 cardboard);
-            visual.layer = interactableLayer;
+            productCarton.layer = interactableLayer;
             CreateDetailCube(
-                "NorthstarA60Tape",
-                itemRoot.transform,
-                new Vector3(0f, 0.236f, 0f),
-                new Vector3(0.13f, 0.012f, 0.50f),
-                rubber);
-            CreateDetailCube(
-                "NorthstarA60ManifestLabel",
-                itemRoot.transform,
-                new Vector3(0.16f, 0.01f, -0.266f),
-                new Vector3(0.30f, 0.18f, 0.012f),
-                labelPaper);
-            CreateDetailCube(
-                "NorthstarA60IdentityBand",
-                itemRoot.transform,
+                "NorthstarA60RetailBand",
+                productVisual.transform,
                 new Vector3(0f, -0.07f, -0.268f),
                 new Vector3(0.68f, 0.07f, 0.014f),
                 accent);
+            CreateDetailCube(
+                "NorthstarA60RetailLabel",
+                productVisual.transform,
+                new Vector3(0.16f, 0.01f, -0.266f),
+                new Vector3(0.30f, 0.18f, 0.012f),
+                labelPaper);
+            SetLayerRecursively(productVisual, interactableLayer);
+
+            GameObject openedParcelShell = new GameObject("OpenedDeliveryParcelShell");
+            openedParcelShell.transform.SetParent(receiving, false);
+            CreateDetailCube(
+                "OpenedParcelBase",
+                openedParcelShell.transform,
+                new Vector3(2.55f, 1.18f, -3.55f),
+                new Vector3(0.94f, 0.06f, 0.74f),
+                cardboard);
+            CreateDetailCube(
+                "OpenedParcelFlapFront",
+                openedParcelShell.transform,
+                new Vector3(2.55f, 1.24f, -3.98f),
+                new Vector3(0.90f, 0.05f, 0.34f),
+                cardboard);
+            CreateDetailCube(
+                "OpenedParcelFlapBack",
+                openedParcelShell.transform,
+                new Vector3(2.55f, 1.24f, -3.12f),
+                new Vector3(0.90f, 0.05f, 0.34f),
+                cardboard);
+            CreateDetailCube(
+                "OpenedParcelFlapLeft",
+                openedParcelShell.transform,
+                new Vector3(2.03f, 1.24f, -3.55f),
+                new Vector3(0.30f, 0.05f, 0.68f),
+                cardboard);
+            CreateDetailCube(
+                "OpenedParcelFlapRight",
+                openedParcelShell.transform,
+                new Vector3(3.07f, 1.24f, -3.55f),
+                new Vector3(0.30f, 0.05f, 0.68f),
+                cardboard);
+            productVisual.SetActive(false);
+            openedParcelShell.SetActive(false);
 
             Rigidbody body = itemRoot.AddComponent<Rigidbody>();
             body.mass = 2.4f;
@@ -1253,13 +1315,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Vector3.zero,
                 Vector3.zero,
                 PhysicalCarryProfile.SmallBox);
+            DeliveryParcelProjection parcel = itemRoot.AddComponent<DeliveryParcelProjection>();
+            parcel.Configure(projection, sealedParcel, productVisual, openedParcelShell);
             InventoryItemWorldBinding binding = itemRoot.AddComponent<InventoryItemWorldBinding>();
 
             GameObject statusBoard = CreateBeveledCube(
                 "ReceivingStatusBoard",
                 receiving,
                 new Vector3(2.55f, 2.20f, -4.73f),
-                new Vector3(2.35f, 0.72f, 0.06f),
+                new Vector3(2.35f, 0.92f, 0.06f),
                 0.018f,
                 metal,
                 false);
@@ -1269,16 +1333,17 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             statusText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             statusText.anchor = TextAnchor.MiddleCenter;
             statusText.alignment = TextAlignment.Center;
-            statusText.characterSize = 0.055f;
+            statusText.characterSize = 0.047f;
             statusText.fontSize = 46;
             statusText.color = new Color(0.90f, 0.94f, 0.96f);
-            statusText.text = "SİPARİŞ: GELDİ • KABUL BEKLİYOR\nÜRÜN: KABUL BEKLİYOR • STOK 0";
+            statusText.text = "SİPARİŞ: GELDİ • KABUL BEKLİYOR\nKOLİ: KAPALI\n" +
+                              "ÜRÜN: KABUL BEKLİYOR • STOK 0";
 
             GameObject indicator = CreateDetailCube(
                 "ReceivingStatusIndicator",
                 receiving,
                 new Vector3(3.56f, 2.20f, -4.68f),
-                new Vector3(0.16f, 0.38f, 0.08f),
+                new Vector3(0.16f, 0.50f, 0.08f),
                 arrivedStatusMaterial);
 
             Transform shelf = new GameObject("AuthoritativeRetailShelfA").transform;

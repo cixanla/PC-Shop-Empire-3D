@@ -909,6 +909,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
             GarageStockFlowRuntime stockFlow = marker.StockFlow;
             InventoryItemWorldBinding binding = stockFlow.ItemBinding;
+            DeliveryParcelProjection parcel = binding.Parcel;
             marker.PlayerMotor.SetPaused(false);
             MovePlayerToAuthoritativeDelivery(marker);
             marker.PlayerCarry.ProcessInputFrame();
@@ -920,6 +921,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("teslimatını kabul et"));
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.InteractBindingPrompt));
+            Assert.That(parcel.IsSealed, Is.True);
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
             InputSystem.Update();
@@ -929,7 +931,27 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
             Assert.That(stockFlow.Session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Accepted));
             AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
-            Assert.That(binding.LocationLabel, Does.Contain("KABUL ALANI"));
+            Assert.That(binding.LocationLabel, Does.Contain("KOLİ KAPALI"));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("kolisini aç"));
+
+            long inventoryRevisionBeforeOpen = stockFlow.Session.Inventory.Revision;
+            long orderRevisionBeforeOpen = stockFlow.Session.Orders.Revision;
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(parcel.IsOpened, Is.True);
+            Assert.That(parcel.OpenTransitionCount, Is.EqualTo(1));
+            Assert.That(parcel.ProductVisualRoot.activeSelf, Is.True);
+            Assert.That(parcel.OpenedShellVisualRoot.activeSelf, Is.True);
+            Assert.That(stockFlow.Session.Inventory.Revision, Is.EqualTo(inventoryRevisionBeforeOpen));
+            Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOpen));
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain(" al"));
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
@@ -988,6 +1010,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             GaragePrototypeMarker marker = Object.FindFirstObjectByType<GaragePrototypeMarker>();
             GarageStockFlowRuntime stockFlow = marker.StockFlow;
             PhysicalItemProjection item = FindPhysicalItem(DeliveryItemId);
+            DeliveryParcelProjection parcel = stockFlow.Parcel;
             marker.PlayerMotor.SetPaused(false);
             MovePlayerToAuthoritativeDelivery(marker);
             marker.PlayerCarry.ProcessInputFrame();
@@ -998,6 +1021,18 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(parcel.IsOpened, Is.True);
+            Assert.That(parcel.OpenTransitionCount, Is.EqualTo(1));
             AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
@@ -1049,6 +1084,15 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
             AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(stockFlow.Parcel.IsOpened, Is.True);
+            AssertInventoryLocation(stockFlow, stockFlow.Session.ReceivingContainerId);
+
             Assert.That(stockFlow.Session.Inventory.ReceiveSerializedItem(
                 StableId<ItemInstanceIdScope>.Parse("inventory.item.hands-blocker"),
                 stockFlow.Session.ProductId,

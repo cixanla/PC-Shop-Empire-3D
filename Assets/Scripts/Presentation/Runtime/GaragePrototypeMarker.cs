@@ -12,7 +12,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-authoritative-stock-flow-r9-v1";
+        public const string Version = "garage-delivery-unpacking-r10-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -104,6 +104,7 @@ namespace PCShopEmpire3D.Presentation
                 $"stacking={(smallBoxCount >= 2 ? "ok" : "missing")} " +
                 $"transport-cart={(transportCart != null ? "ok" : "missing")} " +
                 $"inventory-flow={(hasArrivedStockFlow ? "arrived" : "missing")} " +
+                $"parcel={(stockFlow?.Parcel != null && stockFlow.Parcel.IsSealed ? "sealed" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             if (Debug.isDebugBuild && HasCommandLineArgument("-pse-cart-smoke"))
@@ -130,8 +131,9 @@ namespace PCShopEmpire3D.Presentation
             InventoryItemWorldBinding binding = stockFlow != null
                 ? stockFlow.ItemBinding
                 : null;
+            DeliveryParcelProjection parcel = binding != null ? binding.Parcel : null;
             PhysicalItemProjection item = binding != null ? binding.Projection : null;
-            if (playerMotor == null || playerCarry == null || session == null || item == null)
+            if (playerMotor == null || playerCarry == null || session == null || item == null || parcel == null)
             {
                 Debug.LogError(
                     "GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed code=smoke.context-missing");
@@ -140,7 +142,8 @@ namespace PCShopEmpire3D.Presentation
 
             if (session.Order.Status != PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived ||
                 session.TryGetItem(out _) ||
-                session.Inventory.GetTotalQuantity(session.ProductId).Value != 0)
+                session.Inventory.GetTotalQuantity(session.ProductId).Value != 0 ||
+                !parcel.IsSealed)
             {
                 Debug.LogError(
                     "GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed code=smoke.arrival-contract");
@@ -153,6 +156,26 @@ namespace PCShopEmpire3D.Presentation
                 Debug.LogError(
                     $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
                     $"code={(accept.IsFailure ? accept.Error.Code : "smoke.accept-carried")}");
+                yield break;
+            }
+
+            long inventoryRevisionBeforeOpen = session.Inventory.Revision;
+            long orderRevisionBeforeOpen = session.Orders.Revision;
+            OperationResult open = playerCarry.TryPickup(item);
+            OperationResult repeatedOpen = binding.TryOpenParcel();
+            if (open.IsFailure || repeatedOpen.IsFailure || playerCarry.HeldItem != null ||
+                !parcel.IsOpened || parcel.OpenTransitionCount != 1 ||
+                session.Inventory.Revision != inventoryRevisionBeforeOpen ||
+                session.Orders.Revision != orderRevisionBeforeOpen)
+            {
+                string parcelFailureCode = open.IsFailure
+                    ? open.Error.Code
+                    : repeatedOpen.IsFailure
+                        ? repeatedOpen.Error.Code
+                        : "smoke.parcel-contract";
+                Debug.LogError(
+                    $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=failed " +
+                    $"code={parcelFailureCode}");
                 yield break;
             }
 
@@ -186,7 +209,7 @@ namespace PCShopEmpire3D.Presentation
             }
 
             Debug.Log(
-                $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=ok accepted=ok carry=ok " +
+                $"GARAGE_STOCK_FLOW_RUNTIME_SMOKE stock-flow=ok accepted=ok parcel-open=ok carry=ok " +
                 $"world-floor=ok stable={(item.ItemIdValue == session.ItemId.Value ? "ok" : "missing")} " +
                 $"quantity={session.Inventory.GetTotalQuantity(session.ProductId).Value}");
             yield return new WaitForEndOfFrame();

@@ -132,6 +132,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            binding.LocationLabel;
                 }
 
+                if (binding != null && binding.RequiresUnpacking)
+                {
+                    return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
+                           $"{FocusedItem.DisplayName} kolisini aç   |   " +
+                           binding.LocationLabel;
+                }
+
                 return FocusedItem.HasStackedItem
                     ? $"{FocusedItem.DisplayName}: önce üst kutuyu al"
                     : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
@@ -192,6 +199,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 return Remember(acceptance);
+            }
+
+            if (binding != null && binding.RequiresUnpacking)
+            {
+                OperationResult unpack = binding.TryOpenParcel();
+                if (unpack.IsSuccess)
+                {
+                    LastFailureCode = string.Empty;
+                    SetHandsState(VisibleHandsState.TargetFocused);
+                }
+
+                return Remember(unpack);
             }
 
             OperationResult authorityTransfer = binding != null

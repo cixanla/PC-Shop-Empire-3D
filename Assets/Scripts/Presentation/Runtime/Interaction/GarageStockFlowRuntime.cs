@@ -18,6 +18,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public InventoryItemWorldBinding ItemBinding => itemBinding;
 
+        public DeliveryParcelProjection Parcel => itemBinding != null ? itemBinding.Parcel : null;
+
         public string StatusText
         {
             get
@@ -26,7 +28,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 string order = session.Order.Status == PurchaseOrderStatus.Arrived
                     ? "GELDİ • KABUL BEKLİYOR"
                     : "KABUL EDİLDİ";
-                return $"SİPARİŞ: {order}\nÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}";
+                string parcel = Parcel != null ? Parcel.StateLabel : "PROJECTION EKSİK";
+                return $"SİPARİŞ: {order}\nKOLİ: {parcel}\n" +
+                       $"ÜRÜN: {itemBinding?.LocationLabel ?? "PROJECTION EKSİK"}";
             }
         }
 

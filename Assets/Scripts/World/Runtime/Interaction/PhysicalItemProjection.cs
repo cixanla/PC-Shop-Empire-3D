@@ -444,13 +444,17 @@ namespace PCShopEmpire3D.World.Interaction
             }
 
             CacheColliders();
-            if (_colliders.Length == 0 || !_colliders.Any(collider => collider != null && collider.enabled))
+            Collider[] activeColliders = _colliders.Where(collider =>
+                collider != null &&
+                collider.enabled &&
+                collider.gameObject.activeInHierarchy).ToArray();
+            if (activeColliders.Length == 0)
             {
                 return OperationResult.Fail(Failure.FromCode("pickup.missing-collider"));
             }
 
-            if (_colliders.Any(collider =>
-                    collider == null || collider.isTrigger || collider.attachedRigidbody != body))
+            if (activeColliders.Any(collider =>
+                    collider.isTrigger || collider.attachedRigidbody != body))
             {
                 return OperationResult.Fail(Failure.FromCode("pickup.invalid-collider-ownership"));
             }

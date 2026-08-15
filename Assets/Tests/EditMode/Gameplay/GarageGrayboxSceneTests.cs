@@ -114,10 +114,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(deliveryItem.IsStablePlacement, Is.True);
                 InventoryItemWorldBinding deliveryBinding =
                     deliveryItem.GetComponent<InventoryItemWorldBinding>();
+                DeliveryParcelProjection deliveryParcel =
+                    deliveryItem.GetComponent<DeliveryParcelProjection>();
                 Assert.That(deliveryBinding, Is.Not.Null);
+                Assert.That(deliveryParcel, Is.Not.Null);
+                Assert.That(deliveryParcel.State, Is.EqualTo(DeliveryParcelState.Sealed));
+                Assert.That(deliveryParcel.SealedVisualRoot.activeSelf, Is.True);
+                Assert.That(deliveryParcel.ProductVisualRoot.activeSelf, Is.False);
+                Assert.That(deliveryParcel.OpenedShellVisualRoot.activeSelf, Is.False);
+                Assert.That(deliveryParcel.OpenedShellVisualRoot.transform.parent,
+                    Is.SameAs(deliveryItem.transform.parent));
                 Assert.That(deliveryBinding.InventoryItemId.Value, Is.EqualTo(deliveryItem.ItemIdValue));
                 Assert.That(marker.StockFlow, Is.Not.Null);
                 Assert.That(marker.StockFlow.ItemBinding, Is.SameAs(deliveryBinding));
+                Assert.That(marker.StockFlow.Parcel, Is.SameAs(deliveryParcel));
                 Assert.That(marker.StockFlow.EnsureInitialized().Order.Status,
                     Is.EqualTo(PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived));
                 Assert.That(marker.StockFlow.Session.TryGetItem(out _), Is.False);
@@ -204,7 +214,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-authoritative-stock-flow-r9-v1"));
+                    Is.EqualTo("garage-delivery-unpacking-r10-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

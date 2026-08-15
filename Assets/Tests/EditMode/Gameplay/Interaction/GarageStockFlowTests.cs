@@ -62,12 +62,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Fixture fixture = CreateBindingFixture();
             Assert.That(fixture.Binding.RequiresAcceptance, Is.True);
             Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryPreparePickupTransfer().Error,
+                Is.EqualTo(StockProjectionFailures.ParcelSealed));
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
             Vector3 safePosition = fixture.Item.LastSafePosition;
 
             Assert.That(fixture.Binding.TryPreparePickupTransfer().IsSuccess, Is.True);
             AssertLocation(fixture.Session, fixture.Session.HandsContainerId);
             Assert.That(fixture.Item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
-            Assert.That(fixture.Item.BeginCarry(fixture.Anchor, 8).IsSuccess, Is.True);
+            OperationResult beginCarry = fixture.Item.BeginCarry(fixture.Anchor, 8);
+            Assert.That(beginCarry.IsSuccess, Is.True, beginCarry.IsFailure ? beginCarry.Error.Code : string.Empty);
             Assert.That(fixture.Binding.CommitPreparedTransfer(targetIsWorld: false).IsSuccess, Is.True);
 
             Assert.That(fixture.Binding.TryPrepareRecoveryTransfer().IsSuccess, Is.True);
@@ -85,9 +89,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         {
             Fixture fixture = CreateBindingFixture();
             Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
             FillShelf(fixture.Session);
             Assert.That(fixture.Binding.TryPreparePickupTransfer().IsSuccess, Is.True);
-            Assert.That(fixture.Item.BeginCarry(fixture.Anchor, 8).IsSuccess, Is.True);
+            OperationResult beginCarry = fixture.Item.BeginCarry(fixture.Anchor, 8);
+            Assert.That(beginCarry.IsSuccess, Is.True, beginCarry.IsFailure ? beginCarry.Error.Code : string.Empty);
             Assert.That(fixture.Binding.CommitPreparedTransfer(targetIsWorld: false).IsSuccess, Is.True);
             Vector3 heldPosition = fixture.Item.transform.position;
 
@@ -113,6 +119,91 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void AcceptedParcelOpensExactlyOnceWithoutMutatingOrderOrInventory()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            Assert.That(fixture.Parcel.IsSealed, Is.True);
+            Assert.That(fixture.Binding.RequiresUnpacking, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+            Assert.That(fixture.Binding.TryOpenParcel().IsSuccess, Is.True);
+
+            Assert.That(fixture.Parcel.IsOpened, Is.True);
+            Assert.That(fixture.Parcel.OpenTransitionCount, Is.EqualTo(1));
+            Assert.That(fixture.Parcel.SealedVisualRoot.activeSelf, Is.False);
+            Assert.That(fixture.Parcel.ProductVisualRoot.activeSelf, Is.True);
+            Assert.That(fixture.Parcel.OpenedShellVisualRoot.activeSelf, Is.True);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Session.Inventory.GetTotalQuantity(fixture.Session.ProductId).Value,
+                Is.EqualTo(1));
+            AssertLocation(fixture.Session, fixture.Session.ReceivingContainerId);
+        }
+
+        [Test]
+        public void ParcelCannotOpenBeforeAcceptanceAndLeavesEveryStateUntouched()
+        {
+            Fixture fixture = CreateBindingFixture();
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            OperationResult result = fixture.Binding.TryOpenParcel();
+
+            Assert.That(result.Error, Is.EqualTo(StockProjectionFailures.ParcelNotAccepted));
+            Assert.That(fixture.Parcel.IsSealed, Is.True);
+            Assert.That(fixture.Parcel.OpenTransitionCount, Is.Zero);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            Assert.That(fixture.Session.TryGetItem(out _), Is.False);
+            Assert.That(fixture.Session.Inventory.GetTotalQuantity(fixture.Session.ProductId).Value,
+                Is.Zero);
+        }
+
+        [Test]
+        public void IdentityMismatchKeepsAcceptedParcelSealedAndInventoryInReceiving()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+            fixture.Binding.Configure(
+                fixture.Binding.Runtime,
+                fixture.Item,
+                "inventory.item.wrong-projection-001");
+
+            OperationResult result = fixture.Binding.TryOpenParcel();
+
+            Assert.That(result.Error, Is.EqualTo(StockProjectionFailures.IdentityMismatch));
+            Assert.That(fixture.Parcel.IsSealed, Is.True);
+            Assert.That(fixture.Parcel.OpenTransitionCount, Is.Zero);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            AssertLocation(fixture.Session, fixture.Session.ReceivingContainerId);
+        }
+
+        [Test]
+        public void AcceptedItemOutsideReceivingCannotRevealSealedParcel()
+        {
+            Fixture fixture = CreateBindingFixture();
+            Assert.That(fixture.Binding.TryAcceptDelivery().IsSuccess, Is.True);
+            Assert.That(fixture.Session.TransferItem(fixture.Session.HandsContainerId).IsSuccess, Is.True);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long orderRevision = fixture.Session.Orders.Revision;
+
+            OperationResult result = fixture.Binding.TryOpenParcel();
+
+            Assert.That(result.Error, Is.EqualTo(StockProjectionFailures.ParcelLocationMismatch));
+            Assert.That(fixture.Parcel.IsSealed, Is.True);
+            Assert.That(fixture.Parcel.OpenTransitionCount, Is.Zero);
+            Assert.That(fixture.Session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Session.Orders.Revision, Is.EqualTo(orderRevision));
+            AssertLocation(fixture.Session, fixture.Session.HandsContainerId);
+        }
+
         private Fixture CreateBindingFixture()
         {
             _root = new GameObject("StockFlowTestRoot");
@@ -121,10 +212,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Transform anchor = new GameObject("CarryAnchor").transform;
             anchor.SetParent(_root.transform);
 
-            GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject itemObject = new GameObject("BoundDeliveryItem");
             itemObject.name = "BoundDeliveryItem";
             itemObject.transform.SetParent(world);
             itemObject.transform.position = Vector3.up;
+            GameObject sealedVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sealedVisual.name = "SealedParcelVisual";
+            sealedVisual.transform.SetParent(itemObject.transform, false);
+            sealedVisual.transform.localScale = Vector3.one;
+            GameObject productVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            productVisual.name = "ProductVisual";
+            productVisual.transform.SetParent(itemObject.transform, false);
+            productVisual.transform.localScale = Vector3.one * 0.8f;
+            GameObject openedShell = new GameObject("OpenedParcelShell");
+            openedShell.transform.SetParent(world, false);
             Rigidbody body = itemObject.AddComponent<Rigidbody>();
             body.useGravity = false;
             body.isKinematic = true;
@@ -136,11 +237,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Vector3.one * 0.5f,
                 Vector3.zero,
                 Vector3.zero);
+            DeliveryParcelProjection parcel = itemObject.AddComponent<DeliveryParcelProjection>();
+            parcel.Configure(item, sealedVisual, productVisual, openedShell);
             InventoryItemWorldBinding binding = itemObject.AddComponent<InventoryItemWorldBinding>();
             GarageStockFlowRuntime runtime = _root.AddComponent<GarageStockFlowRuntime>();
             runtime.Configure(binding, null, null, null, null, null);
             GarageStockFlowSession session = runtime.EnsureInitialized();
-            return new Fixture(session, binding, item, anchor);
+            return new Fixture(session, binding, item, parcel, anchor);
         }
 
         private static void FillShelf(GarageStockFlowSession session)
@@ -171,11 +274,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 GarageStockFlowSession session,
                 InventoryItemWorldBinding binding,
                 PhysicalItemProjection item,
+                DeliveryParcelProjection parcel,
                 Transform anchor)
             {
                 Session = session;
                 Binding = binding;
                 Item = item;
+                Parcel = parcel;
                 Anchor = anchor;
             }
 
@@ -184,6 +289,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             public InventoryItemWorldBinding Binding { get; }
 
             public PhysicalItemProjection Item { get; }
+
+            public DeliveryParcelProjection Parcel { get; }
 
             public Transform Anchor { get; }
         }
