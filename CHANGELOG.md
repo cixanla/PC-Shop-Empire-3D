@@ -41,7 +41,9 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Mutually-exclusive parcel/product görsellerinde pickup yalnız aktif collider setini doğruluyor; kapalı ürün alınamıyor, invalid state/identity/location parcel'ı kapalı bırakıyor.
 - Unity bağımsız `PSE.Retail`; stable shelf-offer/product/shelf kimliği, üç harf currency, pozitif bounded integer minor-unit fiyat, idempotent set/update revision, deterministic query ve failure no-mutation sözleşmesiyle eklendi.
 - Exact ürün authoritative RAF A'dayken `E / Gamepad South` kasıtlı fiyat publish yapıyor; dünya etiketi yalnız başarıdan sonra `FİYAT YOK` → `549,99 EUR` değişiyor ve Inventory/Orders state'i sabit kalıyor.
-- Edit Mode baseline `207/207`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok price-minor=54999 currency=EUR stable=ok quantity=1` gerçek player smoke geçti.
+- `PSE.Retail` içine stable customer/basket/line ve exact shelf offer + serialized item + Inventory claim bağlayan authoritative basket reservation eklendi; duplicate item/customer conflict, drift ve bütün validation failure yolları cross-authority no-mutation kalıyor.
+- Fiyatlanmış RAF A ürününde `G / Gamepad East` demo müşteri rezervasyonunu açıp kapatıyor; etiket/pano `1 ÜRÜN • AYRILDI` durumunu gösteriyor, ayrılmış ürün `E / Gamepad South` pickup'a fail-closed yanıt veriyor ve release available quantity'yi geri getiriyor.
+- Edit Mode baseline `220/220`, Play Mode baseline `17/17` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `stock-flow=ok shelf-offer=ok basket-reservation=ok release=ok stable=ok quantity=1` gerçek player smoke geçti.
 
 ### Changed
 

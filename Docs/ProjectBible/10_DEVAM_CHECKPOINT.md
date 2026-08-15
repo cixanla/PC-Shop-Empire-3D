@@ -1,21 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #42 authoritative shelf offer/fiyat etiketi feature'ı tamamlandı; Epic #8 müşteri rezervasyon/checkout alt işleriyle devam ediyor<br>
+**Durum:** Issue #43 customer basket serialized reservation feature'ı tamamlandı; Epic #8 checkout transaction alt işiyle devam ediyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #42 / Epic #8
+## En yeni checkpoint — Issue #43 / Epic #8
 
-- Feature commit `7a23cd92be6ff1169ff49530319b0759965cadf5`, tree `623c2f52839847c098162371bb6f7c1073f4852d`.
-- Unity bağımsız `PSE.Retail`, stable offer/product/shelf kimliği ve iki ondalıklı pozitif integer minor-unit fiyatın tek authority'sidir.
-- Currency tam üç büyük ASCII harftir; price float/double kullanmaz ve bounded `long` minor-unit değeridir.
-- Exact aynı `SetOffer` idempotent başarıdır; fiyat update'i tek offer/authority revision üretir. Bütün validation failure yolları no-mutation kalır.
-- Inventory yalnız exact container'ın `Shelf` olduğunu doğrular; quantity/world projection fiyat state'i değildir.
-- RAF A ürünü fiyatlanmamışken `E / Gamepad South` etkin binding prompt'uyla `549,99 EUR` teklifini kasıtlı yayınlar. Etiket yalnız başarıdan sonra `FİYAT YOK` → `549,99 EUR` değişir.
-- Publish exact item'ı Shelf/world konumunda bırakır; Inventory quantity/revision ve Orders revision değişmez.
-- EditMode `207/207`, gerçek Input System PlayMode `17/17`, Universal macOS build ve Apple M4/Metal `shelf-offer=ok` runtime smoke geçti.
-- Karar: `Docs/ADR-0020-AUTHORITATIVE-SHELF-OFFER-PRICE.md`; kanıt: `Docs/Evidence/AUTHORITATIVE-SHELF-OFFER-CHECKPOINT-2026-08-15.md`.
-- Sayısal fiyat düzenleme UI'si, müşteri/sepet/checkout, transaction snapshot, vergi/indirim, ledger, save ve final sanat sonraki bounded paketlerdir.
+- Feature commit `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`, tree `788e9a016a692a9e558d8fb3903e32830b3a8b08`.
+- Unity bağımsız `RetailBasketAuthority`, stable customer/basket/line kimliklerini exact shelf offer, serialized item ve Inventory claim/reservation ile bağlar.
+- Reserve yalnız item offer ürünüyle eşleşiyor ve exact offer Shelf container'ında duruyorsa başarılıdır. Aynı serialized item ikinci müşteri/sepet için ayrılamaz.
+- Başarılı reserve Retail basket ve Inventory revision'ını birer kez ilerletir; exact tekrar cross-authority durum tutarlıysa idempotenttir. Bütün validation/conflict/drift failure yolları no-mutation kalır.
+- Reservation available quantity'yi `1 → 0` yapar, total quantity `1` kalır. Release iki authority'yi birer kez ilerletir ve available quantity'yi `1`e döndürür.
+- RAF A ürünü fiyatlandıktan sonra `G / Gamepad East` demo müşteri için ayırır; etiket/pano `1 ÜRÜN • AYRILDI` gösterir. Ayrılmış ürün `E / Gamepad South` pickup'a fail-closed yanıt verir; aynı `G / East` rezervasyonu kaldırır.
+- Basket satırı fiyat snapshot'ı taşımaz; immutable checkout snapshot ve reservation consume sonraki atomik sınırdır.
+- EditMode `220/220`, gerçek Input System PlayMode `17/17`, Universal macOS build ve Apple M4/Metal `basket-reservation=ok release=ok` runtime smoke geçti.
+- Karar: `Docs/ADR-0021-CUSTOMER-BASKET-SERIALIZED-RESERVATION.md`; kanıt: `Docs/Evidence/CUSTOMER-BASKET-RESERVATION-CHECKPOINT-2026-08-15.md`.
+- Fiziksel müşteri AI/gerçek sepet transferi, checkout/ödeme, transaction snapshot, vergi/indirim, ledger, save ve final sanat sonraki bounded paketlerdir.
 
 ## Kullanım güvenliği protokolü
 
@@ -29,9 +29,9 @@
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 - Unity `6000.3.21f1`, URP `17.3.0`, C#.
 - Core: stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministik event dispatcher tamam.
-- Catalog/Inventory/Orders/Retail: immutable ürün, authoritative container/transfer, exact purchase-order receiving ve shelf offer authority tamam.
-- Explicit Presentation adaptörü: Arrived → acceptance/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish zinciri tamam.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; marker `garage-shelf-offer-r11-v1`.
+- Catalog/Inventory/Orders/Retail: immutable ürün, authoritative container/transfer/reservation, exact purchase-order receiving, shelf offer ve customer basket authority tamam.
+- Explicit Presentation adaptörü: Arrived → acceptance/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → customer reserve/release zinciri tamam.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; marker `garage-customer-reservation-r12-v1`.
 - Kapalı dış parcel, görünür perakende ürün kutusu ve dünyada kalan açık parcel kabuğu ayrı projection durumlarıdır.
 - Küçük kutu `Mouse Left / RT` placement, `R / Right Shoulder` 90° rotation ve `G / Gamepad East` placement/drop kullanır; full support/overlap/stack/zone kontrolleri korunur.
 - Büyük kutu ayrı carry profili; platform arabası tek LargeBox hands→cart→hands ve fail-closed recovery kullanır.
@@ -42,24 +42,24 @@
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `7a23cd92be6ff1169ff49530319b0759965cadf5`
-- Tree: `623c2f52839847c098162371bb6f7c1073f4852d`
-- USB snapshot source/docs checkpoint commit: `6ae294ea97571921d1296b72ab86e458235f9c22`.
-- Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#42](https://github.com/cixanla/PC-Shop-Empire-3D/issues/42)
-- Repository Guard: [31866681324](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31866681324), başarılı.
+- Feature commit: `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`
+- Tree: `788e9a016a692a9e558d8fb3903e32830b3a8b08`
+- USB snapshot source/docs checkpoint commit: bu checkpoint belgeleri commitlendikten sonra kaydedilecek.
+- Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#43](https://github.com/cixanla/PC-Shop-Empire-3D/issues/43)
+- Repository Guard: [31867913964](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31867913964), başarılı.
 
 ## Test, build ve runtime kanıtı
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
-| `shelf-offer-scene-build.log` | GarageGraybox r11 builder kapısı geçti | `9257a9dc11c9425c0441fb5a0b6c0ed81b4b445ca92a3abab9cc51b7dd15bbfc` |
-| `shelf-offer-editmode.xml` | 207/207 geçti; failed/skipped 0 | `6b00fcd3ff3e12bf89a02b9a4e2a4b02a6fb954fafe70cb0953bbee5ae64bfd6` |
-| `shelf-offer-playmode.xml` | 17/17 geçti; failed/skipped 0 | `61dcd25d269d85deb9e41712b40015cbfe4c9e10561f44df575c4bc16564065d` |
-| `shelf-offer-macos-build.log` | Universal development build, 327.511.689 bayt | `8663033c052da2f3129be3160c4ef330edcb2410ec8c832d957e510f601223bc` |
-| Player executable | Mach-O `x86_64 + arm64` | `517be2d1584c85a46570a948d781fb32d860edb8664d306b5b9bcbeafee792d3` |
-| `shelf-offer-macos-runtime.log` | Apple M4/Metal 1280×720; `accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok price-minor=54999 currency=EUR stable=ok quantity=1` | `45b124ad8f314ca98ebab631982ce993f485d69c0ac2c4469087afd804ee95f0` |
+| `Assets/Scenes/Prototypes/GarageGraybox.unity` | r12 görünür shelf/customer label sözleşmesi | `1e945021980d17d000d223afd65c29ae125fa679f13bc591d250c4bf27e4582f` |
+| `editmode-issue43.xml` | 220/220 geçti; failed/skipped 0 | `e7445a284e829861cc57675d57d8404500f85b741b49198bff82467f32edce71` |
+| `playmode-issue43.xml` | 17/17 geçti; failed/skipped 0 | `3f78fa76c41ec2efbfba5b0e4f26401958b3429f9a1079ab4b09f65d68d40674` |
+| `build-issue43.log` | Universal development build, 327.531.969 bayt | `971c6e941d64e38a12c826b41f4f6220ebcfeedf982ffaa323e2acb5fdb1e1f0` |
+| Player executable | Mach-O `x86_64 + arm64` | `98a7d104383137bc74099f214d30923d13e3bd9d05e90d922524a9d4350d1add` |
+| `basket-reservation-macos-runtime.log` | Apple M4/Metal 1280×720; `basket-reservation=ok release=ok` | `4a98c8937d034b38a4e84e7fb2c3572e45af8c8a84ae2c573d0764087d78f6ba` |
 
-Klavye ve gamepad acceptance→open→pickup→RAF A placement→offer publish zincirini gerçek device state ile doğrular. Publish item/world ownership'ini veya Inventory/Orders revision'ını değiştirmez. Kilitli macOS oturumu nedeniyle yeni pencere ekran görüntüsü yoktur; sahne, test, build ve native runtime log kanıtı başarılıdır.
+Klavye ve gamepad acceptance→open→pickup→RAF A placement→offer publish→customer reserve/release zincirini gerçek device state ile doğrular. Reserved pickup fail-closed, exact repeat idempotent ve bütün failure yolları no-mutation kalır. Kilitli macOS oturumu nedeniyle yeni pencere ekran görüntüsü yoktur; sahne, test, build ve native runtime log kanıtı başarılıdır.
 
 ## Korunan geçmiş
 
@@ -72,6 +72,7 @@ Klavye ve gamepad acceptance→open→pickup→RAF A placement→offer publish z
 - Authoritative stock-flow projection: `9d75573a86e395d2fa74f3808d43310e4d65f760`.
 - Idempotent delivery parcel reveal: `3766f3f06df624093f4774ef8fa4e7f1286d1c01`.
 - Authoritative shelf offer ve RAF A etiketi: `7a23cd92be6ff1169ff49530319b0759965cadf5`.
+- Customer basket serialized reservation: `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`.
 
 ## USB güvenlik katmanı
 
@@ -79,13 +80,13 @@ Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3
 
 ## Sıradaki bounded paket
 
-1. Epic #8 altında müşteri/sepet talebi ile serialized item rezervasyonu arasındaki Unity-bağımsız bounded retail sözleşmesini kur.
-2. Aynı item'ın iki müşteri/sepet tarafından rezervasyonunu engelle; bütün failure yollarında Retail/Inventory revision no-mutation kalsın.
-3. Teklif fiyatını checkout başlangıcında immutable snapshot olarak donduracak bir sonraki atomik sınırı açık tut.
-4. Fiziksel müşteri AI, Economy ledger, vergi/indirim, Save/Guardian ve final UI'ı bu ilk rezervasyon paketine ekleme.
+1. Epic #8 altında checkout başlangıcında basket line + exact offer + Inventory reservation'ı doğrulayan Unity-bağımsız transaction sözleşmesini kur.
+2. Offer fiyatını integer minor-unit immutable snapshot olarak dondur; checkout başladıktan sonraki raf fiyatı değişikliği transaction sonucunu değiştirmesin.
+3. Exact tekrar idempotent; stale/missing reservation, drift, unknown line/offer ve invalid state bütün authority'lerde no-mutation kalsın.
+4. İlk checkout paketinde ödeme/ledger/vergi/indirim, fiziksel müşteri AI, Save/Guardian ve final UI ekleme; reservation consume/sale commit sınırını ayrıca belirt.
 
 Her adım ayrı issue, test, commit, CI ve checkpoint ile kapanır.
 
 ## Güvenli devam komutu
 
-> Authoritative RAF A shelf-offer checkpointinden devam et. Önce yaşayan belgeleri, temiz `origin/main` eşitliğini ve Epic #8'i doğrula. Sıradaki bounded paket müşteri/sepet talebi ile serialized stok rezervasyonu arasındaki Unity-bağımsız retail sözleşmesidir. Offer fiyat snapshot'ı, ledger ve müşteri AI ayrı kalsın. Test, commit/push/CI ve yaşayan kayıt olmadan tamamlandı sayma.
+> Customer basket serialized reservation checkpointinden devam et. Önce yaşayan belgeleri, temiz `origin/main` eşitliğini ve Epic #8'i doğrula. Sıradaki bounded paket checkout başlangıcında basket line + exact offer + Inventory reservation'ı doğrulayıp integer fiyatı immutable snapshot olarak donduran Unity-bağımsız transaction sözleşmesidir. Ödeme/ledger, müşteri AI ve Save ayrı kalsın. Test, commit/push/CI ve yaşayan kayıt olmadan tamamlandı sayma.

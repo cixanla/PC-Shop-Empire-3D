@@ -143,21 +143,21 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `7a23cd92be6ff1169ff49530319b0759965cadf5`.
-- Issue #42 feature'ı tamamlandı; Epic #8 müşteri rezervasyon/checkout/satış alt işleriyle sürüyor.
-- EditMode `207/207`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
-- Universal macOS development build `327.511.689` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok price-minor=54999 currency=EUR stable=ok quantity=1` geçti.
-- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor zincirinde taşınır; `PSE.Retail` başarılı publish sonrası exact product+shelf teklifini kaydeder.
-- Offer publish Inventory quantity/revision veya Orders revision değiştirmez; exact tekrar idempotent, validation failure no-mutation kalır. RAF A etiketi yalnız authority sonucunu yansıtır.
+- Son doğrulanmış kaynak feature: `45c2cdc4f4f437824567c7e7cb5b6fcea1ecb4ce`.
+- Issue #43 feature'ı tamamlandı; Epic #8 checkout snapshot/satış alt işleriyle sürüyor.
+- EditMode `220/220`, gerçek Input System PlayMode `17/17` geçti; failed/skipped `0`.
+- Universal macOS development build `327.531.969` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 `accepted=ok parcel-open=ok carry=ok world-floor=ok shelf-offer=ok basket-reservation=ok release=ok stable=ok quantity=1` geçti.
+- Exact serialized item görünür teslimat → acceptance/Receiving → idempotent parcel open → ActorHands → RAF A Shelf/WorldFloor → offer publish → customer reserve/release zincirinde taşınır.
+- Basket line stable customer/basket/line + exact offer/item/Inventory claim taşır. Duplicate/mismatch/drift failure no-mutation, exact tekrar idempotent ve reserved pickup fail-closed kalır; fiyat snapshot'ı henüz basket line'a kopyalanmaz.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8 altında müşteri/sepet talebi ile serialized item reservation arasındaki Unity-bağımsız bounded retail sözleşmesini kur.
-2. Duplicate reservation, unknown offer/item ve location/identity failure'larında Retail/Inventory no-mutation invariantlarını doğrula.
-3. Checkout başlangıcında teklif fiyatını immutable snapshot olarak donduracak sonraki sınırı açık tut.
-4. İlk pakete fiziksel müşteri AI, Economy ledger, vergi/indirim, Save veya final UI ekleme.
+1. Issue #8 altında basket line + exact offer + Inventory reservation'ı doğrulayan Unity-bağımsız checkout transaction başlangıç sözleşmesini kur.
+2. Offer fiyatını integer minor-unit immutable snapshot olarak dondur; sonradan raf fiyatı update'i açık transaction'ı değiştirmesin.
+3. Exact tekrar idempotent; missing/stale reservation, unknown line/offer ve drift failure yolları bütün authority'lerde no-mutation kalsın.
+4. Reservation consume/sale commit, fiziksel müşteri AI, ödeme/Economy ledger, vergi/indirim, Save ve final UI'ı bu ilk snapshot paketine ekleme.
 
 Sonraki ana geliştirme sırası:
 
@@ -234,4 +234,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Authoritative RAF A shelf-offer checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket müşteri/sepet talebi ile serialized stok reservation arasındaki Unity-bağımsız retail sözleşmesidir. Offer price snapshot, ledger ve müşteri AI ayrı kalsın; failure no-mutation korunsun. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Customer basket serialized reservation checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket basket line + exact offer + Inventory reservation'ı doğrulayıp checkout başlangıcında integer offer fiyatını immutable snapshot olarak donduran Unity-bağımsız transaction sözleşmesidir. Reservation consume, ödeme/ledger, müşteri AI ve Save ayrı kalsın; failure no-mutation korunsun. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `207/207` passed.
+- Edit Mode `220/220` passed.
 - Play Mode `17/17` passed.
 - `0` failed.
 - `0` skipped.
@@ -86,7 +86,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
 - Catalog yalnız Core; Inventory yalnız Core + Catalog; Orders Core + Catalog + Inventory; Retail ise Core + Catalog + Inventory referanslıdır. Dört assembly de Unity/Editor bağımlılığı taşımaz.
 - `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
-- `PSE.Retail` assembly: stable shelf-offer/product/shelf kimliği, doğrulanmış üç harf currency, pozitif bounded integer minor-unit fiyat, idempotent set/update revision, deterministic sorgu ve failure no-mutation.
+- `PSE.Retail` assembly: stable shelf-offer/product/shelf fiyat authority'sine ek olarak stable customer/basket/line ve exact serialized item + Inventory claim reservation authority'si; idempotent reserve/release, deterministic sorgu, drift denetimi ve failure no-mutation.
 - `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
 - `GarageStockFlowSession` exact serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` prototype composition'ını kurar.
 - `InventoryItemWorldBinding` aynı Inventory item/world item kimliğini, `InventoryPlacementZone` ise doğrulanmış surface/container eşlemesini taşır.
@@ -94,6 +94,7 @@ Tamamlanan saf Core sözleşmeleri:
 - `DeliveryParcelProjection` kapalı dış parcel ile revealed ürün ve Receiving'de kalan açık kabuğu ayırır; opening accepted exact manifest/location doğrulaması sonrası idempotenttir ve domain revision/quantity değiştirmez.
 - Aynı Interact binding'i acceptance → unpack → pickup olarak sıralanır; HUD/dünya panosu/prompt parcel durumunu klavye ve gamepad için dinamik gösterir.
 - Exact ürün RAF A Shelf container'ındayken aynı Interact binding'i kasıtlı offer publish yapar; etiket authority başarısından önce `FİYAT YOK`, sonra `549,99 EUR` gösterir. Publish Inventory/Orders revision veya quantity değiştirmez.
+- Fiyatlanmış RAF A ürününde `G / Gamepad East` exact item'ı demo customer basket için ayırır; available quantity `0`, total quantity `1` kalır. Etiket/pano reservation'ı gösterir, `E / Gamepad South` pickup fail-closed olur ve aynı `G / East` release sonrası available quantity `1`e döner.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -118,11 +119,11 @@ Henüz yapılmayanlar:
 - Gelişmiş el animasyonu, çok satırlı/çok adetli parcel unpack layout'u, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Sayısal fiyat düzenleme UI'si, customer basket/serialized reservation, checkout price snapshot/satış ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
+- Sayısal fiyat düzenleme UI'si, checkout immutable price snapshot/satış, fiziksel müşteri/gerçek sepet transferi ve fiziksel item/cart projection'ının daha geniş container tiplerine yayılması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #8 altında müşteri/sepet talebi ile serialized stok reservation arasındaki Unity-bağımsız retail sözleşmesini kurar. Aynı item iki talebe ayrılamaz; checkout price snapshot, fiziksel müşteri AI, dinamik ekonomi, vergi/indirim, ledger ve Save bu küçük pakete girmez.
+Sıradaki bounded paket Issue #8 altında basket line + exact offer + Inventory reservation'ı doğrulayıp offer fiyatını checkout başlangıcında immutable integer minor-unit snapshot olarak donduran Unity-bağımsız transaction sözleşmesini kurar. Reservation consume/sale commit, fiziksel müşteri AI, ödeme, vergi/indirim, ledger ve Save bu küçük pakete girmez.
 
 ## 7. Çalışma akışı
 
@@ -176,7 +177,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 207 Edit Mode ve 17 Play Mode baseline testi geçti.
+2. Repo guard, 220 Edit Mode ve 17 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.
