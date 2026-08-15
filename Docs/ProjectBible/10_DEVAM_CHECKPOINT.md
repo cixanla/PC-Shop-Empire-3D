@@ -1,13 +1,14 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #51 bounded single-customer consultation/recommendation gate feature, test, build, runtime ve feature Guard kapılarıyla tamamlandı; source/docs commit, source/docs Guard ve USB milestone değerleri **kapanışta eklenecek**<br>
+**Durum:** Issue #51 bounded single-customer consultation/recommendation gate kaynak, test, build, runtime, CI ve USB kapılarıyla tamamlandı; Issue kapalı, Roadmap `Done`<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #51 / Epic #9
 
 - Feature commit `846eb5d9912150a6ef3aae9a37678d71348f92a3`, tree `9052d219f013fe007dd2bf16d4fc06726b2914eb`; [feature Repository Guard 31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) başarılıdır.
-- Source/docs commit, source/docs Repository Guard run kimliği ve Issue #51 USB milestone kimliği **kapanışta eklenecek**; GitHub Issue/Roadmap final kapanış kaydı da bu zincir tamamlandığında işlenecektir. Parent Epic #9 açık kalır.
+- Source/docs commit `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98`; [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılıdır.
+- Issue #51 acceptance `16/16` doğrulandı, Issue kapatıldı ve Development Roadmap durumu `Done` yapıldı. Parent Epic #9 açık/`In Progress` kalır.
 - Unity bağımsız `CustomerConsultationAuthority`, bağlı canonical `CustomerVisitAuthority` içindeki her ziyaret için en fazla bir immutable consultation receipt tutar. Receipt; stable consultation/customer/visit/intent kimliklerini, need/product'u ve exact `Browsing` state/timestamp snapshot'ını korur.
 - Yalnız current canonical `Browsing` visit ve monotonik simulation timestamp kaydedilebilir. Exact tekrar idempotenttir; aynı visit için ikinci consultation, kimlik çatışması, foreign/historical visit, stale snapshot, non-browsing state ve zaman/revision/invariant hataları authority'yi değiştirmeden fail-closed olur.
 - `CustomerOfferDecisionEvaluator` artık owned, exact ve current consultation olmadan recommendation/`Buy/Leave` kararı üretmez. Missing/mismatch/stale consultation, offer karşılaştırmasından önce stable failure verir; `CustomerOfferDecisionActionAuthority` aynı receipt ownership'ini ve action zamanının consultation sonrasında olduğunu yeniden doğrular. Hata yolları Actors/Consultation/Offer/Basket/Inventory/Checkout/Orders/Economy state'inde no-mutation'dır.
@@ -28,7 +29,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #51 kapanış belgelerinden önceki doğrulanmış feature checkpoint'i `846eb5d9912150a6ef3aae9a37678d71348f92a3` üzerinde yerel/remote eşittir. Source/docs checkpoint'i **kapanışta eklenecek**.
+- Branch: `main`; kapanış metadata commitinden önceki doğrulanmış source/docs checkpoint'i `f9bc38d8861f575909e36a331ab1cc6476a237a5` üzerinde yerel/remote eşittir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
@@ -43,9 +44,9 @@
 - Epic/issue: [#9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) / [#51](https://github.com/cixanla/PC-Shop-Empire-3D/issues/51).
 - Feature commit: `846eb5d9912150a6ef3aae9a37678d71348f92a3`.
 - Feature tree: `9052d219f013fe007dd2bf16d4fc06726b2914eb`.
-- Source/docs commit ve tree: **kapanışta eklenecek**.
+- Source/docs commit: `f9bc38d8861f575909e36a331ab1cc6476a237a5`; tree `cb087b2a36a5030485c5835ababfcb8f6555ac98`.
 - Feature Repository Guard: [31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505), başarılı.
-- Source/docs Repository Guard run kimliği: **kapanışta eklenecek**.
+- Source/docs Repository Guard: [31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125), başarılı.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-issue51-r7.xml`; `347/347`, failed/skipped `0`; `290895` bayt; SHA-256 `a2d0861ce019649d3f6553fe79b4768f398342ad3b249c16fb89df7046a0ecc1`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-issue51-r6.xml`; `23/23`, failed/skipped `0`; `37250` bayt; SHA-256 `d4a8711b37df66828c469e1b67ff21dfd9037020a86a5f6e461938ab1e99e90c`.
 - Universal macOS build: `327837998` bayt. Build log `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-macos-issue51-r4.log`; `581640` bayt; SHA-256 `680c690e6460967d3338c0b866015a61d5b76aa96cbe58fa6147b220adf175c9`.
@@ -73,11 +74,14 @@
 
 ## USB güvenli checkpoint durumu
 
-- Son tamamlanmış milestone hâlâ Issue #50'ye aittir: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
+- Önceki Issue #50 milestone'u tarihsel olarak korunur: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
 - Source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı.
 - `MANIFEST.tsv` SHA-256: `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`.
 - Tam geri okuma 572/572 hash+boyut+path, 566/566 Git-blob ve 5/5 evidence eşliğiyle geçti. Path-set farkı, forbidden/cache/credential, internal AppleDouble ve sibling sidecar sayıları `0`dır.
-- Issue #51 bounded consultation/recommendation gate USB milestone yolu, manifesti ve readback değerleri **kapanışta eklenecek**.
+- Son tamamlanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_BOUNDED_SINGLE_CUSTOMER_CONSULTATION_AND_RECOMMENDATION_GATE`.
+- Source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`; 572 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 578 manifest payload satırı, toplam 580 dosya ve 10.366.388 payload baytı.
+- `MANIFEST.tsv` SHA-256: `f8d3ce98e7daa5a014d3d4c79b9a247ac5e15f737914746bd130c191289ccf20`.
+- Tam geri okuma 578/578 hash+boyut+path, 572/572 Git-blob ve 5/5 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
 
 ## Sıradaki immediate geliştirme işi
 
@@ -88,4 +92,4 @@
 
 ## Güvenli devam komutu
 
-Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`; başarılı feature Guard `31888147505`, EditMode `347/347`, PlayMode `23/23`, Universal Mac `327837998` bayt, `garage-customer-consultation-r20-v1` stock/customer smoke ve scene SHA-256 `353424cd…cbbaf` ile doğrulandı. Source/docs commit, source/docs Guard ve USB milestone değerleri **kapanışta eklenecek**. Epic #9 altındaki sıradaki bounded paket fiziksel checkout station ve yalnız `AwaitingCheckout` durumunda station-gated exact-cash ödemedir.
+Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, başarılı Guard `31888842125`, EditMode `347/347`, PlayMode `23/23`, Universal Mac `327837998` bayt, `garage-customer-consultation-r20-v1` stock/customer smoke ve `f8d3ce98…ccf20` manifestli USB checkpointiyle tamamlandı; acceptance `16/16`, Issue kapalı/Done. Epic #9 altındaki sıradaki bounded paket fiziksel checkout station ve yalnız `AwaitingCheckout` durumunda station-gated exact-cash ödemedir.

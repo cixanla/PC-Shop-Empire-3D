@@ -161,12 +161,12 @@ Tamamlanan oynanabilir sistemler:
 - Universal macOS development build `327837998` bayt, Mach-O `x86_64 + arm64`; build log SHA-256 `680c690e…75c9`, executable SHA-256 `2c9db944…1f86`dır.
 - Apple M4/Metal 1280×720 runtime markerı `garage-customer-consultation-r20-v1`dir. Stock ve customer smoke consultation/replay, decision gate, stale receipt engeli, mevcut Buy/Leave, exact-cash settlement, stok tüketimi ve authority isolation kapılarını geçti.
 - `GarageGraybox.unity` `1378085` bayt, SHA-256 `353424cd…cbbaf`tır. Primitive müşteri, speech text ve büyük status panoları final karakter/UI değildir.
-- Source/docs commit/Guard, Issue #51 acceptance `16/16`, Roadmap `Done` ve verified USB milestone değerleri **kapanış metadata commitinde eklenecek**. Parent Epic #9 açık kalır.
+- Source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98` ve [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılıdır. Issue #51 acceptance `16/16`, kapalı/Roadmap `Done`; parent Epic #9 açık/`In Progress` kalır.
 - Önceki Issue #50 feature `547cf97`, source/docs `aea6e2b`, iki başarılı Guard ve doğrulanmış USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
-Issue #51 feature/test/build/runtime/feature-Guard zinciri tamamlandı; source/docs/USB/Issue metadata kapanışı sürüyor. Sonraki bounded paket Epic #9 altında görünür fiziksel checkout station ve yalnız matching müşteri `AwaitingCheckout` iken station interaction üzerinden exact-cash ödeme almaktır. Raf/uzak ödeme bypass'ı kapatılır; vergi/indirim/fiş, çoklu ödeme, kontrolsüz çoklu ürün/müşteri, Save ve final sanat bu küçük pakete gizlice alınmaz.
+Issue #51 kaynak/test/build/runtime/CI/USB ve Issue metadata zinciri tamamlandı; acceptance `16/16`, kapalı/Done. Sonraki bounded paket Epic #9 altında görünür fiziksel checkout station ve yalnız matching müşteri `AwaitingCheckout` iken station interaction üzerinden exact-cash ödeme almaktır. Raf/uzak ödeme bypass'ı kapatılır; vergi/indirim/fiş, çoklu ödeme, kontrolsüz çoklu ürün/müşteri, Save ve final sanat bu küçük pakete gizlice alınmaz.
 
 Sonraki ana geliştirme sırası:
 
@@ -232,7 +232,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`; source/docs `aa61700`, 547 tracked source + 4 final test/build/runtime evidence + source kaydı, 552 satırlı `05ed8205…e76f6` manifest, 9.902.727 payload baytı; 552/552 hash/boyut/path readback, 547/547 Git-blob ve evidence/forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; source/docs `868885a`, 549 tracked source + 4 final test/build/runtime evidence + source kaydı, 554 satırlı `d685de7a…4209` manifest, 10.003.704 payload baytı; 554/554 hash/boyut/path readback, 549/549 Git-blob, 4/4 evidence ve forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; source/docs `aea6e2b`, 566 tracked source + 5 final test/build/runtime evidence + source kaydı, 572 satırlı `b3168162…ecf8` manifest, 10.227.122 payload baytı; 572/572 hash/boyut/path readback, 566/566 Git-blob, 5/5 evidence ve forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0` kapısı geçti.
-- Issue #51 için `2026-08-15_STAGE_B_BOUNDED_SINGLE_CUSTOMER_CONSULTATION_AND_RECOMMENDATION_GATE` milestone'u source/docs checkpointinden üretilecek; manifest/readback değerleri **kapanışta eklenecek**.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_BOUNDED_SINGLE_CUSTOMER_CONSULTATION_AND_RECOMMENDATION_GATE`; source/docs `f9bc38d`, 572 tracked source + 5 final evidence + source kaydı, 578 satırlı `f8d3ce98…ccf20` manifest, 10.366.388 payload baytı; 578/578 readback, 572/572 Git-blob, 5/5 evidence ve güvenlik mismatch `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -252,4 +252,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, başarılı feature Guard `31888147505`, EditMode 347/347, PlayMode 23/23, Universal Mac `327837998` bayt ve `garage-customer-consultation-r20-v1` stock/customer smoke ile doğrulandı. Source/docs commit/Guard, verified USB ve acceptance 16/16 kapanış değerleri eklenecek. Epic #9 altında sıradaki bounded paket fiziksel checkout station ve yalnız `AwaitingCheckout` durumunda station-gated exact-cash ödemedir.
+> Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, başarılı Guard `31888842125`, EditMode 347/347, PlayMode 23/23, Universal Mac `327837998` bayt, `garage-customer-consultation-r20-v1` smoke ve `f8d3ce98…ccf20` manifestli USB checkpointiyle tamamlandı; acceptance 16/16, Issue kapalı/Done. Epic #9 altında sıradaki bounded paket fiziksel checkout station ve yalnız `AwaitingCheckout` durumunda station-gated exact-cash ödemedir.

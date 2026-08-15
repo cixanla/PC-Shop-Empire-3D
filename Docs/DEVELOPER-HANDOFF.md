@@ -125,7 +125,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
 - Issue #51 feature `846eb5d9912150a6ef3aae9a37678d71348f92a3`, tree `9052d219f013fe007dd2bf16d4fc06726b2914eb` ve [Repository Guard 31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) ile doğrulandı. EditMode `347/347`, PlayMode `23/23`, failed/skipped `0`; Universal macOS build `327837998` bayt ve Mach-O `x86_64 + arm64`tır.
 - Apple M4/Metal 1280×720 `garage-customer-consultation-r20-v1` stock/customer smoke'ları consultation/replay, decision gate, stale receipt engeli, mevcut Buy/Leave, exact-cash settlement, stok tüketimi ve authority isolation kapılarını geçti. Scene ve final kanıt SHA-256 değerleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
-- Issue #51 source/docs commit/Guard, verified USB milestone, acceptance `16/16` ve Roadmap `Done` kapanış değerleri **kapanış metadata commitinde eklenecek**; parent Epic #9 açık/`In Progress` kalır.
+- Issue #51 source/docs `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98` ve [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) ile kapandı. USB milestone 578/578 manifest, 572/572 Git-blob ve 5/5 evidence kapısını geçti; acceptance `16/16`, Issue kapalı ve Roadmap `Done`dır. Parent Epic #9 açık/`In Progress` kalır.
 - Önceki Issue #50 feature `547cf97`, source/docs `aea6e2b`, iki başarılı Guard ve doğrulanmış `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT` USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur.
 
 Henüz yapılmayanlar:

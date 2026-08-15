@@ -1,7 +1,7 @@
 # ADR-0029 — Bounded Single-Customer Consultation and Recommendation Gate
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Kabul edildi ve Issue #51 feature commit'iyle uygulandı; source/docs ve USB kapanış kimlikleri bekliyor<br>
+**Durum:** Kabul edildi ve tamamlandı; Issue #51 kapalı, Roadmap `Done`<br>
 **Bağlam:** Epic #9 — `Browsing` müşterinin ihtiyacını gerçek oyuncu görüşmesiyle kaydetme ve mevcut tek-offer `Buy/Leave` kararını canonical consultation receipt ile kapılama
 
 ## Bağlam
@@ -50,6 +50,7 @@ Issue #46–#50 zinciri deterministic müşteri ziyareti, açıklanabilir tek-of
 - Scene SHA-256: `353424cd5d4a1e48d4b632f21e7343eb211762e4d1468b1e5bf9e45ebc8cbbaf`
 - Runtime: Apple M4/Metal, `1280×720`; stock ve customer smoke r4 başarılı; marker `garage-customer-consultation-r20-v1`
 - Feature Repository Guard: [31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505), başarılı
-- Source/docs commit/tree/Guard: `TBD — ana ajan tamamlayacak`
-- USB milestone/manifest/readback: `TBD — ana ajan tamamlayacak`
+- Source/docs commit: `f9bc38d8861f575909e36a331ab1cc6476a237a5`; tree `cb087b2a36a5030485c5835ababfcb8f6555ac98`; [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125), başarılı
+- Issue #51 acceptance `16/16`; Issue kapalı, Roadmap `Done`, parent Epic #9 açık/`In Progress`
+- USB milestone: `2026-08-15_STAGE_B_BOUNDED_SINGLE_CUSTOMER_CONSULTATION_AND_RECOMMENDATION_GATE`; manifest SHA-256 `f8d3ce98e7daa5a014d3d4c79b9a247ac5e15f737914746bd130c191289ccf20`; 578/578 readback, 572/572 Git-blob ve 5/5 evidence eşliği
 - Ayrıntı: `Docs/Evidence/BOUNDED-SINGLE-CUSTOMER-CONSULTATION-AND-RECOMMENDATION-GATE-CHECKPOINT-2026-08-15.md`

@@ -20,9 +20,9 @@ Issue [#51](https://github.com/cixanla/PC-Shop-Empire-3D/issues/51), Epic [#9](h
 - Tree: `9052d219f013fe007dd2bf16d4fc06726b2914eb`
 - Marker: `garage-customer-consultation-r20-v1`
 - Feature Repository Guard: [31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505), başarılı
-- Source/docs commit: `TBD — ana ajan tamamlayacak`
-- Source/docs tree: `TBD — ana ajan tamamlayacak`
-- Source/docs Repository Guard: `TBD — ana ajan tamamlayacak`
+- Source/docs commit: `f9bc38d8861f575909e36a331ab1cc6476a237a5`
+- Source/docs tree: `cb087b2a36a5030485c5835ababfcb8f6555ac98`
+- Source/docs Repository Guard: [31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125), başarılı
 
 ## Otomatik doğrulama
 
@@ -67,7 +67,10 @@ Final EditMode ve PlayMode sonuçlarında failed/skipped test yoktur. İki runti
 ## Uzak ve USB kapanışı
 
 - Feature commit `846eb5d9912150a6ef3aae9a37678d71348f92a3` private remote'a ulaşmıştır; feature Repository Guard [31888147505](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) başarılıdır.
-- Source/docs commit, tree, push ve Repository Guard: `TBD — ana ajan tamamlayacak`.
-- Issue #51 kapanış checkbox/state ve Project `Done` metadata işlemi: `TBD — ana ajan tamamlayacak`; parent Epic #9 açık/`In Progress` kalmalıdır.
-- USB milestone yolu, payload sayıları, `MANIFEST.tsv` SHA-256 ve readback/Git-blob eşliği: `TBD — ana ajan tamamlayacak`; doğrulanmadan tamamlandı sayılmaz.
+- Source/docs commit `f9bc38d8861f575909e36a331ab1cc6476a237a5`, tree `cb087b2a36a5030485c5835ababfcb8f6555ac98` private remote'a ulaştı; [Repository Guard 31888842125](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) başarılıdır.
+- Issue #51 acceptance `16/16` işaretlendi, Issue kapatıldı ve Development Roadmap durumu `Done` yapıldı; parent Epic #9 açık/`In Progress` kaldı.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_BOUNDED_SINGLE_CUSTOMER_CONSULTATION_AND_RECOMMENDATION_GATE`.
+- Snapshot exact source/docs `f9bc38d` arşivinden 572 tracked `SOURCE`, 5 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt` içerir; 578 manifest payload satırı, toplam 580 dosya ve 10.366.388 payload baytı vardır.
+- `MANIFEST.tsv` SHA-256 `f8d3ce98e7daa5a014d3d4c79b9a247ac5e15f737914746bd130c191289ccf20`dir. Tam geri okuma 578/578 hash+boyut+path, 572/572 Git-blob ve 5/5 evidence eşliğiyle geçti; path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
+- USB source exact `f9bc38d` arşividir; Issue/Project kapanış metadata commit'i güvenli snapshot oluşturulduktan sonra gelir ve snapshot kaynak kimliğini değiştirmez.
 - Sıradaki Epic #9 paketi fiziksel checkout station ve yalnız matching customer `AwaitingCheckout` iken etkin cash payment'tır; henüz uygulanmamıştır.

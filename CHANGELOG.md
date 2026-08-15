@@ -73,6 +73,7 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Tek-offer `CustomerOfferDecision` ve stale-safe `Buy/Leave` action artık matching canonical consultation receipt olmadan kilitlidir. Garage'da gerçek `E / Gamepad South`, `2,75 m` range, `24°` focus, LOS, dinamik `İHTİYACI SOR` promptu ve Türkçe ihtiyaç cevabı görüşmeyi görünür kılar.
 - Versioned tek-consumer Interact, explicit customer execution order ve runtime-owned `InputActionAsset` clone/reconfigure sözleşmeleri aynı basışın pickup/cart'a sızmasını ve source asset mutationını engeller.
 - Issue #51 feature checkpoint'i `846eb5d`, tree `9052d21` ve başarılı [Repository Guard `31888147505`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888147505) ile doğrulandı: 347/347 EditMode, 23/23 PlayMode, 327837998 bayt Universal macOS build ve Apple M4/Metal 1280×720 `garage-customer-consultation-r20-v1 consultation=ok decision-gated=ok stale-consultation-blocked=ok authority-isolated=ok` stock/customer smoke.
+- Issue #51 source/docs `f9bc38d`, tree `cb087b2` ve başarılı [Repository Guard `31888842125`](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31888842125) ile kapatıldı; 572 tracked source + 5 final evidence + source kaydı, 578 satırlı `f8d3ce98…ccf20` USB manifest/readback, acceptance `16/16`, Roadmap `Done`, parent Epic #9 açık/`In Progress` kaldı.
 
 ### Changed
 
