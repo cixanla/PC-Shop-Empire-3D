@@ -20,8 +20,9 @@ Issue [#50](https://github.com/cixanla/PC-Shop-Empire-3D/issues/50), Epic [#9](h
 - Tree: `2df21fe7c9b836eb189f12f211c58d06027a1ae8`
 - Marker: `garage-cash-settlement-r19-v1`
 - Feature Repository Guard: [31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043), başarılı
-- Source/docs commit: pending
-- Source/docs Repository Guard: pending
+- Source/docs commit: `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`
+- Source/docs tree: `84b14646fd549ce93e390bc33a626a8a7a6335fb`
+- Source/docs Repository Guard: [31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638), başarılı
 
 ## Otomatik doğrulama
 
@@ -70,7 +71,10 @@ EditMode ve PlayMode sonuçlarında failed/skipped test yoktur. Universal macOS 
 ## Uzak ve USB kapanışı
 
 - Feature commit `547cf971882239c912d8221f344706afc993a37b` private remote'a ulaşmıştır; feature Repository Guard [31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılıdır.
-- Source/docs commit ve push henüz oluşturulmadı; bu nedenle source/docs tree kimliği ve final Repository Guard run'ı pendingdir.
-- Issue #50 henüz bu belgeyle kapatılmadı; acceptance kapanışı ve Roadmap `Done` geçişi pendingdir.
-- USB milestone henüz oluşturulmadı; snapshot yolu, manifest SHA-256, payload sayıları ve readback/Git-blob/evidence eşliği pendingdir.
-- Bu pending değerler doğrulanmadan belgeye commit, CI veya USB sonucu eklenmeyecektir.
+- Source/docs commit `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, tree `84b14646fd549ce93e390bc33a626a8a7a6335fb` private remote'a ulaşmıştır; [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638) başarılıdır.
+- Issue #50 acceptance `18/18` işaretlenerek kapatıldı ve Development Roadmap durumu `Done` yapıldı. Parent Epic #9 açık/`In Progress` kaldı.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
+- Snapshot; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`, 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı içerir.
+- `MANIFEST.tsv` SHA-256 `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`dir.
+- Tam geri okuma 572/572 hash+boyut+path, 566/566 Git-blob ve 5/5 evidence eşliğiyle geçti. Path-set farkı, forbidden/cache/credential, internal AppleDouble ve sibling sidecar sayıları `0`dır.
+- USB source'u exact `aea6e2b` arşividir; Issue/Project kapanış metadata commit'i güvenli snapshot oluşturulduktan sonra gelir ve snapshotın kaynak kimliğini değiştirmez.

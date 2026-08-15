@@ -1,13 +1,14 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #50 atomik nakit checkout ve ilk Economy settlement feature'ı uygulanıp doğrulandı; source/docs commit, final Repository Guard, USB milestone ve Issue kapanışı henüz bekliyor<br>
+**Durum:** Issue #50 atomik nakit checkout ve ilk Economy settlement paketi kaynak, test, build, runtime, CI ve USB kapılarıyla tamamlandı; Issue kapalı, Roadmap `Done`<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #50 / Epic #9
 
 - Feature commit `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`; [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılıdır.
-- Issue #50 source/docs commit'i, bu commit'in final Guard kimliği, USB milestone kimliği/manifesti ve Issue kapanış durumu henüz oluşmadı; uydurulmadan pending bırakılmıştır.
+- Source/docs commit `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, tree `84b14646fd549ce93e390bc33a626a8a7a6335fb`; [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638) başarılıdır.
+- Issue #50 acceptance `18/18` doğrulandı, Issue kapatıldı ve Development Roadmap durumu `Done` yapıldı. Parent Epic #9 açık/`In Progress` kalır.
 - `InventoryUnitCost`, alış maliyetini purchase-order satırı → teslim manifesti/intake → serialized item/batch → immutable checkout line snapshot zincirinde currency + integer minor-unit olarak korur. Eksik veya uyuşmayan maliyet bütün ilgili authority'lerde no-mutation ile reddedilir.
 - Inventory, Basket ve Checkout katmanlarındaki owner/revision-bound prepared planlar bütün preflight'ı side-effect-free yapar. Yabancı owner, stale revision veya drift commit başlamadan fail-closed olur; public fulfillment bypass'ı kapalıdır.
 - Unity bağımsız downstream `PSE.Economy`, exact cash'i tek atomik settlement içinde checkout completion ve stok tüketimiyle birleştirir. Başarıda stable receipt ve dört dengeli posting oluşur: Cash/Sales Revenue ile COGS/Inventory Asset.
@@ -29,7 +30,7 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; feature checkpointte yerel `HEAD` ile `origin/main` `547cf971882239c912d8221f344706afc993a37b` üzerinde eşittir. Yaşayan belge değişiklikleri henüz commit edilmemiştir.
+- Branch: `main`; kapanış metadata commitinden önceki doğrulanmış source/docs checkpoint'i `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b` üzerinde yerel/remote eşittir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
@@ -45,6 +46,8 @@
 - Feature commit: `547cf971882239c912d8221f344706afc993a37b`.
 - Feature tree: `2df21fe7c9b836eb189f12f211c58d06027a1ae8`.
 - Feature Repository Guard: [31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043), başarılı.
+- Source/docs commit: `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; tree `84b14646fd549ce93e390bc33a626a8a7a6335fb`.
+- Source/docs Repository Guard: [31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638), başarılı.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-issue50-r2.xml`; `328/328`, failed/skipped `0`; `275608` bayt; SHA-256 `018955608d04377739b44316d63ba88bc7b75970cde5e698b7748c45c41e4389`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-issue50-r1.xml`; `22/22`, failed/skipped `0`; `34359` bayt; SHA-256 `f5d139d7aff945a23566a60e999426a2f761eb972c83bbfd22b6a759038029a1`.
 - Universal macOS build: `327809376` bayt. Build log `596600` bayt; SHA-256 `c8be9f9d35728305b0eb827c845dbf4ff3df6da45d8814e1a2fe5fc660a58ad0`.
@@ -72,20 +75,17 @@
 
 ## USB güvenli checkpoint durumu
 
-- Son tamamlanmış milestone hâlâ `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`tir.
-- Issue #49 source/docs `868885af9065d4e9fb274c3862fd525b040e1cc2`; 549 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 554 manifest payload satırı, toplam 556 dosya ve 10.003.704 payload baytı.
-- `MANIFEST.tsv` SHA-256: `d685de7afdd8df0dcba16369d2232c48725a365db15d67ad1cbdae78269a4209`; 554/554 readback, 549/549 Git-blob ve 4/4 evidence eşliği geçti; güvenlik mismatch sayıları `0`dır.
-- Issue #50 USB milestone'u henüz oluşturulmadı. Adı, dosya sayımı, manifest hash'i ve source/docs commit'i kapanış aşamasında gerçek değerleriyle kaydedilecektir.
+- Son tamamlanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
+- Source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı.
+- `MANIFEST.tsv` SHA-256: `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`.
+- Tam geri okuma 572/572 hash+boyut+path, 566/566 Git-blob ve 5/5 evidence eşliğiyle geçti. Path-set farkı, forbidden/cache/credential, internal AppleDouble ve sibling sidecar sayıları `0`dır.
 
-## Sıradaki immediate kapanış işi
+## Sıradaki immediate geliştirme işi
 
-1. Bu yaşayan belgeleri ve ilgili source/docs kayıtlarını ayrı commit'te kaydetmek ve private `main`e push etmek.
-2. Source/docs commit'inin Repository Guard sonucunu başarıyla doğrulamak.
-3. Issue #50 kaynak + final test/build/runtime kanıtlarını ayrı, manifest/readback doğrulanmış USB milestone'una almak.
-4. Issue #50 acceptance listesini gerçek kanıtla kapatıp Project durumunu `Done` yapmak.
-
-Yeni geliştirme paketi bu dört kapanış kapısından önce başlatılmaz. Source/docs commit/tree, final Guard run, USB milestone/manifest ve Issue kapanış kimlikleri oluşana kadar uydurulmaz.
+1. Epic #9 altında hazır authority zincirine dayanan sıradaki küçük müşteri/kasa vertical incrementini GitHub bağımlılık sırasından seçmek.
+2. Domain ve UI kapsamını tek görünür Garage akışına sınırlayıp EditMode/gerçek Input System PlayMode testleriyle kilitlemek.
+3. Test/build/runtime, private push/Guard ve ayrı USB checkpoint zincirini aynı bounded pakette kapatmak.
 
 ## Güvenli devam komutu
 
-Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`, başarılı Guard `31884497043`, EditMode `328/328`, PlayMode `22/22` ve Mac `garage-cash-settlement-r19-v1` exact-cash/receipt/ledger smoke kanıtlarıyla uygulanmış ve doğrulanmıştır. Şimdi yalnız source/docs commit → final Guard → USB milestone → Issue #50 close/Done kapanış zincirini tamamla; bilinmeyen kimlikleri uydurma.
+Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, başarılı Guard `31884807638`, EditMode `328/328`, PlayMode `22/22`, Mac `garage-cash-settlement-r19-v1` smoke ve `b3168162…ecf8` manifestli USB checkpointiyle tamamlandı; acceptance `18/18`, Issue kapalı/Done. Epic #9 açık kalır; sıradaki bounded müşteri/kasa paketini bağımlılık sırasından seç.

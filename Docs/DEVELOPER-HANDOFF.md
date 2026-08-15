@@ -124,7 +124,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
 - Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8` ve [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) ile doğrulandı. EditMode `328/328`, PlayMode `22/22`, failed/skipped `0`; Universal macOS build `327809376` bayt ve Mach-O `x86_64 + arm64`tır.
 - Apple M4/Metal 1280×720 `garage-cash-settlement-r19-v1` stock/customer smoke'ları exact cash, receipt, Economy settlement, dengeli ledger, revenue/COGS/inventory asset, replay/conflict, stock consumption ve authority isolation kapılarını geçti. Ayrıntılı dosya boyutu/SHA-256 kanıtı `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
-- Issue #50 source/docs commit'i, final Guard'ı, USB milestone'u ve Issue close/Done işlemi henüz pendingdir; kimlikleri uydurulmaz.
+- Issue #50 source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, tree `84b14646fd549ce93e390bc33a626a8a7a6335fb` ve [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638) ile kapandı. USB milestone 572/572 manifest, 566/566 Git-blob ve 5/5 evidence kapısını geçti; acceptance `18/18`, Issue kapalı ve Roadmap `Done`dır.
 - Önceki Issue #49 feature `67d858a`, source/docs `868885a`, iki başarılı Guard ve doğrulanmış `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT` USB milestone ile kapalı/Done tarihsel checkpoint olarak korunur. Bu snapshot Issue #50 kapanışı değildir.
 
 Henüz yapılmayanlar:
@@ -136,7 +136,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş yeni feature değildir: yaşayan source/docs değişikliklerini commit/push et → source/docs Repository Guard'ını doğrula → Issue #50 kaynak ve final kanıtlarını manifest/readback doğrulanmış USB milestone'una al → acceptance listesini kapatıp Issue/Project'i `Done` yap. Source/docs commit/tree, final Guard, USB milestone/manifest ve kapanış kimlikleri oluşmadan yazılmaz. Yeni bounded gameplay paketi bu kapanıştan sonra GitHub bağımlılık sırasından seçilir.
+Sıradaki immediate iş Epic #9 altındaki küçük, görünür ve test edilebilir müşteri/kasa vertical incrementini GitHub bağımlılık sırasından seçmektir. Hazır Actors/Retail/Inventory/Economy authority'lerini kullan; vergi/indirim/çoklu ödeme, kontrolsüz çoklu müşteri, Save ve final sanat kapsamını gizlice büyütme.
 
 ## 7. Çalışma akışı
 

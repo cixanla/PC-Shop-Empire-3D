@@ -150,7 +150,7 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`.
-- Issue #50 atomik nakit checkout ve ilk Economy settlement feature'ı uygulanıp private `main`e push edildi; [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılıdır. Source/docs commit, onun final Guard'ı, USB milestone'u ve Issue close/Done işlemi henüz pendingdir.
+- Issue #50 atomik nakit checkout ve ilk Economy settlement paketi tamamlandı: feature `547cf971882239c912d8221f344706afc993a37b`, source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638), doğrulanmış USB milestone, acceptance `18/18`; Issue kapalı ve Roadmap `Done`dır.
 - Purchase-order satırından manifest/intake ve serialized item/batch üzerinden immutable checkout snapshot'ına uzanan `InventoryUnitCost` provenance'ı alış maliyetini currency + integer minor-unit olarak korur. Maliyet uyuşmazlığı no-mutation'dır.
 - Inventory/Basket/Checkout prepared planları authority owner ve exact revision'a bağlı side-effect-free preflight üretir. Foreign/stale/drift commit başlamadan reddedilir; fulfillment dışarıdan public çağrıyla bypass edilemez.
 - Downstream Unity bağımsız `PSE.Economy`, exact cash'i checkout completion ve stok tüketimiyle aynı atomik sınırda birleştirir. Stable settlement receipt'i ile Cash/SalesRevenue/COGS/InventoryAsset üzerinde dört dengeli posting bırakır; exact replay idempotent, kimlik çatışması ve yanlış tutar/currency/payment method bütün authority'lerde no-mutation'dır.
@@ -163,14 +163,7 @@ Tamamlanan oynanabilir sistemler:
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
-En yakın iş yeni feature değildir; Issue #50 kapanış zinciridir:
-
-1. Yaşayan source/docs değişikliklerini commit edip private `main`e push et.
-2. Bu source/docs commit'inin Repository Guard sonucunu doğrula.
-3. Feature kaynakları ile final test/build/runtime kanıtlarını manifest/readback doğrulanmış ayrı USB milestone'una al.
-4. Issue #50 acceptance listesini kapatıp Project durumunu `Done` yap.
-
-Bu kimlikler henüz oluşmadığı için source/docs commit/tree, final Guard, USB milestone/manifest ve Issue kapanış sonucu uydurulmaz. Sonraki bounded gameplay paketi ancak bu kapanıştan sonra GitHub bağımlılık sırasından seçilir; vergi/indirim/fiş, çoklu ödeme, çoklu ürün/müşteri, memnuniyet, Save ve final sanat ayrı kalır.
+Issue #50 kapanış zinciri tamamlandı. En yakın iş, Epic #9 altındaki sıradaki bounded müşteri/kasa vertical incrementini GitHub bağımlılık sırasından seçmektir. Vergi/indirim/fiş, çoklu ödeme, kontrolsüz çoklu ürün/müşteri, memnuniyet, Save ve final sanat bu küçük pakete gizlice alınmaz.
 
 Sonraki ana geliştirme sırası:
 
@@ -235,7 +228,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked source + 4 final test/build/runtime evidence + source kaydı, 546 satırlı `d46e2433…d1b1` manifest, 9.780.828 payload baytı; 546/546 hash/boyut/path readback, 541/541 Git-blob ve forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`; source/docs `aa61700`, 547 tracked source + 4 final test/build/runtime evidence + source kaydı, 552 satırlı `05ed8205…e76f6` manifest, 9.902.727 payload baytı; 552/552 hash/boyut/path readback, 547/547 Git-blob ve evidence/forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; source/docs `868885a`, 549 tracked source + 4 final test/build/runtime evidence + source kaydı, 554 satırlı `d685de7a…4209` manifest, 10.003.704 payload baytı; 554/554 hash/boyut/path readback, 549/549 Git-blob, 4/4 evidence ve forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0` kapısı geçti.
-- Issue #50 için yeni USB milestone'u henüz oluşturulmadı; yukarıdaki Issue #49 snapshotı son tamamlanmış USB checkpointidir. Yeni milestone adı, source/docs commit'i, sayımları ve manifest hash'i gerçek snapshot doğrulamasından sonra eklenecektir.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; source/docs `aea6e2b`, 566 tracked source + 5 final test/build/runtime evidence + source kaydı, 572 satırlı `b3168162…ecf8` manifest, 10.227.122 payload baytı; 572/572 hash/boyut/path readback, 566/566 Git-blob, 5/5 evidence ve forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -255,4 +248,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`, başarılı Guard `31884497043`, EditMode 328/328, PlayMode 22/22 ve Mac `garage-cash-settlement-r19-v1` exact-cash/receipt/ledger smoke kanıtlarıyla doğrulandı. Şimdi source/docs commit → final Guard → USB milestone → Issue #50 close/Done zincirini tamamla; bilinmeyen kapanış kimliklerini uydurma.
+> Issue #50 feature `547cf971882239c912d8221f344706afc993a37b`, source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, başarılı Guard `31884807638`, EditMode 328/328, PlayMode 22/22, Mac `garage-cash-settlement-r19-v1` smoke ve `b3168162…ecf8` manifestli USB checkpointiyle tamamlandı; acceptance 18/18, Issue kapalı/Done. Epic #9 açık; sıradaki bounded müşteri/kasa paketini bağımlılık sırasından seç.

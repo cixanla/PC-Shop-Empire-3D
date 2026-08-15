@@ -1,7 +1,7 @@
 # ADR-0028 — Atomic Cash Checkout and Initial Economy Settlement
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Feature commit ile uygulandı; source/docs ve USB final kapanışı bekleniyor<br>
+**Durum:** Kabul edildi ve tamamlandı; Issue #50 kapalı, Roadmap `Done`<br>
 **Bağlam:** Epic #9 — immutable checkout snapshotını authoritative maliyet kökeni, stok fulfillment ve ilk nakit Economy settlementı ile tek atomik sınırda birleştirme
 
 ## Bağlam
@@ -56,6 +56,8 @@ Issue #50 bu boşluğu bounded bir ilk Economy dilimiyle kapatır. Amaç tam muh
 - Universal macOS build: `327809376` bayt; Mach-O `x86_64 + arm64`; Apple M4/Metal runtime `1280×720`
 - Runtime marker: `garage-cash-settlement-r19-v1`; exact cash, receipt, settlement, dört dengeli ledger postingi, replay/conflict guardı, stok tüketimi ve receipt-gated `Fulfilled` çıkışı başarılı
 - Feature Repository Guard: [31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043), başarılı
-- Source/docs commit ve final Repository Guard: pending
-- Issue #50 kapanışı ve doğrulanmış USB milestone: pending
+- Source/docs commit: `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; tree `84b14646fd549ce93e390bc33a626a8a7a6335fb`
+- Source/docs Repository Guard: [31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638), başarılı
+- Issue #50 acceptance `18/18`; Issue kapalı, Roadmap `Done`, parent Epic #9 açık/`In Progress`
+- USB milestone: `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; manifest SHA-256 `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`; 572/572 readback, 566/566 Git-blob ve 5/5 evidence eşliği
 - Ayrıntı: `Docs/Evidence/ATOMIC-CASH-CHECKOUT-AND-INITIAL-ECONOMY-SETTLEMENT-CHECKPOINT-2026-08-15.md`

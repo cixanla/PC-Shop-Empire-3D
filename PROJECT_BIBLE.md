@@ -243,7 +243,7 @@ Monotonluğu azaltma ilkeleri:
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
-| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout, deterministic müşteri ziyareti + runtime NavMesh, stale-safe tek-offer `Buy/Leave` ve exact-cash ilk `PSE.Economy` settlement feature'ı tamam; Issue #50 docs/USB kapanışı bekliyor |
+| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout, deterministic müşteri ziyareti + runtime NavMesh, stale-safe tek-offer `Buy/Leave` ve exact-cash ilk `PSE.Economy` settlement paketi tamamlandı; Issue #50 kapalı/Done |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
@@ -298,19 +298,17 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Yüklü taşıma arabası | Tek `LargeBox` kapasitesi, hands→cart→hands stable ownership, dört noktalı destek + swept obstruction, 0,85× yüklü hız, sprint kilidi, dinamik prompt ve fail-closed recovery |
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
-| Son tamamlanmış USB milestone | `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; Issue #49 source/docs `868885a`, 549 tracked kaynak + 4 final kanıt + source kaydı, 554 satırlı `d685de7a…4209` SHA-256 manifest/readback, 549/549 Git-blob ve 4/4 evidence eşliği, güvenlik mismatch `0`; Issue #50 USB milestone'u henüz oluşturulmadı |
-| Issue #50 feature checkpoint | Commit `547cf971882239c912d8221f344706afc993a37b`, tree `2df21fe7c9b836eb189f12f211c58d06027a1ae8`; [Repository Guard 31884497043](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884497043) başarılı; source/docs commit, final Guard, USB ve Issue kapanışı pending |
+| Son tamamlanmış USB milestone | `2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`; Issue #50 source/docs `aea6e2b`, 566 tracked kaynak + 5 final kanıt + source kaydı, 572 satırlı `b3168162…ecf8` SHA-256 manifest/readback, 566/566 Git-blob ve 5/5 evidence eşliği, güvenlik mismatch `0` |
+| Issue #50 kapanış checkpoint'i | Feature `547cf971882239c912d8221f344706afc993a37b`, source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`, tree `84b14646fd549ce93e390bc33a626a8a7a6335fb`; [Repository Guard 31884807638](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31884807638) başarılı; acceptance `18/18`, Issue kapalı ve Roadmap `Done` |
 | Son test/build | Issue #50 sonrası Edit Mode `328/328`, Play Mode `22/22`, failed/skipped `0`; Universal macOS build `327809376` bayt ve Apple M4/Metal 1280×720 `garage-cash-settlement-r19-v1` stock/customer exact-cash, receipt, ledger, replay/conflict ve authority-isolation smoke'ları geçti |
 
-Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #49 kapanışı tarihsel olarak korunur. Issue #50'nin tam test/build/runtime hash'leri ile henüz oluşmamış kapanış kimliklerinin durumu `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
+Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` ve Issue #49 kapanışı tarihsel olarak korunur. Issue #50'nin tam test/build/runtime, CI ve USB hash kanıtları `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. Issue #50 yaşayan source/docs değişikliklerini ayrı commit'e alıp private `main`e push et; oluşacak gerçek commit/tree kimliğini kaydet.
-2. Source/docs Repository Guard sonucunu doğrula; ardından kaynak ve final test/build/runtime kanıtlarını manifest/readback doğrulanmış ayrı USB milestone'una al.
-3. Issue #50 acceptance listesini kanıtla kapatıp Roadmap durumunu `Done` yap; source/docs, final Guard ve USB kimliklerini kapanış belgelerine gerçek değerleriyle işle.
-4. Ancak bu kapanıştan sonra Epic #9 altındaki sıradaki bounded paketi GitHub bağımlılık sırasından seç; çoklu müşteri/offer, utility scoring, memnuniyet ve Save sınırlarını hazır authority'lerden önce büyütme.
-5. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
+1. Epic #9 altındaki sıradaki küçük, uçtan uca müşteri/kasa paketini GitHub bağımlılık sırasından seç; çoklu müşteri/offer, utility scoring, memnuniyet ve Save sınırlarını hazır authority'lerden önce büyütme.
+2. Yeni pakette domain authority → gerçek Input System → Garage projection → EditMode/PlayMode → Mac build/runtime zincirini aynı bounded issue içinde kapat.
+3. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 
 Her adım ayrı issue, test, commit ve checkpoint olarak kapanır. Büyük asset, ücretli araç, Steam/Apple ödemesi veya gerçek Windows IL2CPP kurulumu ayrı maliyet/izin kapısıdır.
 
