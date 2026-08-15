@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `136/136` passed.
+- Edit Mode `161/161` passed.
 - Play Mode `14/14` passed.
 - `0` failed.
 - `0` skipped.
@@ -82,6 +82,9 @@ Tamamlanan saf Core sözleşmeleri:
 - `pcg32-xsh-rr-64-32-v1`, official golden vector, raw state snapshot/restore ve bias'sız bounded integer.
 - `sha256-framed-be-pcg32-v1`, canonical root seed, stable domain/context stream derivation ve reload-reroll engeli.
 - Event correlation/direct-causation, global FIFO ve breadth-first nested enqueue uygulayan bounded in-memory dispatcher.
+- `PSE.Catalog` assembly: immutable product definition, stable product/category kimliği, serialized/batch tracking policy, doğrulanmış görünür ad ve bounded garanti.
+- `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
+- Catalog yalnız Core; Inventory yalnız Core + Catalog referanslıdır. İki assembly de Unity/Editor bağımlılığı taşımaz.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -105,11 +108,12 @@ Henüz yapılmayanlar:
 
 - Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
-- Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
+- Orders, Economy ve diğer domain assembly'leri; Catalog/Inventory ile event/save bağlantısı.
+- Fiziksel item/cart projeksiyonlarının authoritative Inventory kayıtlarına açık adaptörle bağlanması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #7 altında Unity'den bağımsız Catalog + Inventory çekirdeğidir. Dünya projection'ı ekonomik stok gerçeği sayılmaz; sipariş/teslimat/raf bağlaması Issue #8'e kadar yapılmaz.
+Sıradaki bounded paket Issue #8 altında sipariş, teslimat kabulü ve raf container akışının en küçük uçtan uca dilimidir. Dünya projection'ı hâlâ ekonomik stok gerçeği değildir; yalnız açık Inventory komutu/adaptörü başarılı olduğunda sahiplik değişir.
 
 ## 7. Çalışma akışı
 
@@ -163,7 +167,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 131 Edit Mode ve 12 Play Mode baseline testi geçti.
+2. Repo guard, 161 Edit Mode ve 14 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

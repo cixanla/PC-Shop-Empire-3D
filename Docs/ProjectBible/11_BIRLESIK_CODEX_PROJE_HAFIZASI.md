@@ -143,26 +143,24 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
-- Issue #37 yüklü taşıma arabası acceptance'ı tamamlandı; Epic #6'nın küçük/büyük kutu, placement ve araba kapısı kapandı.
-- EditMode `136/136`, gerçek Input System PlayMode `14/14` geçti; failed/skipped `0`.
-- Universal macOS development build `327.282.300` bayt ve Mach-O `x86_64 + arm64` olarak üretildi.
-- Apple M4/Metal gerçek player: `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, ayrıca `cart-flow=ok loaded=ok stable=ok`.
-- Feature Repository Guard [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692) başarılıdır.
-- Dünya projection'ı fiziksel kanıttır; Catalog/Inventory authority henüz eklenmemiştir.
+- Son doğrulanmış kaynak feature: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
+- Issue #38 ve Epic #7 acceptance'ı tamamlandı: Unity bağımsız Catalog + authoritative Inventory çekirdeği hazırdır.
+- EditMode `161/161`, gerçek Input System regresyon PlayMode `14/14` geçti; failed/skipped `0`.
+- Önceki Universal macOS development build `327.282.300` bayt, Mach-O `x86_64 + arm64` ve Apple M4/Metal `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, `cart-flow=ok loaded=ok stable=ok` kanıtı geçerlidir.
+- Product/instance/batch/container/transfer/reservation/quantity invariantları, deterministic sorgu ve failure no-mutation revision sözleşmesi saf testlerle kilitlidir.
+- Dünya projection'ı Inventory'ye kendiliğinden yazmaz; explicit adaptör Issue #8'de kurulur.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #7 Catalog + Inventory çekirdeğini Unity'den bağımsız saf domain sözleşmelerine böl.
-2. İlk dilim ürün tanımı, fiziksel instance/batch/container kimliği ve adet/rezervasyon invariantlarını test etsin; UI veya raf görseli eklemesin.
-3. Mevcut item/cart projection stable kimliklerini koru, fakat onları henüz ekonomik authority olarak kullanma.
-4. Sipariş, teslimat ve raf dünya bağlamasını Issue #8'e kadar ertele.
+1. Issue #8'i acceptance odaklı alt işe böl; en küçük sipariş → teslimat kabulü → receiving container → raf transfer zincirini seç.
+2. Dünya item stable ID ile Inventory item/batch kimliğini açık adaptörde eşle; domain komutu başarısızsa fiziksel ownership'i değiştirme.
+3. İlk dilimde fiyat/para, müşteri AI ve geniş Dashboard ekleme; gerçek stok conservation kanıtını tamamla.
+4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula.
 
 Sonraki ana geliştirme sırası:
 
-- Issue #7: Catalog + Inventory çekirdeği.
 - Issue #8: Sipariş, teslimat ve gerçek raf döngüsü.
 - Issue #9: Müşteri gezinme, danışmanlık ve kasa.
 - Issue #10: Fiziksel PC toplama teknik prototipi.
@@ -173,12 +171,12 @@ Sonraki ana geliştirme sırası:
 
 Henüz tamamlanmayan önemli alanlar:
 
-- Gerçek raf ve authoritative Inventory.
+- Gerçek raf ve dünya↔authoritative Inventory adaptörü.
 - Çoklu slot/palet taşıma arabası ve lojistik ekipmanı.
 - Çok katlı veya palet istifi.
 - Gelişmiş el modeli/animasyonu.
 - Garajın bütününe yayılmış final sanat.
-- Catalog, Inventory, Orders, Economy ve diğer domain assembly'leri.
+- Orders, Economy ve diğer domain assembly'leri; Catalog/Inventory event/save entegrasyonu.
 - Save/Guardian runtime.
 - Steam entegrasyonu.
 - Native Windows x64 IL2CPP/DirectX/Steam testi.
@@ -231,4 +229,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Yüklü taşıma arabası checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #7'yi doğrula. Sıradaki tek bounded paket Unity'den bağımsız Catalog + Inventory çekirdeğinin en küçük invariant-testli dilimidir. Dünya item/cart projection'ını ekonomik authority sayma; sipariş/teslimat/raf bağlamasını Issue #8'e bırak. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Catalog + Inventory authority checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket sipariş → teslimat kabulü → receiving container → raf transferinin en küçük uçtan uca dilimidir. Dünya item/cart projection'ı yalnız explicit Inventory komutu başarılı olursa ownership değiştirsin. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.

@@ -27,7 +27,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Stable küçük kutu üstüne merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi, dolu taban pickup kilidi ve `İSTİF GEÇERLİ` geri bildirimi eklendi.
 - Tek `LargeBox` kapasiteli stable platform arabası; hands→cart→hands ownership geçişi, dört noktalı zemin desteği, swept obstruction kontrolü, yüklü/boş hız profili, sprint kilidi, dinamik binding prompt'u ve fail-closed recovery ile eklendi.
 - Klavye/fare ve gamepad ile yükle→sür→bırak→geri al zinciri gerçek Input System testleriyle; yüklü araba aynı stable item kimliği ve physics snapshot'ıyla doğrulandı.
-- Edit Mode baseline `136/136`, Play Mode baseline `14/14` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçti.
+- Unity bağımsız `PSE.Catalog`; immutable ürün tanımı, stable ürün/kategori kimliği, serialized/batch tracking policy, doğrulanmış görünür ad, bounded garanti ve deterministic katalog ile eklendi.
+- Unity bağımsız authoritative `PSE.Inventory`; serialized item, batch position, unit-capacity container, atomik transfer, claim reservation, release/consume, revision, deterministic sorgu ve invariant audit ile eklendi.
+- Catalog/Inventory assembly bağımlılıkları ve failure no-mutation davranışları saf domain testleriyle kilitlendi.
+- Edit Mode baseline `161/161`, Play Mode baseline `14/14` teste yükseldi; son Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçerliliğini koruyor.
 
 ### Changed
 
@@ -64,4 +67,4 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 - Gerçek Windows x64 runtime/IL2CPP/DirectX/Steam testi henüz yapılmadı.
 - UVCS ilk check-in'i uzak bağlantı reseti nedeniyle beklemede; Git tek authoritative VCS'dir.
-- Küçük kutu alma/bırakma/placement/rotation/tek-kat istif, büyük-kutu güvenli taşıma ve tek yüklü platform arabası çalışıyor; gelişmiş el animasyonu, çoklu/palet taşıma, gerçek raf/Inventory authority ve final sanat henüz tamamlanmadı.
+- Küçük kutu alma/bırakma/placement/rotation/tek-kat istif, büyük-kutu güvenli taşıma, tek yüklü platform arabası ve authoritative Catalog/Inventory çekirdeği çalışıyor; gelişmiş el animasyonu, çoklu/palet taşıma, gerçek raf adaptörü ve final sanat henüz tamamlanmadı.

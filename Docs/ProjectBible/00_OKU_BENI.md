@@ -80,6 +80,7 @@ Yapıldı:
 - On ikinci bounded paket tamamlandı: tek garaj köşesine bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe eklendi; Edit Mode 128/128, Play Mode 10/10 ve gerçek player `lookdev=ok` geçti.
 - On üçüncü bounded paket tamamlandı: stable küçük kutu üstüne merkez/90° snap, beş noktalı tam destek, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidiyle kontrollü istifleme eklendi; Edit Mode 131/131, gerçek keyboard/mouse + gamepad Play Mode 12/12 ve gerçek player `stacking=ok` geçti.
 - On dördüncü bounded paket tamamlandı: tek `LargeBox` kapasiteli stable platform arabasına hands→cart→hands transferi, dört noktalı destek/swept obstruction, yüklü/boş hız profili, sprint kilidi, dinamik prompt ve fail-closed recovery eklendi; Edit Mode 136/136, gerçek keyboard/mouse + gamepad Play Mode 14/14 ve gerçek player `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` geçti.
+- On beşinci bounded paket tamamlandı: Unity bağımsız `PSE.Catalog` + authoritative `PSE.Inventory`; ürün/instance/batch/container/transfer/reservation/quantity invariantları, deterministic sorgular ve failure no-mutation revision sözleşmesi eklendi; Edit Mode 161/161 ve regresyon Play Mode 14/14 geçti.
 - Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
@@ -87,7 +88,7 @@ Yapıldı:
 
 Yapılmadı:
 
-- Guardian runtime, final 3D sanat, ürün kataloğu/mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; çalışan küçük/büyük kutu etkileşimi yalnız lisanssız graybox/prototip varlıklarla kuruldu.
+- Guardian runtime, final 3D sanat, mağaza ekonomisi veya ticari içerik üretimi başlatılmadı; ürün kataloğunun yalnız saf domain sözleşmesi ve çalışan küçük/büyük kutu etkileşimi lisanssız graybox/prototip varlıklarla kuruldu.
 - Blender, Steamworks SDK, Xcode, ücretli araç veya üçüncü taraf oyun asset'i kurulmadı.
 - Eski proje, kayıtlar ve USB'deki legacy klasörler değiştirilmedi; yalnız onaylı yeni `90_BACKUPS/PCShopEmpire3D` hedefi yazıldı.
 - Ücretli araç veya lisans satın alınmadı.
@@ -126,6 +127,6 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; pickup/drop, kontrollü placement/rotation/istifleme, güvenli büyük-kutu taşıma, yüklü platform arabası ve tek-köşe okunaklı yarı gerçekçi benchmark içerir: Edit Mode 136/136, Play Mode 14/14, Universal Mac build ve `rotation=ok stacking=ok transport-cart=ok lookdev=ok` runtime smoke geçti. Bir sonraki bounded iş Issue #7 Catalog + Inventory çekirdeğidir; fiziksel projection henüz authoritative stok ve benchmark full final-art değildir.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garajın fiziksel akışına ek olarak Unity bağımsız Catalog + Inventory authority hazırdır: Edit Mode 161/161, Play Mode 14/14 geçti; son Universal Mac build ve `rotation=ok stacking=ok transport-cart=ok lookdev=ok` runtime smoke geçerlidir. Bir sonraki bounded iş Issue #8 sipariş/teslimat/raf dilimidir; fiziksel projection açık adaptör kurulana kadar authoritative stok ve benchmark full final-art değildir.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

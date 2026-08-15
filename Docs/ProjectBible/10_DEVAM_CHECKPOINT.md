@@ -1,19 +1,19 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #37 yüklü taşıma arabası ve Epic #6 tamamlandı; sıradaki bounded paket Issue #7 Catalog + Inventory çekirdeğidir<br>
+**Durum:** Issue #38 authoritative Catalog + Inventory temeli ve Epic #7 tamamlandı; sıradaki bounded paket Issue #8 sipariş/teslimat/raf dilimidir<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #37 / Epic #6
+## En yeni checkpoint — Issue #38 / Epic #7
 
-- Feature commit `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`, tree `1d48b75c74e5ae14ee92d4f0687a68ec35182ddd`.
-- GarageGraybox tek stable platform arabası taşır; eldeki `LargeBox` `E / Gamepad South` ile yüklenir veya yeniden ellere alınır.
-- `Mouse Left / Gamepad RT` arabayı tutar/bırakır; yüklü hız `0,85×`, boş hız `0,90×`, sprint kapalıdır.
-- Dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kontrolü başarısızsa hareket uygulanmaz; araba/yük son güvenli durumda kalır.
-- EditMode `136/136`, gerçek Input System PlayMode `14/14`, Universal macOS build ve Apple M4/Metal `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` player smoke geçti.
-- Pickup/drop/placement/rotation/stacking/large-carry/recovery ve stable-ID invariantları korundu.
-- Kanıt: `Docs/Evidence/LOADED-TRANSPORT-CART-CHECKPOINT-2026-08-15.md`; feature Repository Guard [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692) başarılı.
-- Sıradaki bounded iş Issue #7 altında Unity'den bağımsız Catalog + Inventory çekirdeğidir; fiziksel projection henüz authoritative stok değildir.
+- Feature commit `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`, tree `8f51b1e6e32a351ae187467a340ec10e7337d06d`.
+- `PSE.Catalog` yalnız Core referanslı saf assembly olarak stable ürün/kategori kimliği, tracking policy, doğrulanmış görünür ad, bounded garanti ve immutable deterministic katalog sağlar.
+- `PSE.Inventory` yalnız Core + Catalog referanslı authoritative assembly olarak serialized item, bölünebilir batch, tek container konumu, unit capacity, atomik transfer ve claim reservation sağlar.
+- Release/consume, total/available/container sorguları, başarıda tek revision ve failure'da no-mutation sözleşmesi invariant audit ile kilitlendi.
+- EditMode `161/161`, regresyon PlayMode `14/14` geçti; önceki pickup/drop/placement/rotation/stacking/large-carry/cart akışı bozulmadı.
+- Yeni sahne/prefab/runtime sunumu olmadığı için player yeniden build edilmedi; son Universal macOS ve Apple M4/Metal cart smoke kanıtı geçerlidir.
+- Karar: `Docs/ADR-0016-AUTHORITATIVE-CATALOG-INVENTORY-CORE.md`; kanıt: `Docs/Evidence/CATALOG-INVENTORY-CHECKPOINT-2026-08-15.md`.
+- Fiziksel item/cart henüz otomatik stok authority değildir; açık world↔Inventory adaptörü sipariş/teslimat/raf dilimiyle Issue #8'de kurulur.
 
 ## Kullanım güvenliği protokolü
 
@@ -27,6 +27,8 @@
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 - Unity `6000.3.21f1`, URP `17.3.0`, C#.
 - Core: stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministik event dispatcher tamam.
+- Catalog: stable ürün/kategori ID, serialized/batch tracking policy, fail-closed immutable ürün kataloğu tamam.
+- Inventory: serialized item, batch position, container capacity, atomik transfer, claim reservation, consume/release, deterministic query ve invariant audit tamam.
 - Gameplay sınırları: `PSE.World` ve `PSE.Presentation`.
 - İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`.
 - Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
@@ -46,17 +48,14 @@
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`
-- Tree: `1d48b75c74e5ae14ee92d4f0687a68ec35182ddd`
-- Checkpoint docs commit: `148c6d1f2936307268237ae2c484743146f7e639`
-- Epic/issue: [#6](https://github.com/cixanla/PC-Shop-Empire-3D/issues/6) / [#37](https://github.com/cixanla/PC-Shop-Empire-3D/issues/37)
-- Karar: `Docs/ADR-0015-LOADED-TRANSPORT-CART-GRAYBOX.md`.
-- Kanıt: `Docs/Evidence/LOADED-TRANSPORT-CART-CHECKPOINT-2026-08-15.md`.
-- Kapsam: tek `LargeBox` slotu, hands→cart→hands ownership, tam destek/swept obstruction, yüklü/boş hareket profili, dinamik prompt, gerçek keyboard/gamepad akışı ve recovery.
-- Builder güvenliği, connected prefab, build-scene sırası, stable item ID, physics snapshot ve pickup/drop/placement/rotation/stacking/large-carry invariantları korundu.
-- Çoklu slot/palet, büyük-kutu placement/istif, gerçek raf container'ı ve authoritative Inventory bu checkpoint'in dışında kaldı.
-- Remote feature Repository Guard: [31859948692](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31859948692), başarılı.
-- Remote checkpoint Repository Guard: [31860208560](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31860208560), başarılı.
+- Feature commit: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`
+- Tree: `8f51b1e6e32a351ae187467a340ec10e7337d06d`
+- Epic/issue: [#7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) / [#38](https://github.com/cixanla/PC-Shop-Empire-3D/issues/38)
+- Karar: `Docs/ADR-0016-AUTHORITATIVE-CATALOG-INVENTORY-CORE.md`.
+- Kanıt: `Docs/Evidence/CATALOG-INVENTORY-CHECKPOINT-2026-08-15.md`.
+- Kapsam: Catalog, serialized item, batch positions, logical container capacity, transfer, claim reservation, consume/release, deterministic query ve invariant audit.
+- Sahne projection'ı, raf UI/planogram, acquisition cost/fiyat/para, Orders, event publication ve persistence açıkça kapsam dışında kaldı.
+- Remote Repository Guard bağlantıları push sonrası bu checkpoint'e eklenecektir.
 
 ## Test ve build kanıtı
 
@@ -64,6 +63,8 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
+| `catalog-inventory-editmode.xml` | 161/161 geçti | `626757772e5cae48ce1531ddca35b544ebba986bd34a9f32ddea6b7f758663f0` |
+| `catalog-inventory-playmode.xml` | 14/14 geçti | `69d89a0f7d2943ceb2793cf75db2cffd689bed37ae54d6303e013510835d21f8` |
 | `cart-editmode-final.xml` | 136/136 geçti | `6de78a3e7be6d47e9780962bdabef4a64d5efe153bf3b572fee90c5da98c9bca` |
 | `cart-playmode-final.xml` | 14/14 geçti | `87b3c4e42d73186191740b69971b482bb49ab68c882105f48e7aee39628ccea3` |
 | `cart-macos-build.log` | Universal development build, 327.282.300 bayt | `1511e285a0cb051b1216c11d455efba7334fdda22ef75456e627451a7677f347` |
@@ -71,7 +72,7 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 | `cart-macos-runtime-final.log` | Apple M4/Metal, `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` | `e2a5c113f28db09d4746182bb062031b29b601b0e188d8737fe5967ca5ef2a56` |
 | `cart-macos-runtime-final.png` | 1280×748 yüklü araba ve HUD | `816fec72ed909be4a5ab9244a888adbddce0743b1b42450ec27cabcf72bfc5d2` |
 
-EditMode ownership/physics snapshot, kapasite/profil, grip menzili, dört noktalı destek ve obstruction sözleşmesini doğrular. PlayMode gerçek Input System device-state olaylarıyla keyboard/mouse ve gamepad yükle→sür→engel→bırak→geri al→recovery zincirini ve bütün önceki fiziksel etkileşim regresyonlarını doğrular. Mac kanıtı Windows native doğrulamasının yerine geçmez.
+Yeni EditMode paketi Catalog/Inventory assembly sınırını, ürün/instance/batch/container/reservation/quantity invariantlarını ve failure no-mutation davranışını doğrular. PlayMode gerçek Input System fiziksel etkileşim regresyonlarını korur. Önceki Mac player kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -90,6 +91,7 @@ EditMode ownership/physics snapshot, kapasite/profil, grip menzili, dört noktal
 - Readable lookdev benchmark: `c7214afab81a360a3ca10a88cbdd29f67e741994`.
 - Controlled small-box stacking: `2e11e30a1a4b3435046ae18001004cacc170079e`.
 - Loaded transport cart: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
+- Authoritative Catalog + Inventory core: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
 
 ## USB güvenlik katmanı
 
@@ -106,8 +108,8 @@ Güncel yüklü taşıma arabası snapshot'ı `148c6d1` tracked kaynağını ve 
 
 ## Devam sırası
 
-1. Issue #7 Catalog + Inventory çekirdeğini saf domain sözleşmeleri ve invariant testleriyle küçük bir ilk pakete böl.
-2. Issue #8 sipariş/teslimat/raf akışını yalnız authoritative Inventory hazır olduktan sonra dünya projection'ına bağla.
+1. Issue #8 altında sipariş → teslimat kabulü → authoritative receiving container → raf transferinin en küçük uçtan uca paketini oluştur.
+2. Fiziksel item stable ID ile Inventory item/batch kaydını açık adaptör üzerinden eşle; başarısız domain komutunda dünya ownership'ini değiştirme.
 3. Benchmark görsel dilini tamamlanan gameplay alanlarına kademeli yay; sahneyi final art ilan etme.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
 
