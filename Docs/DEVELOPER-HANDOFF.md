@@ -52,8 +52,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `287/287` passed.
-- Play Mode `19/19` passed.
+- Edit Mode `298/298` passed.
+- Play Mode `22/22` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -88,9 +88,9 @@ Tamamlanan saf Core sözleşmeleri:
 - `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
 - `PSE.Retail` assembly: stable shelf-offer, customer basket reservation, immutable checkout ve checkout completion authority'leri; exact serialized item/claim bağları, deterministic sorgu/snapshot, idempotent komutlar, drift denetimi ve failure no-mutation.
 - `PSE.Actors` assembly: stable customer/intent/visit kimlikleri, immutable state/deadline/route kayıtları, bounded exact command receipt ledger'ı, deterministic query/revision ve invariant audit.
-- Customer visit zinciri `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited`; route state başına iki deneme, `RouteUnavailable`, patience/exit timeout ve güvenli terminal fallback kullanır.
+- Customer visit zinciri `Entering → Browsing → NavigatingToCheckout → AwaitingCheckout → Exiting → Exited`; route state başına iki deneme, `RouteUnavailable`, `OfferDeclined`, patience/exit timeout ve güvenli terminal fallback kullanır.
 - `CustomerOfferDecisionEvaluator`, yalnız immutable Browsing visit + tek shelf offer + accepted price girdisiyle stable `Buy/Leave` ve exact provenance üretir. Exact replay value-equal; historical snapshot action yetkisi değildir ve değerlendirme hiçbir authority'yi mutate etmez.
-- `CustomerOfferDecisionActionAuthority`, explicit Actors↔Retail binding sonrası current visit/offer'ı yeniden doğrular; yalnız current `Buy` exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout` üretir. Stale/mismatch/preflight failure bütün authority'lerde no-mutation, exact action replay idempotenttir.
+- `CustomerOfferDecisionActionAuthority`, explicit Actors↔Retail binding sonrası current visit/offer'ı yeniden doğrular. Current `Buy` exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout`; current `Leave` reservation olmadan `Browsing → Exiting/OfferDeclined` üretir. Stale/mismatch/preflight failure bütün authority'lerde no-mutation, exact kind replay idempotent ve cross-kind replay conflict'tir.
 - `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
 - `GarageStockFlowSession` exact serialized item için `Arrived → Receiving → ActorHands → Shelf/WorldFloor` prototype composition'ını kurar.
 - `InventoryItemWorldBinding` aynı Inventory item/world item kimliğini, `InventoryPlacementZone` ise doğrulanmış surface/container eşlemesini taşır.
@@ -116,12 +116,12 @@ Tamamlanan saf Core sözleşmeleri:
 - Stable küçük kutu desteğinde merkez/90° snap, beş noktalı tam footprint, overlap engeli, tek kat/tek üst ilişkisi ve dolu taban pickup kilidi vardır; gerçek keyboard/mouse ve gamepad zinciri testlidir.
 - Stable platform arabası tek `LargeBox` kabul eder; `E / Gamepad South` ile hands→cart→hands transferi, `Mouse Left / Gamepad RT` ile tut/bırak, 0,85× yüklü ve 0,90× boş hız, sprint kilidi ve dinamik prompt uygulanır.
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
-- `GarageCustomerFlowRuntime`, runtime `NavMeshSurface` üzerinde explicit giriş/RAF A/checkout/çıkış anchor'larını izler; offer ziyareti başlatır, reservation checkout'a, fulfillment `Fulfilled` çıkışına götürür.
+- `GarageCustomerFlowRuntime`, runtime `NavMeshSurface` üzerinde explicit giriş/RAF A/checkout/çıkış anchor'larını izler; offer ziyareti başlatır, Buy reservation checkout'a, fulfillment `Fulfilled` çıkışına ve Leave `OfferDeclined` ile doğrudan Browse→Exit rotasına götürür.
 - Pause integer simulation clock ve NavMeshAgent'ı dondurur. Route/patience fallback'i Inventory/Retail/Orders revision'larını değiştirmez; terminal müşteri projection'ı güvenle gizlenir.
-- Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current `Buy` kararını action authority'ye uygular; stale karar stable failure metniyle engellenir.
+- Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current Buy/Leave kararını action authority'ye uygular; stale Buy `SATIN ALMA ENGELLİ`, stale Leave `AYRILMA ENGELLİ` stable metniyle engellenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Issue #48 feature `6951869`, source/docs `aa61700` ve Repository Guard koşuları `31880394269`/`31880730059` ile kapandı; issue Completed, Roadmap Done, Epic #9 açık/In Progress durumundadır.
+- Issue #49 feature `67d858a`, Repository Guard `31882228394`, EditMode `298/298`, PlayMode `22/22` ve Mac runtime `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı; source/docs/CI/USB kapanışı sürüyor, Epic #9 açık/In Progress kalıyor.
 - Güncel USB milestone `2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`: source/docs checkpoint `aa61700`, 547 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 552 satırlı `05ed8205…e76f6` SHA-256 manifest/readback ile doğrulandı. 547/547 Git-blob eşliği geçti; hash/boyut/path/evidence mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 9.902.727 bayttır.
 
 Henüz yapılmayanlar:
@@ -129,11 +129,11 @@ Henüz yapılmayanlar:
 - Gelişmiş el animasyonu, çok satırlı/çok adetli parcel unpack layout'u, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
 - Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
-- Sayısal fiyat düzenleme UI'si, stale-safe `Leave/OfferDeclined` action'ı, açıklanabilir çoklu-offer müşteri kararı, checkout başlatma, ödeme/Economy settlement, gerçek fiziksel sepet transferi ve item/cart projection'ının daha geniş container tiplerine yayılması.
+- Sayısal fiyat düzenleme UI'si, açıklanabilir çoklu-offer müşteri kararı, ödeme/Economy settlement, gerçek fiziksel sepet transferi ve item/cart projection'ının daha geniş container tiplerine yayılması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #9 altında `Leave` sonucunu current visit/offer snapshotlarıyla yeniden doğrulayıp explicit Actors↔Retail binding sonrası stable `OfferDeclined` ile `Browsing → Exiting` uygulayan action sınırıdır. Tamamlanan `Buy` reservation/navigation korunur; checkout başlatma, ödeme, Economy ledger/COGS/nakit, çoklu müşteri/ürün, derin danışmanlık, Save ve final karakter sanatı ayrı kalır.
+Sıradaki bounded paket Issue #9 altında immutable checkout completion'ı atomik payment receipt ve ilk `PSE.Economy` nakit/gelir/COGS settlement'ına bağlayan sınırdır. Tamamlanan stok tüketimi ve Buy/Leave lifecycle korunur; vergi/indirim/fiş, çoklu ödeme yöntemi, çoklu müşteri/ürün, derin danışmanlık, Save ve final UI ayrı kalır.
 
 ## 7. Çalışma akışı
 

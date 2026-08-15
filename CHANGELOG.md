@@ -59,6 +59,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Inventory/Basket/Actors prepared planları, `ConsumeOnly` action ownership, public release/consume bypass engelleri, exact/conflicting replay ve historical action receipt invariantları domain testleriyle kilitlendi.
 - Garage'da gerçek `G / Gamepad East` current Buy action'ını uygular; stale offer stable `DecisionStale` metniyle Action/Basket/Inventory/Actors/Checkout/Orders mutation üretmeden engellenir.
 - Edit Mode baseline `287/287`, Play Mode baseline `19/19` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-buy-action-r17-v1 buy-action=ok stale-blocked=ok authority-isolated=ok` gerçek player smoke geçti.
+- Aynı kind-discriminated offer-action ledger'ına stale-safe `Leave` eklendi; current visit/offer exact revalidation sonrası internal Actors planı `Browsing → Exiting` ve stable `OfferDeclined` üretirken Basket/Inventory/Checkout/Offer/Orders değişmez.
+- Exact Leave replay, conflicting/cross-kind replay, aynı visit için ikinci action, historical terminal receipt, owner/revision/watermark-bound plan ve route-fallback reason korunumu domain testleriyle kilitlendi.
+- Garage'da gerçek `G / Gamepad East` current Leave'i uygular; `Browse → Exit` NavMesh kontratı, `TEKLİF REDDEDİLDİ` başarı ve `AYRILMA ENGELLİ • <stable-code>` stale geri bildirimi klavye/gamepad testleriyle doğrulandı.
+- Edit Mode baseline `298/298`, Play Mode baseline `22/22` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-leave-action-r18-v1 leave-action=ok stale-leave-blocked=ok authority-isolated=ok` gerçek player smoke geçti.
 
 ### Changed
 

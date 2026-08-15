@@ -18,10 +18,10 @@ Bu depo, eski Electron oyununun doğrudan portu değildir. Yeni oyun Unity 6000.
 - Unity: `6000.3.21f1` ARM64 editör, URP `17.3.0`.
 - Hedef: önce Windows x64 + Steam 1.0; bütçe uygunsa daha sonra ayrı macOS port/QA turu.
 - Stage A: proje, paket, macOS/Windows Mono smoke build ve private GitHub temeli tamamlandı.
-- Stage B: saf `PSE.Core` sözleşmeleri; oynanabilir garaj; güvenli pickup/drop; küçük-kutu placement/rotation/istif; büyük-kutu taşıma ve yüklü platform arabası graybox zincirleri tamamlandı.
-- Son doğrulama: Edit Mode `136/136`, Play Mode `14/14`; başarısız/atlanan test yok. Universal macOS build ve Apple M4/Metal runtime smoke geçti.
+- Stage B: saf Core/Catalog/Inventory/Orders/Retail/Actors authority'leri; oynanabilir fiziksel garaj; teslimat→raf→offer→müşteri→checkout/fulfillment ve stale-safe Buy/Leave müşteri zincirleri tamamlandı.
+- Son doğrulama: Edit Mode `298/298`, Play Mode `22/22`; başarısız/atlanan test yok. Universal macOS build ve Apple M4/Metal `garage-leave-action-r18-v1 leave-action=ok stale-leave-blocked=ok authority-isolated=ok` runtime smoke geçti.
 - Yürütme panosu: [PC Shop Empire 3D — Development Roadmap](https://github.com/users/cixanla/projects/2), 22 epic.
-- GarageGraybox sahnesinde hareket, kamera, görünür eller, dinamik tuş bildirimi, güvenli kutu yerleştirme/istifleme ve klavye/gamepad ile tek büyük kutuyu platform arabasına yükleme–taşıma–geri alma çalışıyor; sıradaki bounded iş Issue #7 Catalog + Inventory çekirdeğidir.
+- GarageGraybox sahnesinde fiziksel teslimat/raf akışı, gerçek keyboard/gamepad Buy/Leave, NavMesh müşteri, checkout/fulfillment, güvenli taşıma/placement/istif ve yarı gerçekçi benchmark köşesi çalışıyor; sıradaki bounded iş atomik payment ve ilk Economy settlement sınırıdır.
 
 ## Dizinler
 

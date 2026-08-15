@@ -243,7 +243,7 @@ Monotonluğu azaltma ilkeleri:
 | 0 | Keşif, ortak anlayış, kaynak güvenliği | Tamamlandı |
 | A | Unity/paket/build/VCS teknik kurulum | Tamamlandı; private GitHub authoritative, UVCS beklemede |
 | 1 | Proje temeli ve graybox etkileşim | Devam ediyor; hareket, küçük kutu pickup/drop/placement/rotation/istif, güvenli büyük-kutu taşıma, yüklü platform arabası ve ilk görsel benchmark tamam |
-| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout/fulfillment, deterministic müşteri ziyareti + runtime NavMesh ve açıklanabilir tek-offer `Buy/Leave` kararı tamam; karar uygulama sınırı ve ödeme/Economy sırada |
+| 2 | Temel mağaza döngüsü | Devam ediyor; Catalog/Inventory, purchase-order receiving, fiziksel teslimat/raf, offer, basket, checkout/fulfillment, deterministic müşteri ziyareti + runtime NavMesh ve stale-safe tek-offer `Buy/Leave` eylemleri tamam; ödeme/Economy settlement sırada |
 | 3 | PC toplama teknik prototipi | Planlandı |
 | 4 | Vertical slice entegrasyonu | Planlandı |
 | 5 | Çalışanlar ve gelişmiş müşteri AI | Planlandı |
@@ -287,6 +287,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A, reservation sonrası checkout, fulfillment sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
 | Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
 | Stale-safe müşteri Buy eylemi | Explicit Actors↔Retail kimlik bağı, current visit/offer yeniden doğrulaması, exact serialized action-owned reservation, `Browsing → NavigatingToCheckout`, idempotent replay ve stale no-mutation |
+| Stale-safe müşteri Leave eylemi | Aynı kind-discriminated action ledger'ında current visit/offer revalidation, internal Actors prepared planı, `Browsing → Exiting`, stable `OfferDeclined`, Browse→Exit NavMesh ve bütün commerce authority'lerinde no-mutation |
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
@@ -297,14 +298,14 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
 | Güncel USB milestone | `2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`; source/docs `aa61700`, 547 tracked kaynak + 4 final test/build/runtime kanıtı + source kaydı, 552 satırlı `05ed8205…e76f6` SHA-256 manifest/readback, 547/547 Git-blob eşliği ve forbidden/cache/credential/AppleDouble/sibling sidecar `0`; payload 9.902.727 bayt |
-| Son test/build | Issue #48 sonrası Edit Mode `287/287`, Play Mode `19/19`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-buy-action-r17-v1`, `buy-action=ok stale-blocked=ok authority-isolated=ok` gerçek player smoke geçti |
+| Son test/build | Issue #49 sonrası Edit Mode `298/298`, Play Mode `22/22`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-leave-action-r18-v1`, `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) altında `Leave` kararını current visit/offer snapshotlarıyla yeniden doğrulayan ayrı bounded action ve `OfferDeclined` çıkış sözleşmesini kur; tamamlanan `Buy` reservation/navigation sınırını değiştirme.
-2. Checkout başlatma ve ödeme/Economy settlement'ını ayrı bounded paketlerde ele al; action-owned reservation yalnız mevcut privileged checkout fulfillment sınırından tüketilsin.
+1. [Issue #9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) altında checkout completion'ı atomik ödeme ve ilk `PSE.Economy` nakit/gelir/COGS ledger settlement'ına bağlayan ayrı bounded paketi aç; fiyat snapshotı ve stok tüketimi mevcut authority'lerde kalsın.
+2. Ödeme başarısızlığı, exact replay, conflict ve cross-authority no-mutation kapılarını settlement receipt'iyle kilitle; vergi/indirim/fiş/fatura ve çoklu ödeme yöntemini büyütme.
 3. Çoklu müşteri/offer seçimi, utility scoring, memnuniyet ve Save sınırlarını authority'leri hazır olana kadar ayrı tut.
 4. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma.
 5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
