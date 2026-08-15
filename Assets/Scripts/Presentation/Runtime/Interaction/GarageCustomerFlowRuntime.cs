@@ -48,6 +48,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private Vector3 _browsePoint;
         private Vector3 _checkoutPoint;
         private Vector3 _exitPoint;
+        private CustomerOfferDecision _displayedOfferDecision;
+        private StableId<CustomerVisitIdScope> _displayedDecisionVisitId;
+        private string _lastOfferActionFailureCode = string.Empty;
+        private StableId<CustomerVisitIdScope> _lastOfferActionVisitId;
 
         public GarageStockFlowRuntime StockFlow => stockFlow;
 
@@ -79,6 +83,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public SimulationTimestamp CurrentSimulationTime => _simulationClock.Current;
 
+        public SimulationTimestamp CurrentOfferActionTime
+        {
+            get
+            {
+                SimulationTimestamp current = CurrentSimulationTime;
+                CustomerVisitRecord visit = CurrentVisit;
+                if (visit == null ||
+                    (current.IsAtOrAfter(visit.LastUpdatedAt) &&
+                     current != visit.LastUpdatedAt))
+                {
+                    return current;
+                }
+
+                if (current.Tick == long.MaxValue ||
+                    current.ElapsedMilliseconds > long.MaxValue - FixedStepMilliseconds)
+                {
+                    return current;
+                }
+
+                return SimulationTimestamp.Create(
+                    current.Tick + 1,
+                    current.ElapsedMilliseconds + FixedStepMilliseconds);
+            }
+        }
+
         public CustomerVisitRecord CurrentVisit
         {
             get
@@ -99,16 +128,74 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GarageStockFlowSession session = stockFlow != null
                     ? stockFlow.EnsureInitialized()
                     : null;
-                if (session == null)
+                if (session == null ||
+                    !session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit) ||
+                    visit.State != CustomerVisitState.Browsing)
                 {
+                    _displayedOfferDecision = null;
+                    _displayedDecisionVisitId = default;
                     return null;
+                }
+
+                if (_displayedOfferDecision != null &&
+                    _displayedDecisionVisitId == visit.Id)
+                {
+                    return _displayedOfferDecision;
                 }
 
                 OperationResult<CustomerOfferDecision> result =
                     session.EvaluatePrototypeCustomerOffer();
-                return result.TryGetValue(out CustomerOfferDecision decision)
-                    ? decision
+                if (!result.TryGetValue(out CustomerOfferDecision decision))
+                {
+                    _displayedOfferDecision = null;
+                    _displayedDecisionVisitId = default;
+                    return null;
+                }
+
+                _displayedOfferDecision = decision;
+                _displayedDecisionVisitId = visit.Id;
+                return _displayedOfferDecision;
+            }
+        }
+
+        public string LastOfferActionFailureCode
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                return visit != null &&
+                       visit.State == CustomerVisitState.Browsing &&
+                       visit.Id == _lastOfferActionVisitId
+                    ? _lastOfferActionFailureCode
+                    : string.Empty;
+            }
+        }
+
+        public bool BuyActionSucceeded
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
                     : null;
+                return session != null &&
+                       session.TryGetPrototypeCustomerBuyAction(out _);
+            }
+        }
+
+        public string OfferActionStatusText
+        {
+            get
+            {
+                string failureCode = LastOfferActionFailureCode;
+                if (!string.IsNullOrEmpty(failureCode))
+                {
+                    return $"SATIN ALMA ENGELLİ • {failureCode}";
+                }
+
+                return BuyActionSucceeded
+                    ? "SATIN ALMA ONAYLANDI • REZERVASYON KİLİTLİ"
+                    : string.Empty;
             }
         }
 
@@ -176,10 +263,25 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ? (_routeAssigned ? "ROTA AKTİF" : "ROTA HAZIRLANIYOR")
                         : "ROTA BEKLEMEDE";
                 string reasonCode = OfferDecisionReasonCode;
-                return string.IsNullOrEmpty(reasonCode)
+                string actionStatus = OfferActionStatusText;
+                string status = string.IsNullOrEmpty(reasonCode)
                     ? $"MÜŞTERİ AKIŞI: {StateText}\n{route}"
                     : $"MÜŞTERİ AKIŞI: {StateText}\n{route}\n{reasonCode}";
+                return string.IsNullOrEmpty(actionStatus)
+                    ? status
+                    : $"{status}\n{actionStatus}";
             }
+        }
+
+        public void RecordOfferActionResult(OperationResult result)
+        {
+            CustomerVisitRecord visit = CurrentVisit;
+            bool showFailure = result.IsFailure &&
+                               visit != null &&
+                               visit.State == CustomerVisitState.Browsing;
+            _lastOfferActionFailureCode = showFailure ? result.Error.Code : string.Empty;
+            _lastOfferActionVisitId = showFailure ? visit.Id : default;
+            RefreshPresentation();
         }
 
         public void Configure(
@@ -397,11 +499,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     break;
                 case CustomerVisitState.Browsing:
                     StopAgent();
-                    if (session.TryGetPrototypeBasketLine(out _))
-                    {
-                        ApplyTransition(
-                            session.BeginPrototypeCustomerCheckoutNavigation(CurrentSimulationTime));
-                    }
                     break;
                 case CustomerVisitState.NavigatingToCheckout:
                     DriveRoute(

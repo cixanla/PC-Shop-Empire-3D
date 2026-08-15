@@ -370,6 +370,63 @@ namespace PCShopEmpire3D.Tests.EditMode.Actors
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void PreparedCheckoutNavigationIsNoMutationAndCommitIsIdempotent()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord before), Is.True);
+            long revision = authority.Revision;
+
+            OperationResult<CustomerVisitCheckoutNavigationPlan> prepared =
+                authority.PrepareCheckoutNavigation(VisitId, Time(3));
+
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(prepared.Value.IsReplay, Is.False);
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord afterPrepare), Is.True);
+            Assert.That(afterPrepare, Is.SameAs(before));
+
+            Assert.That(authority.CommitPreparedCheckoutNavigation(prepared.Value).IsSuccess,
+                Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord committed), Is.True);
+            Assert.That(committed.State,
+                Is.EqualTo(CustomerVisitState.NavigatingToCheckout));
+
+            Assert.That(authority.CommitPreparedCheckoutNavigation(prepared.Value).IsSuccess,
+                Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord replayed), Is.True);
+            Assert.That(replayed, Is.SameAs(committed));
+        }
+
+        [Test]
+        public void PreparedCheckoutNavigationRejectsObservedTimeDriftWithoutMutation()
+        {
+            CustomerVisitAuthority authority = CreateAuthority();
+            Assert.That(Start(authority, VisitId, IntentId, CustomerId, Time(1)).IsSuccess, Is.True);
+            Assert.That(authority.MarkBrowseArrival(VisitId, Time(2)).IsSuccess, Is.True);
+            OperationResult<CustomerVisitCheckoutNavigationPlan> prepared =
+                authority.PrepareCheckoutNavigation(VisitId, Time(4));
+            Assert.That(prepared.IsSuccess, Is.True);
+            long revision = authority.Revision;
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord before), Is.True);
+
+            Assert.That(authority.AdvanceTime(Time(3)).IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            OperationResult commit =
+                authority.CommitPreparedCheckoutNavigation(prepared.Value);
+
+            Assert.That(commit.Error,
+                Is.EqualTo(CustomerVisitFailures.CheckoutNavigationPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(revision));
+            Assert.That(authority.TryGetVisit(VisitId, out CustomerVisitRecord after), Is.True);
+            Assert.That(after, Is.SameAs(before));
+            Assert.That(after.State, Is.EqualTo(CustomerVisitState.Browsing));
+        }
+
         private static CustomerVisitAuthority CreateAuthority()
         {
             ProductDefinition product = ProductDefinition.Create(

@@ -184,13 +184,153 @@ namespace PCShopEmpire3D.Actors
             StableId<CustomerVisitIdScope> visitId,
             SimulationTimestamp at)
         {
-            return Transition(
-                visitId,
-                CustomerVisitState.Browsing,
-                CustomerVisitState.NavigatingToCheckout,
-                CustomerVisitExitReason.None,
+            OperationResult<CustomerVisitCheckoutNavigationPlan> prepared =
+                PrepareCheckoutNavigation(visitId, at);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedCheckoutNavigation(prepared.Value);
+        }
+
+        public OperationResult<CustomerVisitCheckoutNavigationPlan>
+            PrepareCheckoutNavigation(
+                StableId<CustomerVisitIdScope> visitId,
+                SimulationTimestamp at)
+        {
+            if (!_visits.TryGetValue(visitId, out CustomerVisitRecord visit))
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.UnknownVisit);
+            }
+
+            if (visit.CommandReceipts.ContainsExact(
                 CustomerVisitCommandKind.BeginCheckoutNavigation,
-                at);
+                at,
+                CustomerVisitExitReason.None))
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Success(
+                    new CustomerVisitCheckoutNavigationPlan(
+                        this,
+                        Revision,
+                        visit,
+                        null,
+                        at,
+                        _hasObservedTime,
+                        _lastObservedAt,
+                        true));
+            }
+
+            if (IsBeforeObservedTime(at))
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.NonMonotonicTimestamp);
+            }
+
+            if (visit.State != CustomerVisitState.Browsing)
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.InvalidTransition);
+            }
+
+            if (!IsStrictlyAfter(at, visit.LastUpdatedAt))
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.NonMonotonicTimestamp);
+            }
+
+            Failure deadlineFailure = TryCreateDeadline(at, out SimulationTimestamp deadline);
+            if (!deadlineFailure.IsNone)
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    deadlineFailure);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.RevisionOverflow);
+            }
+
+            var receipt = new CustomerVisitCommandReceipt(
+                CustomerVisitCommandKind.BeginCheckoutNavigation,
+                at,
+                CustomerVisitExitReason.None,
+                visit.State);
+            if (!visit.CommandReceipts.TryAppend(
+                receipt,
+                out CustomerVisitCommandReceipts replacementReceipts))
+            {
+                return OperationResult<CustomerVisitCheckoutNavigationPlan>.Fail(
+                    CustomerVisitFailures.InvariantViolation);
+            }
+
+            var replacement = new CustomerVisitRecord(
+                visit.Id,
+                visit.Intent,
+                CustomerVisitState.NavigatingToCheckout,
+                visit.StartedAt,
+                at,
+                at,
+                deadline,
+                0,
+                visit.TotalRouteFailureCount,
+                visit.LastRouteFailureAt,
+                visit.HasRouteFailureReport,
+                CustomerVisitExitReason.None,
+                visit.RouteFallbackUsed,
+                replacementReceipts);
+            return OperationResult<CustomerVisitCheckoutNavigationPlan>.Success(
+                new CustomerVisitCheckoutNavigationPlan(
+                    this,
+                    Revision,
+                    visit,
+                    replacement,
+                    at,
+                    _hasObservedTime,
+                    _lastObservedAt,
+                    false));
+        }
+
+        public OperationResult CommitPreparedCheckoutNavigation(
+            CustomerVisitCheckoutNavigationPlan plan)
+        {
+            if (plan == null || !ReferenceEquals(plan.Owner, this))
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.CheckoutNavigationPlanInvalid);
+            }
+
+            if (_visits.TryGetValue(plan.VisitId, out CustomerVisitRecord replayVisit) &&
+                replayVisit.CommandReceipts.ContainsExact(
+                    CustomerVisitCommandKind.BeginCheckoutNavigation,
+                    plan.At,
+                    CustomerVisitExitReason.None))
+            {
+                return OperationResult.Success();
+            }
+
+            if (plan.IsReplay)
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.CheckoutNavigationPlanStale);
+            }
+
+            bool observedTimeMatches =
+                _hasObservedTime == plan.ExpectedHasObservedTime &&
+                (!_hasObservedTime || _lastObservedAt == plan.ExpectedLastObservedAt);
+            if (Revision != plan.ExpectedRevision ||
+                !observedTimeMatches ||
+                !_visits.TryGetValue(plan.VisitId, out CustomerVisitRecord current) ||
+                !ReferenceEquals(current, plan.ExpectedVisit) ||
+                plan.ReplacementVisit == null)
+            {
+                return OperationResult.Fail(
+                    CustomerVisitFailures.CheckoutNavigationPlanStale);
+            }
+
+            _visits[plan.VisitId] = plan.ReplacementVisit;
+            Revision++;
+            ObserveTime(plan.At);
+            return OperationResult.Success();
         }
 
         public OperationResult MarkCheckoutArrival(

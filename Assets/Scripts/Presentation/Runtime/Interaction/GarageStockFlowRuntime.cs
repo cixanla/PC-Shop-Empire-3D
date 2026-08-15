@@ -20,6 +20,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public InventoryItemWorldBinding ItemBinding => itemBinding;
 
+        public GarageCustomerFlowRuntime CustomerFlow =>
+            GetComponent<GarageCustomerFlowRuntime>();
+
         public DeliveryParcelProjection Parcel => itemBinding != null ? itemBinding.Parcel : null;
 
         public TextMesh ShelfOfferText => shelfOfferText;

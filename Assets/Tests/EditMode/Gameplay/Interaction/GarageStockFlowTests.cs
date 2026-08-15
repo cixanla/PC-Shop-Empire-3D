@@ -340,7 +340,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             OperationResult missingOffer = fixture.Binding.TryReserveForCustomer();
             Assert.That(missingOffer.Error, Is.EqualTo(StockProjectionFailures.ShelfOfferRequired));
             Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
-            Assert.That(fixture.Binding.TryReserveForCustomer().IsSuccess, Is.True);
+            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
             Assert.That(fixture.Binding.IsCustomerReserved, Is.True);
             long inventoryRevision = fixture.Session.Inventory.Revision;
             long basketRevision = fixture.Session.RetailBaskets.Revision;
@@ -421,7 +421,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
             Assert.That(fixture.Binding.TryBeginCheckout().Error,
                 Is.EqualTo(StockProjectionFailures.CustomerReservationMissing));
-            Assert.That(fixture.Binding.TryReserveForCustomer().IsSuccess, Is.True);
+            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
             Assert.That(fixture.Binding.RequiresCheckoutStart, Is.True);
             long inventoryRevision = fixture.Session.Inventory.Revision;
             long basketRevision = fixture.Session.RetailBaskets.Revision;
@@ -456,7 +456,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(fixture.Session.TransferItem(
                 fixture.Session.ShelfContainerId).IsSuccess, Is.True);
             Assert.That(fixture.Binding.TryPublishShelfOffer().IsSuccess, Is.True);
-            Assert.That(fixture.Binding.TryReserveForCustomer().IsSuccess, Is.True);
+            Assert.That(fixture.Session.ReservePrototypeCustomerBasket().IsSuccess, Is.True);
             Assert.That(fixture.Binding.TryBeginCheckout().IsSuccess, Is.True);
             Assert.That(fixture.Binding.RequiresCheckoutCompletion, Is.True);
             long inventoryRevision = fixture.Session.Inventory.Revision;

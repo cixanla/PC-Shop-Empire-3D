@@ -1,6 +1,7 @@
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
+using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -81,6 +82,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        item.ProductId == session.ProductId &&
                        item.ContainerId == session.ShelfContainerId &&
                        session.TryGetShelfOffer(out _) &&
+                       CurrentDisplayedBuyDecision != null &&
                        !IsCustomerReserved;
             }
         }
@@ -92,6 +94,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GarageStockFlowSession session = Session;
                 return session != null &&
                        session.RetailBaskets.TryGetLineForItem(InventoryItemId, out _);
+            }
+        }
+
+        public bool IsCustomerReservationActionOwned
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.TryGetPrototypeBasketLine(out RetailBasketLineRecord line) &&
+                       line.IsActionOwned &&
+                       session.TryGetPrototypeCustomerBuyAction(
+                           out CustomerOfferDecisionActionRecord action) &&
+                       line.OwnerActionId == action.Id;
             }
         }
 
@@ -157,6 +173,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (container.Kind == InventoryContainerKind.Shelf && IsCustomerReserved)
                 {
+                    if (IsCustomerReservationActionOwned && !IsCheckoutStarted)
+                    {
+                        return "RAF A • SATIN ALMA ONAYLANDI • KİLİTLİ • STOK 1";
+                    }
+
                     return IsCheckoutStarted
                         ? "RAF A • KASA FİYATI DONDURULDU • STOK 1"
                         : "RAF A • MÜŞTERİ İÇİN AYRILDI • STOK 1";
@@ -169,6 +190,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private GarageStockFlowSession Session => runtime != null
             ? runtime.EnsureInitialized()
             : null;
+
+        private GarageCustomerFlowRuntime CustomerFlow =>
+            runtime != null ? runtime.CustomerFlow : null;
+
+        private CustomerOfferDecision CurrentDisplayedBuyDecision
+        {
+            get
+            {
+                CustomerOfferDecision decision = CustomerFlow?.CurrentOfferDecision;
+                return decision != null &&
+                       decision.DecisionKind == CustomerOfferDecisionKind.Buy
+                    ? decision
+                    : null;
+            }
+        }
 
         public void Configure(
             GarageStockFlowRuntime stockFlowRuntime,
@@ -328,11 +364,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(StockProjectionFailures.ShelfOfferRequired);
             }
 
-            OperationResult result = session.ReservePrototypeCustomerBasket();
-            if (result.IsSuccess)
+            CustomerOfferDecision decision = CurrentDisplayedBuyDecision;
+            if (decision == null || CustomerFlow == null)
             {
-                runtime.RefreshPresentation();
+                return OperationResult.Fail(
+                    CustomerOfferDecisionActionFailures.InputInvalid);
             }
+
+            OperationResult result = session.ApplyPrototypeCustomerBuy(
+                decision,
+                CustomerFlow.CurrentOfferActionTime);
+            CustomerFlow.RecordOfferActionResult(result);
+            runtime.RefreshPresentation();
 
             return result;
         }
@@ -349,6 +392,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (IsCheckoutStarted)
             {
                 return OperationResult.Fail(StockProjectionFailures.CheckoutActive);
+            }
+
+            if (IsCustomerReservationActionOwned)
+            {
+                return OperationResult.Fail(
+                    StockProjectionFailures.CustomerReservationActionOwned);
             }
 
             if (!session.TryGetPrototypeBasketLine(out _))
@@ -649,6 +698,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public static readonly Failure ShelfOfferRequired = Failure.FromCode("stock-projection.shelf-offer-required");
         public static readonly Failure CustomerReservationLocationMismatch = Failure.FromCode("stock-projection.customer-reservation-location-mismatch");
         public static readonly Failure CustomerReservationMissing = Failure.FromCode("stock-projection.customer-reservation-missing");
+        public static readonly Failure CustomerReservationActionOwned =
+            Failure.FromCode("stock-projection.customer-reservation-action-owned");
         public static readonly Failure CustomerReserved = Failure.FromCode("stock-projection.customer-reserved");
         public static readonly Failure CheckoutUnavailable = Failure.FromCode("stock-projection.checkout-unavailable");
         public static readonly Failure CheckoutActive = Failure.FromCode("stock-projection.checkout-active");

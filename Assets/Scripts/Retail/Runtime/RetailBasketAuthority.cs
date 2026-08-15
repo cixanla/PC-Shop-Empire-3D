@@ -29,6 +29,8 @@ namespace PCShopEmpire3D.Retail
 
         public int Count => _lines.Count;
 
+        internal ShelfOfferAuthority OfferAuthority => _offers;
+
         public static OperationResult<RetailBasketAuthority> Create(
             ShelfOfferAuthority offers,
             InventoryAuthority inventory)
@@ -55,6 +57,83 @@ namespace PCShopEmpire3D.Retail
             StableId<ReservationIdScope> inventoryReservationId,
             StableId<InventoryClaimIdScope> inventoryClaimId)
         {
+            OperationResult<RetailBasketReservationPlan> prepared =
+                PrepareSerializedOfferReservation(
+                    lineId,
+                    basketId,
+                    customerId,
+                    offerId,
+                    itemId,
+                    inventoryReservationId,
+                    inventoryClaimId);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedSerializedOfferReservation(prepared.Value);
+        }
+
+        public OperationResult<RetailBasketReservationPlan>
+            PrepareSerializedOfferReservation(
+                StableId<RetailBasketLineIdScope> lineId,
+                StableId<RetailBasketIdScope> basketId,
+                StableId<RetailCustomerIdScope> customerId,
+                StableId<ShelfOfferIdScope> offerId,
+                StableId<ItemInstanceIdScope> itemId,
+                StableId<ReservationIdScope> inventoryReservationId,
+                StableId<InventoryClaimIdScope> inventoryClaimId)
+        {
+            return PrepareSerializedOfferReservationCore(
+                lineId,
+                basketId,
+                customerId,
+                offerId,
+                itemId,
+                inventoryReservationId,
+                inventoryClaimId,
+                default,
+                false);
+        }
+
+        internal OperationResult<RetailBasketReservationPlan>
+            PrepareActionOwnedSerializedOfferReservation(
+                StableId<RetailBasketLineIdScope> lineId,
+                StableId<RetailBasketIdScope> basketId,
+                StableId<RetailCustomerIdScope> customerId,
+                StableId<ShelfOfferIdScope> offerId,
+                StableId<ItemInstanceIdScope> itemId,
+                StableId<ReservationIdScope> inventoryReservationId,
+                StableId<InventoryClaimIdScope> inventoryClaimId,
+                StableId<CustomerOfferDecisionActionIdScope> ownerActionId)
+        {
+            if (ownerActionId.IsEmpty)
+            {
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.ReservationPlanInvalid);
+            }
+
+            return PrepareSerializedOfferReservationCore(
+                lineId,
+                basketId,
+                customerId,
+                offerId,
+                itemId,
+                inventoryReservationId,
+                inventoryClaimId,
+                ownerActionId,
+                true);
+        }
+
+        private OperationResult<RetailBasketReservationPlan>
+            PrepareSerializedOfferReservationCore(
+                StableId<RetailBasketLineIdScope> lineId,
+                StableId<RetailBasketIdScope> basketId,
+                StableId<RetailCustomerIdScope> customerId,
+                StableId<ShelfOfferIdScope> offerId,
+                StableId<ItemInstanceIdScope> itemId,
+                StableId<ReservationIdScope> inventoryReservationId,
+                StableId<InventoryClaimIdScope> inventoryClaimId,
+                StableId<CustomerOfferDecisionActionIdScope> ownerActionId,
+                bool consumeOnly)
+        {
             Failure identityFailure = ValidateIdentities(
                 lineId,
                 basketId,
@@ -65,7 +144,7 @@ namespace PCShopEmpire3D.Retail
                 inventoryClaimId);
             if (!identityFailure.IsNone)
             {
-                return OperationResult.Fail(identityFailure);
+                return OperationResult<RetailBasketReservationPlan>.Fail(identityFailure);
             }
 
             if (_lines.TryGetValue(lineId, out RetailBasketLineRecord existing))
@@ -77,83 +156,156 @@ namespace PCShopEmpire3D.Retail
                         offerId,
                         itemId,
                         inventoryReservationId,
-                        inventoryClaimId))
+                        inventoryClaimId,
+                        ownerActionId))
                 {
-                    return OperationResult.Fail(RetailBasketFailures.LineIdentityConflict);
+                    return OperationResult<RetailBasketReservationPlan>.Fail(
+                        RetailBasketFailures.LineIdentityConflict);
                 }
 
-                return IsConsistent(existing)
-                    ? OperationResult.Success()
-                    : OperationResult.Fail(RetailBasketFailures.InventoryReservationDrift);
+                if (!IsConsistent(existing))
+                {
+                    return OperationResult<RetailBasketReservationPlan>.Fail(
+                        RetailBasketFailures.InventoryReservationDrift);
+                }
+
+                return OperationResult<RetailBasketReservationPlan>.Success(
+                    new RetailBasketReservationPlan(
+                        this,
+                        Revision,
+                        null,
+                        existing,
+                        null,
+                        true));
             }
 
-            foreach (RetailBasketLineRecord line in _lines.Values)
+            foreach (RetailBasketLineRecord candidate in _lines.Values)
             {
-                if (line.BasketId == basketId && line.CustomerId != customerId)
+                if (candidate.BasketId == basketId && candidate.CustomerId != customerId)
                 {
-                    return OperationResult.Fail(RetailBasketFailures.BasketCustomerConflict);
+                    return OperationResult<RetailBasketReservationPlan>.Fail(
+                        RetailBasketFailures.BasketCustomerConflict);
                 }
 
-                if (line.ItemId == itemId)
+                if (candidate.ItemId == itemId)
                 {
-                    return OperationResult.Fail(RetailBasketFailures.ItemAlreadyInBasket);
+                    return OperationResult<RetailBasketReservationPlan>.Fail(
+                        RetailBasketFailures.ItemAlreadyInBasket);
                 }
 
-                if (line.InventoryReservationId == inventoryReservationId)
+                if (candidate.InventoryReservationId == inventoryReservationId)
                 {
-                    return OperationResult.Fail(RetailBasketFailures.ReservationIdentityConflict);
+                    return OperationResult<RetailBasketReservationPlan>.Fail(
+                        RetailBasketFailures.ReservationIdentityConflict);
                 }
             }
 
             if (!_offers.TryGetOffer(offerId, out ShelfOfferRecord offer))
             {
-                return OperationResult.Fail(RetailBasketFailures.UnknownOffer);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.UnknownOffer);
             }
 
             if (!_inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item))
             {
-                return OperationResult.Fail(RetailBasketFailures.UnknownItem);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.UnknownItem);
             }
 
             if (item.ProductId != offer.ProductId)
             {
-                return OperationResult.Fail(RetailBasketFailures.OfferProductMismatch);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.OfferProductMismatch);
             }
 
             if (item.ContainerId != offer.ShelfContainerId)
             {
-                return OperationResult.Fail(RetailBasketFailures.ItemNotOnOfferShelf);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.ItemNotOnOfferShelf);
             }
 
             if (_inventory.TryGetReservation(inventoryReservationId, out _))
             {
-                return OperationResult.Fail(RetailBasketFailures.ReservationIdentityConflict);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.ReservationIdentityConflict);
             }
 
             if (Revision == long.MaxValue)
             {
-                return OperationResult.Fail(RetailBasketFailures.RevisionOverflow);
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    RetailBasketFailures.RevisionOverflow);
             }
 
-            OperationResult reservation = _inventory.ReserveSerializedItem(
+            OperationResult<InventorySerializedReservationPlan> inventoryPlan = consumeOnly
+                ? _inventory.PrepareSerializedItemReservationForConsumption(
+                    inventoryReservationId,
+                    inventoryClaimId,
+                    itemId)
+                : _inventory.PrepareSerializedItemReservation(
+                    inventoryReservationId,
+                    inventoryClaimId,
+                    itemId);
+            if (inventoryPlan.IsFailure)
+            {
+                return OperationResult<RetailBasketReservationPlan>.Fail(
+                    inventoryPlan.Error);
+            }
+
+            var preparedLine = new RetailBasketLineRecord(
+                lineId,
+                basketId,
+                customerId,
+                offerId,
+                itemId,
                 inventoryReservationId,
                 inventoryClaimId,
-                itemId);
+                ownerActionId);
+            return OperationResult<RetailBasketReservationPlan>.Success(
+                new RetailBasketReservationPlan(
+                    this,
+                    Revision,
+                    offer,
+                    preparedLine,
+                    inventoryPlan.Value,
+                    false));
+        }
+
+        public OperationResult CommitPreparedSerializedOfferReservation(
+            RetailBasketReservationPlan plan)
+        {
+            if (plan == null || !ReferenceEquals(plan.Owner, this))
+            {
+                return OperationResult.Fail(RetailBasketFailures.ReservationPlanInvalid);
+            }
+
+            if (_lines.TryGetValue(plan.Line.Id, out RetailBasketLineRecord existing) &&
+                ReferenceEquals(existing, plan.Line) &&
+                IsConsistent(existing))
+            {
+                return OperationResult.Success();
+            }
+
+            if (plan.IsReplay)
+            {
+                return OperationResult.Fail(RetailBasketFailures.ReservationPlanStale);
+            }
+
+            if (Revision != plan.ExpectedRevision ||
+                !_offers.TryGetOffer(plan.Line.OfferId, out ShelfOfferRecord currentOffer) ||
+                !ReferenceEquals(currentOffer, plan.ExpectedOffer) ||
+                plan.InventoryPlan == null)
+            {
+                return OperationResult.Fail(RetailBasketFailures.ReservationPlanStale);
+            }
+
+            OperationResult reservation =
+                _inventory.CommitPreparedSerializedItemReservation(plan.InventoryPlan);
             if (reservation.IsFailure)
             {
                 return reservation;
             }
 
-            _lines.Add(
-                lineId,
-                new RetailBasketLineRecord(
-                    lineId,
-                    basketId,
-                    customerId,
-                    offerId,
-                    itemId,
-                    inventoryReservationId,
-                    inventoryClaimId));
+            _lines.Add(plan.Line.Id, plan.Line);
             Revision++;
             return OperationResult.Success();
         }
@@ -168,6 +320,11 @@ namespace PCShopEmpire3D.Retail
             if (!_lines.TryGetValue(lineId, out RetailBasketLineRecord line))
             {
                 return OperationResult.Fail(RetailBasketFailures.UnknownLine);
+            }
+
+            if (line.IsActionOwned)
+            {
+                return OperationResult.Fail(RetailBasketFailures.ActionOwnedLine);
             }
 
             if (Revision == long.MaxValue)
@@ -261,7 +418,7 @@ namespace PCShopEmpire3D.Retail
                 return OperationResult.Fail(RetailBasketFailures.RevisionOverflow);
             }
 
-            OperationResult consume = _inventory.ConsumeReservations(reservations);
+            OperationResult consume = _inventory.ConsumeCheckoutReservations(reservations);
             if (consume.IsFailure)
             {
                 return consume;
@@ -401,14 +558,16 @@ namespace PCShopEmpire3D.Retail
             StableId<ShelfOfferIdScope> offerId,
             StableId<ItemInstanceIdScope> itemId,
             StableId<ReservationIdScope> inventoryReservationId,
-            StableId<InventoryClaimIdScope> inventoryClaimId)
+            StableId<InventoryClaimIdScope> inventoryClaimId,
+            StableId<CustomerOfferDecisionActionIdScope> ownerActionId)
         {
             return line.BasketId == basketId &&
                    line.CustomerId == customerId &&
                    line.OfferId == offerId &&
                    line.ItemId == itemId &&
                    line.InventoryReservationId == inventoryReservationId &&
-                   line.InventoryClaimId == inventoryClaimId;
+                   line.InventoryClaimId == inventoryClaimId &&
+                   line.OwnerActionId == ownerActionId;
         }
 
         private static bool Matches(
@@ -458,6 +617,12 @@ namespace PCShopEmpire3D.Retail
         public static readonly Failure InventoryReservationDrift = Failure.FromCode("retail.basket.inventory-drift");
         public static readonly Failure CheckoutSnapshotMismatch = Failure.FromCode("retail.basket.checkout-snapshot-mismatch");
         public static readonly Failure RevisionOverflow = Failure.FromCode("retail.basket.revision-overflow");
+        public static readonly Failure ReservationPlanInvalid =
+            Failure.FromCode("retail.basket.reservation-plan-invalid");
+        public static readonly Failure ReservationPlanStale =
+            Failure.FromCode("retail.basket.reservation-plan-stale");
+        public static readonly Failure ActionOwnedLine =
+            Failure.FromCode("retail.basket.line-action-owned");
         public static readonly Failure InvariantViolation = Failure.FromCode("retail.basket.invariant");
     }
 }

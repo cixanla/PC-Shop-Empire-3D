@@ -131,6 +131,43 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
+        public void PreparedSerializedReservationCommitIsExactReplayWithoutMutation()
+        {
+            InventoryAuthority authority = CreateAuthority();
+            StableId<ItemInstanceIdScope> item = ItemId("item.prepared-replay");
+            StableId<ReservationIdScope> reservation =
+                ReservationId("reservation.prepared-replay");
+            Assert.That(authority.ReceiveSerializedItem(
+                item,
+                SerializedProduct,
+                Receiving,
+                InventoryCondition.New).IsSuccess, Is.True);
+            OperationResult<InventorySerializedReservationPlan> prepared =
+                authority.PrepareSerializedItemReservation(
+                    reservation,
+                    ClaimId("claim.prepared-replay"),
+                    item);
+            Assert.That(prepared.IsSuccess, Is.True);
+            long preparedRevision = authority.Revision;
+
+            Assert.That(authority.CommitPreparedSerializedItemReservation(
+                prepared.Value).IsSuccess, Is.True);
+            long committedRevision = authority.Revision;
+            Assert.That(committedRevision, Is.EqualTo(preparedRevision + 1));
+            Assert.That(authority.CommitPreparedSerializedItemReservation(
+                prepared.Value).IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(committedRevision));
+            Assert.That(authority.ReservationCount, Is.EqualTo(1));
+
+            Assert.That(authority.ReleaseReservation(reservation).IsSuccess, Is.True);
+            long releasedRevision = authority.Revision;
+            Assert.That(authority.CommitPreparedSerializedItemReservation(prepared.Value).Error,
+                Is.EqualTo(InventoryFailures.ReservationPlanStale));
+            Assert.That(authority.Revision, Is.EqualTo(releasedRevision));
+            Assert.That(authority.ReservationCount, Is.Zero);
+        }
+
+        [Test]
         public void BatchTransferSplitsPositionButPreservesBatchIdentityAndTotal()
         {
             InventoryAuthority authority = CreateAuthority();

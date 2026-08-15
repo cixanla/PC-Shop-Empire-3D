@@ -31,6 +31,12 @@ namespace PCShopEmpire3D.Inventory
         BatchPosition = 2
     }
 
+    public enum InventoryReservationReleasePolicy
+    {
+        Releasable = 1,
+        ConsumeOnly = 2
+    }
+
     public sealed class InventoryContainerDefinition
     {
         private InventoryContainerDefinition(
@@ -144,7 +150,8 @@ namespace PCShopEmpire3D.Inventory
             StableId<ItemInstanceIdScope> itemId,
             StableId<BatchIdScope> batchId,
             StableId<ContainerIdScope> containerId,
-            int quantity)
+            int quantity,
+            InventoryReservationReleasePolicy releasePolicy)
         {
             Id = id;
             ClaimId = claimId;
@@ -153,6 +160,7 @@ namespace PCShopEmpire3D.Inventory
             BatchId = batchId;
             ContainerId = containerId;
             Quantity = quantity;
+            ReleasePolicy = releasePolicy;
         }
 
         public StableId<ReservationIdScope> Id { get; }
@@ -168,6 +176,8 @@ namespace PCShopEmpire3D.Inventory
         public StableId<ContainerIdScope> ContainerId { get; }
 
         public int Quantity { get; }
+
+        public InventoryReservationReleasePolicy ReleasePolicy { get; }
     }
 
     internal readonly struct BatchPositionKey : System.IEquatable<BatchPositionKey>
@@ -262,6 +272,14 @@ namespace PCShopEmpire3D.Inventory
         public static readonly Failure ItemAlreadyReserved = Failure.FromCode("inventory.reservation.item-reserved");
         public static readonly Failure InsufficientAvailable = Failure.FromCode("inventory.reservation.insufficient-available");
         public static readonly Failure RevisionOverflow = Failure.FromCode("inventory.revision-overflow");
+        public static readonly Failure ReservationPlanInvalid =
+            Failure.FromCode("inventory.reservation-plan-invalid");
+        public static readonly Failure ReservationPlanStale =
+            Failure.FromCode("inventory.reservation-plan-stale");
+        public static readonly Failure ReservationReleaseRestricted =
+            Failure.FromCode("inventory.reservation.release-restricted");
+        public static readonly Failure ReservationConsumptionRestricted =
+            Failure.FromCode("inventory.reservation.consume-restricted");
         public static readonly Failure InvariantViolation = Failure.FromCode("inventory.invariant.failed");
         public static readonly Failure MissingIntake = Failure.FromCode("inventory.intake.missing");
         public static readonly Failure EmptyIntake = Failure.FromCode("inventory.intake.empty");

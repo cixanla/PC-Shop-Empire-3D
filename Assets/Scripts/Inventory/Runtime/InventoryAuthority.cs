@@ -3,8 +3,39 @@ using System.Collections.Generic;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Retail")]
+
 namespace PCShopEmpire3D.Inventory
 {
+    /// <summary>
+    /// Immutable, revision-bound permission to reserve one exact serialized item. The plan
+    /// contains no mutable state and can only be committed by the authority that prepared it.
+    /// </summary>
+    public sealed class InventorySerializedReservationPlan
+    {
+        internal InventorySerializedReservationPlan(
+            InventoryAuthority owner,
+            long expectedRevision,
+            InventoryReservation reservation)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            Reservation = reservation;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal InventoryReservation Reservation { get; }
+
+        public long ExpectedRevision { get; }
+
+        public StableId<ReservationIdScope> ReservationId => Reservation.Id;
+
+        public StableId<InventoryClaimIdScope> ClaimId => Reservation.ClaimId;
+
+        public StableId<ItemInstanceIdScope> ItemId => Reservation.ItemId;
+    }
+
     /// <summary>
     /// The single authoritative owner of logical stock. Unity world objects are projections and never mutate
     /// quantities directly. Every failed command leaves state and Revision unchanged.
@@ -392,20 +423,62 @@ namespace PCShopEmpire3D.Inventory
             StableId<InventoryClaimIdScope> claimId,
             StableId<ItemInstanceIdScope> itemId)
         {
+            OperationResult<InventorySerializedReservationPlan> prepared =
+                PrepareSerializedItemReservation(reservationId, claimId, itemId);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedSerializedItemReservation(prepared.Value);
+        }
+
+        public OperationResult<InventorySerializedReservationPlan>
+            PrepareSerializedItemReservation(
+                StableId<ReservationIdScope> reservationId,
+                StableId<InventoryClaimIdScope> claimId,
+                StableId<ItemInstanceIdScope> itemId)
+        {
+            return PrepareSerializedItemReservation(
+                reservationId,
+                claimId,
+                itemId,
+                InventoryReservationReleasePolicy.Releasable);
+        }
+
+        internal OperationResult<InventorySerializedReservationPlan>
+            PrepareSerializedItemReservationForConsumption(
+                StableId<ReservationIdScope> reservationId,
+                StableId<InventoryClaimIdScope> claimId,
+                StableId<ItemInstanceIdScope> itemId)
+        {
+            return PrepareSerializedItemReservation(
+                reservationId,
+                claimId,
+                itemId,
+                InventoryReservationReleasePolicy.ConsumeOnly);
+        }
+
+        private OperationResult<InventorySerializedReservationPlan>
+            PrepareSerializedItemReservation(
+                StableId<ReservationIdScope> reservationId,
+                StableId<InventoryClaimIdScope> claimId,
+                StableId<ItemInstanceIdScope> itemId,
+                InventoryReservationReleasePolicy releasePolicy)
+        {
             Failure identityFailure = ValidateReservationIdentity(reservationId, claimId);
             if (!identityFailure.IsNone)
             {
-                return OperationResult.Fail(identityFailure);
+                return OperationResult<InventorySerializedReservationPlan>.Fail(identityFailure);
             }
 
             if (_reservations.ContainsKey(reservationId))
             {
-                return OperationResult.Fail(InventoryFailures.DuplicateReservation);
+                return OperationResult<InventorySerializedReservationPlan>.Fail(
+                    InventoryFailures.DuplicateReservation);
             }
 
             if (!_items.ContainsKey(itemId))
             {
-                return OperationResult.Fail(InventoryFailures.UnknownItem);
+                return OperationResult<InventorySerializedReservationPlan>.Fail(
+                    InventoryFailures.UnknownItem);
             }
 
             foreach (InventoryReservation existing in _reservations.Values)
@@ -413,21 +486,65 @@ namespace PCShopEmpire3D.Inventory
                 if (existing.TargetKind == InventoryReservationTargetKind.SerializedItem &&
                     existing.ItemId == itemId)
                 {
-                    return OperationResult.Fail(InventoryFailures.ItemAlreadyReserved);
+                    return OperationResult<InventorySerializedReservationPlan>.Fail(
+                        InventoryFailures.ItemAlreadyReserved);
                 }
             }
 
-            _reservations.Add(
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedReservationPlan>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var reservation = new InventoryReservation(
                 reservationId,
-                new InventoryReservation(
-                    reservationId,
-                    claimId,
-                    InventoryReservationTargetKind.SerializedItem,
-                    itemId,
-                    default,
-                    default,
-                    1));
-            AdvanceRevision();
+                claimId,
+                InventoryReservationTargetKind.SerializedItem,
+                itemId,
+                default,
+                default,
+                1,
+                releasePolicy);
+            return OperationResult<InventorySerializedReservationPlan>.Success(
+                new InventorySerializedReservationPlan(this, Revision, reservation));
+        }
+
+        public OperationResult CommitPreparedSerializedItemReservation(
+            InventorySerializedReservationPlan plan)
+        {
+            if (plan == null || !ReferenceEquals(plan.Owner, this))
+            {
+                return OperationResult.Fail(InventoryFailures.ReservationPlanInvalid);
+            }
+
+            if (_reservations.TryGetValue(
+                    plan.ReservationId,
+                    out InventoryReservation existing) &&
+                ReferenceEquals(existing, plan.Reservation))
+            {
+                return OperationResult.Success();
+            }
+
+            if (Revision != plan.ExpectedRevision)
+            {
+                return OperationResult.Fail(InventoryFailures.ReservationPlanStale);
+            }
+
+            OperationResult<InventorySerializedReservationPlan> current =
+                PrepareSerializedItemReservation(
+                    plan.ReservationId,
+                    plan.ClaimId,
+                    plan.ItemId);
+            if (current.IsFailure)
+            {
+                return current.Error == InventoryFailures.RevisionOverflow
+                    ? OperationResult.Fail(current.Error)
+                    : OperationResult.Fail(InventoryFailures.ReservationPlanStale);
+            }
+
+            _reservations.Add(plan.ReservationId, plan.Reservation);
+            Revision++;
             return OperationResult.Success();
         }
 
@@ -480,16 +597,24 @@ namespace PCShopEmpire3D.Inventory
                     default,
                     batchId,
                     containerId,
-                    quantity));
+                    quantity,
+                    InventoryReservationReleasePolicy.Releasable));
             AdvanceRevision();
             return OperationResult.Success();
         }
 
         public OperationResult ReleaseReservation(StableId<ReservationIdScope> reservationId)
         {
-            if (!_reservations.ContainsKey(reservationId))
+            if (!_reservations.TryGetValue(
+                    reservationId,
+                    out InventoryReservation reservation))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownReservation);
+            }
+
+            if (reservation.ReleasePolicy == InventoryReservationReleasePolicy.ConsumeOnly)
+            {
+                return OperationResult.Fail(InventoryFailures.ReservationReleaseRestricted);
             }
 
             _reservations.Remove(reservationId);
@@ -499,7 +624,7 @@ namespace PCShopEmpire3D.Inventory
 
         public OperationResult ConsumeReservation(StableId<ReservationIdScope> reservationId)
         {
-            return ConsumeReservations(new[] { reservationId });
+            return ConsumeReservations(new[] { reservationId }, false);
         }
 
         /// <summary>
@@ -509,6 +634,19 @@ namespace PCShopEmpire3D.Inventory
         /// </summary>
         public OperationResult ConsumeReservations(
             IReadOnlyList<StableId<ReservationIdScope>> reservationIds)
+        {
+            return ConsumeReservations(reservationIds, false);
+        }
+
+        internal OperationResult ConsumeCheckoutReservations(
+            IReadOnlyList<StableId<ReservationIdScope>> reservationIds)
+        {
+            return ConsumeReservations(reservationIds, true);
+        }
+
+        private OperationResult ConsumeReservations(
+            IReadOnlyList<StableId<ReservationIdScope>> reservationIds,
+            bool allowConsumeOnly)
         {
             if (reservationIds == null)
             {
@@ -547,6 +685,13 @@ namespace PCShopEmpire3D.Inventory
                     reservation.ClaimId.IsEmpty)
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                }
+
+                if (!allowConsumeOnly &&
+                    reservation.ReleasePolicy == InventoryReservationReleasePolicy.ConsumeOnly)
+                {
+                    return OperationResult.Fail(
+                        InventoryFailures.ReservationConsumptionRestricted);
                 }
 
                 if (reservation.TargetKind == InventoryReservationTargetKind.SerializedItem)
@@ -842,7 +987,9 @@ namespace PCShopEmpire3D.Inventory
                 if (reservation == null ||
                     entry.Key != reservation.Id ||
                     reservation.Id.IsEmpty ||
-                    reservation.ClaimId.IsEmpty)
+                    reservation.ClaimId.IsEmpty ||
+                    (reservation.ReleasePolicy != InventoryReservationReleasePolicy.Releasable &&
+                     reservation.ReleasePolicy != InventoryReservationReleasePolicy.ConsumeOnly))
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
                 }

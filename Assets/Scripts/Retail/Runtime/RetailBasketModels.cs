@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Retail
             StableId<ShelfOfferIdScope> offerId,
             StableId<ItemInstanceIdScope> itemId,
             StableId<ReservationIdScope> inventoryReservationId,
-            StableId<InventoryClaimIdScope> inventoryClaimId)
+            StableId<InventoryClaimIdScope> inventoryClaimId,
+            StableId<CustomerOfferDecisionActionIdScope> ownerActionId = default)
         {
             Id = id;
             BasketId = basketId;
@@ -25,6 +26,7 @@ namespace PCShopEmpire3D.Retail
             ItemId = itemId;
             InventoryReservationId = inventoryReservationId;
             InventoryClaimId = inventoryClaimId;
+            OwnerActionId = ownerActionId;
         }
 
         public StableId<RetailBasketLineIdScope> Id { get; }
@@ -40,5 +42,44 @@ namespace PCShopEmpire3D.Retail
         public StableId<ReservationIdScope> InventoryReservationId { get; }
 
         public StableId<InventoryClaimIdScope> InventoryClaimId { get; }
+
+        public StableId<CustomerOfferDecisionActionIdScope> OwnerActionId { get; }
+
+        public bool IsActionOwned => !OwnerActionId.IsEmpty;
+    }
+
+    /// <summary>
+    /// Immutable Basket + Inventory reservation plan. It is bound to exact authority revisions,
+    /// offer identity and one preflighted Inventory reservation plan.
+    /// </summary>
+    public sealed class RetailBasketReservationPlan
+    {
+        internal RetailBasketReservationPlan(
+            RetailBasketAuthority owner,
+            long expectedRevision,
+            ShelfOfferRecord expectedOffer,
+            RetailBasketLineRecord line,
+            InventorySerializedReservationPlan inventoryPlan,
+            bool isReplay)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            ExpectedOffer = expectedOffer;
+            Line = line;
+            InventoryPlan = inventoryPlan;
+            IsReplay = isReplay;
+        }
+
+        internal RetailBasketAuthority Owner { get; }
+
+        internal ShelfOfferRecord ExpectedOffer { get; }
+
+        internal InventorySerializedReservationPlan InventoryPlan { get; }
+
+        public long ExpectedRevision { get; }
+
+        public RetailBasketLineRecord Line { get; }
+
+        public bool IsReplay { get; }
     }
 }

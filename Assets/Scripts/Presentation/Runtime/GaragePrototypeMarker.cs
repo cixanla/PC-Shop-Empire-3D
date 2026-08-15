@@ -16,7 +16,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-offer-decision-r16-v1";
+        public const string Version = "garage-buy-action-r17-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -114,6 +114,9 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerVisitAuthority = hasArrivedStockFlow &&
                                              stockFlow.Session.CustomerVisits != null &&
                                              stockFlow.Session.CustomerVisits.Count == 0;
+            bool hasCustomerBuyActionAuthority = hasArrivedStockFlow &&
+                                                 stockFlow.Session.CustomerOfferActions != null &&
+                                                 stockFlow.Session.CustomerOfferActions.Count == 0;
             bool hasCustomerNavigation = customerFlow != null &&
                                          customerFlow.NavigationReady &&
                                          customerFlow.CustomerAgent != null;
@@ -136,6 +139,7 @@ namespace PCShopEmpire3D.Presentation
                 $"checkout-snapshot={(hasCheckoutAuthority ? "ready" : "missing")} " +
                 $"checkout-completion={(hasCheckoutCompletionAuthority ? "ready" : "missing")} " +
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
+                $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -630,7 +634,10 @@ namespace PCShopEmpire3D.Presentation
             long decisionCheckoutRevision = session.RetailCheckouts.Revision;
             OperationResult<CustomerOfferDecision> offerDecisionResult =
                 session.EvaluatePrototypeCustomerOffer();
+            CustomerOfferDecision displayedDecision = customerFlow.CurrentOfferDecision;
             bool offerDecision = offerDecisionResult.IsSuccess &&
+                                 displayedDecision != null &&
+                                 displayedDecision.Equals(offerDecisionResult.Value) &&
                                  offerDecisionResult.Value.DecisionKind ==
                                  CustomerOfferDecisionKind.Buy &&
                                  offerDecisionResult.Value.ReasonCode ==
@@ -664,10 +671,27 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
-            OperationResult reserve = session.ReservePrototypeCustomerBasket();
-            if (reserve.IsFailure)
+            long actionRevision = session.CustomerOfferActions.Revision;
+            OperationResult buyAction = session.ApplyPrototypeCustomerBuy(
+                displayedDecision,
+                customerFlow.CurrentOfferActionTime);
+            bool buyApplied = buyAction.IsSuccess &&
+                              session.CustomerOfferActions.Revision == actionRevision + 1 &&
+                              session.CustomerVisits.Revision == decisionCustomerRevision + 1 &&
+                              session.Inventory.Revision == decisionInventoryRevision + 1 &&
+                              session.RetailBaskets.Revision == decisionBasketRevision + 1 &&
+                              session.Orders.Revision == decisionOrderRevision &&
+                              session.RetailOffers.Revision == decisionOfferRevision &&
+                              session.RetailCheckouts.Revision == decisionCheckoutRevision &&
+                              session.TryGetPrototypeCustomerBuyAction(out _) &&
+                              session.TryGetPrototypeBasketLine(out RetailBasketLineRecord actionLine) &&
+                              actionLine.IsActionOwned;
+            if (!buyApplied)
             {
-                LogCustomerFlowSmokeFailure(reserve.Error.Code);
+                LogCustomerFlowSmokeFailure(
+                    buyAction.IsFailure
+                        ? buyAction.Error.Code
+                        : "smoke.buy-action-mismatch");
                 yield break;
             }
 
@@ -721,6 +745,63 @@ namespace PCShopEmpire3D.Presentation
             if (!fulfilled)
             {
                 LogCustomerFlowSmokeFailure("smoke.fulfilled-exit-mismatch");
+                yield break;
+            }
+
+            GarageStockFlowSession staleSession = GarageStockFlowSession.CreateArrived();
+            OperationResult staleAccept = staleSession.AcceptArrivedDelivery();
+            OperationResult staleShelf = staleSession.TransferItem(staleSession.ShelfContainerId);
+            OperationResult stalePublish = staleSession.PublishShelfOffer();
+            OperationResult staleStart = staleSession.StartPrototypeCustomerVisit(
+                SimulationTimestamp.Create(1, 20));
+            OperationResult staleBrowse = staleSession.MarkPrototypeCustomerBrowseArrival(
+                SimulationTimestamp.Create(2, 40));
+            OperationResult<CustomerOfferDecision> staleDecisionResult =
+                staleSession.EvaluatePrototypeCustomerOffer();
+            OperationResult staleOfferDrift = staleSession.RetailOffers.SetOffer(
+                staleSession.ShelfOfferId,
+                staleSession.ProductId,
+                staleSession.ShelfContainerId,
+                GarageStockFlowSession.PrototypeCurrencyCode,
+                GarageStockFlowSession.PrototypePriceMinorUnits + 1);
+            long staleActionRevision = staleSession.CustomerOfferActions.Revision;
+            long staleActorRevision = staleSession.CustomerVisits.Revision;
+            long staleInventoryRevision = staleSession.Inventory.Revision;
+            long staleBasketRevision = staleSession.RetailBaskets.Revision;
+            long staleOfferRevision = staleSession.RetailOffers.Revision;
+            long staleCheckoutRevision = staleSession.RetailCheckouts.Revision;
+            long staleOrderRevision = staleSession.Orders.Revision;
+            OperationResult staleApply = staleDecisionResult.IsSuccess
+                ? staleSession.ApplyPrototypeCustomerBuy(
+                    staleDecisionResult.Value,
+                    SimulationTimestamp.Create(3, 60))
+                : OperationResult.Fail(staleDecisionResult.Error);
+            bool staleBlocked = staleAccept.IsSuccess &&
+                                staleShelf.IsSuccess &&
+                                stalePublish.IsSuccess &&
+                                staleStart.IsSuccess &&
+                                staleBrowse.IsSuccess &&
+                                staleDecisionResult.IsSuccess &&
+                                staleOfferDrift.IsSuccess &&
+                                staleApply.Error ==
+                                    CustomerOfferDecisionActionFailures.DecisionStale &&
+                                staleSession.CustomerOfferActions.Revision == staleActionRevision &&
+                                staleSession.CustomerVisits.Revision == staleActorRevision &&
+                                staleSession.Inventory.Revision == staleInventoryRevision &&
+                                staleSession.RetailBaskets.Revision == staleBasketRevision &&
+                                staleSession.RetailOffers.Revision == staleOfferRevision &&
+                                staleSession.RetailCheckouts.Revision == staleCheckoutRevision &&
+                                staleSession.Orders.Revision == staleOrderRevision &&
+                                staleSession.CustomerOfferActions.Count == 0 &&
+                                staleSession.RetailBaskets.Count == 0 &&
+                                staleSession.Inventory.ReservationCount == 0 &&
+                                staleSession.ValidateInvariants().IsSuccess;
+            if (!staleBlocked)
+            {
+                LogCustomerFlowSmokeFailure(
+                    staleApply.IsFailure
+                        ? staleApply.Error.Code
+                        : "smoke.stale-decision-mutated-authority");
                 yield break;
             }
 
@@ -797,7 +878,7 @@ namespace PCShopEmpire3D.Presentation
 
             Debug.Log(
                 "GARAGE_CUSTOMER_VISIT_RUNTIME_SMOKE customer-visit=ok runtime-route=ok " +
-                "pause=ok offer-decision=ok fulfilled=ok " +
+                "pause=ok offer-decision=ok buy-action=ok stale-blocked=ok fulfilled=ok " +
                 "domain-route-fallback=ok domain-timeout-fallback=ok " +
                 "authority-isolated=ok stock-consumed=ok stock-projection-hidden=ok " +
                 "customer-hidden=ok");

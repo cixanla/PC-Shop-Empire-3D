@@ -157,6 +157,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                "REZERVASYON KİLİTLİ";
                     }
 
+                    if (binding.IsCustomerReservationActionOwned)
+                    {
+                        return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
+                               "kasayı başlat   |   SATIN ALMA ONAYLANDI   |   " +
+                               "REZERVASYON KİLİTLİ";
+                    }
+
                     return $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
                            "kasayı başlat   |   " +
                            $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
@@ -165,11 +172,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (binding != null && binding.RequiresCustomerReservation)
                 {
+                    string actionFailure = LastFailureCode.StartsWith(
+                        "retail.offer-action.",
+                        StringComparison.Ordinal)
+                        ? $"   |   SATIN ALMA ENGELLİ: {LastFailureCode}"
+                        : string.Empty;
                     return $"{(input != null ? input.InteractBindingPrompt : "E / A")}: " +
                            $"{FocusedItem.DisplayName} al   |   " +
                            $"{(input != null ? input.DropBindingPrompt : "G / B")}: " +
-                           "demo müşteri için ayır   |   " +
-                           binding.LocationLabel;
+                           "müşterinin satın almasını onayla   |   " +
+                           binding.LocationLabel + actionFailure;
                 }
 
                 return FocusedItem.HasStackedItem

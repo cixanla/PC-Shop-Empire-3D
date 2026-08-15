@@ -18,6 +18,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             StableId<ContainerIdScope>.Parse("inventory.container.basket-receiving");
         private static readonly StableId<ItemInstanceIdScope> ItemId =
             StableId<ItemInstanceIdScope>.Parse("inventory.item.basket-a60-001");
+
         private static readonly StableId<ShelfOfferIdScope> OfferId =
             StableId<ShelfOfferIdScope>.Parse("retail.offer.basket-a60");
         private static readonly StableId<RetailBasketLineIdScope> LineId =
@@ -30,6 +31,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             StableId<ReservationIdScope>.Parse("inventory.reservation.basket-a60-001");
         private static readonly StableId<InventoryClaimIdScope> ClaimId =
             StableId<InventoryClaimIdScope>.Parse("inventory.claim.basket-customer-001");
+
+        [Test]
+        public void ActionOwnershipPreparationIsNotPublic()
+        {
+            System.Reflection.MethodInfo publicPrepare =
+                typeof(RetailBasketAuthority).GetMethod(
+                    "PrepareActionOwnedSerializedOfferReservation",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public);
+
+            Assert.That(publicPrepare, Is.Null);
+            Assert.That(typeof(RetailBasketAuthority).GetMethod(
+                "PrepareSerializedOfferReservation").GetParameters().Length,
+                Is.EqualTo(7));
+        }
 
         [Test]
         public void CreateRequiresOfferAndInventoryAuthorities()
@@ -269,6 +285,75 @@ namespace PCShopEmpire3D.Tests.EditMode.Retail
             Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
             Assert.That(fixture.Baskets.Count, Is.EqualTo(1));
             Assert.That(fixture.Inventory.ReservationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void PreparedReservationIsNoMutationAndCommitIsIdempotent()
+        {
+            Fixture fixture = CreateFixture();
+            long inventoryRevision = fixture.Inventory.Revision;
+            long offerRevision = fixture.Offers.Revision;
+
+            OperationResult<RetailBasketReservationPlan> prepared =
+                fixture.Baskets.PrepareSerializedOfferReservation(
+                    LineId,
+                    BasketId,
+                    CustomerId,
+                    OfferId,
+                    ItemId,
+                    ReservationId,
+                    ClaimId);
+
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(fixture.Baskets.Revision, Is.Zero);
+            Assert.That(fixture.Baskets.Count, Is.Zero);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.ReservationCount, Is.Zero);
+            Assert.That(fixture.Offers.Revision, Is.EqualTo(offerRevision));
+
+            Assert.That(fixture.Baskets.CommitPreparedSerializedOfferReservation(
+                prepared.Value).IsSuccess, Is.True);
+            Assert.That(fixture.Baskets.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision + 1));
+            Assert.That(fixture.Baskets.CommitPreparedSerializedOfferReservation(
+                prepared.Value).IsSuccess, Is.True);
+            Assert.That(fixture.Baskets.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision + 1));
+            Assert.That(fixture.Baskets.Count, Is.EqualTo(1));
+            Assert.That(fixture.Inventory.ReservationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void PreparedReservationRejectsExactOfferDriftWithoutInventoryMutation()
+        {
+            Fixture fixture = CreateFixture();
+            OperationResult<RetailBasketReservationPlan> prepared =
+                fixture.Baskets.PrepareSerializedOfferReservation(
+                    LineId,
+                    BasketId,
+                    CustomerId,
+                    OfferId,
+                    ItemId,
+                    ReservationId,
+                    ClaimId);
+            Assert.That(prepared.IsSuccess, Is.True);
+            Assert.That(fixture.Offers.SetOffer(
+                OfferId,
+                ProductId,
+                ShelfId,
+                "EUR",
+                55_999).IsSuccess, Is.True);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult commit = fixture.Baskets
+                .CommitPreparedSerializedOfferReservation(prepared.Value);
+
+            Assert.That(commit.Error,
+                Is.EqualTo(RetailBasketFailures.ReservationPlanStale));
+            Assert.That(fixture.Baskets.Revision, Is.Zero);
+            Assert.That(fixture.Baskets.Count, Is.Zero);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.ReservationCount, Is.Zero);
         }
 
         private static OperationResult ReserveDefault(Fixture fixture)

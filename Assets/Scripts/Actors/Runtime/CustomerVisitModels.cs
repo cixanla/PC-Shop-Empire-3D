@@ -213,6 +213,51 @@ namespace PCShopEmpire3D.Actors
         public bool IsActive => State != CustomerVisitState.Exited;
     }
 
+    /// <summary>
+    /// Side-effect-free, revision-bound checkout-navigation transition. Only the authority
+    /// that prepared the plan can commit it; exact historical command replays remain no-op.
+    /// </summary>
+    public sealed class CustomerVisitCheckoutNavigationPlan
+    {
+        internal CustomerVisitCheckoutNavigationPlan(
+            CustomerVisitAuthority owner,
+            long expectedRevision,
+            CustomerVisitRecord expectedVisit,
+            CustomerVisitRecord replacementVisit,
+            SimulationTimestamp at,
+            bool expectedHasObservedTime,
+            SimulationTimestamp expectedLastObservedAt,
+            bool isReplay)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            ExpectedVisit = expectedVisit;
+            ReplacementVisit = replacementVisit;
+            At = at;
+            ExpectedHasObservedTime = expectedHasObservedTime;
+            ExpectedLastObservedAt = expectedLastObservedAt;
+            IsReplay = isReplay;
+        }
+
+        internal CustomerVisitAuthority Owner { get; }
+
+        internal CustomerVisitRecord ExpectedVisit { get; }
+
+        internal CustomerVisitRecord ReplacementVisit { get; }
+
+        internal bool ExpectedHasObservedTime { get; }
+
+        internal SimulationTimestamp ExpectedLastObservedAt { get; }
+
+        public long ExpectedRevision { get; }
+
+        public StableId<CustomerVisitIdScope> VisitId => ExpectedVisit.Id;
+
+        public SimulationTimestamp At { get; }
+
+        public bool IsReplay { get; }
+    }
+
     public static class CustomerVisitFailures
     {
         public static readonly Failure MissingCatalog =
@@ -253,6 +298,10 @@ namespace PCShopEmpire3D.Actors
             Failure.FromCode("actors.customer-visit.timestamp-overflow");
         public static readonly Failure RevisionOverflow =
             Failure.FromCode("actors.customer-visit.revision-overflow");
+        public static readonly Failure CheckoutNavigationPlanInvalid =
+            Failure.FromCode("actors.customer-visit.checkout-plan-invalid");
+        public static readonly Failure CheckoutNavigationPlanStale =
+            Failure.FromCode("actors.customer-visit.checkout-plan-stale");
         public static readonly Failure InvariantViolation =
             Failure.FromCode("actors.customer-visit.invariant-violation");
     }
