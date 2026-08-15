@@ -42,7 +42,9 @@
 - Tree: `2f524430e2a3bf03ad3880ab29eb44a0b8120a25`
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#44](https://github.com/cixanla/PC-Shop-Empire-3D/issues/44)
 - Feature Repository Guard: [31869105555](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31869105555), başarılı.
-- Docs checkpoint/Repository Guard ve USB source commit'i kapanış sonrasında bu belgeye eklenir.
+- USB source/docs checkpoint commit: `0936cc00b9f06264061ebe31893e53b3e8af2950`.
+- Docs Repository Guard: [31869313985](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31869313985), başarılı.
+- Issue #44 Completed olarak kapatıldı ve Roadmap item'ı Done yapıldı; Epic #8 In Progress kaldı.
 
 ## Test, build ve runtime kanıtı
 
@@ -69,7 +71,7 @@ Gerçek klavye/fare ve gamepad, bütün physical stock-flow zincirinden sonra re
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Önceki sağlam snapshot `2026-08-15_STAGE_B_CUSTOMER_BASKET_RESERVATION`dır. Issue #44 için yeni `2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT` milestone'ı docs commit'inden sonra tracked source + seçili test/build/runtime kanıtı + source kaydıyla oluşturulacak; manifest/readback/source checksum, forbidden/credential ve AppleDouble kapıları geçmeden güncel sayılmayacaktır.
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_IMMUTABLE_CHECKOUT_SNAPSHOT`, source/docs checkpoint `0936cc00b9f06264061ebe31893e53b3e8af2950` taşır. İçerik 508 tracked kaynak + 4 test/build/runtime kanıtı + source kaydıdır; 513 manifest satırı ve manifest SHA-256 `30c1e7fa3703bfb84ebf89f8b5b3ba3c6a7ad0be044a6e502434f55256616efa` tam readback/source checksum ile doğrulandı. Hash/boyut/source mismatch, forbidden dir, credential filename/kalıbı ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır. USB güvenle çıkarılabilir.
 
 ## Sıradaki bounded paket
 
