@@ -52,7 +52,7 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `161/161` passed.
+- Edit Mode `184/184` passed.
 - Play Mode `14/14` passed.
 - `0` failed.
 - `0` skipped.
@@ -85,6 +85,8 @@ Tamamlanan saf Core sözleşmeleri:
 - `PSE.Catalog` assembly: immutable product definition, stable product/category kimliği, serialized/batch tracking policy, doğrulanmış görünür ad ve bounded garanti.
 - `PSE.Inventory` assembly: authoritative serialized item/batch/container kayıtları, unit capacity, atomik transfer, claim reservation, release/consume, deterministic sorgu, revision ve invariant audit.
 - Catalog yalnız Core; Inventory yalnız Core + Catalog referanslıdır. İki assembly de Unity/Editor bağımlılığı taşımaz.
+- `PSE.Orders` assembly: stable purchase order/supplier/delivery kimliği, exact manifest, `Placed → Confirmed → InTransit → Arrived → Accepted` lifecycle ve atomik receiving kabulü.
+- `InventoryIntake` bütün manifest satırlarını identity/tracking/capacity bakımından preflight eder; başarıda tek revision, failure'da sıfır stok mutation üretir.
 - `PSE.World` ve `PSE.Presentation` assembly sınırları.
 - GarageGraybox sahnesi, connected `PlayerRig` prefabı ve CharacterController tabanlı birinci şahıs hareket.
 - Klavye/fare + gamepad Input System sözleşmesi, runtime action izolasyonu ve rebind override store.
@@ -108,12 +110,12 @@ Henüz yapılmayanlar:
 
 - Gelişmiş el animasyonu, gerçek raf stoklama, çok katlı/palet istifi ve çoklu/palet taşıma.
 - Garajın bütününe yayılmış final sanat ve gelişmiş el modeli/animasyonu.
-- Orders, Economy ve diğer domain assembly'leri; Catalog/Inventory ile event/save bağlantısı.
+- Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save bağlantısı.
 - Fiziksel item/cart projeksiyonlarının authoritative Inventory kayıtlarına açık adaptörle bağlanması.
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki bounded paket Issue #8 altında sipariş, teslimat kabulü ve raf container akışının en küçük uçtan uca dilimidir. Dünya projection'ı hâlâ ekonomik stok gerçeği değildir; yalnız açık Inventory komutu/adaptörü başarılı olduğunda sahiplik değişir.
+Sıradaki bounded paket Issue #8 altında `Arrived` teslimat manifestini görünür kutu/receiving projection'ına ve ardından gerçek raf container transferine bağlar. Dünya projection'ı ekonomik stok gerçeği değildir; yalnız açık Orders/Inventory komutu başarılı olduğunda sahiplik değişir.
 
 ## 7. Çalışma akışı
 
@@ -167,7 +169,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, 161 Edit Mode ve 14 Play Mode baseline testi geçti.
+2. Repo guard, 184 Edit Mode ve 14 Play Mode baseline testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

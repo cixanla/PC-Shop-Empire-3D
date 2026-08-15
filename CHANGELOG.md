@@ -30,7 +30,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Unity bağımsız `PSE.Catalog`; immutable ürün tanımı, stable ürün/kategori kimliği, serialized/batch tracking policy, doğrulanmış görünür ad, bounded garanti ve deterministic katalog ile eklendi.
 - Unity bağımsız authoritative `PSE.Inventory`; serialized item, batch position, unit-capacity container, atomik transfer, claim reservation, release/consume, revision, deterministic sorgu ve invariant audit ile eklendi.
 - Catalog/Inventory assembly bağımlılıkları ve failure no-mutation davranışları saf domain testleriyle kilitlendi.
-- Edit Mode baseline `161/161`, Play Mode baseline `14/14` teste yükseldi; son Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçerliliğini koruyor.
+- Unity bağımsız `PSE.Orders`; stable purchase order/supplier/delivery kimliği, deterministic satırlar, monotonik lifecycle ve exact delivery manifest ile eklendi.
+- Mixed serialized+batch `InventoryIntake`, tam preflight sonrası bütün teslimatı tek Inventory revision'ında receiving container'a kabul edecek şekilde eklendi.
+- Sipariş/onay/yol/arrival aşamalarında stok yaratmama; manifest/capacity/identity failure'ında order+Inventory no-mutation ve duplicate acceptance engeli testlerle kilitlendi.
+- Edit Mode baseline `184/184`, Play Mode baseline `14/14` teste yükseldi; son Universal macOS build ve Apple M4/Metal 1280×720 `rotation=ok stacking=ok transport-cart=ok lookdev=ok` gerçek player smoke geçerliliğini koruyor.
 
 ### Changed
 

@@ -1,19 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #38 authoritative Catalog + Inventory temeli ve Epic #7 tamamlandı; sıradaki bounded paket Issue #8 sipariş/teslimat/raf dilimidir<br>
+**Durum:** Issue #39 purchase order + atomik receiving tamamlandı; Epic #8 fiziksel teslimat/raf alt işleriyle devam ediyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #38 / Epic #7
+## En yeni checkpoint — Issue #39 / Epic #8
 
-- Feature commit `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`, tree `8f51b1e6e32a351ae187467a340ec10e7337d06d`.
-- `PSE.Catalog` yalnız Core referanslı saf assembly olarak stable ürün/kategori kimliği, tracking policy, doğrulanmış görünür ad, bounded garanti ve immutable deterministic katalog sağlar.
-- `PSE.Inventory` yalnız Core + Catalog referanslı authoritative assembly olarak serialized item, bölünebilir batch, tek container konumu, unit capacity, atomik transfer ve claim reservation sağlar.
-- Release/consume, total/available/container sorguları, başarıda tek revision ve failure'da no-mutation sözleşmesi invariant audit ile kilitlendi.
-- EditMode `161/161`, regresyon PlayMode `14/14` geçti; önceki pickup/drop/placement/rotation/stacking/large-carry/cart akışı bozulmadı.
+- Feature commit `e596e079d90b6d5b9d94714d7821502574eba3c9`, tree `14865dc87d8ad86447e73d8596042d085f52d73f`.
+- `PSE.Orders` stable purchase order/supplier/delivery kimliği ve `Placed → Confirmed → InTransit → Arrived → Accepted` durum zinciri sağlar.
+- Exact manifest serialized `ItemInstanceId` ve batch `BatchId` + quantity taşır; order product/adet/tracking toplamı birebir eşleşmeden arrival kaydı oluşmaz.
+- `InventoryIntake` bütün satırları identity/tracking/capacity açısından preflight eder ve başarıda tek Inventory revision'ında receiving container'a yazar.
+- Sipariş, onay, dispatch ve arrival stok yaratmaz; yalnız fiziksel kabul komutu authoritative quantity ekler. Her failure iki authority'yi de değiştirmeden bırakır.
+- EditMode `184/184`, regresyon PlayMode `14/14` geçti; önceki fiziksel etkileşim zinciri bozulmadı.
 - Yeni sahne/prefab/runtime sunumu olmadığı için player yeniden build edilmedi; son Universal macOS ve Apple M4/Metal cart smoke kanıtı geçerlidir.
-- Karar: `Docs/ADR-0016-AUTHORITATIVE-CATALOG-INVENTORY-CORE.md`; kanıt: `Docs/Evidence/CATALOG-INVENTORY-CHECKPOINT-2026-08-15.md`.
-- Fiziksel item/cart henüz otomatik stok authority değildir; açık world↔Inventory adaptörü sipariş/teslimat/raf dilimiyle Issue #8'de kurulur.
+- Karar: `Docs/ADR-0017-ATOMIC-PURCHASE-ORDER-RECEIVING.md`; kanıt: `Docs/Evidence/ORDERS-RECEIVING-CHECKPOINT-2026-08-15.md`.
+- Dashboard, kurye/spawn, kutu açma, partial/damaged claim, fiyat/para ve fiziksel raf projection'ı sonraki Issue #8 alt işlerindedir.
 
 ## Kullanım güvenliği protokolü
 
@@ -29,6 +30,7 @@
 - Core: stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministik event dispatcher tamam.
 - Catalog: stable ürün/kategori ID, serialized/batch tracking policy, fail-closed immutable ürün kataloğu tamam.
 - Inventory: serialized item, batch position, container capacity, atomik transfer, claim reservation, consume/release, deterministic query ve invariant audit tamam.
+- Orders: exact purchase order manifesti, monotonik delivery lifecycle ve atomik receiving kabulü tamam.
 - Gameplay sınırları: `PSE.World` ve `PSE.Presentation`.
 - İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`.
 - Connected oyuncu prefabı: `Assets/Prefabs/Prototype/PlayerRig.prefab`.
@@ -48,15 +50,14 @@
 ## Feature checkpoint
 
 - Branch: `main`
-- Feature commit: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`
-- Tree: `8f51b1e6e32a351ae187467a340ec10e7337d06d`
-- Checkpoint docs commit: `9e0cb2d6476ab0bfac8918368454a0917744ee36`
-- Epic/issue: [#7](https://github.com/cixanla/PC-Shop-Empire-3D/issues/7) / [#38](https://github.com/cixanla/PC-Shop-Empire-3D/issues/38)
-- Karar: `Docs/ADR-0016-AUTHORITATIVE-CATALOG-INVENTORY-CORE.md`.
-- Kanıt: `Docs/Evidence/CATALOG-INVENTORY-CHECKPOINT-2026-08-15.md`.
-- Kapsam: Catalog, serialized item, batch positions, logical container capacity, transfer, claim reservation, consume/release, deterministic query ve invariant audit.
-- Sahne projection'ı, raf UI/planogram, acquisition cost/fiyat/para, Orders, event publication ve persistence açıkça kapsam dışında kaldı.
-- Remote Repository Guard: [31861777253](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31861777253), başarılı.
+- Feature commit: `e596e079d90b6d5b9d94714d7821502574eba3c9`
+- Tree: `14865dc87d8ad86447e73d8596042d085f52d73f`
+- Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#39](https://github.com/cixanla/PC-Shop-Empire-3D/issues/39)
+- Karar: `Docs/ADR-0017-ATOMIC-PURCHASE-ORDER-RECEIVING.md`.
+- Kanıt: `Docs/Evidence/ORDERS-RECEIVING-CHECKPOINT-2026-08-15.md`.
+- Kapsam: purchase order lines, delivery/ETA lifecycle, exact manifest, generic Inventory intake ve receiving acceptance.
+- Kısmi/hasarlı claim, Economy, Dashboard, event/save ve dünya projection'ı açıkça kapsam dışında kaldı.
+- Remote Repository Guard bağlantısı push sonrası eklenecektir.
 
 ## Test ve build kanıtı
 
@@ -64,6 +65,8 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 
 | Kanıt | Sonuç | SHA-256 |
 |---|---|---|
+| `orders-receiving-editmode.xml` | 184/184 geçti | `4114e3483ed820f5061210402599bedc0e2116cdcdd7cf21305793024f2d42df` |
+| `orders-receiving-playmode.xml` | 14/14 geçti | `1e2bbae00d8116b363d7dc069bb677973a6264c2dbc6840cf34e1706435ef07b` |
 | `catalog-inventory-editmode.xml` | 161/161 geçti | `626757772e5cae48ce1531ddca35b544ebba986bd34a9f32ddea6b7f758663f0` |
 | `catalog-inventory-playmode.xml` | 14/14 geçti | `69d89a0f7d2943ceb2793cf75db2cffd689bed37ae54d6303e013510835d21f8` |
 | `cart-editmode-final.xml` | 136/136 geçti | `6de78a3e7be6d47e9780962bdabef4a64d5efe153bf3b572fee90c5da98c9bca` |
@@ -73,7 +76,7 @@ Ham çıktılar Git dışındaki `../TestResults` klasöründedir.
 | `cart-macos-runtime-final.log` | Apple M4/Metal, `transport-cart=ok`, `cart-flow=ok loaded=ok stable=ok` | `e2a5c113f28db09d4746182bb062031b29b601b0e188d8737fe5967ca5ef2a56` |
 | `cart-macos-runtime-final.png` | 1280×748 yüklü araba ve HUD | `816fec72ed909be4a5ab9244a888adbddce0743b1b42450ec27cabcf72bfc5d2` |
 
-Yeni EditMode paketi Catalog/Inventory assembly sınırını, ürün/instance/batch/container/reservation/quantity invariantlarını ve failure no-mutation davranışını doğrular. PlayMode gerçek Input System fiziksel etkileşim regresyonlarını korur. Önceki Mac player kanıtı Windows native doğrulamasının yerine geçmez.
+Yeni EditMode paketi Orders assembly sınırını, lifecycle/exact manifest/bulk intake ve iki-authority no-mutation davranışını doğrular. PlayMode gerçek Input System fiziksel etkileşim regresyonlarını korur. Önceki Mac player kanıtı Windows native doğrulamasının yerine geçmez.
 
 ## Korunan geçmiş
 
@@ -93,6 +96,7 @@ Yeni EditMode paketi Catalog/Inventory assembly sınırını, ürün/instance/ba
 - Controlled small-box stacking: `2e11e30a1a4b3435046ae18001004cacc170079e`.
 - Loaded transport cart: `82bf74f90fd5bce9f4f17244aea6afde4a7ef2c1`.
 - Authoritative Catalog + Inventory core: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
+- Atomic purchase order receiving: `e596e079d90b6d5b9d94714d7821502574eba3c9`.
 
 ## USB güvenlik katmanı
 
@@ -110,8 +114,8 @@ Güncel Catalog/Inventory snapshot'ı `9e0cb2d` checkpointindeki 428 tracked kay
 
 ## Devam sırası
 
-1. Issue #8 altında sipariş → teslimat kabulü → authoritative receiving container → raf transferinin en küçük uçtan uca paketini oluştur.
-2. Fiziksel item stable ID ile Inventory item/batch kaydını açık adaptör üzerinden eşle; başarısız domain komutunda dünya ownership'ini değiştirme.
+1. Issue #8 altında `Arrived` manifesti görünür teslimat kutusuna bağlayan fiziksel kabul/prompt akışını oluştur.
+2. Receiving stokunu küçük kutu taşıma/placement üzerinden gerçek raf container'ına aktar; başarısız domain komutunda dünya ownership'ini değiştirme.
 3. Benchmark görsel dilini tamamlanan gameplay alanlarına kademeli yay; sahneyi final art ilan etme.
 4. İlk gerçek Windows x64 cihazını Faz 1 kapanmadan devreye al.
 

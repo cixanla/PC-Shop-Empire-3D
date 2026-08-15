@@ -143,20 +143,20 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `71935f11b80d02d03f9dcc1a3f08cafca7e301ff`.
-- Issue #38 ve Epic #7 acceptance'ı tamamlandı: Unity bağımsız Catalog + authoritative Inventory çekirdeği hazırdır.
-- EditMode `161/161`, gerçek Input System regresyon PlayMode `14/14` geçti; failed/skipped `0`.
+- Son doğrulanmış kaynak feature: `e596e079d90b6d5b9d94714d7821502574eba3c9`.
+- Issue #39 tamamlandı; Epic #8 visible delivery/receiving/raf alt işleriyle sürüyor. Unity bağımsız Orders lifecycle ve exact manifest hazırdır.
+- EditMode `184/184`, gerçek Input System regresyon PlayMode `14/14` geçti; failed/skipped `0`.
 - Önceki Universal macOS development build `327.282.300` bayt, Mach-O `x86_64 + arm64` ve Apple M4/Metal `rotation=ok stacking=ok transport-cart=ok lookdev=ok`, `cart-flow=ok loaded=ok stable=ok` kanıtı geçerlidir.
-- Product/instance/batch/container/transfer/reservation/quantity invariantları, deterministic sorgu ve failure no-mutation revision sözleşmesi saf testlerle kilitlidir.
-- Dünya projection'ı Inventory'ye kendiliğinden yazmaz; explicit adaptör Issue #8'de kurulur.
+- Product/instance/batch/container/transfer/reservation invariantlarına purchase-order lifecycle ve atomik receiving intake eklendi; failure iki authority'yi de değiştirmez.
+- Dünya projection'ı Orders/Inventory'ye kendiliğinden yazmaz; explicit visible delivery/raf adaptörü sıradadır.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #8'i acceptance odaklı alt işe böl; en küçük sipariş → teslimat kabulü → receiving container → raf transfer zincirini seç.
+1. Issue #8 altında `Arrived` manifesti görünür teslimat kutusu ve dinamik kabul promptuna bağla.
 2. Dünya item stable ID ile Inventory item/batch kimliğini açık adaptörde eşle; domain komutu başarısızsa fiziksel ownership'i değiştirme.
-3. İlk dilimde fiyat/para, müşteri AI ve geniş Dashboard ekleme; gerçek stok conservation kanıtını tamamla.
+3. Receivingden gerçek raf container'ına güvenli transferi kanıtla; fiyat/para ve müşteri AI ekleme.
 4. EditMode domain ve gerçek Input System PlayMode zincirini birlikte doğrula.
 
 Sonraki ana geliştirme sırası:
@@ -176,7 +176,7 @@ Henüz tamamlanmayan önemli alanlar:
 - Çok katlı veya palet istifi.
 - Gelişmiş el modeli/animasyonu.
 - Garajın bütününe yayılmış final sanat.
-- Orders, Economy ve diğer domain assembly'leri; Catalog/Inventory event/save entegrasyonu.
+- Orders'ın satış/servis varyantları, Economy ve diğer domain assembly'leri; Catalog/Inventory/Orders event-save entegrasyonu.
 - Save/Guardian runtime.
 - Steam entegrasyonu.
 - Native Windows x64 IL2CPP/DirectX/Steam testi.
@@ -230,4 +230,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Catalog + Inventory authority checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket sipariş → teslimat kabulü → receiving container → raf transferinin en küçük uçtan uca dilimidir. Dünya item/cart projection'ı yalnız explicit Inventory komutu başarılı olursa ownership değiştirsin. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Purchase-order receiving checkpointinden devam et. Önce yaşayan belgeleri, `origin/main` eşitliğini ve Issue #8'i doğrula. Sıradaki bounded paket `Arrived` manifestin görünür teslimat kutusu/accept promptu ve receiving→raf transfer adaptörüdür. Dünya projection'ı yalnız explicit Orders/Inventory komutu başarılı olursa ownership değiştirsin. Test, commit/push/CI ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
