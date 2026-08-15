@@ -62,4 +62,8 @@ macOS oturumu kilitli olduğu için yeni pencere ekran görüntüsü alınmadı;
 ## Uzak ve USB kapanışı
 
 - Feature Repository Guard [31866681324](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31866681324): başarılı.
-- Docs checkpoint, Issue #42 kapanışı, Project Done ve USB hash manifesti bu feature commitini izleyen kapanış adımında kaydedilecektir.
+- Docs checkpoint commit `6ae294ea97571921d1296b72ab86e458235f9c22`; Repository Guard [31866965743](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31866965743): başarılı.
+- Issue #42 completed olarak kapatıldı ve Roadmap item'ı Done yapıldı; Epic #8 In Progress kaldı.
+- USB: `2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`; 488 tracked source + 5 evidence + source kaydı, 494 manifest satırı.
+- Manifest SHA-256: `a95d8457e2b52732a35c28d49fa51dfd4981ca0af2b585947a20743e8e10de7a`.
+- Tam readback/hash/boyut ve Git source path/checksum karşılaştırmasında mismatch `0`; forbidden directory, credential filename ve AppleDouble `0`.

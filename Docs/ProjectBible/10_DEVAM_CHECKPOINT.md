@@ -44,7 +44,7 @@
 - Branch: `main`
 - Feature commit: `7a23cd92be6ff1169ff49530319b0759965cadf5`
 - Tree: `623c2f52839847c098162371bb6f7c1073f4852d`
-- USB snapshot source/docs checkpoint commit: feature sonrası docs checkpointinde sabitlenecek.
+- USB snapshot source/docs checkpoint commit: `6ae294ea97571921d1296b72ab86e458235f9c22`.
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#42](https://github.com/cixanla/PC-Shop-Empire-3D/issues/42)
 - Repository Guard: [31866681324](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31866681324), başarılı.
 
@@ -75,7 +75,7 @@ Klavye ve gamepad acceptance→open→pickup→RAF A placement→offer publish z
 
 ## USB güvenlik katmanı
 
-Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Son kapanmış snapshot `2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`, source/docs checkpoint `756547f42298b7aeaf01075cbf6d000cbb97ddaa` taşır ve `37f95b3c…58ac` manifesti mismatch `0` ile doğrulanmıştır. Shelf-offer için yeni hash-doğrulamalı snapshot bu belge checkpointinden sonra üretilecek; `.git`, cache, büyük `.app`, credential ve AppleDouble dışarıda kalacaktır.
+Korunan milestone kayıtları `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` altındadır. Güncel snapshot `2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`, source/docs checkpoint `6ae294ea97571921d1296b72ab86e458235f9c22` taşır. İçerik 488 tracked kaynak + 5 scene/test/build/runtime kanıtı + source kaydıdır; 494 manifest satırı ve manifest SHA-256 `a95d8457e2b52732a35c28d49fa51dfd4981ca0af2b585947a20743e8e10de7a` tam readback/source checksum ile doğrulandı. Hash/boyut mismatch, source path/checksum mismatch, forbidden dir, credential filename ve AppleDouble `0`; büyük `.app`, cache ve credential dışarıdadır. USB güvenle çıkarılabilir.
 
 ## Sıradaki bounded paket
 

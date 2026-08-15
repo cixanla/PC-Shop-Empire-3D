@@ -111,7 +111,7 @@ Tamamlanan saf Core sözleşmeleri:
 - Araba hareketi dört noktalı zemin desteği, hedef overlap ve swept bounds obstruction kapılarından geçer; engelde son güvenli pozda kalır. Cart/controller disable yükü son güvenli dünya pozuna kurtarır.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Son kapanmış USB milestone `2026-08-15_STAGE_B_DELIVERY_PARCEL_UNPACKING`: source/docs checkpoint `756547f`, 471 tracked kaynak, 5 Unity scene/test/build/runtime kanıtı ve source kayıt dosyası; 477 satırlı `37f95b3c…58ac` SHA-256 manifest/readback ile doğrulandı. Shelf-offer snapshotı kapanış adımında ayrıca kaydedilecektir.
+- Güncel USB milestone `2026-08-15_STAGE_B_AUTHORITATIVE_SHELF_OFFER`: source/docs checkpoint `6ae294e`, 488 tracked kaynak, 5 Unity scene/test/build/runtime kanıtı ve source kayıt dosyası; 494 satırlı `a95d8457…de7a` SHA-256 manifest/readback ile doğrulandı. Source path/checksum mismatch, forbidden/credential ve AppleDouble sayısı `0`dır.
 
 Henüz yapılmayanlar:
 
