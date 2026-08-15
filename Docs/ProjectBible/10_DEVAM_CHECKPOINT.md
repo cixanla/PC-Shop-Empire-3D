@@ -52,12 +52,13 @@
 - Branch: `main`
 - Feature commit: `e596e079d90b6d5b9d94714d7821502574eba3c9`
 - Tree: `14865dc87d8ad86447e73d8596042d085f52d73f`
+- Checkpoint docs commit: `c4aed4b050dd92c1f5aaa65261d4d1bc009528b3`
 - Epic/issue: [#8](https://github.com/cixanla/PC-Shop-Empire-3D/issues/8) / [#39](https://github.com/cixanla/PC-Shop-Empire-3D/issues/39)
 - Karar: `Docs/ADR-0017-ATOMIC-PURCHASE-ORDER-RECEIVING.md`.
 - Kanıt: `Docs/Evidence/ORDERS-RECEIVING-CHECKPOINT-2026-08-15.md`.
 - Kapsam: purchase order lines, delivery/ETA lifecycle, exact manifest, generic Inventory intake ve receiving acceptance.
 - Kısmi/hasarlı claim, Economy, Dashboard, event/save ve dünya projection'ı açıkça kapsam dışında kaldı.
-- Remote Repository Guard bağlantısı push sonrası eklenecektir.
+- Remote Repository Guard: [31862730318](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31862730318), başarılı.
 
 ## Test ve build kanıtı
 
@@ -109,8 +110,9 @@ Korunan milestone kayıtları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_SMALL_BOX_STACKING`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_LOADED_TRANSPORT_CART`
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_CATALOG_INVENTORY`
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ORDER_RECEIVING`
 
-Güncel Catalog/Inventory snapshot'ı `9e0cb2d` checkpointindeki 428 tracked kaynağı, 4 EditMode/PlayMode rapor-log kanıtını ve source kaydını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 433 manifest satırında hash/boyut hatası `0`, source mismatch `0`, manifest SHA-256 `f481ddfaf6627bdd34137225fe754e90065b85e7cfc012a1a19c651337c49dc9`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket için güvenle çıkarılabilir.
+Güncel Order Receiving snapshot'ı `c4aed4b` checkpointindeki 449 tracked kaynağı, 4 EditMode/PlayMode rapor-log kanıtını ve source kaydını ayrı `SOURCE`/`EVIDENCE` dizinlerinde tutar. 454 manifest satırında hash/boyut hatası `0`, source mismatch `0`, manifest SHA-256 `07480d15d2f2b187d7e84383c6f45f011be1f8a0056c4075f06103d92f485cff`, yasak cache/build/credential ve AppleDouble sayısı `0`dır. USB bu paket için güvenle çıkarılabilir.
 
 ## Devam sırası
 

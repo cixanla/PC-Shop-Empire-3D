@@ -29,3 +29,11 @@ Ham raporlar repository dışında `/Users/cixanla/Developer/PCShopEmpire3D/Test
 ## Kapsam ve provenans sınırı
 
 Yeni asset, paket, marka verisi veya üçüncü taraf bağımlılık eklenmedi. Fiyat/para, ödeme, partial/damaged claim, event publication, persistence, Dashboard ve 3D delivery/raf projection bu kanıtın dışında açık kalır. Native Windows x64/IL2CPP doğrulaması yapılmış sayılmaz.
+
+## Remote ve USB kapanışı
+
+- Checkpoint commit: `c4aed4b050dd92c1f5aaa65261d4d1bc009528b3`.
+- Repository Guard: [31862730318](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31862730318), başarılı.
+- Issue #39 Closed/Done; Epic #8 In Progress.
+- USB: `2026-08-15_STAGE_B_ORDER_RECEIVING`; 449 tracked source, 4 test evidence, 1 source kaydı ve 454 manifest satırı.
+- USB manifest SHA-256: `07480d15d2f2b187d7e84383c6f45f011be1f8a0056c4075f06103d92f485cff`; manifest/source mismatch, yasak yol ve AppleDouble sayısı `0`.
