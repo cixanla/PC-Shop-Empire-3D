@@ -41,4 +41,5 @@ Issue #47, `Browsing` ziyaretinin RAF A teklifi için immutable ve açıklanabil
 - PlayMode: `22/22`
 - Universal macOS build ve Apple M4/Metal runtime: `garage-leave-action-r18-v1`, `customer-leave-action=ready`, `leave-action=ok`, `stale-leave-blocked=ok`, `authority-isolated=ok`
 - Repository Guard: [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394), başarılı
+- Source/docs checkpoint `868885af9065d4e9fb274c3862fd525b040e1cc2`; Repository Guard [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496), başarılı
 - Ayrıntı: `Docs/Evidence/STALE-SAFE-LEAVE-ACTION-AND-OFFER-DECLINED-EXIT-CHECKPOINT-2026-08-15.md`

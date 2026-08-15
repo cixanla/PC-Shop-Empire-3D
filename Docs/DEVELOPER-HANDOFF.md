@@ -121,8 +121,8 @@ Tamamlanan saf Core sözleşmeleri:
 - Garage müşteri status'u yalnız `Browsing` sırasında `KARAR: SATIN AL / AYRIL` ve stable reason code gösterir. Gerçek `G / Gamepad East` current Buy/Leave kararını action authority'ye uygular; stale Buy `SATIN ALMA ENGELLİ`, stale Leave `AYRILMA ENGELLİ` stable metniyle engellenir.
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
-- Issue #49 feature `67d858a`, Repository Guard `31882228394`, EditMode `298/298`, PlayMode `22/22` ve Mac runtime `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı; source/docs/CI/USB kapanışı sürüyor, Epic #9 açık/In Progress kalıyor.
-- Güncel USB milestone `2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`: source/docs checkpoint `aa61700`, 547 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 552 satırlı `05ed8205…e76f6` SHA-256 manifest/readback ile doğrulandı. 547/547 Git-blob eşliği geçti; hash/boyut/path/evidence mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 9.902.727 bayttır.
+- Issue #49 feature `67d858a`, source/docs `868885a`, Repository Guard `31882228394` + `31882508496`, EditMode `298/298`, PlayMode `22/22` ve Mac runtime `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı; Issue `15/15` acceptance ile kapalı/Done, Epic #9 açık/In Progress kalıyor.
+- Güncel USB milestone `2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`: source/docs checkpoint `868885a`, 549 tracked kaynak, 4 final Unity test/build/runtime kanıtı ve source kaydı; 554 satırlı `d685de7a…4209` SHA-256 manifest/readback ile doğrulandı. 549/549 Git-blob ve 4/4 evidence eşliği geçti; hash/boyut/path/evidence mismatch, forbidden/cache/credential, AppleDouble ve sibling sidecar sayısı `0`dır; payload 10.003.704 bayttır.
 
 Henüz yapılmayanlar:
 

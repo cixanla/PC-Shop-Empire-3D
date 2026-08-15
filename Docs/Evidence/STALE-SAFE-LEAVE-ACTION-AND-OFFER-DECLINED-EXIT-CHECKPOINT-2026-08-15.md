@@ -18,10 +18,11 @@ Issue [#49](https://github.com/cixanla/PC-Shop-Empire-3D/issues/49), Epic [#9](h
 - Branch: `main`
 - Feature commit: `67d858aff773610cff6d6c221c792cd793f27a1b`
 - Tree: `dc76a89a5a9f0f9349509aca7374f30518b1c308`
-- Source/docs commit ve tree: kapanış commitinde sabitlenecek
+- Source/docs commit: `868885af9065d4e9fb274c3862fd525b040e1cc2`
+- Source/docs tree: `66c44529a5bb2cde92903d8fee06ef4d2ed7f667`
 - Marker: `garage-leave-action-r18-v1`
 - Feature Repository Guard: [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394), başarılı
-- Source/docs Repository Guard: kapanış commitinde sabitlenecek
+- Source/docs Repository Guard: [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496), başarılı
 
 ## Otomatik doğrulama
 
@@ -62,5 +63,9 @@ Final test/build/runtime kanıtlarında failed/skipped test, assertion, smoke fa
 
 ## Uzak ve USB kapanışı
 
-- Feature push ve Repository Guard başarılıdır.
-- Source/docs push, ikinci Repository Guard, Issue/Project kapanışı ve USB milestone değerleri kapanış commitinde bu bölüme yazılacaktır.
+- Feature ve source/docs pushları tamamlandı; Repository Guard [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394) ile [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496) başarılıdır.
+- Issue #49, `15/15` acceptance ile kapatıldı ve Roadmap durumu `Done` yapıldı; Epic #9 açık/In Progress kalır.
+- USB milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`.
+- Snapshot exact source/docs `868885a` arşivinden 549 tracked `SOURCE`, dört final `EVIDENCE` ve bir `SOURCE_COMMIT.txt` içerir; 554 payload satırı, toplam 556 dosya ve 10.003.704 payload baytı vardır.
+- `MANIFEST.tsv` SHA-256: `d685de7afdd8df0dcba16369d2232c48725a365db15d67ad1cbdae78269a4209`.
+- 554/554 hash/boyut/path readback, 549/549 Git-blob ve 4/4 evidence eşliği geçti; forbidden/cache/credential/AppleDouble/sibling sidecar mismatch sayıları `0`dır.

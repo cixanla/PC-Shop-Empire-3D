@@ -1,12 +1,13 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 15 Ağustos 2026<br>
-**Durum:** Issue #49 feature/test/build/runtime tamamlandı; stale-safe `Leave/OfferDeclined` source/docs/CI/USB kapanışı sürüyor<br>
+**Durum:** Issue #49 stale-safe `Leave/OfferDeclined` paketi source/docs/CI/USB dahil tamamlandı; Issue kapalı/Done, Epic #9 açık/In Progress<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #49 / Epic #9
 
 - Feature commit `67d858aff773610cff6d6c221c792cd793f27a1b`, tree `dc76a89a5a9f0f9349509aca7374f30518b1c308`; Repository Guard `31882228394` başarılı.
+- Source/docs commit `868885af9065d4e9fb274c3862fd525b040e1cc2`, tree `66c44529a5bb2cde92903d8fee06ef4d2ed7f667`; Repository Guard `31882508496` başarılı. Issue #49 `15/15` acceptance ile kapalı ve Roadmap'te `Done`dır.
 - Ortak `CustomerOfferDecisionActionAuthority`, immutable `Leave` kararını current visit ve current RAF A offer'ıyla tam value-equal yeniden değerlendirir; stale karar `retail.offer-action.decision-stale` ile bütün authority'lerde no-mutation kalır.
 - Actors↔Retail customer kimliği immutable typed binding ile explicit eşlenir. Leave hiçbir line/basket/item/reservation/claim kimliği taşımaz; stok ve kasa authority'leri değişmez.
 - `PSE.Actors` internal friend prepared planı `Browsing → Exiting` ve stable `OfferDeclined` geçişini side-effect-free preflight sonrası uygular. Public Presentation bypass'ı ve cross-kind replay kapalıdır.
@@ -42,7 +43,7 @@
 - Feature commit: `67d858aff773610cff6d6c221c792cd793f27a1b`.
 - Feature tree: `dc76a89a5a9f0f9349509aca7374f30518b1c308`.
 - Feature Repository Guard: [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394), başarılı.
-- Source/docs commit, ikinci Repository Guard, Issue/Project ve USB kapanışı bu bounded kapanışın sonraki adımıdır.
+- Source/docs commit: `868885af9065d4e9fb274c3862fd525b040e1cc2`; tree: `66c44529a5bb2cde92903d8fee06ef4d2ed7f667`; Repository Guard: [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496), başarılı.
 - EditMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/editmode-action49-r2.xml`; `298/298`; SHA-256 `be7e56fad9418de9883100653bdf90722ebd13bc896fcf5432ee86a195d1feea`.
 - PlayMode XML: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/playmode-action49-r2.xml`; `22/22`; SHA-256 `8856709e0fc3c193359d9e3576960512aa261d9a9efdff7b1b775b5ae0658ece`.
 - Build log: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/build-action49-macos-r1.log`; `STAGE_A_BUILD_OK target=StandaloneOSX bytes=327750560`; SHA-256 `c1e317068753a9668ec3737ca0cd69b0c6a37a77c77ea03653a4debd56a75df8`.
@@ -61,10 +62,10 @@
 
 ## USB güvenli checkpoint durumu
 
-- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`.
-- Source/docs `aa617006448a146a5a8a6b151ad66224a6a56301`; 547 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 552 manifest payload satırı, toplam 554 dosya ve 9.902.727 payload baytı.
-- `MANIFEST.tsv` SHA-256: `05ed8205457c18413d90482854bd923186c1140309436c46c57622da798e76f6`.
-- 552/552 hash/boyut/path readback ve 547/547 Git-blob eşliği geçti; evidence mismatch, forbidden/cache/credential/AppleDouble ve sibling sidecar `0`.
+- Güncel milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`.
+- Source/docs `868885af9065d4e9fb274c3862fd525b040e1cc2`; 549 tracked `SOURCE`, 4 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 554 manifest payload satırı, toplam 556 dosya ve 10.003.704 payload baytı.
+- `MANIFEST.tsv` SHA-256: `d685de7afdd8df0dcba16369d2232c48725a365db15d67ad1cbdae78269a4209`.
+- 554/554 hash/boyut/path readback, 549/549 Git-blob ve 4/4 evidence eşliği geçti; forbidden/cache/credential/AppleDouble ve sibling sidecar mismatch sayıları `0`.
 - `.git`, Unity cache/build, token, parola, credential ve AppleDouble snapshot dışında kaldı.
 - Snapshot bağımsız salt-okunur denetimde de aynı sayım, manifest, Git-blob ve güvenlik kapılarıyla başarılı bulundu.
 
@@ -79,4 +80,4 @@ Issue #9 altında atomik ödeme ve ilk Economy settlement sınırı:
 
 ## Güvenli devam komutu
 
-Issue #49 feature `67d858a`, Guard `31882228394`, EditMode `298/298`, PlayMode `22/22` ve Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı. Source/docs/CI/USB kapanışını bitir; ardından Epic #9 altında atomik payment/Economy settlement dilimine geç ve vergi/indirim/Save sınırlarını karıştırma.
+Issue #49 feature `67d858a`, source/docs `868885a`, iki başarılı Guard, EditMode `298/298`, PlayMode `22/22`, Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ve doğrulanmış USB milestone ile kapalı/Done'dır. Epic #9 altında atomik payment/ilk Economy settlement dilimine geç; vergi/indirim/Save sınırlarını karıştırma.

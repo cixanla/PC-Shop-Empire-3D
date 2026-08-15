@@ -149,8 +149,8 @@ Tamamlanan oynanabilir sistemler:
 ### Konsolidasyon sonrası güncel checkpoint
 
 - Son doğrulanmış kaynak feature: `67d858aff773610cff6d6c221c792cd793f27a1b`, tree `dc76a89a5a9f0f9349509aca7374f30518b1c308`.
-- Issue #49 kapsamındaki stale-safe current `Leave`, kind-discriminated action receipt, `Browsing → Exiting`, stable `OfferDeclined` ve Browse→Exit Garage NavMesh dilimi feature/test/build/runtime olarak tamamlandı; source/docs/CI/USB kapanışı sürüyor. Epic #9 açık/In Progress kalır.
-- Feature Repository Guard [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394) başarılıdır; source/docs Guard ve USB değerleri kapanış commitinde sabitlenecektir.
+- Issue #49 kapsamındaki stale-safe current `Leave`, kind-discriminated action receipt, `Browsing → Exiting`, stable `OfferDeclined` ve Browse→Exit Garage NavMesh dilimi source/docs/CI/USB dahil tamamlandı; Issue `15/15` acceptance ile kapalı/Done, Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31882228394](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882228394) ve source/docs `868885a` Repository Guard [31882508496](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31882508496) başarılıdır.
 - EditMode `298/298`, gerçek Input System PlayMode `22/22` geçti; failed/skipped `0`.
 - Universal macOS development build `327.750.560` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-leave-action-r18-v1 leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
@@ -227,6 +227,7 @@ Korunan milestone snapshotları:
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_DETERMINISTIC_CUSTOMER_VISIT`; source/docs `d163328`, 535 tracked source + 5 test/build/runtime evidence + source kaydı, 541 satırlı `c82fc76d…cfd` manifest, 9.715.834 payload baytı; tam hash/boyut/path readback, 535/535 Git-blob ve forbidden/credential/AppleDouble `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked source + 4 final test/build/runtime evidence + source kaydı, 546 satırlı `d46e2433…d1b1` manifest, 9.780.828 payload baytı; 546/546 hash/boyut/path readback, 541/541 Git-blob ve forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
 - `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_BUY_ACTION_AND_CHECKOUT_NAVIGATION`; source/docs `aa61700`, 547 tracked source + 4 final test/build/runtime evidence + source kaydı, 552 satırlı `05ed8205…e76f6` manifest, 9.902.727 payload baytı; 552/552 hash/boyut/path readback, 547/547 Git-blob ve evidence/forbidden/cache/credential/AppleDouble/sibling sidecar `0` kapısı geçti.
+- `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_STALE_SAFE_LEAVE_ACTION_AND_OFFER_DECLINED_EXIT`; source/docs `868885a`, 549 tracked source + 4 final test/build/runtime evidence + source kaydı, 554 satırlı `d685de7a…4209` manifest, 10.003.704 payload baytı; 554/554 hash/boyut/path readback, 549/549 Git-blob, 4/4 evidence ve forbidden/cache/credential/AppleDouble/sibling sidecar mismatch `0` kapısı geçti.
 
 Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credential eklenmez. Her snapshot manifest ve SHA-256 ile doğrulanır; kaynak Git geçmişinin yerine geçmez.
 
@@ -246,4 +247,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #49 feature `67d858a`, Guard `31882228394`, EditMode 298/298, PlayMode 22/22 ve Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ile doğrulandı. Source/docs/CI/USB kapanışını tamamla; ardından Epic #9 altında bounded atomik payment/Economy settlement dilimine geç ve vergi/indirim/Save sınırlarını karıştırma.
+> Issue #49 feature `67d858a`, source/docs `868885a`, iki başarılı Guard, EditMode 298/298, PlayMode 22/22, Mac `leave-action=ok stale-leave-blocked=ok authority-isolated=ok` ve doğrulanmış USB milestone ile kapalı/Done'dır. Epic #9 altında bounded atomik payment/ilk Economy settlement dilimine geç; vergi/indirim/Save sınırlarını karıştırma.
