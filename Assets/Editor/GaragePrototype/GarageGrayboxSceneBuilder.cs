@@ -126,15 +126,19 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         {
             public AssemblyBuildResult(
                 MotherboardSeatProjection seat,
+                MotherboardFastenerProjection fastener,
                 MotherboardAssemblyItemBinding binding,
                 PhysicalItemProjection motherboard)
             {
                 Seat = seat;
+                Fastener = fastener;
                 Binding = binding;
                 Motherboard = motherboard;
             }
 
             public MotherboardSeatProjection Seat { get; }
+
+            public MotherboardFastenerProjection Fastener { get; }
 
             public MotherboardAssemblyItemBinding Binding { get; }
 
@@ -416,8 +420,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 assemblyBuild.Motherboard,
                 assemblyBuild.Seat,
+                assemblyBuild.Fastener,
                 GarageStockFlowSession.MotherboardItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
+            carry.ConfigureMotherboardFastener(
+                assemblyBuild.Fastener,
+                assemblyBuild.Binding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -452,6 +460,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 customerFlow,
                 customerFlowBuild.CheckoutStation,
                 assemblyBuild.Seat,
+                assemblyBuild.Fastener,
                 assemblyBuild.Binding);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
@@ -1008,8 +1017,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 metal);
             SetLayerRecursively(statusPlate, interactableLayer);
             Renderer statusRenderer = statusPlate.GetComponent<Renderer>();
-            statusRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            statusRenderer.receiveShadows = false;
+            DisableDecorativeRendererCost(statusRenderer);
 
             MotherboardSeatProjection seat = seatRoot.gameObject.AddComponent<
                 MotherboardSeatProjection>();
@@ -1024,6 +1032,92 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 invalidMaterial,
                 2f,
                 0.94f);
+
+            Transform fastenerRoot = new GameObject("MotherboardFastenerStation").transform;
+            fastenerRoot.SetParent(chassis, false);
+            GameObject screwHead = CreateCylinder(
+                "MotherboardCaptiveFastener",
+                fastenerRoot,
+                new Vector3(-0.66f, 1.21f, 4.335f),
+                new Vector3(0.012f, 0.004f, 0.012f),
+                Quaternion.Euler(90f, 0f, 0f),
+                brushedSteel);
+            SetLayerRecursively(screwHead, interactableLayer);
+            Renderer fastenerRenderer = screwHead.GetComponent<Renderer>();
+            DisableDecorativeRendererCost(fastenerRenderer);
+            UnityEngine.Object.DestroyImmediate(screwHead.GetComponent<Collider>());
+            GameObject focusTarget = new GameObject("MotherboardFastenerFocusTarget");
+            focusTarget.transform.SetParent(fastenerRoot, false);
+            focusTarget.transform.localPosition = new Vector3(-0.66f, 1.21f, 4.336f);
+            focusTarget.layer = interactableLayer;
+            BoxCollider focusCollider = focusTarget.AddComponent<BoxCollider>();
+            focusCollider.size = new Vector3(0.060f, 0.060f, 0.016f);
+            focusCollider.isTrigger = false;
+            GameObject recessHorizontal = CreateDetailCube(
+                "FastenerCrossRecessHorizontal",
+                fastenerRoot,
+                new Vector3(-0.66f, 1.21f, 4.3305f),
+                new Vector3(0.010f, 0.002f, 0.001f),
+                rubber);
+            GameObject recessVertical = CreateDetailCube(
+                "FastenerCrossRecessVertical",
+                fastenerRoot,
+                new Vector3(-0.66f, 1.21f, 4.3305f),
+                new Vector3(0.002f, 0.010f, 0.001f),
+                rubber);
+            DisableDecorativeRendererCost(recessHorizontal.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(recessVertical.GetComponent<Renderer>());
+
+            Transform screwdriver = new GameObject("CaptiveFastenerScrewdriver").transform;
+            screwdriver.SetParent(fastenerRoot, false);
+            screwdriver.localPosition = new Vector3(-0.37f, 1.12f, 4.305f);
+            screwdriver.localRotation = Quaternion.Euler(0f, 0f, -55f);
+            GameObject screwdriverHandle = CreateCylinder(
+                "ScrewdriverHandle",
+                screwdriver,
+                new Vector3(0f, -0.065f, 0f),
+                new Vector3(0.024f, 0.055f, 0.024f),
+                Quaternion.identity,
+                accent);
+            GameObject screwdriverShaft = CreateCylinder(
+                "ScrewdriverShaft",
+                screwdriver,
+                new Vector3(0f, 0.065f, 0f),
+                new Vector3(0.004f, 0.075f, 0.004f),
+                Quaternion.identity,
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(screwdriverHandle.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(screwdriverShaft.GetComponent<Collider>());
+            DisableDecorativeRendererCost(screwdriverHandle.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(screwdriverShaft.GetComponent<Renderer>());
+
+            TextMesh fastenerStatusText = new GameObject("MotherboardFastenerStatusText")
+                .AddComponent<TextMesh>();
+            fastenerStatusText.transform.SetParent(statusPlate.transform, false);
+            fastenerStatusText.transform.localPosition = new Vector3(0f, 0f, -0.010f);
+            fastenerStatusText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            fastenerStatusText.anchor = TextAnchor.MiddleCenter;
+            fastenerStatusText.alignment = TextAlignment.Center;
+            fastenerStatusText.characterSize = 0.011f;
+            fastenerStatusText.fontSize = 36;
+            fastenerStatusText.color = new Color(0.88f, 0.92f, 0.90f);
+            DisableDecorativeRendererCost(fastenerStatusText.GetComponent<Renderer>());
+
+            MotherboardFastenerProjection fastener = fastenerRoot.gameObject.AddComponent<
+                MotherboardFastenerProjection>();
+            fastener.Configure(
+                GarageStockFlowSession.MotherboardFastenerIdValue,
+                focusCollider,
+                fastenerRenderer,
+                screwHead.transform,
+                screwdriver,
+                fastenerStatusText,
+                brushedSteel,
+                validMaterial,
+                invalidMaterial,
+                brushedSteel,
+                2f,
+                0.975f);
 
             GameObject motherboardRoot = new GameObject("PrototypeMotherboard");
             motherboardRoot.transform.SetParent(slice, false);
@@ -1093,7 +1187,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             MotherboardAssemblyItemBinding binding = motherboardRoot.AddComponent<
                 MotherboardAssemblyItemBinding>();
 
-            return new AssemblyBuildResult(seat, binding, motherboard);
+            return new AssemblyBuildResult(seat, fastener, binding, motherboard);
         }
 
         private static void BuildLighting(
@@ -1254,8 +1348,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             cameraData.renderPostProcessing = true;
             cameraData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
             cameraData.antialiasingQuality = AntialiasingQuality.High;
-            cameraObject.AddComponent<AudioListener>();
-
             Transform interactionOrigin = new GameObject("InteractionOrigin").transform;
             interactionOrigin.SetParent(cameraObject.transform, false);
             interactionOrigin.localPosition = new Vector3(0f, 0f, 0.1f);
@@ -2406,6 +2498,19 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             mesh.preserveMeshAssetOnDestroy = true;
             UnityEngine.Object.DestroyImmediate(mesh);
             return meshObject;
+        }
+
+        private static void DisableDecorativeRendererCost(Renderer renderer)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.motionVectorGenerationMode =
+                MotionVectorGenerationMode.ForceNoMotion;
         }
 
         private static Material GetOrCreateMaterial(

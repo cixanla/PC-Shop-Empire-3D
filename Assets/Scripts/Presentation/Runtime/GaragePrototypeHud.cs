@@ -31,15 +31,16 @@ namespace PCShopEmpire3D.Presentation
         private void OnGUI()
         {
             GUI.color = Color.white;
-            bool motherboardSeatMode = carryController != null &&
-                                       carryController.IsMotherboardSeatMode;
-            if (!motherboardSeatMode)
+            bool compactAssemblyUi = carryController != null &&
+                                     (carryController.IsMotherboardSeatMode ||
+                                      carryController.HasMotherboardFastenerContext);
+            if (!compactAssemblyUi)
             {
                 GUI.Label(new Rect(18f, 14f, 500f, 24f), "PC SHOP EMPIRE 3D — GARAGE PROTOTYPE");
                 GUI.Label(new Rect(18f, 36f, 760f, 24f), "WASD / Left Stick: Move   Mouse / Right Stick: Look   Shift: Sprint   Esc: Pause");
             }
 
-            if (stockFlow != null && !motherboardSeatMode)
+            if (stockFlow != null && !compactAssemblyUi)
             {
                 const float panelWidth = 370f;
                 string status = customerFlow != null
@@ -50,34 +51,39 @@ namespace PCShopEmpire3D.Presentation
                     status);
             }
 
-            string stationPrompt = checkoutStation != null
-                ? checkoutStation.PromptText
-                : string.Empty;
-            string customerPrompt = customerFlow != null
-                ? customerFlow.ContextualPromptText
-                : string.Empty;
-            string prompt = motherboardSeatMode
-                ? carryController.PromptText
-                : !string.IsNullOrEmpty(stationPrompt)
-                    ? stationPrompt
-                    : !string.IsNullOrEmpty(customerPrompt)
-                        ? customerPrompt
-                        : carryController != null
-                            ? carryController.PromptText
-                            : string.Empty;
+            string prompt;
+            if (compactAssemblyUi)
+            {
+                prompt = carryController.PromptText;
+            }
+            else
+            {
+                prompt = checkoutStation != null
+                    ? checkoutStation.PromptText
+                    : string.Empty;
+                if (string.IsNullOrEmpty(prompt) && customerFlow != null)
+                {
+                    prompt = customerFlow.ContextualPromptText;
+                }
+
+                if (string.IsNullOrEmpty(prompt) && carryController != null)
+                {
+                    prompt = carryController.PromptText;
+                }
+            }
             if (!string.IsNullOrEmpty(prompt) && (motor == null || !motor.IsPaused))
             {
                 float promptWidth = Mathf.Min(
-                    motherboardSeatMode ? 680f : 900f,
+                    compactAssemblyUi ? 680f : 900f,
                     Screen.width - 24f);
                 GUI.Box(
                     new Rect(
                         (Screen.width - promptWidth) * 0.5f,
-                        motherboardSeatMode
+                        compactAssemblyUi
                             ? Screen.height - 56f
                             : (Screen.height * 0.5f) + 34f,
                         promptWidth,
-                        motherboardSeatMode ? 30f : 34f),
+                        compactAssemblyUi ? 30f : 34f),
                     prompt);
             }
 

@@ -302,6 +302,8 @@ namespace PCShopEmpire3D.World.Interaction
                 ClearDynamicMotion();
                 body.useGravity = false;
                 body.isKinematic = true;
+                body.interpolation = RigidbodyInterpolation.None;
+                SetWorldPose(worldPose);
             }
 
             Physics.SyncTransforms();

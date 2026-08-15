@@ -394,6 +394,485 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
+        public void SecureAndUnsecurePreserveExactMotherboardAndInventory()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.fastener-attach");
+            fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId);
+            long inventoryRevision = fixture.Inventory.Revision;
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord before), Is.True);
+
+            StableId<AssemblyOperationIdScope> secureId =
+                OperationId("operation.fastener-secure");
+            OperationResult<AssemblyOperationReceipt> secure =
+                fixture.Authority.SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1);
+            OperationResult<AssemblyOperationReceipt> secureReplay =
+                fixture.Authority.SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1);
+
+            Assert.That(secure.IsSuccess, Is.True);
+            Assert.That(secureReplay.Value, Is.SameAs(secure.Value));
+            Assert.That(secure.Value.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.SecureMotherboardFastener));
+            Assert.That(secure.Value.FastenerId, Is.EqualTo(fixture.FastenerId));
+            Assert.That(secure.Value.SequenceIndex, Is.Zero);
+            Assert.That(secure.Value.ExpectedAssemblyRevision, Is.EqualTo(1));
+            Assert.That(secure.Value.PreviousSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(secure.Value.ResultingSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(secure.Value.SourceContainerId.IsEmpty, Is.True);
+            Assert.That(secure.Value.TargetContainerId.IsEmpty, Is.True);
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(fixture.Authority.SecuredByOperationId, Is.EqualTo(secureId));
+            Assert.That(fixture.Authority.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+
+            StableId<AssemblyOperationIdScope> unsecureId =
+                OperationId("operation.fastener-unsecure");
+            OperationResult<AssemblyOperationReceipt> unsecure =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    unsecureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    secureId,
+                    2);
+            OperationResult<AssemblyOperationReceipt> unsecureReplay =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    unsecureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    secureId,
+                    2);
+
+            Assert.That(unsecure.IsSuccess, Is.True);
+            Assert.That(unsecureReplay.Value, Is.SameAs(unsecure.Value));
+            Assert.That(unsecure.Value.SourceAttachOperationId, Is.EqualTo(attachId));
+            Assert.That(unsecure.Value.SourceSecureOperationId, Is.EqualTo(secureId));
+            Assert.That(unsecure.Value.PreviousSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(unsecure.Value.ResultingSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(fixture.Authority.SecuredByOperationId.IsEmpty, Is.True);
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Inventory.TryGetSerializedItem(
+                fixture.ItemId,
+                out InventoryItemRecord after), Is.True);
+            Assert.That(after.Id, Is.EqualTo(before.Id));
+            Assert.That(after.ProductId, Is.EqualTo(before.ProductId));
+            Assert.That(after.ContainerId, Is.EqualTo(before.ContainerId));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(3));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(3));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void WrongFastenerIdentityAndStaleRevisionAreFailClosed()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.fastener-failure-attach");
+            fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> wrongFastener =
+                fixture.Authority.SecureMotherboardFastener(
+                    OperationId("operation.fastener-wrong-id"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    StableId<AssemblyFastenerIdScope>.Parse("fastener.foreign"),
+                    attachId,
+                    1);
+            OperationResult<AssemblyOperationReceipt> stale =
+                fixture.Authority.SecureMotherboardFastener(
+                    OperationId("operation.fastener-stale"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    0);
+            OperationResult<AssemblyOperationReceipt> wrongItem =
+                fixture.Authority.SecureMotherboardFastener(
+                    OperationId("operation.fastener-wrong-item"),
+                    StableId<ItemInstanceIdScope>.Parse("item.foreign"),
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1);
+
+            Assert.That(wrongFastener.Error, Is.EqualTo(AssemblyFailures.InvalidFastener));
+            Assert.That(stale.Error, Is.EqualTo(AssemblyFailures.PlanStale));
+            Assert.That(wrongItem.Error, Is.EqualTo(AssemblyFailures.IdentityConflict));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(1));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(1));
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void DelayedFastenerReplayReturnsHistoricalReceiptWithoutRollingStateBack()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId = OperationId("operation.delayed-attach");
+            StableId<AssemblyOperationIdScope> secureId = OperationId("operation.delayed-secure");
+            StableId<AssemblyOperationIdScope> unsecureId =
+                OperationId("operation.delayed-unsecure");
+            fixture.Authority.AttachMotherboard(attachId, fixture.ItemId, fixture.SlotId);
+            AssemblyOperationReceipt secure = fixture.Authority.SecureMotherboardFastener(
+                secureId,
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                1).Value;
+            fixture.Authority.UnsecureMotherboardFastener(
+                unsecureId,
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                secureId,
+                2);
+            fixture.Authority.DetachMotherboard(
+                OperationId("operation.delayed-detach"),
+                fixture.ItemId,
+                fixture.SlotId);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> replay =
+                fixture.Authority.SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1);
+            OperationResult<AssemblyOperationReceipt> crossKindConflict =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    secureId,
+                    2);
+
+            Assert.That(replay.Value, Is.SameAs(secure));
+            Assert.That(crossKindConflict.Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(4));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(4));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void FastenerOrderLineageSlotAndSameKindConflictsAreFailClosed()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.fastener-order-attach");
+            StableId<AssemblyOperationIdScope> secureId =
+                OperationId("operation.fastener-order-secure");
+            StableId<AssemblyOperationIdScope> foreignSecureId =
+                OperationId("operation.fastener-order-foreign-secure");
+            fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> unsecureBeforeSecure =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    OperationId("operation.fastener-order-early-unsecure"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    foreignSecureId,
+                    1);
+            OperationResult<AssemblyOperationReceipt> secure =
+                fixture.Authority.SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1);
+            OperationResult<AssemblyOperationReceipt> secondSecure =
+                fixture.Authority.SecureMotherboardFastener(
+                    OperationId("operation.fastener-order-second-secure"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    2);
+            OperationResult<AssemblyOperationReceipt> wrongLineage =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    OperationId("operation.fastener-order-wrong-lineage"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    foreignSecureId,
+                    2);
+            OperationResult<AssemblyOperationReceipt> wrongSlot =
+                fixture.Authority.UnsecureMotherboardFastener(
+                    OperationId("operation.fastener-order-wrong-slot"),
+                    fixture.ItemId,
+                    StableId<AssemblySlotIdScope>.Parse("slot.foreign"),
+                    fixture.FastenerId,
+                    attachId,
+                    secureId,
+                    2);
+            OperationResult<AssemblyOperationReceipt> sameKindConflict =
+                fixture.Authority.SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    2);
+
+            Assert.That(unsecureBeforeSecure.Error,
+                Is.EqualTo(AssemblyFailures.FastenerOutOfOrder));
+            Assert.That(secure.IsSuccess, Is.True);
+            Assert.That(secondSecure.Error,
+                Is.EqualTo(AssemblyFailures.FastenerOutOfOrder));
+            Assert.That(wrongLineage.Error,
+                Is.EqualTo(AssemblyFailures.FastenerOutOfOrder));
+            Assert.That(wrongSlot.Error, Is.EqualTo(AssemblyFailures.UnknownSlot));
+            Assert.That(sameKindConflict.Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(2));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(2));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ReceiptHistoryFoldRejectsHistoricalSecureLineageCorruption()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.history-fold-attach");
+            StableId<AssemblyOperationIdScope> secureOneId =
+                OperationId("operation.history-fold-secure-one");
+            StableId<AssemblyOperationIdScope> secureTwoId =
+                OperationId("operation.history-fold-secure-two");
+            fixture.Authority.AttachMotherboard(attachId, fixture.ItemId, fixture.SlotId);
+            fixture.Authority.SecureMotherboardFastener(
+                secureOneId,
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                1);
+            fixture.Authority.UnsecureMotherboardFastener(
+                OperationId("operation.history-fold-unsecure-one"),
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                secureOneId,
+                2);
+            fixture.Authority.SecureMotherboardFastener(
+                secureTwoId,
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                3);
+            AssemblyOperationReceipt unsecureTwo = fixture.Authority
+                .UnsecureMotherboardFastener(
+                    OperationId("operation.history-fold-unsecure-two"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    secureTwoId,
+                    4).Value;
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+
+            FieldInfo sourceSecureField = typeof(AssemblyOperationReceipt).GetField(
+                "<SourceSecureOperationId>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(sourceSecureField, Is.Not.Null);
+            sourceSecureField.SetValue(unsecureTwo, secureOneId);
+
+            Assert.That(fixture.Authority.ValidateInvariants().Error,
+                Is.EqualTo(AssemblyFailures.InvariantViolation));
+        }
+
+        [Test]
+        public void ReceiptHistoryFoldRejectsInventoryRevisionRegressionAndTransferWithoutAdvance()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.history-inventory-attach");
+            StableId<AssemblyOperationIdScope> secureId =
+                OperationId("operation.history-inventory-secure");
+            AssemblyOperationReceipt attach = fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId).Value;
+            AssemblyOperationReceipt secure = fixture.Authority
+                .SecureMotherboardFastener(
+                    secureId,
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    1).Value;
+            FieldInfo inventoryRevisionField = typeof(AssemblyOperationReceipt).GetField(
+                "<InventoryRevision>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(inventoryRevisionField, Is.Not.Null);
+            Assert.That(attach.InventoryRevision, Is.GreaterThan(1));
+
+            long secureInventoryRevision = secure.InventoryRevision;
+            inventoryRevisionField.SetValue(secure, attach.InventoryRevision - 1L);
+            Assert.That(fixture.Authority.ValidateInvariants().Error,
+                Is.EqualTo(AssemblyFailures.InvariantViolation));
+
+            inventoryRevisionField.SetValue(secure, secureInventoryRevision);
+            AssemblyOperationReceipt unsecure = fixture.Authority
+                .UnsecureMotherboardFastener(
+                    OperationId("operation.history-inventory-unsecure"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    secureId,
+                    2).Value;
+            AssemblyOperationReceipt detach = fixture.Authority.DetachMotherboard(
+                OperationId("operation.history-inventory-detach"),
+                fixture.ItemId,
+                fixture.SlotId).Value;
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+
+            inventoryRevisionField.SetValue(detach, unsecure.InventoryRevision);
+            Assert.That(fixture.Authority.ValidateInvariants().Error,
+                Is.EqualTo(AssemblyFailures.InvariantViolation));
+        }
+
+        [Test]
+        public void SecuredMotherboardCannotDetachUntilExactUnsecureSucceeds()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId = OperationId("operation.detach-gate-attach");
+            StableId<AssemblyOperationIdScope> secureId = OperationId("operation.detach-gate-secure");
+            fixture.Authority.AttachMotherboard(attachId, fixture.ItemId, fixture.SlotId);
+            fixture.Authority.SecureMotherboardFastener(
+                secureId,
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                1);
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> blocked =
+                fixture.Authority.DetachMotherboard(
+                    OperationId("operation.detach-while-secured"),
+                    fixture.ItemId,
+                    fixture.SlotId);
+
+            Assert.That(blocked.Error, Is.EqualTo(AssemblyFailures.ComponentSecured));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(2));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(2));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+
+            Assert.That(fixture.Authority.UnsecureMotherboardFastener(
+                OperationId("operation.detach-gate-unsecure"),
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                secureId,
+                2).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.DetachMotherboard(
+                OperationId("operation.detach-after-unsecure"),
+                fixture.ItemId,
+                fixture.SlotId).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.Empty));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void FastenerRevisionOverflowLeavesAuthoritiesUnchanged()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.fastener-overflow-attach");
+            AssemblyOperationReceipt attach = fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId).Value;
+            PropertyInfo revisionProperty = typeof(AssemblyBuildAuthority).GetProperty(
+                nameof(AssemblyBuildAuthority.Revision));
+            revisionProperty.GetSetMethod(nonPublic: true).Invoke(
+                fixture.Authority,
+                new object[] { long.MaxValue });
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyOperationReceipt> result =
+                fixture.Authority.SecureMotherboardFastener(
+                    OperationId("operation.fastener-overflow"),
+                    fixture.ItemId,
+                    fixture.SlotId,
+                    fixture.FastenerId,
+                    attachId,
+                    long.MaxValue);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.RevisionOverflow));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(fixture.Authority.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(fixture.Authority.MotherboardItemId, Is.EqualTo(fixture.ItemId));
+            Assert.That(fixture.Authority.MotherboardProductId,
+                Is.EqualTo(fixture.ItemProductId));
+            Assert.That(fixture.Authority.InstalledByOperationId, Is.EqualTo(attachId));
+            Assert.That(fixture.Authority.SecuredByOperationId.IsEmpty, Is.True);
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(1));
+            Assert.That(fixture.Authority.GetReceipts(), Is.EqualTo(new[] { attach }));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+        }
+
+        [Test]
         public void ManagedWorkbenchRejectsRawTransferAndExactDetachStillSucceeds()
         {
             Fixture fixture = Fixture.Create();
@@ -546,6 +1025,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                 StableId<PcBuildIdScope>.Parse("build.foreign-catalog"),
                 StableId<ChassisIdScope>.Parse("chassis.foreign-catalog"),
                 fixture.SlotId,
+                fixture.FastenerId,
                 fixture.HandsId,
                 fixture.WorkbenchId,
                 MotherboardFormFactor.MicroAtx);
@@ -560,6 +1040,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
             Assert.That(AssemblyFailures.InvalidBuildId.Code, Is.EqualTo("assembly.invalid-build"));
             Assert.That(AssemblyFailures.InvalidChassisId.Code, Is.EqualTo("assembly.invalid-chassis"));
             Assert.That(AssemblyFailures.InvalidSlotId.Code, Is.EqualTo("assembly.invalid-slot"));
+            Assert.That(AssemblyFailures.InvalidFastener.Code,
+                Is.EqualTo("assembly.invalid-fastener"));
             Assert.That(AssemblyFailures.InvalidComponent.Code, Is.EqualTo("assembly.invalid-component"));
             Assert.That(AssemblyFailures.ComponentKindMismatch.Code,
                 Is.EqualTo("assembly.component-kind-mismatch"));
@@ -570,6 +1052,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                 Is.EqualTo("assembly.component-not-in-hands"));
             Assert.That(AssemblyFailures.ComponentNotSeated.Code,
                 Is.EqualTo("assembly.component-not-seated"));
+            Assert.That(AssemblyFailures.ComponentSecured.Code,
+                Is.EqualTo("assembly.component-secured"));
+            Assert.That(AssemblyFailures.FastenerOutOfOrder.Code,
+                Is.EqualTo("assembly.fastener-out-of-order"));
             Assert.That(AssemblyFailures.IdentityConflict.Code,
                 Is.EqualTo("assembly.identity-conflict"));
             Assert.That(AssemblyFailures.PlanForeign.Code, Is.EqualTo("assembly.plan-foreign"));
@@ -597,6 +1083,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
             Assert.That(snapshot.BuildId, Is.EqualTo(fixture.BuildId));
             Assert.That(snapshot.ChassisId, Is.EqualTo(fixture.ChassisId));
             Assert.That(snapshot.MotherboardSlotId, Is.EqualTo(fixture.SlotId));
+            Assert.That(snapshot.MotherboardFastenerId, Is.EqualTo(fixture.FastenerId));
             Assert.That(snapshot.HandsContainerId, Is.EqualTo(fixture.HandsId));
             Assert.That(snapshot.WorkbenchContainerId, Is.EqualTo(fixture.WorkbenchId));
             Assert.That(snapshot.SupportedMotherboardFormFactor,
@@ -606,6 +1093,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
             Assert.That(snapshot.MotherboardItemId, Is.EqualTo(fixture.ItemId));
             Assert.That(snapshot.MotherboardProductId, Is.EqualTo(fixture.ItemProductId));
             Assert.That(snapshot.InstalledByOperationId, Is.EqualTo(operationId));
+            Assert.That(snapshot.SecuredByOperationId.IsEmpty, Is.True);
             Assert.That(snapshot.Revision, Is.EqualTo(1));
             Assert.That(fixture.Authority.TryGetReceipt(operationId, out AssemblyOperationReceipt found),
                 Is.True);
@@ -654,6 +1142,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
 
             public StableId<AssemblySlotIdScope> SlotId { get; private set; }
 
+            public StableId<AssemblyFastenerIdScope> FastenerId { get; private set; }
+
             public StableId<ContainerIdScope> HandsId { get; private set; }
 
             public StableId<ContainerIdScope> WorkbenchId { get; private set; }
@@ -680,6 +1170,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     BuildId = StableId<PcBuildIdScope>.Parse("build.prototype-001"),
                     ChassisId = StableId<ChassisIdScope>.Parse("chassis.prototype-001"),
                     SlotId = StableId<AssemblySlotIdScope>.Parse("slot.motherboard-main"),
+                    FastenerId = StableId<AssemblyFastenerIdScope>.Parse(
+                        "fastener.motherboard-main-01"),
                     HandsId = StableId<ContainerIdScope>.Parse("container.actor-hands"),
                     WorkbenchId = StableId<ContainerIdScope>.Parse("container.assembly-workbench"),
                     StorageId = StableId<ContainerIdScope>.Parse("container.storage"),
@@ -754,6 +1246,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     BuildId,
                     ChassisId,
                     SlotId,
+                    FastenerId,
                     HandsId,
                     WorkbenchId,
                     MotherboardFormFactor.MicroAtx);

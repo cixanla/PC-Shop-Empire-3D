@@ -17,4 +17,8 @@ namespace PCShopEmpire3D.Assembly
     public sealed class AssemblyOperationIdScope : IStableIdScope
     {
     }
+
+    public sealed class AssemblyFastenerIdScope : IStableIdScope
+    {
+    }
 }

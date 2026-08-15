@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-motherboard-seating-r22-v1";
+        public const string Version = "garage-motherboard-fastener-r23-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -29,6 +29,7 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
         [SerializeField] private CheckoutStationProjection checkoutStation;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
+        [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
@@ -47,6 +48,8 @@ namespace PCShopEmpire3D.Presentation
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
+        public MotherboardFastenerProjection MotherboardFastener => motherboardFastener;
+
         public MotherboardAssemblyItemBinding MotherboardBinding => motherboardBinding;
 
         public void Configure(
@@ -58,6 +61,7 @@ namespace PCShopEmpire3D.Presentation
             GarageCustomerFlowRuntime garageCustomerFlow = null,
             CheckoutStationProjection physicalCheckoutStation = null,
             MotherboardSeatProjection physicalMotherboardSeat = null,
+            MotherboardFastenerProjection physicalMotherboardFastener = null,
             MotherboardAssemblyItemBinding physicalMotherboardBinding = null)
         {
             playerMotor = motor;
@@ -68,6 +72,7 @@ namespace PCShopEmpire3D.Presentation
             customerFlow = garageCustomerFlow;
             checkoutStation = physicalCheckoutStation;
             motherboardSeat = physicalMotherboardSeat;
+            motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
         }
 
@@ -158,6 +163,14 @@ namespace PCShopEmpire3D.Presentation
             GarageStockFlowSession assemblySession = stockFlow?.Session;
             bool hasMotherboardSeat = motherboardSeat != null &&
                                       motherboardSeat.IsConfigured;
+            bool hasMotherboardFastener = motherboardFastener != null &&
+                                          motherboardFastener.IsConfigured &&
+                                          motherboardFastener.FastenerIdValue ==
+                                              GarageStockFlowSession.MotherboardFastenerIdValue &&
+                                          motherboardFastener.Screwdriver != null &&
+                                          motherboardFastener.StatusText != null &&
+                                          motherboardFastener.MatchesAuthorityState(
+                                              AssemblySeatState.Empty);
             bool hasMotherboardIdentity = assemblySession != null &&
                                           motherboardBinding != null &&
                                           motherboardBinding.PhysicalItem != null &&
@@ -177,9 +190,11 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value) == 1 &&
                                           motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool hasMotherboardAssembly = hasMotherboardSeat &&
+                                          hasMotherboardFastener &&
                                           motherboardBinding != null &&
                                           motherboardBinding.Runtime == stockFlow &&
                                           motherboardBinding.Seat == motherboardSeat &&
+                                          motherboardBinding.Fastener == motherboardFastener &&
                                           motherboardBinding.PhysicalItem != null &&
                                           motherboardBinding.PhysicalItem.CarryProfile ==
                                               PhysicalCarryProfile.PcComponent &&
@@ -221,6 +236,8 @@ namespace PCShopEmpire3D.Presentation
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
                 $"assembly={(hasMotherboardAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
+                $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
+                $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"motherboard-identity={(hasMotherboardIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1543,6 +1560,7 @@ namespace PCShopEmpire3D.Presentation
                 playerCarry == null ||
                 stockFlow == null ||
                 motherboardSeat == null ||
+                motherboardFastener == null ||
                 motherboardBinding == null ||
                 motherboardBinding.PhysicalItem == null)
             {
@@ -1559,6 +1577,7 @@ namespace PCShopEmpire3D.Presentation
 
             if (motherboardBinding.Runtime != stockFlow ||
                 motherboardBinding.Seat != motherboardSeat ||
+                motherboardBinding.Fastener != motherboardFastener ||
                 motherboardBinding.InventoryItemIdValue !=
                     session.MotherboardItemId.Value ||
                 motherboard.ItemIdValue != session.MotherboardItemId.Value ||
@@ -1568,6 +1587,11 @@ namespace PCShopEmpire3D.Presentation
                 looseItem.Id != session.MotherboardItemId ||
                 looseItem.ProductId != session.MotherboardProductId ||
                 looseItem.ContainerId != session.WorldFloorContainerId ||
+                motherboardFastener.FastenerIdValue !=
+                    session.MotherboardFastenerId.Value ||
+                motherboardFastener.FocusCollider == null ||
+                motherboardFastener.FocusCollider.enabled ||
+                !motherboardFastener.MatchesAuthorityState(AssemblySeatState.Empty) ||
                 session.AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
                 session.AssemblyBuild.Revision != 0 ||
                 session.AssemblyBuild.ReceiptCount != 0 ||
@@ -1672,6 +1696,9 @@ namespace PCShopEmpire3D.Presentation
                             session.AssemblyBuild.Revision == initialAssemblyRevision + 1 &&
                             session.Inventory.Revision == initialInventoryRevision + 2 &&
                             session.AssemblyBuild.ReceiptCount == initialReceiptCount + 1 &&
+                            motherboardFastener.FocusCollider.enabled &&
+                            motherboardFastener.MatchesAuthorityState(
+                                AssemblySeatState.SeatedUnsecured) &&
                             motherboardBinding.ValidateProjectionInvariant().IsSuccess &&
                             ApproximatelySamePose(
                                 new Pose(
@@ -1711,14 +1738,176 @@ namespace PCShopEmpire3D.Presentation
             }
 
             OperationResult duplicateConfirm = playerCarry.TryConfirmMotherboardSeat();
-            bool inputSingleConsumer = duplicateConfirm.IsFailure &&
-                                       session.AssemblyBuild.Revision ==
-                                           attachedAssemblyRevision &&
-                                       session.Inventory.Revision == attachedInventoryRevision &&
-                                       session.AssemblyBuild.ReceiptCount == 1;
-            if (!inputSingleConsumer)
+            bool duplicateSeatConfirmBlocked = duplicateConfirm.IsFailure &&
+                                               session.AssemblyBuild.Revision ==
+                                                   attachedAssemblyRevision &&
+                                               session.Inventory.Revision ==
+                                                   attachedInventoryRevision &&
+                                               session.AssemblyBuild.ReceiptCount == 1;
+            if (!duplicateSeatConfirmBlocked)
             {
                 LogMotherboardAssemblySmokeFailure("smoke.input-double-consumed");
+                yield break;
+            }
+
+            MovePlayerToMotherboardFastener();
+            long fastenerInventoryRevision = session.Inventory.Revision;
+            OperationResult secure = playerCarry.TryOperateMotherboardFastener();
+            AssemblyBuildSnapshot securedSnapshot = session.AssemblyBuild.GetSnapshot();
+            var securedReceipts = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt secureReceipt = securedReceipts.Count > 1
+                ? securedReceipts[1]
+                : null;
+            bool secured = secure.IsSuccess &&
+                           secureReceipt != null &&
+                           secureReceipt.OperationKind ==
+                               AssemblyOperationKind.SecureMotherboardFastener &&
+                           secureReceipt.SourceAttachOperationId == attachReceipt.OperationId &&
+                           secureReceipt.SourceSecureOperationId.IsEmpty &&
+                           secureReceipt.FastenerId == session.MotherboardFastenerId &&
+                           securedSnapshot.MotherboardSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           securedSnapshot.SecuredByOperationId == secureReceipt.OperationId &&
+                           session.AssemblyBuild.Revision == initialAssemblyRevision + 2 &&
+                           session.AssemblyBuild.ReceiptCount == initialReceiptCount + 2 &&
+                           session.Inventory.Revision == fastenerInventoryRevision &&
+                           motherboardFastener.MatchesAuthorityState(
+                               AssemblySeatState.SeatedSecured) &&
+                           motherboardBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!secured)
+            {
+                LogMotherboardAssemblySmokeFailure(
+                    secure.IsFailure ? secure.Error.Code : "smoke.secure-mismatch");
+                yield break;
+            }
+
+            OperationResult<AssemblyOperationReceipt> secureReplay =
+                session.SecureMotherboardFastener(
+                    secureReceipt.OperationId,
+                    attachReceipt.OperationId,
+                    secureReceipt.ExpectedAssemblyRevision);
+            bool secureReplayed = secureReplay.IsSuccess &&
+                                  ReferenceEquals(secureReplay.Value, secureReceipt) &&
+                                  session.AssemblyBuild.Revision ==
+                                      initialAssemblyRevision + 2 &&
+                                  session.AssemblyBuild.ReceiptCount ==
+                                      initialReceiptCount + 2 &&
+                                  session.Inventory.Revision == fastenerInventoryRevision;
+            if (!secureReplayed)
+            {
+                LogMotherboardAssemblySmokeFailure("smoke.secure-replay-mismatch");
+                yield break;
+            }
+
+            Pose securedPose = new Pose(
+                motherboard.transform.position,
+                motherboard.transform.rotation);
+            Transform securedParent = motherboard.transform.parent;
+            OperationResult blockedDetach = playerCarry.TryPickup(motherboard);
+            bool detachBlocked = blockedDetach.IsFailure &&
+                                 blockedDetach.Error == AssemblyFailures.ComponentSecured &&
+                                 playerCarry.HeldItem == null &&
+                                 motherboard.transform.parent == securedParent &&
+                                 ApproximatelySamePose(
+                                     new Pose(
+                                         motherboard.transform.position,
+                                         motherboard.transform.rotation),
+                                     securedPose) &&
+                                 session.AssemblyBuild.MotherboardSeatState ==
+                                     AssemblySeatState.SeatedSecured &&
+                                 session.AssemblyBuild.Revision ==
+                                     initialAssemblyRevision + 2 &&
+                                 session.AssemblyBuild.ReceiptCount ==
+                                     initialReceiptCount + 2 &&
+                                 session.Inventory.Revision == fastenerInventoryRevision;
+            if (!detachBlocked)
+            {
+                LogMotherboardAssemblySmokeFailure("smoke.secured-detach-not-blocked");
+                yield break;
+            }
+
+            StableId<AssemblyOperationIdScope> directDetachOperationId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.prototype-001.smoke-secured-detach.r000003");
+            OperationResult<AssemblyOperationReceipt> authorityBlockedDetach =
+                session.DetachMotherboard(directDetachOperationId);
+            AssemblyBuildSnapshot authorityBlockedSnapshot =
+                session.AssemblyBuild.GetSnapshot();
+            bool authorityDetachBlocked = authorityBlockedDetach.IsFailure &&
+                                          authorityBlockedDetach.Error ==
+                                              AssemblyFailures.ComponentSecured &&
+                                          authorityBlockedSnapshot.MotherboardSeatState ==
+                                              securedSnapshot.MotherboardSeatState &&
+                                          authorityBlockedSnapshot.MotherboardItemId ==
+                                              securedSnapshot.MotherboardItemId &&
+                                          authorityBlockedSnapshot.InstalledByOperationId ==
+                                              securedSnapshot.InstalledByOperationId &&
+                                          authorityBlockedSnapshot.SecuredByOperationId ==
+                                              securedSnapshot.SecuredByOperationId &&
+                                          session.AssemblyBuild.Revision ==
+                                              initialAssemblyRevision + 2 &&
+                                          session.AssemblyBuild.ReceiptCount ==
+                                              initialReceiptCount + 2 &&
+                                          session.Inventory.Revision ==
+                                              fastenerInventoryRevision &&
+                                          playerCarry.HeldItem == null &&
+                                          motherboard.transform.parent == securedParent &&
+                                          ApproximatelySamePose(
+                                              new Pose(
+                                                  motherboard.transform.position,
+                                                  motherboard.transform.rotation),
+                                              securedPose);
+            if (!authorityDetachBlocked)
+            {
+                LogMotherboardAssemblySmokeFailure(
+                    "smoke.secured-detach-authority-not-blocked");
+                yield break;
+            }
+
+            OperationResult unsecure = playerCarry.TryOperateMotherboardFastener();
+            AssemblyBuildSnapshot unsecuredSnapshot = session.AssemblyBuild.GetSnapshot();
+            var unsecuredReceipts = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt unsecureReceipt = unsecuredReceipts.Count > 2
+                ? unsecuredReceipts[2]
+                : null;
+            bool unsecured = unsecure.IsSuccess &&
+                              unsecureReceipt != null &&
+                              unsecureReceipt.OperationKind ==
+                                  AssemblyOperationKind.UnsecureMotherboardFastener &&
+                              unsecureReceipt.SourceAttachOperationId == attachReceipt.OperationId &&
+                              unsecureReceipt.SourceSecureOperationId == secureReceipt.OperationId &&
+                              unsecuredSnapshot.MotherboardSeatState ==
+                                  AssemblySeatState.SeatedUnsecured &&
+                              unsecuredSnapshot.SecuredByOperationId.IsEmpty &&
+                              session.AssemblyBuild.Revision == initialAssemblyRevision + 3 &&
+                              session.AssemblyBuild.ReceiptCount == initialReceiptCount + 3 &&
+                              session.Inventory.Revision == fastenerInventoryRevision &&
+                              motherboardFastener.MatchesAuthorityState(
+                                  AssemblySeatState.SeatedUnsecured) &&
+                              motherboardBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!unsecured)
+            {
+                LogMotherboardAssemblySmokeFailure(
+                    unsecure.IsFailure ? unsecure.Error.Code : "smoke.unsecure-mismatch");
+                yield break;
+            }
+
+            OperationResult<AssemblyOperationReceipt> unsecureReplay =
+                session.UnsecureMotherboardFastener(
+                    unsecureReceipt.OperationId,
+                    attachReceipt.OperationId,
+                    secureReceipt.OperationId,
+                    unsecureReceipt.ExpectedAssemblyRevision);
+            bool unsecureReplayed = unsecureReplay.IsSuccess &&
+                                    ReferenceEquals(unsecureReplay.Value, unsecureReceipt) &&
+                                    session.AssemblyBuild.Revision ==
+                                        initialAssemblyRevision + 3 &&
+                                    session.AssemblyBuild.ReceiptCount ==
+                                        initialReceiptCount + 3 &&
+                                    session.Inventory.Revision == fastenerInventoryRevision;
+            if (!unsecureReplayed)
+            {
+                LogMotherboardAssemblySmokeFailure("smoke.unsecure-replay-mismatch");
                 yield break;
             }
 
@@ -1728,9 +1917,9 @@ namespace PCShopEmpire3D.Presentation
                             playerCarry.HeldItem == motherboard &&
                             detachedSnapshot.MotherboardSeatState == AssemblySeatState.Empty &&
                             detachedSnapshot.MotherboardItemId.IsEmpty &&
-                            session.AssemblyBuild.Revision == initialAssemblyRevision + 2 &&
+                            session.AssemblyBuild.Revision == initialAssemblyRevision + 4 &&
                             session.Inventory.Revision == initialInventoryRevision + 3 &&
-                            session.AssemblyBuild.ReceiptCount == initialReceiptCount + 2 &&
+                            session.AssemblyBuild.ReceiptCount == initialReceiptCount + 4 &&
                             motherboardBinding.IsAuthorityInHands;
             if (!detached)
             {
@@ -1763,11 +1952,11 @@ namespace PCShopEmpire3D.Presentation
                                   detachReceipt.SourceAttachOperationId ==
                                       attachReceipt.OperationId &&
                                   detachReceipt.AssemblyRevision ==
-                                      initialAssemblyRevision + 2 &&
+                                      initialAssemblyRevision + 4 &&
                                   detachReceipt.InventoryRevision ==
                                       initialInventoryRevision + 3 &&
                                   recoveryAttachReceipt.AssemblyRevision ==
-                                      initialAssemblyRevision + 3 &&
+                                      initialAssemblyRevision + 5 &&
                                   recoveryAttachReceipt.InventoryRevision ==
                                       initialInventoryRevision + 4 &&
                                   recoveredSnapshot.InstalledByOperationId ==
@@ -1789,9 +1978,11 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
                              session.Inventory.SerializedItemCount == 1 &&
-                             session.AssemblyBuild.Revision == initialAssemblyRevision + 3 &&
+                             session.AssemblyBuild.Revision == initialAssemblyRevision + 5 &&
                              session.Inventory.Revision == initialInventoryRevision + 4 &&
-                             session.AssemblyBuild.ReceiptCount == initialReceiptCount + 3 &&
+                             session.AssemblyBuild.ReceiptCount == initialReceiptCount + 5 &&
+                             motherboardFastener.MatchesAuthorityState(
+                                 AssemblySeatState.SeatedUnsecured) &&
                              motherboardBinding.ValidateProjectionInvariant().IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
             bool authorityIsolated = session.Orders.Revision == orderRevision &&
@@ -1818,10 +2009,86 @@ namespace PCShopEmpire3D.Presentation
                 yield break;
             }
 
+            long recoveredAssemblyRevision = session.AssemblyBuild.Revision;
+            long recoveredInventoryRevision = session.Inventory.Revision;
+            int recoveredReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose recoveredPose = new Pose(
+                motherboard.transform.position,
+                motherboard.transform.rotation);
+            Transform recoveredParent = motherboard.transform.parent;
+            OperationResult<AssemblyOperationReceipt> delayedSecureReplay =
+                session.SecureMotherboardFastener(
+                    secureReceipt.OperationId,
+                    attachReceipt.OperationId,
+                    secureReceipt.ExpectedAssemblyRevision);
+            bool secureDelayedReplayed = delayedSecureReplay.IsSuccess &&
+                                         ReferenceEquals(
+                                             delayedSecureReplay.Value,
+                                             secureReceipt) &&
+                                         session.AssemblyBuild.Revision ==
+                                             recoveredAssemblyRevision &&
+                                         session.AssemblyBuild.ReceiptCount ==
+                                             recoveredReceiptCount &&
+                                         session.Inventory.Revision ==
+                                             recoveredInventoryRevision &&
+                                         session.AssemblyBuild.MotherboardSeatState ==
+                                             AssemblySeatState.SeatedUnsecured &&
+                                         motherboard.transform.parent == recoveredParent &&
+                                         ApproximatelySamePose(
+                                             new Pose(
+                                                 motherboard.transform.position,
+                                                 motherboard.transform.rotation),
+                                             recoveredPose);
+            if (!secureDelayedReplayed)
+            {
+                LogMotherboardAssemblySmokeFailure(
+                    "smoke.secure-delayed-replay-mismatch");
+                yield break;
+            }
+
+            OperationResult<AssemblyOperationReceipt> delayedUnsecureReplay =
+                session.UnsecureMotherboardFastener(
+                    unsecureReceipt.OperationId,
+                    attachReceipt.OperationId,
+                    secureReceipt.OperationId,
+                    unsecureReceipt.ExpectedAssemblyRevision);
+            bool unsecureDelayedReplayed = delayedUnsecureReplay.IsSuccess &&
+                                           ReferenceEquals(
+                                               delayedUnsecureReplay.Value,
+                                               unsecureReceipt) &&
+                                           session.AssemblyBuild.Revision ==
+                                               recoveredAssemblyRevision &&
+                                           session.AssemblyBuild.ReceiptCount ==
+                                               recoveredReceiptCount &&
+                                           session.Inventory.Revision ==
+                                               recoveredInventoryRevision &&
+                                           session.AssemblyBuild.MotherboardSeatState ==
+                                               AssemblySeatState.SeatedUnsecured &&
+                                           motherboard.transform.parent == recoveredParent &&
+                                           ApproximatelySamePose(
+                                               new Pose(
+                                                   motherboard.transform.position,
+                                                   motherboard.transform.rotation),
+                                               recoveredPose) &&
+                                           motherboardFastener.MatchesAuthorityState(
+                                               AssemblySeatState.SeatedUnsecured) &&
+                                           motherboardBinding.ValidateProjectionInvariant()
+                                               .IsSuccess &&
+                                           session.ValidateInvariants().IsSuccess;
+            if (!unsecureDelayedReplayed)
+            {
+                LogMotherboardAssemblySmokeFailure(
+                    "smoke.unsecure-delayed-replay-mismatch");
+                yield break;
+            }
+
             Debug.Log(
                 "GARAGE_MOTHERBOARD_ASSEMBLY_RUNTIME_SMOKE assembly-flow=ok " +
                 "compatible=ok mismatch-blocked=ok attach=ok attach-replay=ok " +
-                "detach=ok input-single-consumer=ok authority-isolated=ok " +
+                "fastener=ok secure=ok secure-replay=ok secure-delayed-replay=ok " +
+                "detach-blocked=ok detach-authority-blocked=ok " +
+                "unsecure=ok unsecure-replay=ok unsecure-delayed-replay=ok detach=ok " +
+                "duplicate-seat-confirm-blocked=ok authority-isolated=ok " +
                 "identity-stable=ok recovery=ok");
             yield return new WaitForEndOfFrame();
         }
@@ -1970,6 +2237,27 @@ namespace PCShopEmpire3D.Presentation
         private void MovePlayerToMotherboardSeat()
         {
             Vector3 target = motherboardSeat.FocusCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+
+            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.rotation = Quaternion.LookRotation(
+                    target - playerCamera.transform.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToMotherboardFastener()
+        {
+            Vector3 target = motherboardFastener.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;

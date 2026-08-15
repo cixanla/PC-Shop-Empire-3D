@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Player;
@@ -20,6 +21,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private VisibleHandsPresenter hands;
         [SerializeField] private PlacementPreview placementPreview;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
+        [SerializeField] private MotherboardFastenerProjection motherboardFastener;
+        [SerializeField] private MotherboardAssemblyItemBinding motherboardAssemblyBinding;
         [SerializeField] private LayerMask supportMask;
         [SerializeField] private LayerMask stackSupportMask;
         [SerializeField] private LayerMask obstructionMask;
@@ -54,6 +57,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public MotherboardSeatStatus CurrentMotherboardSeatStatus { get; private set; } =
             MotherboardSeatStatus.ContextMissing;
+
+        public MotherboardFastenerStatus CurrentMotherboardFastenerStatus { get; private set; } =
+            MotherboardFastenerStatus.ContextMissing;
+
+        public bool IsMotherboardFastenerFocused { get; private set; }
+
+        public bool HasMotherboardFastenerContext { get; private set; }
 
         public PlacementPreview PlacementPreview => placementPreview;
 
@@ -146,9 +156,41 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            $"{FocusedCart.DisplayName} tut{blocked}";
                 }
 
+                if (HasMotherboardFastenerContext &&
+                    !IsMotherboardFastenerFocused &&
+                    motherboardAssemblyBinding != null)
+                {
+                    return CurrentMotherboardFastenerStatus switch
+                    {
+                        MotherboardFastenerStatus.LineOfSightBlocked =>
+                            "[X] VİDA ENGELLİ • görüş hattını aç",
+                        MotherboardFastenerStatus.Obstructed =>
+                            "[X] VİDA ENGELLİ • önünü aç",
+                        _ => "[X] VİDA KULLANILAMIYOR"
+                    };
+                }
+
                 if (FocusedItem == null)
                 {
-                    return string.Empty;
+                    if (!IsMotherboardFastenerFocused || motherboardAssemblyBinding == null)
+                    {
+                        return string.Empty;
+                    }
+                }
+
+                if (IsMotherboardFastenerFocused && motherboardAssemblyBinding != null)
+                {
+                    string primary = input != null
+                        ? input.PrimaryBindingPrompt
+                        : "Mouse Left / RT";
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    return motherboardAssemblyBinding.IsSecured
+                        ? $"[OK] VIDA SIKILI • {primary}: gevşet • " +
+                          $"{interact}: sökme kilitli"
+                        : $"[O] VIDA GEVŞEK • {primary}: sık • " +
+                          $"{interact}: anakartı sök";
                 }
 
                 MotherboardAssemblyItemBinding focusedMotherboard =
@@ -158,8 +200,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
-                    return focusedMotherboard.IsSeated
-                        ? $"{interact}: anakartı sök • OTURDU, VİDALANMADI"
+                    return focusedMotherboard.IsSecured
+                        ? $"VIDA SIKILI • vidayı hedefle ve " +
+                          $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: gevşet"
+                        : focusedMotherboard.IsSeated
+                            ? $"{interact}: anakartı sök • OTURDU, VİDALANMADI"
                         : $"{interact}: {FocusedItem.DisplayName} al • HASSAS PARÇA";
                 }
 
@@ -275,6 +320,54 @@ namespace PCShopEmpire3D.Presentation.Interaction
             motherboardSeat = seatProjection != null
                 ? seatProjection
                 : throw new ArgumentNullException(nameof(seatProjection));
+        }
+
+        public void ConfigureMotherboardFastener(
+            MotherboardFastenerProjection fastenerProjection,
+            MotherboardAssemblyItemBinding assemblyBinding)
+        {
+            motherboardFastener = fastenerProjection != null
+                ? fastenerProjection
+                : throw new ArgumentNullException(nameof(fastenerProjection));
+            motherboardAssemblyBinding = assemblyBinding != null
+                ? assemblyBinding
+                : throw new ArgumentNullException(nameof(assemblyBinding));
+        }
+
+        public OperationResult TryOperateMotherboardFastener()
+        {
+            if (motherboardFastener == null || motherboardAssemblyBinding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-fastener.context-missing")));
+            }
+
+            return TryOperateMotherboardFastener(EvaluateMotherboardFastener());
+        }
+
+        private OperationResult TryOperateMotherboardFastener(
+            MotherboardFastenerEvaluation evaluation)
+        {
+            ApplyMotherboardFastenerEvaluation(evaluation);
+            if (!evaluation.CanOperate)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode)));
+            }
+
+            OperationResult result = motherboardAssemblyBinding.TryOperateFastener();
+            if (result.IsSuccess)
+            {
+                bool isSecured = motherboardAssemblyBinding.IsSecured;
+                ApplyMotherboardFastenerEvaluation(
+                    new MotherboardFastenerEvaluation(
+                        isSecured
+                            ? MotherboardFastenerStatus.ValidSecured
+                            : MotherboardFastenerStatus.ValidUnsecured,
+                        isSecured));
+            }
+
+            return Remember(result);
         }
 
         public OperationResult TrySetMotherboardSeatMode(bool enabled)
@@ -669,15 +762,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            if (input == null || motor == null || resolver == null || motor.IsPaused)
+            if (input == null || motor == null || resolver == null)
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
+            if (motor.IsPaused || input.PausePressedThisFrame)
+            {
+                input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                placementPreview?.Hide();
+                motherboardSeat?.ResetFeedback();
+                ResetMotherboardFastenerFocus();
                 return;
             }
 
             if (HeldItem != null)
             {
+                ResetMotherboardFastenerFocus();
                 FocusedCart = null;
                 MotherboardAssemblyItemBinding motherboardBinding =
                     GetMotherboardBinding(HeldItem);
@@ -756,6 +862,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ActiveCart != null)
             {
+                ResetMotherboardFastenerFocus();
                 FocusedItem = null;
                 FocusedCart = ActiveCart;
                 SetHandsState(VisibleHandsState.DrivingTransportCart);
@@ -782,6 +889,44 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     motor.ClearTransportCartDriveProfile();
                     Remember(OperationResult.Fail(Failure.FromCode(failureCode)));
                     SetHandsState(VisibleHandsState.TargetFocused);
+                }
+
+                return;
+            }
+
+            UpdateMotherboardFastenerFocus();
+            if (IsMotherboardFastenerFocused)
+            {
+                FocusedCart = null;
+                FocusedItem = motherboardAssemblyBinding.PhysicalItem;
+                SetHandsState(VisibleHandsState.TargetFocused);
+                if (input.TryConsumePrimaryActionPressThisFrame())
+                {
+                    input.TryConsumeInteractPressThisFrame();
+                    input.TryConsumeDropPressThisFrame();
+                    TryOperateMotherboardFastener(motherboardFastener.LastEvaluation);
+                    return;
+                }
+
+                if (input.TryConsumeInteractPressThisFrame())
+                {
+                    TryPickup(motherboardAssemblyBinding.PhysicalItem);
+                }
+
+                return;
+            }
+
+            if (HasMotherboardFastenerContext)
+            {
+                FocusedCart = null;
+                FocusedItem = motherboardAssemblyBinding.PhysicalItem;
+                SetHandsState(VisibleHandsState.TargetFocused);
+                bool primaryPressed = input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                if (primaryPressed)
+                {
+                    TryOperateMotherboardFastener(motherboardFastener.LastEvaluation);
                 }
 
                 return;
@@ -962,6 +1107,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-seat.paused")));
             }
 
+            if (binding.IsSecured)
+            {
+                return Remember(OperationResult.Fail(AssemblyFailures.ComponentSecured));
+            }
+
             bool wasSeated = binding.IsSeated;
             OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
             if (physicalPickup.IsFailure)
@@ -1082,6 +1232,57 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.IsValid);
         }
 
+        private void UpdateMotherboardFastenerFocus()
+        {
+            if (motherboardFastener == null || motherboardAssemblyBinding == null)
+            {
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
+            ApplyMotherboardFastenerEvaluation(EvaluateMotherboardFastener());
+        }
+
+        private MotherboardFastenerEvaluation EvaluateMotherboardFastener()
+        {
+            return motherboardFastener.Evaluate(
+                resolver != null ? resolver.Origin : null,
+                transform,
+                obstructionMask,
+                motor == null || motor.IsPaused,
+                motherboardAssemblyBinding != null &&
+                    motherboardAssemblyBinding.IsSeated,
+                motherboardAssemblyBinding != null &&
+                    motherboardAssemblyBinding.IsSecured);
+        }
+
+        private void ApplyMotherboardFastenerEvaluation(
+            MotherboardFastenerEvaluation evaluation)
+        {
+            CurrentMotherboardFastenerStatus = evaluation.Status;
+            IsMotherboardFastenerFocused = evaluation.CanOperate;
+            HasMotherboardFastenerContext = evaluation.CanOperate ||
+                                            evaluation.Status ==
+                                                MotherboardFastenerStatus.LineOfSightBlocked ||
+                                            evaluation.Status ==
+                                                MotherboardFastenerStatus.Obstructed;
+            if (!evaluation.CanOperate &&
+                evaluation.Status != MotherboardFastenerStatus.OutOfRange &&
+                evaluation.Status != MotherboardFastenerStatus.NotFocused &&
+                evaluation.Status != MotherboardFastenerStatus.AuthorityBlocked)
+            {
+                LastFailureCode = evaluation.FailureCode;
+            }
+        }
+
+        private void ResetMotherboardFastenerFocus()
+        {
+            IsMotherboardFastenerFocused = false;
+            HasMotherboardFastenerContext = false;
+            CurrentMotherboardFastenerStatus = MotherboardFastenerStatus.ContextMissing;
+            motherboardFastener?.ResetFeedback();
+        }
+
         private void CompleteHeldItemRelease()
         {
             HeldItem = null;
@@ -1145,6 +1346,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
+            ResetMotherboardFastenerFocus();
             placementPreview?.Hide();
             motherboardSeat?.ResetFeedback();
         }

@@ -66,6 +66,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
+        public const string MotherboardFastenerIdValue =
+            "assembly.fastener.motherboard-main-01";
         public const string MotherboardDisplayName = "Northstar M-ATX Anakart";
         public const long MotherboardUnitCostMinorUnits = 8_500;
 
@@ -148,6 +150,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<AssemblySlotIdScope> MotherboardSlotId =>
             StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue);
+
+        public StableId<AssemblyFastenerIdScope> MotherboardFastenerId =>
+            StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue);
 
         public StableId<PurchaseOrderIdScope> OrderId =>
             StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
@@ -294,6 +299,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
                 StableId<ChassisIdScope>.Parse(PrototypeChassisIdValue),
                 StableId<AssemblySlotIdScope>.Parse(MotherboardSlotIdValue),
+                StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue),
                 StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                 StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                 MotherboardFormFactor.MicroAtx).Value;
@@ -448,6 +454,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 operationId,
                 MotherboardItemId,
                 MotherboardSlotId);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> SecureMotherboardFastener(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.SecureMotherboardFastener(
+                operationId,
+                MotherboardItemId,
+                MotherboardSlotId,
+                MotherboardFastenerId,
+                sourceAttachOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> UnsecureMotherboardFastener(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.UnsecureMotherboardFastener(
+                operationId,
+                MotherboardItemId,
+                MotherboardSlotId,
+                MotherboardFastenerId,
+                sourceAttachOperationId,
+                sourceSecureOperationId,
+                expectedAssemblyRevision);
         }
 
         public OperationResult PublishShelfOffer()

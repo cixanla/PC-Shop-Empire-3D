@@ -146,9 +146,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     new Vector3(0.127f, 0.127f, 0.045f)), Is.LessThan(0.0001f));
                 Assert.That(marker.MotherboardSeat, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat.IsConfigured, Is.True);
+                Assert.That(marker.MotherboardFastener, Is.Not.Null);
+                Assert.That(marker.MotherboardFastener.IsConfigured, Is.True);
                 Assert.That(marker.MotherboardBinding, Is.SameAs(motherboardBinding));
                 Assert.That(motherboardBinding.PhysicalItem, Is.SameAs(motherboard));
                 Assert.That(motherboardBinding.Seat, Is.SameAs(marker.MotherboardSeat));
+                Assert.That(motherboardBinding.Fastener,
+                    Is.SameAs(marker.MotherboardFastener));
+                Assert.That(marker.MotherboardFastener.FastenerIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MotherboardFastenerIdValue));
+                Assert.That(marker.MotherboardFastener.FocusCollider.enabled, Is.False);
+                Assert.That(marker.MotherboardFastener.MatchesAuthorityState(
+                    AssemblySeatState.Empty), Is.True);
                 Assert.That(motherboardBinding.Runtime, Is.SameAs(marker.StockFlow));
                 Assert.That(motherboardBinding.InventoryItemIdValue,
                     Is.EqualTo(GarageStockFlowSession.MotherboardItemInstanceIdValue));
@@ -323,7 +332,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-motherboard-seating-r22-v1"));
+                    Is.EqualTo("garage-motherboard-fastener-r23-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -360,15 +369,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .Single(transform => transform.name == "MotherboardCpuSocket");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
+                Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardFastenerStation");
+                Transform fastenerHead = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardCaptiveFastener");
+                Transform fastenerFocus = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardFastenerFocusTarget");
+                Transform screwdriver = assemblySlice.GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "CaptiveFastenerScrewdriver");
                 MotherboardSeatProjection seat =
                     assemblySlice.GetComponentInChildren<MotherboardSeatProjection>(true);
+                MotherboardFastenerProjection fastener =
+                    assemblySlice.GetComponentInChildren<MotherboardFastenerProjection>(true);
                 MotherboardAssemblyItemBinding binding =
                     assemblySlice.GetComponentInChildren<MotherboardAssemblyItemBinding>(true);
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
+                Assert.That(fastener, Is.Not.Null);
                 Assert.That(binding, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
+                Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
+                Assert.That(binding.Fastener, Is.SameAs(fastener));
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
                     Is.EqualTo(new Vector3(-0.75f, 1.30f, 4.35f)));
@@ -408,12 +430,62 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(Vector3.Distance(
                     connectorBounds.size,
                     new Vector3(0.171f, 0.182f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(fastener.FastenerIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MotherboardFastenerIdValue));
+                Assert.That(fastener.IsConfigured, Is.True);
+                Assert.That(fastener.FocusCollider,
+                    Is.SameAs(fastenerFocus.GetComponent<BoxCollider>()));
+                Assert.That(fastener.FocusCollider.enabled, Is.False);
+                Assert.That(fastener.FocusCollider.isTrigger, Is.False);
+                Assert.That(fastener.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(Vector3.Distance(
+                    fastenerFocus.localPosition,
+                    new Vector3(-0.66f, 1.21f, 4.336f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    fastenerFocus.GetComponent<BoxCollider>().size,
+                    new Vector3(0.060f, 0.060f, 0.016f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    fastenerHead.localPosition,
+                    new Vector3(-0.66f, 1.21f, 4.335f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    fastenerHead.localScale,
+                    new Vector3(0.012f, 0.004f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(fastenerHead.GetComponent<Collider>(), Is.Null);
+                Assert.That(fastener.Screwdriver, Is.SameAs(screwdriver));
+                Assert.That(screwdriver.GetComponentsInChildren<Collider>(true), Is.Empty);
+                Assert.That(fastenerStation.GetComponent<Rigidbody>(), Is.Null);
+                Assert.That(fastener.StatusText, Is.Not.Null);
+                Assert.That(fastener.StatusText.text, Is.EqualTo("[ ] ANAKARTI OTURT"));
+                Assert.That(fastener.StatusText.text, Does.Not.Contain("\n"));
+                Assert.That(fastener.StatusText.transform.parent, Is.SameAs(statusPlate));
+                Assert.That(Vector3.Distance(
+                    fastener.StatusText.transform.localPosition,
+                    new Vector3(0f, 0f, -0.010f)), Is.LessThan(0.0001f));
+                Assert.That(fastener.StatusText.characterSize, Is.EqualTo(0.011f));
+                Assert.That(fastener.StatusText.fontSize, Is.EqualTo(36));
+                Renderer fastenerTextRenderer = fastener.StatusText.GetComponent<Renderer>();
+                Assert.That(fastenerTextRenderer.shadowCastingMode,
+                    Is.EqualTo(ShadowCastingMode.Off));
+                Assert.That(fastenerTextRenderer.receiveShadows, Is.False);
+                Assert.That(fastenerTextRenderer.motionVectorGenerationMode,
+                    Is.EqualTo(MotionVectorGenerationMode.ForceNoMotion));
+                Renderer statusPlateRenderer = statusPlate.GetComponent<Renderer>();
+                Assert.That(statusPlateRenderer.shadowCastingMode,
+                    Is.EqualTo(ShadowCastingMode.Off));
+                Assert.That(statusPlateRenderer.receiveShadows, Is.False);
+                Assert.That(statusPlateRenderer.motionVectorGenerationMode,
+                    Is.EqualTo(MotionVectorGenerationMode.ForceNoMotion));
+                Assert.That(fastenerHead.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("BrushedSteel"));
+                Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(12));
+                    Is.EqualTo(18));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(8));
+                    Is.EqualTo(9));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
-                Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true), Is.Empty);
+                Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
+                    Is.EqualTo(1));
                 Assert.That(assemblySlice.GetComponentsInChildren<NavMeshObstacle>(true), Is.Empty);
                 Assert.That(
                     benchmark.GetComponentsInChildren<Transform>(true)

@@ -21,6 +21,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private GarageStockFlowRuntime runtime;
         [SerializeField] private PhysicalItemProjection physicalItem;
         [SerializeField] private MotherboardSeatProjection seat;
+        [SerializeField] private MotherboardFastenerProjection fastener;
         [SerializeField] private string inventoryItemId =
             GarageStockFlowSession.MotherboardItemInstanceIdValue;
 
@@ -31,6 +32,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PhysicalItemProjection PhysicalItem => physicalItem;
 
         public MotherboardSeatProjection Seat => seat;
+
+        public MotherboardFastenerProjection Fastener => fastener;
 
         public string InventoryItemIdValue => inventoryItemId;
 
@@ -48,9 +51,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return false;
                 }
 
-                AssemblyBuildSnapshot snapshot = session.AssemblyBuild.GetSnapshot();
-                return snapshot.MotherboardSeatState == AssemblySeatState.SeatedUnsecured &&
-                       snapshot.MotherboardItemId == session.MotherboardItemId;
+                return session.AssemblyBuild.MotherboardSeatState !=
+                           AssemblySeatState.Empty &&
+                       session.AssemblyBuild.MotherboardItemId ==
+                           session.MotherboardItemId;
+            }
+        }
+
+        public bool IsSecured
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session != null &&
+                       session.AssemblyBuild.MotherboardSeatState ==
+                           AssemblySeatState.SeatedSecured &&
+                       session.AssemblyBuild.MotherboardItemId ==
+                           session.MotherboardItemId;
             }
         }
 
@@ -64,6 +81,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             GarageStockFlowRuntime stockFlowRuntime,
             PhysicalItemProjection itemProjection,
             MotherboardSeatProjection seatProjection,
+            MotherboardFastenerProjection fastenerProjection,
             string stableInventoryItemId)
         {
             runtime = stockFlowRuntime != null
@@ -75,6 +93,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             seat = seatProjection != null
                 ? seatProjection
                 : throw new ArgumentNullException(nameof(seatProjection));
+            fastener = fastenerProjection != null
+                ? fastenerProjection
+                : throw new ArgumentNullException(nameof(fastenerProjection));
             inventoryItemId = StableId<ItemInstanceIdScope>.Parse(
                 stableInventoryItemId).Value;
             if (inventoryItemId != GarageStockFlowSession.MotherboardItemInstanceIdValue)
@@ -122,11 +143,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-seat.detach-authority-mismatch"));
             }
 
+            if (IsSecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.ComponentSecured);
+            }
+
             OperationResult<AssemblyOperationReceipt> detach =
                 Session.DetachMotherboard(CreateOperationId("detach"));
             if (detach.IsSuccess)
             {
                 _carryOrigin = CarryOrigin.Seated;
+                fastener.ApplyAuthoritativeState(AssemblySeatState.Empty);
             }
 
             return detach.IsSuccess
@@ -174,6 +201,54 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             _carryOrigin = CarryOrigin.None;
             seat.ResetFeedback();
+            fastener.ApplyAuthoritativeState(AssemblySeatState.SeatedUnsecured);
+            return OperationResult.Success();
+        }
+
+        public OperationResult TryOperateFastener()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            GarageStockFlowSession session = Session;
+            AssemblyBuildSnapshot snapshot = session.AssemblyBuild.GetSnapshot();
+            if (snapshot.MotherboardItemId != session.MotherboardItemId ||
+                snapshot.MotherboardFastenerId != session.MotherboardFastenerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-fastener.authority-mismatch"));
+            }
+
+            OperationResult<AssemblyOperationReceipt> operation;
+            if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedUnsecured)
+            {
+                operation = session.SecureMotherboardFastener(
+                    CreateOperationId("secure-fastener"),
+                    snapshot.InstalledByOperationId,
+                    snapshot.Revision);
+            }
+            else if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedSecured)
+            {
+                operation = session.UnsecureMotherboardFastener(
+                    CreateOperationId("unsecure-fastener"),
+                    snapshot.InstalledByOperationId,
+                    snapshot.SecuredByOperationId,
+                    snapshot.Revision);
+            }
+            else
+            {
+                return OperationResult.Fail(AssemblyFailures.ComponentNotSeated);
+            }
+
+            if (operation.IsFailure)
+            {
+                return OperationResult.Fail(operation.Error);
+            }
+
+            fastener.ApplyAuthoritativeState(operation.Value.ResultingSeatState);
             return OperationResult.Success();
         }
 
@@ -249,6 +324,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 _carryOrigin = CarryOrigin.None;
+                fastener.ApplyAuthoritativeState(AssemblySeatState.SeatedUnsecured);
                 return OperationResult.Success();
             }
 
@@ -302,7 +378,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ? physicalItem.IsCarried
                     : IsAuthorityLooseWorld &&
                       physicalItem.Ownership == PhysicalItemOwnership.World;
-            return physicalMatches
+            bool fastenerMatches = fastener.FastenerIdValue ==
+                                   Session.MotherboardFastenerId.Value &&
+                                   fastener.MatchesAuthorityState(
+                                       Session.AssemblyBuild.MotherboardSeatState);
+            return physicalMatches && fastenerMatches
                 ? OperationResult.Success()
                 : OperationResult.Fail(
                     Failure.FromCode("assembly-seat.projection-invariant"));
@@ -313,9 +393,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return runtime == null ||
                    physicalItem == null ||
                    seat == null ||
+                   fastener == null ||
                    !seat.IsConfigured ||
+                   !fastener.IsConfigured ||
                    Session == null ||
                    inventoryItemId != GarageStockFlowSession.MotherboardItemInstanceIdValue ||
+                   fastener.FastenerIdValue !=
+                       GarageStockFlowSession.MotherboardFastenerIdValue ||
                    physicalItem.ItemIdValue != inventoryItemId
                 ? OperationResult.Fail(
                     Failure.FromCode(

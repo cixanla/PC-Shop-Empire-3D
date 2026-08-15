@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Assembly
         private readonly InventoryAuthority _inventory;
         private readonly StableId<ContainerIdScope> _handsContainerId;
         private readonly StableId<ContainerIdScope> _workbenchContainerId;
+        private readonly StableId<AssemblyFastenerIdScope> _motherboardFastenerId;
         private readonly InventorySerializedTransferAccess _inventoryTransferAccess;
         private readonly MotherboardFormFactor _supportedMotherboardFormFactor;
         private readonly Dictionary<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt> _receipts =
@@ -25,6 +26,7 @@ namespace PCShopEmpire3D.Assembly
         private StableId<ItemInstanceIdScope> _motherboardItemId;
         private StableId<ProductDefinitionIdScope> _motherboardProductId;
         private StableId<AssemblyOperationIdScope> _installedByOperationId;
+        private StableId<AssemblyOperationIdScope> _securedByOperationId;
 
         private AssemblyBuildAuthority(
             PcComponentCatalog componentCatalog,
@@ -32,6 +34,7 @@ namespace PCShopEmpire3D.Assembly
             StableId<PcBuildIdScope> buildId,
             StableId<ChassisIdScope> chassisId,
             StableId<AssemblySlotIdScope> motherboardSlotId,
+            StableId<AssemblyFastenerIdScope> motherboardFastenerId,
             StableId<ContainerIdScope> handsContainerId,
             StableId<ContainerIdScope> workbenchContainerId,
             MotherboardFormFactor supportedMotherboardFormFactor,
@@ -42,6 +45,7 @@ namespace PCShopEmpire3D.Assembly
             BuildId = buildId;
             ChassisId = chassisId;
             MotherboardSlotId = motherboardSlotId;
+            _motherboardFastenerId = motherboardFastenerId;
             _handsContainerId = handsContainerId;
             _workbenchContainerId = workbenchContainerId;
             _supportedMotherboardFormFactor = supportedMotherboardFormFactor;
@@ -53,6 +57,9 @@ namespace PCShopEmpire3D.Assembly
         public StableId<ChassisIdScope> ChassisId { get; }
 
         public StableId<AssemblySlotIdScope> MotherboardSlotId { get; }
+
+        public StableId<AssemblyFastenerIdScope> MotherboardFastenerId =>
+            _motherboardFastenerId;
 
         public StableId<ContainerIdScope> HandsContainerId => _handsContainerId;
 
@@ -69,6 +76,8 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<AssemblyOperationIdScope> InstalledByOperationId => _installedByOperationId;
 
+        public StableId<AssemblyOperationIdScope> SecuredByOperationId => _securedByOperationId;
+
         public long Revision { get; private set; }
 
         public int ReceiptCount => _receipts.Count;
@@ -79,6 +88,7 @@ namespace PCShopEmpire3D.Assembly
             StableId<PcBuildIdScope> buildId,
             StableId<ChassisIdScope> chassisId,
             StableId<AssemblySlotIdScope> motherboardSlotId,
+            StableId<AssemblyFastenerIdScope> motherboardFastenerId,
             StableId<ContainerIdScope> handsContainerId,
             StableId<ContainerIdScope> workbenchContainerId,
             MotherboardFormFactor supportedMotherboardFormFactor)
@@ -114,6 +124,12 @@ namespace PCShopEmpire3D.Assembly
             if (motherboardSlotId.IsEmpty)
             {
                 return OperationResult<AssemblyBuildAuthority>.Fail(AssemblyFailures.InvalidSlotId);
+            }
+
+            if (motherboardFastenerId.IsEmpty)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidFastener);
             }
 
             if (handsContainerId.IsEmpty ||
@@ -164,6 +180,7 @@ namespace PCShopEmpire3D.Assembly
                     buildId,
                     chassisId,
                     motherboardSlotId,
+                    motherboardFastenerId,
                     handsContainerId,
                     workbenchContainerId,
                     supportedMotherboardFormFactor,
@@ -196,6 +213,7 @@ namespace PCShopEmpire3D.Assembly
             }
 
             InventoryItemRecord item = GetItem(itemId);
+            long expectedAssemblyRevision = Revision;
             OperationResult<InventorySerializedTransferPlan> prepared =
                 _inventory.PrepareSerializedItemTransfer(
                     itemId,
@@ -232,6 +250,11 @@ namespace PCShopEmpire3D.Assembly
                 _handsContainerId,
                 _workbenchContainerId,
                 default,
+                default,
+                default,
+                -1,
+                expectedAssemblyRevision,
+                AssemblySeatState.Empty,
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision);
@@ -265,6 +288,7 @@ namespace PCShopEmpire3D.Assembly
             }
 
             InventoryItemRecord item = GetItem(itemId);
+            long expectedAssemblyRevision = Revision;
             StableId<AssemblyOperationIdScope> sourceAttachOperationId =
                 _installedByOperationId;
             OperationResult<InventorySerializedTransferPlan> prepared =
@@ -290,6 +314,7 @@ namespace PCShopEmpire3D.Assembly
             _motherboardItemId = default;
             _motherboardProductId = default;
             _installedByOperationId = default;
+            _securedByOperationId = default;
             Revision++;
 
             var receipt = new AssemblyOperationReceipt(
@@ -303,6 +328,149 @@ namespace PCShopEmpire3D.Assembly
                 _workbenchContainerId,
                 _handsContainerId,
                 sourceAttachOperationId,
+                default,
+                default,
+                -1,
+                expectedAssemblyRevision,
+                AssemblySeatState.SeatedUnsecured,
+                _motherboardSeatState,
+                Revision,
+                _inventory.Revision);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> SecureMotherboardFastener(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyFastenerIdScope> fastenerId,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesSecure(
+                        itemId,
+                        slotId,
+                        fastenerId,
+                        sourceAttachOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateFastenerOperation(
+                itemId,
+                slotId,
+                fastenerId,
+                sourceAttachOperationId,
+                default,
+                expectedAssemblyRevision,
+                securing: true);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            InventoryItemRecord item = GetItem(itemId);
+            _motherboardSeatState = AssemblySeatState.SeatedSecured;
+            _securedByOperationId = operationId;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.SecureMotherboardFastener,
+                BuildId,
+                ChassisId,
+                MotherboardSlotId,
+                item.Id,
+                item.ProductId,
+                default,
+                default,
+                sourceAttachOperationId,
+                default,
+                fastenerId,
+                0,
+                expectedAssemblyRevision,
+                AssemblySeatState.SeatedUnsecured,
+                _motherboardSeatState,
+                Revision,
+                _inventory.Revision);
+            _receipts.Add(operationId, receipt);
+            return OperationResult<AssemblyOperationReceipt>.Success(receipt);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> UnsecureMotherboardFastener(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyFastenerIdScope> fastenerId,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
+            {
+                return replay.MatchesUnsecure(
+                        itemId,
+                        slotId,
+                        fastenerId,
+                        sourceAttachOperationId,
+                        sourceSecureOperationId,
+                        expectedAssemblyRevision)
+                    ? OperationResult<AssemblyOperationReceipt>.Success(replay)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        AssemblyFailures.OperationConflict);
+            }
+
+            Failure preflightFailure = ValidateFastenerOperation(
+                itemId,
+                slotId,
+                fastenerId,
+                sourceAttachOperationId,
+                sourceSecureOperationId,
+                expectedAssemblyRevision,
+                securing: false);
+            if (!preflightFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(preflightFailure);
+            }
+
+            InventoryItemRecord item = GetItem(itemId);
+            _motherboardSeatState = AssemblySeatState.SeatedUnsecured;
+            _securedByOperationId = default;
+            Revision++;
+
+            var receipt = new AssemblyOperationReceipt(
+                operationId,
+                AssemblyOperationKind.UnsecureMotherboardFastener,
+                BuildId,
+                ChassisId,
+                MotherboardSlotId,
+                item.Id,
+                item.ProductId,
+                default,
+                default,
+                sourceAttachOperationId,
+                sourceSecureOperationId,
+                fastenerId,
+                0,
+                expectedAssemblyRevision,
+                AssemblySeatState.SeatedSecured,
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision);
@@ -312,9 +480,14 @@ namespace PCShopEmpire3D.Assembly
 
         public OperationResult EvaluateBenchmarkReadiness()
         {
-            return _motherboardSeatState == AssemblySeatState.Empty
-                ? OperationResult.Fail(AssemblyFailures.MotherboardMissing)
-                : OperationResult.Fail(AssemblyFailures.MotherboardUnsecured);
+            if (_motherboardSeatState == AssemblySeatState.Empty)
+            {
+                return OperationResult.Fail(AssemblyFailures.MotherboardMissing);
+            }
+
+            return _motherboardSeatState == AssemblySeatState.SeatedUnsecured
+                ? OperationResult.Fail(AssemblyFailures.MotherboardUnsecured)
+                : OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
         public AssemblyBuildSnapshot GetSnapshot()
@@ -323,6 +496,7 @@ namespace PCShopEmpire3D.Assembly
                 BuildId,
                 ChassisId,
                 MotherboardSlotId,
+                _motherboardFastenerId,
                 _handsContainerId,
                 _workbenchContainerId,
                 _supportedMotherboardFormFactor,
@@ -330,6 +504,7 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardItemId,
                 _motherboardProductId,
                 _installedByOperationId,
+                _securedByOperationId,
                 Revision);
         }
 
@@ -363,6 +538,7 @@ namespace PCShopEmpire3D.Assembly
                 BuildId.IsEmpty ||
                 ChassisId.IsEmpty ||
                 MotherboardSlotId.IsEmpty ||
+                _motherboardFastenerId.IsEmpty ||
                 _handsContainerId.IsEmpty ||
                 _workbenchContainerId.IsEmpty ||
                 _handsContainerId == _workbenchContainerId ||
@@ -388,12 +564,14 @@ namespace PCShopEmpire3D.Assembly
             {
                 if (!_motherboardItemId.IsEmpty ||
                     !_motherboardProductId.IsEmpty ||
-                    !_installedByOperationId.IsEmpty)
+                    !_installedByOperationId.IsEmpty ||
+                    !_securedByOperationId.IsEmpty)
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
             }
-            else if (_motherboardSeatState == AssemblySeatState.SeatedUnsecured)
+            else if (_motherboardSeatState == AssemblySeatState.SeatedUnsecured ||
+                     _motherboardSeatState == AssemblySeatState.SeatedSecured)
             {
                 if (_motherboardItemId.IsEmpty ||
                     _motherboardProductId.IsEmpty ||
@@ -412,12 +590,38 @@ namespace PCShopEmpire3D.Assembly
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
+
+                if (_motherboardSeatState == AssemblySeatState.SeatedUnsecured)
+                {
+                    if (!_securedByOperationId.IsEmpty)
+                    {
+                        return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                    }
+                }
+                else if (_securedByOperationId.IsEmpty ||
+                         !_receipts.TryGetValue(
+                             _securedByOperationId,
+                             out AssemblyOperationReceipt secureReceipt) ||
+                         secureReceipt.OperationKind !=
+                             AssemblyOperationKind.SecureMotherboardFastener ||
+                         secureReceipt.ItemId != _motherboardItemId ||
+                         secureReceipt.FastenerId != _motherboardFastenerId ||
+                         secureReceipt.SourceAttachOperationId != _installedByOperationId)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
             }
             else
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (Revision != _receipts.Count)
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
+            var receiptsByRevision = new AssemblyOperationReceipt[_receipts.Count];
             foreach (KeyValuePair<StableId<AssemblyOperationIdScope>, AssemblyOperationReceipt> entry in _receipts)
             {
                 AssemblyOperationReceipt receipt = entry.Value;
@@ -429,25 +633,62 @@ namespace PCShopEmpire3D.Assembly
                     receipt.SlotId != MotherboardSlotId ||
                     receipt.ItemId.IsEmpty ||
                     receipt.ProductId.IsEmpty ||
-                    receipt.SourceContainerId.IsEmpty ||
-                    receipt.TargetContainerId.IsEmpty ||
-                    receipt.SourceContainerId == receipt.TargetContainerId ||
                     receipt.AssemblyRevision <= 0 ||
                     receipt.AssemblyRevision > Revision ||
+                    receipt.ExpectedAssemblyRevision != receipt.AssemblyRevision - 1L ||
                     receipt.InventoryRevision <= 0 ||
+                    receipt.InventoryRevision > _inventory.Revision ||
                     (receipt.OperationKind != AssemblyOperationKind.AttachMotherboard &&
-                     receipt.OperationKind != AssemblyOperationKind.DetachMotherboard))
+                     receipt.OperationKind != AssemblyOperationKind.DetachMotherboard &&
+                     receipt.OperationKind !=
+                         AssemblyOperationKind.SecureMotherboardFastener &&
+                     receipt.OperationKind !=
+                         AssemblyOperationKind.UnsecureMotherboardFastener))
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
 
-                if ((receipt.OperationKind == AssemblyOperationKind.AttachMotherboard &&
-                     !receipt.SourceAttachOperationId.IsEmpty) ||
-                    (receipt.OperationKind == AssemblyOperationKind.DetachMotherboard &&
-                     receipt.SourceAttachOperationId.IsEmpty))
+                int revisionIndex = checked((int)receipt.AssemblyRevision - 1);
+                if (receiptsByRevision[revisionIndex] != null)
                 {
                     return OperationResult.Fail(AssemblyFailures.InvariantViolation);
                 }
+
+                receiptsByRevision[revisionIndex] = receipt;
+
+                bool isInventoryTransfer =
+                    receipt.OperationKind == AssemblyOperationKind.AttachMotherboard ||
+                    receipt.OperationKind == AssemblyOperationKind.DetachMotherboard;
+                if (isInventoryTransfer)
+                {
+                    if (receipt.SourceContainerId.IsEmpty ||
+                        receipt.TargetContainerId.IsEmpty ||
+                        receipt.SourceContainerId == receipt.TargetContainerId ||
+                        !receipt.FastenerId.IsEmpty ||
+                        !receipt.SourceSecureOperationId.IsEmpty ||
+                        receipt.SequenceIndex != -1)
+                    {
+                        return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                    }
+                }
+                else if (!receipt.SourceContainerId.IsEmpty ||
+                         !receipt.TargetContainerId.IsEmpty ||
+                         receipt.FastenerId != _motherboardFastenerId ||
+                         receipt.SequenceIndex != 0 ||
+                         receipt.SourceAttachOperationId.IsEmpty)
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+
+                if (!ValidateReceiptTransition(receipt))
+                {
+                    return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+                }
+            }
+
+            if (!ValidateReceiptHistory(receiptsByRevision))
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
             return _inventory.ValidateInvariants().IsSuccess
@@ -512,6 +753,11 @@ namespace PCShopEmpire3D.Assembly
                 return AssemblyFailures.RevisionOverflow;
             }
 
+            if (_motherboardSeatState == AssemblySeatState.SeatedSecured)
+            {
+                return AssemblyFailures.ComponentSecured;
+            }
+
             if (_motherboardSeatState != AssemblySeatState.SeatedUnsecured)
             {
                 return AssemblyFailures.SlotEmpty;
@@ -533,6 +779,268 @@ namespace PCShopEmpire3D.Assembly
             return item.ContainerId == _workbenchContainerId
                 ? Failure.None
                 : AssemblyFailures.ItemNotOnWorkbench;
+        }
+
+        private Failure ValidateFastenerOperation(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyFastenerIdScope> fastenerId,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            long expectedAssemblyRevision,
+            bool securing)
+        {
+            if (slotId != MotherboardSlotId)
+            {
+                return AssemblyFailures.UnknownSlot;
+            }
+
+            if (fastenerId != _motherboardFastenerId)
+            {
+                return AssemblyFailures.InvalidFastener;
+            }
+
+            if (itemId.IsEmpty ||
+                (!_motherboardItemId.IsEmpty && itemId != _motherboardItemId))
+            {
+                return AssemblyFailures.IdentityConflict;
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return AssemblyFailures.RevisionOverflow;
+            }
+
+            if (expectedAssemblyRevision != Revision ||
+                sourceAttachOperationId.IsEmpty ||
+                sourceAttachOperationId != _installedByOperationId ||
+                !_receipts.TryGetValue(
+                    sourceAttachOperationId,
+                    out AssemblyOperationReceipt attachReceipt) ||
+                attachReceipt.OperationKind != AssemblyOperationKind.AttachMotherboard ||
+                attachReceipt.ItemId != itemId ||
+                attachReceipt.SlotId != slotId)
+            {
+                return AssemblyFailures.PlanStale;
+            }
+
+            if (_motherboardSeatState == AssemblySeatState.Empty)
+            {
+                return AssemblyFailures.ComponentNotSeated;
+            }
+
+            if (securing)
+            {
+                if (!sourceSecureOperationId.IsEmpty ||
+                    _motherboardSeatState != AssemblySeatState.SeatedUnsecured ||
+                    !_securedByOperationId.IsEmpty)
+                {
+                    return AssemblyFailures.FastenerOutOfOrder;
+                }
+            }
+            else if (sourceSecureOperationId.IsEmpty ||
+                     sourceSecureOperationId != _securedByOperationId ||
+                     _motherboardSeatState != AssemblySeatState.SeatedSecured ||
+                     !_receipts.TryGetValue(
+                         sourceSecureOperationId,
+                         out AssemblyOperationReceipt secureReceipt) ||
+                     secureReceipt.OperationKind !=
+                         AssemblyOperationKind.SecureMotherboardFastener ||
+                     secureReceipt.ItemId != itemId ||
+                     secureReceipt.FastenerId != fastenerId ||
+                     secureReceipt.SourceAttachOperationId != sourceAttachOperationId)
+            {
+                return AssemblyFailures.FastenerOutOfOrder;
+            }
+
+            if (!_inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item) ||
+                item.ProductId != _motherboardProductId ||
+                item.ContainerId != _workbenchContainerId)
+            {
+                return AssemblyFailures.ComponentNotSeated;
+            }
+
+            return Failure.None;
+        }
+
+        private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
+        {
+            switch (receipt.OperationKind)
+            {
+                case AssemblyOperationKind.AttachMotherboard:
+                    return receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId == _workbenchContainerId &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.PreviousSeatState == AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState ==
+                               AssemblySeatState.SeatedUnsecured;
+
+                case AssemblyOperationKind.DetachMotherboard:
+                    return receipt.SourceContainerId == _workbenchContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedUnsecured &&
+                           receipt.ResultingSeatState == AssemblySeatState.Empty &&
+                           IsMatchingAttachReceipt(
+                               receipt.SourceAttachOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.SecureMotherboardFastener:
+                    return receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedUnsecured &&
+                           receipt.ResultingSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           IsMatchingAttachReceipt(
+                               receipt.SourceAttachOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.UnsecureMotherboardFastener:
+                    if (receipt.PreviousSeatState != AssemblySeatState.SeatedSecured ||
+                        receipt.ResultingSeatState != AssemblySeatState.SeatedUnsecured ||
+                        !IsMatchingAttachReceipt(
+                            receipt.SourceAttachOperationId,
+                            receipt) ||
+                        receipt.SourceSecureOperationId.IsEmpty ||
+                        !_receipts.TryGetValue(
+                            receipt.SourceSecureOperationId,
+                            out AssemblyOperationReceipt secureReceipt))
+                    {
+                        return false;
+                    }
+
+                    return secureReceipt.OperationKind ==
+                               AssemblyOperationKind.SecureMotherboardFastener &&
+                           secureReceipt.AssemblyRevision < receipt.AssemblyRevision &&
+                           secureReceipt.ItemId == receipt.ItemId &&
+                           secureReceipt.SlotId == receipt.SlotId &&
+                           secureReceipt.FastenerId == receipt.FastenerId &&
+                           secureReceipt.SourceAttachOperationId ==
+                               receipt.SourceAttachOperationId;
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool ValidateReceiptHistory(AssemblyOperationReceipt[] receiptsByRevision)
+        {
+            AssemblySeatState foldedState = AssemblySeatState.Empty;
+            StableId<ItemInstanceIdScope> foldedItemId = default;
+            StableId<ProductDefinitionIdScope> foldedProductId = default;
+            StableId<AssemblyOperationIdScope> foldedAttachOperationId = default;
+            StableId<AssemblyOperationIdScope> foldedSecureOperationId = default;
+            long foldedInventoryRevision = 0;
+
+            for (int index = 0; index < receiptsByRevision.Length; index++)
+            {
+                AssemblyOperationReceipt receipt = receiptsByRevision[index];
+                if (receipt == null ||
+                    receipt.AssemblyRevision != index + 1L ||
+                    receipt.PreviousSeatState != foldedState ||
+                    receipt.InventoryRevision < foldedInventoryRevision)
+                {
+                    return false;
+                }
+
+                bool inventoryTransfer =
+                    receipt.OperationKind == AssemblyOperationKind.AttachMotherboard ||
+                    receipt.OperationKind == AssemblyOperationKind.DetachMotherboard;
+                if (inventoryTransfer &&
+                    receipt.InventoryRevision <= foldedInventoryRevision)
+                {
+                    return false;
+                }
+
+                switch (receipt.OperationKind)
+                {
+                    case AssemblyOperationKind.AttachMotherboard:
+                        if (foldedState != AssemblySeatState.Empty ||
+                            !foldedItemId.IsEmpty ||
+                            !foldedProductId.IsEmpty ||
+                            !foldedAttachOperationId.IsEmpty ||
+                            !foldedSecureOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedItemId = receipt.ItemId;
+                        foldedProductId = receipt.ProductId;
+                        foldedAttachOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.DetachMotherboard:
+                        if (foldedState != AssemblySeatState.SeatedUnsecured ||
+                            receipt.ItemId != foldedItemId ||
+                            receipt.ProductId != foldedProductId ||
+                            receipt.SourceAttachOperationId != foldedAttachOperationId ||
+                            !receipt.SourceSecureOperationId.IsEmpty ||
+                            !foldedSecureOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedItemId = default;
+                        foldedProductId = default;
+                        foldedAttachOperationId = default;
+                        foldedSecureOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.SecureMotherboardFastener:
+                        if (foldedState != AssemblySeatState.SeatedUnsecured ||
+                            receipt.ItemId != foldedItemId ||
+                            receipt.ProductId != foldedProductId ||
+                            receipt.SourceAttachOperationId != foldedAttachOperationId ||
+                            !receipt.SourceSecureOperationId.IsEmpty ||
+                            !foldedSecureOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedSecureOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.UnsecureMotherboardFastener:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            receipt.ItemId != foldedItemId ||
+                            receipt.ProductId != foldedProductId ||
+                            receipt.SourceAttachOperationId != foldedAttachOperationId ||
+                            receipt.SourceSecureOperationId != foldedSecureOperationId ||
+                            foldedSecureOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedSecureOperationId = default;
+                        break;
+
+                    default:
+                        return false;
+                }
+
+                foldedState = receipt.ResultingSeatState;
+                foldedInventoryRevision = receipt.InventoryRevision;
+            }
+
+            return foldedState == _motherboardSeatState &&
+                   foldedItemId == _motherboardItemId &&
+                   foldedProductId == _motherboardProductId &&
+                   foldedAttachOperationId == _installedByOperationId &&
+                   foldedSecureOperationId == _securedByOperationId;
+        }
+
+        private bool IsMatchingAttachReceipt(
+            StableId<AssemblyOperationIdScope> operationId,
+            AssemblyOperationReceipt descendant)
+        {
+            return !operationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       operationId,
+                       out AssemblyOperationReceipt attachReceipt) &&
+                   attachReceipt.OperationKind == AssemblyOperationKind.AttachMotherboard &&
+                   attachReceipt.AssemblyRevision < descendant.AssemblyRevision &&
+                   attachReceipt.ItemId == descendant.ItemId &&
+                   attachReceipt.SlotId == descendant.SlotId;
         }
 
         private InventoryItemRecord GetItem(StableId<ItemInstanceIdScope> itemId)

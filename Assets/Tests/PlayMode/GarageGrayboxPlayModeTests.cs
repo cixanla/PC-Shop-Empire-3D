@@ -706,6 +706,392 @@ namespace PCShopEmpire3D.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator KeyboardMouseFastenerGatesPhysicsAndConsumesOneSameFrameAction()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            marker.PlayerMotor.SetPaused(false);
+            SeatMotherboardForFastener(marker, motherboard);
+            long inventoryRevision = session.Inventory.Revision;
+            long seatedRevision = session.AssemblyBuild.Revision;
+            int seatedReceiptCount = session.AssemblyBuild.ReceiptCount;
+
+            MovePlayerToMotherboardFastener(marker);
+            marker.PlayerMotor.SetPaused(true);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "paused");
+            marker.PlayerMotor.SetPaused(false);
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "pause-edge-drained");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+
+            MovePlayerOutOfFastenerRange(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardFastenerStatus,
+                Is.EqualTo(MotherboardFastenerStatus.OutOfRange));
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "out-of-range");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+
+            MovePlayerToMotherboardFastener(marker);
+            AimPlayerAwayFromMotherboardFastener(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardFastenerStatus,
+                Is.EqualTo(MotherboardFastenerStatus.NotFocused));
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "not-focused");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+
+            MovePlayerToMotherboardFastener(marker);
+            GameObject blocker = CreateMotherboardFastenerBlocker(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardFastenerStatus,
+                Is.EqualTo(MotherboardFastenerStatus.Obstructed));
+            Assert.That(marker.PlayerCarry.HasMotherboardFastenerContext, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("[X]"));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("önünü aç"));
+            Assert.That(marker.MotherboardFastener.StatusText.text,
+                Is.EqualTo("[X] ÖNÜNÜ AÇ"));
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E, Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "obstructed");
+            blocker.SetActive(false);
+            Physics.SyncTransforms();
+            marker.PlayerCarry.ProcessInputFrame();
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            AssertMotherboardAtSeat(marker, motherboard, "obstructed-edge-drained");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            Object.Destroy(blocker);
+            AssertMotherboardAtSeat(marker, motherboard, "post-blocker");
+
+            MovePlayerToMotherboardFastener(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardFastenerStatus,
+                Is.EqualTo(MotherboardFastenerStatus.ValidUnsecured));
+            Assert.That(marker.MotherboardFastener.FocusCollider.enabled, Is.True);
+
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E, Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.MotherboardFastener.IsShowingSecured, Is.True);
+            AssertMotherboardAtSeat(marker, motherboard, "secured");
+            Vector3 securedScrewPosition = marker.MotherboardFastener.ScrewHead.localPosition;
+            marker.MotherboardFastener.ScrewHead.localPosition -= Vector3.forward * 0.004f;
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsFailure,
+                Is.True);
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().Error.Code,
+                Is.EqualTo("assembly-seat.projection-invariant"));
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedSecured,
+                seatedRevision + 1,
+                inventoryRevision,
+                seatedReceiptCount + 1);
+            marker.MotherboardFastener.ApplyAuthoritativeState(
+                AssemblySeatState.SeatedSecured);
+            Assert.That(Vector3.Distance(
+                marker.MotherboardFastener.ScrewHead.localPosition,
+                securedScrewPosition), Is.LessThan(0.00001f));
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.False);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("LMB: gevşet"));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("E: sökme kilitli"));
+
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+            AssertMotherboardAtSeat(marker, motherboard, "held-primary");
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.ComponentSecured.Code));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            AssertMotherboardAtSeat(marker, motherboard, "secured-detach-blocked");
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 2));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 2));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(marker.MotherboardFastener.IsShowingSecured, Is.False);
+            Assert.That(marker.MotherboardBinding.IsSeated, Is.True);
+            Assert.That(motherboard.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(motherboard.IsStablePlacement, Is.True);
+            Assert.That(Vector3.Distance(
+                motherboard.transform.position,
+                marker.MotherboardSeat.SnapPose.position), Is.LessThan(0.0001f));
+            Assert.That(Quaternion.Angle(
+                motherboard.transform.rotation,
+                marker.MotherboardSeat.SnapPose.rotation), Is.LessThan(0.01f));
+            Assert.That(marker.MotherboardFastener.MatchesAuthorityState(
+                AssemblySeatState.SeatedUnsecured), Is.True);
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadFastenerUsesDynamicPromptsAndOneConsumerPerEdge()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            marker.PlayerMotor.SetPaused(false);
+            SeatMotherboardForFastener(marker, motherboard);
+            MovePlayerToMotherboardFastener(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            long inventoryRevision = session.Inventory.Revision;
+            long seatedRevision = session.AssemblyBuild.Revision;
+            int seatedReceiptCount = session.AssemblyBuild.ReceiptCount;
+
+            uint coEdgeButtons =
+                (1u << (int)GamepadButton.South) |
+                (1u << (int)GamepadButton.East);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    rightTrigger = 1f,
+                    buttons = coEdgeButtons
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("RT: gevşet"));
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("A: sökme kilitli"));
+
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.ComponentSecured.Code));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(seatedRevision + 2));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 2));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(marker.MotherboardFastener.MatchesAuthorityState(
+                AssemblySeatState.SeatedUnsecured), Is.True);
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadFastenerPauseCoEdgeRequiresReleaseRepressInProductionLifecycle()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            marker.PlayerMotor.SetPaused(false);
+            SeatMotherboardForFastener(marker, motherboard);
+            MovePlayerToMotherboardFastener(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            long inventoryRevision = session.Inventory.Revision;
+            long seatedRevision = session.AssemblyBuild.Revision;
+            int seatedReceiptCount = session.AssemblyBuild.ReceiptCount;
+
+            marker.PlayerMotor.SetPaused(true);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    rightTrigger = 1f,
+                    buttons = 1u << (int)GamepadButton.Start
+                });
+            yield return null;
+            yield return null;
+
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+            AssertMotherboardAtSeat(marker, motherboard, "resume-co-edge-drained");
+
+            yield return null;
+            AssertFastenerAuthoritiesUnchanged(
+                session,
+                AssemblySeatState.SeatedUnsecured,
+                seatedRevision,
+                inventoryRevision,
+                seatedReceiptCount);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+
+            MovePlayerToMotherboardFastener(marker);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    rightTrigger = 1f
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedSecured));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+            AssertMotherboardAtSeat(marker, motherboard, "fresh-primary-after-resume");
+
+            yield return null;
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(seatedRevision + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(seatedReceiptCount + 1));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+        }
+
+        [UnityTest]
         public IEnumerator KeyboardMousePlacementShowsBlockedGhostThenPlacesSameItem()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
@@ -2968,6 +3354,134 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void SeatMotherboardForFastener(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection motherboard)
+        {
+            OperationResult pickup = marker.PlayerCarry.TryPickup(motherboard);
+            Assert.That(pickup.IsSuccess, Is.True,
+                pickup.IsFailure ? pickup.Error.Code : string.Empty);
+            MovePlayerToMotherboardSeat(marker);
+            OperationResult begin = marker.PlayerCarry.TrySetMotherboardSeatMode(true);
+            Assert.That(begin.IsSuccess, Is.True,
+                begin.IsFailure ? begin.Error.Code : string.Empty);
+            Assert.That(marker.PlayerCarry.CurrentMotherboardSeatStatus,
+                Is.EqualTo(MotherboardSeatStatus.Valid), marker.PlayerCarry.LastFailureCode);
+            OperationResult attach = marker.PlayerCarry.TryConfirmMotherboardSeat();
+            Assert.That(attach.IsSuccess, Is.True,
+                attach.IsFailure ? attach.Error.Code : string.Empty);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.MotherboardBinding.IsSeated, Is.True);
+            Assert.That(marker.MotherboardBinding.IsSecured, Is.False);
+            Assert.That(marker.MotherboardFastener.FocusCollider.enabled, Is.True);
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True);
+        }
+
+        private static void MovePlayerToMotherboardFastener(GaragePrototypeMarker marker)
+        {
+            Collider targetCollider = marker.MotherboardFastener.FocusCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerOutOfFastenerRange(GaragePrototypeMarker marker)
+        {
+            Collider targetCollider = marker.MotherboardFastener.FocusCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 1.35f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void AimPlayerAwayFromMotherboardFastener(
+            GaragePrototypeMarker marker)
+        {
+            marker.PlayerMotor.transform.rotation = Quaternion.LookRotation(
+                Vector3.back,
+                Vector3.up);
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(Vector3.back, Vector3.up);
+            Physics.SyncTransforms();
+        }
+
+        private static GameObject CreateMotherboardFastenerBlocker(
+            GaragePrototypeMarker marker)
+        {
+            Camera camera = marker.PlayerMotor.GetComponentInChildren<Camera>(true);
+            Vector3 target = marker.MotherboardFastener.FocusCollider.bounds.center;
+            GameObject blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = "MotherboardFastenerPlayModeBlocker";
+            blocker.layer = LayerMask.NameToLayer("Default");
+            blocker.transform.position = Vector3.Lerp(camera.transform.position, target, 0.52f);
+            blocker.transform.localScale = new Vector3(0.12f, 0.12f, 0.08f);
+            Physics.SyncTransforms();
+            return blocker;
+        }
+
+        private static void AssertFastenerAuthoritiesUnchanged(
+            GarageStockFlowSession session,
+            AssemblySeatState expectedState,
+            long expectedAssemblyRevision,
+            long expectedInventoryRevision,
+            int expectedReceiptCount)
+        {
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(expectedState));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(expectedAssemblyRevision));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(expectedInventoryRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(expectedReceiptCount));
+        }
+
+        private static void AssertMotherboardAtSeat(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection motherboard,
+            string stage)
+        {
+            Assert.That(motherboard.Ownership, Is.EqualTo(PhysicalItemOwnership.World), stage);
+            Assert.That(motherboard.IsStablePlacement, Is.True, stage);
+            Assert.That(motherboard.Body.isKinematic, Is.True, stage);
+            Assert.That(motherboard.Body.useGravity, Is.False, stage);
+            Assert.That(motherboard.Body.interpolation,
+                Is.EqualTo(RigidbodyInterpolation.None), stage);
+            Assert.That(Vector3.Distance(
+                motherboard.transform.position,
+                marker.MotherboardSeat.SnapPose.position), Is.LessThan(0.0001f),
+                $"{stage} actual={motherboard.transform.position:F6} " +
+                $"snap={marker.MotherboardSeat.SnapPose.position:F6} " +
+                $"safe={motherboard.LastSafePosition:F6}");
+            Assert.That(Quaternion.Angle(
+                motherboard.transform.rotation,
+                marker.MotherboardSeat.SnapPose.rotation), Is.LessThan(0.01f), stage);
         }
 
         private static long[] CaptureAuthorityRevisions(GarageStockFlowSession session)
