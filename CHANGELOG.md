@@ -55,6 +55,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 - Exact replay, historical offer/Browsing snapshot, literal public code, validation precedence ve aynı outcome taşıyan farklı accepted-price provenance testleri eklendi; evaluator hiçbir authority/cache/revision/receipt/action taşımaz.
 - Garage müşteri status'u yalnız `Browsing` sırasında renge bağımlı kalmadan `KARAR: SATIN AL / AYRIL` ve stable reason code gösteriyor; gerçek keyboard/gamepad akışında karar okuması Actors/Inventory/Orders/Offer/Basket/Checkout state'ini değiştirmiyor.
 - Edit Mode baseline `267/267`, Play Mode baseline `18/18` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-offer-decision-r16-v1 offer-decision=ok authority-isolated=ok` gerçek player smoke geçti.
+- Explicit Actors↔Retail customer binding ve `CustomerOfferDecisionActionAuthority`; immutable `Buy` kararını current visit/offer ile stale-safe yeniden doğrulayıp exact serialized action-owned Basket/Inventory reservation ve `Browsing → NavigatingToCheckout` geçişi üretecek şekilde eklendi.
+- Inventory/Basket/Actors prepared planları, `ConsumeOnly` action ownership, public release/consume bypass engelleri, exact/conflicting replay ve historical action receipt invariantları domain testleriyle kilitlendi.
+- Garage'da gerçek `G / Gamepad East` current Buy action'ını uygular; stale offer stable `DecisionStale` metniyle Action/Basket/Inventory/Actors/Checkout/Orders mutation üretmeden engellenir.
+- Edit Mode baseline `287/287`, Play Mode baseline `19/19` teste yükseldi; Universal macOS build ve Apple M4/Metal 1280×720 `garage-buy-action-r17-v1 buy-action=ok stale-blocked=ok authority-isolated=ok` gerçek player smoke geçti.
 
 ### Changed
 

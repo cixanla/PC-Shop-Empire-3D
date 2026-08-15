@@ -286,6 +286,7 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Deterministic müşteri ziyareti | Unity bağımsız `PSE.Actors`; stable customer/intent/visit, monotonik state + bounded receipt ledger, iki denemeli route fallback, patience/exit timeout ve Inventory/Retail/Orders izolasyonu |
 | Runtime NavMesh müşteri projection'ı | Offer sonrası giriş→RAF A, reservation sonrası checkout, fulfillment sonrası çıkış; pause güvenli simulation clock, görünür durum/neden ve güvenli terminal gizleme |
 | Açıklanabilir tek-offer müşteri kararı | Tek yönlü `PSE.Retail → PSE.Actors`; immutable visit/offer/accepted-price provenance, deterministic `Buy/Leave`, stable reason/failure code, exact replay ve bütün gameplay authority'lerinde no-mutation |
+| Stale-safe müşteri Buy eylemi | Explicit Actors↔Retail kimlik bağı, current visit/offer yeniden doğrulaması, exact serialized action-owned reservation, `Browsing → NavigatingToCheckout`, idempotent replay ve stale no-mutation |
 | Oynanabilir garaj | `PSE.World`/`PSE.Presentation`, GarageGraybox, connected PlayerRig, görünür prototip eller, klavye/fare + gamepad hareket/kamera, sprint, pause ve rebind store |
 | Fiziksel pickup/drop | Stable ürün kimliği, range+LOS hedefleme, tek slot, fizik snapshot/restore, dinamik prompt, güvenli drop ve recovery |
 | Kontrollü küçük kutu placement | İşaretli stock surface, 0,25 m grid/90° yaw snap, tam destek/overlap doğrulaması, yeşil-kırmızı ghost + metin, stabil kinematic placement |
@@ -296,15 +297,15 @@ Ayrıntılı bağımlılık, zorluk, risk ve kabul ölçütleri: [`Docs/ProjectB
 | Görsel yön sözleşmesi | Gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık taşıyan okunaklı yarı gerçekçilik; ilk uygulama tek benchmark köşesiyle sınırlı |
 | Garaj görsel benchmarkı | Bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom/reflection probe; gameplay collider ve kimlik sözleşmeleri korunuyor |
 | Güncel USB milestone | `2026-08-15_STAGE_B_EXPLAINABLE_SINGLE_OFFER_CUSTOMER_DECISION`; source/docs `8832c13`, 541 tracked kaynak + 4 final test/build/runtime kanıtı + source kaydı, 546 satırlı `d46e2433…d1b1` SHA-256 manifest/readback, 541/541 Git-blob eşliği ve forbidden/cache/credential/AppleDouble `0`; payload 9.780.828 bayt |
-| Son test/build | Issue #47 sonrası Edit Mode `267/267`, Play Mode `18/18`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-offer-decision-r16-v1`, `offer-decision=ok authority-isolated=ok` gerçek player smoke geçti |
+| Son test/build | Issue #48 sonrası Edit Mode `287/287`, Play Mode `19/19`; Universal macOS build ve Apple M4/Metal 1280×720 `garage-buy-action-r17-v1`, `buy-action=ok stale-blocked=ok authority-isolated=ok` gerçek player smoke geçti |
 
 Önceki zaman/olay Core commit'i `8af2ad3d05906839c4b607e4958650e723060465`, iş birliği/devir checkpoint'i `2ee421193833111f76c85dabb33910240c36db03` olarak korunur. Güncel PRNG feature ve checkpoint commitleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içinde kayıtlıdır.
 
 ## 16. Sıradaki uygulama sırası
 
-1. [Issue #9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) altında `Buy/Leave` sonucunu güncel visit/offer revisionlarıyla yeniden doğrulayan ayrı, bounded action sınırını tanımla; stale karar commerce/lifecycle yetkisi olmasın.
-2. Actors customer kimliği ile Retail basket customer kimliği arasında explicit mapping olmadan otomatik reservation/checkout başlatma; `Leave` ve `Buy` eylemlerini ayrı no-mutation preflight ile kapat.
-3. Ödeme, Economy ledger/COGS/nakit, vergi/indirim ve Save sınırlarını authority'leri hazır olana kadar ayrı tut.
+1. [Issue #9](https://github.com/cixanla/PC-Shop-Empire-3D/issues/9) altında `Leave` kararını current visit/offer snapshotlarıyla yeniden doğrulayan ayrı bounded action ve `OfferDeclined` çıkış sözleşmesini kur; tamamlanan `Buy` reservation/navigation sınırını değiştirme.
+2. Checkout başlatma ve ödeme/Economy settlement'ını ayrı bounded paketlerde ele al; action-owned reservation yalnız mevcut privileged checkout fulfillment sınırından tüketilsin.
+3. Çoklu müşteri/offer seçimi, utility scoring, memnuniyet ve Save sınırlarını authority'leri hazır olana kadar ayrı tut.
 4. Graybox/debug world textlerini bağlamsal prompt, erişilebilir UI ve fiziksel terminal katmanına kademeli taşı; bütün sahneyi henüz final art sayma.
 5. İlk gerçek Windows x64 test cihazı erişim tarihini Faz 1 kapanmadan sabitle.
 

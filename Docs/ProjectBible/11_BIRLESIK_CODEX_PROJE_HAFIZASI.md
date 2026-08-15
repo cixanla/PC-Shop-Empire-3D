@@ -148,22 +148,23 @@ Tamamlanan oynanabilir sistemler:
 
 ### Konsolidasyon sonrası güncel checkpoint
 
-- Son doğrulanmış kaynak feature: `f97ded34f00e0d0637fbf9b41c0c0d33a7969b8e`, tree `e8cddbc13166b35a081786fed895417cf6270c16`.
-- Issue #47 kapsamındaki açıklanabilir tek-offer `Buy/Leave` domain + Garage graybox dilimi source/docs/CI/USB ile tamamlandı; issue `Completed`, Roadmap `Done`. Epic #9 açık/In Progress kalır.
-- Feature Repository Guard [31876993251](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31876993251) ve source/docs `8832c1372566ede623f08e04b5d9385b6ad23739` Guard [31877488552](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31877488552) başarılıdır.
-- EditMode `267/267`, gerçek Input System PlayMode `18/18` geçti; failed/skipped `0`.
-- Universal macOS development build `327.708.376` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-offer-decision-r16-v1 offer-decision=ok authority-isolated=ok` ile geçti.
+- Son doğrulanmış kaynak feature: `6951869c4a9f33662f322c02348fa4282b9cdbb6`, tree `5f4c956423bbc07b9087d47f7886ab36cc6992f1`.
+- Issue #48 kapsamındaki stale-safe current `Buy`, exact action-owned serialized reservation ve `Browsing → NavigatingToCheckout` Garage graybox dilimi kod/test/build/runtime/feature CI ile tamamlandı; source/docs, USB ve Issue/Project kapanışı yürütülüyor. Epic #9 açık/In Progress kalır.
+- Feature Repository Guard [31880394269](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31880394269) başarılıdır.
+- EditMode `287/287`, gerçek Input System PlayMode `19/19` geçti; failed/skipped `0`.
+- Universal macOS development build `327.737.593` bayt, Mach-O `x86_64 + arm64`; Apple M4/Metal 1280×720 runtime smoke `garage-buy-action-r17-v1 buy-action=ok stale-blocked=ok authority-isolated=ok` ile geçti.
 - Exact serialized item teslimat → kabul/Receiving → parcel open → ActorHands → Shelf/WorldFloor → offer publish → basket reserve → checkout → atomic fulfillment zincirinde korunur; müşteri projection'ı bu authority'leri NPC transformundan yönetmez.
 - Customer visit lifecycle yalnız ileri ilerler; route başarısızlığı iki denemeyle sınırlıdır. `RouteUnavailable`, patience ve exit timeout sonuçları açıklanabilir ve no-mutation'dır; exact terminal replay ve receipt ledger invariantları testlidir.
-- Tek-offer evaluator yalnız immutable visit/offer/accepted-price provenance tüketir; exact replay value-equal, historical snapshot action yetkisi değildir. `Buy/Leave` okuması Actors/Inventory/Orders/Offer/Basket/Checkout state'ini değiştirmez.
+- Tek-offer evaluator yalnız immutable visit/offer/accepted-price provenance tüketir; action authority current snapshotı yeniden doğrular. Stale karar bütün authority'lerde no-mutation; exact action replay idempotenttir ve explicit binding olmadan reservation/navigation başlamaz.
 - Mevcut primitive müşteri, büyük durum panoları ve debug HUD final sanat/UI değildir. Okunaklı yarı gerçekçi görsel yön ve bağlamsal/diegetic UI ayrı bounded presentation paketlerinde geliştirilecektir.
 
 ## 7. Sıradaki işler ve bağımlılık sırası
 
 En yakın bounded paket:
 
-1. Issue #9 altında `Buy/Leave` provenanceını current visit/offer revisionlarıyla fail-closed yeniden doğrulayan explicit action sözleşmesi kur.
-2. Actors↔Retail customer ID mapping olmadan reservation/checkout/exit başlatma; çoklu ürün/müşteri, ödeme/Economy, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
+1. Önce Issue #48 source/docs/USB/Issue/Project kapanışını tamamla.
+2. Ardından Issue #9 altında `Leave` kararını current visit/offer snapshotıyla fail-closed yeniden doğrulayan, explicit binding sonrası `OfferDeclined` ile `Browsing → Exiting` uygulayan ayrı bounded action sözleşmesi kur.
+3. Checkout başlatma, ödeme/Economy, çoklu ürün/müşteri, memnuniyet, Save ve final sanat ayrı bounded paketler olarak kalsın.
 
 Sonraki ana geliştirme sırası:
 
@@ -245,4 +246,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #47 kapandı: feature `f97ded3`, source/docs `8832c13`, Guard koşuları `31876993251`/`31877488552`, EditMode 267/267, PlayMode 18/18, Mac `offer-decision=ok` ve doğrulanmış USB milestone kayıtlıdır. Epic #9 altında stale-safe decision-action sınırına geç; Inventory/Retail/Economy/Save authority sınırlarını karıştırma ve checkpoint kanıtı olmadan paketi tamamlandı sayma.
+> Issue #48 feature `6951869`, Guard `31880394269`, EditMode 287/287, PlayMode 19/19 ve Mac `buy-action=ok stale-blocked=ok authority-isolated=ok` ile doğrulandı. Source/docs + USB + Issue/Project kapanışını tamamlamadan yeni paket açma; sonra Epic #9 altında bounded `Leave/OfferDeclined` action dilimine geç. Checkout/payment/Economy/Save authority sınırlarını karıştırma.
