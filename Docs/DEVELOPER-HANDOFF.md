@@ -6,9 +6,13 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 1. Root `PROJECT_BIBLE.md`.
 2. `Docs/ProjectBible/00_OKU_BENI.md`.
-3. Çalışacağınız alanın ayrıntılı Game Design Bible/Yol Haritası bölümü.
-4. `CONTRIBUTING.md` ve `Docs/REPOSITORY-GOVERNANCE.md`.
-5. [GitHub Development Roadmap Project](https://github.com/users/cixanla/projects/2) içindeki atanmış issue ve kabul ölçütü.
+3. `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md`.
+4. `Docs/ProjectBible/11_BIRLESIK_CODEX_PROJE_HAFIZASI.md`.
+5. Çalışacağınız alanın ayrıntılı Game Design Bible/Yol Haritası bölümü.
+6. `CONTRIBUTING.md` ve `Docs/REPOSITORY-GOVERNANCE.md`.
+7. [GitHub Development Roadmap Project](https://github.com/users/cixanla/projects/2) içindeki atanmış issue ve kabul ölçütü.
+
+Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
 ## 2. Gereken temel araçlar
 

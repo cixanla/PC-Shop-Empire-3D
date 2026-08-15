@@ -378,6 +378,8 @@ Pull request şablonu bu kontrolü zorunlu hatırlatır. Kapsam değişmediyse �
 | [`08_KURULUM_PLANI`](Docs/ProjectBible/08_CANONICAL_KAYNAK_VE_KURULUM_PLANI.md) | Canonical kaynak, araç sürümü ve geri alma |
 | [`09_STAGE_A_RAPORU`](Docs/ProjectBible/09_STAGE_A_KURULUM_RAPORU.md) | Kurulum/build/test kanıtı |
 | [`10_CHECKPOINT`](Docs/ProjectBible/10_DEVAM_CHECKPOINT.md) | Son sağlam devam noktası ve kullanım protokolü |
+| [`11_BIRLESIK_CODEX_HAFIZASI`](Docs/ProjectBible/11_BIRLESIK_CODEX_PROJE_HAFIZASI.md) | Üç Codex görevinin ortak bağlamı, üretim geçmişi ve tek-kanal devam protokolü |
+| [`CODEX_HISTORY`](Docs/CodexHistory/README.md) | Tam kullanıcı/Codex konuşmaları, dosya değişiklik envanteri ve Git dosya geçmişi |
 | [`GITHUB_HANDOFF`](Docs/Evidence/GITHUB-HANDOFF-2026-08-11.md) | Private remote, Project, Codex, fresh clone ve USB devir özeti |
 
 ## 23. Telif ve özgünlük ilkesi

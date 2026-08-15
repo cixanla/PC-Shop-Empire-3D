@@ -1,8 +1,8 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
-**Sürüm:** 0.9 — Stage B küçük-kutu placement ve güvenli büyük-kutu taşımaya ilerledi<br>
+**Sürüm:** 1.0 — üç Codex görevi tek ana görev ve merkezî konuşma arşivinde birleştirildi<br>
 **Son güncelleme:** 15 Ağustos 2026<br>
-**Kural:** Bu dosya konuşmalardaki kalıcı kararların tek özetidir. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
+**Kural:** Bu dosya karar ID'lerinin yaşayan özetidir. Üç görevin birleşik uygulanabilir bağlamı [`11_BIRLESIK_CODEX_PROJE_HAFIZASI.md`](11_BIRLESIK_CODEX_PROJE_HAFIZASI.md), tam kullanıcı/Codex konuşmaları ise [`Docs/CodexHistory`](../CodexHistory/README.md) altında korunur. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
 ## Durum işaretleri
 

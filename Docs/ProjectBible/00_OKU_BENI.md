@@ -26,6 +26,9 @@ Bu, yalnızca kutu açıp raf dolduran başka bir mağaza simülatörü ya da ya
 8. [Canonical Kaynak ve Kesin Kurulum Planı](08_CANONICAL_KAYNAK_VE_KURULUM_PLANI.md): USB hash manifesti, bilgisayar envanteri, kesin Unity/araç sürümleri, disk-maliyet etkisi, yedekleme ve geri alma planı ile tek kurulum onayı kapsamı.
 9. [Stage A Teknik Kurulum Raporu](09_STAGE_A_KURULUM_RAPORU.md): gerçek kurulum sürümleri, proje/paket ayarları, 4/4 test, macOS ve Windows buildleri, USB snapshot doğrulaması ile UVCS bağlantı engelinin neden zinciri.
 10. [Devam ve Kullanım Güvenliği Checkpoint'i](10_DEVAM_CHECKPOINT.md): son sağlam commit/snapshot, kullanım tasarrufu protokolü ve kesintisiz devam sırası.
+11. [Birleşik Codex Proje Hafızası](11_BIRLESIK_CODEX_PROJE_HAFIZASI.md): üç proje görevinin ortak vizyonu, teknik geçmişi, kesin çalışma sınırı ve tek-kanal devam protokolü.
+
+Tam kullanıcı/Codex konuşmaları, dosya değişiklik envanteri ve Git commit/dosya geçmişi [`Docs/CodexHistory`](../CodexHistory/README.md) altında merkezî ve kronolojik biçimde korunur.
 
 Repository'yi ilk kez devralan kişi önce root [`PROJECT_BIBLE.md`](../../PROJECT_BIBLE.md), ardından [`Docs/DEVELOPER-HANDOFF.md`](../DEVELOPER-HANDOFF.md) ve [`Docs/REPOSITORY-GOVERNANCE.md`](../REPOSITORY-GOVERNANCE.md) belgelerini okumalıdır. Günlük yürütme private [`cixanla/PC-Shop-Empire-3D`](https://github.com/cixanla/PC-Shop-Empire-3D) Issues ve [Development Roadmap Project](https://github.com/users/cixanla/projects/2) üzerinden izlenir.
 
