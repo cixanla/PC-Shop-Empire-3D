@@ -127,5 +127,25 @@ namespace PCShopEmpire3D.Catalog
         public static readonly Failure NullDefinition = Failure.FromCode("catalog.definition.null");
         public static readonly Failure DuplicateDefinition = Failure.FromCode("catalog.definition.duplicate");
         public static readonly Failure UnknownProduct = Failure.FromCode("catalog.product.unknown");
+        public static readonly Failure MissingProductCatalog =
+            Failure.FromCode("catalog.component.product-catalog.missing");
+        public static readonly Failure InvalidComponentProductId =
+            Failure.FromCode("catalog.component.product-id.invalid");
+        public static readonly Failure UnknownComponentProduct =
+            Failure.FromCode("catalog.component.product.unknown");
+        public static readonly Failure ComponentTrackingMismatch =
+            Failure.FromCode("catalog.component.tracking-mismatch");
+        public static readonly Failure InvalidComponentKind =
+            Failure.FromCode("catalog.component.kind.invalid");
+        public static readonly Failure InvalidMotherboardFormFactor =
+            Failure.FromCode("catalog.component.motherboard-form-factor.invalid");
+        public static readonly Failure EmptyComponentCatalog =
+            Failure.FromCode("catalog.component-catalog.empty");
+        public static readonly Failure NullComponentSpecification =
+            Failure.FromCode("catalog.component-specification.null");
+        public static readonly Failure DuplicateComponentSpecification =
+            Failure.FromCode("catalog.component-specification.duplicate");
+        public static readonly Failure UnknownComponentSpecification =
+            Failure.FromCode("catalog.component-specification.unknown");
     }
 }

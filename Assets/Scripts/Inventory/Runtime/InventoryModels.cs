@@ -383,6 +383,10 @@ namespace PCShopEmpire3D.Inventory
         public static readonly Failure QuantityOverflow = Failure.FromCode("inventory.quantity.overflow");
         public static readonly Failure SameContainer = Failure.FromCode("inventory.transfer.same-container");
         public static readonly Failure ReservedQuantity = Failure.FromCode("inventory.transfer.reserved");
+        public static readonly Failure SerializedTransferPlanInvalid =
+            Failure.FromCode("inventory.serialized-transfer-plan.invalid");
+        public static readonly Failure SerializedTransferPlanStale =
+            Failure.FromCode("inventory.serialized-transfer-plan.stale");
         public static readonly Failure InvalidReservationId = Failure.FromCode("inventory.reservation-id.invalid");
         public static readonly Failure InvalidClaimId = Failure.FromCode("inventory.claim-id.invalid");
         public static readonly Failure DuplicateReservation = Failure.FromCode("inventory.reservation.duplicate");

@@ -4,6 +4,7 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
+    "PSE.Assembly",
     "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",

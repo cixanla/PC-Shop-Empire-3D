@@ -4,10 +4,42 @@ using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Retail")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Assembly")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.EditModeTests")]
 
 namespace PCShopEmpire3D.Inventory
 {
+    /// <summary>
+    /// Immutable, revision-bound permission to move one exact serialized item between
+    /// two logical containers. Only the authority that prepared the plan may commit it.
+    /// </summary>
+    public sealed class InventorySerializedTransferPlan
+    {
+        internal InventorySerializedTransferPlan(
+            InventoryAuthority owner,
+            long expectedRevision,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> targetContainerId)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            ItemId = itemId;
+            SourceContainerId = sourceContainerId;
+            TargetContainerId = targetContainerId;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        public long ExpectedRevision { get; }
+
+        public StableId<ItemInstanceIdScope> ItemId { get; }
+
+        public StableId<ContainerIdScope> SourceContainerId { get; }
+
+        public StableId<ContainerIdScope> TargetContainerId { get; }
+    }
+
     /// <summary>
     /// Immutable, revision-bound permission to reserve one exact serialized item. The plan
     /// contains no mutable state and can only be committed by the authority that prepared it.
@@ -414,34 +446,96 @@ namespace PCShopEmpire3D.Inventory
             StableId<ItemInstanceIdScope> itemId,
             StableId<ContainerIdScope> targetContainerId)
         {
+            OperationResult<InventorySerializedTransferPlan> prepared =
+                PrepareSerializedItemTransfer(itemId, targetContainerId);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedSerializedItemTransfer(prepared.Value);
+        }
+
+        internal OperationResult<InventorySerializedTransferPlan> PrepareSerializedItemTransfer(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ContainerIdScope> targetContainerId)
+        {
             if (!_items.TryGetValue(itemId, out InventoryItemRecord item))
             {
-                return OperationResult.Fail(InventoryFailures.UnknownItem);
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.UnknownItem);
             }
 
             if (!_containers.ContainsKey(targetContainerId))
             {
-                return OperationResult.Fail(InventoryFailures.UnknownContainer);
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.UnknownContainer);
             }
 
             if (item.ContainerId == targetContainerId)
             {
-                return OperationResult.Fail(InventoryFailures.SameContainer);
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.SameContainer);
             }
 
             Failure capacityFailure = ValidateCapacity(targetContainerId, 1);
             if (!capacityFailure.IsNone)
             {
-                return OperationResult.Fail(capacityFailure);
+                return OperationResult<InventorySerializedTransferPlan>.Fail(capacityFailure);
             }
 
-            _items[itemId] = new InventoryItemRecord(
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            return OperationResult<InventorySerializedTransferPlan>.Success(
+                new InventorySerializedTransferPlan(
+                    this,
+                    Revision,
+                    itemId,
+                    item.ContainerId,
+                    targetContainerId));
+        }
+
+        internal OperationResult CommitPreparedSerializedItemTransfer(
+            InventorySerializedTransferPlan plan)
+        {
+            if (plan == null ||
+                !ReferenceEquals(plan.Owner, this) ||
+                plan.ItemId.IsEmpty ||
+                plan.SourceContainerId.IsEmpty ||
+                plan.TargetContainerId.IsEmpty ||
+                plan.SourceContainerId == plan.TargetContainerId)
+            {
+                return OperationResult.Fail(InventoryFailures.SerializedTransferPlanInvalid);
+            }
+
+            if (Revision != plan.ExpectedRevision)
+            {
+                return OperationResult.Fail(InventoryFailures.SerializedTransferPlanStale);
+            }
+
+            OperationResult<InventorySerializedTransferPlan> current =
+                PrepareSerializedItemTransfer(plan.ItemId, plan.TargetContainerId);
+            if (current.IsFailure)
+            {
+                return current.Error == InventoryFailures.RevisionOverflow
+                    ? OperationResult.Fail(current.Error)
+                    : OperationResult.Fail(InventoryFailures.SerializedTransferPlanStale);
+            }
+
+            if (current.Value.SourceContainerId != plan.SourceContainerId)
+            {
+                return OperationResult.Fail(InventoryFailures.SerializedTransferPlanStale);
+            }
+
+            InventoryItemRecord item = _items[plan.ItemId];
+            _items[plan.ItemId] = new InventoryItemRecord(
                 item.Id,
                 item.ProductId,
-                targetContainerId,
+                plan.TargetContainerId,
                 item.Condition,
                 item.UnitCost);
-            AdvanceRevision();
+            Revision++;
             return OperationResult.Success();
         }
 
