@@ -282,6 +282,14 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 ## 10. Bundan sonraki tek-kanal çalışma protokolü
 
+## 9.1 Issue #57 deterministic single M.2 NVMe seating checkpoint'i
+
+- Epic #10'un beşinci bounded child paketi [Issue #57](https://github.com/cixanla/PC-Shop-Empire-3D/issues/57) ile tek canonical serialized M.2 2280 NVMe, tek M-key/2280 standoff ve motherboard-owned captive screw akışına sınırlandı.
+- Feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, tree `1aedb833983df256c500c6a1815b075fa29c254c`; dört-container atomic claim, `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured`, exact receipt replay, host-detach gate ve same-instance recovery ekledi.
+- GarageGraybox r26'da 18° guided pose, flat seated pose, PCB/controller/NAND/label/gold M-key contacts, standoff ve captive screw görünürdür. Presentation authority değildir; generic placement/stack/cart yolu fail-closed'dur.
+- Gerçek keyboard/mouse ve gamepad akışı, dynamic compact HUD, pause/co-edge drain, wrong-orientation/obstruction/secured-remove no-mutation kapılarıyla testlidir.
+- Final EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal exact storage smoke başarılıdır. İkinci M.2/SATA/RAID, tam benchmark ve diğer PC bileşenleri ayrı kalır.
+
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
 - Aynı karar kullanıcıya tekrar sorulmadan önce bu belge ve tam konuşma arşivi aranır.
@@ -296,4 +304,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, USB metadata `17af550856e8bca288ed5c17924bc82586c76c27`, EditMode 461/461, PlayMode 33/33, Universal Mac `328268700` bayt, Apple M4/Metal exact r25 smoke, üç başarılı Guard ve 668/668 doğrulanmış USB milestone ile kapandı; acceptance `21/21`, Issue `Completed`, Roadmap `Done`dur. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
+> Issue #57 feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, EditMode 490/490, PlayMode 35/35, Universal Mac `328362356` bayt ve Apple M4/Metal exact r26 storage smoke ile tamamlandı. Tek canonical M.2 2280 NVMe'nin deterministic seat/captive-screw/recovery akışı kapalıdır; ikinci storage/SATA/RAID, tam benchmark ve diğer PC bileşenleri ayrı bounded kapılardır.

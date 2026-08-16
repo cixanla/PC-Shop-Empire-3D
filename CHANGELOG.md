@@ -6,6 +6,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #57 ile tek canonical serialized M.2 2280 NVMe, atomic four-container Inventory claim, stable M-key/2280/captive-screw topology ve `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured` authority akışı eklendi.
+- GarageGraybox r26'da 18° guided insertion, keyed 180° orientation, düz seated pose, visible PCB/controller/NAND/label/gold contacts/standoff/captive screw, gerçek keyboard/gamepad dynamic HUD ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
+- Four-operation receipt lineage/replay, installed-storage motherboard detach gate, same-instance recovery, benchmark `storage-missing`/`storage-unsecured` ayrımı ve bütün stale/conflict/obstruction/full-hands failure no-mutation sözleşmeleri testlerle kilitlendi.
+- Feature `4f14e7b`, tree `1aedb83`; EditMode 490/490, PlayMode 35/35, 328362356 bayt Universal macOS build ve Apple M4/Metal `garage-m2-nvme-captive-screw-r26-v1` exact storage smoke başarılıdır.
+
 - Tek canonical serialized DDR5 UDIMM, immutable A2/Channel A/Bank 2 topology'si, capacity-1 managed MemorySlot ve atomik Workbench+ProcessorSocket+MemorySlot triple claim; `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` Assembly authority'si, exact seat/close/open/remove receipt lineage'ı ve delayed replay ile eklendi.
 - DIMM yalnız secured motherboard üzerinde `0° ↔ 180°` keyed toggle ile oturur. İki görünür latch sol→sağ kapanıp sağ→sol açılırken tek retention revision/receipt üretir; retained remove, installed-DIMM motherboard detach, duplicate seat, stale/conflict/full-hands ve recovery failure yolları cross-authority no-mutation fail-closed'dur.
 - GarageGraybox r25'e dört materyalli yarı-gerçekçi UDIMM package, matching notch, A2 slot bed/rail ve iki ayrı latch pivotu eklendi. Generic placement/stack/cart bypass'ı kapalı; same-instance recovery ve `25 Renderer / 13 Collider / 1 TextMesh` assembly bütçesi testlidir.

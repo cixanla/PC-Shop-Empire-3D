@@ -59,6 +59,20 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır. Gerçek Windows x64 hostta I
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
 
+## Stage B deterministic single M.2 NVMe seating ve captive screw doğrulaması — 16 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #57 feature `4f14e7b` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`), ad-hoc signed.
+- Unity build raporu: `328.362.356` bayt.
+- Ana executable: `117.179` bayt.
+- Runtime: Apple M4/Metal, pencereli 1280×720; `garage-m2-nvme-captive-screw-r26-v1` readiness ve exact storage smoke başarılı.
+- Test kapıları: EditMode `490/490`, PlayMode `35/35`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue57-final.log`, `600.974` bayt, SHA-256 `560a20ee380ffe5fd76e12b5c48d5dc843557e27b5a571ea90c6eefac51baad3`.
+- Runtime log: `runtime-storage-issue57-final.log`, `5.206` bayt, SHA-256 `5e8a250452c5a487692646b0626dd6aa03ccacd68267a6c37cab62e083ebb858`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
+
 ## Stage B deterministic single DIMM seating ve dual-latch retention doğrulaması — 16 Ağustos 2026
 
 `macOS/PC Shop Empire 3D.app`, Issue #56 feature `7482fc9` kaynak durumuyla yeniden üretildi:

@@ -5,6 +5,10 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
+## Güncel geliştirme checkpoint'i — Issue #57
+
+Epic #10'un tek M.2 2280 NVMe seating + captive retention screw dilimi tamamlandı. Feature `4f14e7b`, tek canonical serialized SSD'yi atomik dört-container Inventory claim'i, stable M-key/2280 topology, reversible seat/secure/unsecure/remove authority'si, installed-storage host gate'i, same-instance recovery ve gerçek keyboard/gamepad dynamic prompt'larıyla GarageGraybox r26'ya taşır. Final doğrulama EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal exact storage smoke'tur. İkinci storage/SATA/RAID, tam benchmark ve sonraki PC bileşenleri ayrı bounded kapılardır.
+
 ## 1. Kuzey yıldızı
 
 PC Shop Empire 3D, oyuncunun küçük bir garajda başlayıp fiziksel olarak büyüyen bir teknoloji perakende ve servis işletmesi kurduğu birinci şahıs 3D simülasyondur.

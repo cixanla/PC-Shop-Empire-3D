@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #56
+### Güncel checkpoint — Issue #57
+
+- Feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, tree `1aedb833983df256c500c6a1815b075fa29c254c`, tek canonical serialized M.2 2280 NVMe'yi stable M-key slot, 2280 standoff ve motherboard-owned captive screw ile GarageGraybox r26'ya ekler.
+- Inventory authority dört managed container'ı atomik claim eder. Assembly yalnız `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured` state'ini, exact receipt lineage/replay'i, installed-storage detach gate'ini ve no-mutation failure yollarını kabul eder.
+- Oyuncu gerçek keyboard/mouse veya gamepad ile guided 18° insertion, iki keyed orientation, seat, captive screw secure/unsecure ve same-instance remove/recovery akışını oynar. Generic placement/stack/cart bypass'ı kapalıdır.
+- Final EditMode `490/490`, PlayMode `35/35`; Universal macOS build `328362356` bayt ve Apple M4/Metal exact r26 storage smoke başarılıdır.
+- Ayrıntı: `Docs/ADR-0035-DETERMINISTIC-SINGLE-M2-NVME-SEATING-AND-CAPTIVE-SCREW-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-M2-NVME-SEATING-AND-CAPTIVE-SCREW-RETENTION-CHECKPOINT-2026-08-16.md`.
+- İkinci M.2/SATA/RAID, tam benchmark, kalan PC parçaları, final art ve native Windows/Steam ayrı kapılardır.
+
+### Önceki checkpoint — Issue #56
 
 - Feature commit `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2` deterministic single-DIMM seating + dual-latch retention dilimini taşır; source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`; USB metadata `17af550856e8bca288ed5c17924bc82586c76c27`; [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055), [31920258176](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920258176) ve [31920923402](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920923402) başarılıdır.
 - `PSE.Assembly` stable memory slot/retention/channel/bank identity, `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` state'i, four-operation immutable receipt/historical replay fold'u ve installed-DIMM motherboard detach gate'ini taşır.

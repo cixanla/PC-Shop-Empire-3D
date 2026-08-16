@@ -518,3 +518,12 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Kanıt: EditMode `461/461`, gerçek Input System PlayMode `33/33`, Universal macOS `328268700` bayt ve Apple M4/Metal 1280×720 exact `GARAGE_DIMM_RUNTIME_SMOKE ... latch-order=ok ... authority-isolated=ok identity=stable recovery=ok` markerı başarılıdır.
 - USB: `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_DIMM_DUAL_LATCH_RETENTION`, source/docs `01c2b5a`, 663 tracked source + 4 final evidence + source kaydı, 668/668 readback, `8658b50a…c50` manifest ve 12.073.868 payload baytı; güvenlik/AppleDouble mismatch `0`. Acceptance `21/21`, Issue `Completed`, Roadmap `Done`dur.
 - Sıradaki küçük aday: yalnız tek M.2 2280 NVMe SSD seating + captive retention screw. İkinci storage yolu, SATA/RAID, GPU/cooler, tam build/benchmark, genel Inventory hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.
+
+## Güncel uygulama kaydı — Issue #57 deterministic single M.2 NVMe seating ve captive screw retention
+
+- Epic #10'un beşinci bounded child'ı Issue #57'dir. Feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, tree `1aedb833983df256c500c6a1815b075fa29c254c`; tek canonical serialized M.2 2280 NVMe ve immutable M-key/2280/captive-screw topology ekledi.
+- Karar: Workbench + ProcessorSocket + MemorySlot + capacity-1 StorageSlot all-or-none claim edilir. Seat/remove exact custody'yi değiştirir; secure/unsecure Inventory revision'ını değiştirmez; partial/ghost claim yasaktır.
+- Karar: 18° guided insertion ve flat seated pose deterministiktir. Range/focus/LOS/key/orientation/support/obstruction/tie/saturation fail-closed'dur; generic placement/stack/cart bypass'ı yoktur.
+- Karar: seat/secure/unsecure/remove immutable receipts ve exact delayed replay taşır. Installed storage motherboard detach'i, secured storage remove'u engeller; bütün failure yolları authority ve projection katmanlarında no-mutation kalır.
+- Kanıt: EditMode `490/490`, gerçek Input System PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal 1280×720 exact `GARAGE_STORAGE_RUNTIME_SMOKE ... insertion-angle=ok captive-screw=ok ... authority-isolated=ok identity=stable recovery=ok` başarılıdır.
+- Sınır: ikinci M.2/SATA/RAID, heatsink/thermal/performance benchmarkı, GPU/PSU/cooler/cabling, POST/BIOS/OS, final art ve Windows/Steam ayrı issue'lardır.

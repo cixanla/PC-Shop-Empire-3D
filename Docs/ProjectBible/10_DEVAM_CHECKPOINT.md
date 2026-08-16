@@ -1,10 +1,19 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Issue #56 kaynak/test/build/runtime/CI/USB kapıları, acceptance `21/21`, Issue `Completed` ve Roadmap `Done` ile kapandı; sonraki bounded aday tek M.2 2280 NVMe SSD seating + captive retention screw<br>
+**Durum:** Issue #57 deterministic single M.2 NVMe seating + captive screw kaynak/test/build/runtime kapıları tamamlandı; GitHub/USB kapanışı bu checkpoint zincirinde yürütülür<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #56 / Epic #10
+## En yeni checkpoint — Issue #57 / Epic #10
+
+- Feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, tree `1aedb833983df256c500c6a1815b075fa29c254c`; tek canonical M.2 2280 NVMe, immutable M-key/2280 standoff/captive-screw topology ve atomik Workbench+ProcessorSocket+MemorySlot+StorageSlot claim'i eklendi.
+- State yalnız `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured`dır. Seat/remove exact serialized custody'yi değiştirir; secure/unsecure Inventory revision'ını değiştirmez. Four-operation immediate/delayed replay, installed-storage host gate, conflict/stale/overflow no-mutation ve same-instance recovery testlidir.
+- Guided pose 18°; seated pose düzdür. Range/focus/LOS/key/orientation/support/obstruction/tie/saturation fail-closed solver ile korunur. Mode kapalı ghost/query sıfırdır; generic placement/stack/cart bypass'ı kapalıdır.
+- GarageGraybox `garage-m2-nvme-captive-screw-r26-v1`; PCB/controller/NAND/label/gold M-key contacts, connector, 2280 standoff ve captive screw görünürdür. Compact HUD gerçek keyboard/mouse ve gamepad bindinglerini dinamik gösterir.
+- Final EditMode `490/490`, PlayMode `35/35`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328362356` bayt; Apple M4/Metal 1280×720 readiness ve exact storage smoke başarılıdır.
+- Ayrıntı `Docs/ADR-0035-DETERMINISTIC-SINGLE-M2-NVME-SEATING-AND-CAPTIVE-SCREW-RETENTION.md` ve tarihli Evidence belgesindedir. İkinci storage/SATA/RAID, tam performans benchmarkı, diğer PC bileşenleri, final art ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #56 / Epic #10
 
 - Feature commit `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2`; source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, tree `16053753222d3166d5f59d61ec20b4f8bf8e23cb`; USB metadata `17af550856e8bca288ed5c17924bc82586c76c27`; [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055), [31920258176](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920258176) ve [31920923402](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920923402) başarılıdır.
 - Tek canonical serialized DDR5 UDIMM, immutable A2/Channel A/Bank 2/population priority 1 topology'si ve atomik managed Workbench+ProcessorSocket+MemorySlot triple claim kullanılır. Başarı tek Inventory revision; bütün conflict/overflow yolları sıfır partial/ghost claim üretir.
