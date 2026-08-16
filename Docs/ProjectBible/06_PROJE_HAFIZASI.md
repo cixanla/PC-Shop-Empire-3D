@@ -1,7 +1,7 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
 **Sürüm:** 1.0 — üç Codex görevi tek ana görev ve merkezî konuşma arşivinde birleştirildi<br>
-**Son güncelleme:** 15 Ağustos 2026<br>
+**Son güncelleme:** 16 Ağustos 2026<br>
 **Kural:** Bu dosya karar ID'lerinin yaşayan özetidir. Üç görevin birleşik uygulanabilir bağlamı [`11_BIRLESIK_CODEX_PROJE_HAFIZASI.md`](11_BIRLESIK_CODEX_PROJE_HAFIZASI.md), tam kullanıcı/Codex konuşmaları ise [`Docs/CodexHistory`](../CodexHistory/README.md) altında korunur. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
 ## Durum işaretleri
@@ -283,6 +283,7 @@
 | D-179 | Checkout fulfillment satır satır mutation değil, exact reservation setinin tam preflight sonrası tek Inventory commit'i ve stable immutable completion kaydıdır. | Uygulandı — 15 Ağustos 2026 | Bulk serialized/batch consume başarıda Inventory revision'ını bir kez ilerletir; Basket ve Checkout kendi revision'larını birer kez ilerletip item/reservation/line'ı birlikte kapatır, Offer/Orders sabit kalır. Exact repeat ve completed begin idempotent; identity/time/drift failure cross-authority no-mutation. RAF A'da ikinci Mouse Left/RT projection'ı kaldırır, `TAMAMLANDI`, stok 0 gösterir. Fulfillment ödeme değildir. Edit Mode 242/242, Play Mode 17/17, Mac `sale-completion=ok stock-consumed=ok`; commit `bb89b0c`. |
 | D-180 | Müşteri ziyareti Unity/NavMesh transformu değil, `PSE.Actors` içinde deterministic ve bounded authoritative lifecycle state'idir. | Uygulandı — 15 Ağustos 2026 | Stable customer/intent/visit ve exact receipt ledger; `Entering→Browsing→NavigatingToCheckout→AwaitingCheckout→Exiting→Exited`, state başına iki route denemesi, `RouteUnavailable`, patience/exit timeout ve terminal replay taşır. NavMesh yalnız Presentation projection'ıdır; pause clock/agentı dondurur, NPC Inventory/Retail/Orders mutate etmez. Edit Mode 255/255, Play Mode 18/18, Mac normal+leakdiag `runtime-route=ok fulfilled=ok authority-isolated=ok`; commit `b37b056`. |
 | D-181 | Tek shelf offer müşteri kararı authority eylemi değil, immutable snapshotlardan üretilen saf ve açıklanabilir `Buy/Leave` sonucudur. | Uygulandı — 15 Ağustos 2026 | Tek yönlü `PSE.Retail→PSE.Actors`; Browsing visit + offer + integer accepted-price girdisi, stable reason/failure code, exact provenance ve value equality taşır. Historical snapshot action yetkisi değildir; evaluator cache/revision/receipt/RNG/Unity/authority almaz. Garage metni yalnız Browsing'de görünür ve reservation/checkout/visit transition başlatmaz. Edit Mode 267/267, Play Mode 18/18, Mac `offer-decision=ok authority-isolated=ok`; commit `f97ded3`. |
+| D-182 | Tek DIMM montajı, iki görünür mandalı tek Assembly-owned retention aggregate'i olarak kullanan deterministic ve reversible physical authority akışıdır. | Uygulandı — 16 Ağustos 2026 | Tek serialized DDR5 UDIMM ve immutable A2/Channel A/Bank 2 topology; atomik Workbench+ProcessorSocket+MemorySlot triple claim, `EmptyOpen↔SeatedOpen↔Retained`, 0°↔180° keyed input, sol→sağ close/sağ→sol open, exact four-operation receipt/replay, installed-DIMM host gate ve same-instance recovery. EditMode 461/461, PlayMode 33/33, Mac `garage-dimm-dual-latch-r25-v1 dimm-flow=ok ... authority-isolated=ok`; feature `7482fc9`. |
 
 ## Vertical slice kilidi
 
@@ -394,7 +395,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Stage B Core, oynanabilir GarageGraybox fiziksel akışı, görsel benchmark, Catalog + Inventory authority, atomik purchase-order receiving, transactional dünya/stok projection'ı, idempotent parcel reveal, authoritative shelf offer, customer basket reservation, immutable checkout price snapshot, atomik checkout fulfillment, deterministic customer visit/runtime NavMesh ve stale-safe tek-offer `Buy/Leave` eylemleri ayrı testli paketlerde kapatıldı. Güncel baseline Edit Mode 298/298 ve Play Mode 22/22'dir; sıradaki bounded alan atomik payment/ilk Economy settlement sınırıdır.
+Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Stage B; Core, oynanabilir GarageGraybox, Catalog/Inventory/Orders/Retail/Economy, deterministic customer zinciri ve fiziksel checkout sonrasında Epic #10'un anakart seating, captive fastener, CPU socket/retention ve single-DIMM dual-latch montaj dilimlerine ilerledi. Güncel feature baseline EditMode 461/461, PlayMode 33/33 ve Apple M4/Metal `garage-dimm-dual-latch-r25-v1`dir; source/docs/Issue/USB metadata kapanışından sonraki bounded aday tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
@@ -503,3 +504,16 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Kanıt: EditMode `430/430`, gerçek Input System PlayMode `31/31`, Universal macOS `328144884` bayt ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok retained-remove-gate=ok replay=ok identity=stable`.
 - Issue #53–#55 birleşik USB milestone'u `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION` altında doğrulandı: source `07364b79`, 653 satırlı `0b5f3c61…aaba9e` manifest, 13.500.119 payload baytı ve bütün mismatch sayaçları `0`.
 - Sıradaki küçük karar: yalnız dual-latch DIMM/RAM seating. GPU/cooler/storage, tam build/benchmark, genel Inventory revision-max hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.
+
+## Güncel uygulama kaydı — Issue #56 deterministic single DIMM seating ve dual-latch retention
+
+- Epic #10'un dördüncü bounded child'ı Issue #56'dır. Feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2`; tek canonical serialized DDR5 UDIMM, immutable A2/Channel A/Bank 2 topology ve `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` state'ini ekledi.
+- [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055) başarılıdır; source/docs, acceptance/Project ve USB metadata kapanışı sıradadır.
+- Karar: Workbench + ProcessorSocket + capacity-1 MemorySlot container'ları tek all-or-none triple claim ile Assembly planına aittir. Seat/remove exact custody'yi değiştirir; close/open Inventory revision'ını değiştirmez. Üçüncü-container conflict/overflow partial veya ghost claim oluşturmaz.
+- Karar: player rotation yalnız `0° ↔ 180°` fiziksel keyed orientation üretir. Solver doğrudan verilen 90°/270° değerleri fail-closed reddeder; reversed confirm exact `DimmOrientationMismatch` ve tam no-mutation bırakır.
+- Karar: iki ayrı latch pivotu close sırasında sol→sağ, open sırasında sağ→sol hareket eder fakat tek retention operation/revision/receipt üretir. DIMM installed iken motherboard detach, retained iken remove kilitlidir.
+- Karar: seat/close/open/remove immutable receipt'leri exact attach/secure/seat/retention lineage'ını taşır. Immediate ve delayed replay aynı reference'ı döndürür; duplicate/stale/conflict/overflow bütün authority/projectionlarda no-mutation kalır.
+- Karar: guided mode kapalıyken ghost veya seat PhysX query çalışmaz. Dynamic compact HUD gerçek ilk input consumer'ı gösterir; keyboard/mouse ve gamepad co-edge/pause/release–repress sözleşmesi gerçek Input System testlidir.
+- Karar: r25 DIMM/slot/latch geometri ve materyali okunaklı yarı-gerçekçi graybox kanıtıdır. Dört submesh/material, matching notch ve `25 Renderer / 13 Collider / 1 TextMesh` assembly bütçesi vardır; presentation authority değildir.
+- Kanıt: EditMode `461/461`, gerçek Input System PlayMode `33/33`, Universal macOS `328268700` bayt ve Apple M4/Metal 1280×720 exact `GARAGE_DIMM_RUNTIME_SMOKE ... latch-order=ok ... authority-isolated=ok identity=stable recovery=ok` markerı başarılıdır.
+- Sıradaki küçük aday: yalnız tek M.2 2280 NVMe SSD seating + captive retention screw. İkinci storage yolu, SATA/RAID, GPU/cooler, tam build/benchmark, genel Inventory hardening, Save, Guardian, final art ve Windows/Steam ayrı kapıdır.

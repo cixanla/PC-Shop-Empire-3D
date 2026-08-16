@@ -58,3 +58,17 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır. Gerçek Windows x64 hostta I
 - Runtime log: `runtime-processor-issue55-r2.log`, `5.000` bayt, SHA-256 `b9d0fd1dff5d702f3c74d67e09c1b11dc5e30028effaece3045cd7993581e799`.
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
+
+## Stage B deterministic single DIMM seating ve dual-latch retention doğrulaması — 16 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #56 feature `7482fc9` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`).
+- Unity build raporu: `328.268.700` bayt.
+- Ana executable: `117.179` bayt; SHA-256 `eba2a0baeecb9a214a3d0520f4a94641e84b697b3d79f785ec124e4d1932eb50`.
+- Runtime: Apple M4/Metal, pencereli 1280×720; `garage-dimm-dual-latch-r25-v1` readiness ve exact DIMM smoke başarılı.
+- Test kapıları: EditMode `461/461`, PlayMode `33/33`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue56-final.log`, `582.591` bayt, SHA-256 `49fd863b79bb50b3138471c6efbf7d33a33f66e2f482175abf529b18baa38c3d`.
+- Runtime log: `runtime-dimm-issue56-final.log`, `5.140` bayt, SHA-256 `03d45cac685bbe1295ec2181ff7d3a36aed16289ce272bb813b1de4f46b6cc4f`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.

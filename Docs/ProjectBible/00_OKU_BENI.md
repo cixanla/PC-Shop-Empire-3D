@@ -1,7 +1,7 @@
 # PC Shop Empire – 3D Dönüşüm Ana Dosyası
 
-**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B deterministic motherboard-fastener checkpoint'i 0.19<br>
-**Tarih:** 15 Ağustos 2026
+**Belge durumu:** Onaylı araştırma/tasarım paketi 0.1 + uygulanmış Stage A ve Stage B deterministic single-DIMM dual-latch checkpoint'i 0.20<br>
+**Tarih:** 16 Ağustos 2026
 **Çalışma biçimi:** Yaşayan belgeler; karar değiştikçe sürüm notuyla güncellenecek.
 
 ## Sonuç
@@ -98,6 +98,7 @@ Yapıldı:
 - Otuzuncu bounded paket tamamlandı: Unity bağımsız `PSE.Assembly`, managed Workbench ve tek serialized `MicroAtx` anakart için stable al→guided hizala→`SeatedUnsecured` oturt→sök→recovery zinciri eklendi. Same-frame Primary+Drop tek-geçiş, dynamic keyboard/gamepad prompt, fail-closed seat geometrisi ve no-duplicate identity testlidir. Feature `582a3cf`; EditMode 394/394, PlayMode 26/26, Universal macOS 328.020.817 bayt ve Apple M4/Metal r22 smoke geçti; acceptance 18/18, Issue kapalı/Roadmap `Done`dur.
 - Otuz birinci bounded paket tamamlandı: Assembly-owned stable captive fastener ile `SeatedUnsecured ↔ SeatedSecured`, immutable secure/unsecure receipt ve historical replay, Inventory-isolated revision, secured presentation+authority detach kilidi, NonAlloc range/focus/LOS/pause/obstruction solver ve gerçek keyboard/gamepad edge ownership'i eklendi. Görünür screw/screwdriver/status plate r23 sahnesindedir. Feature `b681239`, source/docs `7cec7cc`, EditMode 411/411, PlayMode 29/29, Universal macOS 328.057.977 bayt, Apple M4/Metal 1280×720 smoke ve Guard `31909940414` geçti; acceptance 18/18, Issue kapalı/Roadmap `Done`dur.
 - Otuz ikinci bounded paket tamamlandı: tek canonical serialized CPU, capacity-1 managed socket, `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained`, keyed orientation, secured/unsecured host gate'leri, four-operation delayed replay ve same-instance recovery eklendi. r24 sahnesi notched LGA-style CPU, matching socket key, aperture load plate ve lever taşır. Feature `99cadad`, source/docs `d9d0722`, EditMode 430/430, PlayMode 31/31, Universal macOS 328.144.884 bayt, Apple M4/Metal 1280×720 exact CPU smoke ve Guard `31914774370` geçti; acceptance 20/20, Issue kapalı/Roadmap `Done`dur. Issue #53–#55 birleşik USB milestone'u `07364b79` kaynağından 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı.
+- Otuz üçüncü bounded paket uygulandı: tek canonical serialized DDR5 UDIMM, immutable A2/Channel A/Bank 2 topology, atomik managed triple claim, `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained`, yalnız 0°↔180° keyed toggle, sol→sağ close/sağ→sol open dual-latch sırası, four-operation delayed replay ve same-instance recovery eklendi. r25 sahnesi dört materyalli DIMM package, matching notch, A2 rail ve iki ayrı latch taşır. Feature `7482fc9`, EditMode 461/461, PlayMode 33/33, Universal macOS 328.268.700 bayt, Apple M4/Metal 1280×720 exact DIMM smoke ve Guard `31919985055` geçti; source/docs/Issue/USB metadata kapanışı sürmektedir.
 - Kullanıcının görsel kalite geri bildirimiyle okunaklı yarı gerçekçilik yönü kabul edildi: gerçek oran, PBR yüzey, zemine oturan ışık ve doğal ağırlık; hafif stilize okunabilirlik ve ölçülü performans bütçesi. Mevcut graybox final sanat değildir.
 - Yeni oyun için private `cixanla/PC-Shop-Empire-3D` repository oluşturuldu; `main`, Stage A etiketi, Unity kaynakları, yaşayan belgeler, repo guard ve byte-exact legacy snapshot güvenli biçimde push edildi.
 - 22 üst seviye epic oluşturuldu ve private `PC Shop Empire 3D — Development Roadmap` Project'ine bağlandı; Phase/Priority/Risk/Status alanları yürütme görünümü olarak tanımlandı.
@@ -135,15 +136,15 @@ Tam oyun büyük olacak; fakat üretime şu küçük ve kaliteli çekirdekle ba�
 - Tek garaj ve teslimat önü.
 - Birinci şahıs hareket, görünür eller, taşıma ve yönlendirilmiş fizik.
 - Sipariş, fiziksel teslimat, kutu açma, depolama, raf, fiyat ve kasa.
-- Temel müşteri gezinmesi ve ihtiyaç görüşmesi.
+- Çoklu müşteri, gerçek sıra kapasitesi ve gelişmiş çok turlu ihtiyaç görüşmesi.
 - Baştan sona tek özel PC işi: teklif, parça, fiziksel montaj, kurgusal OS, test, paketleme ve teslim.
-- Temel Dashboard, ekonomi ve kayıt; oyuncuya gösterilmeyen Guardian tanı olay zinciri.
+- Bounded exact-cash satış ötesindeki tam ekonomi/Dashboard, kalıcı kayıt ve oyuncuya gösterilmeyen Guardian tanı olay zinciri.
 - Küçük ama doğrulanmış ürün kataloğu.
 
 Çalışanlar, şubeler, geniş servis, online satış, gelişmiş rekabet ve yüzlerce ürün vertical slice'a yığılmayacak. Önce zincir kusursuz çalışacak, sonra genişleyecek.
 
 ## Sonraki kapı
 
-Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; authoritative order-to-sale stok zinciri, deterministic customer visit, consultation-gated tek-offer `Buy/Leave`, fiziksel checkout station üzerinden exact-cash Economy settlement ve tek anakartın seating + captive-fastener + CPU socket/retention akışını birlikte taşır. Issue #55 feature `99cadad`, 430/430 Edit Mode, 31/31 Play Mode, 328.144.884 bayt Universal macOS build ve Apple M4/Metal 1280×720 `garage-cpu-socket-retention-r24-v1` smoke ile doğrulandı. Final source/docs/Issue metadata kapanışından sonra Epic #10'da sıradaki bounded geliştirme yalnız dual-latch DIMM/RAM seating dilimidir. GPU/cooler/storage, tam build/benchmark, Inventory hardening, Save ve Guardian ayrı kalır.
+Stage A ve private GitHub güvenlik/devir temeli tamamlandı. Oynanabilir garaj; authoritative order-to-sale stok zinciri, deterministic customer visit, consultation-gated tek-offer `Buy/Leave`, fiziksel checkout station üzerinden exact-cash Economy settlement ve tek anakartın seating + captive-fastener + CPU socket + single-DIMM/dual-latch akışını birlikte taşır. Issue #56 feature `7482fc9`, 461/461 Edit Mode, 33/33 Play Mode, 328.268.700 bayt Universal macOS build ve Apple M4/Metal 1280×720 `garage-dimm-dual-latch-r25-v1` smoke ile doğrulandı. Source/docs/Issue/USB metadata kapanışından sonraki bounded Epic #10 adayı tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir. İkinci depolama yolu, SATA/RAID, GPU/cooler, tam build/benchmark, Inventory hardening, Save ve Guardian ayrı kalır.
 
 Gameplay prototipine geçiş ayrı Stage B kapsamıdır. Bu geçiş; Blender, ücretli araç, Steam/Apple ödemesi, üçüncü taraf asset, gerçek Windows IL2CPP release build veya legacy kaynak değişikliği için otomatik yetki vermez.

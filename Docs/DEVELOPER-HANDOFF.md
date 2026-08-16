@@ -14,18 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #55
+### Güncel checkpoint — Issue #56
 
-- Feature commit `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad` deterministic CPU socket seating + retention dilimini taşır; [Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır.
-- `PSE.Assembly` stable processor slot/retention identity, `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` state'i, four-operation immutable receipt/historical replay fold'u ve installed-CPU motherboard detach gate'ini taşır.
-- Inventory atomik managed Workbench + capacity-1 ProcessorSocket pair claim'i kullanır. Seat/remove exact serialized custody'yi değiştirir; close/open Inventory revision'ını değiştirmez ve bütün failure yolları no-mutation kalır.
-- GarageGraybox marker'ı `garage-cpu-socket-retention-r24-v1`dir. Tek canonical 45 × 37,5 mm notched CPU; ayrı substrate/IHS materyali, matching socket key, aperture load plate ve retention lever ile görünürdür.
-- Gerçek Input System guided mode/rotate/seat/retain/open/remove akışı; dynamic keyboard/gamepad prompt, compact HUD ownership, pause/co-edge drain ve release–repress sözleşmeleri testlidir. Mode kapalıyken ghost veya seat PhysX sorgusu çalışmaz.
-- Final EditMode `430/430`, PlayMode `31/31`; Universal macOS build `328144884` bayt ve Apple M4/Metal 1280×720 exact CPU smoke başarılıdır.
-- Ayrıntı: `Docs/ADR-0033-DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-CPU-SOCKET-SEATING-AND-RETENTION-CHECKPOINT-2026-08-16.md`.
-- Issue #53–#55 birleşik USB snapshotı doğrulandı: `2026-08-16_STAGE_B_PHYSICAL_ASSEMBLY_MOTHERBOARD_FASTENER_AND_CPU_SOCKET_RETENTION`, source `07364b79`, 653/653 readback, 640/640 exact Git source, 12/12 evidence ve `0b5f3c61…aaba9e` manifest; bütün güvenlik mismatch sayaçları `0`.
-- Issue #53 acceptance `18/18` tamamlandı; Issue kapalı ve Development Roadmap `Done`dur. Issue #54–#55 de kapalı/Done kalır.
-- Sonraki bounded Epic #10 child adayı yalnız dual-latch DIMM/RAM seating akışıdır.
+- Feature commit `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2` deterministic single-DIMM seating + dual-latch retention dilimini taşır; [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055) başarılıdır.
+- `PSE.Assembly` stable memory slot/retention/channel/bank identity, `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` state'i, four-operation immutable receipt/historical replay fold'u ve installed-DIMM motherboard detach gate'ini taşır.
+- Inventory atomik managed Workbench + ProcessorSocket + capacity-1 MemorySlot triple claim kullanır. Seat/remove exact serialized custody'yi değiştirir; close/open Inventory revision'ını değiştirmez ve bütün failure yolları no-mutation kalır.
+- GarageGraybox marker'ı `garage-dimm-dual-latch-r25-v1`dir. Tek canonical DDR5 UDIMM; dört materyalli PCB/chip/spreader/notch, matching A2 slot rail ve iki ayrı latch pivotuyla görünürdür.
+- Gerçek Input System guided mode/yalnız 0°↔180° keyed toggle/seat/dual-latch close-open/remove akışı; dynamic keyboard/gamepad prompt, compact HUD ownership, pause/co-edge drain ve release–repress sözleşmeleri testlidir. Mode kapalıyken ghost veya seat PhysX sorgusu çalışmaz.
+- Final EditMode `461/461`, PlayMode `33/33`; Universal macOS build `328268700` bayt ve Apple M4/Metal 1280×720 exact DIMM smoke başarılıdır.
+- Ayrıntı: `Docs/ADR-0034-DETERMINISTIC-SINGLE-DIMM-SEATING-AND-DUAL-LATCH-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-DIMM-SEATING-AND-DUAL-LATCH-RETENTION-CHECKPOINT-2026-08-16.md`.
+- Source/docs, Issue acceptance/Project `Done` ve ayrı SHA-256 USB milestone kapanışı sürmektedir; bu tamamlanana kadar yeni gameplay paketi başlatılmaz.
+- Sonraki bounded Epic #10 adayı yalnız tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır.
 
 ## 2. Gereken temel araçlar
 
@@ -65,8 +64,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `394/394` passed.
-- Play Mode `26/26` passed.
+- Edit Mode `461/461` passed.
+- Play Mode `33/33` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -153,7 +152,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Sıradaki immediate iş yalnız dual-latch DIMM/RAM seating bounded child'ını açmaktır. GPU/cooler/storage, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Sıradaki immediate iş Issue #56 source/docs, acceptance/Project ve USB metadata kapanışını tamamlamaktır; yeni gameplay başlatılmaz. Ardıl bounded Epic #10 adayı yalnız tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır. İkinci storage/SATA/RAID, GPU/cooler, tam PC kataloğu/benchmark, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 

@@ -1,10 +1,26 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Issue #53–#55 kaynak/test/build/runtime/CI zinciri kapalıdır; birleşik USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; Issue #53 acceptance `18/18`, kapalı/Roadmap `Done`; sıradaki bounded paket yalnız dual-latch DIMM/RAM seating<br>
+**Durum:** Issue #56 feature kaynak/test/build/runtime/CI kapıları tamamlandı; source/docs, Issue/Project ve ayrı USB metadata kapanışı sürmektedir; sonraki bounded aday tek M.2 2280 NVMe SSD seating + captive retention screw<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #55 / Epic #10
+## En yeni checkpoint — Issue #56 / Epic #10
+
+- Feature commit `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2`; yerel Repository Guard `tracked=641` ve [feature Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055) başarılıdır.
+- Tek canonical serialized DDR5 UDIMM, immutable A2/Channel A/Bank 2/population priority 1 topology'si ve atomik managed Workbench+ProcessorSocket+MemorySlot triple claim kullanılır. Başarı tek Inventory revision; bütün conflict/overflow yolları sıfır partial/ghost claim üretir.
+- Assembly state'i `EmptyOpen → MemoryModuleSeatedOpen → MemoryModuleRetained` ve tersidir. Seat/close/open/remove stable slot/retention/item/product ile attach/secure/seat/retention lineage'ını doğrular; immediate ve delayed replay aynı receipt referansını döndürür.
+- Oyuncu input'u `R / Right Shoulder` ile yalnız `0° ↔ 180°` keyed orientation üretir. Valid seat secured motherboard, exact DDR5/A2/channel/bank, range/focus/LOS ve obstruction-free insertion ister; reversed confirm tam no-mutation fail-closed'dur.
+- İki görünür latch close sırasında sol→sağ, open sırasında sağ→sol hareket eder fakat tek retention operation/revision/receipt üretir. Retained remove ve DIMM-installed motherboard detach engellenir.
+- GarageGraybox `garage-dimm-dual-latch-r25-v1`; dört materyalli UV'li DIMM PCB/chip/heat-spreader/notch, hard-surface A2 bed/rail ve iki ayrı latch pivotu taşır. Assembly bütçesi `25 Renderer / 13 Collider / 1 TextMesh`tir.
+- Gerçek Input System keyboard/mouse ve gamepad pickup→guided mode→180° toggle→seat→close/open→remove→recovery akışı, dynamic compact HUD, co-edge/pause drain ve mode-kapalı sıfır ghost/query sözleşmesiyle testlidir.
+- Final EditMode `461/461`, PlayMode `33/33`; failed/skipped/inconclusive `0`.
+- Universal macOS Development/StrictMode build `328268700` bayttır; ana executable Universal Mach-O `x86_64 + arm64`, SHA-256 `eba2a0ba…eb50`.
+- Apple M4/Metal 1280×720 runtime readiness ve exact `GARAGE_DIMM_RUNTIME_SMOKE ... keyed-orientation=ok latch-order=ok ... replay=ok authority-isolated=ok identity=stable recovery=ok` marker'ı geçti.
+- Final evidence `/Users/cixanla/Developer/PCShopEmpire3D/TestResults` altında korunur; ayrıntı `Docs/ADR-0034-DETERMINISTIC-SINGLE-DIMM-SEATING-AND-DUAL-LATCH-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-DIMM-SEATING-AND-DUAL-LATCH-RETENTION-CHECKPOINT-2026-08-16.md` içindedir.
+- Source/docs, Issue acceptance/Project `Done` ve ayrı SHA-256 USB milestone'u final metadata checkpointinde tamamlanacaktır.
+- Sonraki bounded Epic #10 adayı tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır. İkinci storage yolu, SATA/RAID, GPU/cooler, tam benchmark, Inventory hardening ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #55 / Epic #10
 
 - Feature commit `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, tree `fea116af021d66efb31b96b4f3e7523929f8b8ad`; yerel Repository Guard `tracked=624` ve [feature Repository Guard 31914489537](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914489537) başarılıdır.
 - Source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb` ve [Repository Guard 31914774370](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31914774370) başarılıdır; acceptance `20/20`, Issue kapalı/Roadmap `Done`dur.
@@ -80,14 +96,14 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad` ve source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb` private remote'a ulaştı; Guard başarılı, acceptance `20/20`, Issue kapalı/Roadmap `Done`dur.
+- Branch: `main`; Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515` private remote'a ulaştı ve Guard başarılıdır; source/docs, acceptance/Project ve USB metadata kapanışı sürmektedir.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-cpu-socket-retention-r24-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-dimm-dual-latch-r25-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
-- PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e oturtur; Assembly-owned fastener ile `SeatedUnsecured ↔ SeatedSecured` geçişini ve exact serialized CPU ile capacity-1 socket'te `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` döngüsünü korur. Attach/secure/seat/retention/detach/recovery lineage'ı ve stable world identity authoritative'dir.
+- PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e oturtur; Assembly-owned fastener ile `SeatedUnsecured ↔ SeatedSecured`, exact CPU ile capacity-1 socket'te `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` ve exact DDR5 UDIMM ile A2 slotunda `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` döngülerini korur. Attach/secure/seat/retention/detach/recovery lineage'ı ve stable world identity authoritative'dir.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
 - Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
@@ -146,9 +162,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Sonraki Epic #10 child paketini tek dual-latch DIMM/RAM seating akışıyla sınırlamak; slot/channel identity, keyed orientation, latch sırası, sökme ve recovery dışına büyütmemek.
-2. Inventory revision-max hardening, GPU/cooler/storage, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Issue #56 source/docs, acceptance/Project ve USB metadata kapanışını tamamlamak; yeni gameplay başlatmamak.
+2. Sonraki Epic #10 adayını tek M.2 2280 NVMe SSD seating + captive retention screw akışıyla sınırlamak; ikinci storage/SATA/RAID kapsamına büyütmemek.
+3. Inventory revision-max hardening, GPU/cooler, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #55 feature `99cadad414789d3f440e08cc6e42e727c2b7a2ad`, source/docs `d9d0722a1592a83b89938529f72b3170f17e94eb`, EditMode `430/430`, PlayMode `31/31`, Universal Mac `328144884` bayt, Apple M4/Metal `garage-cpu-socket-retention-r24-v1 cpu-socket-flow=ok ... keyed-orientation=ok ... retained-remove-gate=ok replay=ok identity=stable` ve Guard `31914774370` ile tamamlandı; acceptance `20/20`, Issue kapalı/Roadmap `Done`dur. Issue #53–#55 USB milestone'u source `07364b79`, 653/653 readback ve `0b5f3c61…aaba9e` manifestiyle doğrulandı; Issue #53 de acceptance `18/18`, kapalı/Roadmap `Done`dur. Sıradaki bounded child yalnız tek dual-latch DIMM/RAM seating akışıdır.
+Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, EditMode `461/461`, PlayMode `33/33`, Universal Mac `328268700` bayt, Apple M4/Metal `garage-dimm-dual-latch-r25-v1 dimm-flow=ok ... keyed-orientation=ok latch-order=ok replay=ok authority-isolated=ok identity=stable recovery=ok` ve Guard `31919985055` ile doğrulandı. Source/docs, acceptance/Project ve USB metadata kapanışı sürmektedir; bu tamamlanana kadar yeni gameplay başlamaz. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
