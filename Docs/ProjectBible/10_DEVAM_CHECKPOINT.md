@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 16 Ağustos 2026<br>
-**Durum:** Issue #57 deterministic single M.2 NVMe seating + captive screw kaynak/test/build/runtime kapıları tamamlandı; GitHub/USB kapanışı bu checkpoint zincirinde yürütülür<br>
+**Durum:** Issue #57 deterministic single M.2 NVMe seating + captive screw kaynak/test/build/runtime/CI/USB kapıları tamamlandı; Issue ve Roadmap `Done`<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #57 / Epic #10
@@ -11,6 +11,8 @@
 - Guided pose 18°; seated pose düzdür. Range/focus/LOS/key/orientation/support/obstruction/tie/saturation fail-closed solver ile korunur. Mode kapalı ghost/query sıfırdır; generic placement/stack/cart bypass'ı kapalıdır.
 - GarageGraybox `garage-m2-nvme-captive-screw-r26-v1`; PCB/controller/NAND/label/gold M-key contacts, connector, 2280 standoff ve captive screw görünürdür. Compact HUD gerçek keyboard/mouse ve gamepad bindinglerini dinamik gösterir.
 - Final EditMode `490/490`, PlayMode `35/35`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328362356` bayt; Apple M4/Metal 1280×720 readiness ve exact storage smoke başarılıdır.
+- Source/docs `6e0627ec7a76a70abdba8bb507e6ef6979e34236` ve [Repository Guard 31970813717](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31970813717) başarılıdır. USB milestone `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_M2_NVME_CAPTIVE_SCREW`, exact source + 4 final evidence + source kaydıyla 689/689 readback, `19da758c…21b8` manifest ve AppleDouble `0` olarak doğrulandı.
+- Acceptance `21/21`; Issue #57 kapalı ve Development Roadmap `Done`dur.
 - Ayrıntı `Docs/ADR-0035-DETERMINISTIC-SINGLE-M2-NVME-SEATING-AND-CAPTIVE-SCREW-RETENTION.md` ve tarihli Evidence belgesindedir. İkinci storage/SATA/RAID, tam performans benchmarkı, diğer PC bileşenleri, final art ve Windows/Steam ayrı kapılardır.
 
 ## Önceki checkpoint — Issue #56 / Epic #10

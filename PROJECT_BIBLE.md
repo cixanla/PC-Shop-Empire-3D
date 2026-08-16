@@ -7,7 +7,7 @@
 
 ## Güncel geliştirme checkpoint'i — Issue #57
 
-Epic #10'un tek M.2 2280 NVMe seating + captive retention screw dilimi tamamlandı. Feature `4f14e7b`, tek canonical serialized SSD'yi atomik dört-container Inventory claim'i, stable M-key/2280 topology, reversible seat/secure/unsecure/remove authority'si, installed-storage host gate'i, same-instance recovery ve gerçek keyboard/gamepad dynamic prompt'larıyla GarageGraybox r26'ya taşır. Final doğrulama EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal exact storage smoke'tur. İkinci storage/SATA/RAID, tam benchmark ve sonraki PC bileşenleri ayrı bounded kapılardır.
+Epic #10'un tek M.2 2280 NVMe seating + captive retention screw dilimi tamamlandı. Feature `4f14e7b`, tek canonical serialized SSD'yi atomik dört-container Inventory claim'i, stable M-key/2280 topology, reversible seat/secure/unsecure/remove authority'si, installed-storage host gate'i, same-instance recovery ve gerçek keyboard/gamepad dynamic prompt'larıyla GarageGraybox r26'ya taşır. Final doğrulama EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt, Apple M4/Metal exact storage smoke, başarılı Guard `31970813717` ve 689/689 doğrulanmış `19da758c…21b8` USB manifestidir. Issue #57 kapalı/Done'dur. İkinci storage/SATA/RAID, tam benchmark ve sonraki PC bileşenleri ayrı bounded kapılardır.
 
 ## 1. Kuzey yıldızı
 

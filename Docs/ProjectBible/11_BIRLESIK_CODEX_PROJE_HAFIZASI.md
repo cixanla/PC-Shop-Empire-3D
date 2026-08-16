@@ -289,6 +289,7 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - GarageGraybox r26'da 18° guided pose, flat seated pose, PCB/controller/NAND/label/gold M-key contacts, standoff ve captive screw görünürdür. Presentation authority değildir; generic placement/stack/cart yolu fail-closed'dur.
 - Gerçek keyboard/mouse ve gamepad akışı, dynamic compact HUD, pause/co-edge drain, wrong-orientation/obstruction/secured-remove no-mutation kapılarıyla testlidir.
 - Final EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal exact storage smoke başarılıdır. İkinci M.2/SATA/RAID, tam benchmark ve diğer PC bileşenleri ayrı kalır.
+- Source/docs `6e0627e`, Guard `31970813717` ve 689/689 `19da758c…21b8` USB readback başarılıdır; Issue #57 ve Roadmap `Done`dur.
 
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.

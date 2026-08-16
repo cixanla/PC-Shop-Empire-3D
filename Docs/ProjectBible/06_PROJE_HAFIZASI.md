@@ -526,4 +526,5 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Karar: 18° guided insertion ve flat seated pose deterministiktir. Range/focus/LOS/key/orientation/support/obstruction/tie/saturation fail-closed'dur; generic placement/stack/cart bypass'ı yoktur.
 - Karar: seat/secure/unsecure/remove immutable receipts ve exact delayed replay taşır. Installed storage motherboard detach'i, secured storage remove'u engeller; bütün failure yolları authority ve projection katmanlarında no-mutation kalır.
 - Kanıt: EditMode `490/490`, gerçek Input System PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal 1280×720 exact `GARAGE_STORAGE_RUNTIME_SMOKE ... insertion-angle=ok captive-screw=ok ... authority-isolated=ok identity=stable recovery=ok` başarılıdır.
+- Kapanış: source/docs `6e0627e`, Guard `31970813717`, ayrı USB milestone 689/689 readback ve `19da758c…21b8` manifest ile doğrulandı; AppleDouble `0`, Issue/Roadmap `Done`dur.
 - Sınır: ikinci M.2/SATA/RAID, heatsink/thermal/performance benchmarkı, GPU/PSU/cooler/cabling, POST/BIOS/OS, final art ve Windows/Steam ayrı issue'lardır.

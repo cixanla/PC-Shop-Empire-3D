@@ -29,6 +29,14 @@ GARAGE_STORAGE_RUNTIME_SMOKE storage-flow=ok preflight=ok slot-interface=ok keye
 
 The build was launched at 1280x720 on Apple M4/Metal with `-pse-storage-smoke`; the process was intentionally stopped only after the exact marker appeared.
 
+## Repository and USB closure
+
+- Source/docs commit: `6e0627ec7a76a70abdba8bb507e6ef6979e34236`.
+- Repository Guard: [31970813717](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31970813717), success.
+- USB milestone: `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_M2_NVME_CAPTIVE_SCREW`.
+- Exact Git source plus four evidence files and source record: 689/689 SHA-256/size/path readback.
+- Manifest SHA-256: `19da758c8ab03453092482efc80d6e7dd62aa590a2e57f27c94fe1b8e51e21b8`; AppleDouble sidecars: 0.
+
 ## Bounded exclusions
 
 Second M.2/slot, SATA, RAID, hot-swap, heatsink/thermal pad, capacity/performance scoring, GPU/PSU/cooler/cabling, POST/BIOS/OS, final art/audio/VFX/UI and native Windows/Steam release validation are not part of Issue #57.
