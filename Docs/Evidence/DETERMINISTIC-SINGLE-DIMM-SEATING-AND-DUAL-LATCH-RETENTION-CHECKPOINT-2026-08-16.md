@@ -73,4 +73,4 @@ Native player exact başarı marker'ı kaydedildikten sonra yalnız kaydedilen P
 
 - Feature `7482fc9` ve source/docs `01c2b5a` private `main`e ulaştı; Repository Guard `31919985055` ve `31920258176` başarılıdır.
 - Ayrı `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_DIMM_DUAL_LATCH_RETENTION` USB milestone'u 663 tracked source + 4 final evidence + source kaydıyla doğrulandı: 668/668 readback, 12.073.868 payload baytı, `8658b50a…c50` manifesti ve bütün güvenlik/AppleDouble mismatch sayaçları `0`.
-- Acceptance `21/21`, Issue close ve Project `Done` geçişi USB metadata checkpointinin Repository Guard sonucundan sonra uygulanır. Ayrıntı `Docs/Evidence/DETERMINISTIC-SINGLE-DIMM-DUAL-LATCH-USB-CHECKPOINT-2026-08-16.md` içindedir.
+- USB metadata `17af550` ve Repository Guard `31920923402` başarılıdır; acceptance `21/21`, Issue `Completed` ve Project `Done`dur. Ayrıntı `Docs/Evidence/DETERMINISTIC-SINGLE-DIMM-DUAL-LATCH-USB-CHECKPOINT-2026-08-16.md` içindedir.

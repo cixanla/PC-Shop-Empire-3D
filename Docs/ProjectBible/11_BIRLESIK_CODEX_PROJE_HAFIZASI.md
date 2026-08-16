@@ -250,7 +250,7 @@ Tam konuşma ve dosya geçmişi:
 - GarageGraybox r25 dört materyalli UDIMM package, matching notch, hard-surface A2 bed/rail ve iki ayrı latch pivotu taşır. Close sol→sağ, open sağ→sol görünür sıradadır; tek Assembly revision/receipt korunur ve `25/13/1` render/physics/text bütçesi sabittir.
 - Gerçek keyboard/mouse ve gamepad PlayMode testleri pickup, guided mode, yalnız 0°↔180° keyed toggle, seat, dual-latch close/open, retained remove, DIMM-installed motherboard detach, dynamic compact HUD, co-edge/pause drain ve recovery'yi taşır.
 - Final EditMode `461/461`, PlayMode `33/33`, Universal macOS `328268700` bayt ve Apple M4/Metal 1280×720 `garage-dimm-dual-latch-r25-v1 dimm-flow=ok ... keyed-orientation=ok latch-order=ok replay=ok authority-isolated=ok identity=stable recovery=ok` başarılıdır.
-- Ayrı `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_DIMM_DUAL_LATCH_RETENTION` USB milestone'u 663 tracked source + 4 final evidence + source kaydıyla 668/668 readback, `8658b50a…c50` manifest ve 12.073.868 payload baytıyla doğrulandı; bütün güvenlik/AppleDouble mismatch sayaçları `0`dır. Acceptance/Project final geçişi metadata Guard sonrasındadır.
+- Ayrı `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_DIMM_DUAL_LATCH_RETENTION` USB milestone'u 663 tracked source + 4 final evidence + source kaydıyla 668/668 readback, `8658b50a…c50` manifest ve 12.073.868 payload baytıyla doğrulandı; bütün güvenlik/AppleDouble mismatch sayaçları `0`dır. USB metadata `17af550`, Guard `31920923402`, acceptance `21/21`, Issue `Completed` ve Roadmap `Done`dur.
 - Sonraki bounded Epic #10 adayı yalnız tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır. İkinci storage yolu, SATA/RAID, GPU/cooler, tam build/benchmark, genel Inventory hardening, Save/Guardian ve Windows/Steam ayrı kalır.
 
 ## 9. USB ve yedek güvenlik katmanı
@@ -296,4 +296,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, EditMode 461/461, PlayMode 33/33, Universal Mac `328268700` bayt, Apple M4/Metal exact r25 smoke, iki başarılı Guard ve 668/668 doğrulanmış USB milestone ile sabitlendi; acceptance/Project final geçişi metadata Guard sonrasındadır. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
+> Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, USB metadata `17af550856e8bca288ed5c17924bc82586c76c27`, EditMode 461/461, PlayMode 33/33, Universal Mac `328268700` bayt, Apple M4/Metal exact r25 smoke, üç başarılı Guard ve 668/668 doğrulanmış USB milestone ile kapandı; acceptance `21/21`, Issue `Completed`, Roadmap `Done`dur. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.

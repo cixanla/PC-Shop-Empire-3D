@@ -50,5 +50,6 @@ Bu evidence belgesini ekleyen sonraki metadata commitinin snapshot içinde olmam
 ## Kapanış sınırı
 
 - Issue #56 gameplay, test, build, runtime, source/docs CI ve USB milestone kapıları tamamdır.
-- Acceptance `21/21`, Issue close ve Roadmap `Done` geçişi bu metadata checkpointinin Repository Guard sonucundan sonra uygulanır.
+- USB metadata commit `17af550856e8bca288ed5c17924bc82586c76c27`; [Repository Guard 31920923402](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920923402) başarılıdır.
+- Acceptance `21/21`; Issue #56 `Completed`, Development Roadmap `Done`dur.
 - Parent Epic #10 açık kalır; sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır.
