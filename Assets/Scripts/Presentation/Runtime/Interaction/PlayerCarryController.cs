@@ -16,6 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             new Vector3(0.244f, 0.244f, 0.012f);
         private static readonly Vector3 ProcessorSeatPreviewSize =
             new Vector3(0.045f, 0.0375f, 0.004f);
+        private static readonly Vector3 DimmSeatPreviewSize =
+            new Vector3(0.132f, 0.032f, 0.008f);
 
         [SerializeField] private PlayerInputAdapter input;
         [SerializeField] private FirstPersonMotor motor;
@@ -28,6 +30,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private MotherboardAssemblyItemBinding motherboardAssemblyBinding;
         [SerializeField] private ProcessorSocketProjection processorSocket;
         [SerializeField] private ProcessorAssemblyItemBinding processorAssemblyBinding;
+        [SerializeField] private DimmSlotProjection dimmSlot;
+        [SerializeField] private DimmAssemblyItemBinding dimmAssemblyBinding;
         [SerializeField] private LayerMask supportMask;
         [SerializeField] private LayerMask stackSupportMask;
         [SerializeField] private LayerMask obstructionMask;
@@ -58,6 +62,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsProcessorSeatMode { get; private set; }
 
+        public bool IsDimmSeatMode { get; private set; }
+
         public bool PlacementValid { get; private set; }
 
         public PlacementStatus CurrentPlacementStatus { get; private set; } = PlacementStatus.ContextMissing;
@@ -71,6 +77,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public ProcessorSocketStatus CurrentProcessorSocketStatus { get; private set; } =
             ProcessorSocketStatus.ContextMissing;
 
+        public DimmSlotStatus CurrentDimmSlotStatus { get; private set; } =
+            DimmSlotStatus.ContextMissing;
+
         public bool IsMotherboardFastenerFocused { get; private set; }
 
         public bool HasMotherboardFastenerContext { get; private set; }
@@ -79,14 +88,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool HasProcessorSocketContext { get; private set; }
 
+        public bool IsDimmSlotFocused { get; private set; }
+
+        public bool HasDimmSlotContext { get; private set; }
+
         public bool HasAssemblyPromptOwnership =>
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
             HasProcessorSocketContext ||
+            IsDimmSeatMode ||
+            HasDimmSlotContext ||
             (HeldItem != null &&
              (GetMotherboardBinding(HeldItem) != null ||
-              GetProcessorBinding(HeldItem) != null));
+              GetProcessorBinding(HeldItem) != null ||
+              GetDimmBinding(HeldItem) != null));
 
         public PlacementPreview PlacementPreview => placementPreview;
 
@@ -114,6 +130,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetMotherboardBinding(HeldItem);
                     ProcessorAssemblyItemBinding processorBinding =
                         GetProcessorBinding(HeldItem);
+                    DimmAssemblyItemBinding dimmBinding =
+                        GetDimmBinding(HeldItem);
+                    if (dimmBinding != null)
+                    {
+                        if (!IsDimmSeatMode)
+                        {
+                            return $"{placement}: A2 bellek slotuna hizala • " +
+                                   $"{drop}: güvenli bırak • ANAHTARLI DDR5";
+                        }
+
+                        string state = GetDimmSlotStatusLabel(CurrentDimmSlotStatus);
+                        return PlacementValid
+                            ? $"[OK] DDR5 ÇENTİĞİ HİZALI • {drop}: oturt • " +
+                              $"{rotate}: döndür • {placement}: çık"
+                            : $"[X] {state} • {rotate}: döndür • {placement}: çık";
+                    }
+
                     if (processorBinding != null)
                     {
                         if (!IsProcessorSeatMode)
@@ -197,6 +230,42 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            $"{FocusedCart.DisplayName} tut{blocked}";
                 }
 
+                if (HasDimmSlotContext &&
+                    !IsDimmSlotFocused &&
+                    dimmAssemblyBinding != null)
+                {
+                    return CurrentDimmSlotStatus switch
+                    {
+                        DimmSlotStatus.LineOfSightBlocked =>
+                            "[X] A2 BELLEK SLOTU ENGELLİ • görüş hattını aç",
+                        DimmSlotStatus.Obstructed =>
+                            "[X] A2 BELLEK SLOTU ENGELLİ • önünü aç",
+                        _ => "[X] A2 BELLEK SLOTU KULLANILAMIYOR"
+                    };
+                }
+
+                if (IsDimmSlotFocused && dimmAssemblyBinding != null)
+                {
+                    string primary = input != null
+                        ? input.PrimaryBindingPrompt
+                        : "Mouse Left / RT";
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (CurrentDimmSlotStatus ==
+                        DimmSlotStatus.ValidSeatedOpenRetentionBlocked)
+                    {
+                        return $"[AÇIK] DDR5 OTURDU • ANAKART SABİT DEĞİL • " +
+                               $"{interact}: belleği çıkar";
+                    }
+
+                    return dimmAssemblyBinding.IsRetained
+                        ? $"[KİLİTLİ] ÇİFT MANDAL KAPALI • {primary}: mandalları aç • " +
+                          $"{interact}: çıkarma kilitli"
+                        : $"[AÇIK] DDR5 OTURDU • {primary}: çift mandalı kapat • " +
+                          $"{interact}: belleği çıkar";
+                }
+
                 if (HasProcessorSocketContext &&
                     !IsProcessorSocketFocused &&
                     processorAssemblyBinding != null)
@@ -274,6 +343,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     GetMotherboardBinding(FocusedItem);
                 ProcessorAssemblyItemBinding focusedProcessor =
                     GetProcessorBinding(FocusedItem);
+                DimmAssemblyItemBinding focusedDimm = GetDimmBinding(FocusedItem);
+                if (focusedDimm != null)
+                {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    return focusedDimm.IsRetained
+                        ? "ÇİFT MANDAL KAPALI • slotu hedefleyip aç"
+                        : focusedDimm.IsSeated
+                            ? $"{interact}: belleği çıkar • ÇİFT MANDAL AÇIK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • DDR5";
+                }
+
                 if (focusedProcessor != null)
                 {
                     string interact = input != null
@@ -438,6 +520,43 @@ namespace PCShopEmpire3D.Presentation.Interaction
             processorAssemblyBinding.SyncProjectionToAuthority();
         }
 
+        public void ConfigureDimmSlot(
+            DimmSlotProjection slotProjection,
+            DimmAssemblyItemBinding assemblyBinding)
+        {
+            if (slotProjection == null)
+            {
+                throw new ArgumentNullException(nameof(slotProjection));
+            }
+
+            if (assemblyBinding == null)
+            {
+                throw new ArgumentNullException(nameof(assemblyBinding));
+            }
+
+            if (assemblyBinding.Slot != slotProjection)
+            {
+                throw new ArgumentException(
+                    "The DIMM binding must own the configured slot.",
+                    nameof(assemblyBinding));
+            }
+
+            dimmSlot = slotProjection;
+            dimmAssemblyBinding = assemblyBinding;
+            dimmAssemblyBinding.SyncProjectionToAuthority();
+        }
+
+        public bool MatchesDimmConfiguration(
+            DimmSlotProjection slotProjection,
+            DimmAssemblyItemBinding assemblyBinding)
+        {
+            return slotProjection != null &&
+                   assemblyBinding != null &&
+                   dimmSlot == slotProjection &&
+                   dimmAssemblyBinding == assemblyBinding &&
+                   assemblyBinding.Slot == slotProjection;
+        }
+
         public OperationResult TryOperateMotherboardFastener()
         {
             if (motherboardFastener == null || motherboardAssemblyBinding == null)
@@ -470,6 +589,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             : MotherboardFastenerStatus.ValidUnsecured,
                         isSecured));
                 processorAssemblyBinding?.SyncProjectionToAuthority();
+                dimmAssemblyBinding?.SyncProjectionToAuthority();
             }
 
             return Remember(result);
@@ -505,6 +625,40 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         session.AssemblyBuild.MotherboardSeatState,
                         session.AssemblyBuild.ProcessorSocketState);
                 ApplyProcessorSocketEvaluation(authoritativeEvaluation);
+            }
+
+            return Remember(result);
+        }
+
+        public OperationResult TryOperateDimmRetention()
+        {
+            if (dimmSlot == null || dimmAssemblyBinding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.context-missing")));
+            }
+
+            return TryOperateDimmRetention(EvaluateDimmSlotInteraction());
+        }
+
+        private OperationResult TryOperateDimmRetention(DimmSlotEvaluation evaluation)
+        {
+            ApplyDimmSlotEvaluation(evaluation);
+            if (!evaluation.CanOperateRetention)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode)));
+            }
+
+            OperationResult result = dimmAssemblyBinding.TryOperateRetention();
+            if (result.IsSuccess)
+            {
+                GarageStockFlowSession session = dimmAssemblyBinding.Session;
+                DimmSlotEvaluation authoritativeEvaluation =
+                    dimmSlot.ApplyAuthoritativeInteractionFeedback(
+                        session.AssemblyBuild.MotherboardSeatState,
+                        session.AssemblyBuild.MemorySlotState);
+                ApplyDimmSlotEvaluation(authoritativeEvaluation);
             }
 
             return Remember(result);
@@ -558,6 +712,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(OperationResult.Success());
         }
 
+        public OperationResult TrySetDimmSeatMode(bool enabled)
+        {
+            DimmAssemblyItemBinding binding = GetDimmBinding(HeldItem);
+            if (HeldItem == null || binding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.nothing-held")));
+            }
+
+            if (motor != null && motor.IsPaused)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.paused")));
+            }
+
+            SetDimmSeatMode(enabled);
+            if (enabled)
+            {
+                UpdateDimmSeatPreview(binding);
+            }
+
+            return Remember(OperationResult.Success());
+        }
+
         public OperationResult TryRotateProcessorSeatPreviewClockwise()
         {
             ProcessorAssemblyItemBinding binding = GetProcessorBinding(HeldItem);
@@ -579,6 +757,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return OperationResult.Success();
         }
 
+        public OperationResult TryRotateDimmSeatPreviewClockwise()
+        {
+            DimmAssemblyItemBinding binding = GetDimmBinding(HeldItem);
+            if (HeldItem == null || binding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.nothing-held")));
+            }
+
+            if (!IsDimmSeatMode)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.mode-inactive")));
+            }
+
+            _placementRotationQuarterTurns = (_placementRotationQuarterTurns + 2) % 4;
+            LastFailureCode = string.Empty;
+            UpdateDimmSeatPreview(binding);
+            return OperationResult.Success();
+        }
+
         public OperationResult TryPickup(PhysicalItemProjection item)
         {
             if (item == null)
@@ -595,6 +794,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetMotherboardBinding(item);
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
+            DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            if (dimmBinding != null)
+            {
+                return TryPickupDimm(item, dimmBinding);
+            }
+
             if (processorBinding != null)
             {
                 return TryPickupProcessor(item, processorBinding);
@@ -819,6 +1024,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetMotherboardBinding(HeldItem);
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(HeldItem);
+            DimmAssemblyItemBinding dimmBinding = GetDimmBinding(HeldItem);
+            if (dimmBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(
+                        Failure.FromCode("assembly-memory.paused")));
+                }
+
+                OperationResult drop = dimmBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess)
+                {
+                    CompleteHeldItemRelease();
+                }
+                else
+                {
+                    SetCarryHandsState(blocked: true);
+                }
+
+                return Remember(drop);
+            }
+
             if (processorBinding != null)
             {
                 if (motor != null && motor.IsPaused)
@@ -944,6 +1171,52 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(attach);
         }
 
+        public OperationResult TryConfirmDimmSeat()
+        {
+            DimmAssemblyItemBinding binding = GetDimmBinding(HeldItem);
+            if (HeldItem == null || binding == null)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.nothing-held")));
+            }
+
+            if (!IsDimmSeatMode)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.mode-inactive")));
+            }
+
+            DimmSlotEvaluation evaluation = EvaluateDimmSeat(binding);
+            return TryConfirmDimmSeat(binding, evaluation);
+        }
+
+        private OperationResult TryConfirmDimmSeat(
+            DimmAssemblyItemBinding binding,
+            DimmSlotEvaluation evaluation)
+        {
+            ApplyDimmSeatEvaluation(evaluation);
+            if (!evaluation.CanSeat)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode)));
+            }
+
+            OperationResult attach = binding.TryAttachAt(
+                evaluation.Pose,
+                evaluation.Orientation);
+            if (attach.IsSuccess)
+            {
+                CompleteHeldItemRelease();
+                binding.SyncProjectionToAuthority();
+            }
+            else
+            {
+                SetCarryHandsState(blocked: true);
+            }
+
+            return Remember(attach);
+        }
+
         public OperationResult TryConfirmPlacement()
         {
             if (HeldItem == null)
@@ -1025,6 +1298,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 return;
@@ -1035,6 +1309,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.DrainGameplayPressesThisFrame();
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 return;
@@ -1042,9 +1317,57 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HeldItem != null)
             {
+                ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedCart = null;
+                DimmAssemblyItemBinding dimmBinding = GetDimmBinding(HeldItem);
+                if (dimmBinding != null)
+                {
+                    if (input.TryConsumePrimaryActionPressThisFrame())
+                    {
+                        input.TryConsumeRotatePlacementPressThisFrame();
+                        input.TryConsumeInteractPressThisFrame();
+                        input.TryConsumeDropPressThisFrame();
+                        TrySetDimmSeatMode(!IsDimmSeatMode);
+                        return;
+                    }
+
+                    if (IsDimmSeatMode &&
+                        input.TryConsumeRotatePlacementPressThisFrame())
+                    {
+                        input.TryConsumeInteractPressThisFrame();
+                        input.TryConsumeDropPressThisFrame();
+                        TryRotateDimmSeatPreviewClockwise();
+                        return;
+                    }
+
+                    if (!IsDimmSeatMode)
+                    {
+                        UpdateDimmSeatPreview(dimmBinding);
+                        if (input.TryConsumeDropPressThisFrame())
+                        {
+                            input.TryConsumePrimaryActionPressThisFrame();
+                            input.TryConsumeRotatePlacementPressThisFrame();
+                            input.TryConsumeInteractPressThisFrame();
+                            TryDrop();
+                        }
+
+                        return;
+                    }
+
+                    DimmSlotEvaluation dimmSeatEvaluation = EvaluateDimmSeat(dimmBinding);
+                    ApplyDimmSeatEvaluation(dimmSeatEvaluation);
+                    if (input.TryConsumeDropPressThisFrame())
+                    {
+                        input.TryConsumePrimaryActionPressThisFrame();
+                        input.TryConsumeInteractPressThisFrame();
+                        TryConfirmDimmSeat(dimmBinding, dimmSeatEvaluation);
+                    }
+
+                    return;
+                }
+
                 ProcessorAssemblyItemBinding processorBinding =
                     GetProcessorBinding(HeldItem);
                 if (processorBinding != null)
@@ -1175,6 +1498,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ActiveCart != null)
             {
+                ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedItem = null;
@@ -1208,9 +1532,51 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
+            UpdateDimmSlotFocus();
             UpdateProcessorSocketFocus();
             UpdateMotherboardFastenerFocus();
             SelectAssemblyInteractionTarget();
+            if (IsDimmSlotFocused)
+            {
+                FocusedCart = null;
+                FocusedItem = dimmAssemblyBinding.PhysicalItem;
+                SetHandsState(VisibleHandsState.TargetFocused);
+                if (input.TryConsumePrimaryActionPressThisFrame())
+                {
+                    input.TryConsumeRotatePlacementPressThisFrame();
+                    input.TryConsumeInteractPressThisFrame();
+                    input.TryConsumeDropPressThisFrame();
+                    TryOperateDimmRetention(dimmSlot.LastEvaluation);
+                    return;
+                }
+
+                if (input.TryConsumeInteractPressThisFrame())
+                {
+                    input.TryConsumeRotatePlacementPressThisFrame();
+                    input.TryConsumeDropPressThisFrame();
+                    TryPickup(dimmAssemblyBinding.PhysicalItem);
+                }
+
+                return;
+            }
+
+            if (HasDimmSlotContext)
+            {
+                FocusedCart = null;
+                FocusedItem = dimmAssemblyBinding.PhysicalItem;
+                SetHandsState(VisibleHandsState.TargetFocused);
+                bool primaryPressed = input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeRotatePlacementPressThisFrame();
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                if (primaryPressed)
+                {
+                    TryOperateDimmRetention(dimmSlot.LastEvaluation);
+                }
+
+                return;
+            }
+
             if (IsProcessorSocketFocused)
             {
                 FocusedCart = null;
@@ -1359,6 +1725,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetMotherboardBinding(item);
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
+            DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            if (dimmBinding != null)
+            {
+                OperationResult recovery = dimmBinding.TryRecoverHeld(
+                    carryAnchor,
+                    heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                dimmBinding.SyncProjectionToAuthority();
+                return Remember(recovery);
+            }
+
             if (processorBinding != null)
             {
                 OperationResult recovery = processorBinding.TryRecoverHeld(
@@ -1495,6 +1877,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ProcessorInstalled));
             }
 
+            if (binding.Session != null &&
+                binding.Session.AssemblyBuild.HasMemorySlot &&
+                binding.Session.AssemblyBuild.MemorySlotState != MemorySlotState.EmptyOpen)
+            {
+                return Remember(OperationResult.Fail(AssemblyFailures.MemoryModuleInstalled));
+            }
+
             bool wasSeated = binding.IsSeated;
             OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
             if (physicalPickup.IsFailure)
@@ -1524,6 +1913,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             LastFailureCode = string.Empty;
             motor?.ApplyCarryProfile(item.CarryProfile);
             processorAssemblyBinding?.SyncProjectionToAuthority();
+            dimmAssemblyBinding?.SyncProjectionToAuthority();
             SetCarryHandsState(blocked: false);
             return physicalPickup;
         }
@@ -1577,12 +1967,62 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return physicalPickup;
         }
 
+        private OperationResult TryPickupDimm(
+            PhysicalItemProjection item,
+            DimmAssemblyItemBinding binding)
+        {
+            if (motor != null && motor.IsPaused)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.paused")));
+            }
+
+            if (binding.IsRetained)
+            {
+                return Remember(OperationResult.Fail(AssemblyFailures.MemoryModuleRetained));
+            }
+
+            bool wasSeated = binding.IsSeated;
+            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+            if (physicalPickup.IsFailure)
+            {
+                return Remember(physicalPickup);
+            }
+
+            OperationResult authority = wasSeated
+                ? binding.TryCommitSeatedDetach()
+                : binding.TryCommitLoosePickup();
+            if (authority.IsFailure)
+            {
+                OperationResult rollback = item.RecoverToLastSafePose();
+                if (rollback.IsFailure)
+                {
+                    Debug.LogError(
+                        $"DIMM_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                }
+
+                binding.SyncProjectionToAuthority();
+                return Remember(authority);
+            }
+
+            HeldItem = item;
+            _heldItemId = item.ItemIdValue;
+            FocusedItem = null;
+            ResetPlacementState();
+            LastFailureCode = string.Empty;
+            motor?.ApplyCarryProfile(item.CarryProfile);
+            binding.SyncProjectionToAuthority();
+            SetCarryHandsState(blocked: false);
+            return physicalPickup;
+        }
+
         private void SetMotherboardSeatMode(bool enabled)
         {
             IsMotherboardSeatMode = enabled &&
                                     HeldItem != null &&
                                     GetMotherboardBinding(HeldItem) != null;
             IsProcessorSeatMode = false;
+            IsDimmSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -1604,6 +2044,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                   HeldItem != null &&
                                   GetProcessorBinding(HeldItem) != null;
             IsMotherboardSeatMode = false;
+            IsDimmSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -1617,6 +2058,106 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 processorSocket?.ResetFeedback();
                 SetCarryHandsState(blocked: false);
             }
+        }
+
+        private void SetDimmSeatMode(bool enabled)
+        {
+            IsDimmSeatMode = enabled &&
+                             HeldItem != null &&
+                             GetDimmBinding(HeldItem) != null;
+            IsMotherboardSeatMode = false;
+            IsProcessorSeatMode = false;
+            IsPlacementMode = false;
+            PlacementValid = false;
+            CurrentStackSupport = null;
+            CurrentPlacementStatus = PlacementStatus.ContextMissing;
+            CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+            LastFailureCode = string.Empty;
+            if (!IsDimmSeatMode)
+            {
+                _placementRotationQuarterTurns = 0;
+                placementPreview?.Hide();
+                dimmSlot?.ResetFeedback();
+                SetCarryHandsState(blocked: false);
+            }
+        }
+
+        private void UpdateDimmSeatPreview(DimmAssemblyItemBinding binding)
+        {
+            if (!IsDimmSeatMode || HeldItem == null)
+            {
+                PlacementValid = false;
+                CurrentPlacementStatus = PlacementStatus.ContextMissing;
+                CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+                CurrentStackSupport = null;
+                placementPreview?.Hide();
+                dimmSlot?.ResetFeedback();
+                SetCarryHandsState(blocked: false);
+                return;
+            }
+
+            ApplyDimmSeatEvaluation(EvaluateDimmSeat(binding));
+        }
+
+        private DimmSlotEvaluation EvaluateDimmSeat(DimmAssemblyItemBinding binding)
+        {
+            DimmSlotProjection slotProjection = binding?.Slot ?? dimmSlot;
+            if (slotProjection == null)
+            {
+                return new DimmSlotEvaluation(
+                    DimmSlotStatus.ContextMissing,
+                    default,
+                    false,
+                    default);
+            }
+
+            binding?.SyncProjectionToAuthority();
+            bool hostSecured = binding != null &&
+                               binding.Session != null &&
+                               binding.Session.AssemblyBuild.MotherboardSeatState ==
+                                   AssemblySeatState.SeatedSecured;
+            return slotProjection.EvaluateSeat(
+                resolver != null ? resolver.Origin : null,
+                transform,
+                HeldItem,
+                obstructionMask,
+                _placementRotationQuarterTurns,
+                motor == null || motor.IsPaused,
+                binding != null &&
+                    binding.IsAuthorityInHands &&
+                    !binding.IsSeated &&
+                    hostSecured);
+        }
+
+        private void ApplyDimmSeatEvaluation(DimmSlotEvaluation evaluation)
+        {
+            CurrentDimmSlotStatus = evaluation.Status;
+            PlacementValid = evaluation.CanSeat;
+            CurrentPlacementStatus = evaluation.CanSeat
+                ? PlacementStatus.Valid
+                : PlacementStatus.Blocked;
+            CurrentStackSupport = null;
+            LastFailureCode = evaluation.CanSeat
+                ? string.Empty
+                : evaluation.FailureCode;
+
+            if (evaluation.HasPose && HeldItem != null)
+            {
+                PlacementEvaluation previewEvaluation = new PlacementEvaluation(
+                    evaluation.CanSeat ? PlacementStatus.Valid : PlacementStatus.Blocked,
+                    evaluation.Pose,
+                    true);
+                placementPreview?.Show(
+                    HeldItem,
+                    previewEvaluation,
+                    DimmSeatPreviewSize);
+            }
+            else
+            {
+                placementPreview?.Hide();
+            }
+
+            SetCarryHandsState(blocked: !evaluation.CanSeat);
         }
 
         private void UpdateProcessorSeatPreview(
@@ -1767,6 +2308,62 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.IsValid);
         }
 
+        private void UpdateDimmSlotFocus()
+        {
+            if (dimmSlot == null || dimmAssemblyBinding == null)
+            {
+                ResetDimmSlotFocus();
+                return;
+            }
+
+            dimmAssemblyBinding.SyncProjectionToAuthority();
+            ApplyDimmSlotEvaluation(EvaluateDimmSlotInteraction());
+        }
+
+        private DimmSlotEvaluation EvaluateDimmSlotInteraction()
+        {
+            GarageStockFlowSession session = dimmAssemblyBinding != null
+                ? dimmAssemblyBinding.Session
+                : null;
+            MemorySlotState state = session != null
+                ? session.AssemblyBuild.MemorySlotState
+                : MemorySlotState.Unsupported;
+            bool retentionCloseAvailable = session != null &&
+                                           (state == MemorySlotState.MemoryModuleRetained ||
+                                            session.AssemblyBuild.MotherboardSeatState ==
+                                                AssemblySeatState.SeatedSecured);
+            return dimmSlot.EvaluateInteraction(
+                resolver != null ? resolver.Origin : null,
+                transform,
+                dimmAssemblyBinding != null
+                    ? dimmAssemblyBinding.PhysicalItem
+                    : null,
+                obstructionMask,
+                motor == null || motor.IsPaused,
+                dimmAssemblyBinding != null && dimmAssemblyBinding.IsSeated,
+                state,
+                retentionCloseAvailable);
+        }
+
+        private void ApplyDimmSlotEvaluation(DimmSlotEvaluation evaluation)
+        {
+            CurrentDimmSlotStatus = evaluation.Status;
+            IsDimmSlotFocused = evaluation.CanOperateRetention || evaluation.CanRemove;
+            HasDimmSlotContext = evaluation.HasOwnedContext;
+            if (!IsDimmSlotFocused && HasDimmSlotContext)
+            {
+                LastFailureCode = evaluation.FailureCode;
+            }
+        }
+
+        private void ResetDimmSlotFocus()
+        {
+            IsDimmSlotFocused = false;
+            HasDimmSlotContext = false;
+            CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+            dimmSlot?.ResetFeedback();
+        }
+
         private void UpdateProcessorSocketFocus()
         {
             if (processorSocket == null || processorAssemblyBinding == null)
@@ -1826,49 +2423,106 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SelectAssemblyInteractionTarget()
         {
+            bool dimmHasTarget = IsDimmSlotFocused || HasDimmSlotContext;
             bool processorHasTarget = IsProcessorSocketFocused || HasProcessorSocketContext;
             bool fastenerHasTarget = IsMotherboardFastenerFocused ||
                                      HasMotherboardFastenerContext;
-            if (!processorHasTarget || !fastenerHasTarget)
+            int targetCount = (dimmHasTarget ? 1 : 0) +
+                              (processorHasTarget ? 1 : 0) +
+                              (fastenerHasTarget ? 1 : 0);
+            if (targetCount <= 1)
             {
                 return;
             }
 
             Transform origin = resolver != null ? resolver.Origin : null;
+            Collider dimmFocus = dimmSlot != null ? dimmSlot.FocusCollider : null;
             Collider processorFocus = processorSocket != null
                 ? processorSocket.FocusCollider
                 : null;
             Collider fastenerFocus = motherboardFastener != null
                 ? motherboardFastener.FocusCollider
                 : null;
-            if (origin == null || processorFocus == null || fastenerFocus == null)
+            if (origin == null)
             {
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 return;
             }
 
-            Vector3 toProcessor = processorFocus.bounds.center - origin.position;
-            Vector3 toFastener = fastenerFocus.bounds.center - origin.position;
-            float processorDistance = toProcessor.magnitude;
-            float fastenerDistance = toFastener.magnitude;
-            float processorDot = processorDistance > Mathf.Epsilon
-                ? Vector3.Dot(origin.forward, toProcessor / processorDistance)
-                : -1f;
-            float fastenerDot = fastenerDistance > Mathf.Epsilon
-                ? Vector3.Dot(origin.forward, toFastener / fastenerDistance)
-                : -1f;
-            const float tieEpsilon = 0.0001f;
-            bool fastenerWins = fastenerDot > processorDot + tieEpsilon ||
-                                (Mathf.Abs(fastenerDot - processorDot) <= tieEpsilon &&
-                                 fastenerDistance < processorDistance - tieEpsilon);
-            if (fastenerWins)
+            int winner = 0;
+            float bestDot = -2f;
+            float bestDistance = float.PositiveInfinity;
+            ConsiderAssemblyTarget(
+                origin,
+                processorHasTarget ? processorFocus : null,
+                1,
+                ref winner,
+                ref bestDot,
+                ref bestDistance);
+            ConsiderAssemblyTarget(
+                origin,
+                dimmHasTarget ? dimmFocus : null,
+                2,
+                ref winner,
+                ref bestDot,
+                ref bestDistance);
+            ConsiderAssemblyTarget(
+                origin,
+                fastenerHasTarget ? fastenerFocus : null,
+                3,
+                ref winner,
+                ref bestDot,
+                ref bestDistance);
+
+            if (winner != 1)
             {
                 ResetProcessorSocketFocus();
             }
-            else
+
+            if (winner != 2)
+            {
+                ResetDimmSlotFocus();
+            }
+
+            if (winner != 3)
             {
                 ResetMotherboardFastenerFocus();
             }
+        }
+
+        private static void ConsiderAssemblyTarget(
+            Transform origin,
+            Collider focus,
+            int candidate,
+            ref int winner,
+            ref float bestDot,
+            ref float bestDistance)
+        {
+            if (origin == null || focus == null)
+            {
+                return;
+            }
+
+            Vector3 toFocus = focus.bounds.center - origin.position;
+            float distance = toFocus.magnitude;
+            float dot = distance > Mathf.Epsilon
+                ? Vector3.Dot(origin.forward, toFocus / distance)
+                : -1f;
+            const float tieEpsilon = 0.0001f;
+            bool wins = winner == 0 ||
+                        dot > bestDot + tieEpsilon ||
+                        (Mathf.Abs(dot - bestDot) <= tieEpsilon &&
+                         distance < bestDistance - tieEpsilon);
+            if (!wins)
+            {
+                return;
+            }
+
+            winner = candidate;
+            bestDot = dot;
+            bestDistance = distance;
         }
 
         private void UpdateMotherboardFastenerFocus()
@@ -1928,6 +2582,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _heldItemId = string.Empty;
             ResetPlacementState();
             processorAssemblyBinding?.SyncProjectionToAuthority();
+            dimmAssemblyBinding?.SyncProjectionToAuthority();
             motor?.ClearCarryProfile();
             LastFailureCode = string.Empty;
             SetHandsState(VisibleHandsState.Empty);
@@ -1937,6 +2592,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             IsProcessorSeatMode = false;
+            IsDimmSeatMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
@@ -1983,17 +2639,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
+            IsDimmSeatMode = false;
             _placementRotationQuarterTurns = 0;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
             CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
             CurrentProcessorSocketStatus = ProcessorSocketStatus.ContextMissing;
+            CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+            ResetDimmSlotFocus();
             ResetProcessorSocketFocus();
             ResetMotherboardFastenerFocus();
             placementPreview?.Hide();
             motherboardSeat?.ResetFeedback();
             processorSocket?.ResetFeedback();
+            dimmSlot?.ResetFeedback();
         }
 
         private void OnDisable()
@@ -2071,6 +2731,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : null;
         }
 
+        private static DimmAssemblyItemBinding GetDimmBinding(
+            PhysicalItemProjection item)
+        {
+            return item != null
+                ? item.GetComponent<DimmAssemblyItemBinding>()
+                : null;
+        }
+
         private static string GetMotherboardSeatStatusLabel(
             MotherboardSeatStatus status)
         {
@@ -2103,6 +2771,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProcessorSocketStatus.Paused => "DURAKLATILDI",
                 ProcessorSocketStatus.AuthorityBlocked => "ANAKART SABİT DEĞİL",
                 ProcessorSocketStatus.ValidSeatedOpenRetentionBlocked =>
+                    "ANAKART SABİT DEĞİL",
+                _ => "BAĞLANTI YOK"
+            };
+        }
+
+        private static string GetDimmSlotStatusLabel(DimmSlotStatus status)
+        {
+            return status switch
+            {
+                DimmSlotStatus.ValidSeat => "ÇENTİK HİZALI",
+                DimmSlotStatus.OutOfRange => "YAKLAŞ",
+                DimmSlotStatus.NotFocused => "A2 SLOTU HEDEFLE",
+                DimmSlotStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
+                DimmSlotStatus.OrientationInvalid => "DDR5 ÇENTİK YÖNÜ",
+                DimmSlotStatus.Obstructed => "A2 SLOTU ENGELLİ",
+                DimmSlotStatus.Paused => "DURAKLATILDI",
+                DimmSlotStatus.AuthorityBlocked => "ANAKART SABİT DEĞİL",
+                DimmSlotStatus.ValidSeatedOpenRetentionBlocked =>
                     "ANAKART SABİT DEĞİL",
                 _ => "BAĞLANTI YOK"
             };

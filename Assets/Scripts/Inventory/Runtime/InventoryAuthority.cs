@@ -45,6 +45,30 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns three distinct managed
+    /// serialized-item containers. All validation completes before any capability is
+    /// published so a failed claim can never leave partial managed custody behind.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessTriple
+    {
+        internal InventorySerializedTransferAccessTriple(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second,
+            InventorySerializedTransferAccess third)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+
+        internal InventorySerializedTransferAccess Third { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -321,6 +345,64 @@ namespace PCShopEmpire3D.Inventory
             Revision++;
             return OperationResult<InventorySerializedTransferAccessPair>.Success(
                 new InventorySerializedTransferAccessPair(first, second));
+        }
+
+        internal OperationResult<InventorySerializedTransferAccessTriple>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId,
+                StableId<ContainerIdScope> thirdContainerId)
+        {
+            if (!_containers.ContainsKey(firstContainerId) ||
+                !_containers.ContainsKey(secondContainerId) ||
+                !_containers.ContainsKey(thirdContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessTriple>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            if (firstContainerId == secondContainerId ||
+                firstContainerId == thirdContainerId ||
+                secondContainerId == thirdContainerId)
+            {
+                return OperationResult<InventorySerializedTransferAccessTriple>.Fail(
+                    InventoryFailures.SameContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(firstContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(secondContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(thirdContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessTriple>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
+            if (GetContainerLoadUnsafe(firstContainerId) != 0 ||
+                GetContainerLoadUnsafe(secondContainerId) != 0 ||
+                GetContainerLoadUnsafe(thirdContainerId) != 0 ||
+                HasReservationTargetingContainerUnsafe(firstContainerId) ||
+                HasReservationTargetingContainerUnsafe(secondContainerId) ||
+                HasReservationTargetingContainerUnsafe(thirdContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessTriple>.Fail(
+                    InventoryFailures.SerializedTransferContainerOccupied);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessTriple>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var first = new InventorySerializedTransferAccess(this, firstContainerId);
+            var second = new InventorySerializedTransferAccess(this, secondContainerId);
+            var third = new InventorySerializedTransferAccess(this, thirdContainerId);
+            _managedSerializedTransferContainers.Add(firstContainerId, first);
+            _managedSerializedTransferContainers.Add(secondContainerId, second);
+            _managedSerializedTransferContainers.Add(thirdContainerId, third);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessTriple>.Success(
+                new InventorySerializedTransferAccessTriple(first, second, third));
         }
 
         public OperationResult ReceiveSerializedItem(

@@ -82,13 +82,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// </summary>
     public static class ProcessorSocketSolver
     {
-        private const int HitCapacity = 32;
-        private const float DistanceTieEpsilon = 0.0001f;
         private const float RotationStepDegrees = 90f;
         private const float InsertionDistance = 0.08f;
-        private static readonly RaycastHit[] LineHits = new RaycastHit[HitCapacity];
-        private static readonly RaycastHit[] InsertionHits = new RaycastHit[HitCapacity];
-        private static readonly Collider[] Overlaps = new Collider[HitCapacity];
 
         public static ProcessorSocketEvaluation EvaluateSeat(
             Transform interactionOrigin,
@@ -119,7 +114,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 snapAnchor.rotation * Quaternion.AngleAxis(
                     normalizedTurns * RotationStepDegrees,
                     Vector3.forward));
-            ProcessorSocketStatus focusStatus = EvaluateFocus(
+            ProcessorSocketStatus focusStatus = MapFocusStatus(
+                AssemblySeatPhysics.EvaluateFocus(
                 interactionOrigin,
                 playerRoot,
                 processor.transform,
@@ -129,7 +125,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 maximumRange,
                 minimumFocusDot,
                 paused,
-                authorityAvailable);
+                authorityAvailable));
             if (focusStatus != ProcessorSocketStatus.ValidSeat)
             {
                 return Invalid(focusStatus, candidatePose, true);
@@ -143,60 +139,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     true);
             }
 
-            int overlapCount = Physics.OverlapBoxNonAlloc(
-                candidatePose.position,
-                processor.DropHalfExtents,
-                Overlaps,
-                candidatePose.rotation,
-                obstructionMask,
-                QueryTriggerInteraction.Ignore);
-            if (overlapCount >= HitCapacity)
-            {
-                return Invalid(ProcessorSocketStatus.Obstructed, candidatePose, true);
-            }
-
-            for (int index = 0; index < overlapCount; index++)
-            {
-                Collider overlap = Overlaps[index];
-                if (overlap == null ||
-                    overlap == focusCollider ||
-                    IsChildOf(overlap.transform, playerRoot) ||
-                    IsChildOf(overlap.transform, processor.transform) ||
-                    IsChildOf(overlap.transform, assemblyRoot))
-                {
-                    continue;
-                }
-
-                return Invalid(ProcessorSocketStatus.Obstructed, candidatePose, true);
-            }
-
-            Vector3 insertionNormal = snapAnchor.forward.normalized;
-            int insertionCount = Physics.BoxCastNonAlloc(
-                candidatePose.position + (insertionNormal * InsertionDistance),
-                processor.DropHalfExtents,
-                -insertionNormal,
-                InsertionHits,
-                candidatePose.rotation,
+            if (AssemblySeatPhysics.IsPoseObstructed(
+                processor,
+                candidatePose,
+                snapAnchor.forward,
                 InsertionDistance,
-                obstructionMask,
-                QueryTriggerInteraction.Ignore);
-            if (insertionCount >= HitCapacity)
+                focusCollider,
+                playerRoot,
+                assemblyRoot,
+                obstructionMask))
             {
-                return Invalid(ProcessorSocketStatus.Obstructed, candidatePose, true);
-            }
-
-            for (int index = 0; index < insertionCount; index++)
-            {
-                Collider hit = InsertionHits[index].collider;
-                if (hit == null ||
-                    hit == focusCollider ||
-                    IsChildOf(hit.transform, playerRoot) ||
-                    IsChildOf(hit.transform, processor.transform) ||
-                    IsChildOf(hit.transform, assemblyRoot))
-                {
-                    continue;
-                }
-
                 return Invalid(ProcessorSocketStatus.Obstructed, candidatePose, true);
             }
 
@@ -227,7 +179,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             bool stateCanOperate = state == ProcessorSocketState.ProcessorSeatedOpen ||
                                    state == ProcessorSocketState.ProcessorRetained;
-            ProcessorSocketStatus focusStatus = EvaluateFocus(
+            ProcessorSocketStatus focusStatus = MapFocusStatus(
+                AssemblySeatPhysics.EvaluateFocus(
                 interactionOrigin,
                 playerRoot,
                 seatedProcessorRoot,
@@ -237,7 +190,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 maximumRange,
                 minimumFocusDot,
                 paused,
-                authorityAvailable && stateCanOperate);
+                authorityAvailable && stateCanOperate));
             if (focusStatus != ProcessorSocketStatus.ValidSeat)
             {
                 return Invalid(focusStatus, default, false);
@@ -254,104 +207,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 false);
         }
 
-        private static ProcessorSocketStatus EvaluateFocus(
-            Transform interactionOrigin,
-            Transform playerRoot,
-            Transform heldProcessorRoot,
-            Collider focusCollider,
-            Transform assemblyRoot,
-            LayerMask obstructionMask,
-            float maximumRange,
-            float minimumFocusDot,
-            bool paused,
-            bool authorityAvailable)
+        private static ProcessorSocketStatus MapFocusStatus(
+            AssemblySeatPhysicsStatus status)
         {
-            if (!focusCollider.enabled || !focusCollider.gameObject.activeInHierarchy)
+            return status switch
             {
-                return ProcessorSocketStatus.ContextMissing;
-            }
-
-            if (paused)
-            {
-                return ProcessorSocketStatus.Paused;
-            }
-
-            if (!authorityAvailable)
-            {
-                return ProcessorSocketStatus.AuthorityBlocked;
-            }
-
-            Vector3 toFocus = focusCollider.bounds.center - interactionOrigin.position;
-            float distance = toFocus.magnitude;
-            if (distance <= Mathf.Epsilon || distance > Mathf.Max(0.1f, maximumRange))
-            {
-                return ProcessorSocketStatus.OutOfRange;
-            }
-
-            Vector3 direction = toFocus / distance;
-            if (Vector3.Dot(interactionOrigin.forward, direction) <
-                Mathf.Clamp01(minimumFocusDot))
-            {
-                return ProcessorSocketStatus.NotFocused;
-            }
-
-            int targetMask = 1 << focusCollider.gameObject.layer;
-            int hitCount = Physics.RaycastNonAlloc(
-                interactionOrigin.position,
-                direction,
-                LineHits,
-                distance + 0.03f,
-                obstructionMask | targetMask,
-                QueryTriggerInteraction.Ignore);
-            if (hitCount <= 0)
-            {
-                return ProcessorSocketStatus.LineOfSightBlocked;
-            }
-
-            if (hitCount >= HitCapacity)
-            {
-                return ProcessorSocketStatus.Obstructed;
-            }
-
-            float targetDistance = float.PositiveInfinity;
-            float obstructionDistance = float.PositiveInfinity;
-            for (int index = 0; index < hitCount; index++)
-            {
-                RaycastHit hit = LineHits[index];
-                if (hit.collider == null ||
-                    IsChildOf(hit.collider.transform, playerRoot) ||
-                    IsChildOf(hit.collider.transform, heldProcessorRoot) ||
-                    (hit.collider != focusCollider &&
-                     IsChildOf(hit.collider.transform, assemblyRoot)))
-                {
-                    continue;
-                }
-
-                if (hit.collider == focusCollider)
-                {
-                    targetDistance = Mathf.Min(targetDistance, hit.distance);
-                }
-                else
-                {
-                    obstructionDistance = Mathf.Min(
-                        obstructionDistance,
-                        hit.distance);
-                }
-            }
-
-            if (float.IsPositiveInfinity(targetDistance))
-            {
-                return ProcessorSocketStatus.LineOfSightBlocked;
-            }
-
-            return obstructionDistance <= targetDistance + DistanceTieEpsilon
-                ? ProcessorSocketStatus.Obstructed
-                : ProcessorSocketStatus.ValidSeat;
-        }
-
-        private static bool IsChildOf(Transform candidate, Transform root)
-        {
-            return candidate != null && root != null && candidate.IsChildOf(root);
+                AssemblySeatPhysicsStatus.Valid => ProcessorSocketStatus.ValidSeat,
+                AssemblySeatPhysicsStatus.ContextMissing =>
+                    ProcessorSocketStatus.ContextMissing,
+                AssemblySeatPhysicsStatus.Paused => ProcessorSocketStatus.Paused,
+                AssemblySeatPhysicsStatus.AuthorityBlocked =>
+                    ProcessorSocketStatus.AuthorityBlocked,
+                AssemblySeatPhysicsStatus.OutOfRange => ProcessorSocketStatus.OutOfRange,
+                AssemblySeatPhysicsStatus.NotFocused => ProcessorSocketStatus.NotFocused,
+                AssemblySeatPhysicsStatus.LineOfSightBlocked =>
+                    ProcessorSocketStatus.LineOfSightBlocked,
+                _ => ProcessorSocketStatus.Obstructed
+            };
         }
 
         private static ProcessorSocketEvaluation Invalid(

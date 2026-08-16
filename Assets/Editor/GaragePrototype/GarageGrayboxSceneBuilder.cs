@@ -131,7 +131,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PhysicalItemProjection motherboard,
                 ProcessorSocketProjection processorSocket,
                 ProcessorAssemblyItemBinding processorBinding,
-                PhysicalItemProjection processor)
+                PhysicalItemProjection processor,
+                DimmSlotProjection dimmSlot,
+                DimmAssemblyItemBinding dimmBinding,
+                PhysicalItemProjection memoryModule)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -140,6 +143,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 ProcessorSocket = processorSocket;
                 ProcessorBinding = processorBinding;
                 Processor = processor;
+                DimmSlot = dimmSlot;
+                DimmBinding = dimmBinding;
+                MemoryModule = memoryModule;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -155,6 +161,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public ProcessorAssemblyItemBinding ProcessorBinding { get; }
 
             public PhysicalItemProjection Processor { get; }
+
+            public DimmSlotProjection DimmSlot { get; }
+
+            public DimmAssemblyItemBinding DimmBinding { get; }
+
+            public PhysicalItemProjection MemoryModule { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -439,6 +451,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Processor,
                 assemblyBuild.ProcessorSocket,
                 GarageStockFlowSession.ProcessorItemInstanceIdValue);
+            assemblyBuild.DimmBinding.Configure(
+                stockFlow,
+                assemblyBuild.MemoryModule,
+                assemblyBuild.DimmSlot,
+                GarageStockFlowSession.MemoryItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -446,6 +463,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureProcessorSocket(
                 assemblyBuild.ProcessorSocket,
                 assemblyBuild.ProcessorBinding);
+            carry.ConfigureDimmSlot(
+                assemblyBuild.DimmSlot,
+                assemblyBuild.DimmBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -484,7 +504,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Binding,
                 assemblyBuild.ProcessorSocket,
                 assemblyBuild.ProcessorBinding,
-                assemblyBuild.Processor);
+                assemblyBuild.Processor,
+                assemblyBuild.DimmSlot,
+                assemblyBuild.DimmBinding,
+                assemblyBuild.MemoryModule);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1249,18 +1272,97 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 invalidMaterial,
                 2f,
                 0.94f);
+
+            Transform dimmSlotRoot = new GameObject("MotherboardDimmSlotA2").transform;
+            dimmSlotRoot.SetParent(motherboardRoot.transform, false);
+            dimmSlotRoot.localPosition = new Vector3(0.105f, 0.045f, 0.012f);
+            GameObject dimmSlotBase = CreateHardSurfaceBoxDetails(
+                "DimmSlotBase",
+                dimmSlotRoot,
+                new[]
+                {
+                    new Vector3(0f, 0f, 0f),
+                    new Vector3(-0.008f, 0f, 0.004f),
+                    new Vector3(0.008f, 0f, 0.004f),
+                    new Vector3(0f, -0.009f, 0.006f)
+                },
+                new[]
+                {
+                    new Vector3(0.012f, 0.122f, 0.008f),
+                    new Vector3(0.004f, 0.116f, 0.012f),
+                    new Vector3(0.004f, 0.116f, 0.012f),
+                    new Vector3(0.012f, 0.004f, 0.012f)
+                },
+                rubber);
+            DisableDecorativeRendererCost(dimmSlotBase.GetComponent<Renderer>());
+
+            Transform dimmSnapAnchor = new GameObject("MemoryModuleSnapAnchor").transform;
+            dimmSnapAnchor.SetParent(dimmSlotRoot, false);
+            dimmSnapAnchor.localPosition = new Vector3(0f, 0f, 0.024f);
+            dimmSnapAnchor.localRotation = Quaternion.LookRotation(
+                Vector3.right,
+                Vector3.forward);
+
+            Transform leftLatchPivot = new GameObject("DimmLeftLatchPivot").transform;
+            leftLatchPivot.SetParent(dimmSlotRoot, false);
+            leftLatchPivot.localPosition = new Vector3(0f, -0.064f, 0.006f);
+            leftLatchPivot.localRotation = Quaternion.Euler(-28f, 0f, 0f);
+            GameObject leftLatch = CreateBeveledCube(
+                "DimmLeftLatch",
+                leftLatchPivot,
+                new Vector3(0f, -0.006f, 0.004f),
+                new Vector3(0.026f, 0.014f, 0.012f),
+                0.002f,
+                accent,
+                false);
+            DisableDecorativeRendererCost(leftLatch.GetComponent<Renderer>());
+
+            Transform rightLatchPivot = new GameObject("DimmRightLatchPivot").transform;
+            rightLatchPivot.SetParent(dimmSlotRoot, false);
+            rightLatchPivot.localPosition = new Vector3(0f, 0.064f, 0.006f);
+            rightLatchPivot.localRotation = Quaternion.Euler(28f, 0f, 0f);
+            GameObject rightLatch = CreateBeveledCube(
+                "DimmRightLatch",
+                rightLatchPivot,
+                new Vector3(0f, 0.006f, 0.004f),
+                new Vector3(0.026f, 0.014f, 0.012f),
+                0.002f,
+                accent,
+                false);
+            DisableDecorativeRendererCost(rightLatch.GetComponent<Renderer>());
+
+            GameObject dimmFocusTarget = new GameObject("DimmSlotFocusTarget");
+            dimmFocusTarget.transform.SetParent(dimmSlotRoot, false);
+            dimmFocusTarget.transform.localPosition = new Vector3(0f, 0f, 0.042f);
+            dimmFocusTarget.layer = interactableLayer;
+            BoxCollider dimmFocusCollider = dimmFocusTarget.AddComponent<BoxCollider>();
+            dimmFocusCollider.size = new Vector3(0.052f, 0.150f, 0.080f);
+            dimmFocusCollider.isTrigger = false;
+
+            DimmSlotProjection dimmSlot =
+                dimmSlotRoot.gameObject.AddComponent<DimmSlotProjection>();
+            dimmSlot.Configure(
+                GarageStockFlowSession.MemorySlotIdValue,
+                GarageStockFlowSession.MemoryRetentionIdValue,
+                GarageStockFlowSession.MemoryChannelIdValue,
+                GarageStockFlowSession.MemoryBankIdValue,
+                dimmSnapAnchor,
+                dimmFocusCollider,
+                motherboardRoot.transform,
+                leftLatchPivot,
+                rightLatchPivot,
+                2f,
+                0.94f);
             CreateCombinedBoxDetails(
                 "MotherboardConnectorMarks",
                 motherboardRoot.transform,
                 new[]
                 {
                     new Vector3(0.085f, 0.045f, 0.012f),
-                    new Vector3(0.105f, 0.045f, 0.012f),
                     new Vector3(0.02f, -0.07f, 0.012f)
                 },
                 new[]
                 {
-                    new Vector3(0.012f, 0.12f, 0.012f),
                     new Vector3(0.012f, 0.12f, 0.012f),
                     new Vector3(0.16f, 0.014f, 0.012f)
                 },
@@ -1320,6 +1422,46 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             ProcessorAssemblyItemBinding processorBinding =
                 processorRoot.AddComponent<ProcessorAssemblyItemBinding>();
 
+            GameObject memoryRoot = new GameObject("PrototypeMemoryModule");
+            memoryRoot.transform.SetParent(slice, false);
+            memoryRoot.transform.localPosition = new Vector3(-1.05f, 0.992f, 3.93f);
+            memoryRoot.transform.localRotation = Quaternion.Euler(-90f, 90f, 0f);
+            memoryRoot.layer = interactableLayer;
+
+            Rigidbody memoryBody = memoryRoot.AddComponent<Rigidbody>();
+            memoryBody.mass = 0.045f;
+            memoryBody.useGravity = false;
+            memoryBody.isKinematic = true;
+            memoryBody.interpolation = RigidbodyInterpolation.Interpolate;
+            memoryBody.collisionDetectionMode =
+                CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject memoryPackage = CreateMemoryModulePackage(
+                "PrototypeMemoryModulePackage",
+                memoryRoot.transform,
+                motherboardPcb,
+                rubber,
+                brushedSteel,
+                accent);
+            DisableDecorativeRendererCost(memoryPackage.GetComponent<Renderer>());
+            BoxCollider memoryCollider = memoryRoot.AddComponent<BoxCollider>();
+            memoryCollider.center = new Vector3(0f, 0.004f, 0f);
+            memoryCollider.size = new Vector3(0.136f, 0.034f, 0.010f);
+            SetLayerRecursively(memoryRoot, interactableLayer);
+
+            PhysicalItemProjection memoryModule = memoryRoot.AddComponent<
+                PhysicalItemProjection>();
+            memoryModule.Configure(
+                GarageStockFlowSession.MemoryItemInstanceIdValue,
+                GarageStockFlowSession.MemoryDisplayName,
+                memoryBody,
+                new Vector3(0.068f, 0.018f, 0.010f),
+                new Vector3(0f, -0.055f, 0f),
+                new Vector3(0f, 180f, 90f),
+                PhysicalCarryProfile.PcComponent);
+            DimmAssemblyItemBinding dimmBinding =
+                memoryRoot.AddComponent<DimmAssemblyItemBinding>();
+
             return new AssemblyBuildResult(
                 seat,
                 fastener,
@@ -1327,7 +1469,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 motherboard,
                 processorSocket,
                 processorBinding,
-                processor);
+                processor,
+                dimmSlot,
+                dimmBinding,
+                memoryModule);
         }
 
         private static void BuildLighting(
@@ -2749,6 +2894,122 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             package.AddComponent<MeshFilter>().sharedMesh = mesh;
             package.AddComponent<MeshRenderer>().sharedMaterials =
                 new[] { substrateMaterial, heatSpreaderMaterial };
+            return package;
+        }
+
+        private static GameObject CreateMemoryModulePackage(
+            string name,
+            Transform parent,
+            Material pcbMaterial,
+            Material chipMaterial,
+            Material heatSpreaderMaterial,
+            Material contactMaterial)
+        {
+            string meshPath = $"{MeshRoot}/{name}.asset";
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            bool createAsset = mesh == null;
+            mesh ??= new Mesh { name = name };
+            mesh.Clear();
+
+            var vertices = new List<Vector3>(420);
+            var uvs = new List<Vector2>(420);
+            var pcbTriangles = new List<int>(108);
+            var chipTriangles = new List<int>(288);
+            var heatSpreaderTriangles = new List<int>(108);
+            var contactTriangles = new List<int>(432);
+
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                pcbTriangles,
+                new Vector3(0f, 0.008f, 0f),
+                new Vector3(0.134f, 0.024f, 0.004f));
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                pcbTriangles,
+                new Vector3(-0.0385f, -0.008f, 0f),
+                new Vector3(0.057f, 0.008f, 0.004f));
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                pcbTriangles,
+                new Vector3(0.0355f, -0.008f, 0f),
+                new Vector3(0.063f, 0.008f, 0.004f));
+
+            for (int index = 0; index < 8; index++)
+            {
+                AppendHardSurfaceBoxGeometry(
+                    vertices,
+                    uvs,
+                    chipTriangles,
+                    new Vector3(-0.0525f + (index * 0.015f), 0.005f, 0.003f),
+                    new Vector3(0.011f, 0.012f, 0.002f));
+            }
+
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                heatSpreaderTriangles,
+                new Vector3(0f, 0.016f, 0.0042f),
+                new Vector3(0.122f, 0.006f, 0.0024f));
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                heatSpreaderTriangles,
+                new Vector3(-0.040f, -0.001f, 0.0042f),
+                new Vector3(0.047f, 0.004f, 0.0024f));
+            AppendHardSurfaceBoxGeometry(
+                vertices,
+                uvs,
+                heatSpreaderTriangles,
+                new Vector3(0.038f, -0.001f, 0.0042f),
+                new Vector3(0.051f, 0.004f, 0.0024f));
+
+            for (int index = 0; index < 13; index++)
+            {
+                float x = -0.060f + (index * 0.010f);
+                if (x > -0.012f && x < 0.006f)
+                {
+                    continue;
+                }
+
+                AppendHardSurfaceBoxGeometry(
+                    vertices,
+                    uvs,
+                    contactTriangles,
+                    new Vector3(x, -0.012f, 0.003f),
+                    new Vector3(0.006f, 0.004f, 0.0015f));
+            }
+
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.subMeshCount = 4;
+            mesh.SetTriangles(pcbTriangles, 0);
+            mesh.SetTriangles(chipTriangles, 1);
+            mesh.SetTriangles(heatSpreaderTriangles, 2);
+            mesh.SetTriangles(contactTriangles, 3);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            if (createAsset)
+            {
+                AssetDatabase.CreateAsset(mesh, meshPath);
+            }
+            else
+            {
+                EditorUtility.SetDirty(mesh);
+            }
+
+            GameObject package = new GameObject(name);
+            package.transform.SetParent(parent, false);
+            package.AddComponent<MeshFilter>().sharedMesh = mesh;
+            package.AddComponent<MeshRenderer>().sharedMaterials = new[]
+            {
+                pcbMaterial,
+                chipMaterial,
+                heatSpreaderMaterial,
+                contactMaterial
+            };
             return package;
         }
 

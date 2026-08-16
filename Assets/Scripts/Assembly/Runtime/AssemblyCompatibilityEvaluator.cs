@@ -86,5 +86,50 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.CpuSocketFamilyMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluateMemoryModuleSeat(
+            PcComponentSpecification memoryModuleSpecification,
+            PcComponentSpecification motherboardSpecification,
+            DimmType supportedDimmType,
+            DimmKeyOrientation orientation)
+        {
+            if (memoryModuleSpecification == null || motherboardSpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidDimmType(supportedDimmType))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidDimmType);
+            }
+
+            if (orientation != DimmKeyOrientation.NotchAligned &&
+                orientation != DimmKeyOrientation.Reversed)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidDimmOrientation);
+            }
+
+            if (orientation != DimmKeyOrientation.NotchAligned)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.DimmOrientationMismatch);
+            }
+
+            if (memoryModuleSpecification.Kind != PcComponentKind.MemoryModule ||
+                motherboardSpecification.Kind != PcComponentKind.Motherboard)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            return memoryModuleSpecification.DimmType == supportedDimmType &&
+                   motherboardSpecification.DimmType == supportedDimmType
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.DimmTypeMismatch);
+        }
     }
 }

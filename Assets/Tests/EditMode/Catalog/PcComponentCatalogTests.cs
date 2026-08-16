@@ -7,6 +7,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
     public sealed class PcComponentCatalogTests
     {
         [Test]
+        public void PersistedComponentAndDimmEnumValuesAreAppendOnly()
+        {
+            Assert.That((int)PcComponentKind.Motherboard, Is.EqualTo(1));
+            Assert.That((int)PcComponentKind.Processor, Is.EqualTo(2));
+            Assert.That((int)PcComponentKind.MemoryModule, Is.EqualTo(3));
+            Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
+        }
+
+        [Test]
         public void MotherboardSpecificationKeepsAuthoritativeProductIdentityAndFormFactor()
         {
             ProductCatalog products = CreateProducts();
@@ -60,6 +69,88 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
         }
 
         [Test]
+        public void MotherboardAndMemoryModuleKeepTypedDdr5UdimmCompatibility()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> motherboardId =
+                ProductId("component.motherboard-matx");
+            StableId<ProductDefinitionIdScope> memoryId =
+                ProductId("component.memory-ddr5-udimm");
+
+            OperationResult<PcComponentSpecification> motherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    motherboardId,
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm);
+            OperationResult<PcComponentSpecification> memory =
+                PcComponentSpecification.CreateMemoryModule(
+                    products,
+                    memoryId,
+                    DimmType.Ddr5Udimm);
+
+            Assert.That(motherboard.IsSuccess, Is.True);
+            Assert.That(motherboard.Value.DimmType, Is.EqualTo(DimmType.Ddr5Udimm));
+            Assert.That(memory.IsSuccess, Is.True);
+            Assert.That(memory.Value.Kind, Is.EqualTo(PcComponentKind.MemoryModule));
+            Assert.That(memory.Value.ProductId, Is.EqualTo(memoryId));
+            Assert.That(memory.Value.DimmType, Is.EqualTo(DimmType.Ddr5Udimm));
+            Assert.That(memory.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(memory.Value.CpuSocketFamily,
+                Is.EqualTo(default(CpuSocketFamily)));
+
+            PcComponentSpecification legacyMotherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    motherboardId,
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700).Value;
+            Assert.That(legacyMotherboard.DimmType, Is.EqualTo(default(DimmType)));
+        }
+
+        [Test]
+        public void ComponentCatalogRegistersMotherboardProcessorAndMemoryMetadataTogether()
+        {
+            ProductCatalog products = CreateProducts();
+            PcComponentSpecification motherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    ProductId("component.motherboard-matx"),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm).Value;
+            PcComponentSpecification processor =
+                PcComponentSpecification.CreateProcessor(
+                    products,
+                    ProductId("component.processor-lga1700"),
+                    CpuSocketFamily.Lga1700).Value;
+            PcComponentSpecification memory =
+                PcComponentSpecification.CreateMemoryModule(
+                    products,
+                    ProductId("component.memory-ddr5-udimm"),
+                    DimmType.Ddr5Udimm).Value;
+
+            OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
+                products,
+                new[] { motherboard, processor, memory });
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.Count, Is.EqualTo(3));
+            Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
+            Assert.That(result.Value.Specifications[0], Is.SameAs(memory));
+            Assert.That(result.Value.Specifications[1], Is.SameAs(motherboard));
+            Assert.That(result.Value.Specifications[2], Is.SameAs(processor));
+            Assert.That(PcComponentSpecification.Create(
+                    products,
+                    memory.ProductId,
+                    PcComponentKind.MemoryModule,
+                    MotherboardFormFactor.MicroAtx).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+        }
+
+        [Test]
         public void SpecificationRejectsUnknownBatchAndInvalidCompatibilityData()
         {
             ProductCatalog products = CreateProducts();
@@ -105,6 +196,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     ProductId("component.processor-lga1700"),
                     (CpuSocketFamily)99).Error,
                 Is.EqualTo(CatalogFailures.InvalidCpuSocketFamily));
+            Assert.That(PcComponentSpecification.CreateMemoryModule(
+                    products,
+                    ProductId("component.memory-ddr5-udimm"),
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidDimmType));
+            Assert.That(PcComponentSpecification.CreateMotherboard(
+                    products,
+                    ProductId("component.motherboard-matx"),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    (DimmType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidDimmType));
         }
 
         [Test]
@@ -171,6 +274,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.motherboard-matx", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.motherboard-atx", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.processor-lga1700", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.memory-ddr5-udimm", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardAndProcessor()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorAndMemory()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(3));
-            Assert.That(session.Components.Count, Is.EqualTo(2));
+            Assert.That(session.Catalog.Count, Is.EqualTo(4));
+            Assert.That(session.Components.Count, Is.EqualTo(3));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -62,6 +62,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(MotherboardFormFactor.MicroAtx));
             Assert.That(specification.Value.CpuSocketFamily,
                 Is.EqualTo(CpuSocketFamily.Lga1700));
+            Assert.That(specification.Value.DimmType, Is.EqualTo(DimmType.Ddr5Udimm));
             OperationResult<PcComponentSpecification> processorSpecification =
                 session.Components.Get(session.ProcessorProductId);
             Assert.That(processorSpecification.IsSuccess, Is.True);
@@ -78,7 +79,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(processor.Id, Is.EqualTo(session.ProcessorItemId));
             Assert.That(processor.ProductId, Is.EqualTo(session.ProcessorProductId));
             Assert.That(processor.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(2));
+            OperationResult<PcComponentSpecification> memorySpecification =
+                session.Components.Get(session.MemoryProductId);
+            Assert.That(memorySpecification.IsSuccess, Is.True);
+            Assert.That(memorySpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.MemoryModule));
+            Assert.That(memorySpecification.Value.DimmType,
+                Is.EqualTo(DimmType.Ddr5Udimm));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord memory), Is.True);
+            Assert.That(memory.Id, Is.EqualTo(session.MemoryItemId));
+            Assert.That(memory.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(memory.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(3));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -86,6 +98,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(session.AssemblyBuild.MotherboardItemId.IsEmpty, Is.True);
             Assert.That(session.AssemblyBuild.ProcessorSocketState,
                 Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.MemorySlotId, Is.EqualTo(session.MemorySlotId));
+            Assert.That(session.AssemblyBuild.MemoryRetentionId,
+                Is.EqualTo(session.MemoryRetentionId));
+            Assert.That(session.AssemblyBuild.MemoryChannelId,
+                Is.EqualTo(session.MemoryChannelId));
+            Assert.That(session.AssemblyBuild.MemoryBankId,
+                Is.EqualTo(session.MemoryBankId));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -209,6 +230,73 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(recovered.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(session.AssemblyBuild.ProcessorSocketState,
                 Is.EqualTo(ProcessorSocketState.EmptyOpen));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void MemoryWorldHandsSlotRetentionAndRecoveryPreserveIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            StableId<AssemblyOperationIdScope> attachId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-motherboard-attach");
+            StableId<AssemblyOperationIdScope> secureId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-motherboard-secure");
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(attachId).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                secureId,
+                attachId,
+                1).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseMemoryToHands().IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> seatId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-seat");
+            AssemblyOperationReceipt seat = session.SeatMemoryModule(
+                seatId,
+                DimmKeyOrientation.NotchAligned,
+                attachId,
+                secureId,
+                2).Value;
+            Assert.That(seat.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.SeatMemoryModule));
+            Assert.That(seat.DimmKeyOrientation,
+                Is.EqualTo(DimmKeyOrientation.NotchAligned));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord seated), Is.True);
+            Assert.That(seated.Id, Is.EqualTo(session.MemoryItemId));
+            Assert.That(seated.ContainerId, Is.EqualTo(session.MemorySlotContainerId));
+
+            StableId<AssemblyOperationIdScope> retainId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-retain");
+            Assert.That(session.CloseMemoryRetention(
+                retainId,
+                seatId,
+                3).IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> openId =
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-open");
+            Assert.That(session.OpenMemoryRetention(
+                openId,
+                seatId,
+                retainId,
+                4).IsSuccess, Is.True);
+            Assert.That(session.RemoveMemoryModule(
+                StableId<AssemblyOperationIdScope>.Parse(
+                    "assembly.operation.tests.memory-remove"),
+                seatId,
+                5).IsSuccess, Is.True);
+            Assert.That(session.DropHeldMemoryToWorld().IsSuccess, Is.True);
+
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
+            Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
+            Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(recovered.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

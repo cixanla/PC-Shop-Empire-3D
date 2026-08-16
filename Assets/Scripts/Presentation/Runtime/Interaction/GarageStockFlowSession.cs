@@ -81,6 +81,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "assembly.retention.processor-main-01";
         public const string ProcessorDisplayName = "Northstar C-01 İşlemci";
         public const long ProcessorUnitCostMinorUnits = 24_900;
+        public const string MemoryProductIdValue =
+            "catalog.memory.northstar-d5-16-udimm";
+        public const string MemoryCategoryIdValue = "catalog.category.memory";
+        public const string MemoryItemInstanceIdValue =
+            "inventory.item.northstar-d5-16-udimm-001";
+        public const string MemorySlotContainerIdValue =
+            "inventory.container.assembly-memory-a2";
+        public const string MemorySlotIdValue = "assembly.slot.memory-a2";
+        public const string MemoryRetentionIdValue =
+            "assembly.retention.memory-a2-dual-latch";
+        public const string MemoryChannelIdValue = "assembly.memory-channel.a";
+        public const string MemoryBankIdValue = "assembly.memory-bank.2";
+        public const string MemoryDisplayName = "Northstar D5 16 GB Bellek";
+        public const long MemoryUnitCostMinorUnits = 8_900;
 
         private GarageStockFlowSession(
             ProductCatalog catalog,
@@ -156,11 +170,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ItemInstanceIdScope> ProcessorItemId =>
             StableId<ItemInstanceIdScope>.Parse(ProcessorItemInstanceIdValue);
 
+        public StableId<ProductDefinitionIdScope> MemoryProductId =>
+            StableId<ProductDefinitionIdScope>.Parse(MemoryProductIdValue);
+
+        public StableId<ItemInstanceIdScope> MemoryItemId =>
+            StableId<ItemInstanceIdScope>.Parse(MemoryItemInstanceIdValue);
+
         public StableId<ContainerIdScope> WorkbenchContainerId =>
             StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
+
+        public StableId<ContainerIdScope> MemorySlotContainerId =>
+            StableId<ContainerIdScope>.Parse(MemorySlotContainerIdValue);
 
         public StableId<PcBuildIdScope> PrototypeBuildId =>
             StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue);
@@ -179,6 +202,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<AssemblyRetentionIdScope> ProcessorRetentionId =>
             StableId<AssemblyRetentionIdScope>.Parse(ProcessorRetentionIdValue);
+
+        public StableId<AssemblySlotIdScope> MemorySlotId =>
+            StableId<AssemblySlotIdScope>.Parse(MemorySlotIdValue);
+
+        public StableId<AssemblyRetentionIdScope> MemoryRetentionId =>
+            StableId<AssemblyRetentionIdScope>.Parse(MemoryRetentionIdValue);
+
+        public StableId<AssemblyMemoryChannelIdScope> MemoryChannelId =>
+            StableId<AssemblyMemoryChannelIdScope>.Parse(MemoryChannelIdValue);
+
+        public StableId<AssemblyMemoryBankIdScope> MemoryBankId =>
+            StableId<AssemblyMemoryBankIdScope>.Parse(MemoryBankIdValue);
 
         public StableId<PurchaseOrderIdScope> OrderId =>
             StableId<PurchaseOrderIdScope>.Parse(PurchaseOrderIdValue);
@@ -289,9 +324,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProductTrackingPolicy.SerializedInstance,
                     1095).Value
                 : null;
+            ProductDefinition memoryProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(MemoryProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(MemoryCategoryIdValue),
+                    MemoryDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1095).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
                 includeAssemblyPrototype
-                    ? new[] { product, motherboardProduct, processorProduct }
+                    ? new[] { product, motherboardProduct, processorProduct, memoryProduct }
                     : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
                 includeAssemblyPrototype
@@ -299,7 +342,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         catalog,
                         motherboardProduct.Id,
                         MotherboardFormFactor.MicroAtx,
-                        CpuSocketFamily.Lga1700).Value
+                        CpuSocketFamily.Lga1700,
+                        DimmType.Ddr5Udimm).Value
                     : PcComponentSpecification.Create(
                         catalog,
                         motherboardProduct.Id,
@@ -312,10 +356,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         processorProduct.Id,
                         CpuSocketFamily.Lga1700).Value
                     : null;
+            PcComponentSpecification memorySpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreateMemoryModule(
+                        catalog,
+                        memoryProduct.Id,
+                        DimmType.Ddr5Udimm).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
-                    ? new[] { motherboardSpecification, processorSpecification }
+                    ? new[]
+                    {
+                        motherboardSpecification,
+                        processorSpecification,
+                        memorySpecification
+                    }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
             RegisterContainer(
@@ -350,10 +406,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProcessorSocketContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
+                RegisterContainer(
+                    inventory,
+                    MemorySlotContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
-                ? AssemblyBuildAuthority.CreateWithProcessorSocket(
+                ? AssemblyBuildAuthority.CreateWithProcessorSocketAndMemorySlot(
                     components,
                     inventory,
                     StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
@@ -362,6 +423,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StableId<AssemblyFastenerIdScope>.Parse(MotherboardFastenerIdValue),
                     StableId<AssemblySlotIdScope>.Parse(ProcessorSlotIdValue),
                     StableId<AssemblyRetentionIdScope>.Parse(ProcessorRetentionIdValue),
+                    DimmSlotDefinition.Create(
+                        StableId<AssemblySlotIdScope>.Parse(MemorySlotIdValue),
+                        StableId<AssemblyRetentionIdScope>.Parse(MemoryRetentionIdValue),
+                        StableId<ContainerIdScope>.Parse(MemorySlotContainerIdValue),
+                        StableId<AssemblyMemoryChannelIdScope>.Parse(MemoryChannelIdValue),
+                        StableId<AssemblyMemoryBankIdScope>.Parse(MemoryBankIdValue),
+                        1,
+                        DimmType.Ddr5Udimm).Value,
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue),
@@ -452,6 +521,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         ProcessorUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(MemoryItemInstanceIdValue),
+                    memoryProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        MemoryUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(
@@ -495,6 +572,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool TryGetProcessorItem(out InventoryItemRecord item)
         {
             return Inventory.TryGetSerializedItem(ProcessorItemId, out item);
+        }
+
+        public bool TryGetMemoryItem(out InventoryItemRecord item)
+        {
+            return Inventory.TryGetSerializedItem(MemoryItemId, out item);
         }
 
         public OperationResult PickupLooseMotherboardToHands()
@@ -552,6 +634,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             return Inventory.TransferSerializedItem(
                 ProcessorItemId,
+                WorldFloorContainerId);
+        }
+
+        public OperationResult PickupLooseMemoryToHands()
+        {
+            if (!AssemblyBuild.HasMemorySlot ||
+                AssemblyBuild.MemorySlotState != MemorySlotState.EmptyOpen ||
+                !TryGetMemoryItem(out InventoryItemRecord item) ||
+                item.ContainerId != WorldFloorContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.loose-pickup-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(MemoryItemId, HandsContainerId);
+        }
+
+        public OperationResult DropHeldMemoryToWorld()
+        {
+            if (!AssemblyBuild.HasMemorySlot ||
+                AssemblyBuild.MemorySlotState != MemorySlotState.EmptyOpen ||
+                !TryGetMemoryItem(out InventoryItemRecord item) ||
+                item.ContainerId != HandsContainerId)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-memory.world-drop-invalid"));
+            }
+
+            return Inventory.TransferSerializedItem(
+                MemoryItemId,
                 WorldFloorContainerId);
         }
 
@@ -658,6 +770,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProcessorItemId,
                 ProcessorSlotId,
                 sourceProcessorSeatOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> SeatMemoryModule(
+            StableId<AssemblyOperationIdScope> operationId,
+            DimmKeyOrientation orientation,
+            StableId<AssemblyOperationIdScope> sourceMotherboardAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.SeatMemoryModule(
+                operationId,
+                MemoryItemId,
+                MemorySlotId,
+                orientation,
+                sourceMotherboardAttachOperationId,
+                sourceMotherboardSecureOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> CloseMemoryRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceMemorySeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.CloseMemoryRetention(
+                operationId,
+                MemoryItemId,
+                MemorySlotId,
+                MemoryRetentionId,
+                sourceMemorySeatOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> OpenMemoryRetention(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceMemorySeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceMemoryRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.OpenMemoryRetention(
+                operationId,
+                MemoryItemId,
+                MemorySlotId,
+                MemoryRetentionId,
+                sourceMemorySeatOperationId,
+                sourceMemoryRetentionOperationId,
+                expectedAssemblyRevision);
+        }
+
+        public OperationResult<AssemblyOperationReceipt> RemoveMemoryModule(
+            StableId<AssemblyOperationIdScope> operationId,
+            StableId<AssemblyOperationIdScope> sourceMemorySeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return AssemblyBuild.RemoveMemoryModule(
+                operationId,
+                MemoryItemId,
+                MemorySlotId,
+                sourceMemorySeatOperationId,
                 expectedAssemblyRevision);
         }
 

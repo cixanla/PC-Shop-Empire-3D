@@ -673,6 +673,8 @@ MonoBehaviour:
   motherboardAssemblyBinding: {fileID: 0}
   processorSocket: {fileID: 0}
   processorAssemblyBinding: {fileID: 0}
+  dimmSlot: {fileID: 0}
+  dimmAssemblyBinding: {fileID: 0}
   supportMask:
     serializedVersion: 2
     m_Bits: 1

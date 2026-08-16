@@ -13,7 +13,8 @@ namespace PCShopEmpire3D.Catalog
     public enum PcComponentKind
     {
         Motherboard = 1,
-        Processor = 2
+        Processor = 2,
+        MemoryModule = 3
     }
 
     /// <summary>
@@ -37,6 +38,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed DIMM compatibility type. Form factor and DDR generation are one
+    /// typed key so a visually similar but electrically incompatible module fails closed.
+    /// </summary>
+    public enum DimmType
+    {
+        Ddr5Udimm = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -46,13 +56,15 @@ namespace PCShopEmpire3D.Catalog
             StableId<ProductDefinitionIdScope> productId,
             PcComponentKind kind,
             MotherboardFormFactor motherboardFormFactor,
-            CpuSocketFamily cpuSocketFamily)
+            CpuSocketFamily cpuSocketFamily,
+            DimmType dimmType)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
             Kind = kind;
             MotherboardFormFactor = motherboardFormFactor;
             CpuSocketFamily = cpuSocketFamily;
+            DimmType = dimmType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -64,6 +76,8 @@ namespace PCShopEmpire3D.Catalog
         public MotherboardFormFactor MotherboardFormFactor { get; }
 
         public CpuSocketFamily CpuSocketFamily { get; }
+
+        public DimmType DimmType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -119,6 +133,7 @@ namespace PCShopEmpire3D.Catalog
                     productId,
                     kind,
                     motherboardFormFactor,
+                    default,
                     default));
         }
 
@@ -154,7 +169,51 @@ namespace PCShopEmpire3D.Catalog
                     productId,
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
-                    cpuSocketFamily));
+                    cpuSocketFamily,
+                    default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateMotherboard(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            MotherboardFormFactor motherboardFormFactor,
+            CpuSocketFamily cpuSocketFamily,
+            DimmType supportedDimmType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidMotherboardFormFactor(motherboardFormFactor))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidMotherboardFormFactor);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            if (!IsValidDimmType(supportedDimmType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidDimmType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.Motherboard,
+                    motherboardFormFactor,
+                    cpuSocketFamily,
+                    supportedDimmType));
         }
 
         public static OperationResult<PcComponentSpecification> CreateProcessor(
@@ -182,13 +241,44 @@ namespace PCShopEmpire3D.Catalog
                     productId,
                     PcComponentKind.Processor,
                     default,
-                    cpuSocketFamily));
+                    cpuSocketFamily,
+                    default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateMemoryModule(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            DimmType dimmType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidDimmType(dimmType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidDimmType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.MemoryModule,
+                    default,
+                    default,
+                    dimmType));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
         {
             return kind == PcComponentKind.Motherboard ||
-                   kind == PcComponentKind.Processor;
+                   kind == PcComponentKind.Processor ||
+                   kind == PcComponentKind.MemoryModule;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -202,6 +292,11 @@ namespace PCShopEmpire3D.Catalog
         {
             return socketFamily == CpuSocketFamily.Lga1700 ||
                    socketFamily == CpuSocketFamily.Am5;
+        }
+
+        public static bool IsValidDimmType(DimmType dimmType)
+        {
+            return dimmType == DimmType.Ddr5Udimm;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -300,11 +395,20 @@ namespace PCShopEmpire3D.Catalog
                               specification.MotherboardFormFactor) &&
                           (specification.CpuSocketFamily == default ||
                            PcComponentSpecification.IsValidCpuSocketFamily(
-                               specification.CpuSocketFamily))
-                        : specification.Kind == PcComponentKind.Processor &&
-                          specification.MotherboardFormFactor == default &&
-                          PcComponentSpecification.IsValidCpuSocketFamily(
-                              specification.CpuSocketFamily);
+                               specification.CpuSocketFamily)) &&
+                          (specification.DimmType == default ||
+                           PcComponentSpecification.IsValidDimmType(
+                               specification.DimmType))
+                        : (specification.Kind == PcComponentKind.Processor &&
+                           specification.MotherboardFormFactor == default &&
+                           PcComponentSpecification.IsValidCpuSocketFamily(
+                               specification.CpuSocketFamily) &&
+                           specification.DimmType == default) ||
+                          (specification.Kind == PcComponentKind.MemoryModule &&
+                           specification.MotherboardFormFactor == default &&
+                           specification.CpuSocketFamily == default &&
+                           PcComponentSpecification.IsValidDimmType(
+                               specification.DimmType));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

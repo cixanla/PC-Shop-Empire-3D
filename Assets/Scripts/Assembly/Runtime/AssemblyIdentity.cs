@@ -25,4 +25,12 @@ namespace PCShopEmpire3D.Assembly
     public sealed class AssemblyRetentionIdScope : IStableIdScope
     {
     }
+
+    public sealed class AssemblyMemoryChannelIdScope : IStableIdScope
+    {
+    }
+
+    public sealed class AssemblyMemoryBankIdScope : IStableIdScope
+    {
+    }
 }

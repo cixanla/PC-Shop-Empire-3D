@@ -10,7 +10,7 @@ namespace PCShopEmpire3D.Assembly
     /// Authoritative single-chassis assembly aggregate. Presentation may project motherboard
     /// and processor state but cannot own component identity, custody or operation chronology.
     /// </summary>
-    public sealed class AssemblyBuildAuthority
+    public sealed partial class AssemblyBuildAuthority
     {
         private readonly PcComponentCatalog _componentCatalog;
         private readonly InventoryAuthority _inventory;
@@ -83,7 +83,9 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyRetentionIdScope> processorRetentionId,
             StableId<ContainerIdScope> processorSocketContainerId,
             CpuSocketFamily supportedCpuSocketFamily,
-            InventorySerializedTransferAccess processorInventoryTransferAccess)
+            InventorySerializedTransferAccess processorInventoryTransferAccess,
+            DimmSlotDefinition memorySlotDefinition = default,
+            InventorySerializedTransferAccess memoryInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -100,9 +102,16 @@ namespace PCShopEmpire3D.Assembly
             _processorSocketContainerId = processorSocketContainerId;
             _supportedCpuSocketFamily = supportedCpuSocketFamily;
             _processorInventoryTransferAccess = processorInventoryTransferAccess;
+            _memorySlotDefinition = memorySlotDefinition;
+            _memoryInventoryTransferAccess = memoryInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
+            }
+
+            if (memorySlotDefinition.IsValid)
+            {
+                _memorySlotState = MemorySlotState.EmptyOpen;
             }
         }
 
@@ -499,7 +508,8 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision,
-                _processorSocketState);
+                _processorSocketState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -578,7 +588,8 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision,
-                _processorSocketState);
+                _processorSocketState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -647,7 +658,8 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision,
-                _processorSocketState);
+                _processorSocketState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -718,7 +730,8 @@ namespace PCShopEmpire3D.Assembly
                 _motherboardSeatState,
                 Revision,
                 _inventory.Revision,
-                _processorSocketState);
+                _processorSocketState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -811,7 +824,9 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorSocketState.EmptyOpen,
                 _processorSocketState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _memorySlotState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -885,7 +900,9 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorSocketState.ProcessorSeatedOpen,
                 _processorSocketState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _memorySlotState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -961,7 +978,9 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorSocketState.ProcessorRetained,
                 _processorSocketState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _memorySlotState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -1053,7 +1072,9 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorSocketState.ProcessorSeatedOpen,
                 _processorSocketState,
                 Revision,
-                _inventory.Revision);
+                _inventory.Revision,
+                _memorySlotState,
+                _memorySlotState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -1080,8 +1101,23 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.ProcessorMissing);
             }
 
-            return _processorSocketState == ProcessorSocketState.ProcessorSeatedOpen
-                ? OperationResult.Fail(AssemblyFailures.ProcessorUnretained)
+            if (_processorSocketState == ProcessorSocketState.ProcessorSeatedOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.ProcessorUnretained);
+            }
+
+            if (!HasMemorySlot)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (_memorySlotState == MemorySlotState.EmptyOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.MemoryMissing);
+            }
+
+            return _memorySlotState == MemorySlotState.MemoryModuleSeatedOpen
+                ? OperationResult.Fail(AssemblyFailures.MemoryUnretained)
                 : OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
@@ -1109,7 +1145,13 @@ namespace PCShopEmpire3D.Assembly
                 _processorProductId,
                 _processorSeatedByOperationId,
                 _processorRetainedByOperationId,
-                Revision);
+                Revision,
+                _memorySlotDefinition,
+                _memorySlotState,
+                _memoryItemId,
+                _memoryProductId,
+                _memorySeatedByOperationId,
+                _memoryRetainedByOperationId);
         }
 
         public bool TryGetReceipt(
@@ -1335,6 +1377,11 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (!ValidateMemoryStateInvariants())
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (Revision != _receipts.Count)
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
@@ -1346,13 +1393,19 @@ namespace PCShopEmpire3D.Assembly
                 AssemblyOperationReceipt receipt = entry.Value;
                 bool processorOperation = receipt != null &&
                     IsProcessorOperation(receipt.OperationKind);
+                bool memoryOperation = receipt != null &&
+                    IsMemoryOperation(receipt.OperationKind);
+                StableId<AssemblySlotIdScope> expectedSlotId = memoryOperation
+                    ? _memorySlotDefinition.SlotId
+                    : processorOperation
+                        ? _processorSlotId
+                        : MotherboardSlotId;
                 if (receipt == null ||
                     entry.Key.IsEmpty ||
                     entry.Key != receipt.OperationId ||
                     receipt.BuildId != BuildId ||
                     receipt.ChassisId != ChassisId ||
-                    receipt.SlotId !=
-                        (processorOperation ? _processorSlotId : MotherboardSlotId) ||
+                    receipt.SlotId != expectedSlotId ||
                     receipt.ItemId.IsEmpty ||
                     receipt.ProductId.IsEmpty ||
                     receipt.AssemblyRevision <= 0 ||
@@ -1455,6 +1508,11 @@ namespace PCShopEmpire3D.Assembly
                 _processorSocketState != ProcessorSocketState.EmptyOpen)
             {
                 return AssemblyFailures.ProcessorInstalled;
+            }
+
+            if (HasMemorySlot && _memorySlotState != MemorySlotState.EmptyOpen)
+            {
+                return AssemblyFailures.MemoryModuleInstalled;
             }
 
             if (_motherboardSeatState == AssemblySeatState.SeatedSecured)
@@ -1816,6 +1874,14 @@ namespace PCShopEmpire3D.Assembly
 
         private bool ValidateReceiptShape(AssemblyOperationReceipt receipt)
         {
+            if (!IsMemoryOperation(receipt.OperationKind) &&
+                (!receipt.SourceMemorySeatOperationId.IsEmpty ||
+                 !receipt.SourceMemoryRetentionOperationId.IsEmpty ||
+                 receipt.DimmKeyOrientation != default))
+            {
+                return false;
+            }
+
             switch (receipt.OperationKind)
             {
                 case AssemblyOperationKind.AttachMotherboard:
@@ -1910,6 +1976,71 @@ namespace PCShopEmpire3D.Assembly
                            !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
                            receipt.SequenceIndex == 0;
 
+                case AssemblyOperationKind.SeatMemoryModule:
+                    return HasMemorySlot &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId ==
+                               _memorySlotDefinition.ContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceMemorySeatOperationId.IsEmpty &&
+                           receipt.SourceMemoryRetentionOperationId.IsEmpty &&
+                           receipt.DimmKeyOrientation ==
+                               DimmKeyOrientation.NotchAligned &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RemoveMemoryModule:
+                    return HasMemorySlot &&
+                           receipt.SourceContainerId ==
+                               _memorySlotDefinition.ContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceMemorySeatOperationId.IsEmpty &&
+                           receipt.SourceMemoryRetentionOperationId.IsEmpty &&
+                           receipt.DimmKeyOrientation == default &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.CloseMemoryRetention:
+                    return HasMemorySlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId ==
+                               _memorySlotDefinition.RetentionId &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceMemorySeatOperationId.IsEmpty &&
+                           receipt.SourceMemoryRetentionOperationId.IsEmpty &&
+                           receipt.DimmKeyOrientation == default &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.OpenMemoryRetention:
+                    return HasMemorySlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId ==
+                               _memorySlotDefinition.RetentionId &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceMemorySeatOperationId.IsEmpty &&
+                           !receipt.SourceMemoryRetentionOperationId.IsEmpty &&
+                           receipt.DimmKeyOrientation == default &&
+                           receipt.SequenceIndex == 0;
+
                 default:
                     return false;
             }
@@ -1924,7 +2055,11 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.SeatProcessor ||
                    operationKind == AssemblyOperationKind.RemoveProcessor ||
                    operationKind == AssemblyOperationKind.CloseProcessorRetention ||
-                   operationKind == AssemblyOperationKind.OpenProcessorRetention;
+                   operationKind == AssemblyOperationKind.OpenProcessorRetention ||
+                   operationKind == AssemblyOperationKind.SeatMemoryModule ||
+                   operationKind == AssemblyOperationKind.RemoveMemoryModule ||
+                   operationKind == AssemblyOperationKind.CloseMemoryRetention ||
+                   operationKind == AssemblyOperationKind.OpenMemoryRetention;
         }
 
         private static bool IsProcessorOperation(AssemblyOperationKind operationKind)
@@ -1935,8 +2070,22 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.OpenProcessorRetention;
         }
 
+        private static bool IsMemoryOperation(AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.SeatMemoryModule ||
+                   operationKind == AssemblyOperationKind.RemoveMemoryModule ||
+                   operationKind == AssemblyOperationKind.CloseMemoryRetention ||
+                   operationKind == AssemblyOperationKind.OpenMemoryRetention;
+        }
+
         private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
         {
+            if (!IsMemoryOperation(receipt.OperationKind) &&
+                receipt.PreviousMemorySlotState != receipt.ResultingMemorySlotState)
+            {
+                return false;
+            }
+
             switch (receipt.OperationKind)
             {
                 case AssemblyOperationKind.AttachMotherboard:
@@ -2044,6 +2193,60 @@ namespace PCShopEmpire3D.Assembly
                                receipt.SourceProcessorRetentionOperationId,
                                receipt);
 
+                case AssemblyOperationKind.SeatMemoryModule:
+                    return receipt.PreviousSeatState == AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousMemorySlotState == MemorySlotState.EmptyOpen &&
+                           receipt.ResultingMemorySlotState ==
+                               MemorySlotState.MemoryModuleSeatedOpen &&
+                           receipt.DimmKeyOrientation ==
+                               DimmKeyOrientation.NotchAligned &&
+                           IsMatchingMotherboardSecureLineage(receipt);
+
+                case AssemblyOperationKind.RemoveMemoryModule:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousMemorySlotState ==
+                               MemorySlotState.MemoryModuleSeatedOpen &&
+                           receipt.ResultingMemorySlotState == MemorySlotState.EmptyOpen &&
+                           IsMatchingMemorySeatReceipt(
+                               receipt.SourceMemorySeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.CloseMemoryRetention:
+                    return receipt.PreviousSeatState == AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousMemorySlotState ==
+                               MemorySlotState.MemoryModuleSeatedOpen &&
+                           receipt.ResultingMemorySlotState ==
+                               MemorySlotState.MemoryModuleRetained &&
+                           receipt.SourceMemoryRetentionOperationId.IsEmpty &&
+                           IsMatchingMemorySeatReceipt(
+                               receipt.SourceMemorySeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.OpenMemoryRetention:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousMemorySlotState ==
+                               MemorySlotState.MemoryModuleRetained &&
+                           receipt.ResultingMemorySlotState ==
+                               MemorySlotState.MemoryModuleSeatedOpen &&
+                           IsMatchingMemorySeatReceipt(
+                               receipt.SourceMemorySeatOperationId,
+                               receipt) &&
+                           IsMatchingMemoryRetentionReceipt(
+                               receipt.SourceMemoryRetentionOperationId,
+                               receipt);
+
                 default:
                     return false;
             }
@@ -2063,6 +2266,13 @@ namespace PCShopEmpire3D.Assembly
             StableId<ProductDefinitionIdScope> foldedProcessorProductId = default;
             StableId<AssemblyOperationIdScope> foldedProcessorSeatOperationId = default;
             StableId<AssemblyOperationIdScope> foldedProcessorRetentionOperationId = default;
+            MemorySlotState foldedMemoryState = HasMemorySlot
+                ? MemorySlotState.EmptyOpen
+                : MemorySlotState.Unsupported;
+            StableId<ItemInstanceIdScope> foldedMemoryItemId = default;
+            StableId<ProductDefinitionIdScope> foldedMemoryProductId = default;
+            StableId<AssemblyOperationIdScope> foldedMemorySeatOperationId = default;
+            StableId<AssemblyOperationIdScope> foldedMemoryRetentionOperationId = default;
             long foldedInventoryRevision = 0;
 
             for (int index = 0; index < receiptsByRevision.Length; index++)
@@ -2072,6 +2282,7 @@ namespace PCShopEmpire3D.Assembly
                     receipt.AssemblyRevision != index + 1L ||
                     receipt.PreviousSeatState != foldedState ||
                     receipt.PreviousProcessorSocketState != foldedProcessorState ||
+                    receipt.PreviousMemorySlotState != foldedMemoryState ||
                     receipt.InventoryRevision < foldedInventoryRevision)
                 {
                     return false;
@@ -2081,7 +2292,9 @@ namespace PCShopEmpire3D.Assembly
                     receipt.OperationKind == AssemblyOperationKind.AttachMotherboard ||
                     receipt.OperationKind == AssemblyOperationKind.DetachMotherboard ||
                     receipt.OperationKind == AssemblyOperationKind.SeatProcessor ||
-                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessor;
+                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessor ||
+                    receipt.OperationKind == AssemblyOperationKind.SeatMemoryModule ||
+                    receipt.OperationKind == AssemblyOperationKind.RemoveMemoryModule;
                 if (inventoryTransfer &&
                     receipt.InventoryRevision <= foldedInventoryRevision)
                 {
@@ -2110,6 +2323,9 @@ namespace PCShopEmpire3D.Assembly
                             foldedProcessorState != (HasProcessorSocket
                                 ? ProcessorSocketState.EmptyOpen
                                 : ProcessorSocketState.Unsupported) ||
+                            foldedMemoryState != (HasMemorySlot
+                                ? MemorySlotState.EmptyOpen
+                                : MemorySlotState.Unsupported) ||
                             receipt.ItemId != foldedItemId ||
                             receipt.ProductId != foldedProductId ||
                             receipt.SourceAttachOperationId != foldedAttachOperationId ||
@@ -2226,12 +2442,88 @@ namespace PCShopEmpire3D.Assembly
                         foldedProcessorRetentionOperationId = default;
                         break;
 
+                    case AssemblyOperationKind.SeatMemoryModule:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedMemoryState != MemorySlotState.EmptyOpen ||
+                            !foldedMemoryItemId.IsEmpty ||
+                            !foldedMemoryProductId.IsEmpty ||
+                            !foldedMemorySeatOperationId.IsEmpty ||
+                            !foldedMemoryRetentionOperationId.IsEmpty ||
+                            receipt.SourceAttachOperationId !=
+                                foldedAttachOperationId ||
+                            receipt.SourceSecureOperationId !=
+                                foldedSecureOperationId ||
+                            receipt.DimmKeyOrientation !=
+                                DimmKeyOrientation.NotchAligned)
+                        {
+                            return false;
+                        }
+
+                        foldedMemoryItemId = receipt.ItemId;
+                        foldedMemoryProductId = receipt.ProductId;
+                        foldedMemorySeatOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.CloseMemoryRetention:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedMemoryState !=
+                                MemorySlotState.MemoryModuleSeatedOpen ||
+                            receipt.ItemId != foldedMemoryItemId ||
+                            receipt.ProductId != foldedMemoryProductId ||
+                            receipt.SourceMemorySeatOperationId !=
+                                foldedMemorySeatOperationId ||
+                            !foldedMemoryRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedMemoryRetentionOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.OpenMemoryRetention:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedMemoryState != MemorySlotState.MemoryModuleRetained ||
+                            receipt.ItemId != foldedMemoryItemId ||
+                            receipt.ProductId != foldedMemoryProductId ||
+                            receipt.SourceMemorySeatOperationId !=
+                                foldedMemorySeatOperationId ||
+                            receipt.SourceMemoryRetentionOperationId !=
+                                foldedMemoryRetentionOperationId ||
+                            foldedMemoryRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedMemoryRetentionOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.RemoveMemoryModule:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedMemoryState !=
+                                MemorySlotState.MemoryModuleSeatedOpen ||
+                            receipt.ItemId != foldedMemoryItemId ||
+                            receipt.ProductId != foldedMemoryProductId ||
+                            receipt.SourceMemorySeatOperationId !=
+                                foldedMemorySeatOperationId ||
+                            !receipt.SourceMemoryRetentionOperationId.IsEmpty ||
+                            !foldedMemoryRetentionOperationId.IsEmpty)
+                        {
+                            return false;
+                        }
+
+                        foldedMemoryItemId = default;
+                        foldedMemoryProductId = default;
+                        foldedMemorySeatOperationId = default;
+                        foldedMemoryRetentionOperationId = default;
+                        break;
+
                     default:
                         return false;
                 }
 
                 foldedState = receipt.ResultingSeatState;
                 foldedProcessorState = receipt.ResultingProcessorSocketState;
+                foldedMemoryState = receipt.ResultingMemorySlotState;
                 foldedInventoryRevision = receipt.InventoryRevision;
             }
 
@@ -2246,7 +2538,13 @@ namespace PCShopEmpire3D.Assembly
                    foldedProcessorSeatOperationId ==
                        _processorSeatedByOperationId &&
                    foldedProcessorRetentionOperationId ==
-                       _processorRetainedByOperationId;
+                       _processorRetainedByOperationId &&
+                   foldedMemoryState == _memorySlotState &&
+                   foldedMemoryItemId == _memoryItemId &&
+                   foldedMemoryProductId == _memoryProductId &&
+                   foldedMemorySeatOperationId == _memorySeatedByOperationId &&
+                   foldedMemoryRetentionOperationId ==
+                       _memoryRetainedByOperationId;
         }
 
         private bool IsMatchingAttachReceipt(

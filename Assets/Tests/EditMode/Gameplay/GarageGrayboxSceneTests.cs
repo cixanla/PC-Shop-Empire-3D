@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using PCShopEmpire3D.Actors;
 using PCShopEmpire3D.Assembly;
+using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
@@ -90,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(6));
+                Assert.That(physicalItems.Length, Is.EqualTo(7));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -111,9 +113,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection processor = physicalItems.Single(
                     item => item.ItemIdValue ==
                             GarageStockFlowSession.ProcessorItemInstanceIdValue);
+                PhysicalItemProjection memoryModule = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.MemoryItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(2));
+                    Is.EqualTo(3));
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -224,6 +229,50 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.EqualTo(ProcessorSocketState.EmptyOpen));
                 Assert.That(processorBinding.ValidateProjectionInvariant().IsSuccess,
                     Is.True);
+
+                DimmAssemblyItemBinding dimmBinding =
+                    memoryModule.GetComponent<DimmAssemblyItemBinding>();
+                Assert.That(dimmBinding, Is.Not.Null);
+                Assert.That(memoryModule.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.MemoryDisplayName));
+                Assert.That(memoryModule.SupportsPlacement, Is.False);
+                Assert.That(memoryModule.Body.mass, Is.EqualTo(0.045f).Within(0.001f));
+                Assert.That(Vector3.Distance(
+                    memoryModule.DropHalfExtents,
+                    new Vector3(0.068f, 0.018f, 0.010f)), Is.LessThan(0.0001f));
+                Assert.That(marker.MemoryModule, Is.SameAs(memoryModule));
+                Assert.That(marker.DimmBinding, Is.SameAs(dimmBinding));
+                Assert.That(marker.DimmSlot, Is.Not.Null);
+                Assert.That(marker.DimmSlot.IsConfigured, Is.True);
+                Assert.That(marker.DimmSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemorySlotIdValue));
+                Assert.That(marker.DimmSlot.RetentionIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryRetentionIdValue));
+                Assert.That(marker.DimmSlot.ChannelIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryChannelIdValue));
+                Assert.That(marker.DimmSlot.BankIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryBankIdValue));
+                Assert.That(marker.DimmSlot.FocusCollider.enabled, Is.False);
+                Assert.That(marker.DimmSlot.MatchesAuthorityState(
+                    AssemblySeatState.Empty,
+                    MemorySlotState.EmptyOpen), Is.True);
+                Assert.That(dimmBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(dimmBinding.PhysicalItem, Is.SameAs(memoryModule));
+                Assert.That(dimmBinding.Slot, Is.SameAs(marker.DimmSlot));
+                Assert.That(dimmBinding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryItemInstanceIdValue));
+                Assert.That(marker.StockFlow.Session.TryGetMemoryItem(
+                    out InventoryItemRecord memoryItem), Is.True);
+                Assert.That(memoryItem.Id,
+                    Is.EqualTo(marker.StockFlow.Session.MemoryItemId));
+                Assert.That(memoryItem.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.MemoryProductId));
+                Assert.That(memoryItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.HasMemorySlot, Is.True);
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.MemorySlotState,
+                    Is.EqualTo(MemorySlotState.EmptyOpen));
+                Assert.That(dimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -369,6 +418,77 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void DimmBindingRejectsCompensationUnsafeRevisionsBeforeMutation()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            var carryAnchor = new GameObject("DimmHeadroomCarryAnchor");
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
+                GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+                DimmAssemblyItemBinding binding = marker.DimmBinding;
+                PhysicalItemProjection memoryModule = marker.MemoryModule;
+                StableId<AssemblyOperationIdScope> attachId =
+                    StableId<AssemblyOperationIdScope>.Parse(
+                        "operation.scene-dimm-headroom-attach");
+                StableId<AssemblyOperationIdScope> secureId =
+                    StableId<AssemblyOperationIdScope>.Parse(
+                        "operation.scene-dimm-headroom-secure");
+
+                Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+                Assert.That(session.AttachMotherboard(attachId).IsSuccess, Is.True);
+                Assert.That(session.SecureMotherboardFastener(
+                    secureId,
+                    attachId,
+                    1).IsSuccess, Is.True);
+                Assert.That(session.PickupLooseMemoryToHands().IsSuccess, Is.True);
+                Assert.That(memoryModule.BeginCarry(
+                    carryAnchor.transform,
+                    LayerMask.NameToLayer("HeldItem")).IsSuccess, Is.True);
+
+                long assemblyRevision = session.AssemblyBuild.Revision;
+                long inventoryRevision = session.Inventory.Revision;
+                int receiptCount = session.AssemblyBuild.ReceiptCount;
+                SetRevision(session.AssemblyBuild, long.MaxValue - 1L);
+                Assert.That(binding.TryAttachAt(
+                        marker.DimmSlot.SnapPose,
+                        DimmKeyOrientation.NotchAligned).Error,
+                    Is.EqualTo(AssemblyFailures.RevisionOverflow));
+                Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptCount));
+                Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+                Assert.That(session.AssemblyBuild.MemorySlotState,
+                    Is.EqualTo(MemorySlotState.EmptyOpen));
+                Assert.That(memoryModule.IsCarried, Is.True);
+                SetRevision(session.AssemblyBuild, assemblyRevision);
+
+                SetRevision(session.Inventory, long.MaxValue - 1L);
+                Assert.That(binding.TryDropToWorld(new Pose(
+                        memoryModule.transform.position,
+                        memoryModule.transform.rotation)).Error,
+                    Is.EqualTo(AssemblyFailures.InventoryRevisionOverflow));
+                Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+                Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptCount));
+                Assert.That(session.AssemblyBuild.MemorySlotState,
+                    Is.EqualTo(MemorySlotState.EmptyOpen));
+                Assert.That(memoryModule.IsCarried, Is.True);
+                Assert.That(session.TryGetMemoryItem(out InventoryItemRecord memoryItem), Is.True);
+                Assert.That(memoryItem.ContainerId, Is.EqualTo(session.HandsContainerId));
+                SetRevision(session.Inventory, inventoryRevision);
+
+                Assert.That(binding.SyncProjectionToAuthority().IsSuccess, Is.True);
+                Assert.That(binding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(carryAnchor);
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsReadableSemiRealisticBenchmarkContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -380,7 +500,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-cpu-socket-retention-r24-v1"));
+                    Is.EqualTo("garage-dimm-dual-latch-r25-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -442,6 +562,36 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Transform processorPackage = assemblySlice
                     .GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "PrototypeProcessorPackage");
+                Transform dimmSlotRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardDimmSlotA2");
+                Transform dimmSlotBase = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmSlotBase");
+                Transform dimmSnapAnchor = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MemoryModuleSnapAnchor");
+                Transform leftLatchPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmLeftLatchPivot");
+                Transform leftLatch = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmLeftLatch");
+                Transform rightLatchPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmRightLatchPivot");
+                Transform rightLatch = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmRightLatch");
+                Transform dimmFocus = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "DimmSlotFocusTarget");
+                Transform memoryRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeMemoryModule");
+                Transform memoryPackage = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeMemoryModulePackage");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
                 Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
@@ -464,6 +614,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     assemblySlice.GetComponentInChildren<ProcessorAssemblyItemBinding>(true);
                 PhysicalItemProjection processor =
                     processorRoot.GetComponent<PhysicalItemProjection>();
+                DimmSlotProjection dimmSlot =
+                    dimmSlotRoot.GetComponent<DimmSlotProjection>();
+                DimmAssemblyItemBinding dimmBinding =
+                    memoryRoot.GetComponent<DimmAssemblyItemBinding>();
+                PhysicalItemProjection memoryModule =
+                    memoryRoot.GetComponent<PhysicalItemProjection>();
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
                 Assert.That(fastener, Is.Not.Null);
@@ -471,12 +627,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(processorSocket, Is.Not.Null);
                 Assert.That(processorBinding, Is.Not.Null);
                 Assert.That(processor, Is.Not.Null);
+                Assert.That(dimmSlot, Is.Not.Null);
+                Assert.That(dimmBinding, Is.Not.Null);
+                Assert.That(memoryModule, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
                 Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
                 Assert.That(marker.ProcessorSocket, Is.SameAs(processorSocket));
                 Assert.That(marker.ProcessorBinding, Is.SameAs(processorBinding));
                 Assert.That(marker.Processor, Is.SameAs(processor));
+                Assert.That(marker.DimmSlot, Is.SameAs(dimmSlot));
+                Assert.That(marker.DimmBinding, Is.SameAs(dimmBinding));
+                Assert.That(marker.MemoryModule, Is.SameAs(memoryModule));
                 Assert.That(binding.Fastener, Is.SameAs(fastener));
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
@@ -640,6 +802,115 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(processorBinding.ValidateProjectionInvariant().IsSuccess,
                     Is.True);
 
+                Assert.That(Vector3.Distance(
+                    dimmSlotRoot.localPosition,
+                    new Vector3(0.105f, 0.045f, 0.012f)), Is.LessThan(0.0001f));
+                Assert.That(dimmSlot.IsConfigured, Is.True);
+                Assert.That(dimmSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemorySlotIdValue));
+                Assert.That(dimmSlot.RetentionIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryRetentionIdValue));
+                Assert.That(dimmSlot.ChannelIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryChannelIdValue));
+                Assert.That(dimmSlot.BankIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryBankIdValue));
+                Assert.That(dimmSlot.SnapAnchor, Is.SameAs(dimmSnapAnchor));
+                Assert.That(dimmSlot.AssemblyRoot, Is.SameAs(binding.PhysicalItem.transform));
+                Assert.That(dimmSlot.LeftLatchPivot, Is.SameAs(leftLatchPivot));
+                Assert.That(dimmSlot.RightLatchPivot, Is.SameAs(rightLatchPivot));
+                Assert.That(leftLatchPivot, Is.Not.SameAs(rightLatchPivot));
+                Assert.That(Vector3.Distance(
+                    dimmSnapAnchor.localPosition,
+                    new Vector3(0f, 0f, 0.024f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    dimmSnapAnchor.localRotation,
+                    Quaternion.LookRotation(
+                        Vector3.right,
+                        Vector3.forward)), Is.LessThan(0.1f));
+                Assert.That(Vector3.Dot(dimmSnapAnchor.right, dimmSlotRoot.up),
+                    Is.GreaterThan(0.999f));
+                Assert.That(Vector3.Dot(dimmSnapAnchor.up, dimmSlotRoot.forward),
+                    Is.GreaterThan(0.999f));
+                Assert.That(dimmSlot.FocusCollider,
+                    Is.SameAs(dimmFocus.GetComponent<BoxCollider>()));
+                Assert.That(dimmSlot.FocusCollider.enabled, Is.False);
+                Assert.That(dimmSlot.FocusCollider.isTrigger, Is.False);
+                Assert.That(dimmSlot.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(Vector3.Distance(
+                    dimmFocus.localPosition,
+                    new Vector3(0f, 0f, 0.042f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    dimmFocus.GetComponent<BoxCollider>().size,
+                    new Vector3(0.052f, 0.150f, 0.080f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    leftLatchPivot.localPosition,
+                    new Vector3(0f, -0.064f, 0.006f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    rightLatchPivot.localPosition,
+                    new Vector3(0f, 0.064f, 0.006f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    leftLatchPivot.localRotation,
+                    Quaternion.Euler(-28f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(Quaternion.Angle(
+                    rightLatchPivot.localRotation,
+                    Quaternion.Euler(28f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(leftLatch.GetComponent<Collider>(), Is.Null);
+                Assert.That(rightLatch.GetComponent<Collider>(), Is.Null);
+                Assert.That(dimmSlotBase.GetComponent<Collider>(), Is.Null);
+                Assert.That(dimmSlot.MatchesAuthorityState(
+                    AssemblySeatState.Empty,
+                    MemorySlotState.EmptyOpen), Is.True);
+                Assert.That(dimmSlot.LatchVisualPhase,
+                    Is.EqualTo(DimmLatchVisualPhase.Stable));
+
+                Assert.That(dimmBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(dimmBinding.PhysicalItem, Is.SameAs(memoryModule));
+                Assert.That(dimmBinding.Slot, Is.SameAs(dimmSlot));
+                Assert.That(marker.PlayerCarry.MatchesDimmConfiguration(
+                    dimmSlot,
+                    dimmBinding), Is.True);
+                Assert.That(marker.PlayerCarry.MatchesDimmConfiguration(
+                    null,
+                    null), Is.False);
+                Assert.That(dimmBinding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryItemInstanceIdValue));
+                Assert.That(memoryModule.ItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.MemoryItemInstanceIdValue));
+                Assert.That(memoryModule.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.MemoryDisplayName));
+                Assert.That(memoryModule.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(memoryModule.SupportsPlacement, Is.False);
+                Assert.That(memoryModule.Body.mass, Is.EqualTo(0.045f).Within(0.001f));
+                Assert.That(memoryModule.Body.isKinematic, Is.True);
+                Assert.That(memoryModule.Body.useGravity, Is.False);
+                Assert.That(Vector3.Distance(
+                    memoryModule.DropHalfExtents,
+                    new Vector3(0.068f, 0.018f, 0.010f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    memoryRoot.localPosition,
+                    new Vector3(-1.05f, 0.992f, 3.93f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    memoryRoot.localRotation,
+                    Quaternion.Euler(-90f, 90f, 0f)), Is.LessThan(0.1f));
+                Assert.That(memoryRoot.GetComponent<BoxCollider>().center,
+                    Is.EqualTo(new Vector3(0f, 0.004f, 0f)));
+                Assert.That(Vector3.Distance(
+                    memoryRoot.GetComponent<BoxCollider>().size,
+                    new Vector3(0.136f, 0.034f, 0.010f)), Is.LessThan(0.0001f));
+                Mesh memoryMesh = memoryPackage.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(memoryMesh, Is.Not.Null);
+                Assert.That(memoryMesh.subMeshCount, Is.EqualTo(4));
+                Assert.That(memoryMesh.vertexCount, Is.GreaterThan(250));
+                Assert.That(memoryMesh.uv.Length, Is.EqualTo(memoryMesh.vertexCount));
+                Assert.That(memoryPackage.GetComponent<Renderer>().sharedMaterials.Length,
+                    Is.EqualTo(4));
+                Assert.That(Mathf.Abs(
+                    memoryPackage.GetComponent<Renderer>().bounds.min.y -
+                    workbenchTop.bounds.max.y), Is.LessThan(0.0001f));
+                Assert.That(dimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+
                 Bounds standoffBounds = standoffMarks.GetComponent<MeshFilter>().sharedMesh.bounds;
                 Assert.That(Vector3.Distance(
                     standoffBounds.center,
@@ -651,10 +922,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Bounds connectorBounds = connectorMarks.GetComponent<MeshFilter>().sharedMesh.bounds;
                 Assert.That(Vector3.Distance(
                     connectorBounds.center,
-                    new Vector3(0.0255f, 0.014f, 0.012f)), Is.LessThan(0.0001f));
+                    new Vector3(0.020f, 0.014f, 0.012f)), Is.LessThan(0.0001f));
                 Assert.That(Vector3.Distance(
                     connectorBounds.size,
-                    new Vector3(0.171f, 0.182f, 0.012f)), Is.LessThan(0.0001f));
+                    new Vector3(0.160f, 0.182f, 0.012f)), Is.LessThan(0.0001f));
                 Assert.That(fastener.FastenerIdValue,
                     Is.EqualTo(GarageStockFlowSession.MotherboardFastenerIdValue));
                 Assert.That(fastener.IsConfigured, Is.True);
@@ -705,9 +976,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(21));
+                    Is.EqualTo(25));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(11));
+                    Is.EqualTo(13));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));
@@ -790,6 +1061,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
             {
                 EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        private static void SetRevision(object authority, long revision)
+        {
+            PropertyInfo property = authority.GetType().GetProperty(
+                "Revision",
+                BindingFlags.Instance | BindingFlags.Public);
+            Assert.That(property, Is.Not.Null);
+            property.GetSetMethod(nonPublic: true).Invoke(
+                authority,
+                new object[] { revision });
         }
 
         private static T FindInScene<T>(Scene scene)

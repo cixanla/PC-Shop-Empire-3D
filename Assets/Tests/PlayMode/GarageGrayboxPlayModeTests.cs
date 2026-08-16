@@ -32,6 +32,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             GarageStockFlowSession.MotherboardItemInstanceIdValue;
         private const string ProcessorPhysicalItemId =
             GarageStockFlowSession.ProcessorItemInstanceIdValue;
+        private const string MemoryPhysicalItemId =
+            GarageStockFlowSession.MemoryItemInstanceIdValue;
 
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
@@ -1086,6 +1088,486 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(ProcessorSocketState.EmptyOpen));
             Assert.That(marker.ProcessorBinding.ValidateProjectionInvariant().IsSuccess,
                 Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator KeyboardMouseSeatsDualLatchGatesRemovesAndRecoversSameDimm()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            PhysicalItemProjection memory = FindPhysicalItem(MemoryPhysicalItemId);
+            int physicalIdentity = memory.GetInstanceID();
+            Pose initialPose = new Pose(memory.transform.position, memory.transform.rotation);
+            Transform initialParent = memory.transform.parent;
+            marker.PlayerMotor.SetPaused(false);
+            PrepareSecuredMotherboardForProcessor(marker, motherboard);
+
+            AimPlayerAtItem(marker, memory, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(memory));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(marker.DimmBinding.IsAuthorityInHands, Is.True);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("ANAHTARLI DDR5"));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToDimmSlot(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            long assemblyBeforeMode = session.AssemblyBuild.Revision;
+            long inventoryBeforeMode = session.Inventory.Revision;
+            int receiptsBeforeMode = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.IsDimmSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.ValidSeat),
+                $"{marker.PlayerCarry.LastFailureCode} overlaps=" +
+                DescribeDimmSeatOverlaps(marker, memory));
+            Assert.That(marker.PlayerCarry.PlacementPreview.IsShowingValidPose, Is.True);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeMode));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeMode));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeMode));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.EqualTo(2));
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.OrientationInvalid));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeMode));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeMode));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeMode));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.ValidSeat), marker.PlayerCarry.LastFailureCode);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeMode + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeMode + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeMode + 1));
+            AssertMemoryAtDimmSlot(marker, memory, "keyboard-seat");
+            AssemblyBuildSnapshot seatedSnapshot = session.AssemblyBuild.GetSnapshot();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToDimmSlot(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsDimmSlotFocused, Is.True,
+                marker.PlayerCarry.LastFailureCode);
+            long assemblyBeforeClose = session.AssemblyBuild.Revision;
+            long inventoryBeforeClose = session.Inventory.Revision;
+            int receiptsBeforeClose = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleRetained));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeClose + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeClose));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeClose + 1));
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.ClosingLeft));
+            Assert.That(marker.DimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.ClosingRight));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.MatchesAuthorityState(
+                AssemblySeatState.SeatedSecured,
+                MemorySlotState.MemoryModuleRetained), Is.True);
+            AssemblyBuildSnapshot retainedSnapshot = session.AssemblyBuild.GetSnapshot();
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.MemoryModuleRetained.Code));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeClose + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeClose));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeClose + 1));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToMotherboardFastener(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MotherboardSeatState,
+                Is.EqualTo(AssemblySeatState.SeatedUnsecured));
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleRetained));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            long assemblyBeforeHostDetach = session.AssemblyBuild.Revision;
+            long inventoryBeforeHostDetach = session.Inventory.Revision;
+            int receiptsBeforeHostDetach = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.MemoryModuleInstalled.Code));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeHostDetach));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeHostDetach));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(receiptsBeforeHostDetach));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToDimmSlot(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            long assemblyBeforeOpen = session.AssemblyBuild.Revision;
+            long inventoryBeforeOpen = session.Inventory.Revision;
+            int receiptsBeforeOpen = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null,
+                "Primary+Interact co-edge must only open the aggregate retention.");
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeOpen + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeOpen));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeOpen + 1));
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.OpeningRight));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.OpeningLeft));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.MatchesAuthorityState(
+                AssemblySeatState.SeatedUnsecured,
+                MemorySlotState.MemoryModuleSeatedOpen), Is.True);
+            AssemblyOperationReceipt openReceipt = session.AssemblyBuild.GetReceipts()
+                .Single(receipt => receipt.OperationKind ==
+                    AssemblyOperationKind.OpenMemoryRetention);
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            long assemblyBeforeRemove = session.AssemblyBuild.Revision;
+            long inventoryBeforeRemove = session.Inventory.Revision;
+            int receiptsBeforeRemove = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(marker.DimmBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(memory.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRemove + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRemove + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRemove + 1));
+            AssemblyOperationReceipt removeReceipt = session.AssemblyBuild.GetReceipts()
+                .Single(receipt => receipt.AssemblyRevision == assemblyBeforeRemove + 1);
+            Assert.That(removeReceipt.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.RemoveMemoryModule));
+            Assert.That(removeReceipt.ItemId, Is.EqualTo(session.MemoryItemId));
+            Assert.That(removeReceipt.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(removeReceipt.SlotId, Is.EqualTo(session.MemorySlotId));
+            Assert.That(removeReceipt.SourceContainerId,
+                Is.EqualTo(session.MemorySlotContainerId));
+            Assert.That(removeReceipt.TargetContainerId,
+                Is.EqualTo(session.HandsContainerId));
+            Assert.That(removeReceipt.SourceMemorySeatOperationId,
+                Is.EqualTo(seatedSnapshot.MemorySeatedByOperationId));
+            Assert.That(removeReceipt.ExpectedAssemblyRevision,
+                Is.EqualTo(assemblyBeforeRemove));
+            Assert.That(removeReceipt.PreviousMemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(removeReceipt.ResultingMemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(removeReceipt.InventoryRevision,
+                Is.EqualTo(inventoryBeforeRemove + 1));
+
+            long assemblyBeforeReplay = session.AssemblyBuild.Revision;
+            long inventoryBeforeReplay = session.Inventory.Revision;
+            int receiptsBeforeReplay = session.AssemblyBuild.ReceiptCount;
+            OperationResult<AssemblyOperationReceipt> replay = session.OpenMemoryRetention(
+                openReceipt.OperationId,
+                seatedSnapshot.MemorySeatedByOperationId,
+                retainedSnapshot.MemoryRetainedByOperationId,
+                assemblyBeforeOpen);
+            Assert.That(replay.IsSuccess, Is.True,
+                replay.IsFailure ? replay.Error.Code : string.Empty);
+            Assert.That(replay.Value, Is.SameAs(openReceipt));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeReplay));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeReplay));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeReplay));
+
+            long assemblyBeforeRecovery = session.AssemblyBuild.Revision;
+            long inventoryBeforeRecovery = session.Inventory.Revision;
+            int receiptsBeforeRecovery = session.AssemblyBuild.ReceiptCount;
+            OperationResult recovery = marker.PlayerCarry.TryRecoverHeldItem();
+            Assert.That(recovery.IsSuccess, Is.True,
+                recovery.IsFailure ? recovery.Error.Code : string.Empty);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(memory.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            Assert.That(memory.transform.parent, Is.SameAs(initialParent));
+            Assert.That(Vector3.Distance(memory.transform.position, initialPose.position),
+                Is.LessThan(0.0005f));
+            Assert.That(Quaternion.Angle(memory.transform.rotation, initialPose.rotation),
+                Is.LessThan(0.05f));
+            Assert.That(marker.DimmBinding.IsAuthorityLooseWorld, Is.True);
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(3));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
+            Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
+            Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(recovered.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(marker.DimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadKeyedCoEdgesCompleteDualLatchDimmCycle()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            PhysicalItemProjection memory = FindPhysicalItem(MemoryPhysicalItemId);
+            int physicalIdentity = memory.GetInstanceID();
+            marker.PlayerMotor.SetPaused(false);
+            PrepareSecuredMotherboardForProcessor(marker, motherboard);
+
+            AimPlayerAtItem(marker, memory, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+            Assert.That(marker.PlayerInput.InteractBindingPrompt, Is.EqualTo("A"));
+            Assert.That(marker.PlayerInput.DropBindingPrompt, Is.EqualTo("B"));
+            Assert.That(marker.PlayerInput.RotatePlacementBindingPrompt, Is.EqualTo("RB"));
+            Assert.That(marker.PlayerInput.PrimaryBindingPrompt, Is.EqualTo("RT"));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToDimmSlot(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsDimmSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.ValidSeat), marker.PlayerCarry.LastFailureCode);
+
+            long assemblyBeforeRotation = session.AssemblyBuild.Revision;
+            long inventoryBeforeRotation = session.Inventory.Revision;
+            int receiptsBeforeRotation = session.AssemblyBuild.ReceiptCount;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = (1u << (int)GamepadButton.RightShoulder) |
+                              (1u << (int)GamepadButton.East)
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.EqualTo(2));
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.OrientationInvalid));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRotation));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRotation));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(receiptsBeforeRotation));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = 1u << (int)GamepadButton.RightShoulder
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.PlacementRotationQuarterTurns, Is.Zero);
+            Assert.That(marker.PlayerCarry.CurrentDimmSlotStatus,
+                Is.EqualTo(DimmSlotStatus.ValidSeat), marker.PlayerCarry.LastFailureCode);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            AssertMemoryAtDimmSlot(marker, memory, "gamepad-seat");
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToDimmSlot(marker);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleRetained));
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.ClosingLeft));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.ClosingRight));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.MemoryModuleRetained.Code));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.OpeningRight));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+            Assert.That(marker.DimmSlot.LatchVisualPhase,
+                Is.EqualTo(DimmLatchVisualPhase.OpeningLeft));
+            marker.DimmSlot.AdvanceLatchAnimation(0.10f);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(memory));
+            Assert.That(marker.DimmBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(memory.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            AssemblyBuildSnapshot beforeRecovery = session.AssemblyBuild.GetSnapshot();
+            long assemblyBeforeRecovery = session.AssemblyBuild.Revision;
+            long inventoryBeforeRecovery = session.Inventory.Revision;
+            int receiptsBeforeRecovery = session.AssemblyBuild.ReceiptCount;
+            OperationResult recovery = marker.PlayerCarry.TryRecoverHeldItem();
+            Assert.That(recovery.IsSuccess, Is.True,
+                recovery.IsFailure ? recovery.Error.Code : string.Empty);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(memory.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery + 1));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
+            Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery + 1));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
+            Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
+            Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(recovered.ContainerId,
+                Is.EqualTo(session.MemorySlotContainerId));
+            AssemblyOperationReceipt recoveryReceipt = session.AssemblyBuild.GetReceipts()
+                .Single(receipt => receipt.AssemblyRevision == assemblyBeforeRecovery + 1);
+            Assert.That(recoveryReceipt.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.SeatMemoryModule));
+            Assert.That(recoveryReceipt.ItemId, Is.EqualTo(session.MemoryItemId));
+            Assert.That(recoveryReceipt.ProductId, Is.EqualTo(session.MemoryProductId));
+            Assert.That(recoveryReceipt.SlotId, Is.EqualTo(session.MemorySlotId));
+            Assert.That(recoveryReceipt.SourceContainerId,
+                Is.EqualTo(session.HandsContainerId));
+            Assert.That(recoveryReceipt.TargetContainerId,
+                Is.EqualTo(session.MemorySlotContainerId));
+            Assert.That(recoveryReceipt.SourceAttachOperationId,
+                Is.EqualTo(beforeRecovery.InstalledByOperationId));
+            Assert.That(recoveryReceipt.SourceSecureOperationId,
+                Is.EqualTo(beforeRecovery.SecuredByOperationId));
+            Assert.That(recoveryReceipt.ExpectedAssemblyRevision,
+                Is.EqualTo(assemblyBeforeRecovery));
+            Assert.That(recoveryReceipt.PreviousMemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(recoveryReceipt.ResultingMemorySlotState,
+                Is.EqualTo(MemorySlotState.MemoryModuleSeatedOpen));
+            Assert.That(recoveryReceipt.DimmKeyOrientation,
+                Is.EqualTo(DimmKeyOrientation.NotchAligned));
+            AssertMemoryAtDimmSlot(marker, memory, "gamepad-recovery");
+            Assert.That(marker.DimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -2781,7 +3263,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(2));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(3));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -2793,6 +3275,14 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(remainingProcessor.ProductId,
                 Is.EqualTo(stockFlow.Session.ProcessorProductId));
             Assert.That(remainingProcessor.ContainerId,
+                Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
+            Assert.That(stockFlow.Session.TryGetMemoryItem(
+                out InventoryItemRecord remainingMemory), Is.True);
+            Assert.That(remainingMemory.Id,
+                Is.EqualTo(stockFlow.Session.MemoryItemId));
+            Assert.That(remainingMemory.ProductId,
+                Is.EqualTo(stockFlow.Session.MemoryProductId));
+            Assert.That(remainingMemory.ContainerId,
                 Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
             Assert.That(stockFlow.Session.AssemblyBuild.ProcessorSocketState,
                 Is.EqualTo(ProcessorSocketState.EmptyOpen));
@@ -3189,7 +3679,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(2));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(3));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3201,6 +3691,14 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(remainingProcessor.ProductId,
                 Is.EqualTo(stockFlow.Session.ProcessorProductId));
             Assert.That(remainingProcessor.ContainerId,
+                Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
+            Assert.That(stockFlow.Session.TryGetMemoryItem(
+                out InventoryItemRecord remainingMemory), Is.True);
+            Assert.That(remainingMemory.Id,
+                Is.EqualTo(stockFlow.Session.MemoryItemId));
+            Assert.That(remainingMemory.ProductId,
+                Is.EqualTo(stockFlow.Session.MemoryProductId));
+            Assert.That(remainingMemory.ContainerId,
                 Is.EqualTo(stockFlow.Session.WorldFloorContainerId));
             Assert.That(stockFlow.Session.AssemblyBuild.ProcessorSocketState,
                 Is.EqualTo(ProcessorSocketState.EmptyOpen));
@@ -3818,6 +4316,62 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToDimmSlot(GaragePrototypeMarker marker)
+        {
+            Collider targetCollider = marker.DimmSlot.FocusCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void AssertMemoryAtDimmSlot(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection memory,
+            string stage)
+        {
+            Assert.That(memory.Ownership, Is.EqualTo(PhysicalItemOwnership.World), stage);
+            Assert.That(memory.IsStablePlacement, Is.True, stage);
+            Assert.That(memory.Body.isKinematic, Is.True, stage);
+            Assert.That(memory.Body.useGravity, Is.False, stage);
+            Assert.That(Vector3.Distance(
+                memory.transform.position,
+                marker.DimmSlot.SnapPose.position), Is.LessThan(0.0001f), stage);
+            Assert.That(Quaternion.Angle(
+                memory.transform.rotation,
+                marker.DimmSlot.SnapPose.rotation), Is.LessThan(0.01f), stage);
+            Assert.That(marker.DimmBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True, stage);
+        }
+
+        private static string DescribeDimmSeatOverlaps(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection memory)
+        {
+            Pose pose = marker.DimmSlot.SnapPose;
+            return string.Join(
+                ",",
+                Physics.OverlapBox(
+                        pose.position,
+                        memory.DropHalfExtents,
+                        pose.rotation,
+                        ~0,
+                        QueryTriggerInteraction.Ignore)
+                    .Select(collider => collider.name)
+                    .OrderBy(name => name));
         }
 
         private static void AssertProcessorAtSocket(

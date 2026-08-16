@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-cpu-socket-retention-r24-v1";
+        public const string Version = "garage-dimm-dual-latch-r25-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -34,6 +34,9 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private ProcessorSocketProjection processorSocket;
         [SerializeField] private ProcessorAssemblyItemBinding processorBinding;
         [SerializeField] private PhysicalItemProjection processor;
+        [SerializeField] private DimmSlotProjection dimmSlot;
+        [SerializeField] private DimmAssemblyItemBinding dimmBinding;
+        [SerializeField] private PhysicalItemProjection memoryModule;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -61,6 +64,12 @@ namespace PCShopEmpire3D.Presentation
 
         public PhysicalItemProjection Processor => processor;
 
+        public DimmSlotProjection DimmSlot => dimmSlot;
+
+        public DimmAssemblyItemBinding DimmBinding => dimmBinding;
+
+        public PhysicalItemProjection MemoryModule => memoryModule;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -74,7 +83,10 @@ namespace PCShopEmpire3D.Presentation
             MotherboardAssemblyItemBinding physicalMotherboardBinding = null,
             ProcessorSocketProjection physicalProcessorSocket = null,
             ProcessorAssemblyItemBinding physicalProcessorBinding = null,
-            PhysicalItemProjection physicalProcessor = null)
+            PhysicalItemProjection physicalProcessor = null,
+            DimmSlotProjection physicalDimmSlot = null,
+            DimmAssemblyItemBinding physicalDimmBinding = null,
+            PhysicalItemProjection physicalMemoryModule = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -89,6 +101,9 @@ namespace PCShopEmpire3D.Presentation
             processorSocket = physicalProcessorSocket;
             processorBinding = physicalProcessorBinding;
             processor = physicalProcessor;
+            dimmSlot = physicalDimmSlot;
+            dimmBinding = physicalDimmBinding;
+            memoryModule = physicalMemoryModule;
         }
 
         private void Start()
@@ -193,7 +208,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 2 &&
+                                          assemblySession.Inventory.SerializedItemCount == 3 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -257,6 +272,51 @@ namespace PCShopEmpire3D.Presentation
                                         assemblySession.AssemblyBuild.HasProcessorSocket &&
                                         assemblySession.AssemblyBuild.ProcessorSocketState ==
                                             ProcessorSocketState.EmptyOpen;
+            bool hasDimmSlot = assemblySession != null &&
+                               dimmSlot != null &&
+                               dimmSlot.IsConfigured &&
+                               dimmSlot.SlotIdValue ==
+                                   GarageStockFlowSession.MemorySlotIdValue &&
+                               dimmSlot.RetentionIdValue ==
+                                   GarageStockFlowSession.MemoryRetentionIdValue &&
+                               dimmSlot.ChannelIdValue ==
+                                   GarageStockFlowSession.MemoryChannelIdValue &&
+                               dimmSlot.BankIdValue ==
+                                   GarageStockFlowSession.MemoryBankIdValue &&
+                               dimmSlot.MatchesAuthorityState(
+                                   assemblySession.AssemblyBuild.MotherboardSeatState,
+                                   assemblySession.AssemblyBuild.MemorySlotState);
+            bool hasMemoryIdentity = assemblySession != null &&
+                                     dimmBinding != null &&
+                                     memoryModule != null &&
+                                     dimmBinding.Runtime == stockFlow &&
+                                     dimmBinding.PhysicalItem == memoryModule &&
+                                     dimmBinding.InventoryItemIdValue ==
+                                         assemblySession.MemoryItemId.Value &&
+                                     memoryModule.ItemIdValue ==
+                                         assemblySession.MemoryItemId.Value &&
+                                     assemblySession.TryGetMemoryItem(
+                                         out InventoryItemRecord memoryItem) &&
+                                     memoryItem.Id == assemblySession.MemoryItemId &&
+                                     memoryItem.ProductId == assemblySession.MemoryProductId &&
+                                     memoryItem.ContainerId ==
+                                         assemblySession.WorldFloorContainerId &&
+                                     CountCanonicalMemoryProjections(
+                                         assemblySession.MemoryItemId.Value) == 1 &&
+                                     dimmBinding.ValidateProjectionInvariant().IsSuccess;
+            bool hasMemoryAssembly = hasDimmSlot &&
+                                     hasMemoryIdentity &&
+                                     dimmBinding.Slot == dimmSlot &&
+                                     playerCarry != null &&
+                                     playerCarry.MatchesDimmConfiguration(
+                                         dimmSlot,
+                                         dimmBinding) &&
+                                     memoryModule.CarryProfile ==
+                                         PhysicalCarryProfile.PcComponent &&
+                                     assemblySession != null &&
+                                     assemblySession.AssemblyBuild.HasMemorySlot &&
+                                     assemblySession.AssemblyBuild.MemorySlotState ==
+                                         MemorySlotState.EmptyOpen;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -286,7 +346,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -294,6 +354,9 @@ namespace PCShopEmpire3D.Presentation
                 $"processor-socket={(hasProcessorSocket ? "ready" : "missing")} " +
                 $"processor-retention={(hasProcessorAssembly ? "ready" : "missing")} " +
                 $"processor-identity={(hasProcessorIdentity ? "stable" : "missing")} " +
+                $"dimm-slot={(hasDimmSlot ? "ready" : "missing")} " +
+                $"dimm-dual-latch={(hasMemoryAssembly ? "ready" : "missing")} " +
+                $"dimm-identity={(hasMemoryIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -301,11 +364,13 @@ namespace PCShopEmpire3D.Presentation
             bool runCustomerFlowSmoke = HasCommandLineArgument("-pse-customer-flow-smoke");
             bool runAssemblySmoke = HasCommandLineArgument("-pse-assembly-smoke");
             bool runProcessorSmoke = HasCommandLineArgument("-pse-processor-smoke");
+            bool runDimmSmoke = HasCommandLineArgument("-pse-dimm-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
                              (runAssemblySmoke ? 1 : 0) +
-                             (runProcessorSmoke ? 1 : 0);
+                             (runProcessorSmoke ? 1 : 0) +
+                             (runDimmSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -332,6 +397,14 @@ namespace PCShopEmpire3D.Presentation
                 Debug.LogError(
                     "GARAGE_CPU_SOCKET_RUNTIME_SMOKE " +
                     "cpu-socket-flow=failed code=smoke.processor-requires-development-build");
+                return;
+            }
+
+            if (runDimmSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_DIMM_RUNTIME_SMOKE " +
+                    "dimm-flow=failed code=smoke.dimm-requires-development-build");
                 return;
             }
 
@@ -362,6 +435,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunProcessorSocketSmoke());
+            }
+
+            if (runDimmSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunDimmSlotSmoke());
             }
         }
 
@@ -1134,7 +1213,7 @@ namespace PCShopEmpire3D.Presentation
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 2 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 3 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -1667,7 +1746,7 @@ namespace PCShopEmpire3D.Presentation
                     session.MotherboardItemId.Value ||
                 motherboard.ItemIdValue != session.MotherboardItemId.Value ||
                 physicalMotherboardCount != 1 ||
-                session.Inventory.SerializedItemCount != 2 ||
+                session.Inventory.SerializedItemCount != 3 ||
                 !session.TryGetMotherboardItem(out InventoryItemRecord looseItem) ||
                 looseItem.Id != session.MotherboardItemId ||
                 looseItem.ProductId != session.MotherboardProductId ||
@@ -2068,7 +2147,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 2 &&
+                             session.Inventory.SerializedItemCount == 3 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -2464,7 +2543,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 2 &&
+                             session.Inventory.SerializedItemCount == 3 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -2487,6 +2566,435 @@ namespace PCShopEmpire3D.Presentation
             yield return new WaitForEndOfFrame();
         }
 
+        private IEnumerator RunDimmSlotSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(false);
+            yield return null;
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            if (playerMotor == null ||
+                playerCarry == null ||
+                session == null ||
+                motherboardBinding == null ||
+                motherboardSeat == null ||
+                motherboardFastener == null ||
+                dimmSlot == null ||
+                dimmBinding == null ||
+                memoryModule == null)
+            {
+                LogDimmSlotSmokeFailure("smoke.context-missing");
+                yield break;
+            }
+
+            Pose initialMemoryPose = new Pose(
+                memoryModule.transform.position,
+                memoryModule.transform.rotation);
+            Transform initialMemoryParent = memoryModule.transform.parent;
+            int initialMemoryInstanceId = memoryModule.GetInstanceID();
+            bool slotChannel = dimmSlot.IsConfigured &&
+                               dimmSlot.SlotIdValue == session.MemorySlotId.Value &&
+                               dimmSlot.RetentionIdValue == session.MemoryRetentionId.Value &&
+                               dimmSlot.ChannelIdValue == session.MemoryChannelId.Value &&
+                               dimmSlot.BankIdValue == session.MemoryBankId.Value &&
+                               dimmBinding.Slot == dimmSlot &&
+                               playerCarry.MatchesDimmConfiguration(dimmSlot, dimmBinding);
+            bool preflight = slotChannel &&
+                             session.AssemblyBuild.HasMemorySlot &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.Empty &&
+                             session.AssemblyBuild.MemorySlotState ==
+                                 MemorySlotState.EmptyOpen &&
+                             session.TryGetMemoryItem(
+                                 out InventoryItemRecord looseMemory) &&
+                             looseMemory.Id == session.MemoryItemId &&
+                             looseMemory.ProductId == session.MemoryProductId &&
+                             looseMemory.ContainerId == session.WorldFloorContainerId &&
+                             CountCanonicalMemoryProjections(
+                                 session.MemoryItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 3 &&
+                             dimmBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!preflight)
+            {
+                LogDimmSlotSmokeFailure("smoke.preflight-mismatch");
+                yield break;
+            }
+
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+            long settlementRevision = session.CheckoutSettlements.Revision;
+            long visitRevision = session.CustomerVisits.Revision;
+            long consultationRevision = session.CustomerConsultations.Revision;
+            long actionRevision = session.CustomerOfferActions.Revision;
+
+            OperationResult motherboardPickup = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            MovePlayerToMotherboardSeat();
+            OperationResult motherboardMode =
+                playerCarry.TrySetMotherboardSeatMode(true);
+            OperationResult motherboardAttach = playerCarry.TryConfirmMotherboardSeat();
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardSecure =
+                playerCarry.TryOperateMotherboardFastener();
+            if (motherboardPickup.IsFailure ||
+                motherboardMode.IsFailure ||
+                motherboardAttach.IsFailure ||
+                motherboardSecure.IsFailure ||
+                session.AssemblyBuild.MotherboardSeatState !=
+                    AssemblySeatState.SeatedSecured)
+            {
+                LogDimmSlotSmokeFailure("smoke.motherboard-preflight-failed");
+                yield break;
+            }
+
+            OperationResult memoryPickup = playerCarry.TryPickup(memoryModule);
+            MovePlayerToDimmSlot();
+            OperationResult memoryMode = playerCarry.TrySetDimmSeatMode(true);
+            long keyedAssemblyRevision = session.AssemblyBuild.Revision;
+            long keyedInventoryRevision = session.Inventory.Revision;
+            int keyedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose carriedMemoryPose = new Pose(
+                memoryModule.transform.position,
+                memoryModule.transform.rotation);
+            OperationResult wrongOrientation =
+                playerCarry.TryRotateDimmSeatPreviewClockwise();
+            OperationResult wrongOrientationConfirm =
+                playerCarry.TryConfirmDimmSeat();
+            bool wrongOrientationBlocked = wrongOrientation.IsSuccess &&
+                                           wrongOrientationConfirm.IsFailure &&
+                                           wrongOrientationConfirm.Error ==
+                                               AssemblyFailures.DimmOrientationMismatch &&
+                                           !playerCarry.PlacementValid &&
+                                           playerCarry.CurrentDimmSlotStatus ==
+                                               DimmSlotStatus.OrientationInvalid &&
+                                           playerCarry.HeldItem == memoryModule &&
+                                           session.AssemblyBuild.Revision ==
+                                               keyedAssemblyRevision &&
+                                           session.Inventory.Revision ==
+                                               keyedInventoryRevision &&
+                                           session.AssemblyBuild.ReceiptCount ==
+                                               keyedReceiptCount &&
+                                           ApproximatelySamePose(
+                                               new Pose(
+                                                   memoryModule.transform.position,
+                                                   memoryModule.transform.rotation),
+                                               carriedMemoryPose);
+            playerCarry.TryRotateDimmSeatPreviewClockwise();
+
+            bool validPreview = memoryMode.IsSuccess &&
+                                wrongOrientationBlocked &&
+                                playerCarry.IsDimmSeatMode &&
+                                playerCarry.PlacementRotationQuarterTurns == 0 &&
+                                playerCarry.PlacementValid &&
+                                playerCarry.CurrentDimmSlotStatus ==
+                                    DimmSlotStatus.ValidSeat &&
+                                session.AssemblyBuild.Revision == keyedAssemblyRevision &&
+                                session.Inventory.Revision == keyedInventoryRevision &&
+                                session.AssemblyBuild.ReceiptCount == keyedReceiptCount;
+            OperationResult memorySeat = playerCarry.TryConfirmDimmSeat();
+            var receiptsAfterSeat = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt seatReceipt =
+                receiptsAfterSeat[receiptsAfterSeat.Count - 1];
+            if (memoryPickup.IsFailure ||
+                !validPreview ||
+                memorySeat.IsFailure ||
+                seatReceipt.OperationKind != AssemblyOperationKind.SeatMemoryModule ||
+                seatReceipt.DimmKeyOrientation != DimmKeyOrientation.NotchAligned ||
+                session.AssemblyBuild.MemorySlotState !=
+                    MemorySlotState.MemoryModuleSeatedOpen ||
+                dimmBinding.ValidateProjectionInvariant().IsFailure)
+            {
+                LogDimmSlotSmokeFailure("smoke.memory-seat-failed");
+                yield break;
+            }
+
+            long duplicateAssemblyRevision = session.AssemblyBuild.Revision;
+            long duplicateInventoryRevision = session.Inventory.Revision;
+            int duplicateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult duplicateSeat = dimmBinding.TryAttachAt(
+                dimmSlot.SnapPose,
+                DimmKeyOrientation.NotchAligned);
+            bool duplicateSeatBlocked = duplicateSeat.IsFailure &&
+                                        duplicateSeat.Error.Code ==
+                                            "assembly-memory.attach-authority-mismatch" &&
+                                        session.AssemblyBuild.Revision ==
+                                            duplicateAssemblyRevision &&
+                                        session.Inventory.Revision ==
+                                            duplicateInventoryRevision &&
+                                        session.AssemblyBuild.ReceiptCount ==
+                                            duplicateReceiptCount &&
+                                        session.AssemblyBuild.MemorySlotState ==
+                                            MemorySlotState.MemoryModuleSeatedOpen;
+
+            MovePlayerToDimmSlot();
+            long closeAssemblyRevision = session.AssemblyBuild.Revision;
+            long closeInventoryRevision = session.Inventory.Revision;
+            int closeReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult close = playerCarry.TryOperateDimmRetention();
+            var receiptsAfterClose = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt closeReceipt =
+                receiptsAfterClose[receiptsAfterClose.Count - 1];
+            bool closeAuthorityIsolated = close.IsSuccess &&
+                                          closeReceipt.OperationKind ==
+                                              AssemblyOperationKind.CloseMemoryRetention &&
+                                          session.AssemblyBuild.Revision ==
+                                              closeAssemblyRevision + 1 &&
+                                          session.AssemblyBuild.ReceiptCount ==
+                                              closeReceiptCount + 1 &&
+                                          session.Inventory.Revision ==
+                                              closeInventoryRevision &&
+                                          session.AssemblyBuild.MemorySlotState ==
+                                              MemorySlotState.MemoryModuleRetained &&
+                                          dimmSlot.LatchVisualPhase ==
+                                              DimmLatchVisualPhase.ClosingLeft &&
+                                          dimmBinding.ValidateProjectionInvariant().IsSuccess;
+            dimmSlot.AdvanceLatchAnimation(0.10f);
+            bool closingRight = dimmSlot.LatchVisualPhase ==
+                                DimmLatchVisualPhase.ClosingRight &&
+                                session.AssemblyBuild.Revision ==
+                                    closeAssemblyRevision + 1 &&
+                                session.AssemblyBuild.ReceiptCount ==
+                                    closeReceiptCount + 1 &&
+                                session.Inventory.Revision == closeInventoryRevision;
+            dimmSlot.AdvanceLatchAnimation(0.10f);
+            bool closeStable = dimmSlot.MatchesAuthorityState(
+                AssemblySeatState.SeatedSecured,
+                MemorySlotState.MemoryModuleRetained);
+
+            long retainedGateAssemblyRevision = session.AssemblyBuild.Revision;
+            long retainedGateInventoryRevision = session.Inventory.Revision;
+            int retainedGateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose retainedPose = new Pose(
+                memoryModule.transform.position,
+                memoryModule.transform.rotation);
+            OperationResult retainedRemoval = playerCarry.TryPickup(memoryModule);
+            bool retainedGate = retainedRemoval.IsFailure &&
+                                retainedRemoval.Error ==
+                                    AssemblyFailures.MemoryModuleRetained &&
+                                playerCarry.HeldItem == null &&
+                                session.AssemblyBuild.Revision ==
+                                    retainedGateAssemblyRevision &&
+                                session.Inventory.Revision ==
+                                    retainedGateInventoryRevision &&
+                                session.AssemblyBuild.ReceiptCount ==
+                                    retainedGateReceiptCount &&
+                                ApproximatelySamePose(
+                                    new Pose(
+                                        memoryModule.transform.position,
+                                        memoryModule.transform.rotation),
+                                    retainedPose);
+
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardUnsecure =
+                playerCarry.TryOperateMotherboardFastener();
+            long hostGateAssemblyRevision = session.AssemblyBuild.Revision;
+            long hostGateInventoryRevision = session.Inventory.Revision;
+            int hostGateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult hostDetach = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            bool hostDetachGate = motherboardUnsecure.IsSuccess &&
+                                  hostDetach.IsFailure &&
+                                  hostDetach.Error ==
+                                      AssemblyFailures.MemoryModuleInstalled &&
+                                  playerCarry.HeldItem == null &&
+                                  session.AssemblyBuild.MotherboardSeatState ==
+                                      AssemblySeatState.SeatedUnsecured &&
+                                  session.AssemblyBuild.MemorySlotState ==
+                                      MemorySlotState.MemoryModuleRetained &&
+                                  session.AssemblyBuild.Revision ==
+                                      hostGateAssemblyRevision &&
+                                  session.Inventory.Revision ==
+                                      hostGateInventoryRevision &&
+                                  session.AssemblyBuild.ReceiptCount ==
+                                      hostGateReceiptCount;
+
+            MovePlayerToDimmSlot();
+            long openAssemblyRevision = session.AssemblyBuild.Revision;
+            long openInventoryRevision = session.Inventory.Revision;
+            int openReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult open = playerCarry.TryOperateDimmRetention();
+            var receiptsAfterOpen = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt openReceipt =
+                receiptsAfterOpen[receiptsAfterOpen.Count - 1];
+            bool openAuthorityIsolated = open.IsSuccess &&
+                                         openReceipt.OperationKind ==
+                                             AssemblyOperationKind.OpenMemoryRetention &&
+                                         session.AssemblyBuild.Revision ==
+                                             openAssemblyRevision + 1 &&
+                                         session.AssemblyBuild.ReceiptCount ==
+                                             openReceiptCount + 1 &&
+                                         session.Inventory.Revision ==
+                                             openInventoryRevision &&
+                                         session.AssemblyBuild.MemorySlotState ==
+                                             MemorySlotState.MemoryModuleSeatedOpen &&
+                                         dimmSlot.LatchVisualPhase ==
+                                             DimmLatchVisualPhase.OpeningRight &&
+                                         dimmBinding.ValidateProjectionInvariant().IsSuccess;
+            dimmSlot.AdvanceLatchAnimation(0.10f);
+            bool openingLeft = dimmSlot.LatchVisualPhase ==
+                               DimmLatchVisualPhase.OpeningLeft &&
+                               session.AssemblyBuild.Revision ==
+                                   openAssemblyRevision + 1 &&
+                               session.AssemblyBuild.ReceiptCount ==
+                                   openReceiptCount + 1 &&
+                               session.Inventory.Revision == openInventoryRevision;
+            dimmSlot.AdvanceLatchAnimation(0.10f);
+            bool openStable = dimmSlot.MatchesAuthorityState(
+                AssemblySeatState.SeatedUnsecured,
+                MemorySlotState.MemoryModuleSeatedOpen);
+            bool latchOrder = closeAuthorityIsolated &&
+                              closingRight &&
+                              closeStable &&
+                              openAuthorityIsolated &&
+                              openingLeft &&
+                              openStable;
+            bool dimmTransitionsIsolated = duplicateSeatBlocked &&
+                                           closeAuthorityIsolated &&
+                                           openAuthorityIsolated &&
+                                           retainedGate &&
+                                           hostDetachGate;
+            if (!latchOrder || !retainedGate || !hostDetachGate)
+            {
+                LogDimmSlotSmokeFailure("smoke.retention-cycle-failed");
+                yield break;
+            }
+
+            OperationResult remove = playerCarry.TryPickup(memoryModule);
+            var receiptsAfterRemove = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt removeReceipt =
+                receiptsAfterRemove[receiptsAfterRemove.Count - 1];
+            if (remove.IsFailure ||
+                removeReceipt.OperationKind != AssemblyOperationKind.RemoveMemoryModule ||
+                playerCarry.HeldItem != memoryModule ||
+                !dimmBinding.IsAuthorityInHands ||
+                session.AssemblyBuild.MemorySlotState != MemorySlotState.EmptyOpen)
+            {
+                LogDimmSlotSmokeFailure("smoke.memory-remove-failed");
+                yield break;
+            }
+
+            OperationResult recovery = playerCarry.TryRecoverHeldItem();
+            long finalAssemblyRevision = session.AssemblyBuild.Revision;
+            int finalReceiptCount = session.AssemblyBuild.ReceiptCount;
+            long finalInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> delayedSeatReplay =
+                session.SeatMemoryModule(
+                    seatReceipt.OperationId,
+                    seatReceipt.DimmKeyOrientation,
+                    seatReceipt.SourceAttachOperationId,
+                    seatReceipt.SourceSecureOperationId,
+                    seatReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedCloseReplay =
+                session.CloseMemoryRetention(
+                    closeReceipt.OperationId,
+                    closeReceipt.SourceMemorySeatOperationId,
+                    closeReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedOpenReplay =
+                session.OpenMemoryRetention(
+                    openReceipt.OperationId,
+                    openReceipt.SourceMemorySeatOperationId,
+                    openReceipt.SourceMemoryRetentionOperationId,
+                    openReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedRemoveReplay =
+                session.RemoveMemoryModule(
+                    removeReceipt.OperationId,
+                    removeReceipt.SourceMemorySeatOperationId,
+                    removeReceipt.ExpectedAssemblyRevision);
+            bool replayStable = delayedSeatReplay.IsSuccess &&
+                                ReferenceEquals(delayedSeatReplay.Value, seatReceipt) &&
+                                delayedCloseReplay.IsSuccess &&
+                                ReferenceEquals(delayedCloseReplay.Value, closeReceipt) &&
+                                delayedOpenReplay.IsSuccess &&
+                                ReferenceEquals(delayedOpenReplay.Value, openReceipt) &&
+                                delayedRemoveReplay.IsSuccess &&
+                                ReferenceEquals(delayedRemoveReplay.Value, removeReceipt) &&
+                                session.AssemblyBuild.Revision == finalAssemblyRevision &&
+                                session.AssemblyBuild.ReceiptCount == finalReceiptCount &&
+                                session.Inventory.Revision == finalInventoryRevision;
+            bool recovered = recovery.IsSuccess &&
+                             playerCarry.HeldItem == null &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.SeatedUnsecured &&
+                             session.AssemblyBuild.MemorySlotState ==
+                                 MemorySlotState.EmptyOpen &&
+                             session.TryGetMemoryItem(
+                                 out InventoryItemRecord recoveredMemory) &&
+                             recoveredMemory.Id == session.MemoryItemId &&
+                             recoveredMemory.ProductId == session.MemoryProductId &&
+                             recoveredMemory.ContainerId == session.WorldFloorContainerId &&
+                             memoryModule.GetInstanceID() == initialMemoryInstanceId &&
+                             memoryModule.transform.parent == initialMemoryParent &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     memoryModule.transform.position,
+                                     memoryModule.transform.rotation),
+                                 initialMemoryPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     memoryModule.Body.position,
+                                     memoryModule.Body.rotation),
+                                 initialMemoryPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     memoryModule.LastSafePosition,
+                                     memoryModule.LastSafeRotation),
+                                 initialMemoryPose) &&
+                             memoryModule.Ownership == PhysicalItemOwnership.World &&
+                             memoryModule.IsStablePlacement &&
+                             CountCanonicalMemoryProjections(
+                                 session.MemoryItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 3 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.HandsContainerId).Value == 0 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.MemorySlotContainerId).Value == 0 &&
+                             dimmBinding.ValidateProjectionInvariant().IsSuccess &&
+                             session.ValidateInvariants().IsSuccess;
+            bool authorityIsolated = dimmTransitionsIsolated &&
+                                     session.Orders.Revision == orderRevision &&
+                                     session.RetailOffers.Revision == offerRevision &&
+                                     session.RetailBaskets.Revision == basketRevision &&
+                                     session.RetailCheckouts.Revision == checkoutRevision &&
+                                     session.CheckoutSettlements.Revision == settlementRevision &&
+                                     session.CustomerVisits.Revision == visitRevision &&
+                                     session.CustomerConsultations.Revision ==
+                                         consultationRevision &&
+                                     session.CustomerOfferActions.Revision == actionRevision &&
+                                     session.AssemblyBuild.ProcessorSocketState ==
+                                         ProcessorSocketState.EmptyOpen &&
+                                     session.TryGetProcessorItem(
+                                         out InventoryItemRecord unchangedProcessor) &&
+                                     unchangedProcessor.Id == session.ProcessorItemId &&
+                                     unchangedProcessor.ProductId ==
+                                         session.ProcessorProductId &&
+                                     unchangedProcessor.ContainerId ==
+                                         session.WorldFloorContainerId;
+            if (!recovered || !replayStable || !duplicateSeatBlocked || !authorityIsolated)
+            {
+                LogDimmSlotSmokeFailure(
+                    !recovered
+                        ? "smoke.recovery-failed"
+                        : !replayStable
+                            ? "smoke.delayed-replay-failed"
+                            : !duplicateSeatBlocked
+                                ? "smoke.duplicate-seat-not-blocked"
+                                : "smoke.authority-isolation-failed");
+                yield break;
+            }
+
+            Debug.Log(
+                "GARAGE_DIMM_RUNTIME_SMOKE dimm-flow=ok preflight=ok " +
+                "slot-channel=ok keyed-orientation=ok latch-order=ok " +
+                "duplicate-seat-blocked=ok retained-remove-gate=ok " +
+                "host-detach-gate=ok replay=ok authority-isolated=ok " +
+                "identity=stable recovery=ok");
+            yield return new WaitForEndOfFrame();
+        }
+
         private static void LogMotherboardAssemblySmokeFailure(string code)
         {
             Debug.LogError(
@@ -2497,6 +3005,12 @@ namespace PCShopEmpire3D.Presentation
         {
             Debug.LogError(
                 $"GARAGE_CPU_SOCKET_RUNTIME_SMOKE cpu-socket-flow=failed code={code}");
+        }
+
+        private static void LogDimmSlotSmokeFailure(string code)
+        {
+            Debug.LogError(
+                $"GARAGE_DIMM_RUNTIME_SMOKE dimm-flow=failed code={code}");
         }
 
         private static int CountCanonicalMotherboardProjections(string canonicalItemId)
@@ -2516,6 +3030,22 @@ namespace PCShopEmpire3D.Presentation
         }
 
         private static int CountCanonicalProcessorProjections(string canonicalItemId)
+        {
+            int count = 0;
+            foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
+                         FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+            {
+                if (item != null && item.ItemIdValue == canonicalItemId)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static int CountCanonicalMemoryProjections(string canonicalItemId)
         {
             int count = 0;
             foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
@@ -2695,6 +3225,27 @@ namespace PCShopEmpire3D.Presentation
         private void MovePlayerToProcessorSocket()
         {
             Vector3 target = processorSocket.FocusCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+
+            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.rotation = Quaternion.LookRotation(
+                    target - playerCamera.transform.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToDimmSlot()
+        {
+            Vector3 target = dimmSlot.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;
