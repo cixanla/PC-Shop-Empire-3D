@@ -246,10 +246,11 @@ Tam konuşma ve dosya geçmişi:
 
 - Epic #10'un dördüncü child paketi [Issue #56](https://github.com/cixanla/PC-Shop-Empire-3D/issues/56) ile tek canonical serialized DDR5 UDIMM, tek immutable A2/Channel A/Bank 2 topology ve tek dual-latch retention aggregate akışına sınırlandı.
 - Feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, tree `291b23cb2fe774cb44ba71b26716d7c8131370a2`; atomik managed triple claim, four-operation Assembly authority/receipt lineage, secured-host gate, installed-DIMM detach gate ve same-instance recovery ekledi.
-- [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055) başarılıdır; source/docs, Issue/Project ve USB metadata kapanışı sürmektedir.
+- Source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`; [Repository Guard 31919985055](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31919985055) ve [31920258176](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31920258176) başarılıdır.
 - GarageGraybox r25 dört materyalli UDIMM package, matching notch, hard-surface A2 bed/rail ve iki ayrı latch pivotu taşır. Close sol→sağ, open sağ→sol görünür sıradadır; tek Assembly revision/receipt korunur ve `25/13/1` render/physics/text bütçesi sabittir.
 - Gerçek keyboard/mouse ve gamepad PlayMode testleri pickup, guided mode, yalnız 0°↔180° keyed toggle, seat, dual-latch close/open, retained remove, DIMM-installed motherboard detach, dynamic compact HUD, co-edge/pause drain ve recovery'yi taşır.
 - Final EditMode `461/461`, PlayMode `33/33`, Universal macOS `328268700` bayt ve Apple M4/Metal 1280×720 `garage-dimm-dual-latch-r25-v1 dimm-flow=ok ... keyed-orientation=ok latch-order=ok replay=ok authority-isolated=ok identity=stable recovery=ok` başarılıdır.
+- Ayrı `2026-08-16_STAGE_B_DETERMINISTIC_SINGLE_DIMM_DUAL_LATCH_RETENTION` USB milestone'u 663 tracked source + 4 final evidence + source kaydıyla 668/668 readback, `8658b50a…c50` manifest ve 12.073.868 payload baytıyla doğrulandı; bütün güvenlik/AppleDouble mismatch sayaçları `0`dır. Acceptance/Project final geçişi metadata Guard sonrasındadır.
 - Sonraki bounded Epic #10 adayı yalnız tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır. İkinci storage yolu, SATA/RAID, GPU/cooler, tam build/benchmark, genel Inventory hardening, Save/Guardian ve Windows/Steam ayrı kalır.
 
 ## 9. USB ve yedek güvenlik katmanı
@@ -295,4 +296,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, EditMode 461/461, PlayMode 33/33, Universal Mac `328268700` bayt, Apple M4/Metal `garage-dimm-dual-latch-r25-v1 dimm-flow=ok ... keyed-orientation=ok latch-order=ok replay=ok authority-isolated=ok identity=stable recovery=ok` ve Guard `31919985055` ile doğrulandı; source/docs, acceptance/Project ve USB metadata kapanışı sürmektedir. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
+> Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, EditMode 461/461, PlayMode 33/33, Universal Mac `328268700` bayt, Apple M4/Metal exact r25 smoke, iki başarılı Guard ve 668/668 doğrulanmış USB milestone ile sabitlendi; acceptance/Project final geçişi metadata Guard sonrasındadır. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
