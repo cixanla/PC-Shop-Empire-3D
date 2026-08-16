@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-dimm-dual-latch-r25-v1";
+        public const string Version = "garage-m2-nvme-captive-screw-r26-v1";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -37,6 +37,9 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private DimmSlotProjection dimmSlot;
         [SerializeField] private DimmAssemblyItemBinding dimmBinding;
         [SerializeField] private PhysicalItemProjection memoryModule;
+        [SerializeField] private M2StorageSlotProjection storageSlot;
+        [SerializeField] private M2StorageAssemblyItemBinding storageBinding;
+        [SerializeField] private PhysicalItemProjection storageDevice;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -70,6 +73,12 @@ namespace PCShopEmpire3D.Presentation
 
         public PhysicalItemProjection MemoryModule => memoryModule;
 
+        public M2StorageSlotProjection StorageSlot => storageSlot;
+
+        public M2StorageAssemblyItemBinding StorageBinding => storageBinding;
+
+        public PhysicalItemProjection StorageDevice => storageDevice;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -86,7 +95,10 @@ namespace PCShopEmpire3D.Presentation
             PhysicalItemProjection physicalProcessor = null,
             DimmSlotProjection physicalDimmSlot = null,
             DimmAssemblyItemBinding physicalDimmBinding = null,
-            PhysicalItemProjection physicalMemoryModule = null)
+            PhysicalItemProjection physicalMemoryModule = null,
+            M2StorageSlotProjection physicalStorageSlot = null,
+            M2StorageAssemblyItemBinding physicalStorageBinding = null,
+            PhysicalItemProjection physicalStorageDevice = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -104,6 +116,9 @@ namespace PCShopEmpire3D.Presentation
             dimmSlot = physicalDimmSlot;
             dimmBinding = physicalDimmBinding;
             memoryModule = physicalMemoryModule;
+            storageSlot = physicalStorageSlot;
+            storageBinding = physicalStorageBinding;
+            storageDevice = physicalStorageDevice;
         }
 
         private void Start()
@@ -208,7 +223,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 3 &&
+                                          assemblySession.Inventory.SerializedItemCount == 4 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -317,6 +332,49 @@ namespace PCShopEmpire3D.Presentation
                                      assemblySession.AssemblyBuild.HasMemorySlot &&
                                      assemblySession.AssemblyBuild.MemorySlotState ==
                                          MemorySlotState.EmptyOpen;
+            bool hasStorageSlot = assemblySession != null &&
+                                  storageSlot != null &&
+                                  storageSlot.IsConfigured &&
+                                  storageSlot.SlotIdValue ==
+                                      GarageStockFlowSession.StorageSlotIdValue &&
+                                  storageSlot.StandoffIdValue ==
+                                      GarageStockFlowSession.StorageStandoffIdValue &&
+                                  storageSlot.CaptiveScrewIdValue ==
+                                      GarageStockFlowSession.StorageCaptiveScrewIdValue &&
+                                  storageSlot.MatchesLogicalAuthorityState(
+                                      assemblySession.AssemblyBuild.MotherboardSeatState,
+                                      assemblySession.AssemblyBuild.StorageSlotState);
+            bool hasStorageIdentity = assemblySession != null &&
+                                      storageBinding != null &&
+                                      storageDevice != null &&
+                                      storageBinding.Runtime == stockFlow &&
+                                      storageBinding.PhysicalItem == storageDevice &&
+                                      storageBinding.InventoryItemIdValue ==
+                                          assemblySession.StorageItemId.Value &&
+                                      storageDevice.ItemIdValue ==
+                                          assemblySession.StorageItemId.Value &&
+                                      assemblySession.TryGetStorageItem(
+                                          out InventoryItemRecord storageItem) &&
+                                      storageItem.Id == assemblySession.StorageItemId &&
+                                      storageItem.ProductId ==
+                                          assemblySession.StorageProductId &&
+                                      storageItem.ContainerId ==
+                                          assemblySession.WorldFloorContainerId &&
+                                      CountCanonicalStorageProjections(
+                                          assemblySession.StorageItemId.Value) == 1 &&
+                                      storageBinding.ValidateProjectionInvariant().IsSuccess;
+            bool hasStorageAssembly = hasStorageSlot &&
+                                      hasStorageIdentity &&
+                                      storageBinding.Slot == storageSlot &&
+                                      playerCarry != null &&
+                                      playerCarry.MatchesM2StorageConfiguration(
+                                          storageSlot,
+                                          storageBinding) &&
+                                      storageDevice.CarryProfile ==
+                                          PhysicalCarryProfile.PcComponent &&
+                                      assemblySession.AssemblyBuild.HasStorageSlot &&
+                                      assemblySession.AssemblyBuild.StorageSlotState ==
+                                          StorageSlotState.EmptyOpen;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -346,7 +404,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -357,6 +415,9 @@ namespace PCShopEmpire3D.Presentation
                 $"dimm-slot={(hasDimmSlot ? "ready" : "missing")} " +
                 $"dimm-dual-latch={(hasMemoryAssembly ? "ready" : "missing")} " +
                 $"dimm-identity={(hasMemoryIdentity ? "stable" : "missing")} " +
+                $"m2-slot={(hasStorageSlot ? "ready" : "missing")} " +
+                $"m2-captive-screw={(hasStorageAssembly ? "ready" : "missing")} " +
+                $"m2-identity={(hasStorageIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -365,12 +426,14 @@ namespace PCShopEmpire3D.Presentation
             bool runAssemblySmoke = HasCommandLineArgument("-pse-assembly-smoke");
             bool runProcessorSmoke = HasCommandLineArgument("-pse-processor-smoke");
             bool runDimmSmoke = HasCommandLineArgument("-pse-dimm-smoke");
+            bool runStorageSmoke = HasCommandLineArgument("-pse-storage-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
                              (runAssemblySmoke ? 1 : 0) +
                              (runProcessorSmoke ? 1 : 0) +
-                             (runDimmSmoke ? 1 : 0);
+                             (runDimmSmoke ? 1 : 0) +
+                             (runStorageSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -408,6 +471,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runStorageSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_STORAGE_RUNTIME_SMOKE " +
+                    "storage-flow=failed code=smoke.storage-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -441,6 +512,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunDimmSlotSmoke());
+            }
+
+            if (runStorageSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunM2StorageSmoke());
             }
         }
 
@@ -1213,7 +1290,7 @@ namespace PCShopEmpire3D.Presentation
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 3 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 4 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -2147,7 +2224,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 3 &&
+                             session.Inventory.SerializedItemCount == 4 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -2543,7 +2620,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 3 &&
+                             session.Inventory.SerializedItemCount == 4 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -2614,7 +2691,7 @@ namespace PCShopEmpire3D.Presentation
                              looseMemory.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 3 &&
+                             session.Inventory.SerializedItemCount == 4 &&
                              dimmBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -2947,7 +3024,7 @@ namespace PCShopEmpire3D.Presentation
                              memoryModule.IsStablePlacement &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 3 &&
+                             session.Inventory.SerializedItemCount == 4 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -2995,6 +3072,346 @@ namespace PCShopEmpire3D.Presentation
             yield return new WaitForEndOfFrame();
         }
 
+        private IEnumerator RunM2StorageSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(false);
+            yield return null;
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            if (playerMotor == null ||
+                playerCarry == null ||
+                session == null ||
+                motherboardBinding == null ||
+                motherboardSeat == null ||
+                motherboardFastener == null ||
+                storageSlot == null ||
+                storageBinding == null ||
+                storageDevice == null)
+            {
+                LogM2StorageSmokeFailure("smoke.context-missing");
+                yield break;
+            }
+
+            Pose initialPose = new Pose(
+                storageDevice.transform.position,
+                storageDevice.transform.rotation);
+            Transform initialParent = storageDevice.transform.parent;
+            int initialInstanceId = storageDevice.GetInstanceID();
+            bool slotInterface = storageSlot.IsConfigured &&
+                                 storageSlot.SlotIdValue == session.StorageSlotId.Value &&
+                                 storageSlot.StandoffIdValue ==
+                                     session.StorageStandoffId.Value &&
+                                 storageSlot.CaptiveScrewIdValue ==
+                                     session.StorageCaptiveScrewId.Value &&
+                                 storageBinding.Slot == storageSlot &&
+                                 playerCarry.MatchesM2StorageConfiguration(
+                                     storageSlot,
+                                     storageBinding);
+            bool preflight = slotInterface &&
+                             session.AssemblyBuild.HasStorageSlot &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.Empty &&
+                             session.AssemblyBuild.StorageSlotState ==
+                                 StorageSlotState.EmptyOpen &&
+                             session.TryGetStorageItem(
+                                 out InventoryItemRecord looseStorage) &&
+                             looseStorage.Id == session.StorageItemId &&
+                             looseStorage.ProductId == session.StorageProductId &&
+                             looseStorage.ContainerId == session.WorldFloorContainerId &&
+                             CountCanonicalStorageProjections(
+                                 session.StorageItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 4 &&
+                             storageBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!preflight)
+            {
+                LogM2StorageSmokeFailure("smoke.preflight-mismatch");
+                yield break;
+            }
+
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+            long settlementRevision = session.CheckoutSettlements.Revision;
+            long visitRevision = session.CustomerVisits.Revision;
+            long consultationRevision = session.CustomerConsultations.Revision;
+            long actionRevision = session.CustomerOfferActions.Revision;
+
+            OperationResult motherboardPickup = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            MovePlayerToMotherboardSeat();
+            OperationResult motherboardMode =
+                playerCarry.TrySetMotherboardSeatMode(true);
+            OperationResult motherboardAttach = playerCarry.TryConfirmMotherboardSeat();
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardSecure =
+                playerCarry.TryOperateMotherboardFastener();
+            if (motherboardPickup.IsFailure ||
+                motherboardMode.IsFailure ||
+                motherboardAttach.IsFailure ||
+                motherboardSecure.IsFailure ||
+                session.AssemblyBuild.MotherboardSeatState !=
+                    AssemblySeatState.SeatedSecured)
+            {
+                LogM2StorageSmokeFailure("smoke.motherboard-preflight-failed");
+                yield break;
+            }
+
+            OperationResult storagePickup = playerCarry.TryPickup(storageDevice);
+            MovePlayerToM2StorageSlot();
+            OperationResult storageMode = playerCarry.TrySetM2StorageSeatMode(true);
+            M2StorageSlotEvaluation initialEvaluation = storageSlot.LastEvaluation;
+            bool insertionAngle = storageMode.IsSuccess &&
+                                  initialEvaluation.CanSeat &&
+                                  Mathf.Abs(
+                                      Quaternion.Angle(
+                                          initialEvaluation.GuidedPose.rotation,
+                                          initialEvaluation.SeatedPose.rotation) -
+                                      M2StorageSlotSolver.GuidedInsertionAngleDegrees) <
+                                      0.001f &&
+                                  initialEvaluation.GuidedPose.position !=
+                                      initialEvaluation.SeatedPose.position;
+            long keyedAssemblyRevision = session.AssemblyBuild.Revision;
+            long keyedInventoryRevision = session.Inventory.Revision;
+            int keyedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult rotateWrong =
+                playerCarry.TryRotateM2StorageSeatPreviewClockwise();
+            OperationResult wrongConfirm = playerCarry.TryConfirmM2StorageSeat();
+            bool keyedOrientation = rotateWrong.IsSuccess &&
+                                    wrongConfirm.IsFailure &&
+                                    wrongConfirm.Error ==
+                                        AssemblyFailures.M2OrientationMismatch &&
+                                    playerCarry.CurrentM2StorageSlotStatus ==
+                                        M2StorageSlotStatus.OrientationInvalid &&
+                                    session.AssemblyBuild.Revision == keyedAssemblyRevision &&
+                                    session.Inventory.Revision == keyedInventoryRevision &&
+                                    session.AssemblyBuild.ReceiptCount == keyedReceiptCount;
+            playerCarry.TryRotateM2StorageSeatPreviewClockwise();
+            OperationResult storageSeat = playerCarry.TryConfirmM2StorageSeat();
+            AssemblyOperationReceipt seatReceipt =
+                session.AssemblyBuild.GetReceipts()[
+                    session.AssemblyBuild.ReceiptCount - 1];
+            bool seated = storagePickup.IsSuccess &&
+                          keyedOrientation &&
+                          insertionAngle &&
+                          storageSeat.IsSuccess &&
+                          seatReceipt.OperationKind ==
+                              AssemblyOperationKind.SeatStorageDevice &&
+                          seatReceipt.M2KeyOrientation == M2KeyOrientation.KeyAligned &&
+                          session.AssemblyBuild.StorageSlotState ==
+                              StorageSlotState.StorageDeviceSeatedUnsecured &&
+                          ApproximatelySamePose(
+                              new Pose(
+                                  storageDevice.transform.position,
+                                  storageDevice.transform.rotation),
+                              storageSlot.SeatedPose) &&
+                          storageBinding.ValidateProjectionInvariant().IsSuccess;
+            if (!seated)
+            {
+                LogM2StorageSmokeFailure("smoke.storage-seat-failed");
+                yield break;
+            }
+
+            long duplicateAssemblyRevision = session.AssemblyBuild.Revision;
+            long duplicateInventoryRevision = session.Inventory.Revision;
+            int duplicateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult duplicateSeat = storageBinding.TryAttachAt(
+                storageSlot.SeatedPose,
+                M2KeyOrientation.KeyAligned);
+            bool duplicateSeatBlocked = duplicateSeat.IsFailure &&
+                                        duplicateSeat.Error.Code ==
+                                            "assembly-storage.attach-authority-mismatch" &&
+                                        session.AssemblyBuild.Revision ==
+                                            duplicateAssemblyRevision &&
+                                        session.Inventory.Revision ==
+                                            duplicateInventoryRevision &&
+                                        session.AssemblyBuild.ReceiptCount ==
+                                            duplicateReceiptCount;
+
+            MovePlayerToM2StorageSlot();
+            long secureInventoryRevision = session.Inventory.Revision;
+            OperationResult secure = playerCarry.TryOperateM2StorageCaptiveScrew();
+            AssemblyOperationReceipt secureReceipt =
+                session.AssemblyBuild.GetReceipts()[
+                    session.AssemblyBuild.ReceiptCount - 1];
+            bool captiveScrew = secure.IsSuccess &&
+                                secureReceipt.OperationKind ==
+                                    AssemblyOperationKind.SecureStorageDevice &&
+                                session.AssemblyBuild.StorageSlotState ==
+                                    StorageSlotState.StorageDeviceSecured &&
+                                session.Inventory.Revision == secureInventoryRevision &&
+                                storageBinding.ValidateProjectionInvariant().IsSuccess;
+            long securedAssemblyRevision = session.AssemblyBuild.Revision;
+            long securedInventoryRevision = session.Inventory.Revision;
+            int securedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult securedRemove = playerCarry.TryPickup(storageDevice);
+            bool securedRemoveGate = securedRemove.IsFailure &&
+                                     securedRemove.Error ==
+                                         AssemblyFailures.StorageDeviceSecured &&
+                                     session.AssemblyBuild.Revision ==
+                                         securedAssemblyRevision &&
+                                     session.Inventory.Revision ==
+                                         securedInventoryRevision &&
+                                     session.AssemblyBuild.ReceiptCount ==
+                                         securedReceiptCount;
+
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardUnsecure =
+                playerCarry.TryOperateMotherboardFastener();
+            long hostGateAssemblyRevision = session.AssemblyBuild.Revision;
+            long hostGateInventoryRevision = session.Inventory.Revision;
+            int hostGateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult hostDetach = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            bool hostDetachGate = motherboardUnsecure.IsSuccess &&
+                                  hostDetach.IsFailure &&
+                                  hostDetach.Error ==
+                                      AssemblyFailures.StorageDeviceInstalled &&
+                                  session.AssemblyBuild.Revision ==
+                                      hostGateAssemblyRevision &&
+                                  session.Inventory.Revision ==
+                                      hostGateInventoryRevision &&
+                                  session.AssemblyBuild.ReceiptCount ==
+                                      hostGateReceiptCount;
+
+            MovePlayerToM2StorageSlot();
+            long unsecureInventoryRevision = session.Inventory.Revision;
+            OperationResult unsecure = playerCarry.TryOperateM2StorageCaptiveScrew();
+            AssemblyOperationReceipt unsecureReceipt =
+                session.AssemblyBuild.GetReceipts()[
+                    session.AssemblyBuild.ReceiptCount - 1];
+            bool unsecureIsolated = unsecure.IsSuccess &&
+                                    unsecureReceipt.OperationKind ==
+                                        AssemblyOperationKind.UnsecureStorageDevice &&
+                                    session.AssemblyBuild.StorageSlotState ==
+                                        StorageSlotState.StorageDeviceSeatedUnsecured &&
+                                    session.Inventory.Revision ==
+                                        unsecureInventoryRevision;
+            OperationResult remove = playerCarry.TryPickup(storageDevice);
+            AssemblyOperationReceipt removeReceipt =
+                session.AssemblyBuild.GetReceipts()[
+                    session.AssemblyBuild.ReceiptCount - 1];
+            bool removed = remove.IsSuccess &&
+                           removeReceipt.OperationKind ==
+                               AssemblyOperationKind.RemoveStorageDevice &&
+                           playerCarry.HeldItem == storageDevice &&
+                           storageBinding.IsAuthorityInHands &&
+                           session.AssemblyBuild.StorageSlotState ==
+                               StorageSlotState.EmptyOpen;
+            OperationResult recovery = playerCarry.TryRecoverHeldItem();
+
+            long finalAssemblyRevision = session.AssemblyBuild.Revision;
+            int finalReceiptCount = session.AssemblyBuild.ReceiptCount;
+            long finalInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> delayedSeatReplay =
+                session.SeatStorageDevice(
+                    seatReceipt.OperationId,
+                    seatReceipt.M2KeyOrientation,
+                    seatReceipt.SourceAttachOperationId,
+                    seatReceipt.SourceSecureOperationId,
+                    seatReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedSecureReplay =
+                session.SecureStorageDevice(
+                    secureReceipt.OperationId,
+                    secureReceipt.SourceStorageSeatOperationId,
+                    secureReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedUnsecureReplay =
+                session.UnsecureStorageDevice(
+                    unsecureReceipt.OperationId,
+                    unsecureReceipt.SourceStorageSeatOperationId,
+                    unsecureReceipt.SourceStorageRetentionOperationId,
+                    unsecureReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedRemoveReplay =
+                session.RemoveStorageDevice(
+                    removeReceipt.OperationId,
+                    removeReceipt.SourceStorageSeatOperationId,
+                    removeReceipt.ExpectedAssemblyRevision);
+            bool replayStable = delayedSeatReplay.IsSuccess &&
+                                ReferenceEquals(delayedSeatReplay.Value, seatReceipt) &&
+                                delayedSecureReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedSecureReplay.Value,
+                                    secureReceipt) &&
+                                delayedUnsecureReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedUnsecureReplay.Value,
+                                    unsecureReceipt) &&
+                                delayedRemoveReplay.IsSuccess &&
+                                ReferenceEquals(delayedRemoveReplay.Value, removeReceipt) &&
+                                session.AssemblyBuild.Revision == finalAssemblyRevision &&
+                                session.AssemblyBuild.ReceiptCount == finalReceiptCount &&
+                                session.Inventory.Revision == finalInventoryRevision;
+            bool recovered = recovery.IsSuccess &&
+                             playerCarry.HeldItem == null &&
+                             session.AssemblyBuild.StorageSlotState ==
+                                 StorageSlotState.EmptyOpen &&
+                             session.TryGetStorageItem(
+                                 out InventoryItemRecord recoveredStorage) &&
+                             recoveredStorage.Id == session.StorageItemId &&
+                             recoveredStorage.ProductId == session.StorageProductId &&
+                             recoveredStorage.ContainerId ==
+                                 session.WorldFloorContainerId &&
+                             storageDevice.GetInstanceID() == initialInstanceId &&
+                             storageDevice.transform.parent == initialParent &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     storageDevice.transform.position,
+                                     storageDevice.transform.rotation),
+                                 initialPose) &&
+                             storageDevice.Ownership == PhysicalItemOwnership.World &&
+                             storageDevice.IsStablePlacement &&
+                             CountCanonicalStorageProjections(
+                                 session.StorageItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.HandsContainerId).Value == 0 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.StorageSlotContainerId).Value == 0 &&
+                             storageBinding.ValidateProjectionInvariant().IsSuccess &&
+                             session.ValidateInvariants().IsSuccess;
+            bool authorityIsolated = session.Orders.Revision == orderRevision &&
+                                     session.RetailOffers.Revision == offerRevision &&
+                                     session.RetailBaskets.Revision == basketRevision &&
+                                     session.RetailCheckouts.Revision == checkoutRevision &&
+                                     session.CheckoutSettlements.Revision ==
+                                         settlementRevision &&
+                                     session.CustomerVisits.Revision == visitRevision &&
+                                     session.CustomerConsultations.Revision ==
+                                         consultationRevision &&
+                                     session.CustomerOfferActions.Revision ==
+                                         actionRevision &&
+                                     session.AssemblyBuild.ProcessorSocketState ==
+                                         ProcessorSocketState.EmptyOpen &&
+                                     session.AssemblyBuild.MemorySlotState ==
+                                         MemorySlotState.EmptyOpen;
+            if (!slotInterface ||
+                !insertionAngle ||
+                !duplicateSeatBlocked ||
+                !captiveScrew ||
+                !securedRemoveGate ||
+                !hostDetachGate ||
+                !unsecureIsolated ||
+                !removed ||
+                !replayStable ||
+                !recovered ||
+                !authorityIsolated)
+            {
+                LogM2StorageSmokeFailure("smoke.final-contract-mismatch");
+                yield break;
+            }
+
+            Debug.Log(
+                "GARAGE_STORAGE_RUNTIME_SMOKE storage-flow=ok preflight=ok " +
+                "slot-interface=ok keyed-orientation=ok insertion-angle=ok " +
+                "captive-screw=ok duplicate-seat-blocked=ok " +
+                "secured-remove-gate=ok host-detach-gate=ok replay=ok " +
+                "authority-isolated=ok identity=stable recovery=ok");
+            yield return new WaitForEndOfFrame();
+        }
+
         private static void LogMotherboardAssemblySmokeFailure(string code)
         {
             Debug.LogError(
@@ -3011,6 +3428,12 @@ namespace PCShopEmpire3D.Presentation
         {
             Debug.LogError(
                 $"GARAGE_DIMM_RUNTIME_SMOKE dimm-flow=failed code={code}");
+        }
+
+        private static void LogM2StorageSmokeFailure(string code)
+        {
+            Debug.LogError(
+                $"GARAGE_STORAGE_RUNTIME_SMOKE storage-flow=failed code={code}");
         }
 
         private static int CountCanonicalMotherboardProjections(string canonicalItemId)
@@ -3046,6 +3469,22 @@ namespace PCShopEmpire3D.Presentation
         }
 
         private static int CountCanonicalMemoryProjections(string canonicalItemId)
+        {
+            int count = 0;
+            foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
+                         FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+            {
+                if (item != null && item.ItemIdValue == canonicalItemId)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static int CountCanonicalStorageProjections(string canonicalItemId)
         {
             int count = 0;
             foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
@@ -3246,6 +3685,27 @@ namespace PCShopEmpire3D.Presentation
         private void MovePlayerToDimmSlot()
         {
             Vector3 target = dimmSlot.FocusCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+
+            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.rotation = Quaternion.LookRotation(
+                    target - playerCamera.transform.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToM2StorageSlot()
+        {
+            Vector3 target = storageSlot.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;

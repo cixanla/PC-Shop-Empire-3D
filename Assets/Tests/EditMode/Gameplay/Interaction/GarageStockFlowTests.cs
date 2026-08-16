@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorAndMemory()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryAndStorage()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(4));
-            Assert.That(session.Components.Count, Is.EqualTo(3));
+            Assert.That(session.Catalog.Count, Is.EqualTo(5));
+            Assert.That(session.Components.Count, Is.EqualTo(4));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -63,6 +63,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(specification.Value.CpuSocketFamily,
                 Is.EqualTo(CpuSocketFamily.Lga1700));
             Assert.That(specification.Value.DimmType, Is.EqualTo(DimmType.Ddr5Udimm));
+            Assert.That(specification.Value.M2StorageType,
+                Is.EqualTo(M2StorageType.NvmePcie4X4_2280));
             OperationResult<PcComponentSpecification> processorSpecification =
                 session.Components.Get(session.ProcessorProductId);
             Assert.That(processorSpecification.IsSuccess, Is.True);
@@ -90,7 +92,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(memory.Id, Is.EqualTo(session.MemoryItemId));
             Assert.That(memory.ProductId, Is.EqualTo(session.MemoryProductId));
             Assert.That(memory.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(3));
+            OperationResult<PcComponentSpecification> storageSpecification =
+                session.Components.Get(session.StorageProductId);
+            Assert.That(storageSpecification.IsSuccess, Is.True);
+            Assert.That(storageSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.StorageDevice));
+            Assert.That(storageSpecification.Value.M2StorageType,
+                Is.EqualTo(M2StorageType.NvmePcie4X4_2280));
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord storage), Is.True);
+            Assert.That(storage.Id, Is.EqualTo(session.StorageItemId));
+            Assert.That(storage.ProductId, Is.EqualTo(session.StorageProductId));
+            Assert.That(storage.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(4));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -107,6 +120,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.MemoryChannelId));
             Assert.That(session.AssemblyBuild.MemoryBankId,
                 Is.EqualTo(session.MemoryBankId));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.StorageSlotId,
+                Is.EqualTo(session.StorageSlotId));
+            Assert.That(session.AssemblyBuild.StorageStandoffId,
+                Is.EqualTo(session.StorageStandoffId));
+            Assert.That(session.AssemblyBuild.StorageCaptiveScrewId,
+                Is.EqualTo(session.StorageCaptiveScrewId));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

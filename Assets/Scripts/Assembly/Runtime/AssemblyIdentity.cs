@@ -33,4 +33,8 @@ namespace PCShopEmpire3D.Assembly
     public sealed class AssemblyMemoryBankIdScope : IStableIdScope
     {
     }
+
+    public sealed class AssemblyStorageStandoffIdScope : IStableIdScope
+    {
+    }
 }

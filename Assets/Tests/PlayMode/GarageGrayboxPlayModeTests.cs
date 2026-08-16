@@ -34,6 +34,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             GarageStockFlowSession.ProcessorItemInstanceIdValue;
         private const string MemoryPhysicalItemId =
             GarageStockFlowSession.MemoryItemInstanceIdValue;
+        private const string StoragePhysicalItemId =
+            GarageStockFlowSession.StorageItemInstanceIdValue;
 
         [UnityTest]
         public IEnumerator GarageLoadsWithOnePlayableRigAndPauseStateTransitions()
@@ -1364,7 +1366,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery));
             Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
             Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(3));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(4));
             Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
             Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
             Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
@@ -3263,7 +3265,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(3));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(4));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3679,7 +3681,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(3));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(4));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -4152,6 +4154,234 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator KeyboardMouseCompletesKeyedM2CaptiveScrewCycle()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            marker.PlayerMotor.SetPaused(false);
+            GarageStockFlowSession session = marker.StockFlow.Session;
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            PhysicalItemProjection storage = FindPhysicalItem(StoragePhysicalItemId);
+            int instanceId = storage.GetInstanceID();
+            PrepareSecuredMotherboardForProcessor(marker, motherboard);
+
+            AimPlayerAtItem(marker, storage, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(marker.StorageBinding.IsAuthorityInHands, Is.True);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToM2StorageSlot(marker);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsM2StorageSeatMode, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentM2StorageSlotStatus,
+                Is.EqualTo(M2StorageSlotStatus.ValidSeat),
+                marker.PlayerCarry.LastFailureCode);
+            Assert.That(marker.PlayerCarry.PromptText, Does.Contain("18°"));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentM2StorageSlotStatus,
+                Is.EqualTo(M2StorageSlotStatus.OrientationInvalid));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.R));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.G));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.StorageDeviceSeatedUnsecured));
+            AssertStorageAtM2Slot(marker, storage, "keyboard-seat");
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            MovePlayerToM2StorageSlot(marker);
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.StorageDeviceSecured));
+            Assert.That(marker.StorageBinding.IsSecured, Is.True);
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.StorageDeviceSecured.Code));
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(mouse, new MouseState { buttons = 1 });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.StorageDeviceSeatedUnsecured));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+            Assert.That(storage.GetInstanceID(), Is.EqualTo(instanceId));
+            Assert.That(marker.StorageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadCoEdgesCompleteM2SeatAndRetentionCycle()
+        {
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            marker.PlayerMotor.SetPaused(false);
+            GarageStockFlowSession session = marker.StockFlow.Session;
+            PhysicalItemProjection motherboard = FindPhysicalItem(
+                MotherboardPhysicalItemId);
+            PhysicalItemProjection storage = FindPhysicalItem(StoragePhysicalItemId);
+            PrepareSecuredMotherboardForProcessor(marker, motherboard);
+
+            AimPlayerAtItem(marker, storage, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToM2StorageSlot(marker);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsM2StorageSeatMode, Is.True);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = (1u << (int)GamepadButton.RightShoulder) |
+                              (1u << (int)GamepadButton.East)
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+            Assert.That(marker.PlayerCarry.CurrentM2StorageSlotStatus,
+                Is.EqualTo(M2StorageSlotStatus.OrientationInvalid));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = 1u << (int)GamepadButton.RightShoulder
+                });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.StorageDeviceSeatedUnsecured));
+            AssertStorageAtM2Slot(marker, storage, "gamepad-seat");
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToM2StorageSlot(marker);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.StorageDeviceSecured));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.LastFailureCode,
+                Is.EqualTo(AssemblyFailures.StorageDeviceSecured.Code));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(storage));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+            Assert.That(marker.StorageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+        }
+
         private static void MovePlayerToStockSurface(GaragePrototypeMarker marker)
         {
             CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
@@ -4290,12 +4520,32 @@ namespace PCShopEmpire3D.Tests.PlayMode
             MovePlayerToMotherboardFastener(marker);
             OperationResult secure = marker.PlayerCarry.TryOperateMotherboardFastener();
             Assert.That(secure.IsSuccess, Is.True,
-                secure.IsFailure ? secure.Error.Code : string.Empty);
+                secure.IsFailure
+                    ? $"{secure.Error.Code} {DescribeFastenerLine(marker)}"
+                    : string.Empty);
             Assert.That(marker.StockFlow.Session.AssemblyBuild.MotherboardSeatState,
                 Is.EqualTo(AssemblySeatState.SeatedSecured));
             Assert.That(marker.MotherboardBinding.IsSecured, Is.True);
             Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant().IsSuccess,
                 Is.True);
+        }
+
+        private static string DescribeFastenerLine(GaragePrototypeMarker marker)
+        {
+            Camera camera = marker.PlayerMotor.GetComponentInChildren<Camera>(true);
+            Vector3 target = marker.MotherboardFastener.FocusCollider.bounds.center;
+            Vector3 direction = (target - camera.transform.position).normalized;
+            float distance = Vector3.Distance(camera.transform.position, target) + 0.03f;
+            return string.Join(
+                ",",
+                Physics.RaycastAll(
+                        camera.transform.position,
+                        direction,
+                        distance,
+                        ~0,
+                        QueryTriggerInteraction.Ignore)
+                    .OrderBy(hit => hit.distance)
+                    .Select(hit => $"{hit.collider.name}@{hit.distance:0.000}"));
         }
 
         private static void MovePlayerToProcessorSocket(GaragePrototypeMarker marker)
@@ -4336,6 +4586,46 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static void MovePlayerToM2StorageSlot(GaragePrototypeMarker marker)
+        {
+            Collider targetCollider = marker.StorageSlot.FocusCollider;
+            Vector3 target = targetCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            CharacterController controller = marker.PlayerMotor.GetComponent<CharacterController>();
+            controller.enabled = false;
+            marker.PlayerMotor.transform.SetPositionAndRotation(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
+            cameraPivot.rotation = Quaternion.LookRotation(
+                target - cameraPivot.position,
+                Vector3.up);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+
+        private static void AssertStorageAtM2Slot(
+            GaragePrototypeMarker marker,
+            PhysicalItemProjection storage,
+            string stage)
+        {
+            Assert.That(storage.Ownership,
+                Is.EqualTo(PhysicalItemOwnership.World), stage);
+            Assert.That(storage.IsStablePlacement, Is.True, stage);
+            Assert.That(storage.Body.isKinematic, Is.True, stage);
+            Assert.That(storage.Body.useGravity, Is.False, stage);
+            Assert.That(Vector3.Distance(
+                storage.transform.position,
+                marker.StorageSlot.SeatedPose.position), Is.LessThan(0.0001f), stage);
+            Assert.That(Quaternion.Angle(
+                storage.transform.rotation,
+                marker.StorageSlot.SeatedPose.rotation), Is.LessThan(0.01f), stage);
+            Assert.That(marker.StorageBinding.ValidateProjectionInvariant().IsSuccess,
+                Is.True, stage);
         }
 
         private static void AssertMemoryAtDimmSlot(

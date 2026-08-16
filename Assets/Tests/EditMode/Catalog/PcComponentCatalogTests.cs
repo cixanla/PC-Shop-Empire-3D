@@ -7,12 +7,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
     public sealed class PcComponentCatalogTests
     {
         [Test]
-        public void PersistedComponentAndDimmEnumValuesAreAppendOnly()
+        public void PersistedComponentDimmAndStorageEnumValuesAreAppendOnly()
         {
             Assert.That((int)PcComponentKind.Motherboard, Is.EqualTo(1));
             Assert.That((int)PcComponentKind.Processor, Is.EqualTo(2));
             Assert.That((int)PcComponentKind.MemoryModule, Is.EqualTo(3));
+            Assert.That((int)PcComponentKind.StorageDevice, Is.EqualTo(4));
             Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
+            Assert.That((int)M2StorageType.NvmePcie4X4_2280, Is.EqualTo(1));
         }
 
         [Test]
@@ -108,10 +110,50 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     MotherboardFormFactor.MicroAtx,
                     CpuSocketFamily.Lga1700).Value;
             Assert.That(legacyMotherboard.DimmType, Is.EqualTo(default(DimmType)));
+            Assert.That(legacyMotherboard.M2StorageType,
+                Is.EqualTo(default(M2StorageType)));
         }
 
         [Test]
-        public void ComponentCatalogRegistersMotherboardProcessorAndMemoryMetadataTogether()
+        public void MotherboardAndStorageDeviceKeepTypedM2Nvme2280Compatibility()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> motherboardId =
+                ProductId("component.motherboard-matx");
+            StableId<ProductDefinitionIdScope> storageId =
+                ProductId("component.storage-nvme-2280");
+
+            OperationResult<PcComponentSpecification> motherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    motherboardId,
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm,
+                    M2StorageType.NvmePcie4X4_2280);
+            OperationResult<PcComponentSpecification> storage =
+                PcComponentSpecification.CreateStorageDevice(
+                    products,
+                    storageId,
+                    M2StorageType.NvmePcie4X4_2280);
+
+            Assert.That(motherboard.IsSuccess, Is.True);
+            Assert.That(motherboard.Value.M2StorageType,
+                Is.EqualTo(M2StorageType.NvmePcie4X4_2280));
+            Assert.That(storage.IsSuccess, Is.True);
+            Assert.That(storage.Value.Kind, Is.EqualTo(PcComponentKind.StorageDevice));
+            Assert.That(storage.Value.ProductId, Is.EqualTo(storageId));
+            Assert.That(storage.Value.M2StorageType,
+                Is.EqualTo(M2StorageType.NvmePcie4X4_2280));
+            Assert.That(storage.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(storage.Value.CpuSocketFamily,
+                Is.EqualTo(default(CpuSocketFamily)));
+            Assert.That(storage.Value.DimmType, Is.EqualTo(default(DimmType)));
+        }
+
+        [Test]
+        public void ComponentCatalogRegistersMotherboardProcessorMemoryAndStorageMetadataTogether()
         {
             ProductCatalog products = CreateProducts();
             PcComponentSpecification motherboard =
@@ -120,7 +162,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     ProductId("component.motherboard-matx"),
                     MotherboardFormFactor.MicroAtx,
                     CpuSocketFamily.Lga1700,
-                    DimmType.Ddr5Udimm).Value;
+                    DimmType.Ddr5Udimm,
+                    M2StorageType.NvmePcie4X4_2280).Value;
             PcComponentSpecification processor =
                 PcComponentSpecification.CreateProcessor(
                     products,
@@ -131,17 +174,23 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     products,
                     ProductId("component.memory-ddr5-udimm"),
                     DimmType.Ddr5Udimm).Value;
+            PcComponentSpecification storage =
+                PcComponentSpecification.CreateStorageDevice(
+                    products,
+                    ProductId("component.storage-nvme-2280"),
+                    M2StorageType.NvmePcie4X4_2280).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
-                new[] { motherboard, processor, memory });
+                new[] { motherboard, processor, memory, storage });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(3));
+            Assert.That(result.Value.Count, Is.EqualTo(4));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
             Assert.That(result.Value.Specifications[0], Is.SameAs(memory));
             Assert.That(result.Value.Specifications[1], Is.SameAs(motherboard));
             Assert.That(result.Value.Specifications[2], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[3], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
@@ -208,6 +257,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     CpuSocketFamily.Lga1700,
                     (DimmType)99).Error,
                 Is.EqualTo(CatalogFailures.InvalidDimmType));
+            Assert.That(PcComponentSpecification.CreateStorageDevice(
+                    products,
+                    ProductId("component.storage-nvme-2280"),
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidM2StorageType));
+            Assert.That(PcComponentSpecification.CreateMotherboard(
+                    products,
+                    ProductId("component.motherboard-matx"),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm,
+                    (M2StorageType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidM2StorageType));
         }
 
         [Test]
@@ -275,6 +337,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.motherboard-atx", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.processor-lga1700", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.memory-ddr5-udimm", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.storage-nvme-2280", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

@@ -131,5 +131,50 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.DimmTypeMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluateStorageDeviceSeat(
+            PcComponentSpecification storageDeviceSpecification,
+            PcComponentSpecification motherboardSpecification,
+            M2StorageType supportedM2StorageType,
+            M2KeyOrientation orientation)
+        {
+            if (storageDeviceSpecification == null || motherboardSpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidM2StorageType(supportedM2StorageType))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidM2StorageType);
+            }
+
+            if (orientation != M2KeyOrientation.KeyAligned &&
+                orientation != M2KeyOrientation.Reversed)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidM2Orientation);
+            }
+
+            if (orientation != M2KeyOrientation.KeyAligned)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.M2OrientationMismatch);
+            }
+
+            if (storageDeviceSpecification.Kind != PcComponentKind.StorageDevice ||
+                motherboardSpecification.Kind != PcComponentKind.Motherboard)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            return storageDeviceSpecification.M2StorageType == supportedM2StorageType &&
+                   motherboardSpecification.M2StorageType == supportedM2StorageType
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.M2StorageTypeMismatch);
+        }
     }
 }

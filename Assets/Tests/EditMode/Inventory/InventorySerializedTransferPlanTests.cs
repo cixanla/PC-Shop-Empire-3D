@@ -18,10 +18,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ContainerIdScope>.Parse("container.processor-socket");
         private static readonly StableId<ContainerIdScope> MemorySlot =
             StableId<ContainerIdScope>.Parse("container.memory-slot-a2");
+        private static readonly StableId<ContainerIdScope> StorageSlot =
+            StableId<ContainerIdScope>.Parse("container.storage-slot-m2-primary");
         private static readonly StableId<ItemInstanceIdScope> Item =
             StableId<ItemInstanceIdScope>.Parse("item.motherboard-001");
         private static readonly StableId<ItemInstanceIdScope> MemorySlotItem =
             StableId<ItemInstanceIdScope>.Parse("item.memory-slot-occupied");
+        private static readonly StableId<ItemInstanceIdScope> StorageSlotItem =
+            StableId<ItemInstanceIdScope>.Parse("item.storage-slot-occupied");
 
         [Test]
         public void PrepareIsSideEffectFreeAndBindsExactSourceTargetAndRevision()
@@ -470,6 +474,147 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ManagedContainerQuadrupleClaimSucceedsInOneRevisionAndBlocksAllPublicPaths()
+        {
+            InventoryAuthority authority = CreateQuadrupleAuthority();
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessQuadruple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(claim.Value.First.ManagedContainerId, Is.EqualTo(Workbench));
+            Assert.That(claim.Value.Second.ManagedContainerId, Is.EqualTo(ProcessorSocket));
+            Assert.That(claim.Value.Third.ManagedContainerId, Is.EqualTo(MemorySlot));
+            Assert.That(claim.Value.Fourth.ManagedContainerId, Is.EqualTo(StorageSlot));
+            Assert.That(authority.PrepareSerializedItemTransfer(Item, Workbench).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.PrepareSerializedItemTransfer(Item, ProcessorSocket).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.PrepareSerializedItemTransfer(Item, MemorySlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.PrepareSerializedItemTransfer(Item, StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TryGetSerializedItem(Item, out InventoryItemRecord unchanged),
+                Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerQuadrupleConflictOrOccupiedFourthLeavesNoPartialClaim()
+        {
+            InventoryAuthority managedConflict = CreateQuadrupleAuthority();
+            Assert.That(managedConflict.ClaimManagedSerializedTransferContainer(
+                StorageSlot).IsSuccess, Is.True);
+            long managedRevision = managedConflict.Revision;
+
+            Assert.That(managedConflict.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(managedConflict.Revision, Is.EqualTo(managedRevision));
+            Assert.That(managedConflict.PrepareSerializedItemTransfer(Item, Workbench).IsSuccess,
+                Is.True);
+            Assert.That(managedConflict.PrepareSerializedItemTransfer(
+                Item, ProcessorSocket).IsSuccess, Is.True);
+            Assert.That(managedConflict.PrepareSerializedItemTransfer(Item, MemorySlot).IsSuccess,
+                Is.True);
+
+            InventoryAuthority occupiedConflict = CreateQuadrupleAuthority(fillStorageSlot: true);
+            long occupiedRevision = occupiedConflict.Revision;
+            Assert.That(occupiedConflict.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(occupiedConflict.Revision, Is.EqualTo(occupiedRevision));
+            Assert.That(occupiedConflict.PrepareSerializedItemTransfer(Item, Workbench).IsSuccess,
+                Is.True);
+            Assert.That(occupiedConflict.PrepareSerializedItemTransfer(
+                Item, ProcessorSocket).IsSuccess, Is.True);
+            Assert.That(occupiedConflict.PrepareSerializedItemTransfer(Item, MemorySlot).IsSuccess,
+                Is.True);
+            Assert.That(occupiedConflict.TryGetSerializedItem(
+                StorageSlotItem, out InventoryItemRecord occupied), Is.True);
+            Assert.That(occupied.ContainerId, Is.EqualTo(StorageSlot));
+            Assert.That(occupiedConflict.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerQuadrupleUsesDeterministicValidationPrecedence()
+        {
+            InventoryAuthority unknownBeforeSame = CreateQuadrupleAuthority();
+            Assert.That(unknownBeforeSame.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StableId<ContainerIdScope>.Parse("container.unknown")).Error,
+                Is.EqualTo(InventoryFailures.UnknownContainer));
+
+            InventoryAuthority sameBeforeManaged = CreateQuadrupleAuthority();
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainer(
+                StorageSlot).IsSuccess, Is.True);
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SameContainer));
+
+            InventoryAuthority managedBeforeOccupied =
+                CreateQuadrupleAuthority(fillStorageSlot: true);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainer(
+                ProcessorSocket).IsSuccess, Is.True);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+        }
+
+        [Test]
+        public void ManagedContainerQuadrupleAtRevisionBoundaryIsAtomic()
+        {
+            InventoryAuthority overflow = CreateQuadrupleAuthority();
+            SetRevision(overflow, long.MaxValue);
+
+            Assert.That(overflow.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.RevisionOverflow));
+            Assert.That(overflow.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(overflow.TryGetSerializedItem(Item, out InventoryItemRecord unchanged),
+                Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+
+            InventoryAuthority finalRevision = CreateQuadrupleAuthority();
+            SetRevision(finalRevision, long.MaxValue - 1);
+            OperationResult<InventorySerializedTransferAccessQuadruple> claim =
+                finalRevision.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot);
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(finalRevision.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(finalRevision.PrepareSerializedItemTransfer(Item, StorageSlot).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(finalRevision.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void SetRevision(InventoryAuthority authority, long revision)
         {
             PropertyInfo revisionProperty = typeof(InventoryAuthority).GetProperty(
@@ -539,6 +684,27 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                     MemorySlotItem,
                     ProductId,
                     MemorySlot,
+                    InventoryCondition.OpenBox,
+                    InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
+            }
+
+            return authority;
+        }
+
+        private static InventoryAuthority CreateQuadrupleAuthority(bool fillStorageSlot = false)
+        {
+            InventoryAuthority authority = CreateTripleAuthority();
+            Assert.That(authority.RegisterContainer(InventoryContainerDefinition.Create(
+                StorageSlot,
+                InventoryContainerKind.Workbench,
+                1).Value).IsSuccess, Is.True);
+
+            if (fillStorageSlot)
+            {
+                Assert.That(authority.ReceiveSerializedItem(
+                    StorageSlotItem,
+                    ProductId,
+                    StorageSlot,
                     InventoryCondition.OpenBox,
                     InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
             }

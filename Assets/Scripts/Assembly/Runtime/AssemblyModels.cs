@@ -24,7 +24,11 @@ namespace PCShopEmpire3D.Assembly
         SeatMemoryModule = 9,
         RemoveMemoryModule = 10,
         CloseMemoryRetention = 11,
-        OpenMemoryRetention = 12
+        OpenMemoryRetention = 12,
+        SeatStorageDevice = 13,
+        RemoveStorageDevice = 14,
+        SecureStorageDevice = 15,
+        UnsecureStorageDevice = 16
     }
 
     public enum ProcessorSocketState
@@ -106,7 +110,8 @@ namespace PCShopEmpire3D.Assembly
             long assemblyRevision,
             long inventoryRevision,
             ProcessorSocketState processorSocketState,
-            MemorySlotState memorySlotState = MemorySlotState.Unsupported)
+            MemorySlotState memorySlotState = MemorySlotState.Unsupported,
+            StorageSlotState storageSlotState = StorageSlotState.Unsupported)
             : this(
                 operationId,
                 operationKind,
@@ -132,7 +137,12 @@ namespace PCShopEmpire3D.Assembly
                 assemblyRevision,
                 inventoryRevision,
                 memorySlotState,
-                memorySlotState)
+                memorySlotState,
+                default,
+                default,
+                default,
+                storageSlotState,
+                storageSlotState)
         {
         }
 
@@ -164,7 +174,12 @@ namespace PCShopEmpire3D.Assembly
             MemorySlotState resultingMemorySlotState = MemorySlotState.Unsupported,
             StableId<AssemblyOperationIdScope> sourceMemorySeatOperationId = default,
             StableId<AssemblyOperationIdScope> sourceMemoryRetentionOperationId = default,
-            DimmKeyOrientation dimmKeyOrientation = default)
+            DimmKeyOrientation dimmKeyOrientation = default,
+            StorageSlotState previousStorageSlotState = StorageSlotState.Unsupported,
+            StorageSlotState resultingStorageSlotState = StorageSlotState.Unsupported,
+            StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId = default,
+            StableId<AssemblyOperationIdScope> sourceStorageRetentionOperationId = default,
+            M2KeyOrientation m2KeyOrientation = default)
         {
             OperationId = operationId;
             OperationKind = operationKind;
@@ -192,6 +207,11 @@ namespace PCShopEmpire3D.Assembly
             SourceMemorySeatOperationId = sourceMemorySeatOperationId;
             SourceMemoryRetentionOperationId = sourceMemoryRetentionOperationId;
             DimmKeyOrientation = dimmKeyOrientation;
+            PreviousStorageSlotState = previousStorageSlotState;
+            ResultingStorageSlotState = resultingStorageSlotState;
+            SourceStorageSeatOperationId = sourceStorageSeatOperationId;
+            SourceStorageRetentionOperationId = sourceStorageRetentionOperationId;
+            M2KeyOrientation = m2KeyOrientation;
             AssemblyRevision = assemblyRevision;
             InventoryRevision = inventoryRevision;
         }
@@ -247,6 +267,16 @@ namespace PCShopEmpire3D.Assembly
         public StableId<AssemblyOperationIdScope> SourceMemoryRetentionOperationId { get; }
 
         public DimmKeyOrientation DimmKeyOrientation { get; }
+
+        public StorageSlotState PreviousStorageSlotState { get; }
+
+        public StorageSlotState ResultingStorageSlotState { get; }
+
+        public StableId<AssemblyOperationIdScope> SourceStorageSeatOperationId { get; }
+
+        public StableId<AssemblyOperationIdScope> SourceStorageRetentionOperationId { get; }
+
+        public M2KeyOrientation M2KeyOrientation { get; }
 
         public long AssemblyRevision { get; }
 
@@ -425,6 +455,69 @@ namespace PCShopEmpire3D.Assembly
                        sourceMemoryRetentionOperationId &&
                    ExpectedAssemblyRevision == expectedAssemblyRevision;
         }
+
+        internal bool MatchesSeatStorageDevice(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            M2KeyOrientation m2KeyOrientation,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.SeatStorageDevice &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   M2KeyOrientation == m2KeyOrientation &&
+                   SourceAttachOperationId == sourceAttachOperationId &&
+                   SourceSecureOperationId == sourceSecureOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRemoveStorageDevice(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RemoveStorageDevice &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   SourceStorageSeatOperationId == sourceStorageSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesSecureStorageDevice(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyRetentionIdScope> retentionId,
+            StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.SecureStorageDevice &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   RetentionId == retentionId &&
+                   SourceStorageSeatOperationId == sourceStorageSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesUnsecureStorageDevice(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyRetentionIdScope> retentionId,
+            StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceStorageRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.UnsecureStorageDevice &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   RetentionId == retentionId &&
+                   SourceStorageSeatOperationId == sourceStorageSeatOperationId &&
+                   SourceStorageRetentionOperationId ==
+                       sourceStorageRetentionOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
     }
 
     /// <summary>
@@ -500,7 +593,13 @@ namespace PCShopEmpire3D.Assembly
             StableId<ItemInstanceIdScope> memoryItemId = default,
             StableId<ProductDefinitionIdScope> memoryProductId = default,
             StableId<AssemblyOperationIdScope> memorySeatedByOperationId = default,
-            StableId<AssemblyOperationIdScope> memoryRetainedByOperationId = default)
+            StableId<AssemblyOperationIdScope> memoryRetainedByOperationId = default,
+            M2SlotDefinition storageSlotDefinition = default,
+            StorageSlotState storageSlotState = StorageSlotState.Unsupported,
+            StableId<ItemInstanceIdScope> storageItemId = default,
+            StableId<ProductDefinitionIdScope> storageProductId = default,
+            StableId<AssemblyOperationIdScope> storageSeatedByOperationId = default,
+            StableId<AssemblyOperationIdScope> storageSecuredByOperationId = default)
         {
             BuildId = buildId;
             ChassisId = chassisId;
@@ -529,6 +628,12 @@ namespace PCShopEmpire3D.Assembly
             MemoryProductId = memoryProductId;
             MemorySeatedByOperationId = memorySeatedByOperationId;
             MemoryRetainedByOperationId = memoryRetainedByOperationId;
+            StorageSlotDefinition = storageSlotDefinition;
+            StorageSlotState = storageSlotState;
+            StorageItemId = storageItemId;
+            StorageProductId = storageProductId;
+            StorageSeatedByOperationId = storageSeatedByOperationId;
+            StorageSecuredByOperationId = storageSecuredByOperationId;
             Revision = revision;
         }
 
@@ -608,6 +713,34 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<AssemblyOperationIdScope> MemoryRetainedByOperationId { get; }
 
+        public M2SlotDefinition StorageSlotDefinition { get; }
+
+        public bool HasStorageSlot => StorageSlotDefinition.IsValid;
+
+        public StableId<AssemblySlotIdScope> StorageSlotId => StorageSlotDefinition.SlotId;
+
+        public StableId<AssemblyStorageStandoffIdScope> StorageStandoffId =>
+            StorageSlotDefinition.StandoffId;
+
+        public StableId<AssemblyRetentionIdScope> StorageCaptiveScrewId =>
+            StorageSlotDefinition.CaptiveScrewId;
+
+        public StableId<ContainerIdScope> StorageSlotContainerId =>
+            StorageSlotDefinition.ContainerId;
+
+        public M2StorageType SupportedM2StorageType =>
+            StorageSlotDefinition.SupportedStorageType;
+
+        public StorageSlotState StorageSlotState { get; }
+
+        public StableId<ItemInstanceIdScope> StorageItemId { get; }
+
+        public StableId<ProductDefinitionIdScope> StorageProductId { get; }
+
+        public StableId<AssemblyOperationIdScope> StorageSeatedByOperationId { get; }
+
+        public StableId<AssemblyOperationIdScope> StorageSecuredByOperationId { get; }
+
         public long Revision { get; }
     }
 
@@ -637,6 +770,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.memory-slot-container.invalid");
         public static readonly Failure InvalidMemorySlotDefinition =
             Failure.FromCode("assembly.memory-slot-definition.invalid");
+        public static readonly Failure InvalidStorageSlotContainer =
+            Failure.FromCode("assembly.storage-slot-container.invalid");
+        public static readonly Failure InvalidStorageSlotDefinition =
+            Failure.FromCode("assembly.storage-slot-definition.invalid");
         public static readonly Failure SameInventoryContainer =
             Failure.FromCode("assembly.inventory-container.same");
         public static readonly Failure InvalidMotherboardFormFactor =
@@ -645,10 +782,18 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.cpu-socket-family.invalid");
         public static readonly Failure InvalidDimmType =
             Failure.FromCode("assembly.dimm-type.invalid");
+        public static readonly Failure InvalidM2StorageType =
+            Failure.FromCode("assembly.m2-storage-type.invalid");
         public static readonly Failure InvalidDimmOrientation =
             Failure.FromCode("assembly.dimm-orientation.invalid");
         public static readonly Failure DimmOrientationMismatch =
             Failure.FromCode("assembly.dimm-orientation.mismatch");
+        public static readonly Failure InvalidM2Orientation =
+            Failure.FromCode("assembly.m2-orientation.invalid");
+        public static readonly Failure M2OrientationMismatch =
+            Failure.FromCode("assembly.m2-orientation.mismatch");
+        public static readonly Failure InvalidStorageStandoff =
+            Failure.FromCode("assembly.storage-standoff.invalid");
         public static readonly Failure InvalidMemoryChannel =
             Failure.FromCode("assembly.memory-channel.invalid");
         public static readonly Failure InvalidMemoryBank =
@@ -667,6 +812,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-socket.occupied");
         public static readonly Failure MemorySlotOccupied =
             Failure.FromCode("assembly.memory-slot.occupied");
+        public static readonly Failure StorageSlotOccupied =
+            Failure.FromCode("assembly.storage-slot.occupied");
         public static readonly Failure InvalidComponent = Failure.FromCode("assembly.invalid-component");
         public static readonly Failure UnknownItem = InvalidComponent;
         public static readonly Failure ComponentNotInActorHands =
@@ -686,10 +833,16 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.motherboard.processor-installed");
         public static readonly Failure MemoryModuleInstalled =
             Failure.FromCode("assembly.motherboard.memory-installed");
+        public static readonly Failure StorageDeviceInstalled =
+            Failure.FromCode("assembly.motherboard.storage-installed");
         public static readonly Failure MemoryRetentionOutOfOrder =
             Failure.FromCode("assembly.memory-retention.out-of-order");
         public static readonly Failure MemoryModuleRetained =
             Failure.FromCode("assembly.memory-module.retained");
+        public static readonly Failure StorageRetentionOutOfOrder =
+            Failure.FromCode("assembly.storage-retention.out-of-order");
+        public static readonly Failure StorageDeviceSecured =
+            Failure.FromCode("assembly.storage-device.secured");
         public static readonly Failure SlotEmpty = ComponentNotSeated;
         public static readonly Failure ItemNotOnWorkbench = ComponentNotSeated;
         public static readonly Failure UnknownComponentSpecification = InvalidComponent;
@@ -703,12 +856,16 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.cpu-socket-family.mismatch");
         public static readonly Failure DimmTypeMismatch =
             Failure.FromCode("assembly.dimm-type.mismatch");
+        public static readonly Failure M2StorageTypeMismatch =
+            Failure.FromCode("assembly.m2-storage-type.mismatch");
         public static readonly Failure WorkbenchCapacityExceeded =
             Failure.FromCode("assembly.workbench.capacity");
         public static readonly Failure ProcessorSocketCapacityExceeded =
             Failure.FromCode("assembly.processor-socket.capacity");
         public static readonly Failure MemorySlotCapacityExceeded =
             Failure.FromCode("assembly.memory-slot.capacity");
+        public static readonly Failure StorageSlotCapacityExceeded =
+            Failure.FromCode("assembly.storage-slot.capacity");
         public static readonly Failure HandsCapacityExceeded =
             Failure.FromCode("assembly.hands.capacity");
         public static readonly Failure InventoryRevisionOverflow = RevisionOverflow;
@@ -729,6 +886,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.benchmark.memory-missing");
         public static readonly Failure MemoryUnretained =
             Failure.FromCode("assembly.benchmark.memory-unretained");
+        public static readonly Failure StorageMissing =
+            Failure.FromCode("assembly.benchmark.storage-missing");
+        public static readonly Failure StorageUnsecured =
+            Failure.FromCode("assembly.benchmark.storage-unsecured");
         public static readonly Failure BuildIncomplete =
             Failure.FromCode("assembly.benchmark.build-incomplete");
         public static readonly Failure InvariantViolation =

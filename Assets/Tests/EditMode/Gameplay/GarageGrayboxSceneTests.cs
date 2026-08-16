@@ -92,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(7));
+                Assert.That(physicalItems.Length, Is.EqualTo(8));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -116,9 +116,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection memoryModule = physicalItems.Single(
                     item => item.ItemIdValue ==
                             GarageStockFlowSession.MemoryItemInstanceIdValue);
+                PhysicalItemProjection storageDevice = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.StorageItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(3));
+                    Is.EqualTo(4));
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -273,6 +276,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.Session.AssemblyBuild.MemorySlotState,
                     Is.EqualTo(MemorySlotState.EmptyOpen));
                 Assert.That(dimmBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                M2StorageAssemblyItemBinding storageBinding =
+                    storageDevice.GetComponent<M2StorageAssemblyItemBinding>();
+                Assert.That(storageBinding, Is.Not.Null);
+                Assert.That(storageDevice.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.StorageDisplayName));
+                Assert.That(storageDevice.SupportsPlacement, Is.False);
+                Assert.That(storageDevice.Body.mass, Is.EqualTo(0.010f).Within(0.001f));
+                Assert.That(marker.StorageDevice, Is.SameAs(storageDevice));
+                Assert.That(marker.StorageBinding, Is.SameAs(storageBinding));
+                Assert.That(marker.StorageSlot, Is.Not.Null);
+                Assert.That(marker.StorageSlot.IsConfigured, Is.True);
+                Assert.That(marker.StorageSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageSlotIdValue));
+                Assert.That(marker.StorageSlot.StandoffIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageStandoffIdValue));
+                Assert.That(marker.StorageSlot.CaptiveScrewIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageCaptiveScrewIdValue));
+                Assert.That(marker.StorageSlot.FocusCollider.enabled, Is.False);
+                Assert.That(storageBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(storageBinding.PhysicalItem, Is.SameAs(storageDevice));
+                Assert.That(storageBinding.Slot, Is.SameAs(marker.StorageSlot));
+                Assert.That(marker.PlayerCarry.MatchesM2StorageConfiguration(
+                    marker.StorageSlot,
+                    storageBinding), Is.True);
+                Assert.That(marker.StockFlow.Session.TryGetStorageItem(
+                    out InventoryItemRecord storageItem), Is.True);
+                Assert.That(storageItem.Id,
+                    Is.EqualTo(marker.StockFlow.Session.StorageItemId));
+                Assert.That(storageItem.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.StorageProductId));
+                Assert.That(storageItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild.StorageSlotState,
+                    Is.EqualTo(StorageSlotState.EmptyOpen));
+                Assert.That(storageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -500,7 +538,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-dimm-dual-latch-r25-v1"));
+                    Is.EqualTo("garage-m2-nvme-captive-screw-r26-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -592,6 +630,36 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Transform memoryPackage = assemblySlice
                     .GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "PrototypeMemoryModulePackage");
+                Transform storageSlotRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "MotherboardM2SlotPrimary");
+                Transform storageSeatAnchor = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2StorageSeatedAnchor");
+                Transform storageStandoff = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2Storage2280Standoff");
+                Transform storageScrew = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2CaptiveScrew");
+                Transform storageFocus = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2StorageSlotFocusTarget");
+                Transform storageRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "PrototypeM2Nvme2280");
+                Transform storagePcb = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2NvmePcb");
+                Transform storageController = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2NvmeController");
+                Transform storageNand = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2NvmeNandA");
+                Transform storageLabel = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "M2NvmeLabel");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
                 Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
@@ -620,6 +688,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     memoryRoot.GetComponent<DimmAssemblyItemBinding>();
                 PhysicalItemProjection memoryModule =
                     memoryRoot.GetComponent<PhysicalItemProjection>();
+                M2StorageSlotProjection storageSlot =
+                    storageSlotRoot.GetComponent<M2StorageSlotProjection>();
+                M2StorageAssemblyItemBinding storageBinding =
+                    storageRoot.GetComponent<M2StorageAssemblyItemBinding>();
+                PhysicalItemProjection storageDevice =
+                    storageRoot.GetComponent<PhysicalItemProjection>();
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
                 Assert.That(fastener, Is.Not.Null);
@@ -630,6 +704,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(dimmSlot, Is.Not.Null);
                 Assert.That(dimmBinding, Is.Not.Null);
                 Assert.That(memoryModule, Is.Not.Null);
+                Assert.That(storageSlot, Is.Not.Null);
+                Assert.That(storageBinding, Is.Not.Null);
+                Assert.That(storageDevice, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
                 Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
@@ -639,7 +716,35 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.DimmSlot, Is.SameAs(dimmSlot));
                 Assert.That(marker.DimmBinding, Is.SameAs(dimmBinding));
                 Assert.That(marker.MemoryModule, Is.SameAs(memoryModule));
+                Assert.That(marker.StorageSlot, Is.SameAs(storageSlot));
+                Assert.That(marker.StorageBinding, Is.SameAs(storageBinding));
+                Assert.That(marker.StorageDevice, Is.SameAs(storageDevice));
                 Assert.That(binding.Fastener, Is.SameAs(fastener));
+                Assert.That(storageSlot.IsConfigured, Is.True);
+                Assert.That(storageSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageSlotIdValue));
+                Assert.That(storageSlot.StandoffIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageStandoffIdValue));
+                Assert.That(storageSlot.CaptiveScrewIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageCaptiveScrewIdValue));
+                Assert.That(storageSlot.SeatedAnchor, Is.SameAs(storageSeatAnchor));
+                Assert.That(storageSlot.FocusCollider,
+                    Is.SameAs(storageFocus.GetComponent<BoxCollider>()));
+                Assert.That(storageSlot.CaptiveScrewPivot,
+                    Is.SameAs(storageScrew.parent));
+                Assert.That(storageStandoff, Is.Not.Null);
+                Assert.That(storagePcb.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("MotherboardPcb"));
+                Assert.That(storageController.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("WorkshopRubber"));
+                Assert.That(storageNand.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("WorkshopRubber"));
+                Assert.That(storageLabel.GetComponent<Renderer>().sharedMaterial.name,
+                    Does.StartWith("LabelPaper"));
+                Assert.That(storageDevice.ItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.StorageItemInstanceIdValue));
+                Assert.That(storageDevice.Body.mass, Is.EqualTo(0.010f).Within(0.001f));
+                Assert.That(storageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
                     Is.EqualTo(new Vector3(-0.75f, 1.30f, 4.35f)));
@@ -976,9 +1081,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(25));
+                    Is.EqualTo(40));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(13));
+                    Is.EqualTo(15));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));

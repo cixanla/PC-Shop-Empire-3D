@@ -14,7 +14,8 @@ namespace PCShopEmpire3D.Catalog
     {
         Motherboard = 1,
         Processor = 2,
-        MemoryModule = 3
+        MemoryModule = 3,
+        StorageDevice = 4
     }
 
     /// <summary>
@@ -47,6 +48,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed M.2 storage compatibility type. Interface, protocol and physical
+    /// length are one typed key so similarly shaped but incompatible modules fail closed.
+    /// </summary>
+    public enum M2StorageType
+    {
+        NvmePcie4X4_2280 = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -57,7 +67,8 @@ namespace PCShopEmpire3D.Catalog
             PcComponentKind kind,
             MotherboardFormFactor motherboardFormFactor,
             CpuSocketFamily cpuSocketFamily,
-            DimmType dimmType)
+            DimmType dimmType,
+            M2StorageType m2StorageType)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
@@ -65,6 +76,7 @@ namespace PCShopEmpire3D.Catalog
             MotherboardFormFactor = motherboardFormFactor;
             CpuSocketFamily = cpuSocketFamily;
             DimmType = dimmType;
+            M2StorageType = m2StorageType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -78,6 +90,8 @@ namespace PCShopEmpire3D.Catalog
         public CpuSocketFamily CpuSocketFamily { get; }
 
         public DimmType DimmType { get; }
+
+        public M2StorageType M2StorageType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -134,6 +148,7 @@ namespace PCShopEmpire3D.Catalog
                     kind,
                     motherboardFormFactor,
                     default,
+                    default,
                     default));
         }
 
@@ -170,6 +185,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
                     cpuSocketFamily,
+                    default,
                     default));
         }
 
@@ -213,7 +229,59 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
                     cpuSocketFamily,
-                    supportedDimmType));
+                    supportedDimmType,
+                    default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateMotherboard(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            MotherboardFormFactor motherboardFormFactor,
+            CpuSocketFamily cpuSocketFamily,
+            DimmType supportedDimmType,
+            M2StorageType supportedM2StorageType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidMotherboardFormFactor(motherboardFormFactor))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidMotherboardFormFactor);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            if (!IsValidDimmType(supportedDimmType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidDimmType);
+            }
+
+            if (!IsValidM2StorageType(supportedM2StorageType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidM2StorageType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.Motherboard,
+                    motherboardFormFactor,
+                    cpuSocketFamily,
+                    supportedDimmType,
+                    supportedM2StorageType));
         }
 
         public static OperationResult<PcComponentSpecification> CreateProcessor(
@@ -242,6 +310,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Processor,
                     default,
                     cpuSocketFamily,
+                    default,
                     default));
         }
 
@@ -271,14 +340,46 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.MemoryModule,
                     default,
                     default,
-                    dimmType));
+                    dimmType,
+                    default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateStorageDevice(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            M2StorageType m2StorageType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidM2StorageType(m2StorageType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidM2StorageType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.StorageDevice,
+                    default,
+                    default,
+                    default,
+                    m2StorageType));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
         {
             return kind == PcComponentKind.Motherboard ||
                    kind == PcComponentKind.Processor ||
-                   kind == PcComponentKind.MemoryModule;
+                   kind == PcComponentKind.MemoryModule ||
+                   kind == PcComponentKind.StorageDevice;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -297,6 +398,11 @@ namespace PCShopEmpire3D.Catalog
         public static bool IsValidDimmType(DimmType dimmType)
         {
             return dimmType == DimmType.Ddr5Udimm;
+        }
+
+        public static bool IsValidM2StorageType(M2StorageType m2StorageType)
+        {
+            return m2StorageType == M2StorageType.NvmePcie4X4_2280;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -398,17 +504,28 @@ namespace PCShopEmpire3D.Catalog
                                specification.CpuSocketFamily)) &&
                           (specification.DimmType == default ||
                            PcComponentSpecification.IsValidDimmType(
-                               specification.DimmType))
+                               specification.DimmType)) &&
+                          (specification.M2StorageType == default ||
+                           PcComponentSpecification.IsValidM2StorageType(
+                               specification.M2StorageType))
                         : (specification.Kind == PcComponentKind.Processor &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
                                specification.CpuSocketFamily) &&
-                           specification.DimmType == default) ||
+                           specification.DimmType == default &&
+                           specification.M2StorageType == default) ||
                           (specification.Kind == PcComponentKind.MemoryModule &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
                            PcComponentSpecification.IsValidDimmType(
-                               specification.DimmType));
+                               specification.DimmType) &&
+                           specification.M2StorageType == default) ||
+                          (specification.Kind == PcComponentKind.StorageDevice &&
+                           specification.MotherboardFormFactor == default &&
+                           specification.CpuSocketFamily == default &&
+                           specification.DimmType == default &&
+                           PcComponentSpecification.IsValidM2StorageType(
+                               specification.M2StorageType));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

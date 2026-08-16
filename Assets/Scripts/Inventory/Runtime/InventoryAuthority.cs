@@ -69,6 +69,34 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns four distinct managed
+    /// serialized-item containers. Validation is all-or-none and advances Inventory by
+    /// exactly one revision only after all four capabilities can be published together.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessQuadruple
+    {
+        internal InventorySerializedTransferAccessQuadruple(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second,
+            InventorySerializedTransferAccess third,
+            InventorySerializedTransferAccess fourth)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+            Fourth = fourth;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+
+        internal InventorySerializedTransferAccess Third { get; }
+
+        internal InventorySerializedTransferAccess Fourth { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -403,6 +431,78 @@ namespace PCShopEmpire3D.Inventory
             Revision++;
             return OperationResult<InventorySerializedTransferAccessTriple>.Success(
                 new InventorySerializedTransferAccessTriple(first, second, third));
+        }
+
+        internal OperationResult<InventorySerializedTransferAccessQuadruple>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId,
+                StableId<ContainerIdScope> thirdContainerId,
+                StableId<ContainerIdScope> fourthContainerId)
+        {
+            if (!_containers.ContainsKey(firstContainerId) ||
+                !_containers.ContainsKey(secondContainerId) ||
+                !_containers.ContainsKey(thirdContainerId) ||
+                !_containers.ContainsKey(fourthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuadruple>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            if (firstContainerId == secondContainerId ||
+                firstContainerId == thirdContainerId ||
+                firstContainerId == fourthContainerId ||
+                secondContainerId == thirdContainerId ||
+                secondContainerId == fourthContainerId ||
+                thirdContainerId == fourthContainerId)
+            {
+                return OperationResult<InventorySerializedTransferAccessQuadruple>.Fail(
+                    InventoryFailures.SameContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(firstContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(secondContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(thirdContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(fourthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuadruple>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
+            if (GetContainerLoadUnsafe(firstContainerId) != 0 ||
+                GetContainerLoadUnsafe(secondContainerId) != 0 ||
+                GetContainerLoadUnsafe(thirdContainerId) != 0 ||
+                GetContainerLoadUnsafe(fourthContainerId) != 0 ||
+                HasReservationTargetingContainerUnsafe(firstContainerId) ||
+                HasReservationTargetingContainerUnsafe(secondContainerId) ||
+                HasReservationTargetingContainerUnsafe(thirdContainerId) ||
+                HasReservationTargetingContainerUnsafe(fourthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuadruple>.Fail(
+                    InventoryFailures.SerializedTransferContainerOccupied);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessQuadruple>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var first = new InventorySerializedTransferAccess(this, firstContainerId);
+            var second = new InventorySerializedTransferAccess(this, secondContainerId);
+            var third = new InventorySerializedTransferAccess(this, thirdContainerId);
+            var fourth = new InventorySerializedTransferAccess(this, fourthContainerId);
+            _managedSerializedTransferContainers.Add(firstContainerId, first);
+            _managedSerializedTransferContainers.Add(secondContainerId, second);
+            _managedSerializedTransferContainers.Add(thirdContainerId, third);
+            _managedSerializedTransferContainers.Add(fourthContainerId, fourth);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessQuadruple>.Success(
+                new InventorySerializedTransferAccessQuadruple(
+                    first,
+                    second,
+                    third,
+                    fourth));
         }
 
         public OperationResult ReceiveSerializedItem(

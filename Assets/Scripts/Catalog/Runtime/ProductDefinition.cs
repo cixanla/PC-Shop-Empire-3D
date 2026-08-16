@@ -145,6 +145,8 @@ namespace PCShopEmpire3D.Catalog
             Failure.FromCode("catalog.component.cpu-socket-family.invalid");
         public static readonly Failure InvalidDimmType =
             Failure.FromCode("catalog.component.dimm-type.invalid");
+        public static readonly Failure InvalidM2StorageType =
+            Failure.FromCode("catalog.component.m2-storage-type.invalid");
         public static readonly Failure ComponentMetadataMismatch =
             Failure.FromCode("catalog.component.metadata-mismatch");
         public static readonly Failure EmptyComponentCatalog =

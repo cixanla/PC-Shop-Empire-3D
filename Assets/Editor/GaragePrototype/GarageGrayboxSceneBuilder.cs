@@ -134,7 +134,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PhysicalItemProjection processor,
                 DimmSlotProjection dimmSlot,
                 DimmAssemblyItemBinding dimmBinding,
-                PhysicalItemProjection memoryModule)
+                PhysicalItemProjection memoryModule,
+                M2StorageSlotProjection storageSlot,
+                M2StorageAssemblyItemBinding storageBinding,
+                PhysicalItemProjection storageDevice)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -146,6 +149,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 DimmSlot = dimmSlot;
                 DimmBinding = dimmBinding;
                 MemoryModule = memoryModule;
+                StorageSlot = storageSlot;
+                StorageBinding = storageBinding;
+                StorageDevice = storageDevice;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -167,6 +173,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public DimmAssemblyItemBinding DimmBinding { get; }
 
             public PhysicalItemProjection MemoryModule { get; }
+
+            public M2StorageSlotProjection StorageSlot { get; }
+
+            public M2StorageAssemblyItemBinding StorageBinding { get; }
+
+            public PhysicalItemProjection StorageDevice { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -456,6 +468,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.MemoryModule,
                 assemblyBuild.DimmSlot,
                 GarageStockFlowSession.MemoryItemInstanceIdValue);
+            assemblyBuild.StorageBinding.Configure(
+                stockFlow,
+                assemblyBuild.StorageDevice,
+                assemblyBuild.StorageSlot,
+                GarageStockFlowSession.StorageItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -466,6 +483,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureDimmSlot(
                 assemblyBuild.DimmSlot,
                 assemblyBuild.DimmBinding);
+            carry.ConfigureM2StorageSlot(
+                assemblyBuild.StorageSlot,
+                assemblyBuild.StorageBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -507,7 +527,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Processor,
                 assemblyBuild.DimmSlot,
                 assemblyBuild.DimmBinding,
-                assemblyBuild.MemoryModule);
+                assemblyBuild.MemoryModule,
+                assemblyBuild.StorageSlot,
+                assemblyBuild.StorageBinding,
+                assemblyBuild.StorageDevice);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1353,6 +1376,80 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 rightLatchPivot,
                 2f,
                 0.94f);
+
+            Transform storageSlotRoot = new GameObject(
+                "MotherboardM2SlotPrimary").transform;
+            storageSlotRoot.SetParent(motherboardRoot.transform, false);
+            storageSlotRoot.localPosition = new Vector3(0.020f, 0.085f, 0.012f);
+            GameObject storageConnector = CreateBeveledCube(
+                "M2MKeyConnector",
+                storageSlotRoot,
+                new Vector3(-0.046f, 0f, 0.006f),
+                new Vector3(0.014f, 0.030f, 0.012f),
+                0.002f,
+                rubber,
+                false);
+            UnityEngine.Object.DestroyImmediate(storageConnector.GetComponent<Collider>());
+            DisableDecorativeRendererCost(storageConnector.GetComponent<Renderer>());
+
+            Transform storageSeatAnchor = new GameObject(
+                "M2StorageSeatedAnchor").transform;
+            storageSeatAnchor.SetParent(storageSlotRoot, false);
+            storageSeatAnchor.localPosition = new Vector3(0f, 0f, 0.012f);
+
+            GameObject storageStandoff = CreateCylinder(
+                "M2Storage2280Standoff",
+                storageSlotRoot,
+                new Vector3(0.040f, 0f, 0.007f),
+                new Vector3(0.006f, 0.003f, 0.006f),
+                Quaternion.Euler(90f, 0f, 0f),
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(storageStandoff.GetComponent<Collider>());
+            DisableDecorativeRendererCost(storageStandoff.GetComponent<Renderer>());
+
+            Transform captiveScrewPivot = new GameObject(
+                "M2CaptiveScrewPivot").transform;
+            captiveScrewPivot.SetParent(storageSlotRoot, false);
+            captiveScrewPivot.localPosition = new Vector3(0.040f, 0f, 0.014f);
+            GameObject captiveScrew = CreateCylinder(
+                "M2CaptiveScrew",
+                captiveScrewPivot,
+                Vector3.zero,
+                new Vector3(0.005f, 0.002f, 0.005f),
+                Quaternion.Euler(90f, 0f, 0f),
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(captiveScrew.GetComponent<Collider>());
+            DisableDecorativeRendererCost(captiveScrew.GetComponent<Renderer>());
+            GameObject screwSlot = CreateDetailCube(
+                "M2CaptiveScrewSlot",
+                captiveScrewPivot,
+                new Vector3(0f, 0f, -0.0022f),
+                new Vector3(0.006f, 0.0014f, 0.001f),
+                rubber);
+            UnityEngine.Object.DestroyImmediate(screwSlot.GetComponent<Collider>());
+            DisableDecorativeRendererCost(screwSlot.GetComponent<Renderer>());
+
+            GameObject storageFocusTarget = new GameObject("M2StorageSlotFocusTarget");
+            storageFocusTarget.transform.SetParent(storageSlotRoot, false);
+            storageFocusTarget.transform.localPosition = new Vector3(0f, 0f, 0.028f);
+            storageFocusTarget.layer = interactableLayer;
+            BoxCollider storageFocusCollider =
+                storageFocusTarget.AddComponent<BoxCollider>();
+            storageFocusCollider.size = new Vector3(0.115f, 0.060f, 0.070f);
+            storageFocusCollider.isTrigger = false;
+
+            M2StorageSlotProjection storageSlot =
+                storageSlotRoot.gameObject.AddComponent<M2StorageSlotProjection>();
+            storageSlot.Configure(
+                GarageStockFlowSession.StorageSlotIdValue,
+                GarageStockFlowSession.StorageStandoffIdValue,
+                GarageStockFlowSession.StorageCaptiveScrewIdValue,
+                storageSeatAnchor,
+                storageFocusCollider,
+                motherboardRoot.transform,
+                captiveScrewPivot,
+                2f,
+                0.94f);
             CreateCombinedBoxDetails(
                 "MotherboardConnectorMarks",
                 motherboardRoot.transform,
@@ -1462,6 +1559,100 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             DimmAssemblyItemBinding dimmBinding =
                 memoryRoot.AddComponent<DimmAssemblyItemBinding>();
 
+            GameObject storageRoot = new GameObject("PrototypeM2Nvme2280");
+            storageRoot.transform.SetParent(slice, false);
+            storageRoot.transform.localPosition = new Vector3(-0.91f, 0.992f, 3.93f);
+            storageRoot.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            storageRoot.layer = interactableLayer;
+
+            Rigidbody storageBody = storageRoot.AddComponent<Rigidbody>();
+            storageBody.mass = 0.010f;
+            storageBody.useGravity = false;
+            storageBody.isKinematic = true;
+            storageBody.interpolation = RigidbodyInterpolation.Interpolate;
+            storageBody.collisionDetectionMode =
+                CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject storagePcb = CreateBeveledCube(
+                "M2NvmePcb",
+                storageRoot.transform,
+                Vector3.zero,
+                new Vector3(0.080f, 0.022f, 0.003f),
+                0.001f,
+                motherboardPcb);
+            UnityEngine.Object.DestroyImmediate(storagePcb.GetComponent<Collider>());
+            DisableDecorativeRendererCost(storagePcb.GetComponent<Renderer>());
+            GameObject storageController = CreateDetailCube(
+                "M2NvmeController",
+                storageRoot.transform,
+                new Vector3(-0.012f, 0f, 0.003f),
+                new Vector3(0.013f, 0.013f, 0.003f),
+                rubber);
+            GameObject storageNandA = CreateDetailCube(
+                "M2NvmeNandA",
+                storageRoot.transform,
+                new Vector3(0.008f, 0f, 0.003f),
+                new Vector3(0.014f, 0.014f, 0.003f),
+                rubber);
+            GameObject storageNandB = CreateDetailCube(
+                "M2NvmeNandB",
+                storageRoot.transform,
+                new Vector3(0.027f, 0f, 0.003f),
+                new Vector3(0.014f, 0.014f, 0.003f),
+                rubber);
+            GameObject storageLabel = CreateDetailCube(
+                "M2NvmeLabel",
+                storageRoot.transform,
+                new Vector3(0.012f, 0f, 0.005f),
+                new Vector3(0.048f, 0.018f, 0.001f),
+                labelPaper);
+            DisableDecorativeRendererCost(storageController.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(storageNandA.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(storageNandB.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(storageLabel.GetComponent<Renderer>());
+
+            for (int contact = 0; contact < 6; contact++)
+            {
+                float y = -0.009f + (contact * 0.0036f);
+                if (contact == 4)
+                {
+                    continue;
+                }
+
+                GameObject finger = CreateDetailCube(
+                    $"M2MKeyContact_{contact + 1}",
+                    storageRoot.transform,
+                    new Vector3(-0.0385f, y, 0.0025f),
+                    new Vector3(0.008f, 0.0022f, 0.001f),
+                    accent);
+                DisableDecorativeRendererCost(finger.GetComponent<Renderer>());
+            }
+
+            GameObject keyNotch = CreateDetailCube(
+                "M2MKeyNotch",
+                storageRoot.transform,
+                new Vector3(-0.0395f, 0.0053f, 0.0015f),
+                new Vector3(0.004f, 0.003f, 0.0045f),
+                rubber);
+            DisableDecorativeRendererCost(keyNotch.GetComponent<Renderer>());
+            BoxCollider storageCollider = storageRoot.AddComponent<BoxCollider>();
+            storageCollider.center = Vector3.zero;
+            storageCollider.size = new Vector3(0.082f, 0.024f, 0.009f);
+            SetLayerRecursively(storageRoot, interactableLayer);
+
+            PhysicalItemProjection storageDevice = storageRoot.AddComponent<
+                PhysicalItemProjection>();
+            storageDevice.Configure(
+                GarageStockFlowSession.StorageItemInstanceIdValue,
+                GarageStockFlowSession.StorageDisplayName,
+                storageBody,
+                new Vector3(0.041f, 0.012f, 0.006f),
+                new Vector3(0f, -0.045f, 0f),
+                new Vector3(0f, 180f, 0f),
+                PhysicalCarryProfile.PcComponent);
+            M2StorageAssemblyItemBinding storageBinding =
+                storageRoot.AddComponent<M2StorageAssemblyItemBinding>();
+
             return new AssemblyBuildResult(
                 seat,
                 fastener,
@@ -1472,7 +1663,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 processor,
                 dimmSlot,
                 dimmBinding,
-                memoryModule);
+                memoryModule,
+                storageSlot,
+                storageBinding,
+                storageDevice);
         }
 
         private static void BuildLighting(
