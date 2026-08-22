@@ -291,6 +291,15 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Final EditMode `490/490`, PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal exact storage smoke başarılıdır. İkinci M.2/SATA/RAID, tam benchmark ve diğer PC bileşenleri ayrı kalır.
 - Source/docs `6e0627e`, Guard `31970813717` ve 689/689 `19da758c…21b8` USB readback başarılıdır; Issue #57 ve Roadmap `Done`dur.
 
+## 9.2 Issue #58 deterministic single air-cooler seating checkpoint'i
+
+- Epic #10'un altıncı bounded child paketi [Issue #58](https://github.com/cixanla/PC-Shop-Empire-3D/issues/58) ile tek canonical serialized LGA1700 top-down air cooler, pre-applied single-use TIM ve stable four-point retention akışına sınırlandı.
+- Feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`; five-container atomic claim, `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained`, exact receipt replay, TIM consumption, CPU-retention/motherboard-detach host gates ve same-instance recovery ekledi.
+- GarageGraybox r27'de cold plate/TIM yüzeyi, fin stack, fan, bracket ve dört retention point görünürdür. Retain `1→3→2→4`, release ters sıradadır; presentation authority değildir ve generic placement/stack/cart yolu fail-closed'dur.
+- Gerçek keyboard/mouse ve gamepad akışı, dynamic compact HUD, pause/co-edge drain, wrong-orientation/RAM-clearance/obstruction/retained-remove/consumed-TIM no-mutation kapılarıyla testlidir.
+- Final EditMode `521/521`, PlayMode `38/38`, Universal macOS `328534723` bayt ve aktif Apple Silicon/Metal 1280×720 exact cooler smoke başarılıdır. Source/docs, Guard, USB ve Issue/Project kapanışı bu checkpoint zincirinde tamamlanır.
+- Ayrı paste/reapplication, liquid cooling, GPU/PSU/cabling, tam benchmark ve Windows/Steam ayrı bounded kapılardır.
+
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
 - Aynı karar kullanıcıya tekrar sorulmadan önce bu belge ve tam konuşma arşivi aranır.
@@ -305,4 +314,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #57 feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, EditMode 490/490, PlayMode 35/35, Universal Mac `328362356` bayt ve Apple M4/Metal exact r26 storage smoke ile tamamlandı. Tek canonical M.2 2280 NVMe'nin deterministic seat/captive-screw/recovery akışı kapalıdır; ikinci storage/SATA/RAID, tam benchmark ve diğer PC bileşenleri ayrı bounded kapılardır.
+> Issue #58 feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, EditMode 521/521, PlayMode 38/38, Universal Mac `328534723` bayt ve aktif Apple Silicon/Metal exact r27 cooler smoke ile tamamlandı. Tek canonical air cooler'ın deterministic seat/four-point-retention/TIM/recovery akışı kapalıdır; GitHub/USB kapanışı tamamlanmadan yeni gameplay başlatılmaz.

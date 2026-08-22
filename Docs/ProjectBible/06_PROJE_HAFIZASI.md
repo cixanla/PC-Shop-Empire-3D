@@ -528,3 +528,14 @@ Kullanıcı bu noktada konuşmanın korunmasını ve daha sonra aynı yerden dev
 - Kanıt: EditMode `490/490`, gerçek Input System PlayMode `35/35`, Universal macOS `328362356` bayt ve Apple M4/Metal 1280×720 exact `GARAGE_STORAGE_RUNTIME_SMOKE ... insertion-angle=ok captive-screw=ok ... authority-isolated=ok identity=stable recovery=ok` başarılıdır.
 - Kapanış: source/docs `6e0627e`, Guard `31970813717`, ayrı USB milestone 689/689 readback ve `19da758c…21b8` manifest ile doğrulandı; AppleDouble `0`, Issue/Roadmap `Done`dur.
 - Sınır: ikinci M.2/SATA/RAID, heatsink/thermal/performance benchmarkı, GPU/PSU/cooler/cabling, POST/BIOS/OS, final art ve Windows/Steam ayrı issue'lardır.
+
+## Güncel uygulama kaydı — Issue #58 deterministic single air-cooler seating ve four-point retention
+
+- Epic #10'un altıncı bounded child'ı Issue #58'dir. Feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`; tek canonical serialized `Lga1700TopDownAirPreAppliedTim` cooler ve immutable slot/bracket/four-point topology ekledi.
+- Karar: Workbench + ProcessorSocket + MemorySlot + StorageSlot + capacity-1 ProcessorCoolerSlot all-or-none claim edilir. Seat/remove exact custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez; partial/ghost claim yasaktır.
+- Karar: pre-applied TIM başarılı seat'te tam bir kez tüketilir ve serialized item üzerinde kalıcıdır. Receipt-history fold aynı itemın tekrar TIM tüketmesini, stale lineage'ı ve cross-kind conflict'i fail-closed reddeder.
+- Karar: retain çapraz `1→3→2→4`, unretain exact ters sıradadır. Cooler installed iken CPU retention açma ve motherboard detach engellenir; retained cooler yalnız kendi benchmark-readiness nedenini giderir ve sonuç yine `BuildIncomplete` kalır.
+- Karar: iki guided orientation, range/focus/LOS/socket-interface/support/RAM-clearance/obstruction/tie/saturation solver kapılarıyla korunur. Generic placement/stack/cart bypass'ı yoktur; recovery aynı Unity instance ve stable item identity'yi korur.
+- GarageGraybox r27 cold plate, TIM yüzeyi, fin stack, fan, bracket ve dört görünür retention point taşır. Gerçek keyboard/mouse ve gamepad dynamic compact HUD/co-edge/pause akışları testlidir; presentation authority değildir.
+- Kanıt: EditMode `521/521`, gerçek Input System PlayMode `38/38`, Universal macOS `328534723` bayt ve aktif Apple Silicon/Metal 1280×720 exact `GARAGE_COOLER_RUNTIME_SMOKE ... tim=pre-applied cross-order=ok ... host-gates=ok replay=ok authority-isolated=ok identity=stable recovery=ok` başarılıdır. Runtime yeni makineyi Apple M1 olarak tanımlar.
+- Kapanış sırası: source/docs commit → Repository Guard → exact USB manifest/readback → Issue/Project `Done`. Ayrı paste/reapplication, liquid cooling, GPU/PSU/cabling, POST/BIOS/OS, tam benchmark, final art ve Windows/Steam ayrı issue'lardır.

@@ -59,6 +59,20 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır. Gerçek Windows x64 hostta I
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
 
+## Stage B deterministic single air-cooler seating ve four-point retention doğrulaması — 22 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #58 feature `e2f10a2` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`), ad-hoc signed.
+- Unity build raporu: `328.534.723` bayt.
+- Ana executable: `117.179` bayt.
+- Runtime: aktif Apple Silicon/Metal makinesi Apple M1, pencereli 1280×720; `garage-processor-cooler-r27-v1` readiness ve exact cooler smoke başarılı.
+- Test kapıları: EditMode `521/521`, PlayMode `38/38`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue58-final.log`, `585.965` bayt, SHA-256 `e32a2a1c8b661a8320e14511eee9d415d6b07c649594cd503221c9e23de99bed`.
+- Runtime log: `runtime-cooler-issue58-metal-final.log`, `5.282` bayt, SHA-256 `365bfd3ad8302f65af5a2121a4c36f0c5029d4128694a263cce1dc439b3f32d1`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
+
 ## Stage B deterministic single M.2 NVMe seating ve captive screw doğrulaması — 16 Ağustos 2026
 
 `macOS/PC Shop Empire 3D.app`, Issue #57 feature `4f14e7b` kaynak durumuyla yeniden üretildi:

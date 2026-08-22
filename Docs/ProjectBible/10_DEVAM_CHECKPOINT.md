@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
-**Tarih:** 16 Ağustos 2026<br>
-**Durum:** Issue #57 deterministic single M.2 NVMe seating + captive screw kaynak/test/build/runtime/CI/USB kapıları tamamlandı; Issue ve Roadmap `Done`<br>
+**Tarih:** 22 Ağustos 2026<br>
+**Durum:** Issue #58 deterministic single air-cooler seating + four-point retention kaynak/test/build/runtime kapıları tamamlandı; GitHub/USB kapanışı yürütülüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #57 / Epic #10
+## En yeni checkpoint — Issue #58 / Epic #10
+
+- Feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`; tek canonical serialized `Lga1700TopDownAirPreAppliedTim` cooler, immutable slot/bracket/dört-point topology ve atomik Workbench+ProcessorSocket+MemorySlot+StorageSlot+ProcessorCoolerSlot claim'i eklendi.
+- Supported lifecycle `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained`dır. Seat/remove exact serialized custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez. Pre-applied TIM başarılı seat'te yalnız bir kez tüketilir ve aynı item üzerinde kalıcıdır.
+- Retention çapraz `1→3→2→4`, release exact ters sıradadır. Immediate/delayed replay, duplicate TIM rejection, installed-cooler CPU-retention/motherboard-detach host gates, conflict/stale/full-hands no-mutation ve same-instance recovery testlidir.
+- İki keyed orientation, range/focus/LOS/socket-interface/support/RAM-clearance/obstruction/tie/saturation fail-closed solver ile korunur. Mode kapalı ghost/query sıfırdır; generic placement/stack/cart bypass'ı kapalıdır.
+- GarageGraybox `garage-processor-cooler-r27-v1`; cold plate, pre-applied TIM yüzeyi, fin stack, fan, bracket ve dört retention noktası görünürdür. Compact HUD gerçek keyboard/mouse ve gamepad bindinglerini dinamik gösterir.
+- Final EditMode `521/521`, PlayMode `38/38`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328534723` bayt; aktif Apple Silicon/Metal makinesinde 1280×720 readiness ve exact cooler smoke başarılıdır. Runtime yeni makineyi Apple M1 olarak tanımlamıştır; eski Apple M4 device ifadesi bu checkpoint için kullanılmaz.
+- Ayrıntı `Docs/ADR-0036-DETERMINISTIC-SINGLE-AIR-COOLER-SEATING-AND-FOUR-POINT-RETENTION.md` ve tarihli Evidence belgesindedir. Ayrı paste/reapplication, liquid cooling, GPU/PSU/cabling, tam benchmark, final art ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #57 / Epic #10
 
 - Feature `4f14e7bcb946f2f8e713a70d16d0e8f04216dbe1`, tree `1aedb833983df256c500c6a1815b075fa29c254c`; tek canonical M.2 2280 NVMe, immutable M-key/2280 standoff/captive-screw topology ve atomik Workbench+ProcessorSocket+MemorySlot+StorageSlot claim'i eklendi.
 - State yalnız `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured`dır. Seat/remove exact serialized custody'yi değiştirir; secure/unsecure Inventory revision'ını değiştirmez. Four-operation immediate/delayed replay, installed-storage host gate, conflict/stale/overflow no-mutation ve same-instance recovery testlidir.
@@ -174,10 +184,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Kullanıcı tarafından istenen büyük checkpoint ve bilgisayar kapanışından önce yeni gameplay başlatmamak.
-2. Sonraki turda Epic #10 adayını tek M.2 2280 NVMe SSD seating + captive retention screw akışıyla sınırlamak; ikinci storage/SATA/RAID kapsamına büyütmemek.
-3. Inventory revision-max hardening, GPU/cooler, tam PC build/benchmark, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Issue #58 source/docs commit, Repository Guard, exact USB manifest/readback ve GitHub Issue/Project kapanışını tamamlamadan yeni gameplay başlatmamak.
+2. Ardıl Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel bileşene sınırlamak; GPU, PSU, kablolama ve tam benchmarkı tek pakette birleştirmemek.
+3. Inventory revision-max hardening, ayrı paste/liquid cooling, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962`, USB metadata `17af550856e8bca288ed5c17924bc82586c76c27`, EditMode `461/461`, PlayMode `33/33`, Universal Mac `328268700` bayt, Apple M4/Metal exact r25 smoke, üç başarılı Guard ve 668/668 doğrulanmış USB milestone ile kapandı. Acceptance `21/21`, Issue `Completed`, Roadmap `Done`dur. Sonraki bounded aday yalnız tek M.2 2280 NVMe SSD seating + captive retention screw dilimidir.
+Issue #58 feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`, EditMode `521/521`, PlayMode `38/38`, Universal Mac `328534723` bayt ve aktif Apple Silicon/Metal exact r27 cooler smoke ile tamamlandı. Tek canonical air cooler'ın deterministic seat/four-point retention/TIM/recovery akışı kapalıdır; GitHub/USB kapanışı tamamlanmadan sonraki gameplay başlatılmaz.

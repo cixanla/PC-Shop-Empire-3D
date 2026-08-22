@@ -6,6 +6,11 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #58 ile tek canonical serialized LGA1700 top-down air cooler, atomic five-container Inventory claim, stable slot/bracket/four-point topology ve `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained` authority akışı eklendi.
+- Pre-applied TIM başarılı seat'te yalnız bir kez tüketilir; retain `1→3→2→4`, unretain exact ters sıradadır. Exact receipt lineage/replay, duplicate-consumption rejection, installed-cooler CPU-retention/motherboard-detach gates ve bütün stale/conflict/obstruction/full-hands failure no-mutation sözleşmeleri testlerle kilitlendi.
+- GarageGraybox r27'de cold plate/TIM/fin stack/fan/bracket/dört retention noktası, iki keyed orientation, gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
+- Feature `e2f10a2`, tree `55d5f0d`; EditMode 521/521, PlayMode 38/38, 328534723 bayt Universal macOS build ve aktif Apple Silicon/Metal 1280×720 `garage-processor-cooler-r27-v1` exact cooler smoke başarılıdır.
+
 - Issue #57 ile tek canonical serialized M.2 2280 NVMe, atomic four-container Inventory claim, stable M-key/2280/captive-screw topology ve `EmptyOpen ↔ StorageDeviceSeatedUnsecured ↔ StorageDeviceSecured` authority akışı eklendi.
 - GarageGraybox r26'da 18° guided insertion, keyed 180° orientation, düz seated pose, visible PCB/controller/NAND/label/gold contacts/standoff/captive screw, gerçek keyboard/gamepad dynamic HUD ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
 - Four-operation receipt lineage/replay, installed-storage motherboard detach gate, same-instance recovery, benchmark `storage-missing`/`storage-unsecured` ayrımı ve bütün stale/conflict/obstruction/full-hands failure no-mutation sözleşmeleri testlerle kilitlendi.
