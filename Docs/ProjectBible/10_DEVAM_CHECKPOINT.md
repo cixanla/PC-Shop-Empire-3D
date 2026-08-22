@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 22 Ağustos 2026<br>
-**Durum:** Issue #58 deterministic single air-cooler seating + four-point retention kaynak/test/build/runtime kapıları tamamlandı; GitHub/USB kapanışı yürütülüyor<br>
+**Durum:** Issue #58 deterministic single air-cooler seating + four-point retention kaynak/test/build/runtime/CI/GitHub kapıları tamamlandı; Issue/Roadmap `Done`, fiziksel USB kullanıcı talimatıyla ertelendi<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #58 / Epic #10
@@ -12,6 +12,8 @@
 - İki keyed orientation, range/focus/LOS/socket-interface/support/RAM-clearance/obstruction/tie/saturation fail-closed solver ile korunur. Mode kapalı ghost/query sıfırdır; generic placement/stack/cart bypass'ı kapalıdır.
 - GarageGraybox `garage-processor-cooler-r27-v1`; cold plate, pre-applied TIM yüzeyi, fin stack, fan, bracket ve dört retention noktası görünürdür. Compact HUD gerçek keyboard/mouse ve gamepad bindinglerini dinamik gösterir.
 - Final EditMode `521/521`, PlayMode `38/38`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328534723` bayt; aktif Apple Silicon/Metal makinesinde 1280×720 readiness ve exact cooler smoke başarılıdır. Runtime yeni makineyi Apple M1 olarak tanımlamıştır; eski Apple M4 device ifadesi bu checkpoint için kullanılmaz.
+- Source/docs `2e848e3bdc5795a349e6c857973c7c88fef36cd7`; [feature Guard 32591206866](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32591206866) ve [source/docs Guard 32591381804](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32591381804) başarılıdır. Acceptance `19/19`; Issue #58 ve Roadmap `Done`dur.
+- USB fiziksel aygıtı yeni Mac tarafından görünmediği için kullanıcı talimatıyla ertelendi. `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-22_STAGE_B_DETERMINISTIC_SINGLE_AIR_COOLER_FOUR_POINT_RETENTION` altında 712 exact Git source + 4 evidence + source kaydı, toplam 717/717 payload ve `f7b2b9bafee9529d95431bbc90914ba51ab24e01de9a0d5d77a53f26cb5626a5` manifest hazırdır. Bu dış yedek kapısı gameplay geliştirmesini bloklamaz; kullanıcı USB'yi bağladığını söylediğinde fiziksel readback tamamlanır.
 - Ayrıntı `Docs/ADR-0036-DETERMINISTIC-SINGLE-AIR-COOLER-SEATING-AND-FOUR-POINT-RETENTION.md` ve tarihli Evidence belgesindedir. Ayrı paste/reapplication, liquid cooling, GPU/PSU/cabling, tam benchmark, final art ve Windows/Steam ayrı kapılardır.
 
 ## Önceki checkpoint — Issue #57 / Epic #10
@@ -184,10 +186,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #58 source/docs commit, Repository Guard, exact USB manifest/readback ve GitHub Issue/Project kapanışını tamamlamadan yeni gameplay başlatmamak.
-2. Ardıl Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel bileşene sınırlamak; GPU, PSU, kablolama ve tam benchmarkı tek pakette birleştirmemek.
+1. Ardıl Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel bileşene sınırlamak; GPU, PSU, kablolama ve tam benchmarkı tek pakette birleştirmemek.
+2. Kullanıcı USB'nin yeniden bağlı olduğunu söylediğinde hazır Issue #58 staging paketinin fiziksel `.incoming-*`/readback kapanışını yapmak; o zamana kadar USB'yi sorgulamamak.
 3. Inventory revision-max hardening, ayrı paste/liquid cooling, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #58 feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`, EditMode `521/521`, PlayMode `38/38`, Universal Mac `328534723` bayt ve aktif Apple Silicon/Metal exact r27 cooler smoke ile tamamlandı. Tek canonical air cooler'ın deterministic seat/four-point retention/TIM/recovery akışı kapalıdır; GitHub/USB kapanışı tamamlanmadan sonraki gameplay başlatılmaz.
+Issue #58 feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, source/docs `2e848e3bdc5795a349e6c857973c7c88fef36cd7`, EditMode `521/521`, PlayMode `38/38`, Universal Mac `328534723` bayt, aktif Apple Silicon/Metal exact r27 cooler smoke ve iki başarılı Guard ile kapandı. Acceptance `19/19`, Issue/Roadmap `Done`dur. Fiziksel USB ertelendi; 717/717 staging hazırdır ve sonraki bounded gameplay'i bloklamaz.

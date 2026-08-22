@@ -29,6 +29,17 @@ GARAGE_COOLER_RUNTIME_SMOKE cooler-flow=ok preflight=ok socket-interface=ok keye
 
 The build was launched windowed at 1280×720 on the active Apple Silicon/Metal workstation with `-pse-cooler-smoke`; the runtime identified the migrated machine as Apple M1. The process was intentionally stopped only after the exact readiness and cooler markers appeared. The older Apple M4 device-specific wording is therefore not claimed for this checkpoint.
 
+## Repository closure and deferred physical USB copy
+
+- Source/docs commit: `2e848e3bdc5795a349e6c857973c7c88fef36cd7`.
+- Feature Repository Guard: [32591206866](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32591206866), success.
+- Source/docs Repository Guard: [32591381804](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32591381804), success.
+- Acceptance: 19/19; Issue #58 and Development Roadmap item `Done`.
+- The physical USB device was not enumerated by the migrated Mac. The user explicitly deferred the USB copy so gameplay development can continue.
+- USB-ready local staging: `2026-08-22_STAGE_B_DETERMINISTIC_SINGLE_AIR_COOLER_FOUR_POINT_RETENTION`; 712 exact Git source files + four evidence files + source record = 717/717 verified payload files and 13,204,343 bytes.
+- Staging manifest SHA-256: `f7b2b9bafee9529d95431bbc90914ba51ab24e01de9a0d5d77a53f26cb5626a5`; Git-blob, hash, size, path, forbidden/cache/credential and AppleDouble mismatch counts are zero.
+- No physical USB milestone or USB readback is claimed. It remains ready for `.incoming-*` copy and full readback when the user reports the USB connected.
+
 ## Bounded exclusions
 
 Separate thermal paste, cleaning/reapplication, liquid cooling, alternate sockets/brackets, fan curves and cabling, GPU, PSU, cable routing, POST/BIOS/OS, completed benchmark scoring, final art/audio/VFX/UI and native Windows/Steam release validation are not part of Issue #58.

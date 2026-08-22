@@ -20,7 +20,8 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Inventory authority beş managed container'ı atomik claim eder. Assembly supported runtime'da yalnız `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained` state'ini, exact receipt lineage/replay'i, single-use pre-applied TIM'i, installed-cooler host gates'i ve no-mutation failure yollarını kabul eder.
 - Oyuncu gerçek keyboard/mouse veya gamepad ile guided mode, iki keyed orientation, seat, görünür `1→3→2→4` retain/ters release ve same-instance remove/recovery akışını oynar. Generic placement/stack/cart bypass'ı kapalıdır.
 - Final EditMode `521/521`, PlayMode `38/38`; Universal macOS build `328534723` bayt ve aktif Apple Silicon/Metal 1280×720 exact r27 cooler smoke başarılıdır. Yeni makine runtime'da Apple M1 olarak tanımlanmıştır.
-- Feature private `main`e push edilmiştir; source/docs, Repository Guard, USB manifest/readback ve Issue/Project kapanışı bu checkpoint zincirinde tamamlanır.
+- Feature `e2f10a2` ve source/docs `2e848e3` private `main`e push edilmiştir; Guard `32591206866` ve `32591381804` başarılı, acceptance `19/19`, Issue/Roadmap `Done`dur.
+- Fiziksel USB yeni Mac tarafından algılanmadığı için kullanıcı talimatıyla ertelendi. 712 exact Git source + 4 evidence + source kaydı içeren 717/717 yerel staging ve `f7b2b9ba…26a5` manifest hazırdır; kullanıcı USB'yi yeniden bağladığını söyleyene kadar USB sorgulanmaz ve geliştirme durmaz.
 - Ayrıntı: `Docs/ADR-0036-DETERMINISTIC-SINGLE-AIR-COOLER-SEATING-AND-FOUR-POINT-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-AIR-COOLER-SEATING-AND-FOUR-POINT-RETENTION-CHECKPOINT-2026-08-22.md`.
 - Ayrı thermal-paste reapplication, liquid cooling, GPU/PSU/cabling, tam benchmark, final art ve native Windows/Steam ayrı kapılardır.
 
