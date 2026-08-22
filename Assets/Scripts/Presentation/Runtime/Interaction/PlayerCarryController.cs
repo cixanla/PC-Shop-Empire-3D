@@ -99,12 +99,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasProcessorSocketContext ||
             IsDimmSeatMode ||
             HasDimmSlotContext ||
+            IsProcessorCoolerSeatMode ||
+            HasProcessorCoolerSlotContext ||
             IsM2StorageSeatMode ||
             HasM2StorageSlotContext ||
             (HeldItem != null &&
              (GetMotherboardBinding(HeldItem) != null ||
               GetProcessorBinding(HeldItem) != null ||
               GetDimmBinding(HeldItem) != null ||
+              GetProcessorCoolerBinding(HeldItem) != null ||
               GetM2StorageBinding(HeldItem) != null));
 
         public PlacementPreview PlacementPreview => placementPreview;
@@ -135,8 +138,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetProcessorBinding(HeldItem);
                     DimmAssemblyItemBinding dimmBinding =
                         GetDimmBinding(HeldItem);
+                    ProcessorCoolerAssemblyItemBinding coolerBinding =
+                        GetProcessorCoolerBinding(HeldItem);
                     M2StorageAssemblyItemBinding storageBinding =
                         GetM2StorageBinding(HeldItem);
+                    if (coolerBinding != null)
+                    {
+                        return GetHeldProcessorCoolerPrompt(
+                            coolerBinding, placement, drop, rotate);
+                    }
                     if (storageBinding != null)
                     {
                         return GetHeldM2StoragePrompt(
@@ -242,6 +252,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return unload +
                            $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
                            $"{FocusedCart.DisplayName} tut{blocked}";
+                }
+
+                if (HasProcessorCoolerSlotContext && processorCoolerBinding != null)
+                {
+                    return GetProcessorCoolerSlotPrompt();
                 }
 
                 if (HasM2StorageSlotContext && m2StorageAssemblyBinding != null)
@@ -363,8 +378,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProcessorAssemblyItemBinding focusedProcessor =
                     GetProcessorBinding(FocusedItem);
                 DimmAssemblyItemBinding focusedDimm = GetDimmBinding(FocusedItem);
+                ProcessorCoolerAssemblyItemBinding focusedCooler =
+                    GetProcessorCoolerBinding(FocusedItem);
                 M2StorageAssemblyItemBinding focusedStorage =
                     GetM2StorageBinding(FocusedItem);
+                if (focusedCooler != null)
+                {
+                    return focusedCooler.IsRetained
+                        ? "SOĞUTUCU BRAKETİ KİLİTLİ • sökme kilitli"
+                        : focusedCooler.IsSeated
+                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: soğutucuyu çıkar • 4 NOKTA GEVŞEK"
+                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • TOP-DOWN AIR";
+                }
                 if (focusedStorage != null)
                 {
                     string interact = input != null
@@ -829,7 +854,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            if (coolerBinding != null)
+            {
+                return TryPickupProcessorCooler(item, coolerBinding);
+            }
             if (storageBinding != null)
             {
                 return TryPickupM2Storage(item, storageBinding);
@@ -1065,8 +1095,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(HeldItem);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(HeldItem);
+            ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(HeldItem);
             M2StorageAssemblyItemBinding storageBinding =
                 GetM2StorageBinding(HeldItem);
+            if (coolerBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(Failure.FromCode("assembly-cooler.paused")));
+                }
+
+                OperationResult drop = coolerBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess) CompleteHeldItemRelease(); else SetCarryHandsState(blocked: true);
+                return Remember(drop);
+            }
             if (storageBinding != null)
             {
                 if (motor != null && motor.IsPaused)
@@ -1361,6 +1403,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
@@ -1373,6 +1416,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.DrainGameplayPressesThisFrame();
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
@@ -1382,11 +1426,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HeldItem != null)
             {
+                ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedCart = null;
+                if (ProcessHeldProcessorCoolerInput())
+                {
+                    return;
+                }
                 if (ProcessHeldM2StorageInput())
                 {
                     return;
@@ -1569,6 +1618,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ActiveCart != null)
             {
+                ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
@@ -1601,6 +1651,25 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     SetHandsState(VisibleHandsState.TargetFocused);
                 }
 
+                return;
+            }
+
+            if (ProcessLooseProcessorCoolerPickupInput())
+            {
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
+            UpdateProcessorCoolerSlotFocus();
+            if (ProcessProcessorCoolerSlotInput())
+            {
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
                 return;
             }
 
@@ -1807,7 +1876,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            ProcessorCoolerAssemblyItemBinding coolerBinding =
+                GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            if (coolerBinding != null)
+            {
+                OperationResult recovery = coolerBinding.TryRecoverHeld(
+                    carryAnchor,
+                    heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                coolerBinding.SyncProjectionToAuthority();
+                return Remember(recovery);
+            }
+
             if (storageBinding != null)
             {
                 OperationResult recovery = storageBinding.TryRecoverHeld(
@@ -2128,6 +2214,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                     GetMotherboardBinding(HeldItem) != null;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
@@ -2151,6 +2238,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                   GetProcessorBinding(HeldItem) != null;
             IsMotherboardSeatMode = false;
             IsDimmSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
@@ -2174,6 +2262,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                              GetDimmBinding(HeldItem) != null;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
@@ -2691,6 +2780,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetPlacementState();
             processorAssemblyBinding?.SyncProjectionToAuthority();
             dimmAssemblyBinding?.SyncProjectionToAuthority();
+            processorCoolerBinding?.SyncProjectionToAuthority();
             m2StorageAssemblyBinding?.SyncProjectionToAuthority();
             motor?.ClearCarryProfile();
             LastFailureCode = string.Empty;
@@ -2702,6 +2792,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -2750,6 +2841,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             _placementRotationQuarterTurns = 0;
             PlacementValid = false;
@@ -2758,7 +2850,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
             CurrentProcessorSocketStatus = ProcessorSocketStatus.ContextMissing;
             CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+            CurrentProcessorCoolerSlotStatus =
+                ProcessorCoolerSlotStatus.ContextMissing;
             CurrentM2StorageSlotStatus = M2StorageSlotStatus.ContextMissing;
+            ResetProcessorCoolerSlotFocus();
             ResetM2StorageSlotFocus();
             ResetDimmSlotFocus();
             ResetProcessorSocketFocus();
@@ -2767,6 +2862,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             motherboardSeat?.ResetFeedback();
             processorSocket?.ResetFeedback();
             dimmSlot?.ResetFeedback();
+            processorCoolerSlot?.ResetFeedback();
             m2StorageSlot?.ResetFeedback();
         }
 

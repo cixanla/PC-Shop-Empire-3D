@@ -92,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(8));
+                Assert.That(physicalItems.Length, Is.EqualTo(9));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -119,9 +119,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection storageDevice = physicalItems.Single(
                     item => item.ItemIdValue ==
                             GarageStockFlowSession.StorageItemInstanceIdValue);
+                PhysicalItemProjection processorCooler = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(4));
+                    Is.EqualTo(5));
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -311,6 +314,78 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StockFlow.Session.AssemblyBuild.StorageSlotState,
                     Is.EqualTo(StorageSlotState.EmptyOpen));
                 Assert.That(storageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                ProcessorCoolerAssemblyItemBinding coolerBinding =
+                    processorCooler.GetComponent<ProcessorCoolerAssemblyItemBinding>();
+                ProcessorCoolerRuntimeGeometry coolerGeometry =
+                    processorCooler.GetComponent<ProcessorCoolerRuntimeGeometry>();
+                ProcessorCoolerRuntimeSmokeMarker coolerSmoke =
+                    processorCooler.GetComponent<ProcessorCoolerRuntimeSmokeMarker>();
+                Assert.That(coolerBinding, Is.Not.Null);
+                Assert.That(coolerGeometry, Is.Not.Null);
+                Assert.That(coolerSmoke, Is.Not.Null);
+                Assert.That(processorCooler.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerDisplayName));
+                Assert.That(processorCooler.SupportsPlacement, Is.False);
+                Assert.That(processorCooler.Body.mass, Is.EqualTo(0.52f).Within(0.001f));
+                Assert.That(marker.ProcessorCooler, Is.SameAs(processorCooler));
+                Assert.That(marker.ProcessorCoolerBinding, Is.SameAs(coolerBinding));
+                Assert.That(marker.ProcessorCoolerGeometry, Is.SameAs(coolerGeometry));
+                Assert.That(marker.ProcessorCoolerSlot, Is.Not.Null);
+                Assert.That(marker.ProcessorCoolerSlot.IsConfigured, Is.True);
+                Assert.That(marker.ProcessorCoolerSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerSlotIdValue));
+                Assert.That(marker.ProcessorCoolerSlot.BracketIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerBracketIdValue));
+                Assert.That(marker.ProcessorCoolerSlot.RetentionPointIdValues,
+                    Is.EqualTo(new[]
+                    {
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint1IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint2IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint3IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint4IdValue
+                    }));
+                Assert.That(marker.ProcessorCoolerSlot.RetentionPoints.Length,
+                    Is.EqualTo(4));
+                Assert.That(marker.ProcessorCoolerSlot.RetentionPoints.Distinct().Count(),
+                    Is.EqualTo(4));
+                Assert.That(marker.ProcessorCoolerSlot.ClearanceBlockers,
+                    Is.EqualTo(new[] { memoryModule.GetComponent<Collider>() }));
+                Assert.That(marker.ProcessorCoolerSlot.FocusCollider.enabled, Is.False);
+                Assert.That(coolerBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(coolerBinding.PhysicalItem, Is.SameAs(processorCooler));
+                Assert.That(coolerBinding.Slot, Is.SameAs(marker.ProcessorCoolerSlot));
+                Assert.That(coolerBinding.InventoryItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue));
+                Assert.That(marker.PlayerCarry.MatchesProcessorCoolerConfiguration(
+                    marker.ProcessorCoolerSlot,
+                    coolerBinding), Is.True);
+                Assert.That(coolerGeometry.IsCanonical, Is.True);
+                Assert.That(coolerGeometry.RetentionPoints.Length, Is.EqualTo(4));
+                Assert.That(coolerGeometry.RetentionPoints.Distinct().Count(),
+                    Is.EqualTo(4));
+                Assert.That(coolerSmoke.IsReady, Is.True);
+                Assert.That(marker.HasProcessorCoolerR27Runtime, Is.True);
+                Assert.That(marker.StockFlow.Session.TryGetProcessorCoolerItem(
+                    out InventoryItemRecord coolerItem), Is.True);
+                Assert.That(coolerItem.Id,
+                    Is.EqualTo(marker.StockFlow.Session.ProcessorCoolerItemId));
+                Assert.That(coolerItem.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.ProcessorCoolerProductId));
+                Assert.That(coolerItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(coolerItem.StateFlags,
+                    Is.EqualTo(InventorySerializedItemStateFlags.None));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild
+                        .ProcessorCoolerSlotState,
+                    Is.EqualTo(ProcessorCoolerSlotState.EmptyOpen));
+                OperationResult coolerProjectionInvariant =
+                    coolerBinding.ValidateProjectionInvariant();
+                Assert.That(coolerProjectionInvariant.IsSuccess,
+                    Is.True,
+                    coolerProjectionInvariant.IsFailure
+                        ? coolerProjectionInvariant.Error.Code
+                        : string.Empty);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -538,7 +613,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-m2-nvme-captive-screw-r26-v1"));
+                    Is.EqualTo("garage-processor-cooler-r27-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -660,6 +735,45 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Transform storageLabel = assemblySlice
                     .GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "M2NvmeLabel");
+                Transform coolerSlotRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerMountingBracket");
+                Transform coolerSnapAnchor = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerSnapAnchor");
+                Transform coolerBracketPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerBracketPivot");
+                Transform coolerFocus = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerSlotFocusTarget");
+                Transform coolerRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "PrototypeProcessorCooler");
+                Transform coolerColdPlate = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerColdPlate");
+                Transform coolerTim = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerPreAppliedTim");
+                Transform coolerFinStack = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerFinStack");
+                Transform coolerFan = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "ProcessorCoolerFan");
+                Transform coolerMountingFrame = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "ProcessorCoolerMountingFrame");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
                 Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
@@ -694,6 +808,16 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     storageRoot.GetComponent<M2StorageAssemblyItemBinding>();
                 PhysicalItemProjection storageDevice =
                     storageRoot.GetComponent<PhysicalItemProjection>();
+                ProcessorCoolerSlotProjection coolerSlot =
+                    coolerSlotRoot.GetComponent<ProcessorCoolerSlotProjection>();
+                ProcessorCoolerAssemblyItemBinding coolerBinding =
+                    coolerRoot.GetComponent<ProcessorCoolerAssemblyItemBinding>();
+                PhysicalItemProjection processorCooler =
+                    coolerRoot.GetComponent<PhysicalItemProjection>();
+                ProcessorCoolerRuntimeGeometry coolerGeometry =
+                    coolerRoot.GetComponent<ProcessorCoolerRuntimeGeometry>();
+                ProcessorCoolerRuntimeSmokeMarker coolerSmoke =
+                    coolerRoot.GetComponent<ProcessorCoolerRuntimeSmokeMarker>();
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
                 Assert.That(fastener, Is.Not.Null);
@@ -707,6 +831,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(storageSlot, Is.Not.Null);
                 Assert.That(storageBinding, Is.Not.Null);
                 Assert.That(storageDevice, Is.Not.Null);
+                Assert.That(coolerSlot, Is.Not.Null);
+                Assert.That(coolerBinding, Is.Not.Null);
+                Assert.That(processorCooler, Is.Not.Null);
+                Assert.That(coolerGeometry, Is.Not.Null);
+                Assert.That(coolerSmoke, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
                 Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
@@ -719,6 +848,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.StorageSlot, Is.SameAs(storageSlot));
                 Assert.That(marker.StorageBinding, Is.SameAs(storageBinding));
                 Assert.That(marker.StorageDevice, Is.SameAs(storageDevice));
+                Assert.That(marker.ProcessorCoolerSlot, Is.SameAs(coolerSlot));
+                Assert.That(marker.ProcessorCoolerBinding, Is.SameAs(coolerBinding));
+                Assert.That(marker.ProcessorCooler, Is.SameAs(processorCooler));
+                Assert.That(marker.ProcessorCoolerGeometry, Is.SameAs(coolerGeometry));
                 Assert.That(binding.Fastener, Is.SameAs(fastener));
                 Assert.That(storageSlot.IsConfigured, Is.True);
                 Assert.That(storageSlot.SlotIdValue,
@@ -745,6 +878,85 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.EqualTo(GarageStockFlowSession.StorageItemInstanceIdValue));
                 Assert.That(storageDevice.Body.mass, Is.EqualTo(0.010f).Within(0.001f));
                 Assert.That(storageBinding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                Assert.That(coolerSlot.IsConfigured, Is.True);
+                Assert.That(coolerSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerSlotIdValue));
+                Assert.That(coolerSlot.BracketIdValue,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerBracketIdValue));
+                Assert.That(coolerSlot.SnapAnchor, Is.SameAs(coolerSnapAnchor));
+                Assert.That(coolerSlot.FocusCollider,
+                    Is.SameAs(coolerFocus.GetComponent<BoxCollider>()));
+                Assert.That(coolerSlot.FocusCollider.enabled, Is.False);
+                Assert.That(coolerSlot.AssemblyRoot,
+                    Is.SameAs(binding.PhysicalItem.transform));
+                Assert.That(coolerSlot.BracketPivot,
+                    Is.SameAs(coolerBracketPivot));
+                Assert.That(coolerSlot.RetentionPointIdValues,
+                    Is.EqualTo(new[]
+                    {
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint1IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint2IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint3IdValue,
+                        GarageStockFlowSession.ProcessorCoolerRetentionPoint4IdValue
+                    }));
+                Assert.That(coolerSlot.RetentionPoints.Length, Is.EqualTo(4));
+                Assert.That(coolerSlot.RetentionPoints.Distinct().Count(), Is.EqualTo(4));
+                Assert.That(coolerSlot.ClearanceBlockers,
+                    Is.EqualTo(new[] { memoryRoot.GetComponent<BoxCollider>() }));
+                Assert.That(Vector3.Distance(
+                    coolerSnapAnchor.localPosition,
+                    new Vector3(0f, 0f, 0.011f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    coolerFocus.localPosition,
+                    new Vector3(0f, 0f, 0.055f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    coolerFocus.GetComponent<BoxCollider>().size,
+                    new Vector3(0.145f, 0.145f, 0.10f)), Is.LessThan(0.0001f));
+                Assert.That(coolerBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(coolerBinding.PhysicalItem, Is.SameAs(processorCooler));
+                Assert.That(coolerBinding.Slot, Is.SameAs(coolerSlot));
+                Assert.That(coolerBinding.InventoryItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue));
+                Assert.That(marker.PlayerCarry.MatchesProcessorCoolerConfiguration(
+                    coolerSlot,
+                    coolerBinding), Is.True);
+                Assert.That(processorCooler.ItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue));
+                Assert.That(processorCooler.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProcessorCoolerDisplayName));
+                Assert.That(processorCooler.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(processorCooler.SupportsPlacement, Is.False);
+                Assert.That(processorCooler.Body.mass,
+                    Is.EqualTo(0.52f).Within(0.001f));
+                Assert.That(processorCooler.Body.isKinematic, Is.True);
+                Assert.That(processorCooler.Body.useGravity, Is.False);
+                Assert.That(Vector3.Distance(
+                    coolerRoot.localPosition,
+                    new Vector3(-0.72f, 0.992f, 3.93f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    coolerRoot.localRotation,
+                    Quaternion.Euler(-90f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(coolerGeometry.IsCanonical, Is.True);
+                Assert.That(coolerGeometry.ColdPlate, Is.SameAs(coolerColdPlate));
+                Assert.That(coolerGeometry.PreAppliedTim, Is.SameAs(coolerTim));
+                Assert.That(coolerGeometry.FinStack, Is.SameAs(coolerFinStack));
+                Assert.That(coolerGeometry.Fan, Is.SameAs(coolerFan));
+                Assert.That(coolerGeometry.Bracket, Is.SameAs(coolerMountingFrame));
+                Assert.That(coolerGeometry.RetentionPoints.Length, Is.EqualTo(4));
+                Assert.That(coolerGeometry.RetentionPoints.Distinct().Count(),
+                    Is.EqualTo(4));
+                Assert.That(coolerSmoke.IsReady, Is.True);
+                Assert.That(marker.HasProcessorCoolerR27Runtime, Is.True);
+                OperationResult coolerProjectionInvariant =
+                    coolerBinding.ValidateProjectionInvariant();
+                Assert.That(coolerProjectionInvariant.IsSuccess,
+                    Is.True,
+                    coolerProjectionInvariant.IsFailure
+                        ? coolerProjectionInvariant.Error.Code
+                        : string.Empty);
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
                     Is.EqualTo(new Vector3(-0.75f, 1.30f, 4.35f)));
@@ -1081,9 +1293,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(40));
+                    Is.EqualTo(70));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(15));
+                    Is.EqualTo(17));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));

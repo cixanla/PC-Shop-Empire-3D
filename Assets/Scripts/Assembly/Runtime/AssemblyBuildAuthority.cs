@@ -87,7 +87,9 @@ namespace PCShopEmpire3D.Assembly
             DimmSlotDefinition memorySlotDefinition = default,
             InventorySerializedTransferAccess memoryInventoryTransferAccess = null,
             M2SlotDefinition storageSlotDefinition = default,
-            InventorySerializedTransferAccess storageInventoryTransferAccess = null)
+            InventorySerializedTransferAccess storageInventoryTransferAccess = null,
+            ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default,
+            InventorySerializedTransferAccess processorCoolerInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -108,6 +110,9 @@ namespace PCShopEmpire3D.Assembly
             _memoryInventoryTransferAccess = memoryInventoryTransferAccess;
             _storageSlotDefinition = storageSlotDefinition;
             _storageInventoryTransferAccess = storageInventoryTransferAccess;
+            _processorCoolerSlotDefinition = processorCoolerSlotDefinition;
+            _processorCoolerInventoryTransferAccess =
+                processorCoolerInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -121,6 +126,11 @@ namespace PCShopEmpire3D.Assembly
             if (storageSlotDefinition.IsValid)
             {
                 _storageSlotState = StorageSlotState.EmptyOpen;
+            }
+
+            if (processorCoolerSlotDefinition.IsValid)
+            {
+                _processorCoolerSlotState = ProcessorCoolerSlotState.EmptyOpen;
             }
         }
 
@@ -519,7 +529,9 @@ namespace PCShopEmpire3D.Assembly
                 _inventory.Revision,
                 _processorSocketState,
                 _memorySlotState,
-                _storageSlotState);
+                _storageSlotState,
+                _processorCoolerSlotState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -600,7 +612,9 @@ namespace PCShopEmpire3D.Assembly
                 _inventory.Revision,
                 _processorSocketState,
                 _memorySlotState,
-                _storageSlotState);
+                _storageSlotState,
+                _processorCoolerSlotState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -671,7 +685,9 @@ namespace PCShopEmpire3D.Assembly
                 _inventory.Revision,
                 _processorSocketState,
                 _memorySlotState,
-                _storageSlotState);
+                _storageSlotState,
+                _processorCoolerSlotState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -744,7 +760,9 @@ namespace PCShopEmpire3D.Assembly
                 _inventory.Revision,
                 _processorSocketState,
                 _memorySlotState,
-                _storageSlotState);
+                _storageSlotState,
+                _processorCoolerSlotState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -844,7 +862,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -925,7 +953,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -1008,7 +1046,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -1107,7 +1155,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -1164,8 +1222,29 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.StorageMissing);
             }
 
-            return _storageSlotState == StorageSlotState.StorageDeviceSeatedUnsecured
-                ? OperationResult.Fail(AssemblyFailures.StorageUnsecured)
+            if (_storageSlotState == StorageSlotState.StorageDeviceSeatedUnsecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.StorageUnsecured);
+            }
+
+            if (!HasProcessorCoolerSlot)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (_processorCoolerSlotState == ProcessorCoolerSlotState.EmptyOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.ProcessorCoolerMissing);
+            }
+
+            if (_processorCoolerSlotState ==
+                ProcessorCoolerSlotState.CoolerSeatedUnsecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.ProcessorCoolerUnretained);
+            }
+
+            return _processorCoolerSlotState == ProcessorCoolerSlotState.CoolerRetained
+                ? OperationResult.Success()
                 : OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
@@ -1205,7 +1284,15 @@ namespace PCShopEmpire3D.Assembly
                 _storageItemId,
                 _storageProductId,
                 _storageSeatedByOperationId,
-                _storageSecuredByOperationId);
+                _storageSecuredByOperationId,
+                _processorCoolerSlotDefinition,
+                _processorCoolerSlotState,
+                _processorCoolerItemId,
+                _processorCoolerProductId,
+                _processorCoolerSeatedByOperationId,
+                _processorCoolerRetainedByOperationId,
+                _processorCoolerMountOrientation,
+                _processorCoolerTimState);
         }
 
         public bool TryGetReceipt(
@@ -1441,6 +1528,11 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (!ValidateProcessorCoolerStateInvariants())
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (Revision != _receipts.Count)
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
@@ -1456,13 +1548,17 @@ namespace PCShopEmpire3D.Assembly
                     IsMemoryOperation(receipt.OperationKind);
                 bool storageOperation = receipt != null &&
                     IsStorageOperation(receipt.OperationKind);
-                StableId<AssemblySlotIdScope> expectedSlotId = storageOperation
-                    ? _storageSlotDefinition.SlotId
-                    : memoryOperation
-                    ? _memorySlotDefinition.SlotId
-                    : processorOperation
-                        ? _processorSlotId
-                        : MotherboardSlotId;
+                bool processorCoolerOperation = receipt != null &&
+                    IsProcessorCoolerOperation(receipt.OperationKind);
+                StableId<AssemblySlotIdScope> expectedSlotId = processorCoolerOperation
+                    ? _processorCoolerSlotDefinition.SlotId
+                    : storageOperation
+                        ? _storageSlotDefinition.SlotId
+                        : memoryOperation
+                            ? _memorySlotDefinition.SlotId
+                            : processorOperation
+                                ? _processorSlotId
+                                : MotherboardSlotId;
                 if (receipt == null ||
                     entry.Key.IsEmpty ||
                     entry.Key != receipt.OperationId ||
@@ -1581,6 +1677,12 @@ namespace PCShopEmpire3D.Assembly
             if (HasStorageSlot && _storageSlotState != StorageSlotState.EmptyOpen)
             {
                 return AssemblyFailures.StorageDeviceInstalled;
+            }
+
+            if (HasProcessorCoolerSlot &&
+                _processorCoolerSlotState != ProcessorCoolerSlotState.EmptyOpen)
+            {
+                return AssemblyFailures.ProcessorCoolerInstalled;
             }
 
             if (_motherboardSeatState == AssemblySeatState.SeatedSecured)
@@ -1867,6 +1969,13 @@ namespace PCShopEmpire3D.Assembly
                 return AssemblyFailures.ProcessorRetentionOutOfOrder;
             }
 
+            if (!closing &&
+                HasProcessorCoolerSlot &&
+                _processorCoolerSlotState != ProcessorCoolerSlotState.EmptyOpen)
+            {
+                return AssemblyFailures.ProcessorCoolerInstalled;
+            }
+
             return _inventory.TryGetSerializedItem(
                        itemId,
                        out InventoryItemRecord item) &&
@@ -1954,6 +2063,18 @@ namespace PCShopEmpire3D.Assembly
                 (!receipt.SourceStorageSeatOperationId.IsEmpty ||
                  !receipt.SourceStorageRetentionOperationId.IsEmpty ||
                  receipt.M2KeyOrientation != default))
+            {
+                return false;
+            }
+
+            if (!IsProcessorCoolerOperation(receipt.OperationKind) &&
+                (!receipt.SourceProcessorCoolerSeatOperationId.IsEmpty ||
+                 !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty ||
+                 receipt.ProcessorCoolerMountOrientation != default ||
+                 receipt.PreviousProcessorCoolerTimState !=
+                    receipt.ResultingProcessorCoolerTimState ||
+                 !IsDefaultProcessorCoolerSlotDefinition(
+                     receipt.ProcessorCoolerSlotDefinition)))
             {
                 return false;
             }
@@ -2181,6 +2302,96 @@ namespace PCShopEmpire3D.Assembly
                            receipt.M2KeyOrientation == default &&
                            receipt.SequenceIndex == 0;
 
+                case AssemblyOperationKind.SeatProcessorCooler:
+                    return HasProcessorCoolerSlot &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId ==
+                               _processorCoolerSlotDefinition.ContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           IsValidProcessorCoolerOrientation(
+                               receipt.ProcessorCoolerMountOrientation) &&
+                           receipt.PreviousProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.PreAppliedUnused &&
+                           receipt.ResultingProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ProcessorCoolerSlotDefinition.HasExactIdentity(
+                               _processorCoolerSlotDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RemoveProcessorCooler:
+                    return HasProcessorCoolerSlot &&
+                           receipt.SourceContainerId ==
+                               _processorCoolerSlotDefinition.ContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           IsValidProcessorCoolerOrientation(
+                               receipt.ProcessorCoolerMountOrientation) &&
+                           receipt.PreviousProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ResultingProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.Unsupported &&
+                           receipt.ProcessorCoolerSlotDefinition.HasExactIdentity(
+                               _processorCoolerSlotDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RetainProcessorCooler:
+                    return HasProcessorCoolerSlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           IsValidProcessorCoolerOrientation(
+                               receipt.ProcessorCoolerMountOrientation) &&
+                           receipt.PreviousProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ResultingProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ProcessorCoolerSlotDefinition.HasExactIdentity(
+                               _processorCoolerSlotDefinition) &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.UnretainProcessorCooler:
+                    return HasProcessorCoolerSlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           !receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           IsValidProcessorCoolerOrientation(
+                               receipt.ProcessorCoolerMountOrientation) &&
+                           receipt.PreviousProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ResultingProcessorCoolerTimState ==
+                               ProcessorCoolerTimState.AppliedConsumed &&
+                           receipt.ProcessorCoolerSlotDefinition.HasExactIdentity(
+                               _processorCoolerSlotDefinition) &&
+                           receipt.SequenceIndex == 0;
+
                 default:
                     return false;
             }
@@ -2203,7 +2414,11 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.SeatStorageDevice ||
                    operationKind == AssemblyOperationKind.RemoveStorageDevice ||
                    operationKind == AssemblyOperationKind.SecureStorageDevice ||
-                   operationKind == AssemblyOperationKind.UnsecureStorageDevice;
+                   operationKind == AssemblyOperationKind.UnsecureStorageDevice ||
+                   operationKind == AssemblyOperationKind.SeatProcessorCooler ||
+                   operationKind == AssemblyOperationKind.RemoveProcessorCooler ||
+                   operationKind == AssemblyOperationKind.RetainProcessorCooler ||
+                   operationKind == AssemblyOperationKind.UnretainProcessorCooler;
         }
 
         private static bool IsProcessorOperation(AssemblyOperationKind operationKind)
@@ -2230,6 +2445,33 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.UnsecureStorageDevice;
         }
 
+        private static bool IsProcessorCoolerOperation(
+            AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.SeatProcessorCooler ||
+                   operationKind == AssemblyOperationKind.RemoveProcessorCooler ||
+                   operationKind == AssemblyOperationKind.RetainProcessorCooler ||
+                   operationKind == AssemblyOperationKind.UnretainProcessorCooler;
+        }
+
+        private static bool IsValidProcessorCoolerOrientation(
+            ProcessorCoolerMountOrientation orientation)
+        {
+            return orientation == ProcessorCoolerMountOrientation.Primary ||
+                   orientation == ProcessorCoolerMountOrientation.Rotated180;
+        }
+
+        private static bool IsDefaultProcessorCoolerSlotDefinition(
+            ProcessorCoolerSlotDefinition definition)
+        {
+            return definition.SlotId.IsEmpty &&
+                   definition.BracketId.IsEmpty &&
+                   definition.ContainerId.IsEmpty &&
+                   definition.RetentionTopology == null &&
+                   definition.SupportedCoolerType == default &&
+                   definition.SupportedSocketFamily == default;
+        }
+
         private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
         {
             if (!IsMemoryOperation(receipt.OperationKind) &&
@@ -2240,6 +2482,13 @@ namespace PCShopEmpire3D.Assembly
 
             if (!IsStorageOperation(receipt.OperationKind) &&
                 receipt.PreviousStorageSlotState != receipt.ResultingStorageSlotState)
+            {
+                return false;
+            }
+
+            if (!IsProcessorCoolerOperation(receipt.OperationKind) &&
+                receipt.PreviousProcessorCoolerSlotState !=
+                    receipt.ResultingProcessorCoolerSlotState)
             {
                 return false;
             }
@@ -2458,6 +2707,71 @@ namespace PCShopEmpire3D.Assembly
                                receipt.SourceStorageRetentionOperationId,
                                receipt);
 
+                case AssemblyOperationKind.SeatProcessorCooler:
+                    return receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.ResultingProcessorSocketState ==
+                               receipt.PreviousProcessorSocketState &&
+                           receipt.PreviousProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.EmptyOpen &&
+                           receipt.ResultingProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
+                           IsMatchingMotherboardSecureLineage(receipt) &&
+                           HasExactProcessorHostLineage(receipt);
+
+                case AssemblyOperationKind.RemoveProcessorCooler:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.ResultingProcessorSocketState ==
+                               receipt.PreviousProcessorSocketState &&
+                           receipt.PreviousProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
+                           receipt.ResultingProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.EmptyOpen &&
+                           IsMatchingProcessorCoolerSeatReceipt(
+                               receipt.SourceProcessorCoolerSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.RetainProcessorCooler:
+                    return receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.ResultingProcessorSocketState ==
+                               receipt.PreviousProcessorSocketState &&
+                           receipt.PreviousProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
+                           receipt.ResultingProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerRetained &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           IsMatchingProcessorCoolerSeatReceipt(
+                               receipt.SourceProcessorCoolerSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.UnretainProcessorCooler:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               ProcessorSocketState.ProcessorRetained &&
+                           receipt.ResultingProcessorSocketState ==
+                               receipt.PreviousProcessorSocketState &&
+                           receipt.PreviousProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerRetained &&
+                           receipt.ResultingProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
+                           IsMatchingProcessorCoolerSeatReceipt(
+                               receipt.SourceProcessorCoolerSeatOperationId,
+                               receipt) &&
+                           IsMatchingProcessorCoolerRetentionReceipt(
+                               receipt.SourceProcessorCoolerRetentionOperationId,
+                               receipt);
+
                 default:
                     return false;
             }
@@ -2491,17 +2805,43 @@ namespace PCShopEmpire3D.Assembly
             StableId<ProductDefinitionIdScope> foldedStorageProductId = default;
             StableId<AssemblyOperationIdScope> foldedStorageSeatOperationId = default;
             StableId<AssemblyOperationIdScope> foldedStorageRetentionOperationId = default;
+            ProcessorCoolerSlotState foldedProcessorCoolerState =
+                HasProcessorCoolerSlot
+                    ? ProcessorCoolerSlotState.EmptyOpen
+                    : ProcessorCoolerSlotState.Unsupported;
+            StableId<ItemInstanceIdScope> foldedProcessorCoolerItemId = default;
+            StableId<ProductDefinitionIdScope> foldedProcessorCoolerProductId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedProcessorCoolerSeatOperationId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedProcessorCoolerRetentionOperationId = default;
+            ProcessorCoolerMountOrientation foldedProcessorCoolerOrientation = default;
+            ProcessorCoolerTimState foldedProcessorCoolerTimState =
+                ProcessorCoolerTimState.Unsupported;
+            var foldedConsumedProcessorCoolerItems =
+                new HashSet<StableId<ItemInstanceIdScope>>();
             long foldedInventoryRevision = 0;
 
             for (int index = 0; index < receiptsByRevision.Length; index++)
             {
                 AssemblyOperationReceipt receipt = receiptsByRevision[index];
-                if (receipt == null ||
-                    receipt.AssemblyRevision != index + 1L ||
+                if (receipt == null)
+                {
+                    return false;
+                }
+
+                if (receipt.AssemblyRevision != index + 1L ||
                     receipt.PreviousSeatState != foldedState ||
                     receipt.PreviousProcessorSocketState != foldedProcessorState ||
                     receipt.PreviousMemorySlotState != foldedMemoryState ||
                     receipt.PreviousStorageSlotState != foldedStorageState ||
+                    receipt.PreviousProcessorCoolerSlotState !=
+                        foldedProcessorCoolerState ||
+                    (!IsProcessorCoolerOperation(receipt.OperationKind) &&
+                     (receipt.PreviousProcessorCoolerTimState !=
+                          foldedProcessorCoolerTimState ||
+                      receipt.ResultingProcessorCoolerTimState !=
+                          foldedProcessorCoolerTimState)) ||
                     receipt.InventoryRevision < foldedInventoryRevision)
                 {
                     return false;
@@ -2515,7 +2855,9 @@ namespace PCShopEmpire3D.Assembly
                     receipt.OperationKind == AssemblyOperationKind.SeatMemoryModule ||
                     receipt.OperationKind == AssemblyOperationKind.RemoveMemoryModule ||
                     receipt.OperationKind == AssemblyOperationKind.SeatStorageDevice ||
-                    receipt.OperationKind == AssemblyOperationKind.RemoveStorageDevice;
+                    receipt.OperationKind == AssemblyOperationKind.RemoveStorageDevice ||
+                    receipt.OperationKind == AssemblyOperationKind.SeatProcessorCooler ||
+                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessorCooler;
                 if (inventoryTransfer &&
                     receipt.InventoryRevision <= foldedInventoryRevision)
                 {
@@ -2550,6 +2892,9 @@ namespace PCShopEmpire3D.Assembly
                             foldedStorageState != (HasStorageSlot
                                 ? StorageSlotState.EmptyOpen
                                 : StorageSlotState.Unsupported) ||
+                            foldedProcessorCoolerState != (HasProcessorCoolerSlot
+                                ? ProcessorCoolerSlotState.EmptyOpen
+                                : ProcessorCoolerSlotState.Unsupported) ||
                             receipt.ItemId != foldedItemId ||
                             receipt.ProductId != foldedProductId ||
                             receipt.SourceAttachOperationId != foldedAttachOperationId ||
@@ -2815,6 +3160,134 @@ namespace PCShopEmpire3D.Assembly
                         foldedStorageRetentionOperationId = default;
                         break;
 
+                    case AssemblyOperationKind.SeatProcessorCooler:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorRetained ||
+                            foldedProcessorCoolerState !=
+                                ProcessorCoolerSlotState.EmptyOpen ||
+                            !foldedProcessorCoolerItemId.IsEmpty ||
+                            !foldedProcessorCoolerProductId.IsEmpty ||
+                            !foldedProcessorCoolerSeatOperationId.IsEmpty ||
+                            !foldedProcessorCoolerRetentionOperationId.IsEmpty ||
+                            foldedProcessorCoolerOrientation != default ||
+                            foldedProcessorCoolerTimState !=
+                                ProcessorCoolerTimState.Unsupported ||
+                            receipt.SourceAttachOperationId !=
+                                foldedAttachOperationId ||
+                            receipt.SourceSecureOperationId !=
+                                foldedSecureOperationId ||
+                            receipt.SourceProcessorSeatOperationId !=
+                                foldedProcessorSeatOperationId ||
+                            receipt.SourceProcessorRetentionOperationId !=
+                                foldedProcessorRetentionOperationId ||
+                            !IsValidProcessorCoolerOrientation(
+                                receipt.ProcessorCoolerMountOrientation) ||
+                            receipt.PreviousProcessorCoolerTimState !=
+                                ProcessorCoolerTimState.PreAppliedUnused ||
+                            receipt.ResultingProcessorCoolerTimState !=
+                                ProcessorCoolerTimState.AppliedConsumed)
+                        {
+                            return false;
+                        }
+
+                        if (!foldedConsumedProcessorCoolerItems.Add(receipt.ItemId))
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorCoolerItemId = receipt.ItemId;
+                        foldedProcessorCoolerProductId = receipt.ProductId;
+                        foldedProcessorCoolerSeatOperationId = receipt.OperationId;
+                        foldedProcessorCoolerOrientation =
+                            receipt.ProcessorCoolerMountOrientation;
+                        foldedProcessorCoolerTimState =
+                            receipt.ResultingProcessorCoolerTimState;
+                        break;
+
+                    case AssemblyOperationKind.RetainProcessorCooler:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorRetained ||
+                            foldedProcessorCoolerState !=
+                                ProcessorCoolerSlotState.CoolerSeatedUnsecured ||
+                            receipt.ItemId != foldedProcessorCoolerItemId ||
+                            receipt.ProductId != foldedProcessorCoolerProductId ||
+                            receipt.SourceProcessorCoolerSeatOperationId !=
+                                foldedProcessorCoolerSeatOperationId ||
+                            !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty ||
+                            !foldedProcessorCoolerRetentionOperationId.IsEmpty ||
+                            receipt.ProcessorCoolerMountOrientation !=
+                                foldedProcessorCoolerOrientation ||
+                            receipt.PreviousProcessorCoolerTimState !=
+                                foldedProcessorCoolerTimState ||
+                            receipt.ResultingProcessorCoolerTimState !=
+                                foldedProcessorCoolerTimState)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorCoolerRetentionOperationId =
+                            receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.UnretainProcessorCooler:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorRetained ||
+                            foldedProcessorCoolerState !=
+                                ProcessorCoolerSlotState.CoolerRetained ||
+                            receipt.ItemId != foldedProcessorCoolerItemId ||
+                            receipt.ProductId != foldedProcessorCoolerProductId ||
+                            receipt.SourceProcessorCoolerSeatOperationId !=
+                                foldedProcessorCoolerSeatOperationId ||
+                            receipt.SourceProcessorCoolerRetentionOperationId !=
+                                foldedProcessorCoolerRetentionOperationId ||
+                            foldedProcessorCoolerRetentionOperationId.IsEmpty ||
+                            receipt.ProcessorCoolerMountOrientation !=
+                                foldedProcessorCoolerOrientation ||
+                            receipt.PreviousProcessorCoolerTimState !=
+                                foldedProcessorCoolerTimState ||
+                            receipt.ResultingProcessorCoolerTimState !=
+                                foldedProcessorCoolerTimState)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorCoolerRetentionOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.RemoveProcessorCooler:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedProcessorState !=
+                                ProcessorSocketState.ProcessorRetained ||
+                            foldedProcessorCoolerState !=
+                                ProcessorCoolerSlotState.CoolerSeatedUnsecured ||
+                            receipt.ItemId != foldedProcessorCoolerItemId ||
+                            receipt.ProductId != foldedProcessorCoolerProductId ||
+                            receipt.SourceProcessorCoolerSeatOperationId !=
+                                foldedProcessorCoolerSeatOperationId ||
+                            !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty ||
+                            !foldedProcessorCoolerRetentionOperationId.IsEmpty ||
+                            receipt.ProcessorCoolerMountOrientation !=
+                                foldedProcessorCoolerOrientation ||
+                            receipt.PreviousProcessorCoolerTimState !=
+                                foldedProcessorCoolerTimState ||
+                            receipt.ResultingProcessorCoolerTimState !=
+                                ProcessorCoolerTimState.Unsupported)
+                        {
+                            return false;
+                        }
+
+                        foldedProcessorCoolerItemId = default;
+                        foldedProcessorCoolerProductId = default;
+                        foldedProcessorCoolerSeatOperationId = default;
+                        foldedProcessorCoolerRetentionOperationId = default;
+                        foldedProcessorCoolerOrientation = default;
+                        foldedProcessorCoolerTimState =
+                            ProcessorCoolerTimState.Unsupported;
+                        break;
+
                     default:
                         return false;
                 }
@@ -2823,6 +3296,10 @@ namespace PCShopEmpire3D.Assembly
                 foldedProcessorState = receipt.ResultingProcessorSocketState;
                 foldedMemoryState = receipt.ResultingMemorySlotState;
                 foldedStorageState = receipt.ResultingStorageSlotState;
+                foldedProcessorCoolerState =
+                    receipt.ResultingProcessorCoolerSlotState;
+                foldedProcessorCoolerTimState =
+                    receipt.ResultingProcessorCoolerTimState;
                 foldedInventoryRevision = receipt.InventoryRevision;
             }
 
@@ -2849,7 +3326,55 @@ namespace PCShopEmpire3D.Assembly
                    foldedStorageProductId == _storageProductId &&
                    foldedStorageSeatOperationId == _storageSeatedByOperationId &&
                    foldedStorageRetentionOperationId ==
-                       _storageSecuredByOperationId;
+                       _storageSecuredByOperationId &&
+                   foldedProcessorCoolerState == _processorCoolerSlotState &&
+                   foldedProcessorCoolerItemId == _processorCoolerItemId &&
+                   foldedProcessorCoolerProductId == _processorCoolerProductId &&
+                   foldedProcessorCoolerSeatOperationId ==
+                       _processorCoolerSeatedByOperationId &&
+                   foldedProcessorCoolerRetentionOperationId ==
+                       _processorCoolerRetainedByOperationId &&
+                   foldedProcessorCoolerOrientation ==
+                       _processorCoolerMountOrientation &&
+                   foldedProcessorCoolerTimState == _processorCoolerTimState;
+        }
+
+        private bool HasExactProcessorHostLineage(
+            AssemblyOperationReceipt descendant)
+        {
+            return !descendant.SourceProcessorSeatOperationId.IsEmpty &&
+                   !descendant.SourceProcessorRetentionOperationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       descendant.SourceProcessorSeatOperationId,
+                       out AssemblyOperationReceipt processorSeatReceipt) &&
+                   _receipts.TryGetValue(
+                       descendant.SourceProcessorRetentionOperationId,
+                       out AssemblyOperationReceipt processorRetentionReceipt) &&
+                   processorSeatReceipt.OperationKind ==
+                       AssemblyOperationKind.SeatProcessor &&
+                   processorRetentionReceipt.OperationKind ==
+                       AssemblyOperationKind.CloseProcessorRetention &&
+                   processorSeatReceipt.AssemblyRevision <
+                       processorRetentionReceipt.AssemblyRevision &&
+                   processorRetentionReceipt.AssemblyRevision <
+                       descendant.AssemblyRevision &&
+                   processorSeatReceipt.SlotId == _processorSlotId &&
+                   processorRetentionReceipt.SlotId == _processorSlotId &&
+                   processorSeatReceipt.ItemId == processorRetentionReceipt.ItemId &&
+                   processorSeatReceipt.ProductId ==
+                       processorRetentionReceipt.ProductId &&
+                   processorRetentionReceipt.RetentionId ==
+                       _processorRetentionId &&
+                   processorRetentionReceipt.SourceProcessorSeatOperationId ==
+                       processorSeatReceipt.OperationId &&
+                   processorSeatReceipt.SourceAttachOperationId ==
+                       descendant.SourceAttachOperationId &&
+                   processorSeatReceipt.SourceSecureOperationId ==
+                       descendant.SourceSecureOperationId &&
+                   processorRetentionReceipt.SourceAttachOperationId ==
+                       descendant.SourceAttachOperationId &&
+                   processorRetentionReceipt.SourceSecureOperationId ==
+                       descendant.SourceSecureOperationId;
         }
 
         private bool IsMatchingAttachReceipt(

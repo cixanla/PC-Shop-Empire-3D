@@ -15,7 +15,8 @@ namespace PCShopEmpire3D.Catalog
         Motherboard = 1,
         Processor = 2,
         MemoryModule = 3,
-        StorageDevice = 4
+        StorageDevice = 4,
+        ProcessorCooler = 5
     }
 
     /// <summary>
@@ -57,6 +58,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed processor cooler fitment and thermal-interface configuration.
+    /// This is assembly compatibility metadata rather than a display string.
+    /// </summary>
+    public enum ProcessorCoolerType
+    {
+        Lga1700TopDownAirPreAppliedTim = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -68,7 +78,8 @@ namespace PCShopEmpire3D.Catalog
             MotherboardFormFactor motherboardFormFactor,
             CpuSocketFamily cpuSocketFamily,
             DimmType dimmType,
-            M2StorageType m2StorageType)
+            M2StorageType m2StorageType,
+            ProcessorCoolerType processorCoolerType)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
@@ -77,6 +88,7 @@ namespace PCShopEmpire3D.Catalog
             CpuSocketFamily = cpuSocketFamily;
             DimmType = dimmType;
             M2StorageType = m2StorageType;
+            ProcessorCoolerType = processorCoolerType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -92,6 +104,11 @@ namespace PCShopEmpire3D.Catalog
         public DimmType DimmType { get; }
 
         public M2StorageType M2StorageType { get; }
+
+        /// <summary>
+        /// Typed cooler fitment metadata. It is populated only for processor coolers.
+        /// </summary>
+        public ProcessorCoolerType ProcessorCoolerType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -149,6 +166,7 @@ namespace PCShopEmpire3D.Catalog
                     motherboardFormFactor,
                     default,
                     default,
+                    default,
                     default));
         }
 
@@ -185,6 +203,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
                     cpuSocketFamily,
+                    default,
                     default,
                     default));
         }
@@ -230,6 +249,7 @@ namespace PCShopEmpire3D.Catalog
                     motherboardFormFactor,
                     cpuSocketFamily,
                     supportedDimmType,
+                    default,
                     default));
         }
 
@@ -281,7 +301,8 @@ namespace PCShopEmpire3D.Catalog
                     motherboardFormFactor,
                     cpuSocketFamily,
                     supportedDimmType,
-                    supportedM2StorageType));
+                    supportedM2StorageType,
+                    default));
         }
 
         public static OperationResult<PcComponentSpecification> CreateProcessor(
@@ -310,6 +331,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Processor,
                     default,
                     cpuSocketFamily,
+                    default,
                     default,
                     default));
         }
@@ -341,6 +363,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     dimmType,
+                    default,
                     default));
         }
 
@@ -371,7 +394,59 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     default,
-                    m2StorageType));
+                    m2StorageType,
+                    default));
+        }
+
+        /// <summary>
+        /// Creates immutable assembly metadata for a serialized processor cooler.
+        /// Socket compatibility remains a separate typed key so future cooler variants
+        /// do not rely on parsing their persisted cooler type or display name.
+        /// </summary>
+        public static OperationResult<PcComponentSpecification> CreateProcessorCooler(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            ProcessorCoolerType processorCoolerType,
+            CpuSocketFamily cpuSocketFamily)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidProcessorCoolerType(processorCoolerType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.ComponentMetadataMismatch);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            if (!IsProcessorCoolerCompatibleWithSocket(
+                    processorCoolerType,
+                    cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.ComponentMetadataMismatch);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.ProcessorCooler,
+                    default,
+                    cpuSocketFamily,
+                    default,
+                    default,
+                    processorCoolerType));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
@@ -379,7 +454,8 @@ namespace PCShopEmpire3D.Catalog
             return kind == PcComponentKind.Motherboard ||
                    kind == PcComponentKind.Processor ||
                    kind == PcComponentKind.MemoryModule ||
-                   kind == PcComponentKind.StorageDevice;
+                   kind == PcComponentKind.StorageDevice ||
+                   kind == PcComponentKind.ProcessorCooler;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -403,6 +479,22 @@ namespace PCShopEmpire3D.Catalog
         public static bool IsValidM2StorageType(M2StorageType m2StorageType)
         {
             return m2StorageType == M2StorageType.NvmePcie4X4_2280;
+        }
+
+        public static bool IsValidProcessorCoolerType(
+            ProcessorCoolerType processorCoolerType)
+        {
+            return processorCoolerType ==
+                   ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim;
+        }
+
+        public static bool IsProcessorCoolerCompatibleWithSocket(
+            ProcessorCoolerType processorCoolerType,
+            CpuSocketFamily cpuSocketFamily)
+        {
+            return processorCoolerType ==
+                       ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim &&
+                   cpuSocketFamily == CpuSocketFamily.Lga1700;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -507,25 +599,40 @@ namespace PCShopEmpire3D.Catalog
                                specification.DimmType)) &&
                           (specification.M2StorageType == default ||
                            PcComponentSpecification.IsValidM2StorageType(
-                               specification.M2StorageType))
+                               specification.M2StorageType)) &&
+                          specification.ProcessorCoolerType == default
                         : (specification.Kind == PcComponentKind.Processor &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
                                specification.CpuSocketFamily) &&
                            specification.DimmType == default &&
-                           specification.M2StorageType == default) ||
+                           specification.M2StorageType == default &&
+                           specification.ProcessorCoolerType == default) ||
                           (specification.Kind == PcComponentKind.MemoryModule &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
                            PcComponentSpecification.IsValidDimmType(
                                specification.DimmType) &&
-                           specification.M2StorageType == default) ||
+                           specification.M2StorageType == default &&
+                           specification.ProcessorCoolerType == default) ||
                           (specification.Kind == PcComponentKind.StorageDevice &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
                            specification.DimmType == default &&
                            PcComponentSpecification.IsValidM2StorageType(
-                               specification.M2StorageType));
+                               specification.M2StorageType) &&
+                           specification.ProcessorCoolerType == default) ||
+                          (specification.Kind == PcComponentKind.ProcessorCooler &&
+                           specification.MotherboardFormFactor == default &&
+                           PcComponentSpecification.IsValidCpuSocketFamily(
+                               specification.CpuSocketFamily) &&
+                           specification.DimmType == default &&
+                           specification.M2StorageType == default &&
+                           PcComponentSpecification.IsValidProcessorCoolerType(
+                               specification.ProcessorCoolerType) &&
+                           PcComponentSpecification.IsProcessorCoolerCompatibleWithSocket(
+                               specification.ProcessorCoolerType,
+                               specification.CpuSocketFamily));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

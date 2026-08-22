@@ -14,7 +14,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// Small deterministic composition root for the first visible order-to-shelf gameplay slice.
     /// Domain authorities remain the only source of stock and order truth; Unity objects only project it.
     /// </summary>
-    public sealed class GarageStockFlowSession
+    public sealed partial class GarageStockFlowSession
     {
         public const string ProductIdValue = "catalog.gpu.northstar-a60";
         public const string ProductCategoryIdValue = "catalog.category.graphics-cards";
@@ -371,6 +371,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProductTrackingPolicy.SerializedInstance,
                     1095).Value
                 : null;
+            ProductDefinition processorCoolerProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(
+                        ProcessorCoolerProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(
+                        ProcessorCoolerCategoryIdValue),
+                    ProcessorCoolerDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1095).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
                 includeAssemblyPrototype
                     ? new[]
@@ -379,7 +389,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         motherboardProduct,
                         processorProduct,
                         memoryProduct,
-                        storageProduct
+                        storageProduct,
+                        processorCoolerProduct
                     }
                     : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
@@ -417,6 +428,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         storageProduct.Id,
                         M2StorageType.NvmePcie4X4_2280).Value
                     : null;
+            PcComponentSpecification processorCoolerSpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreateProcessorCooler(
+                        catalog,
+                        processorCoolerProduct.Id,
+                        ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                        CpuSocketFamily.Lga1700).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
@@ -425,7 +444,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         motherboardSpecification,
                         processorSpecification,
                         memorySpecification,
-                        storageSpecification
+                        storageSpecification,
+                        processorCoolerSpecification
                     }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
@@ -471,10 +491,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StorageSlotContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
+                RegisterContainer(
+                    inventory,
+                    ProcessorCoolerSlotContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
-                ? AssemblyBuildAuthority.CreateWithProcessorSocketMemorySlotAndStorageSlot(
+                ? AssemblyBuildAuthority.CreateWithProcessorSocketMemoryStorageAndCoolerSlots(
                     components,
                     inventory,
                     StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
@@ -499,6 +524,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             StorageCaptiveScrewIdValue),
                         StableId<ContainerIdScope>.Parse(StorageSlotContainerIdValue),
                         M2StorageType.NvmePcie4X4_2280).Value,
+                    ProcessorCoolerSlotDefinition.Create(
+                        StableId<AssemblySlotIdScope>.Parse(
+                            ProcessorCoolerSlotIdValue),
+                        StableId<AssemblyProcessorCoolerBracketIdScope>.Parse(
+                            ProcessorCoolerBracketIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorCoolerSlotContainerIdValue),
+                        ProcessorCoolerRetentionTopology.Create(
+                            StableId<AssemblyProcessorCoolerRetentionPointIdScope>.Parse(
+                                ProcessorCoolerRetentionPoint1IdValue),
+                            StableId<AssemblyProcessorCoolerRetentionPointIdScope>.Parse(
+                                ProcessorCoolerRetentionPoint2IdValue),
+                            StableId<AssemblyProcessorCoolerRetentionPointIdScope>.Parse(
+                                ProcessorCoolerRetentionPoint3IdValue),
+                            StableId<AssemblyProcessorCoolerRetentionPointIdScope>.Parse(
+                                ProcessorCoolerRetentionPoint4IdValue)).Value,
+                        ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                        CpuSocketFamily.Lga1700).Value,
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue),
@@ -605,6 +648,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         StorageUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(
+                        ProcessorCoolerItemInstanceIdValue),
+                    processorCoolerProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        ProcessorCoolerUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(

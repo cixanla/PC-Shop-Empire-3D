@@ -28,7 +28,11 @@ namespace PCShopEmpire3D.Assembly
         SeatStorageDevice = 13,
         RemoveStorageDevice = 14,
         SecureStorageDevice = 15,
-        UnsecureStorageDevice = 16
+        UnsecureStorageDevice = 16,
+        SeatProcessorCooler = 17,
+        RemoveProcessorCooler = 18,
+        RetainProcessorCooler = 19,
+        UnretainProcessorCooler = 20
     }
 
     public enum ProcessorSocketState
@@ -111,7 +115,11 @@ namespace PCShopEmpire3D.Assembly
             long inventoryRevision,
             ProcessorSocketState processorSocketState,
             MemorySlotState memorySlotState = MemorySlotState.Unsupported,
-            StorageSlotState storageSlotState = StorageSlotState.Unsupported)
+            StorageSlotState storageSlotState = StorageSlotState.Unsupported,
+            ProcessorCoolerSlotState processorCoolerSlotState =
+                ProcessorCoolerSlotState.Unsupported,
+            ProcessorCoolerTimState processorCoolerTimState =
+                ProcessorCoolerTimState.Unsupported)
             : this(
                 operationId,
                 operationKind,
@@ -142,7 +150,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 storageSlotState,
-                storageSlotState)
+                storageSlotState,
+                default,
+                default,
+                default,
+                processorCoolerSlotState,
+                processorCoolerSlotState,
+                default,
+                default,
+                default,
+                processorCoolerTimState,
+                processorCoolerTimState)
         {
         }
 
@@ -179,7 +197,21 @@ namespace PCShopEmpire3D.Assembly
             StorageSlotState resultingStorageSlotState = StorageSlotState.Unsupported,
             StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId = default,
             StableId<AssemblyOperationIdScope> sourceStorageRetentionOperationId = default,
-            M2KeyOrientation m2KeyOrientation = default)
+            M2KeyOrientation m2KeyOrientation = default,
+            ProcessorCoolerSlotState previousProcessorCoolerSlotState =
+                ProcessorCoolerSlotState.Unsupported,
+            ProcessorCoolerSlotState resultingProcessorCoolerSlotState =
+                ProcessorCoolerSlotState.Unsupported,
+            StableId<AssemblyOperationIdScope> sourceProcessorCoolerSeatOperationId =
+                default,
+            StableId<AssemblyOperationIdScope> sourceProcessorCoolerRetentionOperationId =
+                default,
+            ProcessorCoolerMountOrientation processorCoolerMountOrientation = default,
+            ProcessorCoolerTimState previousProcessorCoolerTimState =
+                ProcessorCoolerTimState.Unsupported,
+            ProcessorCoolerTimState resultingProcessorCoolerTimState =
+                ProcessorCoolerTimState.Unsupported,
+            ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default)
         {
             OperationId = operationId;
             OperationKind = operationKind;
@@ -212,6 +244,16 @@ namespace PCShopEmpire3D.Assembly
             SourceStorageSeatOperationId = sourceStorageSeatOperationId;
             SourceStorageRetentionOperationId = sourceStorageRetentionOperationId;
             M2KeyOrientation = m2KeyOrientation;
+            PreviousProcessorCoolerSlotState = previousProcessorCoolerSlotState;
+            ResultingProcessorCoolerSlotState = resultingProcessorCoolerSlotState;
+            SourceProcessorCoolerSeatOperationId =
+                sourceProcessorCoolerSeatOperationId;
+            SourceProcessorCoolerRetentionOperationId =
+                sourceProcessorCoolerRetentionOperationId;
+            ProcessorCoolerMountOrientation = processorCoolerMountOrientation;
+            PreviousProcessorCoolerTimState = previousProcessorCoolerTimState;
+            ResultingProcessorCoolerTimState = resultingProcessorCoolerTimState;
+            ProcessorCoolerSlotDefinition = processorCoolerSlotDefinition;
             AssemblyRevision = assemblyRevision;
             InventoryRevision = inventoryRevision;
         }
@@ -277,6 +319,29 @@ namespace PCShopEmpire3D.Assembly
         public StableId<AssemblyOperationIdScope> SourceStorageRetentionOperationId { get; }
 
         public M2KeyOrientation M2KeyOrientation { get; }
+
+        public ProcessorCoolerSlotState PreviousProcessorCoolerSlotState { get; }
+
+        public ProcessorCoolerSlotState ResultingProcessorCoolerSlotState { get; }
+
+        public StableId<AssemblyOperationIdScope> SourceProcessorCoolerSeatOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope>
+            SourceProcessorCoolerRetentionOperationId
+        {
+            get;
+        }
+
+        public ProcessorCoolerMountOrientation ProcessorCoolerMountOrientation { get; }
+
+        public ProcessorCoolerTimState PreviousProcessorCoolerTimState { get; }
+
+        public ProcessorCoolerTimState ResultingProcessorCoolerTimState { get; }
+
+        public ProcessorCoolerSlotDefinition ProcessorCoolerSlotDefinition { get; }
 
         public long AssemblyRevision { get; }
 
@@ -518,6 +583,78 @@ namespace PCShopEmpire3D.Assembly
                        sourceStorageRetentionOperationId &&
                    ExpectedAssemblyRevision == expectedAssemblyRevision;
         }
+
+        internal bool MatchesSeatProcessorCooler(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            ProcessorCoolerMountOrientation orientation,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.SeatProcessorCooler &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   ProcessorCoolerMountOrientation == orientation &&
+                   SourceAttachOperationId == sourceAttachOperationId &&
+                   SourceSecureOperationId == sourceSecureOperationId &&
+                   SourceProcessorSeatOperationId == sourceProcessorSeatOperationId &&
+                   SourceProcessorRetentionOperationId ==
+                       sourceProcessorRetentionOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRemoveProcessorCooler(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceProcessorCoolerSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RemoveProcessorCooler &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   SourceProcessorCoolerSeatOperationId ==
+                       sourceProcessorCoolerSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRetainProcessorCooler(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyProcessorCoolerBracketIdScope> bracketId,
+            StableId<AssemblyOperationIdScope> sourceProcessorCoolerSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RetainProcessorCooler &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   ProcessorCoolerSlotDefinition.BracketId == bracketId &&
+                   SourceProcessorCoolerSeatOperationId ==
+                       sourceProcessorCoolerSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesUnretainProcessorCooler(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyProcessorCoolerBracketIdScope> bracketId,
+            StableId<AssemblyOperationIdScope> sourceProcessorCoolerSeatOperationId,
+            StableId<AssemblyOperationIdScope>
+                sourceProcessorCoolerRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.UnretainProcessorCooler &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   ProcessorCoolerSlotDefinition.BracketId == bracketId &&
+                   SourceProcessorCoolerSeatOperationId ==
+                       sourceProcessorCoolerSeatOperationId &&
+                   SourceProcessorCoolerRetentionOperationId ==
+                       sourceProcessorCoolerRetentionOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
     }
 
     /// <summary>
@@ -599,7 +736,19 @@ namespace PCShopEmpire3D.Assembly
             StableId<ItemInstanceIdScope> storageItemId = default,
             StableId<ProductDefinitionIdScope> storageProductId = default,
             StableId<AssemblyOperationIdScope> storageSeatedByOperationId = default,
-            StableId<AssemblyOperationIdScope> storageSecuredByOperationId = default)
+            StableId<AssemblyOperationIdScope> storageSecuredByOperationId = default,
+            ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default,
+            ProcessorCoolerSlotState processorCoolerSlotState =
+                ProcessorCoolerSlotState.Unsupported,
+            StableId<ItemInstanceIdScope> processorCoolerItemId = default,
+            StableId<ProductDefinitionIdScope> processorCoolerProductId = default,
+            StableId<AssemblyOperationIdScope> processorCoolerSeatedByOperationId =
+                default,
+            StableId<AssemblyOperationIdScope> processorCoolerRetainedByOperationId =
+                default,
+            ProcessorCoolerMountOrientation processorCoolerMountOrientation = default,
+            ProcessorCoolerTimState processorCoolerTimState =
+                ProcessorCoolerTimState.Unsupported)
         {
             BuildId = buildId;
             ChassisId = chassisId;
@@ -634,6 +783,16 @@ namespace PCShopEmpire3D.Assembly
             StorageProductId = storageProductId;
             StorageSeatedByOperationId = storageSeatedByOperationId;
             StorageSecuredByOperationId = storageSecuredByOperationId;
+            ProcessorCoolerSlotDefinition = processorCoolerSlotDefinition;
+            ProcessorCoolerSlotState = processorCoolerSlotState;
+            ProcessorCoolerItemId = processorCoolerItemId;
+            ProcessorCoolerProductId = processorCoolerProductId;
+            ProcessorCoolerSeatedByOperationId =
+                processorCoolerSeatedByOperationId;
+            ProcessorCoolerRetainedByOperationId =
+                processorCoolerRetainedByOperationId;
+            ProcessorCoolerMountOrientation = processorCoolerMountOrientation;
+            ProcessorCoolerTimState = processorCoolerTimState;
             Revision = revision;
         }
 
@@ -741,6 +900,45 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<AssemblyOperationIdScope> StorageSecuredByOperationId { get; }
 
+        public ProcessorCoolerSlotDefinition ProcessorCoolerSlotDefinition { get; }
+
+        public bool HasProcessorCoolerSlot => ProcessorCoolerSlotDefinition.IsValid;
+
+        public StableId<AssemblySlotIdScope> ProcessorCoolerSlotId =>
+            ProcessorCoolerSlotDefinition.SlotId;
+
+        public StableId<AssemblyProcessorCoolerBracketIdScope> ProcessorCoolerBracketId =>
+            ProcessorCoolerSlotDefinition.BracketId;
+
+        public StableId<ContainerIdScope> ProcessorCoolerSlotContainerId =>
+            ProcessorCoolerSlotDefinition.ContainerId;
+
+        public ProcessorCoolerRetentionTopology ProcessorCoolerRetentionTopology =>
+            ProcessorCoolerSlotDefinition.RetentionTopology;
+
+        public ProcessorCoolerType SupportedProcessorCoolerType =>
+            ProcessorCoolerSlotDefinition.SupportedCoolerType;
+
+        public ProcessorCoolerSlotState ProcessorCoolerSlotState { get; }
+
+        public StableId<ItemInstanceIdScope> ProcessorCoolerItemId { get; }
+
+        public StableId<ProductDefinitionIdScope> ProcessorCoolerProductId { get; }
+
+        public StableId<AssemblyOperationIdScope> ProcessorCoolerSeatedByOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope> ProcessorCoolerRetainedByOperationId
+        {
+            get;
+        }
+
+        public ProcessorCoolerMountOrientation ProcessorCoolerMountOrientation { get; }
+
+        public ProcessorCoolerTimState ProcessorCoolerTimState { get; }
+
         public long Revision { get; }
     }
 
@@ -774,6 +972,14 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.storage-slot-container.invalid");
         public static readonly Failure InvalidStorageSlotDefinition =
             Failure.FromCode("assembly.storage-slot-definition.invalid");
+        public static readonly Failure InvalidProcessorCoolerSlotContainer =
+            Failure.FromCode("assembly.processor-cooler-slot-container.invalid");
+        public static readonly Failure InvalidProcessorCoolerSlotDefinition =
+            Failure.FromCode("assembly.processor-cooler-slot-definition.invalid");
+        public static readonly Failure InvalidProcessorCoolerBracket =
+            Failure.FromCode("assembly.processor-cooler-bracket.invalid");
+        public static readonly Failure InvalidProcessorCoolerRetentionTopology =
+            Failure.FromCode("assembly.processor-cooler-retention-topology.invalid");
         public static readonly Failure SameInventoryContainer =
             Failure.FromCode("assembly.inventory-container.same");
         public static readonly Failure InvalidMotherboardFormFactor =
@@ -784,6 +990,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.dimm-type.invalid");
         public static readonly Failure InvalidM2StorageType =
             Failure.FromCode("assembly.m2-storage-type.invalid");
+        public static readonly Failure InvalidProcessorCoolerType =
+            Failure.FromCode("assembly.processor-cooler-type.invalid");
         public static readonly Failure InvalidDimmOrientation =
             Failure.FromCode("assembly.dimm-orientation.invalid");
         public static readonly Failure DimmOrientationMismatch =
@@ -792,6 +1000,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.m2-orientation.invalid");
         public static readonly Failure M2OrientationMismatch =
             Failure.FromCode("assembly.m2-orientation.mismatch");
+        public static readonly Failure InvalidProcessorCoolerOrientation =
+            Failure.FromCode("assembly.processor-cooler-orientation.invalid");
         public static readonly Failure InvalidStorageStandoff =
             Failure.FromCode("assembly.storage-standoff.invalid");
         public static readonly Failure InvalidMemoryChannel =
@@ -814,6 +1024,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.memory-slot.occupied");
         public static readonly Failure StorageSlotOccupied =
             Failure.FromCode("assembly.storage-slot.occupied");
+        public static readonly Failure ProcessorCoolerSlotOccupied =
+            Failure.FromCode("assembly.processor-cooler-slot.occupied");
         public static readonly Failure InvalidComponent = Failure.FromCode("assembly.invalid-component");
         public static readonly Failure UnknownItem = InvalidComponent;
         public static readonly Failure ComponentNotInActorHands =
@@ -835,6 +1047,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.motherboard.memory-installed");
         public static readonly Failure StorageDeviceInstalled =
             Failure.FromCode("assembly.motherboard.storage-installed");
+        public static readonly Failure ProcessorCoolerInstalled =
+            Failure.FromCode("assembly.motherboard.processor-cooler-installed");
         public static readonly Failure MemoryRetentionOutOfOrder =
             Failure.FromCode("assembly.memory-retention.out-of-order");
         public static readonly Failure MemoryModuleRetained =
@@ -843,6 +1057,12 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.storage-retention.out-of-order");
         public static readonly Failure StorageDeviceSecured =
             Failure.FromCode("assembly.storage-device.secured");
+        public static readonly Failure ProcessorCoolerRetentionOutOfOrder =
+            Failure.FromCode("assembly.processor-cooler-retention.out-of-order");
+        public static readonly Failure ProcessorCoolerRetained =
+            Failure.FromCode("assembly.processor-cooler.retained");
+        public static readonly Failure ProcessorCoolerTimConsumed =
+            Failure.FromCode("assembly.processor-cooler.tim-consumed");
         public static readonly Failure SlotEmpty = ComponentNotSeated;
         public static readonly Failure ItemNotOnWorkbench = ComponentNotSeated;
         public static readonly Failure UnknownComponentSpecification = InvalidComponent;
@@ -858,6 +1078,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.dimm-type.mismatch");
         public static readonly Failure M2StorageTypeMismatch =
             Failure.FromCode("assembly.m2-storage-type.mismatch");
+        public static readonly Failure ProcessorCoolerTypeMismatch =
+            Failure.FromCode("assembly.processor-cooler-type.mismatch");
+        public static readonly Failure ProcessorCoolerSocketMismatch =
+            Failure.FromCode("assembly.processor-cooler-socket.mismatch");
         public static readonly Failure WorkbenchCapacityExceeded =
             Failure.FromCode("assembly.workbench.capacity");
         public static readonly Failure ProcessorSocketCapacityExceeded =
@@ -866,6 +1090,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.memory-slot.capacity");
         public static readonly Failure StorageSlotCapacityExceeded =
             Failure.FromCode("assembly.storage-slot.capacity");
+        public static readonly Failure ProcessorCoolerSlotCapacityExceeded =
+            Failure.FromCode("assembly.processor-cooler-slot.capacity");
         public static readonly Failure HandsCapacityExceeded =
             Failure.FromCode("assembly.hands.capacity");
         public static readonly Failure InventoryRevisionOverflow = RevisionOverflow;
@@ -890,6 +1116,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.benchmark.storage-missing");
         public static readonly Failure StorageUnsecured =
             Failure.FromCode("assembly.benchmark.storage-unsecured");
+        public static readonly Failure ProcessorCoolerMissing =
+            Failure.FromCode("assembly.benchmark.processor-cooler-missing");
+        public static readonly Failure ProcessorCoolerUnretained =
+            Failure.FromCode("assembly.benchmark.processor-cooler-unretained");
         public static readonly Failure BuildIncomplete =
             Failure.FromCode("assembly.benchmark.build-incomplete");
         public static readonly Failure InvariantViolation =

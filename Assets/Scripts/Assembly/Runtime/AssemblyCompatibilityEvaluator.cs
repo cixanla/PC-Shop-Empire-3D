@@ -176,5 +176,64 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.M2StorageTypeMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluateProcessorCoolerSeat(
+            PcComponentSpecification processorCoolerSpecification,
+            PcComponentSpecification motherboardSpecification,
+            PcComponentSpecification processorSpecification,
+            ProcessorCoolerType supportedProcessorCoolerType,
+            CpuSocketFamily supportedSocketFamily,
+            ProcessorCoolerMountOrientation orientation)
+        {
+            if (processorCoolerSpecification == null ||
+                motherboardSpecification == null ||
+                processorSpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidProcessorCoolerType(
+                    supportedProcessorCoolerType))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidProcessorCoolerType);
+            }
+
+            if (!PcComponentSpecification.IsValidCpuSocketFamily(supportedSocketFamily))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidCpuSocketFamily);
+            }
+
+            if (orientation != ProcessorCoolerMountOrientation.Primary &&
+                orientation != ProcessorCoolerMountOrientation.Rotated180)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidProcessorCoolerOrientation);
+            }
+
+            if (processorCoolerSpecification.Kind != PcComponentKind.ProcessorCooler ||
+                motherboardSpecification.Kind != PcComponentKind.Motherboard ||
+                processorSpecification.Kind != PcComponentKind.Processor)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            if (processorCoolerSpecification.ProcessorCoolerType !=
+                supportedProcessorCoolerType)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.ProcessorCoolerTypeMismatch);
+            }
+
+            return processorCoolerSpecification.CpuSocketFamily == supportedSocketFamily &&
+                   motherboardSpecification.CpuSocketFamily == supportedSocketFamily &&
+                   processorSpecification.CpuSocketFamily == supportedSocketFamily
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.ProcessorCoolerSocketMismatch);
+        }
     }
 }

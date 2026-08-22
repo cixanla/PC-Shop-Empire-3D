@@ -662,6 +662,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddbea1589bbbf4050be6a6c5ca711466, type: 3}
   m_Name:
   m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.PlayerCarryController
+  processorCoolerSlot: {fileID: 0}
+  processorCoolerBinding: {fileID: 0}
   m2StorageSlot: {fileID: 0}
   m2StorageAssemblyBinding: {fileID: 0}
   input: {fileID: 6989539455285473086}

@@ -173,6 +173,52 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void StableWorldPoseSynchronizationNeverPretendsAWorldItemIsHeld()
+        {
+            PhysicalItemProjection item = CreateItem(
+                "tests.item-stable-world-sync",
+                new Vector3(1f, 2f, 3f),
+                PhysicalCarryProfile.PcComponent);
+            Transform anchor = new GameObject("Anchor").transform;
+            anchor.SetParent(_root.transform);
+            Pose seatedPose = new Pose(
+                new Vector3(2f, 1f, 4f),
+                Quaternion.Euler(0f, 180f, 0f));
+            Pose correctedPose = new Pose(
+                new Vector3(2.01f, 1.02f, 4.03f),
+                Quaternion.Euler(0f, 0f, 180f));
+
+            Assert.That(item.BeginCarry(anchor, 8).IsSuccess, Is.True);
+            Assert.That(item.PlaceAt(seatedPose).IsSuccess, Is.True);
+            Assert.That(item.SynchronizeStableWorldPose(correctedPose).IsSuccess,
+                Is.True);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.IsStablePlacement, Is.True);
+            Assert.That(Vector3.Distance(
+                item.transform.position,
+                correctedPose.position), Is.LessThan(0.0001f));
+            Assert.That(Quaternion.Angle(
+                item.transform.rotation,
+                correctedPose.rotation), Is.LessThan(0.01f));
+            Assert.That(Vector3.Distance(
+                item.LastSafePosition,
+                correctedPose.position), Is.LessThan(0.0001f));
+
+            item.Body.isKinematic = false;
+            item.Body.useGravity = true;
+            Assert.That(item.BeginCarry(anchor, 8).IsSuccess, Is.True);
+            Assert.That(item.ReleaseTo(seatedPose).IsSuccess, Is.True);
+            Pose beforeRejectedSync = new Pose(
+                item.transform.position,
+                item.transform.rotation);
+            Assert.That(item.SynchronizeStableWorldPose(correctedPose).Error.Code,
+                Is.EqualTo("recovery.stable-world-pose-unavailable"));
+            Assert.That(item.transform.position,
+                Is.EqualTo(beforeRejectedSync.position));
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+        }
+
+        [Test]
         public void SafeDropReportsNoSupportAndBlockedWithoutReleasingTheItem()
         {
             PhysicalItemProjection item = CreateItem("tests.item-drop", new Vector3(0f, 1f, 0f));

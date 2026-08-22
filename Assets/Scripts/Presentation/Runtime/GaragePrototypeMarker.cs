@@ -19,7 +19,9 @@ namespace PCShopEmpire3D.Presentation
     public sealed class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-m2-nvme-captive-screw-r26-v1";
+        public const string Version = "garage-processor-cooler-r27-v1";
+        public const string ProcessorCoolerR27Marker =
+            ProcessorCoolerRuntimeGeometry.RuntimeMarker;
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -40,6 +42,10 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private M2StorageSlotProjection storageSlot;
         [SerializeField] private M2StorageAssemblyItemBinding storageBinding;
         [SerializeField] private PhysicalItemProjection storageDevice;
+        [SerializeField] private ProcessorCoolerSlotProjection processorCoolerSlot;
+        [SerializeField] private ProcessorCoolerAssemblyItemBinding processorCoolerBinding;
+        [SerializeField] private PhysicalItemProjection processorCooler;
+        [SerializeField] private ProcessorCoolerRuntimeGeometry processorCoolerGeometry;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -79,6 +85,32 @@ namespace PCShopEmpire3D.Presentation
 
         public PhysicalItemProjection StorageDevice => storageDevice;
 
+        public ProcessorCoolerSlotProjection ProcessorCoolerSlot =>
+            processorCoolerSlot;
+
+        public ProcessorCoolerAssemblyItemBinding ProcessorCoolerBinding =>
+            processorCoolerBinding;
+
+        public PhysicalItemProjection ProcessorCooler => processorCooler;
+
+        public ProcessorCoolerRuntimeGeometry ProcessorCoolerGeometry =>
+            processorCoolerGeometry;
+
+        /// <summary>
+        /// Deliberately false until the scene owns exactly one canonical r27 cooler geometry.
+        /// This is a smoke flag, not authority and not a substitute for the domain snapshot.
+        /// </summary>
+        public bool HasProcessorCoolerR27Runtime =>
+            processorCoolerGeometry != null &&
+            processorCoolerGeometry.IsCanonical &&
+            processorCoolerSlot != null &&
+            processorCoolerSlot.IsConfigured &&
+            processorCoolerBinding != null &&
+            processorCoolerBinding.Slot == processorCoolerSlot &&
+            processorCoolerBinding.PhysicalItem == processorCooler &&
+            FindObjectsByType<ProcessorCoolerRuntimeGeometry>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -98,7 +130,11 @@ namespace PCShopEmpire3D.Presentation
             PhysicalItemProjection physicalMemoryModule = null,
             M2StorageSlotProjection physicalStorageSlot = null,
             M2StorageAssemblyItemBinding physicalStorageBinding = null,
-            PhysicalItemProjection physicalStorageDevice = null)
+            PhysicalItemProjection physicalStorageDevice = null,
+            ProcessorCoolerSlotProjection physicalProcessorCoolerSlot = null,
+            ProcessorCoolerAssemblyItemBinding physicalProcessorCoolerBinding = null,
+            PhysicalItemProjection physicalProcessorCooler = null,
+            ProcessorCoolerRuntimeGeometry physicalProcessorCoolerGeometry = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -119,6 +155,10 @@ namespace PCShopEmpire3D.Presentation
             storageSlot = physicalStorageSlot;
             storageBinding = physicalStorageBinding;
             storageDevice = physicalStorageDevice;
+            processorCoolerSlot = physicalProcessorCoolerSlot;
+            processorCoolerBinding = physicalProcessorCoolerBinding;
+            processorCooler = physicalProcessorCooler;
+            processorCoolerGeometry = physicalProcessorCoolerGeometry;
         }
 
         private void Start()
@@ -223,7 +263,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 4 &&
+                                          assemblySession.Inventory.SerializedItemCount == 5 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -375,6 +415,81 @@ namespace PCShopEmpire3D.Presentation
                                       assemblySession.AssemblyBuild.HasStorageSlot &&
                                       assemblySession.AssemblyBuild.StorageSlotState ==
                                           StorageSlotState.EmptyOpen;
+            bool hasProcessorCoolerSlot = assemblySession != null &&
+                                          processorCoolerSlot != null &&
+                                          processorCoolerSlot.IsConfigured &&
+                                          processorCoolerSlot.SlotIdValue ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerSlotIdValue &&
+                                          processorCoolerSlot.BracketIdValue ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerBracketIdValue &&
+                                          processorCoolerSlot.RetentionPointIdValues.Length == 4 &&
+                                          processorCoolerSlot.RetentionPointIdValues[0] ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerRetentionPoint1IdValue &&
+                                          processorCoolerSlot.RetentionPointIdValues[1] ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerRetentionPoint2IdValue &&
+                                          processorCoolerSlot.RetentionPointIdValues[2] ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerRetentionPoint3IdValue &&
+                                          processorCoolerSlot.RetentionPointIdValues[3] ==
+                                              GarageStockFlowSession
+                                                  .ProcessorCoolerRetentionPoint4IdValue &&
+                                          memoryModule != null &&
+                                          processorCoolerSlot.ClearanceBlockers.Length == 1 &&
+                                          processorCoolerSlot.ClearanceBlockers[0] ==
+                                              memoryModule.GetComponent<Collider>() &&
+                                          processorCoolerSlot.MatchesLogicalAuthorityState(
+                                              assemblySession.AssemblyBuild
+                                                  .MotherboardSeatState,
+                                              assemblySession.AssemblyBuild
+                                                  .ProcessorSocketState,
+                                              assemblySession.AssemblyBuild
+                                                  .ProcessorCoolerSlotState);
+            bool hasProcessorCoolerIdentity = assemblySession != null &&
+                                              processorCoolerBinding != null &&
+                                              processorCooler != null &&
+                                              processorCoolerBinding.Runtime == stockFlow &&
+                                              processorCoolerBinding.PhysicalItem ==
+                                                  processorCooler &&
+                                              processorCoolerBinding.InventoryItemIdValue ==
+                                                  assemblySession.ProcessorCoolerItemId.Value &&
+                                              processorCooler.ItemIdValue ==
+                                                  assemblySession.ProcessorCoolerItemId.Value &&
+                                              assemblySession.TryGetProcessorCoolerItem(
+                                                  out InventoryItemRecord coolerItem) &&
+                                              coolerItem.Id ==
+                                                  assemblySession.ProcessorCoolerItemId &&
+                                              coolerItem.ProductId ==
+                                                  assemblySession.ProcessorCoolerProductId &&
+                                              coolerItem.ContainerId ==
+                                                  assemblySession.WorldFloorContainerId &&
+                                              coolerItem.StateFlags ==
+                                                  InventorySerializedItemStateFlags.None &&
+                                              CountCanonicalProcessorCoolerProjections(
+                                                  assemblySession.ProcessorCoolerItemId.Value) ==
+                                                  1 &&
+                                              processorCoolerBinding
+                                                  .ValidateProjectionInvariant().IsSuccess;
+            bool hasProcessorCoolerAssembly = hasProcessorCoolerSlot &&
+                                              hasProcessorCoolerIdentity &&
+                                              processorCoolerBinding.Slot ==
+                                                  processorCoolerSlot &&
+                                              playerCarry != null &&
+                                              playerCarry
+                                                  .MatchesProcessorCoolerConfiguration(
+                                                      processorCoolerSlot,
+                                                      processorCoolerBinding) &&
+                                              processorCooler.CarryProfile ==
+                                                  PhysicalCarryProfile.PcComponent &&
+                                              assemblySession.AssemblyBuild
+                                                  .HasProcessorCoolerSlot &&
+                                              assemblySession.AssemblyBuild
+                                                      .ProcessorCoolerSlotState ==
+                                                  ProcessorCoolerSlotState.EmptyOpen &&
+                                              HasProcessorCoolerR27Runtime;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -404,7 +519,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -418,6 +533,9 @@ namespace PCShopEmpire3D.Presentation
                 $"m2-slot={(hasStorageSlot ? "ready" : "missing")} " +
                 $"m2-captive-screw={(hasStorageAssembly ? "ready" : "missing")} " +
                 $"m2-identity={(hasStorageIdentity ? "stable" : "missing")} " +
+                $"processor-cooler-slot={(hasProcessorCoolerSlot ? "ready" : "missing")} " +
+                $"processor-cooler-retention={(hasProcessorCoolerAssembly ? "ready" : "missing")} " +
+                $"processor-cooler-identity={(hasProcessorCoolerIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -427,13 +545,16 @@ namespace PCShopEmpire3D.Presentation
             bool runProcessorSmoke = HasCommandLineArgument("-pse-processor-smoke");
             bool runDimmSmoke = HasCommandLineArgument("-pse-dimm-smoke");
             bool runStorageSmoke = HasCommandLineArgument("-pse-storage-smoke");
+            bool runProcessorCoolerSmoke =
+                HasCommandLineArgument("-pse-cooler-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
                              (runAssemblySmoke ? 1 : 0) +
                              (runProcessorSmoke ? 1 : 0) +
                              (runDimmSmoke ? 1 : 0) +
-                             (runStorageSmoke ? 1 : 0);
+                             (runStorageSmoke ? 1 : 0) +
+                             (runProcessorCoolerSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -479,6 +600,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runProcessorCoolerSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_COOLER_RUNTIME_SMOKE " +
+                    "cooler-flow=failed code=smoke.cooler-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -518,6 +647,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunM2StorageSmoke());
+            }
+
+            if (runProcessorCoolerSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorCoolerSmoke());
             }
         }
 
@@ -1290,7 +1425,7 @@ namespace PCShopEmpire3D.Presentation
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 4 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 5 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -2224,7 +2359,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -2620,7 +2755,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -2691,7 +2826,7 @@ namespace PCShopEmpire3D.Presentation
                              looseMemory.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              dimmBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3024,7 +3159,7 @@ namespace PCShopEmpire3D.Presentation
                              memoryModule.IsStablePlacement &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3123,7 +3258,7 @@ namespace PCShopEmpire3D.Presentation
                              looseStorage.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              storageBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3365,7 +3500,7 @@ namespace PCShopEmpire3D.Presentation
                              storageDevice.IsStablePlacement &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 4 &&
+                             session.Inventory.SerializedItemCount == 5 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3412,6 +3547,503 @@ namespace PCShopEmpire3D.Presentation
             yield return new WaitForEndOfFrame();
         }
 
+        private IEnumerator RunProcessorCoolerSmoke()
+        {
+            yield return null;
+            playerMotor?.SetPaused(false);
+            yield return null;
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            ProcessorCoolerRuntimeSmokeMarker smokeMarker = processorCooler != null
+                ? processorCooler.GetComponent<ProcessorCoolerRuntimeSmokeMarker>()
+                : null;
+            if (playerMotor == null ||
+                playerCarry == null ||
+                session == null ||
+                motherboardBinding == null ||
+                motherboardSeat == null ||
+                motherboardFastener == null ||
+                processorSocket == null ||
+                processorBinding == null ||
+                processor == null ||
+                processorCoolerSlot == null ||
+                processorCoolerBinding == null ||
+                processorCooler == null ||
+                processorCoolerGeometry == null ||
+                smokeMarker == null)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.context-missing");
+                yield break;
+            }
+
+            Pose initialCoolerPose = new Pose(
+                processorCooler.transform.position,
+                processorCooler.transform.rotation);
+            Transform initialCoolerParent = processorCooler.transform.parent;
+            int initialCoolerInstanceId = processorCooler.GetInstanceID();
+            ProcessorCoolerRetentionTopology topology =
+                session.AssemblyBuild.ProcessorCoolerRetentionTopology;
+            bool slotInterface = processorCoolerSlot.IsConfigured &&
+                                 processorCoolerSlot.SlotIdValue ==
+                                     session.ProcessorCoolerSlotId.Value &&
+                                 processorCoolerSlot.BracketIdValue ==
+                                     session.ProcessorCoolerBracketId.Value &&
+                                 processorCoolerBinding.Slot == processorCoolerSlot &&
+                                 processorCoolerBinding.PhysicalItem ==
+                                     processorCooler &&
+                                 processorCoolerGeometry.IsCanonical &&
+                                 smokeMarker.IsReady &&
+                                 HasProcessorCoolerR27Runtime &&
+                                 topology != null &&
+                                 topology.IsValid &&
+                                 topology.PhysicalOrder.Count == 4 &&
+                                 topology.PhysicalOrder[0].Value ==
+                                     GarageStockFlowSession
+                                         .ProcessorCoolerRetentionPoint1IdValue &&
+                                 topology.PhysicalOrder[1].Value ==
+                                     GarageStockFlowSession
+                                         .ProcessorCoolerRetentionPoint2IdValue &&
+                                 topology.PhysicalOrder[2].Value ==
+                                     GarageStockFlowSession
+                                         .ProcessorCoolerRetentionPoint3IdValue &&
+                                 topology.PhysicalOrder[3].Value ==
+                                     GarageStockFlowSession
+                                         .ProcessorCoolerRetentionPoint4IdValue;
+            bool preflight = slotInterface &&
+                             session.AssemblyBuild.HasProcessorCoolerSlot &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.Empty &&
+                             session.AssemblyBuild.ProcessorSocketState ==
+                                 ProcessorSocketState.EmptyOpen &&
+                             session.AssemblyBuild.ProcessorCoolerSlotState ==
+                                 ProcessorCoolerSlotState.EmptyOpen &&
+                             session.TryGetProcessorCoolerItem(
+                                 out InventoryItemRecord looseCooler) &&
+                             looseCooler.Id == session.ProcessorCoolerItemId &&
+                             looseCooler.ProductId ==
+                                 session.ProcessorCoolerProductId &&
+                             looseCooler.ContainerId ==
+                                 session.WorldFloorContainerId &&
+                             looseCooler.StateFlags ==
+                                 InventorySerializedItemStateFlags.None &&
+                             CountCanonicalProcessorCoolerProjections(
+                                 session.ProcessorCoolerItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 5 &&
+                             processorCoolerBinding.ValidateProjectionInvariant()
+                                 .IsSuccess &&
+                             session.ValidateInvariants().IsSuccess;
+            if (!preflight)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.preflight-mismatch");
+                yield break;
+            }
+
+            long orderRevision = session.Orders.Revision;
+            long offerRevision = session.RetailOffers.Revision;
+            long basketRevision = session.RetailBaskets.Revision;
+            long checkoutRevision = session.RetailCheckouts.Revision;
+            long settlementRevision = session.CheckoutSettlements.Revision;
+            long visitRevision = session.CustomerVisits.Revision;
+            long consultationRevision = session.CustomerConsultations.Revision;
+            long actionRevision = session.CustomerOfferActions.Revision;
+
+            OperationResult motherboardPickup = playerCarry.TryPickup(
+                motherboardBinding.PhysicalItem);
+            MovePlayerToMotherboardSeat();
+            OperationResult motherboardMode =
+                playerCarry.TrySetMotherboardSeatMode(true);
+            OperationResult motherboardAttach =
+                playerCarry.TryConfirmMotherboardSeat();
+            MovePlayerToMotherboardFastener();
+            OperationResult motherboardSecure =
+                playerCarry.TryOperateMotherboardFastener();
+            OperationResult processorPickup = playerCarry.TryPickup(processor);
+            MovePlayerToProcessorSocket();
+            OperationResult processorMode = playerCarry.TrySetProcessorSeatMode(true);
+            OperationResult processorSeat = playerCarry.TryConfirmProcessorSeat();
+            MovePlayerToProcessorSocket();
+            OperationResult processorRetain =
+                playerCarry.TryOperateProcessorRetention();
+            if (motherboardPickup.IsFailure ||
+                motherboardMode.IsFailure ||
+                motherboardAttach.IsFailure ||
+                motherboardSecure.IsFailure ||
+                processorPickup.IsFailure ||
+                processorMode.IsFailure ||
+                processorSeat.IsFailure ||
+                processorRetain.IsFailure ||
+                session.AssemblyBuild.MotherboardSeatState !=
+                    AssemblySeatState.SeatedSecured ||
+                session.AssemblyBuild.ProcessorSocketState !=
+                    ProcessorSocketState.ProcessorRetained)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.host-preflight-failed");
+                yield break;
+            }
+
+            OperationResult coolerPickup = playerCarry.TryPickup(processorCooler);
+            MovePlayerToProcessorCoolerSlot();
+            long seatAssemblyRevision = session.AssemblyBuild.Revision;
+            long seatInventoryRevision = session.Inventory.Revision;
+            int seatReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult coolerMode =
+                playerCarry.TrySetProcessorCoolerSeatMode(true);
+            ProcessorCoolerSlotEvaluation primaryEvaluation =
+                processorCoolerSlot.LastEvaluation;
+            bool primaryHalfTurn = coolerMode.IsSuccess &&
+                                   primaryEvaluation.CanSeat &&
+                                   primaryEvaluation.Orientation ==
+                                       ProcessorCoolerMountOrientation.Primary;
+            OperationResult rotate =
+                playerCarry.TryRotateProcessorCoolerSeatPreview();
+            ProcessorCoolerSlotEvaluation rotatedEvaluation =
+                processorCoolerSlot.LastEvaluation;
+            bool rotatedHalfTurn = rotate.IsSuccess &&
+                                   rotatedEvaluation.CanSeat &&
+                                   rotatedEvaluation.Orientation ==
+                                       ProcessorCoolerMountOrientation.Rotated180 &&
+                                   Quaternion.Angle(
+                                       primaryEvaluation.Pose.rotation,
+                                       rotatedEvaluation.Pose.rotation) > 179.9f;
+            OperationResult coolerSeat =
+                playerCarry.TryConfirmProcessorCoolerSeat();
+            var receiptsAfterCoolerSeat = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt coolerSeatReceipt =
+                receiptsAfterCoolerSeat[receiptsAfterCoolerSeat.Count - 1];
+            bool timApplied = coolerPickup.IsSuccess &&
+                              primaryHalfTurn &&
+                              rotatedHalfTurn &&
+                              coolerSeat.IsSuccess &&
+                              coolerSeatReceipt.OperationKind ==
+                                  AssemblyOperationKind.SeatProcessorCooler &&
+                              coolerSeatReceipt.ProcessorCoolerMountOrientation ==
+                                  ProcessorCoolerMountOrientation.Rotated180 &&
+                              coolerSeatReceipt.PreviousProcessorCoolerTimState ==
+                                  ProcessorCoolerTimState.PreAppliedUnused &&
+                              coolerSeatReceipt.ResultingProcessorCoolerTimState ==
+                                  ProcessorCoolerTimState.AppliedConsumed &&
+                              session.AssemblyBuild.ProcessorCoolerSlotState ==
+                                  ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
+                              session.AssemblyBuild.ProcessorCoolerTimState ==
+                                  ProcessorCoolerTimState.AppliedConsumed &&
+                              session.AssemblyBuild.Revision ==
+                                  seatAssemblyRevision + 1 &&
+                              session.AssemblyBuild.ReceiptCount ==
+                                  seatReceiptCount + 1 &&
+                              session.Inventory.Revision ==
+                                  seatInventoryRevision + 1 &&
+                              session.TryGetProcessorCoolerItem(
+                                  out InventoryItemRecord seatedCooler) &&
+                              seatedCooler.ContainerId ==
+                                  session.ProcessorCoolerSlotContainerId &&
+                              seatedCooler.StateFlags ==
+                                  InventorySerializedItemStateFlags
+                                      .PreAppliedConsumableConsumed &&
+                              processorCoolerBinding.ValidateProjectionInvariant()
+                                  .IsSuccess;
+            if (!timApplied)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.cooler-seat-failed");
+                yield break;
+            }
+
+            long duplicateAssemblyRevision = session.AssemblyBuild.Revision;
+            long duplicateInventoryRevision = session.Inventory.Revision;
+            int duplicateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult duplicateSeat = processorCoolerBinding.TryAttachAt(
+                processorCoolerSlot.SnapPose,
+                ProcessorCoolerMountOrientation.Rotated180,
+                null,
+                0);
+            bool duplicateSeatBlocked = duplicateSeat.IsFailure &&
+                                        duplicateSeat.Error.Code ==
+                                            "assembly-cooler.attach-authority-mismatch" &&
+                                        session.AssemblyBuild.Revision ==
+                                            duplicateAssemblyRevision &&
+                                        session.Inventory.Revision ==
+                                            duplicateInventoryRevision &&
+                                        session.AssemblyBuild.ReceiptCount ==
+                                            duplicateReceiptCount;
+
+            MovePlayerToProcessorCoolerSlot();
+            OperationResult retain =
+                playerCarry.TryOperateProcessorCoolerRetention();
+            var receiptsAfterRetain = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt retainReceipt =
+                receiptsAfterRetain[receiptsAfterRetain.Count - 1];
+            bool crossOrder = retain.IsSuccess &&
+                              retainReceipt.OperationKind ==
+                                  AssemblyOperationKind.RetainProcessorCooler &&
+                              retainReceipt.SourceProcessorCoolerSeatOperationId ==
+                                  coolerSeatReceipt.OperationId &&
+                              session.AssemblyBuild.ProcessorCoolerSlotState ==
+                                  ProcessorCoolerSlotState.CoolerRetained &&
+                              topology.CrossRetentionOrder.Count == 4 &&
+                              topology.CrossRetentionOrder[0] == topology.Point1Id &&
+                              topology.CrossRetentionOrder[1] == topology.Point3Id &&
+                              topology.CrossRetentionOrder[2] == topology.Point2Id &&
+                              topology.CrossRetentionOrder[3] == topology.Point4Id &&
+                              topology.ReverseCrossRetentionOrder.Count == 4 &&
+                              topology.ReverseCrossRetentionOrder[0] ==
+                                  topology.Point4Id &&
+                              topology.ReverseCrossRetentionOrder[1] ==
+                                  topology.Point2Id &&
+                              topology.ReverseCrossRetentionOrder[2] ==
+                                  topology.Point3Id &&
+                              topology.ReverseCrossRetentionOrder[3] ==
+                                  topology.Point1Id &&
+                              processorCoolerBinding.ValidateProjectionInvariant()
+                                  .IsSuccess;
+
+            long retainedGateAssemblyRevision = session.AssemblyBuild.Revision;
+            long retainedGateInventoryRevision = session.Inventory.Revision;
+            int retainedGateReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Pose retainedPose = new Pose(
+                processorCooler.transform.position,
+                processorCooler.transform.rotation);
+            OperationResult retainedRemoval =
+                playerCarry.TryPickup(processorCooler);
+            bool retainedRemoveGate = retainedRemoval.IsFailure &&
+                                      retainedRemoval.Error ==
+                                          AssemblyFailures.ProcessorCoolerRetained &&
+                                      playerCarry.HeldItem == null &&
+                                      session.AssemblyBuild.Revision ==
+                                          retainedGateAssemblyRevision &&
+                                      session.Inventory.Revision ==
+                                          retainedGateInventoryRevision &&
+                                      session.AssemblyBuild.ReceiptCount ==
+                                          retainedGateReceiptCount &&
+                                      ApproximatelySamePose(
+                                          new Pose(
+                                              processorCooler.transform.position,
+                                              processorCooler.transform.rotation),
+                                          retainedPose);
+
+            AssemblyBuildSnapshot retainedSnapshot =
+                session.AssemblyBuild.GetSnapshot();
+            OperationResult<AssemblyOperationReceipt> hostOpen =
+                session.OpenProcessorRetention(
+                    StableId<AssemblyOperationIdScope>.Parse(
+                        "assembly.operation.smoke.cooler-host-open"),
+                    retainedSnapshot.ProcessorSeatedByOperationId,
+                    retainedSnapshot.ProcessorRetainedByOperationId,
+                    retainedSnapshot.Revision);
+            bool hostGates = hostOpen.IsFailure &&
+                             hostOpen.Error ==
+                                 AssemblyFailures.ProcessorCoolerInstalled &&
+                             session.AssemblyBuild.Revision ==
+                                 retainedSnapshot.Revision &&
+                             session.AssemblyBuild.ReceiptCount ==
+                                 retainedGateReceiptCount &&
+                             session.Inventory.Revision ==
+                                 retainedGateInventoryRevision &&
+                             session.AssemblyBuild.ProcessorSocketState ==
+                                 ProcessorSocketState.ProcessorRetained;
+            if (!duplicateSeatBlocked ||
+                !crossOrder ||
+                !retainedRemoveGate ||
+                !hostGates)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.retention-contract-failed");
+                yield break;
+            }
+
+            MovePlayerToProcessorCoolerSlot();
+            OperationResult unretain =
+                playerCarry.TryOperateProcessorCoolerRetention();
+            var receiptsAfterUnretain = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt unretainReceipt =
+                receiptsAfterUnretain[receiptsAfterUnretain.Count - 1];
+            OperationResult remove = playerCarry.TryPickup(processorCooler);
+            var receiptsAfterRemove = session.AssemblyBuild.GetReceipts();
+            AssemblyOperationReceipt removeReceipt =
+                receiptsAfterRemove[receiptsAfterRemove.Count - 1];
+            bool removed = unretain.IsSuccess &&
+                           unretainReceipt.OperationKind ==
+                               AssemblyOperationKind.UnretainProcessorCooler &&
+                           unretainReceipt.SourceProcessorCoolerSeatOperationId ==
+                               coolerSeatReceipt.OperationId &&
+                           unretainReceipt.SourceProcessorCoolerRetentionOperationId ==
+                               retainReceipt.OperationId &&
+                           remove.IsSuccess &&
+                           removeReceipt.OperationKind ==
+                               AssemblyOperationKind.RemoveProcessorCooler &&
+                           playerCarry.HeldItem == processorCooler &&
+                           processorCoolerBinding.IsAuthorityInHands &&
+                           session.AssemblyBuild.ProcessorCoolerSlotState ==
+                               ProcessorCoolerSlotState.EmptyOpen;
+            if (!removed)
+            {
+                LogProcessorCoolerSmokeFailure("smoke.cooler-remove-failed");
+                yield break;
+            }
+
+            OperationResult firstRecovery = playerCarry.TryRecoverHeldItem();
+            OperationResult consumedPickup = playerCarry.TryPickup(processorCooler);
+            MovePlayerToProcessorCoolerSlot();
+            OperationResult consumedMode =
+                playerCarry.TrySetProcessorCoolerSeatMode(true);
+            long consumedAssemblyRevision = session.AssemblyBuild.Revision;
+            long consumedInventoryRevision = session.Inventory.Revision;
+            int consumedReceiptCount = session.AssemblyBuild.ReceiptCount;
+            OperationResult consumedSeat =
+                playerCarry.TryConfirmProcessorCoolerSeat();
+            bool consumedBlocked = firstRecovery.IsSuccess &&
+                                   consumedPickup.IsSuccess &&
+                                   consumedMode.IsSuccess &&
+                                   consumedSeat.IsFailure &&
+                                   consumedSeat.Error ==
+                                       AssemblyFailures.ProcessorCoolerTimConsumed &&
+                                   playerCarry.HeldItem == processorCooler &&
+                                   session.AssemblyBuild.Revision ==
+                                       consumedAssemblyRevision &&
+                                   session.Inventory.Revision ==
+                                       consumedInventoryRevision &&
+                                   session.AssemblyBuild.ReceiptCount ==
+                                       consumedReceiptCount &&
+                                   session.AssemblyBuild.ProcessorCoolerSlotState ==
+                                       ProcessorCoolerSlotState.EmptyOpen;
+            OperationResult finalRecovery = playerCarry.TryRecoverHeldItem();
+
+            long finalAssemblyRevision = session.AssemblyBuild.Revision;
+            int finalReceiptCount = session.AssemblyBuild.ReceiptCount;
+            long finalInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> delayedSeatReplay =
+                session.SeatProcessorCooler(
+                    coolerSeatReceipt.OperationId,
+                    coolerSeatReceipt.ProcessorCoolerMountOrientation,
+                    coolerSeatReceipt.SourceAttachOperationId,
+                    coolerSeatReceipt.SourceSecureOperationId,
+                    coolerSeatReceipt.SourceProcessorSeatOperationId,
+                    coolerSeatReceipt.SourceProcessorRetentionOperationId,
+                    coolerSeatReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedRetainReplay =
+                session.RetainProcessorCooler(
+                    retainReceipt.OperationId,
+                    retainReceipt.SourceProcessorCoolerSeatOperationId,
+                    retainReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedUnretainReplay =
+                session.UnretainProcessorCooler(
+                    unretainReceipt.OperationId,
+                    unretainReceipt.SourceProcessorCoolerSeatOperationId,
+                    unretainReceipt.SourceProcessorCoolerRetentionOperationId,
+                    unretainReceipt.ExpectedAssemblyRevision);
+            OperationResult<AssemblyOperationReceipt> delayedRemoveReplay =
+                session.RemoveProcessorCooler(
+                    removeReceipt.OperationId,
+                    removeReceipt.SourceProcessorCoolerSeatOperationId,
+                    removeReceipt.ExpectedAssemblyRevision);
+            bool replayStable = delayedSeatReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedSeatReplay.Value,
+                                    coolerSeatReceipt) &&
+                                delayedRetainReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedRetainReplay.Value,
+                                    retainReceipt) &&
+                                delayedUnretainReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedUnretainReplay.Value,
+                                    unretainReceipt) &&
+                                delayedRemoveReplay.IsSuccess &&
+                                ReferenceEquals(
+                                    delayedRemoveReplay.Value,
+                                    removeReceipt) &&
+                                session.AssemblyBuild.Revision ==
+                                    finalAssemblyRevision &&
+                                session.AssemblyBuild.ReceiptCount ==
+                                    finalReceiptCount &&
+                                session.Inventory.Revision ==
+                                    finalInventoryRevision;
+            bool recovered = consumedBlocked &&
+                             finalRecovery.IsSuccess &&
+                             playerCarry.HeldItem == null &&
+                             session.TryGetProcessorCoolerItem(
+                                 out InventoryItemRecord recoveredCooler) &&
+                             recoveredCooler.Id == session.ProcessorCoolerItemId &&
+                             recoveredCooler.ProductId ==
+                                 session.ProcessorCoolerProductId &&
+                             recoveredCooler.ContainerId ==
+                                 session.WorldFloorContainerId &&
+                             recoveredCooler.StateFlags ==
+                                 InventorySerializedItemStateFlags
+                                     .PreAppliedConsumableConsumed &&
+                             processorCooler.GetInstanceID() ==
+                                 initialCoolerInstanceId &&
+                             processorCooler.transform.parent ==
+                                 initialCoolerParent &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processorCooler.transform.position,
+                                     processorCooler.transform.rotation),
+                                 initialCoolerPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processorCooler.Body.position,
+                                     processorCooler.Body.rotation),
+                                 initialCoolerPose) &&
+                             ApproximatelySamePose(
+                                 new Pose(
+                                     processorCooler.LastSafePosition,
+                                     processorCooler.LastSafeRotation),
+                                 initialCoolerPose) &&
+                             processorCooler.Ownership ==
+                                 PhysicalItemOwnership.World &&
+                             processorCooler.IsStablePlacement &&
+                             CountCanonicalProcessorCoolerProjections(
+                                 session.ProcessorCoolerItemId.Value) == 1 &&
+                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.HandsContainerId).Value == 0 &&
+                             session.Inventory.GetContainerQuantity(
+                                 session.ProcessorCoolerSlotContainerId).Value == 0 &&
+                             session.AssemblyBuild.MotherboardSeatState ==
+                                 AssemblySeatState.SeatedSecured &&
+                             session.AssemblyBuild.ProcessorSocketState ==
+                                 ProcessorSocketState.ProcessorRetained &&
+                             session.AssemblyBuild.ProcessorCoolerSlotState ==
+                                 ProcessorCoolerSlotState.EmptyOpen &&
+                             processorCoolerBinding.ValidateProjectionInvariant()
+                                 .IsSuccess &&
+                             session.ValidateInvariants().IsSuccess;
+            bool authorityIsolated = session.Orders.Revision == orderRevision &&
+                                     session.RetailOffers.Revision == offerRevision &&
+                                     session.RetailBaskets.Revision == basketRevision &&
+                                     session.RetailCheckouts.Revision ==
+                                         checkoutRevision &&
+                                     session.CheckoutSettlements.Revision ==
+                                         settlementRevision &&
+                                     session.CustomerVisits.Revision == visitRevision &&
+                                     session.CustomerConsultations.Revision ==
+                                         consultationRevision &&
+                                     session.CustomerOfferActions.Revision ==
+                                         actionRevision &&
+                                     session.AssemblyBuild.MemorySlotState ==
+                                         MemorySlotState.EmptyOpen &&
+                                     session.AssemblyBuild.StorageSlotState ==
+                                         StorageSlotState.EmptyOpen;
+            if (!replayStable || !recovered || !authorityIsolated)
+            {
+                LogProcessorCoolerSmokeFailure(
+                    !replayStable
+                        ? "smoke.delayed-replay-failed"
+                        : !recovered
+                            ? "smoke.recovery-failed"
+                            : "smoke.authority-isolation-failed");
+                yield break;
+            }
+
+            Debug.Log(
+                "GARAGE_COOLER_RUNTIME_SMOKE cooler-flow=ok preflight=ok " +
+                "socket-interface=ok keyed-orientation=ok tim=pre-applied " +
+                "cross-order=ok duplicate-seat-blocked=ok " +
+                "retained-remove-gate=ok host-gates=ok replay=ok " +
+                "authority-isolated=ok identity=stable recovery=ok");
+            yield return new WaitForEndOfFrame();
+        }
+
         private static void LogMotherboardAssemblySmokeFailure(string code)
         {
             Debug.LogError(
@@ -3434,6 +4066,12 @@ namespace PCShopEmpire3D.Presentation
         {
             Debug.LogError(
                 $"GARAGE_STORAGE_RUNTIME_SMOKE storage-flow=failed code={code}");
+        }
+
+        private static void LogProcessorCoolerSmokeFailure(string code)
+        {
+            Debug.LogError(
+                $"GARAGE_COOLER_RUNTIME_SMOKE cooler-flow=failed code={code}");
         }
 
         private static int CountCanonicalMotherboardProjections(string canonicalItemId)
@@ -3485,6 +4123,23 @@ namespace PCShopEmpire3D.Presentation
         }
 
         private static int CountCanonicalStorageProjections(string canonicalItemId)
+        {
+            int count = 0;
+            foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
+                         FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+            {
+                if (item != null && item.ItemIdValue == canonicalItemId)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static int CountCanonicalProcessorCoolerProjections(
+            string canonicalItemId)
         {
             int count = 0;
             foreach (PhysicalItemProjection item in FindObjectsByType<PhysicalItemProjection>(
@@ -3706,6 +4361,27 @@ namespace PCShopEmpire3D.Presentation
         private void MovePlayerToM2StorageSlot()
         {
             Vector3 target = storageSlot.FocusCollider.bounds.center;
+            Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
+            Vector3 horizontalLook = target - playerPosition;
+            horizontalLook.y = 0f;
+            SetPlayerPose(
+                playerPosition,
+                Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+
+            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.rotation = Quaternion.LookRotation(
+                    target - playerCamera.transform.position,
+                    Vector3.up);
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        private void MovePlayerToProcessorCoolerSlot()
+        {
+            Vector3 target = processorCoolerSlot.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.95f, 0.05f, 3.15f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;

@@ -97,6 +97,38 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns five distinct managed
+    /// serialized-item containers. Validation is all-or-none and advances Inventory by
+    /// exactly one revision only after all five capabilities can be published together.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessQuintuple
+    {
+        internal InventorySerializedTransferAccessQuintuple(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second,
+            InventorySerializedTransferAccess third,
+            InventorySerializedTransferAccess fourth,
+            InventorySerializedTransferAccess fifth)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+            Fourth = fourth;
+            Fifth = fifth;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+
+        internal InventorySerializedTransferAccess Third { get; }
+
+        internal InventorySerializedTransferAccess Fourth { get; }
+
+        internal InventorySerializedTransferAccess Fifth { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -108,7 +140,11 @@ namespace PCShopEmpire3D.Inventory
             StableId<ItemInstanceIdScope> itemId,
             StableId<ContainerIdScope> sourceContainerId,
             StableId<ContainerIdScope> targetContainerId,
-            InventorySerializedTransferAccess access = null)
+            InventorySerializedTransferAccess access = null,
+            InventorySerializedItemStateFlags requiredAbsentStateFlags =
+                InventorySerializedItemStateFlags.None,
+            InventorySerializedItemStateFlags stateFlagsToAdd =
+                InventorySerializedItemStateFlags.None)
         {
             Owner = owner;
             ExpectedRevision = expectedRevision;
@@ -116,11 +152,17 @@ namespace PCShopEmpire3D.Inventory
             SourceContainerId = sourceContainerId;
             TargetContainerId = targetContainerId;
             Access = access;
+            RequiredAbsentStateFlags = requiredAbsentStateFlags;
+            StateFlagsToAdd = stateFlagsToAdd;
         }
 
         internal InventoryAuthority Owner { get; }
 
         internal InventorySerializedTransferAccess Access { get; }
+
+        internal InventorySerializedItemStateFlags RequiredAbsentStateFlags { get; }
+
+        internal InventorySerializedItemStateFlags StateFlagsToAdd { get; }
 
         public long ExpectedRevision { get; }
 
@@ -505,6 +547,90 @@ namespace PCShopEmpire3D.Inventory
                     fourth));
         }
 
+        internal OperationResult<InventorySerializedTransferAccessQuintuple>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId,
+                StableId<ContainerIdScope> thirdContainerId,
+                StableId<ContainerIdScope> fourthContainerId,
+                StableId<ContainerIdScope> fifthContainerId)
+        {
+            if (!_containers.ContainsKey(firstContainerId) ||
+                !_containers.ContainsKey(secondContainerId) ||
+                !_containers.ContainsKey(thirdContainerId) ||
+                !_containers.ContainsKey(fourthContainerId) ||
+                !_containers.ContainsKey(fifthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuintuple>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            if (firstContainerId == secondContainerId ||
+                firstContainerId == thirdContainerId ||
+                firstContainerId == fourthContainerId ||
+                firstContainerId == fifthContainerId ||
+                secondContainerId == thirdContainerId ||
+                secondContainerId == fourthContainerId ||
+                secondContainerId == fifthContainerId ||
+                thirdContainerId == fourthContainerId ||
+                thirdContainerId == fifthContainerId ||
+                fourthContainerId == fifthContainerId)
+            {
+                return OperationResult<InventorySerializedTransferAccessQuintuple>.Fail(
+                    InventoryFailures.SameContainer);
+            }
+
+            if (_managedSerializedTransferContainers.ContainsKey(firstContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(secondContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(thirdContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(fourthContainerId) ||
+                _managedSerializedTransferContainers.ContainsKey(fifthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuintuple>.Fail(
+                    InventoryFailures.SerializedTransferContainerManaged);
+            }
+
+            if (GetContainerLoadUnsafe(firstContainerId) != 0 ||
+                GetContainerLoadUnsafe(secondContainerId) != 0 ||
+                GetContainerLoadUnsafe(thirdContainerId) != 0 ||
+                GetContainerLoadUnsafe(fourthContainerId) != 0 ||
+                GetContainerLoadUnsafe(fifthContainerId) != 0 ||
+                HasReservationTargetingContainerUnsafe(firstContainerId) ||
+                HasReservationTargetingContainerUnsafe(secondContainerId) ||
+                HasReservationTargetingContainerUnsafe(thirdContainerId) ||
+                HasReservationTargetingContainerUnsafe(fourthContainerId) ||
+                HasReservationTargetingContainerUnsafe(fifthContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessQuintuple>.Fail(
+                    InventoryFailures.SerializedTransferContainerOccupied);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessQuintuple>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var first = new InventorySerializedTransferAccess(this, firstContainerId);
+            var second = new InventorySerializedTransferAccess(this, secondContainerId);
+            var third = new InventorySerializedTransferAccess(this, thirdContainerId);
+            var fourth = new InventorySerializedTransferAccess(this, fourthContainerId);
+            var fifth = new InventorySerializedTransferAccess(this, fifthContainerId);
+            _managedSerializedTransferContainers.Add(firstContainerId, first);
+            _managedSerializedTransferContainers.Add(secondContainerId, second);
+            _managedSerializedTransferContainers.Add(thirdContainerId, third);
+            _managedSerializedTransferContainers.Add(fourthContainerId, fourth);
+            _managedSerializedTransferContainers.Add(fifthContainerId, fifth);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessQuintuple>.Success(
+                new InventorySerializedTransferAccessQuintuple(
+                    first,
+                    second,
+                    third,
+                    fourth,
+                    fifth));
+        }
+
         public OperationResult ReceiveSerializedItem(
             StableId<ItemInstanceIdScope> itemId,
             StableId<ProductDefinitionIdScope> productId,
@@ -795,6 +921,37 @@ namespace PCShopEmpire3D.Inventory
             StableId<ContainerIdScope> targetContainerId,
             InventorySerializedTransferAccess access)
         {
+            return PrepareSerializedItemTransfer(
+                itemId,
+                targetContainerId,
+                access,
+                InventorySerializedItemStateFlags.None,
+                InventorySerializedItemStateFlags.None);
+        }
+
+        internal OperationResult<InventorySerializedTransferPlan>
+            PrepareSerializedItemTransferAndConsumePreAppliedState(
+                StableId<ItemInstanceIdScope> itemId,
+                StableId<ContainerIdScope> targetContainerId,
+                InventorySerializedTransferAccess access)
+        {
+            const InventorySerializedItemStateFlags consumed =
+                InventorySerializedItemStateFlags.PreAppliedConsumableConsumed;
+            return PrepareSerializedItemTransfer(
+                itemId,
+                targetContainerId,
+                access,
+                consumed,
+                consumed);
+        }
+
+        private OperationResult<InventorySerializedTransferPlan> PrepareSerializedItemTransfer(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedTransferAccess access,
+            InventorySerializedItemStateFlags requiredAbsentStateFlags,
+            InventorySerializedItemStateFlags stateFlagsToAdd)
+        {
             if (!_items.TryGetValue(itemId, out InventoryItemRecord item))
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
@@ -811,6 +968,20 @@ namespace PCShopEmpire3D.Inventory
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
                     InventoryFailures.SameContainer);
+            }
+
+            if (!AreValidSerializedItemStateFlags(requiredAbsentStateFlags) ||
+                !AreValidSerializedItemStateFlags(stateFlagsToAdd) ||
+                requiredAbsentStateFlags != stateFlagsToAdd)
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.SerializedItemStateInvalid);
+            }
+
+            if ((item.StateFlags & requiredAbsentStateFlags) != 0)
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.SerializedItemStateConflict);
             }
 
             Failure accessFailure = ValidateSerializedTransferAccess(
@@ -847,7 +1018,9 @@ namespace PCShopEmpire3D.Inventory
                     itemId,
                     item.ContainerId,
                     targetContainerId,
-                    access));
+                    access,
+                    requiredAbsentStateFlags,
+                    stateFlagsToAdd));
         }
 
         internal OperationResult CommitPreparedSerializedItemTransfer(
@@ -858,7 +1031,10 @@ namespace PCShopEmpire3D.Inventory
                 plan.ItemId.IsEmpty ||
                 plan.SourceContainerId.IsEmpty ||
                 plan.TargetContainerId.IsEmpty ||
-                plan.SourceContainerId == plan.TargetContainerId)
+                plan.SourceContainerId == plan.TargetContainerId ||
+                !AreValidSerializedItemStateFlags(plan.RequiredAbsentStateFlags) ||
+                !AreValidSerializedItemStateFlags(plan.StateFlagsToAdd) ||
+                plan.RequiredAbsentStateFlags != plan.StateFlagsToAdd)
             {
                 return OperationResult.Fail(InventoryFailures.SerializedTransferPlanInvalid);
             }
@@ -877,7 +1053,12 @@ namespace PCShopEmpire3D.Inventory
             }
 
             OperationResult<InventorySerializedTransferPlan> current =
-                PrepareSerializedItemTransfer(plan.ItemId, plan.TargetContainerId, plan.Access);
+                PrepareSerializedItemTransfer(
+                    plan.ItemId,
+                    plan.TargetContainerId,
+                    plan.Access,
+                    plan.RequiredAbsentStateFlags,
+                    plan.StateFlagsToAdd);
             if (current.IsFailure)
             {
                 return current.Error == InventoryFailures.RevisionOverflow
@@ -896,7 +1077,8 @@ namespace PCShopEmpire3D.Inventory
                 item.ProductId,
                 plan.TargetContainerId,
                 item.Condition,
-                item.UnitCost);
+                item.UnitCost,
+                item.StateFlags | plan.StateFlagsToAdd);
             Revision++;
             return OperationResult.Success();
         }
@@ -1623,6 +1805,7 @@ namespace PCShopEmpire3D.Inventory
                     !_containers.ContainsKey(item.ContainerId) ||
                     !InventoryValidation.IsValidCondition(item.Condition) ||
                     !item.UnitCost.IsValid ||
+                    !AreValidSerializedItemStateFlags(item.StateFlags) ||
                     !ProductHasTrackingPolicy(item.ProductId, ProductTrackingPolicy.SerializedInstance))
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
@@ -1915,6 +2098,14 @@ namespace PCShopEmpire3D.Inventory
             }
 
             return false;
+        }
+
+        private static bool AreValidSerializedItemStateFlags(
+            InventorySerializedItemStateFlags stateFlags)
+        {
+            const InventorySerializedItemStateFlags allKnownFlags =
+                InventorySerializedItemStateFlags.PreAppliedConsumableConsumed;
+            return (stateFlags & ~allKnownFlags) == 0;
         }
 
         private void AdvanceRevision()

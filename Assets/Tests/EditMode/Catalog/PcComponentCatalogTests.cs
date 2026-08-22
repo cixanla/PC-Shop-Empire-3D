@@ -13,8 +13,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             Assert.That((int)PcComponentKind.Processor, Is.EqualTo(2));
             Assert.That((int)PcComponentKind.MemoryModule, Is.EqualTo(3));
             Assert.That((int)PcComponentKind.StorageDevice, Is.EqualTo(4));
+            Assert.That((int)PcComponentKind.ProcessorCooler, Is.EqualTo(5));
             Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
             Assert.That((int)M2StorageType.NvmePcie4X4_2280, Is.EqualTo(1));
+            Assert.That(
+                (int)ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                Is.EqualTo(1));
         }
 
         [Test]
@@ -153,7 +157,35 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
         }
 
         [Test]
-        public void ComponentCatalogRegistersMotherboardProcessorMemoryAndStorageMetadataTogether()
+        public void ProcessorCoolerKeepsTypedCoolerAndSocketCompatibility()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> coolerId =
+                ProductId("component.cooler-lga1700-top-down-air");
+
+            OperationResult<PcComponentSpecification> result =
+                PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    coolerId,
+                    ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                    CpuSocketFamily.Lga1700);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.ProductId, Is.EqualTo(coolerId));
+            Assert.That(result.Value.Kind, Is.EqualTo(PcComponentKind.ProcessorCooler));
+            Assert.That(result.Value.ProcessorCoolerType,
+                Is.EqualTo(ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim));
+            Assert.That(result.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+            Assert.That(result.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(result.Value.DimmType, Is.EqualTo(default(DimmType)));
+            Assert.That(result.Value.M2StorageType,
+                Is.EqualTo(default(M2StorageType)));
+        }
+
+        [Test]
+        public void ComponentCatalogRegistersMotherboardProcessorMemoryStorageAndCoolerMetadataTogether()
         {
             ProductCatalog products = CreateProducts();
             PcComponentSpecification motherboard =
@@ -179,24 +211,77 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     products,
                     ProductId("component.storage-nvme-2280"),
                     M2StorageType.NvmePcie4X4_2280).Value;
+            PcComponentSpecification cooler =
+                PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    ProductId("component.cooler-lga1700-top-down-air"),
+                    ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                    CpuSocketFamily.Lga1700).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
-                new[] { motherboard, processor, memory, storage });
+                new[] { motherboard, processor, memory, storage, cooler });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(4));
+            Assert.That(result.Value.Count, Is.EqualTo(5));
+            Assert.That(result.Value.Get(cooler.ProductId).Value, Is.SameAs(cooler));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
-            Assert.That(result.Value.Specifications[0], Is.SameAs(memory));
-            Assert.That(result.Value.Specifications[1], Is.SameAs(motherboard));
-            Assert.That(result.Value.Specifications[2], Is.SameAs(processor));
-            Assert.That(result.Value.Specifications[3], Is.SameAs(storage));
+            Assert.That(result.Value.Specifications[0], Is.SameAs(cooler));
+            Assert.That(result.Value.Specifications[1], Is.SameAs(memory));
+            Assert.That(result.Value.Specifications[2], Is.SameAs(motherboard));
+            Assert.That(result.Value.Specifications[3], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[4], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
                     PcComponentKind.MemoryModule,
                     MotherboardFormFactor.MicroAtx).Error,
                 Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+        }
+
+        [Test]
+        public void ProcessorCoolerRejectsInvalidDefaultKindAndNonSerializedProductData()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> coolerId =
+                ProductId("component.cooler-lga1700-top-down-air");
+
+            Assert.That(PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    coolerId,
+                    default,
+                    CpuSocketFamily.Lga1700).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+            Assert.That(PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    coolerId,
+                    (ProcessorCoolerType)99,
+                    CpuSocketFamily.Lga1700).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+            Assert.That(PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    coolerId,
+                    ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidCpuSocketFamily));
+            Assert.That(PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    coolerId,
+                    ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                    CpuSocketFamily.Am5).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+            Assert.That(PcComponentSpecification.Create(
+                    products,
+                    coolerId,
+                    PcComponentKind.ProcessorCooler,
+                    MotherboardFormFactor.MicroAtx).Error,
+                Is.EqualTo(CatalogFailures.ComponentMetadataMismatch));
+            Assert.That(PcComponentSpecification.CreateProcessorCooler(
+                    products,
+                    ProductId("consumable.screw"),
+                    ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                    CpuSocketFamily.Lga1700).Error,
+                Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
         }
 
         [Test]
@@ -338,6 +423,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.processor-lga1700", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.memory-ddr5-udimm", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.storage-nvme-2280", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.cooler-lga1700-top-down-air", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

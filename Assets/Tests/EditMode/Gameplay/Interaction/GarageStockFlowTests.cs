@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryAndStorage()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageAndCooler()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(5));
-            Assert.That(session.Components.Count, Is.EqualTo(4));
+            Assert.That(session.Catalog.Count, Is.EqualTo(6));
+            Assert.That(session.Components.Count, Is.EqualTo(5));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -103,7 +103,23 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(storage.Id, Is.EqualTo(session.StorageItemId));
             Assert.That(storage.ProductId, Is.EqualTo(session.StorageProductId));
             Assert.That(storage.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(4));
+            OperationResult<PcComponentSpecification> coolerSpecification =
+                session.Components.Get(session.ProcessorCoolerProductId);
+            Assert.That(coolerSpecification.IsSuccess, Is.True);
+            Assert.That(coolerSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.ProcessorCooler));
+            Assert.That(coolerSpecification.Value.ProcessorCoolerType,
+                Is.EqualTo(ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim));
+            Assert.That(coolerSpecification.Value.CpuSocketFamily,
+                Is.EqualTo(CpuSocketFamily.Lga1700));
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord cooler), Is.True);
+            Assert.That(cooler.Id, Is.EqualTo(session.ProcessorCoolerItemId));
+            Assert.That(cooler.ProductId, Is.EqualTo(session.ProcessorCoolerProductId));
+            Assert.That(cooler.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(cooler.StateFlags,
+                Is.EqualTo(InventorySerializedItemStateFlags.None));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(5));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -128,6 +144,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.StorageStandoffId));
             Assert.That(session.AssemblyBuild.StorageCaptiveScrewId,
                 Is.EqualTo(session.StorageCaptiveScrewId));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerSlotState,
+                Is.EqualTo(ProcessorCoolerSlotState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerSlotId,
+                Is.EqualTo(session.ProcessorCoolerSlotId));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerBracketId,
+                Is.EqualTo(session.ProcessorCoolerBracketId));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

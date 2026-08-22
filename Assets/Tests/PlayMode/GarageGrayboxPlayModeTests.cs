@@ -1366,7 +1366,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery));
             Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
             Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(4));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(5));
             Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
             Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
             Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
@@ -3265,7 +3265,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(4));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(5));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3681,7 +3681,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(4));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(5));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,

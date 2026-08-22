@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -133,7 +134,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Collider focusCollider,
             Transform playerRoot,
             Transform assemblyRoot,
-            LayerMask obstructionMask)
+            LayerMask obstructionMask,
+            IReadOnlyList<Collider> explicitAssemblyBlockers = null)
         {
             if (item == null || focusCollider == null || assemblyRoot == null)
             {
@@ -141,7 +143,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             int overlapCount = Physics.OverlapBoxNonAlloc(
-                candidatePose.position,
+                item.ResolveDropCenter(candidatePose),
                 item.DropHalfExtents,
                 Overlaps,
                 candidatePose.rotation,
@@ -160,7 +162,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     focusCollider,
                     playerRoot,
                     item.transform,
-                    assemblyRoot))
+                    assemblyRoot,
+                    explicitAssemblyBlockers))
                 {
                     return true;
                 }
@@ -171,7 +174,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 : Vector3.forward;
             float distance = Mathf.Max(0.001f, insertionDistance);
             int insertionCount = Physics.BoxCastNonAlloc(
-                candidatePose.position + (normalizedInsertion * distance),
+                item.ResolveDropCenter(candidatePose) +
+                (normalizedInsertion * distance),
                 item.DropHalfExtents,
                 -normalizedInsertion,
                 InsertionHits,
@@ -191,7 +195,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     focusCollider,
                     playerRoot,
                     item.transform,
-                    assemblyRoot))
+                    assemblyRoot,
+                    explicitAssemblyBlockers))
                 {
                     return true;
                 }
@@ -205,13 +210,40 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Collider focusCollider,
             Transform playerRoot,
             Transform itemRoot,
-            Transform assemblyRoot)
+            Transform assemblyRoot,
+            IReadOnlyList<Collider> explicitAssemblyBlockers)
         {
+            if (collider != null &&
+                IsExplicitAssemblyBlocker(collider, explicitAssemblyBlockers))
+            {
+                return false;
+            }
+
             return collider == null ||
                    collider == focusCollider ||
                    IsChildOf(collider.transform, playerRoot) ||
                    IsChildOf(collider.transform, itemRoot) ||
                    IsChildOf(collider.transform, assemblyRoot);
+        }
+
+        private static bool IsExplicitAssemblyBlocker(
+            Collider collider,
+            IReadOnlyList<Collider> explicitAssemblyBlockers)
+        {
+            if (explicitAssemblyBlockers == null)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < explicitAssemblyBlockers.Count; index++)
+            {
+                if (explicitAssemblyBlockers[index] == collider)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsChildOf(Transform candidate, Transform root)

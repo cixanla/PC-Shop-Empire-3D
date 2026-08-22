@@ -137,7 +137,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PhysicalItemProjection memoryModule,
                 M2StorageSlotProjection storageSlot,
                 M2StorageAssemblyItemBinding storageBinding,
-                PhysicalItemProjection storageDevice)
+                PhysicalItemProjection storageDevice,
+                ProcessorCoolerSlotProjection processorCoolerSlot,
+                ProcessorCoolerAssemblyItemBinding processorCoolerBinding,
+                PhysicalItemProjection processorCooler,
+                ProcessorCoolerRuntimeGeometry processorCoolerGeometry)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -152,6 +156,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 StorageSlot = storageSlot;
                 StorageBinding = storageBinding;
                 StorageDevice = storageDevice;
+                ProcessorCoolerSlot = processorCoolerSlot;
+                ProcessorCoolerBinding = processorCoolerBinding;
+                ProcessorCooler = processorCooler;
+                ProcessorCoolerGeometry = processorCoolerGeometry;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -179,6 +187,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public M2StorageAssemblyItemBinding StorageBinding { get; }
 
             public PhysicalItemProjection StorageDevice { get; }
+
+            public ProcessorCoolerSlotProjection ProcessorCoolerSlot { get; }
+
+            public ProcessorCoolerAssemblyItemBinding ProcessorCoolerBinding { get; }
+
+            public PhysicalItemProjection ProcessorCooler { get; }
+
+            public ProcessorCoolerRuntimeGeometry ProcessorCoolerGeometry { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -473,6 +489,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.StorageDevice,
                 assemblyBuild.StorageSlot,
                 GarageStockFlowSession.StorageItemInstanceIdValue);
+            assemblyBuild.ProcessorCoolerBinding.Configure(
+                stockFlow,
+                assemblyBuild.ProcessorCooler,
+                assemblyBuild.ProcessorCoolerSlot,
+                GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -486,6 +507,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureM2StorageSlot(
                 assemblyBuild.StorageSlot,
                 assemblyBuild.StorageBinding);
+            carry.ConfigureProcessorCoolerSlot(
+                assemblyBuild.ProcessorCoolerSlot,
+                assemblyBuild.ProcessorCoolerBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -530,7 +554,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.MemoryModule,
                 assemblyBuild.StorageSlot,
                 assemblyBuild.StorageBinding,
-                assemblyBuild.StorageDevice);
+                assemblyBuild.StorageDevice,
+                assemblyBuild.ProcessorCoolerSlot,
+                assemblyBuild.ProcessorCoolerBinding,
+                assemblyBuild.ProcessorCooler,
+                assemblyBuild.ProcessorCoolerGeometry);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1296,6 +1324,98 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 2f,
                 0.94f);
 
+            Transform processorCoolerSlotRoot = new GameObject(
+                "ProcessorCoolerMountingBracket").transform;
+            processorCoolerSlotRoot.SetParent(processorSocketRoot, false);
+            processorCoolerSlotRoot.localPosition = Vector3.zero;
+
+            Transform processorCoolerSnapAnchor = new GameObject(
+                "ProcessorCoolerSnapAnchor").transform;
+            processorCoolerSnapAnchor.SetParent(processorCoolerSlotRoot, false);
+            processorCoolerSnapAnchor.localPosition = new Vector3(0f, 0f, 0.011f);
+
+            Transform processorCoolerBracketPivot = new GameObject(
+                "ProcessorCoolerBracketPivot").transform;
+            processorCoolerBracketPivot.SetParent(processorCoolerSlotRoot, false);
+            processorCoolerBracketPivot.localPosition = new Vector3(0f, 0f, 0.010f);
+            GameObject bracketHorizontal = CreateDetailCube(
+                "ProcessorCoolerBracketHorizontal",
+                processorCoolerBracketPivot,
+                Vector3.zero,
+                new Vector3(0.112f, 0.012f, 0.005f),
+                brushedSteel);
+            GameObject bracketVertical = CreateDetailCube(
+                "ProcessorCoolerBracketVertical",
+                processorCoolerBracketPivot,
+                Vector3.zero,
+                new Vector3(0.012f, 0.112f, 0.005f),
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(bracketHorizontal.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(bracketVertical.GetComponent<Collider>());
+            DisableDecorativeRendererCost(bracketHorizontal.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(bracketVertical.GetComponent<Renderer>());
+
+            Vector3[] coolerPointPositions =
+            {
+                new Vector3(-0.047f, 0.047f, 0.014f),
+                new Vector3(0.047f, 0.047f, 0.014f),
+                new Vector3(0.047f, -0.047f, 0.014f),
+                new Vector3(-0.047f, -0.047f, 0.014f)
+            };
+            Transform[] coolerRetentionPoints = new Transform[4];
+            for (int pointIndex = 0; pointIndex < coolerRetentionPoints.Length;
+                 pointIndex++)
+            {
+                Transform pointPivot = new GameObject(
+                    $"ProcessorCoolerRetentionPoint_{pointIndex + 1}").transform;
+                pointPivot.SetParent(processorCoolerSlotRoot, false);
+                pointPivot.localPosition = coolerPointPositions[pointIndex];
+                GameObject pointHead = CreateCylinder(
+                    $"ProcessorCoolerRetentionHead_{pointIndex + 1}",
+                    pointPivot,
+                    Vector3.zero,
+                    new Vector3(0.006f, 0.003f, 0.006f),
+                    Quaternion.Euler(90f, 0f, 0f),
+                    brushedSteel);
+                UnityEngine.Object.DestroyImmediate(pointHead.GetComponent<Collider>());
+                DisableDecorativeRendererCost(pointHead.GetComponent<Renderer>());
+                coolerRetentionPoints[pointIndex] = pointPivot;
+            }
+
+            GameObject processorCoolerFocusTarget = new GameObject(
+                "ProcessorCoolerSlotFocusTarget");
+            processorCoolerFocusTarget.transform.SetParent(
+                processorCoolerSlotRoot,
+                false);
+            processorCoolerFocusTarget.transform.localPosition =
+                new Vector3(0f, 0f, 0.055f);
+            processorCoolerFocusTarget.layer = interactableLayer;
+            BoxCollider processorCoolerFocusCollider =
+                processorCoolerFocusTarget.AddComponent<BoxCollider>();
+            processorCoolerFocusCollider.size = new Vector3(0.145f, 0.145f, 0.10f);
+            processorCoolerFocusCollider.isTrigger = false;
+
+            ProcessorCoolerSlotProjection processorCoolerSlot =
+                processorCoolerSlotRoot.gameObject.AddComponent<
+                    ProcessorCoolerSlotProjection>();
+            processorCoolerSlot.Configure(
+                GarageStockFlowSession.ProcessorCoolerSlotIdValue,
+                GarageStockFlowSession.ProcessorCoolerBracketIdValue,
+                new[]
+                {
+                    GarageStockFlowSession.ProcessorCoolerRetentionPoint1IdValue,
+                    GarageStockFlowSession.ProcessorCoolerRetentionPoint2IdValue,
+                    GarageStockFlowSession.ProcessorCoolerRetentionPoint3IdValue,
+                    GarageStockFlowSession.ProcessorCoolerRetentionPoint4IdValue
+                },
+                processorCoolerSnapAnchor,
+                processorCoolerFocusCollider,
+                motherboardRoot.transform,
+                processorCoolerBracketPivot,
+                coolerRetentionPoints,
+                2f,
+                0.94f);
+
             Transform dimmSlotRoot = new GameObject("MotherboardDimmSlotA2").transform;
             dimmSlotRoot.SetParent(motherboardRoot.transform, false);
             dimmSlotRoot.localPosition = new Vector3(0.105f, 0.045f, 0.012f);
@@ -1544,6 +1664,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             BoxCollider memoryCollider = memoryRoot.AddComponent<BoxCollider>();
             memoryCollider.center = new Vector3(0f, 0.004f, 0f);
             memoryCollider.size = new Vector3(0.136f, 0.034f, 0.010f);
+            processorCoolerSlot.ConfigureClearanceBlockers(
+                new Collider[] { memoryCollider });
             SetLayerRecursively(memoryRoot, interactableLayer);
 
             PhysicalItemProjection memoryModule = memoryRoot.AddComponent<
@@ -1653,6 +1775,174 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             M2StorageAssemblyItemBinding storageBinding =
                 storageRoot.AddComponent<M2StorageAssemblyItemBinding>();
 
+            GameObject processorCoolerRoot = new GameObject(
+                "PrototypeProcessorCooler");
+            processorCoolerRoot.transform.SetParent(slice, false);
+            processorCoolerRoot.transform.localPosition =
+                new Vector3(-0.72f, 0.992f, 3.93f);
+            processorCoolerRoot.transform.localRotation =
+                Quaternion.Euler(-90f, 0f, 0f);
+            processorCoolerRoot.layer = interactableLayer;
+
+            Rigidbody processorCoolerBody =
+                processorCoolerRoot.AddComponent<Rigidbody>();
+            processorCoolerBody.mass = 0.52f;
+            processorCoolerBody.useGravity = false;
+            processorCoolerBody.isKinematic = true;
+            processorCoolerBody.interpolation = RigidbodyInterpolation.Interpolate;
+            processorCoolerBody.collisionDetectionMode =
+                CollisionDetectionMode.ContinuousSpeculative;
+
+            GameObject coolerColdPlate = CreateBeveledCube(
+                "ProcessorCoolerColdPlate",
+                processorCoolerRoot.transform,
+                new Vector3(0f, 0f, 0.006f),
+                new Vector3(0.052f, 0.052f, 0.010f),
+                0.002f,
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(coolerColdPlate.GetComponent<Collider>());
+            DisableDecorativeRendererCost(coolerColdPlate.GetComponent<Renderer>());
+
+            GameObject coolerTim = CreateDetailCube(
+                "ProcessorCoolerPreAppliedTim",
+                processorCoolerRoot.transform,
+                new Vector3(0f, 0f, 0.0005f),
+                new Vector3(0.038f, 0.038f, 0.001f),
+                rubber);
+            UnityEngine.Object.DestroyImmediate(coolerTim.GetComponent<Collider>());
+            DisableDecorativeRendererCost(coolerTim.GetComponent<Renderer>());
+
+            Transform coolerBracket = new GameObject(
+                "ProcessorCoolerMountingFrame").transform;
+            coolerBracket.SetParent(processorCoolerRoot.transform, false);
+            coolerBracket.localPosition = new Vector3(0f, 0f, 0.013f);
+            GameObject coolerBracketX = CreateDetailCube(
+                "ProcessorCoolerFrameX",
+                coolerBracket,
+                Vector3.zero,
+                new Vector3(0.116f, 0.012f, 0.006f),
+                brushedSteel);
+            GameObject coolerBracketY = CreateDetailCube(
+                "ProcessorCoolerFrameY",
+                coolerBracket,
+                Vector3.zero,
+                new Vector3(0.012f, 0.116f, 0.006f),
+                brushedSteel);
+            UnityEngine.Object.DestroyImmediate(coolerBracketX.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(coolerBracketY.GetComponent<Collider>());
+            DisableDecorativeRendererCost(coolerBracketX.GetComponent<Renderer>());
+            DisableDecorativeRendererCost(coolerBracketY.GetComponent<Renderer>());
+
+            GameObject coolerFinStack = CreateBeveledCube(
+                "ProcessorCoolerFinStack",
+                processorCoolerRoot.transform,
+                new Vector3(0f, 0f, 0.043f),
+                new Vector3(0.098f, 0.098f, 0.058f),
+                0.004f,
+                metal);
+            UnityEngine.Object.DestroyImmediate(coolerFinStack.GetComponent<Collider>());
+            DisableDecorativeRendererCost(coolerFinStack.GetComponent<Renderer>());
+            for (int finIndex = 0; finIndex < 7; finIndex++)
+            {
+                GameObject fin = CreateDetailCube(
+                    $"ProcessorCoolerFin_{finIndex + 1}",
+                    processorCoolerRoot.transform,
+                    new Vector3(0f, 0f, 0.020f + (finIndex * 0.008f)),
+                    new Vector3(0.106f, 0.106f, 0.0015f),
+                    brushedSteel);
+                UnityEngine.Object.DestroyImmediate(fin.GetComponent<Collider>());
+                DisableDecorativeRendererCost(fin.GetComponent<Renderer>());
+            }
+
+            Transform coolerFan = new GameObject("ProcessorCoolerFan").transform;
+            coolerFan.SetParent(processorCoolerRoot.transform, false);
+            coolerFan.localPosition = new Vector3(0f, 0f, 0.078f);
+            GameObject fanHub = CreateCylinder(
+                "ProcessorCoolerFanHub",
+                coolerFan,
+                Vector3.zero,
+                new Vector3(0.014f, 0.006f, 0.014f),
+                Quaternion.Euler(90f, 0f, 0f),
+                rubber);
+            UnityEngine.Object.DestroyImmediate(fanHub.GetComponent<Collider>());
+            DisableDecorativeRendererCost(fanHub.GetComponent<Renderer>());
+            for (int bladeIndex = 0; bladeIndex < 7; bladeIndex++)
+            {
+                Transform bladePivot = new GameObject(
+                    $"ProcessorCoolerFanBladePivot_{bladeIndex + 1}").transform;
+                bladePivot.SetParent(coolerFan, false);
+                bladePivot.localRotation = Quaternion.Euler(
+                    0f,
+                    0f,
+                    bladeIndex * (360f / 7f));
+                GameObject blade = CreateBeveledCube(
+                    $"ProcessorCoolerFanBlade_{bladeIndex + 1}",
+                    bladePivot,
+                    new Vector3(0.026f, 0f, 0f),
+                    new Vector3(0.042f, 0.012f, 0.004f),
+                    0.002f,
+                    rubber,
+                    false);
+                UnityEngine.Object.DestroyImmediate(blade.GetComponent<Collider>());
+                DisableDecorativeRendererCost(blade.GetComponent<Renderer>());
+            }
+
+            Transform[] coolerGeometryPoints = new Transform[4];
+            for (int pointIndex = 0; pointIndex < coolerGeometryPoints.Length;
+                 pointIndex++)
+            {
+                Transform point = new GameObject(
+                    $"ProcessorCoolerFastener_{pointIndex + 1}").transform;
+                point.SetParent(processorCoolerRoot.transform, false);
+                point.localPosition = coolerPointPositions[pointIndex];
+                GameObject pointHead = CreateCylinder(
+                    $"ProcessorCoolerFastenerHead_{pointIndex + 1}",
+                    point,
+                    Vector3.zero,
+                    new Vector3(0.006f, 0.004f, 0.006f),
+                    Quaternion.Euler(90f, 0f, 0f),
+                    accent);
+                UnityEngine.Object.DestroyImmediate(pointHead.GetComponent<Collider>());
+                DisableDecorativeRendererCost(pointHead.GetComponent<Renderer>());
+                coolerGeometryPoints[pointIndex] = point;
+            }
+
+            BoxCollider processorCoolerCollider =
+                processorCoolerRoot.AddComponent<BoxCollider>();
+            processorCoolerCollider.center = new Vector3(0f, 0f, 0.040f);
+            processorCoolerCollider.size = new Vector3(0.120f, 0.120f, 0.082f);
+            SetLayerRecursively(processorCoolerRoot, interactableLayer);
+
+            PhysicalItemProjection processorCooler =
+                processorCoolerRoot.AddComponent<PhysicalItemProjection>();
+            processorCooler.Configure(
+                GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue,
+                GarageStockFlowSession.ProcessorCoolerDisplayName,
+                processorCoolerBody,
+                new Vector3(0.060f, 0.060f, 0.043f),
+                new Vector3(0f, -0.075f, 0f),
+                new Vector3(0f, 180f, 0f),
+                PhysicalCarryProfile.PcComponent,
+                new Vector3(0f, 0f, 0.040f));
+            ProcessorCoolerAssemblyItemBinding processorCoolerBinding =
+                processorCoolerRoot.AddComponent<
+                    ProcessorCoolerAssemblyItemBinding>();
+            ProcessorCoolerRuntimeGeometry processorCoolerGeometry =
+                processorCoolerRoot.AddComponent<ProcessorCoolerRuntimeGeometry>();
+            processorCoolerGeometry.Configure(
+                coolerColdPlate.transform,
+                coolerTim.transform,
+                coolerFinStack.transform,
+                coolerFan,
+                coolerBracket,
+                coolerGeometryPoints);
+            ProcessorCoolerRuntimeSmokeMarker processorCoolerSmoke =
+                processorCoolerRoot.AddComponent<ProcessorCoolerRuntimeSmokeMarker>();
+            processorCoolerSmoke.Configure(
+                processorCoolerGeometry,
+                processorCoolerSlot,
+                processorCoolerBinding);
+
             return new AssemblyBuildResult(
                 seat,
                 fastener,
@@ -1666,7 +1956,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 memoryModule,
                 storageSlot,
                 storageBinding,
-                storageDevice);
+                storageDevice,
+                processorCoolerSlot,
+                processorCoolerBinding,
+                processorCooler,
+                processorCoolerGeometry);
         }
 
         private static void BuildLighting(

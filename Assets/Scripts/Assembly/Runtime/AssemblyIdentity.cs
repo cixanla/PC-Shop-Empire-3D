@@ -37,4 +37,12 @@ namespace PCShopEmpire3D.Assembly
     public sealed class AssemblyStorageStandoffIdScope : IStableIdScope
     {
     }
+
+    public sealed class AssemblyProcessorCoolerBracketIdScope : IStableIdScope
+    {
+    }
+
+    public sealed class AssemblyProcessorCoolerRetentionPointIdScope : IStableIdScope
+    {
+    }
 }

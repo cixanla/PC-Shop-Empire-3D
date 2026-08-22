@@ -26,6 +26,7 @@ namespace PCShopEmpire3D.World.Interaction
         [SerializeField] private PhysicalCarryProfile carryProfile = PhysicalCarryProfile.SmallBox;
         [SerializeField] private Rigidbody body;
         [SerializeField] private Vector3 carryHalfExtents = new Vector3(0.275f, 0.25f, 0.275f);
+        [SerializeField] private Vector3 dropLocalCenter;
         [SerializeField] private Vector3 carryLocalPosition;
         [SerializeField] private Vector3 carryLocalEulerAngles;
         [SerializeField] private float recoveryFloorY = -20f;
@@ -64,6 +65,14 @@ namespace PCShopEmpire3D.World.Interaction
         public Vector3 CarryHalfExtents => carryHalfExtents;
 
         public Vector3 DropHalfExtents => Vector3.Scale(carryHalfExtents, Abs(transform.lossyScale));
+
+        public Vector3 ResolveDropCenter(Pose worldPose)
+        {
+            return worldPose.position +
+                   (worldPose.rotation * Vector3.Scale(
+                       dropLocalCenter,
+                       transform.lossyScale));
+        }
 
         public Vector3 InteractionCenter
         {
@@ -146,14 +155,43 @@ namespace PCShopEmpire3D.World.Interaction
             Vector3 localCarryEulerAngles,
             PhysicalCarryProfile physicalCarryProfile = PhysicalCarryProfile.SmallBox)
         {
+            Configure(
+                stableItemId,
+                playerFacingName,
+                rigidbody,
+                halfExtents,
+                localCarryPosition,
+                localCarryEulerAngles,
+                physicalCarryProfile,
+                Vector3.zero);
+        }
+
+        public void Configure(
+            string stableItemId,
+            string playerFacingName,
+            Rigidbody rigidbody,
+            Vector3 halfExtents,
+            Vector3 localCarryPosition,
+            Vector3 localCarryEulerAngles,
+            PhysicalCarryProfile physicalCarryProfile,
+            Vector3 localDropCenter)
+        {
             itemId = StableId<PhysicalItemIdScope>.Parse(stableItemId).Value;
             displayName = string.IsNullOrWhiteSpace(playerFacingName)
                 ? throw new ArgumentException("A display name is required.", nameof(playerFacingName))
                 : playerFacingName;
             body = rigidbody != null ? rigidbody : throw new ArgumentNullException(nameof(rigidbody));
             PhysicalCarryProfileRules.Resolve(physicalCarryProfile);
+            if (!IsFinite(localDropCenter))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(localDropCenter),
+                    "Drop center must contain finite values.");
+            }
+
             carryProfile = physicalCarryProfile;
             carryHalfExtents = ClampHalfExtents(halfExtents);
+            dropLocalCenter = localDropCenter;
             carryLocalPosition = localCarryPosition;
             carryLocalEulerAngles = localCarryEulerAngles;
             CacheColliders();
@@ -359,6 +397,56 @@ namespace PCShopEmpire3D.World.Interaction
                 _lastSafePosition = transform.position;
                 _lastSafeRotation = transform.rotation;
             }
+        }
+
+        public OperationResult RestoreLastSafePoseSnapshot(Pose safePose)
+        {
+            Quaternion rotation = safePose.rotation;
+            if (!IsFinite(safePose.position) ||
+                !float.IsFinite(rotation.x) ||
+                !float.IsFinite(rotation.y) ||
+                !float.IsFinite(rotation.z) ||
+                !float.IsFinite(rotation.w) ||
+                Quaternion.Dot(rotation, rotation) <= Mathf.Epsilon)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.safe-pose-invalid"));
+            }
+
+            _lastSafePosition = safePose.position;
+            _lastSafeRotation = Quaternion.Normalize(rotation);
+            return OperationResult.Success();
+        }
+
+        public OperationResult SynchronizeStableWorldPose(Pose worldPose)
+        {
+            EnsureRuntimeReferences();
+            if (Ownership != PhysicalItemOwnership.World || !IsStablePlacement)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.stable-world-pose-unavailable"));
+            }
+
+            Quaternion rotation = worldPose.rotation;
+            if (!IsFinite(worldPose.position) ||
+                !float.IsFinite(rotation.x) ||
+                !float.IsFinite(rotation.y) ||
+                !float.IsFinite(rotation.z) ||
+                !float.IsFinite(rotation.w) ||
+                Quaternion.Dot(rotation, rotation) <= Mathf.Epsilon)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.stable-world-pose-invalid"));
+            }
+
+            ClearDynamicMotion();
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.None;
+            SetWorldPose(new Pose(worldPose.position, Quaternion.Normalize(rotation)));
+            Physics.SyncTransforms();
+            RecordSafePose();
+            return OperationResult.Success();
         }
 
         private void Awake()

@@ -343,7 +343,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 orientation,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -561,7 +571,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
             _receipts.Add(operationId, receipt);
             return OperationResult<AssemblyOperationReceipt>.Success(receipt);
         }
@@ -607,7 +627,17 @@ namespace PCShopEmpire3D.Assembly
                 sourceMemoryRetentionOperationId,
                 default,
                 _storageSlotState,
-                _storageSlotState);
+                _storageSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerSlotState,
+                _processorCoolerSlotState,
+                default,
+                default,
+                default,
+                _processorCoolerTimState,
+                _processorCoolerTimState);
         }
 
         private Failure ValidateSeatMemoryModule(

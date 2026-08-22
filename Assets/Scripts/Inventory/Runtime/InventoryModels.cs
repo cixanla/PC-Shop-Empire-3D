@@ -186,6 +186,13 @@ namespace PCShopEmpire3D.Inventory
         }
     }
 
+    [Flags]
+    public enum InventorySerializedItemStateFlags
+    {
+        None = 0,
+        PreAppliedConsumableConsumed = 1 << 0
+    }
+
     public sealed class InventoryItemRecord
     {
         internal InventoryItemRecord(
@@ -193,13 +200,16 @@ namespace PCShopEmpire3D.Inventory
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> containerId,
             InventoryCondition condition,
-            InventoryUnitCost unitCost)
+            InventoryUnitCost unitCost,
+            InventorySerializedItemStateFlags stateFlags =
+                InventorySerializedItemStateFlags.None)
         {
             Id = id;
             ProductId = productId;
             ContainerId = containerId;
             Condition = condition;
             UnitCost = unitCost;
+            StateFlags = stateFlags;
         }
 
         public StableId<ItemInstanceIdScope> Id { get; }
@@ -211,6 +221,8 @@ namespace PCShopEmpire3D.Inventory
         public InventoryCondition Condition { get; }
 
         public InventoryUnitCost UnitCost { get; }
+
+        public InventorySerializedItemStateFlags StateFlags { get; }
     }
 
     public sealed class InventoryBatchRecord
@@ -393,6 +405,10 @@ namespace PCShopEmpire3D.Inventory
             Failure.FromCode("inventory.serialized-transfer-container.managed");
         public static readonly Failure SerializedTransferContainerOccupied =
             Failure.FromCode("inventory.serialized-transfer-container.occupied");
+        public static readonly Failure SerializedItemStateInvalid =
+            Failure.FromCode("inventory.serialized-item-state.invalid");
+        public static readonly Failure SerializedItemStateConflict =
+            Failure.FromCode("inventory.serialized-item-state.conflict");
         public static readonly Failure InvalidReservationId = Failure.FromCode("inventory.reservation-id.invalid");
         public static readonly Failure InvalidClaimId = Failure.FromCode("inventory.claim-id.invalid");
         public static readonly Failure DuplicateReservation = Failure.FromCode("inventory.reservation.duplicate");
