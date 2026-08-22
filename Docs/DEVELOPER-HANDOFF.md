@@ -20,7 +20,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Inventory authority altı managed container'ı atomik claim eder. Assembly supported runtime'da yalnız `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained` state'ini, exact receipt lineage/replay'i, installed-card motherboard-detach gate'ini ve no-mutation failure yollarını kabul eder.
 - Oyuncu gerçek keyboard/mouse veya gamepad ile guided mode, keyed 0°/180° orientation, PCIe seat, görünür slot-latch/rear-bracket retain-unretain ve same-instance remove/recovery akışını oynar. Generic placement/stack/cart bypass'ı kapalıdır.
 - Final EditMode `548/548`, PlayMode `43/43`; Universal macOS build `328781520` bayt ve aktif Apple Silicon/Metal 1280×720 exact r28 GPU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
-- Feature `1b29ad2` private `main`e push edilmiş ve Guard `32599710154` başarılıdır. Source/docs Guard ile acceptance `20/20` ve Issue/Roadmap `Done` final metadata adımında kaydedilecektir.
+- Feature `1b29ad2` ve source/docs `a5bbca4` private `main`e push edilmiştir; Guard `32599710154` ve `32600012769` başarılı, acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`dur. Parent Epic #10 açık/In Progress kalır.
 - Fiziksel USB kullanıcı talimatıyla ertelendi. Issue #58'in 717/717 yerel staging'i korunur; Issue #59 için henüz fiziksel USB milestone/readback iddiası yoktur. Kullanıcı USB'yi yeniden bağladığını söyleyene kadar USB sorgulanmaz ve geliştirme durmaz.
 - Ayrıntı: `Docs/ADR-0037-DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION-CHECKPOINT-2026-08-22.md`.
 - PSU, PCIe power cabling, alternate card/slot biçimleri, tam benchmark, final art ve native Windows/Steam ayrı kapılardır.
@@ -183,7 +183,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Issue #59'un kaynak/test/build/native-runtime/feature-CI kapıları tamamlandı; source/docs CI ile acceptance 20/20/Issue/Roadmap kapanışı final metadata adımıdır. Ardıl bounded Epic #10 adayı yalnız tek fiziksel PSU seating/retention akışıdır; PCIe/PSU cabling, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Issue #59 feature `1b29ad2`, source/docs `a5bbca4`, Guard `32599710154` + `32600012769`, acceptance 20/20, Issue `CLOSED/COMPLETED` ve Roadmap `Done` ile kapandı; parent Epic #10 açık/In Progress kaldı. Ardıl bounded Epic #10 adayı yalnız tek fiziksel PSU seating/retention akışıdır; PCIe/PSU cabling, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 

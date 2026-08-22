@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 22 Ağustos 2026<br>
-**Durum:** Issue #59 deterministic single PCIe x16 graphics-card seating + rear-bracket retention kaynak/test/build/native-runtime/feature-CI kapıları tamamlandı; source/docs CI ve GitHub/Roadmap kapanışı final metadata adımında, fiziksel USB kullanıcı talimatıyla ertelendi<br>
+**Durum:** Issue #59 deterministic single PCIe x16 graphics-card seating + rear-bracket retention kaynak/test/build/native-runtime/CI/GitHub kapıları tamamlandı; Issue `CLOSED/COMPLETED`, Roadmap `Done`, fiziksel USB kullanıcı talimatıyla ertelendi<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #59 / Epic #10
@@ -12,7 +12,7 @@
 - Yalnız primary keyed orientation ve exact PCIe x16 interface kabul edilir. Secured host, support, chassis clearance, cooler clearance, range/focus/LOS/obstruction/tie/saturation fail-closed solver ile korunur. Mode kapalı ghost/query sıfırdır; generic placement/stack/cart bypass'ı kapalıdır.
 - GarageGraybox `garage-gpu-rear-bracket-r28-v1`; dual-fan GPU, PCB, PCIe contacts, rear bracket, slot latch ve bracket screw görünürdür. Compact HUD gerçek keyboard/mouse ve gamepad bindinglerini dinamik gösterir.
 - Final EditMode `548/548`, PlayMode `43/43`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328781520` bayt; aktif Apple Silicon/Metal makinesinde 1280×720 readiness ve exact GPU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
-- [Feature Guard 32599710154](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32599710154) başarılıdır. Source/docs Guard, acceptance `20/20` ve Issue #59/Roadmap `Done` final metadata adımında kaydedilecektir.
+- Source/docs `a5bbca473e81455c44d2f95469c8faf2a11046ff`, tree `1aa335510910bc4ebd60367b41e67dbf99d039b8`; [feature Guard 32599710154](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32599710154) ve [source/docs Guard 32600012769](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32600012769) başarılıdır. Acceptance `20/20`; Issue #59 `CLOSED/COMPLETED`, Roadmap `Done`, parent Epic #10 açık/In Progress durumundadır.
 - Kullanıcı fiziksel USB'nin mevcut olmadığını ve yeniden bağlandığında haber vereceğini bildirdi. USB sorgulanmadı; Issue #58'in 717/717 staging'i korunur, Issue #59 için henüz fiziksel milestone/readback iddiası yoktur ve bu dış yedek kapısı gameplay geliştirmesini bloklamaz.
 - Ayrıntı `Docs/ADR-0037-DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION.md` ve tarihli Evidence belgesindedir. PSU, PCIe power cabling, alternate GPU biçimleri, tam benchmark, final art ve Windows/Steam ayrı kapılardır.
 
@@ -198,11 +198,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #59 source/docs Guard ve GitHub/Roadmap kapanış metadatasını tamamlamak.
-2. Sonraki Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel PSU seating/retention bileşenine sınırlamak; kablolama ve tam benchmarkı tek pakette birleştirmemek.
-3. Kullanıcı USB'nin yeniden bağlı olduğunu söylediğinde hazır Issue #58 staging'i ve güncel Issue #59 GitHub checkpointini çakışmayan `.incoming-*`/full-readback disipliniyle fiziksel milestone'a taşımak; o zamana kadar USB'yi sorgulamamak.
-4. Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Sonraki Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel PSU seating/retention bileşenine sınırlamak; kablolama ve tam benchmarkı tek pakette birleştirmemek.
+2. Kullanıcı USB'nin yeniden bağlı olduğunu söylediğinde hazır Issue #58 staging'i ve güncel Issue #59 GitHub checkpointini çakışmayan `.incoming-*`/full-readback disipliniyle fiziksel milestone'a taşımak; o zamana kadar USB'yi sorgulamamak.
+3. Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #59 feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`, EditMode `548/548`, PlayMode `43/43`, Universal Mac `328781520` bayt, aktif Apple Silicon/Metal exact r28 GPU smoke ve başarılı feature Guard `32599710154` ile doğrulandı. Source/docs CI ile acceptance `20/20`/Issue/Roadmap kapanışı final metadata adımıdır. Fiziksel USB ertelendi; Issue #58 staging'i korunur, Issue #59 için milestone/readback iddiası yoktur ve sonraki bounded gameplay bloklanmaz.
+Issue #59 feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, source/docs `a5bbca473e81455c44d2f95469c8faf2a11046ff`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`, EditMode `548/548`, PlayMode `43/43`, Universal Mac `328781520` bayt, aktif Apple Silicon/Metal exact r28 GPU smoke ve başarılı Guard `32599710154` + `32600012769` ile kapandı. Acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress kalır. Fiziksel USB ertelendi; Issue #58 staging'i korunur, Issue #59 için milestone/readback iddiası yoktur ve sonraki bounded gameplay bloklanmaz.
