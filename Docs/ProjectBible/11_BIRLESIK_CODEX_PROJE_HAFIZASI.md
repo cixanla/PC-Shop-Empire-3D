@@ -301,6 +301,16 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Fiziksel USB kullanıcı talimatıyla ertelendi; 717/717 doğrulanmış `f7b2b9bafee9529d95431bbc90914ba51ab24e01de9a0d5d77a53f26cb5626a5` yerel staging hazırdır. Kullanıcı USB'nin bağlandığını söyleyene kadar USB sorgulanmaz ve gameplay geliştirmesi sürer.
 - Ayrı paste/reapplication, liquid cooling, GPU/PSU/cabling, tam benchmark ve Windows/Steam ayrı bounded kapılardır.
 
+## 9.3 Issue #59 deterministic single PCIe x16 graphics-card seating checkpoint'i
+
+- Epic #10'un yedinci bounded child paketi [Issue #59](https://github.com/cixanla/PC-Shop-Empire-3D/issues/59) ile canonical Northstar A60 ProductId'sini kullanan ayrı exact serialized assembly GPU item'ı, tek PCIe x16 slot, slot latch, rear bracket ve bracket fastener akışına sınırlandı; shadow SKU oluşturulmadı.
+- Feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`; six-container atomic claim, `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained`, exact receipt replay, installed-GPU motherboard-detach gate ve same-instance recovery ekledi.
+- GarageGraybox r28'de dual-fan shroud, PCB, PCIe contacts, rear bracket, slot latch ve screw görünürdür. Presentation authority değildir; generic placement/stack/cart yolu fail-closed'dur.
+- Gerçek keyboard/mouse ve gamepad akışı, dynamic compact HUD, pause/co-edge drain, wrong-orientation/interface/chassis-clearance/cooler-clearance/obstruction/duplicate-seat/retained-remove no-mutation kapılarıyla testlidir.
+- Final EditMode `548/548`, PlayMode `43/43`, Universal macOS `328781520` bayt ve aktif Apple Silicon/Metal 1280×720 exact GPU smoke başarılıdır. Feature Guard `32599710154` başarılı; source/docs Guard ile acceptance `20/20`/Issue/Roadmap `Done` final metadata adımında kaydedilecektir.
+- Fiziksel USB kullanıcı talimatıyla ertelendi; Issue #58'in 717/717 staging'i korunur, Issue #59 için henüz milestone/readback iddiası yoktur. Kullanıcı USB'nin bağlandığını söyleyene kadar USB sorgulanmaz ve gameplay geliştirmesi sürer.
+- PSU, PCIe power cabling, alternate GPU dimensions/slots, tam benchmark ve Windows/Steam ayrı bounded kapılardır.
+
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
 - Aynı karar kullanıcıya tekrar sorulmadan önce bu belge ve tam konuşma arşivi aranır.
@@ -315,4 +325,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #58 feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, source/docs `2e848e3`, EditMode 521/521, PlayMode 38/38, Universal Mac `328534723` bayt, aktif Apple Silicon/Metal exact r27 cooler smoke ve iki başarılı Guard ile kapandı. Acceptance 19/19, Issue/Roadmap Done'dur; fiziksel USB ertelendi ve 717/717 staging hazırdır. Sonraki bounded Epic #10 child'ına devam edilir.
+> Issue #59 feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, EditMode 548/548, PlayMode 43/43, Universal Mac `328781520` bayt, aktif Apple Silicon/Metal exact r28 GPU smoke ve başarılı feature Guard `32599710154` ile doğrulandı. Source/docs CI ile acceptance 20/20/Issue/Roadmap kapanışı final metadata adımıdır; fiziksel USB ertelendi, Issue #58 staging'i korunur ve Issue #59 için milestone/readback iddiası yoktur. Ardıl bounded Epic #10 child'ı PSU seating/retention kapsamını kablolama ve benchmarktan ayrı tutmalıdır.

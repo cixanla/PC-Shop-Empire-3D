@@ -6,6 +6,12 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #59 ile canonical Northstar A60 ProductId'sini koruyan ayrı serialized assembly GPU item'ı, atomic six-container Inventory claim, stable PCIe x16 slot/latch/rear-bracket/fastener topology ve `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained` authority akışı eklendi.
+- Keyed 0°/180° orientation, secured-host/PCIe-interface/support/chassis-clearance/cooler-clearance/obstruction kapıları; exact seat/retain/unretain/remove receipt lineage/replay, duplicate-seat, retained-remove ve installed-GPU motherboard-detach no-mutation sözleşmeleri testlerle kilitlendi.
+- GarageGraybox r28'de dual-fan GPU, PCB, PCIe contacts, rear bracket, latch ve screw; gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
+- Feature `1b29ad2`, tree `e7b3d5d`; EditMode 548/548, PlayMode 43/43, 328781520 bayt Universal macOS build ve aktif Apple Silicon/Metal 1280×720 `garage-gpu-rear-bracket-r28-v1` exact GPU smoke başarılıdır.
+- Issue #59 feature Repository Guard `32599710154` başarılıdır. Source/docs Guard, acceptance `20/20` ve Issue/Roadmap `Done` final kapanış metadatasında kaydedilecektir. Fiziksel USB kullanıcı haberine kadar ertelendi; Issue #59 için henüz USB milestone/readback iddiası yoktur.
+
 - Issue #58 ile tek canonical serialized LGA1700 top-down air cooler, atomic five-container Inventory claim, stable slot/bracket/four-point topology ve `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained` authority akışı eklendi.
 - Pre-applied TIM başarılı seat'te yalnız bir kez tüketilir; retain `1→3→2→4`, unretain exact ters sıradadır. Exact receipt lineage/replay, duplicate-consumption rejection, installed-cooler CPU-retention/motherboard-detach gates ve bütün stale/conflict/obstruction/full-hands failure no-mutation sözleşmeleri testlerle kilitlendi.
 - GarageGraybox r27'de cold plate/TIM/fin stack/fan/bracket/dört retention noktası, iki keyed orientation, gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
