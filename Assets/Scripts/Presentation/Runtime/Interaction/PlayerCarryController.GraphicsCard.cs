@@ -8,27 +8,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
 {
     public sealed partial class PlayerCarryController
     {
-        private static readonly Vector3 ProcessorCoolerSeatPreviewSize =
-            new Vector3(0.118f, 0.074f, 0.118f);
+        private static readonly Vector3 GraphicsCardSeatPreviewSize =
+            new Vector3(0.285f, 0.064f, 0.125f);
 
-        [SerializeField] private ProcessorCoolerSlotProjection processorCoolerSlot;
-        [SerializeField] private ProcessorCoolerAssemblyItemBinding processorCoolerBinding;
+        [SerializeField] private GraphicsCardSlotProjection graphicsCardSlot;
+        [SerializeField] private GraphicsCardAssemblyItemBinding graphicsCardBinding;
 
-        public bool IsProcessorCoolerSeatMode { get; private set; }
+        public bool IsGraphicsCardSeatMode { get; private set; }
 
-        public ProcessorCoolerSlotStatus CurrentProcessorCoolerSlotStatus
+        public GraphicsCardSlotStatus CurrentGraphicsCardSlotStatus
         {
             get;
             private set;
-        } = ProcessorCoolerSlotStatus.ContextMissing;
+        } = GraphicsCardSlotStatus.ContextMissing;
 
-        public bool HasProcessorCoolerSlotContext { get; private set; }
+        public bool HasGraphicsCardSlotContext { get; private set; }
 
-        public bool IsProcessorCoolerSlotFocused { get; private set; }
+        public bool IsGraphicsCardSlotFocused { get; private set; }
 
-        public void ConfigureProcessorCoolerSlot(
-            ProcessorCoolerSlotProjection slotProjection,
-            ProcessorCoolerAssemblyItemBinding assemblyBinding)
+        public void ConfigureGraphicsCardSlot(
+            GraphicsCardSlotProjection slotProjection,
+            GraphicsCardAssemblyItemBinding assemblyBinding)
         {
             if (slotProjection == null)
             {
@@ -43,126 +43,126 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (assemblyBinding.Slot != slotProjection)
             {
                 throw new ArgumentException(
-                    "The cooler binding must own the configured slot.",
+                    "The graphics-card binding must own the configured slot.",
                     nameof(assemblyBinding));
             }
 
-            processorCoolerSlot = slotProjection;
-            processorCoolerBinding = assemblyBinding;
-            processorCoolerBinding.SyncProjectionToAuthority();
+            graphicsCardSlot = slotProjection;
+            graphicsCardBinding = assemblyBinding;
+            graphicsCardBinding.SyncProjectionToAuthority();
         }
 
-        public bool MatchesProcessorCoolerConfiguration(
-            ProcessorCoolerSlotProjection slotProjection,
-            ProcessorCoolerAssemblyItemBinding assemblyBinding)
+        public bool MatchesGraphicsCardConfiguration(
+            GraphicsCardSlotProjection slotProjection,
+            GraphicsCardAssemblyItemBinding assemblyBinding)
         {
             return slotProjection != null &&
                    assemblyBinding != null &&
-                   processorCoolerSlot == slotProjection &&
-                   processorCoolerBinding == assemblyBinding &&
+                   graphicsCardSlot == slotProjection &&
+                   graphicsCardBinding == assemblyBinding &&
                    assemblyBinding.Slot == slotProjection;
         }
 
-        public OperationResult TryOperateProcessorCoolerRetention()
+        public OperationResult TryOperateGraphicsCardRetention()
         {
-            if (processorCoolerSlot == null || processorCoolerBinding == null)
+            if (graphicsCardSlot == null || graphicsCardBinding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.context-missing")));
+                    Failure.FromCode("assembly-graphics-card.context-missing")));
             }
 
-            ProcessorCoolerSlotEvaluation evaluation =
-                EvaluateProcessorCoolerSlotInteraction();
-            ApplyProcessorCoolerSlotEvaluation(evaluation);
+            GraphicsCardSlotEvaluation evaluation =
+                EvaluateGraphicsCardSlotInteraction();
+            ApplyGraphicsCardSlotEvaluation(evaluation);
             if (!evaluation.CanOperateRetention)
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode(evaluation.FailureCode)));
             }
 
-            OperationResult result = processorCoolerBinding.TryOperateRetention();
+            OperationResult result = graphicsCardBinding.TryOperateRetention();
             if (result.IsSuccess)
             {
-                UpdateProcessorCoolerSlotFocus();
+                UpdateGraphicsCardSlotFocus();
             }
 
             return Remember(result);
         }
 
-        public OperationResult TrySetProcessorCoolerSeatMode(bool enabled)
+        public OperationResult TrySetGraphicsCardSeatMode(bool enabled)
         {
-            ProcessorCoolerAssemblyItemBinding binding =
-                GetProcessorCoolerBinding(HeldItem);
+            GraphicsCardAssemblyItemBinding binding =
+                GetGraphicsCardBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.nothing-held")));
+                    Failure.FromCode("assembly-graphics-card.nothing-held")));
             }
 
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.paused")));
+                    Failure.FromCode("assembly-graphics-card.paused")));
             }
 
-            SetProcessorCoolerSeatMode(enabled);
+            SetGraphicsCardSeatMode(enabled);
             if (enabled)
             {
-                UpdateProcessorCoolerSeatPreview(binding);
+                UpdateGraphicsCardSeatPreview(binding);
             }
 
             return Remember(OperationResult.Success());
         }
 
-        public OperationResult TryRotateProcessorCoolerSeatPreview()
+        public OperationResult TryRotateGraphicsCardSeatPreview()
         {
-            ProcessorCoolerAssemblyItemBinding binding =
-                GetProcessorCoolerBinding(HeldItem);
+            GraphicsCardAssemblyItemBinding binding =
+                GetGraphicsCardBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.nothing-held")));
+                    Failure.FromCode("assembly-graphics-card.nothing-held")));
             }
 
-            if (!IsProcessorCoolerSeatMode)
+            if (!IsGraphicsCardSeatMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.mode-inactive")));
+                    Failure.FromCode("assembly-graphics-card.mode-inactive")));
             }
 
             _placementRotationQuarterTurns =
                 (_placementRotationQuarterTurns + 1) % 2;
             LastFailureCode = string.Empty;
-            UpdateProcessorCoolerSeatPreview(binding);
+            UpdateGraphicsCardSeatPreview(binding);
             return OperationResult.Success();
         }
 
-        public OperationResult TryConfirmProcessorCoolerSeat()
+        public OperationResult TryConfirmGraphicsCardSeat()
         {
-            ProcessorCoolerAssemblyItemBinding binding =
-                GetProcessorCoolerBinding(HeldItem);
+            GraphicsCardAssemblyItemBinding binding =
+                GetGraphicsCardBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.nothing-held")));
+                    Failure.FromCode("assembly-graphics-card.nothing-held")));
             }
 
-            if (!IsProcessorCoolerSeatMode)
+            if (!IsGraphicsCardSeatMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.mode-inactive")));
+                    Failure.FromCode("assembly-graphics-card.mode-inactive")));
             }
 
-            return TryConfirmProcessorCoolerSeat(
+            return TryConfirmGraphicsCardSeat(
                 binding,
-                EvaluateProcessorCoolerSeat(binding));
+                EvaluateGraphicsCardSeat(binding));
         }
 
-        private OperationResult TryConfirmProcessorCoolerSeat(
-            ProcessorCoolerAssemblyItemBinding binding,
-            ProcessorCoolerSlotEvaluation evaluation)
+        private OperationResult TryConfirmGraphicsCardSeat(
+            GraphicsCardAssemblyItemBinding binding,
+            GraphicsCardSlotEvaluation evaluation)
         {
-            ApplyProcessorCoolerSeatEvaluation(evaluation);
+            ApplyGraphicsCardSeatEvaluation(evaluation);
             if (!evaluation.CanSeat)
             {
                 return Remember(OperationResult.Fail(
@@ -187,10 +187,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(attach);
         }
 
-        private bool ProcessHeldProcessorCoolerInput()
+        private bool ProcessHeldGraphicsCardInput()
         {
-            ProcessorCoolerAssemblyItemBinding binding =
-                GetProcessorCoolerBinding(HeldItem);
+            GraphicsCardAssemblyItemBinding binding =
+                GetGraphicsCardBinding(HeldItem);
             if (binding == null)
             {
                 return false;
@@ -201,22 +201,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetProcessorCoolerSeatMode(!IsProcessorCoolerSeatMode);
+                TrySetGraphicsCardSeatMode(!IsGraphicsCardSeatMode);
                 return true;
             }
 
-            if (IsProcessorCoolerSeatMode &&
+            if (IsGraphicsCardSeatMode &&
                 input.TryConsumeRotatePlacementPressThisFrame())
             {
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TryRotateProcessorCoolerSeatPreview();
+                TryRotateGraphicsCardSeatPreview();
                 return true;
             }
 
-            if (!IsProcessorCoolerSeatMode)
+            if (!IsGraphicsCardSeatMode)
             {
-                UpdateProcessorCoolerSeatPreview(binding);
+                UpdateGraphicsCardSeatPreview(binding);
                 if (input.TryConsumeDropPressThisFrame())
                 {
                     input.TryConsumePrimaryActionPressThisFrame();
@@ -228,74 +228,74 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            ProcessorCoolerSlotEvaluation evaluation =
-                EvaluateProcessorCoolerSeat(binding);
-            ApplyProcessorCoolerSeatEvaluation(evaluation);
+            GraphicsCardSlotEvaluation evaluation =
+                EvaluateGraphicsCardSeat(binding);
+            ApplyGraphicsCardSeatEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmProcessorCoolerSeat(binding, evaluation);
+                TryConfirmGraphicsCardSeat(binding, evaluation);
             }
 
             return true;
         }
 
-        private void SetProcessorCoolerSeatMode(bool enabled)
+        private void SetGraphicsCardSeatMode(bool enabled)
         {
-            IsProcessorCoolerSeatMode = enabled &&
+            IsGraphicsCardSeatMode = enabled &&
                                         HeldItem != null &&
-                                        GetProcessorCoolerBinding(HeldItem) != null;
+                                        GetGraphicsCardBinding(HeldItem) != null;
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsM2StorageSeatMode = false;
-            IsGraphicsCardSeatMode = false;
+            IsProcessorCoolerSeatMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
-            CurrentProcessorCoolerSlotStatus =
-                ProcessorCoolerSlotStatus.ContextMissing;
+            CurrentGraphicsCardSlotStatus =
+                GraphicsCardSlotStatus.ContextMissing;
             LastFailureCode = string.Empty;
-            if (!IsProcessorCoolerSeatMode)
+            if (!IsGraphicsCardSeatMode)
             {
                 _placementRotationQuarterTurns = 0;
                 placementPreview?.Hide();
-                processorCoolerSlot?.ResetFeedback();
+                graphicsCardSlot?.ResetFeedback();
                 SetCarryHandsState(blocked: false);
             }
         }
 
-        private void UpdateProcessorCoolerSeatPreview(
-            ProcessorCoolerAssemblyItemBinding binding)
+        private void UpdateGraphicsCardSeatPreview(
+            GraphicsCardAssemblyItemBinding binding)
         {
-            if (!IsProcessorCoolerSeatMode || HeldItem == null)
+            if (!IsGraphicsCardSeatMode || HeldItem == null)
             {
                 PlacementValid = false;
                 CurrentPlacementStatus = PlacementStatus.ContextMissing;
-                CurrentProcessorCoolerSlotStatus =
-                    ProcessorCoolerSlotStatus.ContextMissing;
+                CurrentGraphicsCardSlotStatus =
+                    GraphicsCardSlotStatus.ContextMissing;
                 CurrentStackSupport = null;
                 placementPreview?.Hide();
-                processorCoolerSlot?.ResetFeedback();
+                graphicsCardSlot?.ResetFeedback();
                 SetCarryHandsState(blocked: false);
                 return;
             }
 
-            ApplyProcessorCoolerSeatEvaluation(
-                EvaluateProcessorCoolerSeat(binding));
+            ApplyGraphicsCardSeatEvaluation(
+                EvaluateGraphicsCardSeat(binding));
         }
 
-        private ProcessorCoolerSlotEvaluation EvaluateProcessorCoolerSeat(
-            ProcessorCoolerAssemblyItemBinding binding)
+        private GraphicsCardSlotEvaluation EvaluateGraphicsCardSeat(
+            GraphicsCardAssemblyItemBinding binding)
         {
-            ProcessorCoolerSlotProjection slotProjection =
-                binding?.Slot ?? processorCoolerSlot;
+            GraphicsCardSlotProjection slotProjection =
+                binding?.Slot ?? graphicsCardSlot;
             if (slotProjection == null)
             {
-                return new ProcessorCoolerSlotEvaluation(
-                    ProcessorCoolerSlotStatus.ContextMissing,
+                return new GraphicsCardSlotEvaluation(
+                    GraphicsCardSlotStatus.ContextMissing,
                     default,
                     false,
                     default);
@@ -303,6 +303,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             binding?.SyncProjectionToAuthority();
             return slotProjection.EvaluateSeat(
+                IsGraphicsCardSeatMode,
                 resolver != null ? resolver.Origin : null,
                 transform,
                 HeldItem,
@@ -312,13 +313,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 binding != null &&
                     binding.IsAuthorityInHands &&
                     binding.IsHostReady &&
-                    !binding.IsSeated);
+                    !binding.IsSeated,
+                binding != null
+                    ? binding.CardInterface
+                    : GraphicsCardPcieInterface.Unknown,
+                binding != null && binding.HasChassisClearance,
+                binding != null && binding.HasCoolerClearance);
         }
 
-        private void ApplyProcessorCoolerSeatEvaluation(
-            ProcessorCoolerSlotEvaluation evaluation)
+        private void ApplyGraphicsCardSeatEvaluation(
+            GraphicsCardSlotEvaluation evaluation)
         {
-            CurrentProcessorCoolerSlotStatus = evaluation.Status;
+            CurrentGraphicsCardSlotStatus = evaluation.Status;
             PlacementValid = evaluation.CanSeat;
             CurrentPlacementStatus = evaluation.CanSeat
                 ? PlacementStatus.Valid
@@ -338,7 +344,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             : PlacementStatus.Blocked,
                         evaluation.Pose,
                         true),
-                    ProcessorCoolerSeatPreviewSize);
+                    GraphicsCardSeatPreviewSize);
             }
             else
             {
@@ -348,78 +354,79 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.CanSeat);
         }
 
-        private void UpdateProcessorCoolerSlotFocus()
+        private void UpdateGraphicsCardSlotFocus()
         {
-            if (processorCoolerSlot == null || processorCoolerBinding == null)
+            if (graphicsCardSlot == null || graphicsCardBinding == null)
             {
-                ResetProcessorCoolerSlotFocus();
+                ResetGraphicsCardSlotFocus();
                 return;
             }
 
-            processorCoolerBinding.SyncProjectionToAuthority();
-            ApplyProcessorCoolerSlotEvaluation(
-                EvaluateProcessorCoolerSlotInteraction());
+            graphicsCardBinding.SyncProjectionToAuthority();
+            ApplyGraphicsCardSlotEvaluation(
+                EvaluateGraphicsCardSlotInteraction());
         }
 
-        private ProcessorCoolerSlotEvaluation
-            EvaluateProcessorCoolerSlotInteraction()
+        private GraphicsCardSlotEvaluation
+            EvaluateGraphicsCardSlotInteraction()
         {
-            return processorCoolerSlot.EvaluateInteraction(
+            return graphicsCardSlot.EvaluateInteraction(
+                true,
                 resolver != null ? resolver.Origin : null,
                 transform,
-                processorCoolerBinding != null
-                    ? processorCoolerBinding.PhysicalItem.transform
+                graphicsCardBinding != null
+                    ? graphicsCardBinding.PhysicalItem.transform
                     : null,
                 obstructionMask,
                 motor == null || motor.IsPaused,
-                processorCoolerBinding != null &&
-                    processorCoolerBinding.IsSeated,
-                processorCoolerBinding != null &&
-                    (processorCoolerBinding.IsRetained ||
-                     processorCoolerBinding.IsHostReady));
+                graphicsCardBinding != null &&
+                    graphicsCardBinding.IsSeated,
+                graphicsCardBinding != null &&
+                    (graphicsCardBinding.IsRetained ||
+                     graphicsCardBinding.IsHostReady));
         }
 
-        private void ApplyProcessorCoolerSlotEvaluation(
-            ProcessorCoolerSlotEvaluation evaluation)
+        private void ApplyGraphicsCardSlotEvaluation(
+            GraphicsCardSlotEvaluation evaluation)
         {
-            CurrentProcessorCoolerSlotStatus = evaluation.Status;
-            IsProcessorCoolerSlotFocused =
+            CurrentGraphicsCardSlotStatus = evaluation.Status;
+            IsGraphicsCardSlotFocused =
                 evaluation.CanOperateRetention || evaluation.CanRemove;
-            HasProcessorCoolerSlotContext = evaluation.HasOwnedContext;
-            if (!IsProcessorCoolerSlotFocused && HasProcessorCoolerSlotContext)
+            HasGraphicsCardSlotContext = evaluation.HasOwnedContext;
+            if (!IsGraphicsCardSlotFocused && HasGraphicsCardSlotContext)
             {
                 LastFailureCode = evaluation.FailureCode;
             }
         }
 
-        private void ResetProcessorCoolerSlotFocus()
+        private void ResetGraphicsCardSlotFocus()
         {
-            IsProcessorCoolerSlotFocused = false;
-            HasProcessorCoolerSlotContext = false;
-            CurrentProcessorCoolerSlotStatus =
-                ProcessorCoolerSlotStatus.ContextMissing;
-            processorCoolerSlot?.ResetFeedback();
+            IsGraphicsCardSlotFocused = false;
+            HasGraphicsCardSlotContext = false;
+            CurrentGraphicsCardSlotStatus =
+                GraphicsCardSlotStatus.ContextMissing;
+            graphicsCardSlot?.ResetFeedback();
         }
 
-        private bool ProcessProcessorCoolerSlotInput()
+        private bool ProcessGraphicsCardSlotInput()
         {
-            if (!IsProcessorCoolerSlotFocused &&
-                !HasProcessorCoolerSlotContext)
+            if (!IsGraphicsCardSlotFocused &&
+                !HasGraphicsCardSlotContext)
             {
                 return false;
             }
 
             FocusedCart = null;
-            FocusedItem = processorCoolerBinding.PhysicalItem;
+            FocusedItem = graphicsCardBinding.PhysicalItem;
             SetHandsState(VisibleHandsState.TargetFocused);
-            if (IsProcessorCoolerSlotFocused)
+            if (IsGraphicsCardSlotFocused)
             {
                 if (input.TryConsumePrimaryActionPressThisFrame())
                 {
                     input.TryConsumeRotatePlacementPressThisFrame();
                     input.TryConsumeInteractPressThisFrame();
                     input.TryConsumeDropPressThisFrame();
-                    TryOperateProcessorCoolerRetention();
+                    TryOperateGraphicsCardRetention();
                     return true;
                 }
 
@@ -427,7 +434,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 {
                     input.TryConsumeRotatePlacementPressThisFrame();
                     input.TryConsumeDropPressThisFrame();
-                    TryPickup(processorCoolerBinding.PhysicalItem);
+                    TryPickup(graphicsCardBinding.PhysicalItem);
                 }
 
                 return true;
@@ -439,30 +446,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             input.TryConsumeDropPressThisFrame();
             if (primaryPressed)
             {
-                TryOperateProcessorCoolerRetention();
+                TryOperateGraphicsCardRetention();
             }
 
             return true;
         }
 
-        private bool ProcessLooseProcessorCoolerPickupInput()
+        private bool ProcessLooseGraphicsCardPickupInput()
         {
             if (resolver == null ||
-                processorCoolerBinding == null ||
-                processorCoolerBinding.IsSeated ||
-                !processorCoolerBinding.IsAuthorityLooseWorld)
+                graphicsCardBinding == null ||
+                graphicsCardBinding.IsSeated ||
+                !graphicsCardBinding.IsAuthorityLooseWorld)
             {
                 return false;
             }
 
             OperationResult<PhysicalItemProjection> target = resolver.Resolve();
             if (target.IsFailure ||
-                target.Value != processorCoolerBinding.PhysicalItem)
+                target.Value != graphicsCardBinding.PhysicalItem)
             {
                 return false;
             }
 
-            ResetProcessorCoolerSlotFocus();
+            ResetGraphicsCardSlotFocus();
             FocusedCart = null;
             FocusedItem = target.Value;
             SetHandsState(VisibleHandsState.TargetFocused);
@@ -476,20 +483,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return true;
         }
 
-        private OperationResult TryPickupProcessorCooler(
+        private OperationResult TryPickupGraphicsCard(
             PhysicalItemProjection item,
-            ProcessorCoolerAssemblyItemBinding binding)
+            GraphicsCardAssemblyItemBinding binding)
         {
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-cooler.paused")));
+                    Failure.FromCode("assembly-graphics-card.paused")));
             }
 
             if (binding.IsRetained)
             {
                 return Remember(OperationResult.Fail(
-                    AssemblyFailures.ProcessorCoolerRetained));
+                    AssemblyFailures.GraphicsCardRetained));
             }
 
             bool wasSeated = binding.IsSeated;
@@ -510,7 +517,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (rollback.IsFailure)
                 {
                     Debug.LogError(
-                        $"PROCESSOR_COOLER_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                        $"GRAPHICS_CARD_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
                 }
 
                 binding.SyncProjectionToAuthority();
@@ -528,30 +535,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return physicalPickup;
         }
 
-        private string GetHeldProcessorCoolerPrompt(
-            ProcessorCoolerAssemblyItemBinding binding,
+        private string GetHeldGraphicsCardPrompt(
+            GraphicsCardAssemblyItemBinding binding,
             string primary,
             string drop,
             string rotate)
         {
-            if (!IsProcessorCoolerSeatMode)
+            if (!IsGraphicsCardSeatMode)
             {
-                return $"{primary}: CPU soğutucusunu hizala • " +
-                       $"{drop}: güvenli bırak • ÖN UYGULAMALI TIM";
+                return $"{primary}: ekran kartını hizala • " +
+                       $"{drop}: güvenli bırak • PCIe x16";
             }
 
-            string state = GetProcessorCoolerStatusLabel(
-                CurrentProcessorCoolerSlotStatus);
+            string state = GetGraphicsCardStatusLabel(
+                CurrentGraphicsCardSlotStatus);
             string orientation = _placementRotationQuarterTurns == 0
                 ? "0°"
                 : "180°";
             return PlacementValid
-                ? $"[OK] 4 NOKTA HİZALI • YÖN {orientation} • " +
+                ? $"[OK] PCIe x16 ANAHTARI HİZALI • YÖN {orientation} • " +
                   $"{drop}: oturt • {rotate}: 180° döndür • {primary}: çık"
                 : $"[X] {state} • {rotate}: 180° döndür • {primary}: çık";
         }
 
-        private string GetProcessorCoolerSlotPrompt()
+        private string GetGraphicsCardSlotPrompt()
         {
             string primary = input != null
                 ? input.PrimaryBindingPrompt
@@ -559,55 +566,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
-            if (!IsProcessorCoolerSlotFocused)
+            if (!IsGraphicsCardSlotFocused)
             {
-                return CurrentProcessorCoolerSlotStatus switch
+                return CurrentGraphicsCardSlotStatus switch
                 {
-                    ProcessorCoolerSlotStatus.LineOfSightBlocked =>
-                        "[X] SOĞUTUCU ENGELLİ • görüş hattını aç",
-                    ProcessorCoolerSlotStatus.Obstructed =>
-                        "[X] SOĞUTUCU ALANI ENGELLİ • önünü aç",
-                    _ => "[X] SOĞUTUCU BAĞLANTISI KULLANILAMIYOR"
+                    GraphicsCardSlotStatus.LineOfSightBlocked =>
+                        "[X] EKRAN KARTI ENGELLİ • görüş hattını aç",
+                    GraphicsCardSlotStatus.ChassisClearanceBlocked =>
+                        "[X] KASA AÇIKLIĞI YETERSİZ",
+                    GraphicsCardSlotStatus.CoolerClearanceBlocked =>
+                        "[X] SOĞUTUCU EKRAN KARTI ALANINI ENGELLİYOR",
+                    GraphicsCardSlotStatus.Obstructed =>
+                        "[X] EKRAN KARTI ALANI ENGELLİ • önünü aç",
+                    _ => "[X] EKRAN KARTI BAĞLANTISI KULLANILAMIYOR"
                 };
             }
 
-            if (CurrentProcessorCoolerSlotStatus ==
-                ProcessorCoolerSlotStatus.ValidSeatedUnsecuredRetentionBlocked)
+            if (CurrentGraphicsCardSlotStatus ==
+                GraphicsCardSlotStatus.ValidSeatedUnsecuredRetentionBlocked)
             {
-                return $"[GEVŞEK] SOĞUTUCU OTURDU • HOST HAZIR DEĞİL • " +
-                       $"{interact}: soğutucuyu çıkar";
+                return $"[GEVŞEK] EKRAN KARTI OTURDU • HOST HAZIR DEĞİL • " +
+                       $"{interact}: ekran kartını çıkar";
             }
 
-            return processorCoolerBinding.IsRetained
-                ? $"[SABİT] 4 NOKTA 1→3→2→4 SIKILI • {primary}: " +
-                  $"4→2→3→1 gevşet • {interact}: çıkarma kilitli"
-                : $"[GEVŞEK] SOĞUTUCU OTURDU • {primary}: " +
-                  $"1→3→2→4 sık • {interact}: soğutucuyu çıkar";
+            return graphicsCardBinding.IsRetained
+                ? $"[SABİT] PCIe MANDALI + ARKA BRAKET KİLİTLİ • {primary}: " +
+                  $"gevşet • {interact}: çıkarma kilitli"
+                : $"[GEVŞEK] EKRAN KARTI OTURDU • {primary}: " +
+                  $"mandal + braketi sabitle • {interact}: ekran kartını çıkar";
         }
 
-        private static string GetProcessorCoolerStatusLabel(
-            ProcessorCoolerSlotStatus status)
+        private static string GetGraphicsCardStatusLabel(
+            GraphicsCardSlotStatus status)
         {
             return status switch
             {
-                ProcessorCoolerSlotStatus.ValidSeat => "4 NOKTA HİZALI",
-                ProcessorCoolerSlotStatus.OutOfRange => "YAKLAŞ",
-                ProcessorCoolerSlotStatus.NotFocused => "CPU SOKETİNİ HEDEFLE",
-                ProcessorCoolerSlotStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
-                ProcessorCoolerSlotStatus.Obstructed => "MONTAJ ALANI ENGELLİ",
-                ProcessorCoolerSlotStatus.Paused => "DURAKLATILDI",
-                ProcessorCoolerSlotStatus.AuthorityBlocked => "HOST HAZIR DEĞİL",
-                ProcessorCoolerSlotStatus.ValidSeatedUnsecuredRetentionBlocked =>
+                GraphicsCardSlotStatus.ValidSeat => "PCIe x16 HİZALI",
+                GraphicsCardSlotStatus.OutOfRange => "YAKLAŞ",
+                GraphicsCardSlotStatus.NotFocused => "PCIe x16 SLOTUNU HEDEFLE",
+                GraphicsCardSlotStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
+                GraphicsCardSlotStatus.InterfaceInvalid => "PCIe TİPİ UYUMSUZ",
+                GraphicsCardSlotStatus.OrientationInvalid => "YÖN TERS",
+                GraphicsCardSlotStatus.Unsupported => "SLOT DESTEĞİ YOK",
+                GraphicsCardSlotStatus.ChassisClearanceBlocked =>
+                    "KASA AÇIKLIĞI YETERSİZ",
+                GraphicsCardSlotStatus.CoolerClearanceBlocked =>
+                    "SOĞUTUCU AÇIKLIĞI YETERSİZ",
+                GraphicsCardSlotStatus.Obstructed => "MONTAJ ALANI ENGELLİ",
+                GraphicsCardSlotStatus.Paused => "DURAKLATILDI",
+                GraphicsCardSlotStatus.AuthorityBlocked => "HOST HAZIR DEĞİL",
+                GraphicsCardSlotStatus.ValidSeatedUnsecuredRetentionBlocked =>
                     "HOST HAZIR DEĞİL",
                 _ => "BAĞLANTI YOK"
             };
         }
 
-        private static ProcessorCoolerAssemblyItemBinding GetProcessorCoolerBinding(
+        private static GraphicsCardAssemblyItemBinding GetGraphicsCardBinding(
             PhysicalItemProjection item)
         {
             return item != null
-                ? item.GetComponent<ProcessorCoolerAssemblyItemBinding>()
+                ? item.GetComponent<GraphicsCardAssemblyItemBinding>()
                 : null;
         }
     }

@@ -1366,7 +1366,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery));
             Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
             Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(5));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(6));
             Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
             Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
             Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
@@ -2736,7 +2736,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(checkoutStation, Is.Not.Null);
             Assert.That(stockFlow.Session.Order.Status, Is.EqualTo(PurchaseOrderStatus.Arrived));
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.Zero);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(item));
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain("teslimatını kabul et"));
             Assert.That(marker.PlayerCarry.PromptText, Does.Contain(marker.PlayerInput.InteractBindingPrompt));
@@ -2811,7 +2812,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.Body.isKinematic, Is.True);
             Assert.That(Vector3.Distance(item.transform.position, shelfPose.position), Is.LessThan(0.001f));
             AssertInventoryLocation(stockFlow, stockFlow.Session.ShelfContainerId);
-            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.StatusText, Does.Contain("RAF A"));
             Assert.That(stockFlow.Session.RetailOffers.Revision, Is.Zero);
             Assert.That(stockFlow.ShelfOfferText.text,
@@ -3061,9 +3064,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Orders.Revision,
                 Is.EqualTo(orderRevisionBeforeReservation));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
-            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
                 stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.ShelfOfferText.text,
                 Does.Contain("MÜŞTERİ: 1 ÜRÜN • AYRILDI"));
             Assert.That(stockFlow.StatusText, Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
@@ -3102,9 +3106,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.RetailBaskets.Revision,
                 Is.EqualTo(basketRevisionBeforeReservation + 1));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
-            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
                 stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
             Assert.That(stockFlow.ShelfOfferText.text,
                 Does.Contain("MÜŞTERİ: 1 ÜRÜN • AYRILDI"));
 
@@ -3265,7 +3270,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(5));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(6));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3291,9 +3296,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
             Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(2));
             Assert.That(stockFlow.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
             Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
@@ -3396,7 +3402,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
             Assert.That(item.ItemIdValue, Is.EqualTo(GarageStockFlowSession.ItemInstanceIdValue));
             AssertInventoryLocation(stockFlow, stockFlow.Session.WorldFloorContainerId);
-            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
@@ -3558,7 +3566,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(actionRevisionBeforeReservation + 1));
             Assert.That(stockFlow.ItemBinding.IsCustomerReservationActionOwned, Is.True);
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain("SATIN ALMA ONAYLANDI"));
 
@@ -3578,7 +3587,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.RetailBaskets.Revision,
                 Is.EqualTo(basketRevisionBeforeReservation + 1));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
@@ -3681,7 +3691,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(5));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(6));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3707,9 +3717,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Inventory.ReservationCount, Is.Zero);
             Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.Zero);
+                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.Session.RetailCheckouts.Revision, Is.EqualTo(2));
             Assert.That(stockFlow.Session.RetailCheckouts.CompletionCount, Is.EqualTo(1));
             Assert.That(stockFlow.Session.CheckoutSettlements.Revision,
@@ -4004,9 +4015,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(checkoutRevision));
             Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevision));
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
-                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
             Assert.That(stockFlow.Session.Inventory.GetAvailableQuantity(
-                stockFlow.Session.ProductId).Value, Is.EqualTo(1));
+                stockFlow.Session.ProductId).Value, Is.EqualTo(2));
+            AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.Session.RetailBaskets.Count, Is.Zero);
             Assert.That(stockFlow.Session.TryGetPrototypeCustomerLeaveAction(out _), Is.True);
             Assert.That(customerFlow.CurrentVisit.State, Is.EqualTo(CustomerVisitState.Exiting));
@@ -5112,6 +5124,27 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.TryGetItem(out InventoryItemRecord record), Is.True);
             Assert.That(record.Id, Is.EqualTo(stockFlow.Session.ItemId));
             Assert.That(record.ContainerId, Is.EqualTo(expectedContainer));
+        }
+
+        private static void AssertAssemblyGraphicsCardIsolated(
+            GarageStockFlowSession session)
+        {
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord graphicsCard), Is.True);
+            Assert.That(graphicsCard.Id,
+                Is.EqualTo(session.GraphicsCardAssemblyItemId));
+            Assert.That(graphicsCard.Id, Is.Not.EqualTo(session.ItemId));
+            Assert.That(graphicsCard.ProductId, Is.EqualTo(session.ProductId));
+            Assert.That(graphicsCard.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            if (session.Inventory.TryGetReservation(
+                    session.PrototypeReservationId,
+                    out InventoryReservation reservation))
+            {
+                Assert.That(reservation.ItemId, Is.EqualTo(session.ItemId));
+                Assert.That(reservation.ItemId,
+                    Is.Not.EqualTo(session.GraphicsCardAssemblyItemId));
+            }
         }
 
         private static void MovePlayerToLargeBox(GaragePrototypeMarker marker)

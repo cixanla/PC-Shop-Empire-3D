@@ -14,10 +14,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             Assert.That((int)PcComponentKind.MemoryModule, Is.EqualTo(3));
             Assert.That((int)PcComponentKind.StorageDevice, Is.EqualTo(4));
             Assert.That((int)PcComponentKind.ProcessorCooler, Is.EqualTo(5));
+            Assert.That((int)PcComponentKind.GraphicsCard, Is.EqualTo(6));
             Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
             Assert.That((int)M2StorageType.NvmePcie4X4_2280, Is.EqualTo(1));
             Assert.That(
                 (int)ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
+                Is.EqualTo(1));
+            Assert.That(
+                (int)GraphicsCardType.Pcie4X16FullHeightDualSlot,
                 Is.EqualTo(1));
         }
 
@@ -185,7 +189,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
         }
 
         [Test]
-        public void ComponentCatalogRegistersMotherboardProcessorMemoryStorageAndCoolerMetadataTogether()
+        public void MotherboardAndGraphicsCardKeepTypedPciePhysicalCompatibility()
         {
             ProductCatalog products = CreateProducts();
             PcComponentSpecification motherboard =
@@ -195,7 +199,44 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     MotherboardFormFactor.MicroAtx,
                     CpuSocketFamily.Lga1700,
                     DimmType.Ddr5Udimm,
-                    M2StorageType.NvmePcie4X4_2280).Value;
+                    M2StorageType.NvmePcie4X4_2280,
+                    GraphicsCardType.Pcie4X16FullHeightDualSlot).Value;
+            OperationResult<PcComponentSpecification> graphicsCard =
+                PcComponentSpecification.CreateGraphicsCard(
+                    products,
+                    ProductId("component.graphics-card-pcie4-x16"),
+                    GraphicsCardType.Pcie4X16FullHeightDualSlot);
+
+            Assert.That(graphicsCard.IsSuccess, Is.True);
+            Assert.That(graphicsCard.Value.Kind, Is.EqualTo(PcComponentKind.GraphicsCard));
+            Assert.That(graphicsCard.Value.GraphicsCardType,
+                Is.EqualTo(GraphicsCardType.Pcie4X16FullHeightDualSlot));
+            Assert.That(motherboard.GraphicsCardType,
+                Is.EqualTo(GraphicsCardType.Pcie4X16FullHeightDualSlot));
+            Assert.That(graphicsCard.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(graphicsCard.Value.CpuSocketFamily,
+                Is.EqualTo(default(CpuSocketFamily)));
+            Assert.That(graphicsCard.Value.DimmType, Is.EqualTo(default(DimmType)));
+            Assert.That(graphicsCard.Value.M2StorageType,
+                Is.EqualTo(default(M2StorageType)));
+            Assert.That(graphicsCard.Value.ProcessorCoolerType,
+                Is.EqualTo(default(ProcessorCoolerType)));
+        }
+
+        [Test]
+        public void ComponentCatalogRegistersAllBoundedAssemblyMetadataTogether()
+        {
+            ProductCatalog products = CreateProducts();
+            PcComponentSpecification motherboard =
+                PcComponentSpecification.CreateMotherboard(
+                    products,
+                    ProductId("component.motherboard-matx"),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm,
+                    M2StorageType.NvmePcie4X4_2280,
+                    GraphicsCardType.Pcie4X16FullHeightDualSlot).Value;
             PcComponentSpecification processor =
                 PcComponentSpecification.CreateProcessor(
                     products,
@@ -217,20 +258,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     ProductId("component.cooler-lga1700-top-down-air"),
                     ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
                     CpuSocketFamily.Lga1700).Value;
+            PcComponentSpecification graphicsCard =
+                PcComponentSpecification.CreateGraphicsCard(
+                    products,
+                    ProductId("component.graphics-card-pcie4-x16"),
+                    GraphicsCardType.Pcie4X16FullHeightDualSlot).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
-                new[] { motherboard, processor, memory, storage, cooler });
+                new[] { motherboard, processor, memory, storage, cooler, graphicsCard });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(5));
+            Assert.That(result.Value.Count, Is.EqualTo(6));
             Assert.That(result.Value.Get(cooler.ProductId).Value, Is.SameAs(cooler));
+            Assert.That(result.Value.Get(graphicsCard.ProductId).Value,
+                Is.SameAs(graphicsCard));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
             Assert.That(result.Value.Specifications[0], Is.SameAs(cooler));
-            Assert.That(result.Value.Specifications[1], Is.SameAs(memory));
-            Assert.That(result.Value.Specifications[2], Is.SameAs(motherboard));
-            Assert.That(result.Value.Specifications[3], Is.SameAs(processor));
-            Assert.That(result.Value.Specifications[4], Is.SameAs(storage));
+            Assert.That(result.Value.Specifications[1], Is.SameAs(graphicsCard));
+            Assert.That(result.Value.Specifications[2], Is.SameAs(memory));
+            Assert.That(result.Value.Specifications[3], Is.SameAs(motherboard));
+            Assert.That(result.Value.Specifications[4], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[5], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
@@ -355,6 +404,30 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     DimmType.Ddr5Udimm,
                     (M2StorageType)99).Error,
                 Is.EqualTo(CatalogFailures.InvalidM2StorageType));
+            Assert.That(PcComponentSpecification.CreateGraphicsCard(
+                    products,
+                    ProductId("component.graphics-card-pcie4-x16"),
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidGraphicsCardType));
+            Assert.That(PcComponentSpecification.CreateGraphicsCard(
+                    products,
+                    ProductId("component.graphics-card-pcie4-x16"),
+                    (GraphicsCardType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidGraphicsCardType));
+            Assert.That(PcComponentSpecification.CreateMotherboard(
+                    products,
+                    ProductId("component.motherboard-matx"),
+                    MotherboardFormFactor.MicroAtx,
+                    CpuSocketFamily.Lga1700,
+                    DimmType.Ddr5Udimm,
+                    M2StorageType.NvmePcie4X4_2280,
+                    (GraphicsCardType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidGraphicsCardType));
+            Assert.That(PcComponentSpecification.CreateGraphicsCard(
+                    products,
+                    ProductId("consumable.screw"),
+                    GraphicsCardType.Pcie4X16FullHeightDualSlot).Error,
+                Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
         }
 
         [Test]
@@ -424,6 +497,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.memory-ddr5-udimm", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.storage-nvme-2280", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.cooler-lga1700-top-down-air", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.graphics-card-pcie4-x16", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

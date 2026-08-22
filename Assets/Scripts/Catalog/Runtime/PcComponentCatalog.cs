@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Catalog
         Processor = 2,
         MemoryModule = 3,
         StorageDevice = 4,
-        ProcessorCooler = 5
+        ProcessorCooler = 5,
+        GraphicsCard = 6
     }
 
     /// <summary>
@@ -67,6 +68,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed graphics-card electrical interface and physical envelope.
+    /// The first bounded prototype supports one full-height dual-slot PCIe 4 x16 card.
+    /// </summary>
+    public enum GraphicsCardType
+    {
+        Pcie4X16FullHeightDualSlot = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -79,7 +89,8 @@ namespace PCShopEmpire3D.Catalog
             CpuSocketFamily cpuSocketFamily,
             DimmType dimmType,
             M2StorageType m2StorageType,
-            ProcessorCoolerType processorCoolerType)
+            ProcessorCoolerType processorCoolerType,
+            GraphicsCardType graphicsCardType)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
@@ -89,6 +100,7 @@ namespace PCShopEmpire3D.Catalog
             DimmType = dimmType;
             M2StorageType = m2StorageType;
             ProcessorCoolerType = processorCoolerType;
+            GraphicsCardType = graphicsCardType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -109,6 +121,12 @@ namespace PCShopEmpire3D.Catalog
         /// Typed cooler fitment metadata. It is populated only for processor coolers.
         /// </summary>
         public ProcessorCoolerType ProcessorCoolerType { get; }
+
+        /// <summary>
+        /// Typed PCIe interface and physical profile. Motherboards may advertise the
+        /// supported profile; graphics cards must carry one exact non-default value.
+        /// </summary>
+        public GraphicsCardType GraphicsCardType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -167,6 +185,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     default,
+                    default,
                     default));
         }
 
@@ -203,6 +222,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
                     cpuSocketFamily,
+                    default,
                     default,
                     default,
                     default));
@@ -249,6 +269,7 @@ namespace PCShopEmpire3D.Catalog
                     motherboardFormFactor,
                     cpuSocketFamily,
                     supportedDimmType,
+                    default,
                     default,
                     default));
         }
@@ -302,7 +323,68 @@ namespace PCShopEmpire3D.Catalog
                     cpuSocketFamily,
                     supportedDimmType,
                     supportedM2StorageType,
+                    default,
                     default));
+        }
+
+        public static OperationResult<PcComponentSpecification> CreateMotherboard(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            MotherboardFormFactor motherboardFormFactor,
+            CpuSocketFamily cpuSocketFamily,
+            DimmType supportedDimmType,
+            M2StorageType supportedM2StorageType,
+            GraphicsCardType supportedGraphicsCardType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidMotherboardFormFactor(motherboardFormFactor))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidMotherboardFormFactor);
+            }
+
+            if (!IsValidCpuSocketFamily(cpuSocketFamily))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidCpuSocketFamily);
+            }
+
+            if (!IsValidDimmType(supportedDimmType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidDimmType);
+            }
+
+            if (!IsValidM2StorageType(supportedM2StorageType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidM2StorageType);
+            }
+
+            if (!IsValidGraphicsCardType(supportedGraphicsCardType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidGraphicsCardType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.Motherboard,
+                    motherboardFormFactor,
+                    cpuSocketFamily,
+                    supportedDimmType,
+                    supportedM2StorageType,
+                    default,
+                    supportedGraphicsCardType));
         }
 
         public static OperationResult<PcComponentSpecification> CreateProcessor(
@@ -331,6 +413,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Processor,
                     default,
                     cpuSocketFamily,
+                    default,
                     default,
                     default,
                     default));
@@ -364,6 +447,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     dimmType,
                     default,
+                    default,
                     default));
         }
 
@@ -395,6 +479,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     m2StorageType,
+                    default,
                     default));
         }
 
@@ -446,7 +531,44 @@ namespace PCShopEmpire3D.Catalog
                     cpuSocketFamily,
                     default,
                     default,
-                    processorCoolerType));
+                    processorCoolerType,
+                    default));
+        }
+
+        /// <summary>
+        /// Creates immutable assembly metadata for one serialized graphics card while
+        /// reusing the authoritative retail product definition.
+        /// </summary>
+        public static OperationResult<PcComponentSpecification> CreateGraphicsCard(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            GraphicsCardType graphicsCardType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidGraphicsCardType(graphicsCardType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidGraphicsCardType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.GraphicsCard,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    graphicsCardType));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
@@ -455,7 +577,8 @@ namespace PCShopEmpire3D.Catalog
                    kind == PcComponentKind.Processor ||
                    kind == PcComponentKind.MemoryModule ||
                    kind == PcComponentKind.StorageDevice ||
-                   kind == PcComponentKind.ProcessorCooler;
+                   kind == PcComponentKind.ProcessorCooler ||
+                   kind == PcComponentKind.GraphicsCard;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -495,6 +618,12 @@ namespace PCShopEmpire3D.Catalog
             return processorCoolerType ==
                        ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim &&
                    cpuSocketFamily == CpuSocketFamily.Lga1700;
+        }
+
+        public static bool IsValidGraphicsCardType(GraphicsCardType graphicsCardType)
+        {
+            return graphicsCardType ==
+                   GraphicsCardType.Pcie4X16FullHeightDualSlot;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -600,28 +729,34 @@ namespace PCShopEmpire3D.Catalog
                           (specification.M2StorageType == default ||
                            PcComponentSpecification.IsValidM2StorageType(
                                specification.M2StorageType)) &&
-                          specification.ProcessorCoolerType == default
+                          specification.ProcessorCoolerType == default &&
+                          (specification.GraphicsCardType == default ||
+                           PcComponentSpecification.IsValidGraphicsCardType(
+                               specification.GraphicsCardType))
                         : (specification.Kind == PcComponentKind.Processor &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
                                specification.CpuSocketFamily) &&
                            specification.DimmType == default &&
                            specification.M2StorageType == default &&
-                           specification.ProcessorCoolerType == default) ||
+                           specification.ProcessorCoolerType == default &&
+                           specification.GraphicsCardType == default) ||
                           (specification.Kind == PcComponentKind.MemoryModule &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
                            PcComponentSpecification.IsValidDimmType(
                                specification.DimmType) &&
                            specification.M2StorageType == default &&
-                           specification.ProcessorCoolerType == default) ||
+                           specification.ProcessorCoolerType == default &&
+                           specification.GraphicsCardType == default) ||
                           (specification.Kind == PcComponentKind.StorageDevice &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
                            specification.DimmType == default &&
                            PcComponentSpecification.IsValidM2StorageType(
                                specification.M2StorageType) &&
-                           specification.ProcessorCoolerType == default) ||
+                           specification.ProcessorCoolerType == default &&
+                           specification.GraphicsCardType == default) ||
                           (specification.Kind == PcComponentKind.ProcessorCooler &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
@@ -632,7 +767,16 @@ namespace PCShopEmpire3D.Catalog
                                specification.ProcessorCoolerType) &&
                            PcComponentSpecification.IsProcessorCoolerCompatibleWithSocket(
                                specification.ProcessorCoolerType,
-                               specification.CpuSocketFamily));
+                               specification.CpuSocketFamily) &&
+                           specification.GraphicsCardType == default) ||
+                          (specification.Kind == PcComponentKind.GraphicsCard &&
+                           specification.MotherboardFormFactor == default &&
+                           specification.CpuSocketFamily == default &&
+                           specification.DimmType == default &&
+                           specification.M2StorageType == default &&
+                           specification.ProcessorCoolerType == default &&
+                           PcComponentSpecification.IsValidGraphicsCardType(
+                               specification.GraphicsCardType));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

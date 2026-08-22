@@ -22,7 +22,7 @@ using UnityEngine.SceneManagement;
 
 namespace PCShopEmpire3D.Editor.GaragePrototype
 {
-    public static class GarageGrayboxSceneBuilder
+    public static partial class GarageGrayboxSceneBuilder
     {
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
         private const string MaterialRoot = "Assets/Art/Prototype/Materials";
@@ -141,7 +141,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 ProcessorCoolerSlotProjection processorCoolerSlot,
                 ProcessorCoolerAssemblyItemBinding processorCoolerBinding,
                 PhysicalItemProjection processorCooler,
-                ProcessorCoolerRuntimeGeometry processorCoolerGeometry)
+                ProcessorCoolerRuntimeGeometry processorCoolerGeometry,
+                GraphicsCardSlotProjection graphicsCardSlot,
+                GraphicsCardAssemblyItemBinding graphicsCardBinding,
+                PhysicalItemProjection graphicsCard)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -160,6 +163,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 ProcessorCoolerBinding = processorCoolerBinding;
                 ProcessorCooler = processorCooler;
                 ProcessorCoolerGeometry = processorCoolerGeometry;
+                GraphicsCardSlot = graphicsCardSlot;
+                GraphicsCardBinding = graphicsCardBinding;
+                GraphicsCard = graphicsCard;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -195,6 +201,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public PhysicalItemProjection ProcessorCooler { get; }
 
             public ProcessorCoolerRuntimeGeometry ProcessorCoolerGeometry { get; }
+
+            public GraphicsCardSlotProjection GraphicsCardSlot { get; }
+
+            public GraphicsCardAssemblyItemBinding GraphicsCardBinding { get; }
+
+            public PhysicalItemProjection GraphicsCard { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -494,6 +506,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.ProcessorCooler,
                 assemblyBuild.ProcessorCoolerSlot,
                 GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue);
+            assemblyBuild.GraphicsCardBinding.Configure(
+                stockFlow,
+                assemblyBuild.GraphicsCard,
+                assemblyBuild.GraphicsCardSlot,
+                GarageStockFlowSession.GraphicsCardAssemblyItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -510,6 +527,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureProcessorCoolerSlot(
                 assemblyBuild.ProcessorCoolerSlot,
                 assemblyBuild.ProcessorCoolerBinding);
+            carry.ConfigureGraphicsCardSlot(
+                assemblyBuild.GraphicsCardSlot,
+                assemblyBuild.GraphicsCardBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -558,7 +578,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.ProcessorCoolerSlot,
                 assemblyBuild.ProcessorCoolerBinding,
                 assemblyBuild.ProcessorCooler,
-                assemblyBuild.ProcessorCoolerGeometry);
+                assemblyBuild.ProcessorCoolerGeometry,
+                assemblyBuild.GraphicsCardSlot,
+                assemblyBuild.GraphicsCardBinding,
+                assemblyBuild.GraphicsCard);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1149,7 +1172,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             focusTarget.layer = interactableLayer;
             BoxCollider focusCollider = focusTarget.AddComponent<BoxCollider>();
             focusCollider.size = new Vector3(0.060f, 0.060f, 0.016f);
-            focusCollider.isTrigger = false;
+            focusCollider.isTrigger = true;
             GameObject recessHorizontal = CreateDetailCube(
                 "FastenerCrossRecessHorizontal",
                 fastenerRoot,
@@ -1943,6 +1966,26 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 processorCoolerSlot,
                 processorCoolerBinding);
 
+            GraphicsCardBuildResult graphicsCardBuild = BuildGraphicsCardAssembly(
+                slice,
+                motherboardRoot.transform,
+                motherboardPcb,
+                metal,
+                brushedSteel,
+                accent,
+                rubber,
+                labelPaper,
+                interactableLayer,
+                new[]
+                {
+                    chassisBase.GetComponent<Collider>(),
+                    chassisBack.GetComponent<Collider>(),
+                    chassisLeft.GetComponent<Collider>(),
+                    chassisRight.GetComponent<Collider>(),
+                    tray.GetComponent<Collider>()
+                },
+                new Collider[] { processorCoolerCollider });
+
             return new AssemblyBuildResult(
                 seat,
                 fastener,
@@ -1960,7 +2003,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 processorCoolerSlot,
                 processorCoolerBinding,
                 processorCooler,
-                processorCoolerGeometry);
+                processorCoolerGeometry,
+                graphicsCardBuild.Slot,
+                graphicsCardBuild.Binding,
+                graphicsCardBuild.Item);
         }
 
         private static void BuildLighting(

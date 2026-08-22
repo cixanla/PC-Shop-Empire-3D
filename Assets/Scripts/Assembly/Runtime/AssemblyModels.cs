@@ -32,7 +32,11 @@ namespace PCShopEmpire3D.Assembly
         SeatProcessorCooler = 17,
         RemoveProcessorCooler = 18,
         RetainProcessorCooler = 19,
-        UnretainProcessorCooler = 20
+        UnretainProcessorCooler = 20,
+        SeatGraphicsCard = 21,
+        RemoveGraphicsCard = 22,
+        RetainGraphicsCard = 23,
+        UnretainGraphicsCard = 24
     }
 
     public enum ProcessorSocketState
@@ -211,7 +215,17 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorCoolerTimState.Unsupported,
             ProcessorCoolerTimState resultingProcessorCoolerTimState =
                 ProcessorCoolerTimState.Unsupported,
-            ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default)
+            ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default,
+            GraphicsCardSlotState previousGraphicsCardSlotState =
+                GraphicsCardSlotState.Unsupported,
+            GraphicsCardSlotState resultingGraphicsCardSlotState =
+                GraphicsCardSlotState.Unsupported,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardSeatOperationId =
+                default,
+            StableId<AssemblyOperationIdScope>
+                sourceGraphicsCardRetentionOperationId = default,
+            GraphicsCardMountOrientation graphicsCardMountOrientation = default,
+            GraphicsCardSlotDefinition graphicsCardSlotDefinition = default)
         {
             OperationId = operationId;
             OperationKind = operationKind;
@@ -254,6 +268,13 @@ namespace PCShopEmpire3D.Assembly
             PreviousProcessorCoolerTimState = previousProcessorCoolerTimState;
             ResultingProcessorCoolerTimState = resultingProcessorCoolerTimState;
             ProcessorCoolerSlotDefinition = processorCoolerSlotDefinition;
+            PreviousGraphicsCardSlotState = previousGraphicsCardSlotState;
+            ResultingGraphicsCardSlotState = resultingGraphicsCardSlotState;
+            SourceGraphicsCardSeatOperationId = sourceGraphicsCardSeatOperationId;
+            SourceGraphicsCardRetentionOperationId =
+                sourceGraphicsCardRetentionOperationId;
+            GraphicsCardMountOrientation = graphicsCardMountOrientation;
+            GraphicsCardSlotDefinition = graphicsCardSlotDefinition;
             AssemblyRevision = assemblyRevision;
             InventoryRevision = inventoryRevision;
         }
@@ -342,6 +363,25 @@ namespace PCShopEmpire3D.Assembly
         public ProcessorCoolerTimState ResultingProcessorCoolerTimState { get; }
 
         public ProcessorCoolerSlotDefinition ProcessorCoolerSlotDefinition { get; }
+
+        public GraphicsCardSlotState PreviousGraphicsCardSlotState { get; }
+
+        public GraphicsCardSlotState ResultingGraphicsCardSlotState { get; }
+
+        public StableId<AssemblyOperationIdScope> SourceGraphicsCardSeatOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope>
+            SourceGraphicsCardRetentionOperationId
+        {
+            get;
+        }
+
+        public GraphicsCardMountOrientation GraphicsCardMountOrientation { get; }
+
+        public GraphicsCardSlotDefinition GraphicsCardSlotDefinition { get; }
 
         public long AssemblyRevision { get; }
 
@@ -655,6 +695,81 @@ namespace PCShopEmpire3D.Assembly
                        sourceProcessorCoolerRetentionOperationId &&
                    ExpectedAssemblyRevision == expectedAssemblyRevision;
         }
+
+        internal bool MatchesSeatGraphicsCard(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            GraphicsCardMountOrientation orientation,
+            StableId<AssemblyOperationIdScope> sourceAttachOperationId,
+            StableId<AssemblyOperationIdScope> sourceSecureOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.SeatGraphicsCard &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   GraphicsCardMountOrientation == orientation &&
+                   SourceAttachOperationId == sourceAttachOperationId &&
+                   SourceSecureOperationId == sourceSecureOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRemoveGraphicsCard(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RemoveGraphicsCard &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   SourceGraphicsCardSeatOperationId ==
+                       sourceGraphicsCardSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRetainGraphicsCard(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyGraphicsCardLatchIdScope> latchId,
+            StableId<AssemblyFastenerIdScope> bracketFastenerId,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardSeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RetainGraphicsCard &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   GraphicsCardSlotDefinition.IsValid &&
+                   GraphicsCardSlotDefinition.RetentionTopology.LatchId == latchId &&
+                   GraphicsCardSlotDefinition.RetentionTopology.BracketFastenerId ==
+                       bracketFastenerId &&
+                   SourceGraphicsCardSeatOperationId ==
+                       sourceGraphicsCardSeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesUnretainGraphicsCard(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyGraphicsCardLatchIdScope> latchId,
+            StableId<AssemblyFastenerIdScope> bracketFastenerId,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardSeatOperationId,
+            StableId<AssemblyOperationIdScope>
+                sourceGraphicsCardRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.UnretainGraphicsCard &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   GraphicsCardSlotDefinition.IsValid &&
+                   GraphicsCardSlotDefinition.RetentionTopology.LatchId == latchId &&
+                   GraphicsCardSlotDefinition.RetentionTopology.BracketFastenerId ==
+                       bracketFastenerId &&
+                   SourceGraphicsCardSeatOperationId ==
+                       sourceGraphicsCardSeatOperationId &&
+                   SourceGraphicsCardRetentionOperationId ==
+                       sourceGraphicsCardRetentionOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
     }
 
     /// <summary>
@@ -748,7 +863,17 @@ namespace PCShopEmpire3D.Assembly
                 default,
             ProcessorCoolerMountOrientation processorCoolerMountOrientation = default,
             ProcessorCoolerTimState processorCoolerTimState =
-                ProcessorCoolerTimState.Unsupported)
+                ProcessorCoolerTimState.Unsupported,
+            GraphicsCardSlotDefinition graphicsCardSlotDefinition = default,
+            GraphicsCardSlotState graphicsCardSlotState =
+                GraphicsCardSlotState.Unsupported,
+            StableId<ItemInstanceIdScope> graphicsCardItemId = default,
+            StableId<ProductDefinitionIdScope> graphicsCardProductId = default,
+            StableId<AssemblyOperationIdScope> graphicsCardSeatedByOperationId =
+                default,
+            StableId<AssemblyOperationIdScope> graphicsCardRetainedByOperationId =
+                default,
+            GraphicsCardMountOrientation graphicsCardMountOrientation = default)
         {
             BuildId = buildId;
             ChassisId = chassisId;
@@ -793,6 +918,13 @@ namespace PCShopEmpire3D.Assembly
                 processorCoolerRetainedByOperationId;
             ProcessorCoolerMountOrientation = processorCoolerMountOrientation;
             ProcessorCoolerTimState = processorCoolerTimState;
+            GraphicsCardSlotDefinition = graphicsCardSlotDefinition;
+            GraphicsCardSlotState = graphicsCardSlotState;
+            GraphicsCardItemId = graphicsCardItemId;
+            GraphicsCardProductId = graphicsCardProductId;
+            GraphicsCardSeatedByOperationId = graphicsCardSeatedByOperationId;
+            GraphicsCardRetainedByOperationId = graphicsCardRetainedByOperationId;
+            GraphicsCardMountOrientation = graphicsCardMountOrientation;
             Revision = revision;
         }
 
@@ -939,6 +1071,50 @@ namespace PCShopEmpire3D.Assembly
 
         public ProcessorCoolerTimState ProcessorCoolerTimState { get; }
 
+        public GraphicsCardSlotDefinition GraphicsCardSlotDefinition { get; }
+
+        public bool HasGraphicsCardSlot => GraphicsCardSlotDefinition.IsValid;
+
+        public StableId<AssemblySlotIdScope> GraphicsCardSlotId =>
+            GraphicsCardSlotDefinition.SlotId;
+
+        public StableId<ContainerIdScope> GraphicsCardSlotContainerId =>
+            GraphicsCardSlotDefinition.ContainerId;
+
+        public GraphicsCardRetentionTopology GraphicsCardRetentionTopology =>
+            GraphicsCardSlotDefinition.RetentionTopology;
+
+        public StableId<AssemblyGraphicsCardLatchIdScope> GraphicsCardLatchId =>
+            GraphicsCardSlotDefinition.RetentionTopology == null
+                ? default
+                : GraphicsCardSlotDefinition.RetentionTopology.LatchId;
+
+        public StableId<AssemblyFastenerIdScope> GraphicsCardBracketFastenerId =>
+            GraphicsCardSlotDefinition.RetentionTopology == null
+                ? default
+                : GraphicsCardSlotDefinition.RetentionTopology.BracketFastenerId;
+
+        public GraphicsCardType SupportedGraphicsCardType =>
+            GraphicsCardSlotDefinition.SupportedGraphicsCardType;
+
+        public GraphicsCardSlotState GraphicsCardSlotState { get; }
+
+        public StableId<ItemInstanceIdScope> GraphicsCardItemId { get; }
+
+        public StableId<ProductDefinitionIdScope> GraphicsCardProductId { get; }
+
+        public StableId<AssemblyOperationIdScope> GraphicsCardSeatedByOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope> GraphicsCardRetainedByOperationId
+        {
+            get;
+        }
+
+        public GraphicsCardMountOrientation GraphicsCardMountOrientation { get; }
+
         public long Revision { get; }
     }
 
@@ -980,6 +1156,14 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-bracket.invalid");
         public static readonly Failure InvalidProcessorCoolerRetentionTopology =
             Failure.FromCode("assembly.processor-cooler-retention-topology.invalid");
+        public static readonly Failure InvalidGraphicsCardSlotContainer =
+            Failure.FromCode("assembly.graphics-card-slot-container.invalid");
+        public static readonly Failure InvalidGraphicsCardSlotDefinition =
+            Failure.FromCode("assembly.graphics-card-slot-definition.invalid");
+        public static readonly Failure InvalidGraphicsCardSlotLatch =
+            Failure.FromCode("assembly.graphics-card-slot-latch.invalid");
+        public static readonly Failure InvalidGraphicsCardBracketFastener =
+            Failure.FromCode("assembly.graphics-card-bracket-fastener.invalid");
         public static readonly Failure SameInventoryContainer =
             Failure.FromCode("assembly.inventory-container.same");
         public static readonly Failure InvalidMotherboardFormFactor =
@@ -992,6 +1176,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.m2-storage-type.invalid");
         public static readonly Failure InvalidProcessorCoolerType =
             Failure.FromCode("assembly.processor-cooler-type.invalid");
+        public static readonly Failure InvalidGraphicsCardType =
+            Failure.FromCode("assembly.graphics-card-type.invalid");
         public static readonly Failure InvalidDimmOrientation =
             Failure.FromCode("assembly.dimm-orientation.invalid");
         public static readonly Failure DimmOrientationMismatch =
@@ -1002,6 +1188,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.m2-orientation.mismatch");
         public static readonly Failure InvalidProcessorCoolerOrientation =
             Failure.FromCode("assembly.processor-cooler-orientation.invalid");
+        public static readonly Failure InvalidGraphicsCardOrientation =
+            Failure.FromCode("assembly.graphics-card-orientation.invalid");
+        public static readonly Failure GraphicsCardOrientationMismatch =
+            Failure.FromCode("assembly.graphics-card-orientation.mismatch");
         public static readonly Failure InvalidStorageStandoff =
             Failure.FromCode("assembly.storage-standoff.invalid");
         public static readonly Failure InvalidMemoryChannel =
@@ -1026,6 +1216,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.storage-slot.occupied");
         public static readonly Failure ProcessorCoolerSlotOccupied =
             Failure.FromCode("assembly.processor-cooler-slot.occupied");
+        public static readonly Failure GraphicsCardSlotOccupied =
+            Failure.FromCode("assembly.graphics-card-slot.occupied");
         public static readonly Failure InvalidComponent = Failure.FromCode("assembly.invalid-component");
         public static readonly Failure UnknownItem = InvalidComponent;
         public static readonly Failure ComponentNotInActorHands =
@@ -1049,6 +1241,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.motherboard.storage-installed");
         public static readonly Failure ProcessorCoolerInstalled =
             Failure.FromCode("assembly.motherboard.processor-cooler-installed");
+        public static readonly Failure GraphicsCardInstalled =
+            Failure.FromCode("assembly.motherboard.graphics-card-installed");
         public static readonly Failure MemoryRetentionOutOfOrder =
             Failure.FromCode("assembly.memory-retention.out-of-order");
         public static readonly Failure MemoryModuleRetained =
@@ -1063,6 +1257,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler.retained");
         public static readonly Failure ProcessorCoolerTimConsumed =
             Failure.FromCode("assembly.processor-cooler.tim-consumed");
+        public static readonly Failure GraphicsCardRetentionOutOfOrder =
+            Failure.FromCode("assembly.graphics-card-retention.out-of-order");
+        public static readonly Failure GraphicsCardRetained =
+            Failure.FromCode("assembly.graphics-card.retained");
         public static readonly Failure SlotEmpty = ComponentNotSeated;
         public static readonly Failure ItemNotOnWorkbench = ComponentNotSeated;
         public static readonly Failure UnknownComponentSpecification = InvalidComponent;
@@ -1082,6 +1280,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-type.mismatch");
         public static readonly Failure ProcessorCoolerSocketMismatch =
             Failure.FromCode("assembly.processor-cooler-socket.mismatch");
+        public static readonly Failure GraphicsCardTypeMismatch =
+            Failure.FromCode("assembly.graphics-card-type.mismatch");
         public static readonly Failure WorkbenchCapacityExceeded =
             Failure.FromCode("assembly.workbench.capacity");
         public static readonly Failure ProcessorSocketCapacityExceeded =
@@ -1092,6 +1292,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.storage-slot.capacity");
         public static readonly Failure ProcessorCoolerSlotCapacityExceeded =
             Failure.FromCode("assembly.processor-cooler-slot.capacity");
+        public static readonly Failure GraphicsCardSlotCapacityExceeded =
+            Failure.FromCode("assembly.graphics-card-slot.capacity");
         public static readonly Failure HandsCapacityExceeded =
             Failure.FromCode("assembly.hands.capacity");
         public static readonly Failure InventoryRevisionOverflow = RevisionOverflow;
@@ -1120,6 +1322,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.benchmark.processor-cooler-missing");
         public static readonly Failure ProcessorCoolerUnretained =
             Failure.FromCode("assembly.benchmark.processor-cooler-unretained");
+        public static readonly Failure GraphicsCardMissing =
+            Failure.FromCode("assembly.benchmark.graphics-card-missing");
+        public static readonly Failure GraphicsCardUnretained =
+            Failure.FromCode("assembly.benchmark.graphics-card-unretained");
         public static readonly Failure BuildIncomplete =
             Failure.FromCode("assembly.benchmark.build-incomplete");
         public static readonly Failure InvariantViolation =

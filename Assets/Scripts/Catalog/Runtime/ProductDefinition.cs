@@ -147,6 +147,8 @@ namespace PCShopEmpire3D.Catalog
             Failure.FromCode("catalog.component.dimm-type.invalid");
         public static readonly Failure InvalidM2StorageType =
             Failure.FromCode("catalog.component.m2-storage-type.invalid");
+        public static readonly Failure InvalidGraphicsCardType =
+            Failure.FromCode("catalog.component.graphics-card-type.invalid");
         public static readonly Failure ComponentMetadataMismatch =
             Failure.FromCode("catalog.component.metadata-mismatch");
         public static readonly Failure EmptyComponentCatalog =

@@ -401,7 +401,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         MotherboardFormFactor.MicroAtx,
                         CpuSocketFamily.Lga1700,
                         DimmType.Ddr5Udimm,
-                        M2StorageType.NvmePcie4X4_2280).Value
+                        M2StorageType.NvmePcie4X4_2280,
+                        GraphicsCardType.Pcie4X16FullHeightDualSlot).Value
                     : PcComponentSpecification.Create(
                         catalog,
                         motherboardProduct.Id,
@@ -436,6 +437,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
                         CpuSocketFamily.Lga1700).Value
                     : null;
+            PcComponentSpecification graphicsCardSpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreateGraphicsCard(
+                        catalog,
+                        product.Id,
+                        GraphicsCardType.Pcie4X16FullHeightDualSlot).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
@@ -445,7 +453,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         processorSpecification,
                         memorySpecification,
                         storageSpecification,
-                        processorCoolerSpecification
+                        processorCoolerSpecification,
+                        graphicsCardSpecification
                     }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
@@ -496,10 +505,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProcessorCoolerSlotContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
+                RegisterContainer(
+                    inventory,
+                    GraphicsCardSlotContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
-                ? AssemblyBuildAuthority.CreateWithProcessorSocketMemoryStorageAndCoolerSlots(
+                ? AssemblyBuildAuthority
+                    .CreateWithProcessorSocketMemoryStorageCoolerAndGraphicsCardSlots(
                     components,
                     inventory,
                     StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
@@ -542,6 +557,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                 ProcessorCoolerRetentionPoint4IdValue)).Value,
                         ProcessorCoolerType.Lga1700TopDownAirPreAppliedTim,
                         CpuSocketFamily.Lga1700).Value,
+                    GraphicsCardSlotDefinition.Create(
+                        StableId<AssemblySlotIdScope>.Parse(
+                            GraphicsCardSlotIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            GraphicsCardSlotContainerIdValue),
+                        GraphicsCardRetentionTopology.Create(
+                            StableId<AssemblyGraphicsCardLatchIdScope>.Parse(
+                                GraphicsCardLatchIdValue),
+                            StableId<AssemblyFastenerIdScope>.Parse(
+                                GraphicsCardBracketFastenerIdValue)).Value,
+                        GraphicsCardType.Pcie4X16FullHeightDualSlot).Value,
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue),
@@ -657,6 +683,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         ProcessorCoolerUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(
+                        GraphicsCardAssemblyItemInstanceIdValue),
+                    product.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        GraphicsCardAssemblyUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(

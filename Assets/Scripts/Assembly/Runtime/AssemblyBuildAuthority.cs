@@ -89,7 +89,9 @@ namespace PCShopEmpire3D.Assembly
             M2SlotDefinition storageSlotDefinition = default,
             InventorySerializedTransferAccess storageInventoryTransferAccess = null,
             ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default,
-            InventorySerializedTransferAccess processorCoolerInventoryTransferAccess = null)
+            InventorySerializedTransferAccess processorCoolerInventoryTransferAccess = null,
+            GraphicsCardSlotDefinition graphicsCardSlotDefinition = default,
+            InventorySerializedTransferAccess graphicsCardInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -113,6 +115,8 @@ namespace PCShopEmpire3D.Assembly
             _processorCoolerSlotDefinition = processorCoolerSlotDefinition;
             _processorCoolerInventoryTransferAccess =
                 processorCoolerInventoryTransferAccess;
+            _graphicsCardSlotDefinition = graphicsCardSlotDefinition;
+            _graphicsCardInventoryTransferAccess = graphicsCardInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -131,6 +135,11 @@ namespace PCShopEmpire3D.Assembly
             if (processorCoolerSlotDefinition.IsValid)
             {
                 _processorCoolerSlotState = ProcessorCoolerSlotState.EmptyOpen;
+            }
+
+            if (graphicsCardSlotDefinition.IsValid)
+            {
+                _graphicsCardSlotState = GraphicsCardSlotState.EmptyOpen;
             }
         }
 
@@ -1243,9 +1252,30 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.ProcessorCoolerUnretained);
             }
 
-            return _processorCoolerSlotState == ProcessorCoolerSlotState.CoolerRetained
-                ? OperationResult.Success()
-                : OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            if (_processorCoolerSlotState != ProcessorCoolerSlotState.CoolerRetained)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            // Authorities created before Issue #59 retain their established cooler-only
+            // readiness contract. The GPU-capable aggregate extends the ordered reasons.
+            if (!HasGraphicsCardSlot)
+            {
+                return OperationResult.Success();
+            }
+
+            if (_graphicsCardSlotState == GraphicsCardSlotState.EmptyOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.GraphicsCardMissing);
+            }
+
+            if (_graphicsCardSlotState ==
+                GraphicsCardSlotState.GraphicsCardSeatedUnsecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.GraphicsCardUnretained);
+            }
+
+            return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
         public AssemblyBuildSnapshot GetSnapshot()
@@ -1292,7 +1322,14 @@ namespace PCShopEmpire3D.Assembly
                 _processorCoolerSeatedByOperationId,
                 _processorCoolerRetainedByOperationId,
                 _processorCoolerMountOrientation,
-                _processorCoolerTimState);
+                _processorCoolerTimState,
+                _graphicsCardSlotDefinition,
+                _graphicsCardSlotState,
+                _graphicsCardItemId,
+                _graphicsCardProductId,
+                _graphicsCardSeatedByOperationId,
+                _graphicsCardRetainedByOperationId,
+                _graphicsCardMountOrientation);
         }
 
         public bool TryGetReceipt(
@@ -1533,6 +1570,11 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (!ValidateGraphicsCardStateInvariants())
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (Revision != _receipts.Count)
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
@@ -1550,9 +1592,13 @@ namespace PCShopEmpire3D.Assembly
                     IsStorageOperation(receipt.OperationKind);
                 bool processorCoolerOperation = receipt != null &&
                     IsProcessorCoolerOperation(receipt.OperationKind);
-                StableId<AssemblySlotIdScope> expectedSlotId = processorCoolerOperation
-                    ? _processorCoolerSlotDefinition.SlotId
-                    : storageOperation
+                bool graphicsCardOperation = receipt != null &&
+                    IsGraphicsCardOperation(receipt.OperationKind);
+                StableId<AssemblySlotIdScope> expectedSlotId = graphicsCardOperation
+                    ? _graphicsCardSlotDefinition.SlotId
+                    : processorCoolerOperation
+                        ? _processorCoolerSlotDefinition.SlotId
+                        : storageOperation
                         ? _storageSlotDefinition.SlotId
                         : memoryOperation
                             ? _memorySlotDefinition.SlotId
@@ -1683,6 +1729,12 @@ namespace PCShopEmpire3D.Assembly
                 _processorCoolerSlotState != ProcessorCoolerSlotState.EmptyOpen)
             {
                 return AssemblyFailures.ProcessorCoolerInstalled;
+            }
+
+            Failure graphicsCardGate = ValidateGraphicsCardMotherboardDetachGate();
+            if (!graphicsCardGate.IsNone)
+            {
+                return graphicsCardGate;
             }
 
             if (_motherboardSeatState == AssemblySeatState.SeatedSecured)
@@ -2068,6 +2120,7 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (!IsProcessorCoolerOperation(receipt.OperationKind) &&
+                !IsGraphicsCardOperation(receipt.OperationKind) &&
                 (!receipt.SourceProcessorCoolerSeatOperationId.IsEmpty ||
                  !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty ||
                  receipt.ProcessorCoolerMountOrientation != default ||
@@ -2075,6 +2128,18 @@ namespace PCShopEmpire3D.Assembly
                     receipt.ResultingProcessorCoolerTimState ||
                  !IsDefaultProcessorCoolerSlotDefinition(
                      receipt.ProcessorCoolerSlotDefinition)))
+            {
+                return false;
+            }
+
+            if (!IsGraphicsCardOperation(receipt.OperationKind) &&
+                (!receipt.SourceGraphicsCardSeatOperationId.IsEmpty ||
+                 !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty ||
+                 receipt.GraphicsCardMountOrientation != default ||
+                 receipt.PreviousGraphicsCardSlotState !=
+                    receipt.ResultingGraphicsCardSlotState ||
+                 !IsDefaultGraphicsCardSlotDefinition(
+                     receipt.GraphicsCardSlotDefinition)))
             {
                 return false;
             }
@@ -2392,6 +2457,98 @@ namespace PCShopEmpire3D.Assembly
                                _processorCoolerSlotDefinition) &&
                            receipt.SequenceIndex == 0;
 
+                case AssemblyOperationKind.SeatGraphicsCard:
+                    return HasGraphicsCardSlot &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId ==
+                               _graphicsCardSlotDefinition.ContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           receipt.GraphicsCardMountOrientation ==
+                               GraphicsCardMountOrientation.Primary &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.EmptyOpen &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                               _graphicsCardSlotDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RemoveGraphicsCard:
+                    return HasGraphicsCardSlot &&
+                           receipt.SourceContainerId ==
+                               _graphicsCardSlotDefinition.ContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           receipt.GraphicsCardMountOrientation ==
+                               GraphicsCardMountOrientation.Primary &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.EmptyOpen &&
+                           receipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                               _graphicsCardSlotDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RetainGraphicsCard:
+                    return HasGraphicsCardSlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId == _graphicsCardSlotDefinition
+                               .RetentionTopology.BracketFastenerId &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           receipt.GraphicsCardMountOrientation ==
+                               GraphicsCardMountOrientation.Primary &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardRetained &&
+                           receipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                               _graphicsCardSlotDefinition) &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.UnretainGraphicsCard:
+                    return HasGraphicsCardSlot &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           !receipt.SourceAttachOperationId.IsEmpty &&
+                           !receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId == _graphicsCardSlotDefinition
+                               .RetentionTopology.BracketFastenerId &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           !receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           receipt.GraphicsCardMountOrientation ==
+                               GraphicsCardMountOrientation.Primary &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardRetained &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                               _graphicsCardSlotDefinition) &&
+                           receipt.SequenceIndex == 0;
+
                 default:
                     return false;
             }
@@ -2418,7 +2575,11 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.SeatProcessorCooler ||
                    operationKind == AssemblyOperationKind.RemoveProcessorCooler ||
                    operationKind == AssemblyOperationKind.RetainProcessorCooler ||
-                   operationKind == AssemblyOperationKind.UnretainProcessorCooler;
+                   operationKind == AssemblyOperationKind.UnretainProcessorCooler ||
+                   operationKind == AssemblyOperationKind.SeatGraphicsCard ||
+                   operationKind == AssemblyOperationKind.RemoveGraphicsCard ||
+                   operationKind == AssemblyOperationKind.RetainGraphicsCard ||
+                   operationKind == AssemblyOperationKind.UnretainGraphicsCard;
         }
 
         private static bool IsProcessorOperation(AssemblyOperationKind operationKind)
@@ -2454,6 +2615,22 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.UnretainProcessorCooler;
         }
 
+        private static bool IsGraphicsCardOperation(
+            AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.SeatGraphicsCard ||
+                   operationKind == AssemblyOperationKind.RemoveGraphicsCard ||
+                   operationKind == AssemblyOperationKind.RetainGraphicsCard ||
+                   operationKind == AssemblyOperationKind.UnretainGraphicsCard;
+        }
+
+        private static bool IsValidGraphicsCardOrientation(
+            GraphicsCardMountOrientation orientation)
+        {
+            return orientation == GraphicsCardMountOrientation.Primary ||
+                   orientation == GraphicsCardMountOrientation.Rotated180;
+        }
+
         private static bool IsValidProcessorCoolerOrientation(
             ProcessorCoolerMountOrientation orientation)
         {
@@ -2470,6 +2647,15 @@ namespace PCShopEmpire3D.Assembly
                    definition.RetentionTopology == null &&
                    definition.SupportedCoolerType == default &&
                    definition.SupportedSocketFamily == default;
+        }
+
+        private static bool IsDefaultGraphicsCardSlotDefinition(
+            GraphicsCardSlotDefinition definition)
+        {
+            return definition.SlotId.IsEmpty &&
+                   definition.ContainerId.IsEmpty &&
+                   definition.RetentionTopology == null &&
+                   definition.SupportedGraphicsCardType == default;
         }
 
         private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
@@ -2489,6 +2675,13 @@ namespace PCShopEmpire3D.Assembly
             if (!IsProcessorCoolerOperation(receipt.OperationKind) &&
                 receipt.PreviousProcessorCoolerSlotState !=
                     receipt.ResultingProcessorCoolerSlotState)
+            {
+                return false;
+            }
+
+            if (!IsGraphicsCardOperation(receipt.OperationKind) &&
+                receipt.PreviousGraphicsCardSlotState !=
+                    receipt.ResultingGraphicsCardSlotState)
             {
                 return false;
             }
@@ -2772,6 +2965,64 @@ namespace PCShopEmpire3D.Assembly
                                receipt.SourceProcessorCoolerRetentionOperationId,
                                receipt);
 
+                case AssemblyOperationKind.SeatGraphicsCard:
+                    return receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.EmptyOpen &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.GraphicsCardMountOrientation ==
+                               GraphicsCardMountOrientation.Primary &&
+                           IsMatchingMotherboardSecureLineage(receipt);
+
+                case AssemblyOperationKind.RemoveGraphicsCard:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.EmptyOpen &&
+                           IsMatchingGraphicsCardSeatReceipt(
+                               receipt.SourceGraphicsCardSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.RetainGraphicsCard:
+                    return receipt.PreviousSeatState ==
+                               AssemblySeatState.SeatedSecured &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardRetained &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           IsMatchingGraphicsCardSeatReceipt(
+                               receipt.SourceGraphicsCardSeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.UnretainGraphicsCard:
+                    return receipt.PreviousSeatState != AssemblySeatState.Empty &&
+                           receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardRetained &&
+                           receipt.ResultingGraphicsCardSlotState ==
+                               GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                           IsMatchingGraphicsCardSeatReceipt(
+                               receipt.SourceGraphicsCardSeatOperationId,
+                               receipt) &&
+                           IsMatchingGraphicsCardRetentionReceipt(
+                               receipt.SourceGraphicsCardRetentionOperationId,
+                               receipt);
+
                 default:
                     return false;
             }
@@ -2820,6 +3071,16 @@ namespace PCShopEmpire3D.Assembly
                 ProcessorCoolerTimState.Unsupported;
             var foldedConsumedProcessorCoolerItems =
                 new HashSet<StableId<ItemInstanceIdScope>>();
+            GraphicsCardSlotState foldedGraphicsCardState = HasGraphicsCardSlot
+                ? GraphicsCardSlotState.EmptyOpen
+                : GraphicsCardSlotState.Unsupported;
+            StableId<ItemInstanceIdScope> foldedGraphicsCardItemId = default;
+            StableId<ProductDefinitionIdScope> foldedGraphicsCardProductId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedGraphicsCardSeatOperationId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedGraphicsCardRetentionOperationId = default;
+            GraphicsCardMountOrientation foldedGraphicsCardOrientation = default;
             long foldedInventoryRevision = 0;
 
             for (int index = 0; index < receiptsByRevision.Length; index++)
@@ -2842,6 +3103,9 @@ namespace PCShopEmpire3D.Assembly
                           foldedProcessorCoolerTimState ||
                       receipt.ResultingProcessorCoolerTimState !=
                           foldedProcessorCoolerTimState)) ||
+                    (IsGraphicsCardOperation(receipt.OperationKind) &&
+                     receipt.PreviousGraphicsCardSlotState !=
+                         foldedGraphicsCardState) ||
                     receipt.InventoryRevision < foldedInventoryRevision)
                 {
                     return false;
@@ -2857,7 +3121,9 @@ namespace PCShopEmpire3D.Assembly
                     receipt.OperationKind == AssemblyOperationKind.SeatStorageDevice ||
                     receipt.OperationKind == AssemblyOperationKind.RemoveStorageDevice ||
                     receipt.OperationKind == AssemblyOperationKind.SeatProcessorCooler ||
-                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessorCooler;
+                    receipt.OperationKind == AssemblyOperationKind.RemoveProcessorCooler ||
+                    receipt.OperationKind == AssemblyOperationKind.SeatGraphicsCard ||
+                    receipt.OperationKind == AssemblyOperationKind.RemoveGraphicsCard;
                 if (inventoryTransfer &&
                     receipt.InventoryRevision <= foldedInventoryRevision)
                 {
@@ -2895,6 +3161,9 @@ namespace PCShopEmpire3D.Assembly
                             foldedProcessorCoolerState != (HasProcessorCoolerSlot
                                 ? ProcessorCoolerSlotState.EmptyOpen
                                 : ProcessorCoolerSlotState.Unsupported) ||
+                            foldedGraphicsCardState != (HasGraphicsCardSlot
+                                ? GraphicsCardSlotState.EmptyOpen
+                                : GraphicsCardSlotState.Unsupported) ||
                             receipt.ItemId != foldedItemId ||
                             receipt.ProductId != foldedProductId ||
                             receipt.SourceAttachOperationId != foldedAttachOperationId ||
@@ -3288,6 +3557,94 @@ namespace PCShopEmpire3D.Assembly
                             ProcessorCoolerTimState.Unsupported;
                         break;
 
+                    case AssemblyOperationKind.SeatGraphicsCard:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedGraphicsCardState !=
+                                GraphicsCardSlotState.EmptyOpen ||
+                            !foldedGraphicsCardItemId.IsEmpty ||
+                            !foldedGraphicsCardProductId.IsEmpty ||
+                            !foldedGraphicsCardSeatOperationId.IsEmpty ||
+                            !foldedGraphicsCardRetentionOperationId.IsEmpty ||
+                            foldedGraphicsCardOrientation != default ||
+                            receipt.SourceAttachOperationId !=
+                                foldedAttachOperationId ||
+                            receipt.SourceSecureOperationId !=
+                                foldedSecureOperationId ||
+                            receipt.GraphicsCardMountOrientation !=
+                                GraphicsCardMountOrientation.Primary)
+                        {
+                            return false;
+                        }
+
+                        foldedGraphicsCardItemId = receipt.ItemId;
+                        foldedGraphicsCardProductId = receipt.ProductId;
+                        foldedGraphicsCardSeatOperationId = receipt.OperationId;
+                        foldedGraphicsCardOrientation =
+                            receipt.GraphicsCardMountOrientation;
+                        break;
+
+                    case AssemblyOperationKind.RetainGraphicsCard:
+                        if (foldedState != AssemblySeatState.SeatedSecured ||
+                            foldedGraphicsCardState !=
+                                GraphicsCardSlotState.GraphicsCardSeatedUnsecured ||
+                            receipt.ItemId != foldedGraphicsCardItemId ||
+                            receipt.ProductId != foldedGraphicsCardProductId ||
+                            receipt.SourceGraphicsCardSeatOperationId !=
+                                foldedGraphicsCardSeatOperationId ||
+                            !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty ||
+                            !foldedGraphicsCardRetentionOperationId.IsEmpty ||
+                            receipt.GraphicsCardMountOrientation !=
+                                foldedGraphicsCardOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedGraphicsCardRetentionOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.UnretainGraphicsCard:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedGraphicsCardState !=
+                                GraphicsCardSlotState.GraphicsCardRetained ||
+                            receipt.ItemId != foldedGraphicsCardItemId ||
+                            receipt.ProductId != foldedGraphicsCardProductId ||
+                            receipt.SourceGraphicsCardSeatOperationId !=
+                                foldedGraphicsCardSeatOperationId ||
+                            receipt.SourceGraphicsCardRetentionOperationId !=
+                                foldedGraphicsCardRetentionOperationId ||
+                            foldedGraphicsCardRetentionOperationId.IsEmpty ||
+                            receipt.GraphicsCardMountOrientation !=
+                                foldedGraphicsCardOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedGraphicsCardRetentionOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.RemoveGraphicsCard:
+                        if (foldedState == AssemblySeatState.Empty ||
+                            foldedGraphicsCardState !=
+                                GraphicsCardSlotState.GraphicsCardSeatedUnsecured ||
+                            receipt.ItemId != foldedGraphicsCardItemId ||
+                            receipt.ProductId != foldedGraphicsCardProductId ||
+                            receipt.SourceGraphicsCardSeatOperationId !=
+                                foldedGraphicsCardSeatOperationId ||
+                            !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty ||
+                            !foldedGraphicsCardRetentionOperationId.IsEmpty ||
+                            receipt.GraphicsCardMountOrientation !=
+                                foldedGraphicsCardOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedGraphicsCardItemId = default;
+                        foldedGraphicsCardProductId = default;
+                        foldedGraphicsCardSeatOperationId = default;
+                        foldedGraphicsCardRetentionOperationId = default;
+                        foldedGraphicsCardOrientation = default;
+                        break;
+
                     default:
                         return false;
                 }
@@ -3300,6 +3657,11 @@ namespace PCShopEmpire3D.Assembly
                     receipt.ResultingProcessorCoolerSlotState;
                 foldedProcessorCoolerTimState =
                     receipt.ResultingProcessorCoolerTimState;
+                if (IsGraphicsCardOperation(receipt.OperationKind))
+                {
+                    foldedGraphicsCardState =
+                        receipt.ResultingGraphicsCardSlotState;
+                }
                 foldedInventoryRevision = receipt.InventoryRevision;
             }
 
@@ -3336,7 +3698,16 @@ namespace PCShopEmpire3D.Assembly
                        _processorCoolerRetainedByOperationId &&
                    foldedProcessorCoolerOrientation ==
                        _processorCoolerMountOrientation &&
-                   foldedProcessorCoolerTimState == _processorCoolerTimState;
+                   foldedProcessorCoolerTimState == _processorCoolerTimState &&
+                   foldedGraphicsCardState == _graphicsCardSlotState &&
+                   foldedGraphicsCardItemId == _graphicsCardItemId &&
+                   foldedGraphicsCardProductId == _graphicsCardProductId &&
+                   foldedGraphicsCardSeatOperationId ==
+                       _graphicsCardSeatedByOperationId &&
+                   foldedGraphicsCardRetentionOperationId ==
+                       _graphicsCardRetainedByOperationId &&
+                   foldedGraphicsCardOrientation ==
+                       _graphicsCardMountOrientation;
         }
 
         private bool HasExactProcessorHostLineage(

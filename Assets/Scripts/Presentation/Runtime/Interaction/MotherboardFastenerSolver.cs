@@ -125,7 +125,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 LineHits,
                 distance + 0.03f,
                 obstructionMask | targetMask,
-                QueryTriggerInteraction.Ignore);
+                QueryTriggerInteraction.Collide);
             if (hitCount <= 0)
             {
                 return Invalid(
@@ -151,6 +151,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (hit.collider == focusCollider)
                 {
                     targetDistance = Mathf.Min(targetDistance, hit.distance);
+                }
+                else if (hit.collider.isTrigger)
+                {
+                    continue;
                 }
                 else
                 {

@@ -51,7 +51,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             fixture.Origin.rotation = Quaternion.identity;
             fixture.Target.isTrigger = true;
             Assert.That(fixture.Evaluate().Status,
-                Is.EqualTo(MotherboardFastenerStatus.LineOfSightBlocked));
+                Is.EqualTo(MotherboardFastenerStatus.ValidUnsecured));
             fixture.Target.isTrigger = false;
             fixture.CreateBlocker();
             Assert.That(fixture.Evaluate().Status,

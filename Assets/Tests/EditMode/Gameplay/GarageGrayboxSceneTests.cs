@@ -92,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(9));
+                Assert.That(physicalItems.Length, Is.EqualTo(10));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -122,9 +122,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection processorCooler = physicalItems.Single(
                     item => item.ItemIdValue ==
                             GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue);
+                PhysicalItemProjection graphicsCard = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession
+                                .GraphicsCardAssemblyItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(5));
+                    Is.EqualTo(6));
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -386,6 +390,69 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     coolerProjectionInvariant.IsFailure
                         ? coolerProjectionInvariant.Error.Code
                         : string.Empty);
+                GraphicsCardAssemblyItemBinding graphicsCardBinding =
+                    graphicsCard.GetComponent<GraphicsCardAssemblyItemBinding>();
+                Assert.That(graphicsCardBinding, Is.Not.Null);
+                Assert.That(graphicsCard.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProductDisplayName));
+                Assert.That(graphicsCard.SupportsPlacement, Is.False);
+                Assert.That(graphicsCard.Body.mass, Is.EqualTo(0.82f).Within(0.001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCard.DropHalfExtents,
+                    new Vector3(0.1425f, 0.032f, 0.0625f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(marker.GraphicsCard, Is.SameAs(graphicsCard));
+                Assert.That(marker.GraphicsCardBinding,
+                    Is.SameAs(graphicsCardBinding));
+                Assert.That(marker.GraphicsCardSlot, Is.Not.Null);
+                Assert.That(marker.GraphicsCardSlot.IsConfigured, Is.True);
+                Assert.That(marker.GraphicsCardSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.GraphicsCardSlotIdValue));
+                Assert.That(marker.GraphicsCardSlot.LatchIdValue,
+                    Is.EqualTo(GarageStockFlowSession.GraphicsCardLatchIdValue));
+                Assert.That(marker.GraphicsCardSlot.RearBracketIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.GraphicsCardRearBracketIdValue));
+                Assert.That(marker.GraphicsCardSlot.RearBracketFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .GraphicsCardBracketFastenerIdValue));
+                Assert.That(marker.GraphicsCardSlot.FocusCollider.enabled,
+                    Is.False);
+                Assert.That(marker.GraphicsCardSlot.SupportCollider.isTrigger,
+                    Is.False);
+                Assert.That(graphicsCardBinding.Runtime,
+                    Is.SameAs(marker.StockFlow));
+                Assert.That(graphicsCardBinding.PhysicalItem,
+                    Is.SameAs(graphicsCard));
+                Assert.That(graphicsCardBinding.Slot,
+                    Is.SameAs(marker.GraphicsCardSlot));
+                Assert.That(graphicsCardBinding.InventoryItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .GraphicsCardAssemblyItemInstanceIdValue));
+                Assert.That(marker.PlayerCarry.MatchesGraphicsCardConfiguration(
+                    marker.GraphicsCardSlot,
+                    graphicsCardBinding), Is.True);
+                Assert.That(marker.HasGraphicsCardR28Runtime, Is.True);
+                Assert.That(marker.StockFlow.Session.TryGetGraphicsCardAssemblyItem(
+                    out InventoryItemRecord graphicsCardItem), Is.True);
+                Assert.That(graphicsCardItem.Id,
+                    Is.EqualTo(marker.StockFlow.Session.GraphicsCardAssemblyItemId));
+                Assert.That(graphicsCardItem.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.ProductId));
+                Assert.That(graphicsCardItem.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.AssemblyBuild
+                        .GraphicsCardSlotState,
+                    Is.EqualTo(GraphicsCardSlotState.EmptyOpen));
+                OperationResult graphicsCardProjectionInvariant =
+                    graphicsCardBinding.ValidateProjectionInvariant();
+                Assert.That(graphicsCardProjectionInvariant.IsSuccess,
+                    Is.True,
+                    graphicsCardProjectionInvariant.IsFailure
+                        ? graphicsCardProjectionInvariant.Error.Code
+                        : string.Empty);
                 Assert.That(marker.StockFlow.Session.RetailOffers.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailBaskets.Count, Is.Zero);
                 Assert.That(marker.StockFlow.Session.RetailCheckouts.Count, Is.Zero);
@@ -613,7 +680,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-cooler-r27-v1"));
+                    Is.EqualTo("garage-gpu-rear-bracket-r28-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -774,6 +841,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name ==
                                          "ProcessorCoolerMountingFrame");
+                Transform graphicsCardSlotRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "MotherboardPcieX16GraphicsSlot");
+                Transform graphicsCardSnapAnchor = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardPcieX16SnapAnchor");
+                Transform graphicsCardLatchPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardPcieLatchPivot");
+                Transform graphicsCardRearBracket = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardRearBracket");
+                Transform graphicsCardFastenerPivot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardRearBracketFastenerPivot");
+                Transform graphicsCardFocus = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardSlotFocusTarget");
+                Transform graphicsCardRoot = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "PrototypeNorthstarA60GraphicsCard");
+                Transform graphicsCardPcb = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name == "GraphicsCardPcb");
+                Transform graphicsCardShroud = assemblySlice
+                    .GetComponentsInChildren<Transform>(true)
+                    .Single(transform => transform.name ==
+                                         "GraphicsCardDualFanShroud");
                 Transform connectorMarks = assemblySlice.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name == "MotherboardConnectorMarks");
                 Transform fastenerStation = assemblySlice.GetComponentsInChildren<Transform>(true)
@@ -818,6 +920,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     coolerRoot.GetComponent<ProcessorCoolerRuntimeGeometry>();
                 ProcessorCoolerRuntimeSmokeMarker coolerSmoke =
                     coolerRoot.GetComponent<ProcessorCoolerRuntimeSmokeMarker>();
+                GraphicsCardSlotProjection graphicsCardSlot =
+                    graphicsCardSlotRoot.GetComponent<GraphicsCardSlotProjection>();
+                GraphicsCardAssemblyItemBinding graphicsCardBinding =
+                    graphicsCardRoot.GetComponent<GraphicsCardAssemblyItemBinding>();
+                PhysicalItemProjection graphicsCard =
+                    graphicsCardRoot.GetComponent<PhysicalItemProjection>();
                 Assert.That(openChassis, Is.Not.Null);
                 Assert.That(seat, Is.Not.Null);
                 Assert.That(fastener, Is.Not.Null);
@@ -836,6 +944,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(processorCooler, Is.Not.Null);
                 Assert.That(coolerGeometry, Is.Not.Null);
                 Assert.That(coolerSmoke, Is.Not.Null);
+                Assert.That(graphicsCardSlot, Is.Not.Null);
+                Assert.That(graphicsCardBinding, Is.Not.Null);
+                Assert.That(graphicsCard, Is.Not.Null);
                 Assert.That(marker.MotherboardSeat, Is.SameAs(seat));
                 Assert.That(marker.MotherboardFastener, Is.SameAs(fastener));
                 Assert.That(marker.MotherboardBinding, Is.SameAs(binding));
@@ -852,6 +963,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.ProcessorCoolerBinding, Is.SameAs(coolerBinding));
                 Assert.That(marker.ProcessorCooler, Is.SameAs(processorCooler));
                 Assert.That(marker.ProcessorCoolerGeometry, Is.SameAs(coolerGeometry));
+                Assert.That(marker.GraphicsCardSlot, Is.SameAs(graphicsCardSlot));
+                Assert.That(marker.GraphicsCardBinding,
+                    Is.SameAs(graphicsCardBinding));
+                Assert.That(marker.GraphicsCard, Is.SameAs(graphicsCard));
                 Assert.That(binding.Fastener, Is.SameAs(fastener));
                 Assert.That(storageSlot.IsConfigured, Is.True);
                 Assert.That(storageSlot.SlotIdValue,
@@ -956,6 +1071,129 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.True,
                     coolerProjectionInvariant.IsFailure
                         ? coolerProjectionInvariant.Error.Code
+                        : string.Empty);
+                Assert.That(graphicsCardSlot.IsConfigured, Is.True);
+                Assert.That(graphicsCardSlot.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.GraphicsCardSlotIdValue));
+                Assert.That(graphicsCardSlot.LatchIdValue,
+                    Is.EqualTo(GarageStockFlowSession.GraphicsCardLatchIdValue));
+                Assert.That(graphicsCardSlot.RearBracketIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.GraphicsCardRearBracketIdValue));
+                Assert.That(graphicsCardSlot.RearBracketFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .GraphicsCardBracketFastenerIdValue));
+                Assert.That(graphicsCardSlot.SnapAnchor,
+                    Is.SameAs(graphicsCardSnapAnchor));
+                Assert.That(Vector3.Distance(
+                    graphicsCardSlotRoot.localPosition,
+                    new Vector3(0f, -0.074f, 0.012f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCardSnapAnchor.localPosition,
+                    new Vector3(0f, 0f, 0.008f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(graphicsCardSlot.AssemblyRoot,
+                    Is.SameAs(binding.PhysicalItem.transform));
+                Assert.That(graphicsCardSlot.LatchPivot,
+                    Is.SameAs(graphicsCardLatchPivot));
+                Assert.That(graphicsCardSlot.RearBracketFastenerPivot,
+                    Is.SameAs(graphicsCardFastenerPivot));
+                Assert.That(graphicsCardSlot.FocusCollider,
+                    Is.SameAs(graphicsCardFocus.GetComponent<BoxCollider>()));
+                Assert.That(graphicsCardSlot.FocusCollider.enabled, Is.False);
+                Assert.That(graphicsCardSlot.FocusCollider.isTrigger, Is.True);
+                Assert.That(graphicsCardSlot.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(graphicsCardSlot.SupportCollider,
+                    Is.SameAs(graphicsCardSlotRoot
+                        .Find("PcieX16Connector").GetComponent<BoxCollider>()));
+                Assert.That(graphicsCardSlot.SupportCollider.isTrigger, Is.False);
+                Assert.That(graphicsCardSlot.SupportCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(graphicsCardSlot.ChassisClearanceBlockers.Length,
+                    Is.EqualTo(5));
+                Assert.That(graphicsCardSlot.CoolerClearanceBlockers,
+                    Is.EqualTo(new[]
+                    {
+                        processorCooler.GetComponent<BoxCollider>()
+                    }));
+                Assert.That(graphicsCardBinding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(graphicsCardBinding.PhysicalItem,
+                    Is.SameAs(graphicsCard));
+                Assert.That(graphicsCardBinding.Slot,
+                    Is.SameAs(graphicsCardSlot));
+                Assert.That(graphicsCardBinding.InventoryItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .GraphicsCardAssemblyItemInstanceIdValue));
+                Assert.That(marker.PlayerCarry.MatchesGraphicsCardConfiguration(
+                    graphicsCardSlot,
+                    graphicsCardBinding), Is.True);
+                Assert.That(graphicsCard.ItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .GraphicsCardAssemblyItemInstanceIdValue));
+                Assert.That(graphicsCard.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.ProductDisplayName));
+                Assert.That(graphicsCard.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(graphicsCard.SupportsPlacement, Is.False);
+                Assert.That(graphicsCard.Body.mass,
+                    Is.EqualTo(0.82f).Within(0.001f));
+                Assert.That(graphicsCard.Body.isKinematic, Is.True);
+                Assert.That(graphicsCard.Body.useGravity, Is.False);
+                BoxCollider graphicsCardCollider =
+                    graphicsCardRoot.GetComponent<BoxCollider>();
+                Assert.That(graphicsCardCollider, Is.Not.Null);
+                Assert.That(Vector3.Distance(
+                    graphicsCardCollider.center,
+                    new Vector3(0f, -0.032f, 0.0625f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCardCollider.size,
+                    new Vector3(0.285f, 0.064f, 0.125f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCardPcb.GetComponent<MeshFilter>()
+                        .sharedMesh.bounds.size,
+                    new Vector3(0.270f, 0.008f, 0.112f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCard.DropHalfExtents,
+                    new Vector3(0.1425f, 0.032f, 0.0625f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    graphicsCardRoot.localPosition,
+                    new Vector3(-0.45f, 0.992f, 3.93f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    graphicsCardRoot.localRotation,
+                    Quaternion.Euler(-90f, 0f, 0f)), Is.LessThan(0.1f));
+                Assert.That(graphicsCardPcb.GetComponent<Renderer>()
+                        .sharedMaterial.name,
+                    Does.StartWith("MotherboardPcb"));
+                Assert.That(graphicsCardShroud.GetComponent<Renderer>()
+                        .sharedMaterial.name,
+                    Does.StartWith("DarkMetal"));
+                Assert.That(graphicsCardRoot.GetComponentsInChildren<Transform>(true)
+                        .Count(transform => transform.name.StartsWith(
+                            "GraphicsCardFan_",
+                            StringComparison.Ordinal)),
+                    Is.EqualTo(2));
+                Assert.That(graphicsCardRoot.GetComponentsInChildren<Transform>(true)
+                        .Count(transform => transform.name.StartsWith(
+                            "GraphicsCardPcieContact_",
+                            StringComparison.Ordinal)),
+                    Is.EqualTo(12));
+                Assert.That(graphicsCardRearBracket, Is.Not.Null);
+                Assert.That(marker.HasGraphicsCardR28Runtime, Is.True);
+                OperationResult graphicsCardProjectionInvariant =
+                    graphicsCardBinding.ValidateProjectionInvariant();
+                Assert.That(graphicsCardProjectionInvariant.IsSuccess,
+                    Is.True,
+                    graphicsCardProjectionInvariant.IsFailure
+                        ? graphicsCardProjectionInvariant.Error.Code
                         : string.Empty);
                 Assert.That(seat.SnapAnchor, Is.SameAs(snapAnchor));
                 Assert.That(seat.SnapPose.position,
@@ -1249,7 +1487,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(fastener.FocusCollider,
                     Is.SameAs(fastenerFocus.GetComponent<BoxCollider>()));
                 Assert.That(fastener.FocusCollider.enabled, Is.False);
-                Assert.That(fastener.FocusCollider.isTrigger, Is.False);
+                Assert.That(fastener.FocusCollider.isTrigger, Is.True);
                 Assert.That(fastener.FocusCollider.gameObject.layer,
                     Is.EqualTo(LayerMask.NameToLayer("Interactable")));
                 Assert.That(Vector3.Distance(
@@ -1293,9 +1531,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(70));
+                    Is.EqualTo(108));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(17));
+                    Is.EqualTo(20));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));

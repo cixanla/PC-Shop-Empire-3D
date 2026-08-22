@@ -16,10 +16,10 @@ using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation
 {
-    public sealed class GaragePrototypeMarker : MonoBehaviour
+    public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-processor-cooler-r27-v1";
+        public const string Version = "garage-gpu-rear-bracket-r28-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
 
@@ -46,6 +46,9 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private ProcessorCoolerAssemblyItemBinding processorCoolerBinding;
         [SerializeField] private PhysicalItemProjection processorCooler;
         [SerializeField] private ProcessorCoolerRuntimeGeometry processorCoolerGeometry;
+        [SerializeField] private GraphicsCardSlotProjection graphicsCardSlot;
+        [SerializeField] private GraphicsCardAssemblyItemBinding graphicsCardBinding;
+        [SerializeField] private PhysicalItemProjection graphicsCard;
 
         public FirstPersonMotor PlayerMotor => playerMotor;
 
@@ -96,6 +99,13 @@ namespace PCShopEmpire3D.Presentation
         public ProcessorCoolerRuntimeGeometry ProcessorCoolerGeometry =>
             processorCoolerGeometry;
 
+        public GraphicsCardSlotProjection GraphicsCardSlot => graphicsCardSlot;
+
+        public GraphicsCardAssemblyItemBinding GraphicsCardBinding =>
+            graphicsCardBinding;
+
+        public PhysicalItemProjection GraphicsCard => graphicsCard;
+
         /// <summary>
         /// Deliberately false until the scene owns exactly one canonical r27 cooler geometry.
         /// This is a smoke flag, not authority and not a substitute for the domain snapshot.
@@ -110,6 +120,26 @@ namespace PCShopEmpire3D.Presentation
             processorCoolerBinding.PhysicalItem == processorCooler &&
             FindObjectsByType<ProcessorCoolerRuntimeGeometry>(
                 FindObjectsSortMode.None).Length == 1;
+
+        public bool HasGraphicsCardR28Runtime =>
+            graphicsCardSlot != null &&
+            graphicsCardSlot.IsConfigured &&
+            graphicsCardBinding != null &&
+            graphicsCardBinding.Slot == graphicsCardSlot &&
+            graphicsCardBinding.PhysicalItem == graphicsCard &&
+            graphicsCard != null &&
+            processorCooler != null &&
+            graphicsCardSlot.ChassisClearanceBlockers.Length == 5 &&
+            graphicsCardSlot.CoolerClearanceBlockers.Length == 1 &&
+            graphicsCardSlot.CoolerClearanceBlockers[0] ==
+                processorCooler.GetComponent<Collider>() &&
+            graphicsCardSlot.FocusCollider.isTrigger &&
+            graphicsCardSlot.FocusCollider.gameObject.layer ==
+                LayerMask.NameToLayer("Interactable") &&
+            graphicsCardSlot.SupportCollider.gameObject.layer ==
+                LayerMask.NameToLayer("Ignore Raycast") &&
+            CountCanonicalGraphicsCardProjections(
+                GarageStockFlowSession.GraphicsCardAssemblyItemInstanceIdValue) == 1;
 
         public void Configure(
             FirstPersonMotor motor,
@@ -134,7 +164,10 @@ namespace PCShopEmpire3D.Presentation
             ProcessorCoolerSlotProjection physicalProcessorCoolerSlot = null,
             ProcessorCoolerAssemblyItemBinding physicalProcessorCoolerBinding = null,
             PhysicalItemProjection physicalProcessorCooler = null,
-            ProcessorCoolerRuntimeGeometry physicalProcessorCoolerGeometry = null)
+            ProcessorCoolerRuntimeGeometry physicalProcessorCoolerGeometry = null,
+            GraphicsCardSlotProjection physicalGraphicsCardSlot = null,
+            GraphicsCardAssemblyItemBinding physicalGraphicsCardBinding = null,
+            PhysicalItemProjection physicalGraphicsCard = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -159,6 +192,9 @@ namespace PCShopEmpire3D.Presentation
             processorCoolerBinding = physicalProcessorCoolerBinding;
             processorCooler = physicalProcessorCooler;
             processorCoolerGeometry = physicalProcessorCoolerGeometry;
+            graphicsCardSlot = physicalGraphicsCardSlot;
+            graphicsCardBinding = physicalGraphicsCardBinding;
+            graphicsCard = physicalGraphicsCard;
         }
 
         private void Start()
@@ -263,7 +299,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 5 &&
+                                          assemblySession.Inventory.SerializedItemCount == 6 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -490,6 +526,59 @@ namespace PCShopEmpire3D.Presentation
                                                       .ProcessorCoolerSlotState ==
                                                   ProcessorCoolerSlotState.EmptyOpen &&
                                               HasProcessorCoolerR27Runtime;
+            bool hasGraphicsCardSlot = assemblySession != null &&
+                                       graphicsCardSlot != null &&
+                                       graphicsCardSlot.IsConfigured &&
+                                       graphicsCardSlot.SlotIdValue ==
+                                           GarageStockFlowSession.GraphicsCardSlotIdValue &&
+                                       graphicsCardSlot.LatchIdValue ==
+                                           GarageStockFlowSession.GraphicsCardLatchIdValue &&
+                                       graphicsCardSlot.RearBracketIdValue ==
+                                           GarageStockFlowSession.GraphicsCardRearBracketIdValue &&
+                                       graphicsCardSlot.RearBracketFastenerIdValue ==
+                                           GarageStockFlowSession
+                                               .GraphicsCardBracketFastenerIdValue &&
+                                       graphicsCardSlot.MatchesLogicalAuthorityState(
+                                           false,
+                                           GraphicsCardSlotProjectionState.EmptyOpen);
+            bool hasGraphicsCardIdentity = assemblySession != null &&
+                                           graphicsCardBinding != null &&
+                                           graphicsCard != null &&
+                                           graphicsCardBinding.Runtime == stockFlow &&
+                                           graphicsCardBinding.PhysicalItem == graphicsCard &&
+                                           graphicsCardBinding.InventoryItemIdValue ==
+                                               assemblySession
+                                                   .GraphicsCardAssemblyItemId.Value &&
+                                           graphicsCard.ItemIdValue ==
+                                               assemblySession
+                                                   .GraphicsCardAssemblyItemId.Value &&
+                                           assemblySession.TryGetGraphicsCardAssemblyItem(
+                                               out InventoryItemRecord graphicsCardItem) &&
+                                           graphicsCardItem.Id ==
+                                               assemblySession.GraphicsCardAssemblyItemId &&
+                                           graphicsCardItem.ProductId ==
+                                               assemblySession.ProductId &&
+                                           graphicsCardItem.ContainerId ==
+                                               assemblySession.WorldFloorContainerId &&
+                                           CountCanonicalGraphicsCardProjections(
+                                               assemblySession
+                                                   .GraphicsCardAssemblyItemId.Value) == 1 &&
+                                           graphicsCardBinding
+                                               .ValidateProjectionInvariant().IsSuccess;
+            bool hasGraphicsCardAssembly = hasGraphicsCardSlot &&
+                                           hasGraphicsCardIdentity &&
+                                           graphicsCardBinding.Slot == graphicsCardSlot &&
+                                           playerCarry != null &&
+                                           playerCarry.MatchesGraphicsCardConfiguration(
+                                               graphicsCardSlot,
+                                               graphicsCardBinding) &&
+                                           graphicsCard.CarryProfile ==
+                                               PhysicalCarryProfile.PcComponent &&
+                                           assemblySession.AssemblyBuild.HasGraphicsCardSlot &&
+                                           assemblySession.AssemblyBuild
+                                                   .GraphicsCardSlotState ==
+                                               GraphicsCardSlotState.EmptyOpen &&
+                                           HasGraphicsCardR28Runtime;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -519,7 +608,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly && hasGraphicsCardAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -536,6 +625,9 @@ namespace PCShopEmpire3D.Presentation
                 $"processor-cooler-slot={(hasProcessorCoolerSlot ? "ready" : "missing")} " +
                 $"processor-cooler-retention={(hasProcessorCoolerAssembly ? "ready" : "missing")} " +
                 $"processor-cooler-identity={(hasProcessorCoolerIdentity ? "stable" : "missing")} " +
+                $"graphics-card-slot={(hasGraphicsCardSlot ? "ready" : "missing")} " +
+                $"graphics-card-retention={(hasGraphicsCardAssembly ? "ready" : "missing")} " +
+                $"graphics-card-identity={(hasGraphicsCardIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -547,6 +639,8 @@ namespace PCShopEmpire3D.Presentation
             bool runStorageSmoke = HasCommandLineArgument("-pse-storage-smoke");
             bool runProcessorCoolerSmoke =
                 HasCommandLineArgument("-pse-cooler-smoke");
+            bool runGraphicsCardSmoke =
+                HasCommandLineArgument("-pse-gpu-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
@@ -554,7 +648,8 @@ namespace PCShopEmpire3D.Presentation
                              (runProcessorSmoke ? 1 : 0) +
                              (runDimmSmoke ? 1 : 0) +
                              (runStorageSmoke ? 1 : 0) +
-                             (runProcessorCoolerSmoke ? 1 : 0);
+                             (runProcessorCoolerSmoke ? 1 : 0) +
+                             (runGraphicsCardSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -608,6 +703,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runGraphicsCardSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_GRAPHICS_CARD_RUNTIME_SMOKE " +
+                    "graphics-card-flow=failed code=smoke.gpu-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -654,6 +757,12 @@ namespace PCShopEmpire3D.Presentation
                 Application.runInBackground = true;
                 StartCoroutine(RunProcessorCoolerSmoke());
             }
+
+            if (runGraphicsCardSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunGraphicsCardSmoke());
+            }
         }
 
         private IEnumerator RunStockFlowSmoke()
@@ -679,7 +788,14 @@ namespace PCShopEmpire3D.Presentation
 
             if (session.Order.Status != PCShopEmpire3D.Orders.PurchaseOrderStatus.Arrived ||
                 session.TryGetItem(out _) ||
-                session.Inventory.GetTotalQuantity(session.ProductId).Value != 0 ||
+                !session.TryGetGraphicsCardAssemblyItem(
+                    out InventoryItemRecord initialAssemblyGraphicsCard) ||
+                initialAssemblyGraphicsCard.Id !=
+                    session.GraphicsCardAssemblyItemId ||
+                initialAssemblyGraphicsCard.ProductId != session.ProductId ||
+                initialAssemblyGraphicsCard.ContainerId !=
+                    session.WorldFloorContainerId ||
+                session.Inventory.GetTotalQuantity(session.ProductId).Value != 1 ||
                 !parcel.IsSealed)
             {
                 Debug.LogError(
@@ -730,7 +846,14 @@ namespace PCShopEmpire3D.Presentation
             bool validInventory = session.TryGetItem(out PCShopEmpire3D.Inventory.InventoryItemRecord record) &&
                                   record.Id == session.ItemId &&
                                   record.ContainerId == session.WorldFloorContainerId &&
-                                  session.Inventory.GetTotalQuantity(session.ProductId).Value == 1;
+                                  session.TryGetGraphicsCardAssemblyItem(
+                                      out InventoryItemRecord assemblyGraphicsCard) &&
+                                  assemblyGraphicsCard.Id ==
+                                      session.GraphicsCardAssemblyItemId &&
+                                  assemblyGraphicsCard.ProductId == session.ProductId &&
+                                  assemblyGraphicsCard.ContainerId ==
+                                      session.WorldFloorContainerId &&
+                                  session.Inventory.GetTotalQuantity(session.ProductId).Value == 2;
             if (drop.IsFailure || playerCarry.HeldItem != null || !validInventory)
             {
                 Debug.LogError(
@@ -1089,7 +1212,15 @@ namespace PCShopEmpire3D.Presentation
             OperationResult publishOffer = session.PublishShelfOffer();
             stockFlow.RefreshPresentation();
             if (accept.IsFailure || shelfTransfer.IsFailure || publishOffer.IsFailure ||
-                session.Inventory.GetTotalQuantity(session.ProductId).Value != 1 ||
+                session.Inventory.GetTotalQuantity(session.ProductId).Value != 2 ||
+                !session.TryGetItem(out InventoryItemRecord shelfItem) ||
+                shelfItem.Id != session.ItemId ||
+                shelfItem.ContainerId != session.ShelfContainerId ||
+                !session.TryGetGraphicsCardAssemblyItem(
+                    out InventoryItemRecord assemblyGraphicsCard) ||
+                assemblyGraphicsCard.Id != session.GraphicsCardAssemblyItemId ||
+                assemblyGraphicsCard.ProductId != session.ProductId ||
+                assemblyGraphicsCard.ContainerId != session.WorldFloorContainerId ||
                 !session.TryGetShelfOffer(out _))
             {
                 playerMotor.SetPaused(false);
@@ -1421,11 +1552,14 @@ namespace PCShopEmpire3D.Presentation
                 out InventoryItemRecord remainingMotherboard);
             bool hasRemainingProcessor = session.TryGetProcessorItem(
                 out InventoryItemRecord remainingProcessor);
+            bool hasRemainingGraphicsCard =
+                session.TryGetGraphicsCardAssemblyItem(
+                    out InventoryItemRecord remainingGraphicsCard);
             bool motherboardProjectionValid = motherboardBinding != null &&
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 5 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 6 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -1434,6 +1568,12 @@ namespace PCShopEmpire3D.Presentation
                                        remainingProcessor.Id == session.ProcessorItemId &&
                                        remainingProcessor.ProductId == session.ProcessorProductId &&
                                        remainingProcessor.ContainerId == session.WorldFloorContainerId &&
+                                       hasRemainingGraphicsCard &&
+                                       remainingGraphicsCard.Id ==
+                                           session.GraphicsCardAssemblyItemId &&
+                                       remainingGraphicsCard.ProductId == session.ProductId &&
+                                       remainingGraphicsCard.ContainerId ==
+                                           session.WorldFloorContainerId &&
                                        session.AssemblyBuild.Revision == 0 &&
                                        session.AssemblyBuild.ProcessorSocketState ==
                                            ProcessorSocketState.EmptyOpen &&
@@ -1445,7 +1585,9 @@ namespace PCShopEmpire3D.Presentation
                              !exitedVisit.RouteFallbackUsed &&
                              exitedVisit.TotalRouteFailureCount == 0 &&
                              !customerFlow.CustomerVisible &&
-                             session.Inventory.GetTotalQuantity(session.ProductId).Value == 0 &&
+                             !session.TryGetItem(out _) &&
+                             session.Inventory.GetTotalQuantity(session.ProductId).Value == 1 &&
+                             session.Inventory.GetAvailableQuantity(session.ProductId).Value == 1 &&
                              session.RetailBaskets.Count == 0 &&
                              session.RetailCheckouts.CompletionCount == 1 &&
                              session.CheckoutSettlements.SettlementCount == 1 &&
@@ -2359,7 +2501,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -2755,7 +2897,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -2826,7 +2968,7 @@ namespace PCShopEmpire3D.Presentation
                              looseMemory.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              dimmBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3159,7 +3301,7 @@ namespace PCShopEmpire3D.Presentation
                              memoryModule.IsStablePlacement &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3258,7 +3400,7 @@ namespace PCShopEmpire3D.Presentation
                              looseStorage.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              storageBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3500,7 +3642,7 @@ namespace PCShopEmpire3D.Presentation
                              storageDevice.IsStablePlacement &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3630,7 +3772,7 @@ namespace PCShopEmpire3D.Presentation
                                  InventorySerializedItemStateFlags.None &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              processorCoolerBinding.ValidateProjectionInvariant()
                                  .IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
@@ -3994,7 +4136,7 @@ namespace PCShopEmpire3D.Presentation
                              processorCooler.IsStablePlacement &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 5 &&
+                             session.Inventory.SerializedItemCount == 6 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(

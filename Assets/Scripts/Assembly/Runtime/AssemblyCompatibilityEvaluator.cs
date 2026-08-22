@@ -235,5 +235,53 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.ProcessorCoolerSocketMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluateGraphicsCardSeat(
+            PcComponentSpecification graphicsCardSpecification,
+            PcComponentSpecification motherboardSpecification,
+            GraphicsCardType supportedGraphicsCardType,
+            GraphicsCardMountOrientation orientation)
+        {
+            if (graphicsCardSpecification == null || motherboardSpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidGraphicsCardType(
+                    supportedGraphicsCardType))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidGraphicsCardType);
+            }
+
+            if (orientation != GraphicsCardMountOrientation.Primary &&
+                orientation != GraphicsCardMountOrientation.Rotated180)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidGraphicsCardOrientation);
+            }
+
+            if (orientation != GraphicsCardMountOrientation.Primary)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.GraphicsCardOrientationMismatch);
+            }
+
+            if (graphicsCardSpecification.Kind != PcComponentKind.GraphicsCard ||
+                motherboardSpecification.Kind != PcComponentKind.Motherboard)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            return graphicsCardSpecification.GraphicsCardType ==
+                       supportedGraphicsCardType &&
+                   motherboardSpecification.GraphicsCardType ==
+                       supportedGraphicsCardType
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.GraphicsCardTypeMismatch);
+        }
     }
 }

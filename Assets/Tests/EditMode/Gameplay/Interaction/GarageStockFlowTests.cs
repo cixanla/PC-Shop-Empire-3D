@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageAndCooler()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageCoolerAndGraphicsCard()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
             Assert.That(session.Catalog.Count, Is.EqualTo(6));
-            Assert.That(session.Components.Count, Is.EqualTo(5));
+            Assert.That(session.Components.Count, Is.EqualTo(6));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -65,6 +65,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(specification.Value.DimmType, Is.EqualTo(DimmType.Ddr5Udimm));
             Assert.That(specification.Value.M2StorageType,
                 Is.EqualTo(M2StorageType.NvmePcie4X4_2280));
+            Assert.That(specification.Value.GraphicsCardType,
+                Is.EqualTo(GraphicsCardType.Pcie4X16FullHeightDualSlot));
             OperationResult<PcComponentSpecification> processorSpecification =
                 session.Components.Get(session.ProcessorProductId);
             Assert.That(processorSpecification.IsSuccess, Is.True);
@@ -119,7 +121,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(cooler.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(cooler.StateFlags,
                 Is.EqualTo(InventorySerializedItemStateFlags.None));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(5));
+            OperationResult<PcComponentSpecification> graphicsCardSpecification =
+                session.Components.Get(session.ProductId);
+            Assert.That(graphicsCardSpecification.IsSuccess, Is.True);
+            Assert.That(graphicsCardSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.GraphicsCard));
+            Assert.That(graphicsCardSpecification.Value.GraphicsCardType,
+                Is.EqualTo(GraphicsCardType.Pcie4X16FullHeightDualSlot));
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord graphicsCard), Is.True);
+            Assert.That(graphicsCard.Id, Is.EqualTo(session.GraphicsCardAssemblyItemId));
+            Assert.That(graphicsCard.ProductId, Is.EqualTo(session.ProductId));
+            Assert.That(graphicsCard.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(graphicsCard.Id, Is.Not.EqualTo(session.ItemId));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(6));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -150,6 +166,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.ProcessorCoolerSlotId));
             Assert.That(session.AssemblyBuild.ProcessorCoolerBracketId,
                 Is.EqualTo(session.ProcessorCoolerBracketId));
+            Assert.That(session.AssemblyBuild.GraphicsCardSlotState,
+                Is.EqualTo(GraphicsCardSlotState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.GraphicsCardSlotId,
+                Is.EqualTo(session.GraphicsCardSlotId));
+            Assert.That(session.AssemblyBuild.GraphicsCardSlotContainerId,
+                Is.EqualTo(session.GraphicsCardSlotContainerId));
+            Assert.That(session.AssemblyBuild.GraphicsCardRetentionTopology.LatchId,
+                Is.EqualTo(session.GraphicsCardLatchId));
+            Assert.That(
+                session.AssemblyBuild.GraphicsCardRetentionTopology.BracketFastenerId,
+                Is.EqualTo(session.GraphicsCardBracketFastenerId));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

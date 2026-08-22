@@ -244,6 +244,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsGraphicsCardSeatMode = false;
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
