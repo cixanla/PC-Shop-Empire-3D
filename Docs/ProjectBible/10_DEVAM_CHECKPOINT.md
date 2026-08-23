@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 23 Ağustos 2026<br>
-**Durum:** Issue #61 deterministic single ATX24 split-PSU cable routing feature/test/build/native-runtime kapıları tamamlandı; source/docs, exact USB readback ve GitHub acceptance/Project kapanışı sürüyor<br>
+**Durum:** Issue #61 deterministic single ATX24 split-PSU cable routing feature/test/build/native-runtime/source/docs/USB kapıları tamamlandı; GitHub acceptance/Project kapanışı sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #61 / Epic #10
@@ -11,7 +11,9 @@
 - Route yalnız retained PSU, secured motherboard, exact keyed connector orientation, range/focus/LOS ve obstruction-free authored beş segment üzerinde geçerlidir. Generic placement/stack/cart/raw-transfer bypass'ları, duplicate route ve routed durumdaki PSU/motherboard detach işlemleri fail-closed'dur.
 - GarageGraybox `garage-atx24-power-cable-routing-r30-v1`; tek kinematic root, üç görünür connector child, latch/key geometry ve LineRenderer branch/trunk taşır. Aynı Unity instance ve stable ItemId pickup→route→unroute→recovery boyunca korunur; gerçek keyboard/mouse ve gamepad dynamic compact prompt/co-edge/pause sözleşmesi testlidir.
 - Final EditMode `589/589`, PlayMode `49/49`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329082160` bayt; aktif Apple M1/Metal makinesinde 1280×720 readiness ve exact `GARAGE_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
-- [Feature Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs commit/Guard, expected USB `.incoming-*` + iki tam readback, acceptance `20/20`, Issue `CLOSED/COMPLETED` ve Roadmap `Done` henüz tamamlanmamış son metadata kapılarıdır.
+- [Feature Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, tree `d0bdb7bd39bb09a27565ed1d4a0fd77e22b7dfa3` ve [Guard 32614187494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32614187494) ile private `main`e ulaştı.
+- Final USB milestone `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING` altında atomik adlandırmayla sabitlendi. Manifest `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`; iki ayrı tam geri okumada 801/801 hash+boyut+yol, 796/796 exact Git source ve 4/4 evidence eşliği geçti. Payload 15.237.662 bayt, toplam paket dosyası 803; forbidden/cache/credential/internal AppleDouble/sibling sidecar farkları `0`dır.
+- Acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done` ve final metadata Guard henüz tamamlanmamış son kapanış kapılarıdır.
 - Ayrıntı `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve tarihli Evidence belgesindedir. EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB kabloları; electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, free-rope physics, final art ve Windows/Steam ayrı kapılardır.
 
 ## Önceki checkpoint — Issue #60 / Epic #10
@@ -200,6 +202,10 @@
 
 ## USB güvenli checkpoint durumu
 
+- En yeni doğrulanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`.
+- Source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`; 796 tracked `SOURCE`, 4 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt`; 801 manifest payload satırı, toplam 803 dosya ve 15.237.662 payload baytı.
+- `MANIFEST.tsv` SHA-256: `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`.
+- `.incoming-*` kopyası ve atomik final adlandırmadan sonra iki tam geri okuma da 801/801 hash+boyut+yol, 796/796 exact Git source ve 4/4 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
 - Önceki Issue #50 milestone'u tarihsel olarak korunur: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
 - Source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı.
 - `MANIFEST.tsv` SHA-256: `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`.
@@ -219,9 +225,9 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Ardıl Epic #10 child'ını fiziksel kablo konektörü/routing akışına sınırlandırmak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
-2. Beklenen fiziksel USB gerçekten mount edildiğinde doğrulanmış Issue #60 staging'ini çakışmayan `.incoming-*`/iki tam readback disipliniyle taşımak; yanlış volume'a yazmamak veya gameplay'i bloklamamak.
+1. Issue #61 acceptance `20/20`, Project `Done`, Issue kapanışı ve final metadata Guard zincirini tamamlamak.
+2. Ardıl Epic #10 child'ını yalnız deterministic single EPS12V/CPU power cable routing akışına sınırlandırmak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, source/docs `4939a041635a8864f53f6613a9dc9b4e8972f235`, EditMode `577/577`, PlayMode `47/47`, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` + `32607886160` ile kapandı. Acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress kalır. 775/775 exact local staging hazırdır; macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve fiziksel readback iddiası yoktur. Ardıl bounded child kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.
+Issue #61 feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, EditMode `589/589`, PlayMode `49/49`, Universal Mac `329082160` bayt, aktif Apple M1/Metal exact r30 ATX24 cable smoke ve başarılı Guard `32613813494` + `32614187494` ile doğrulandı. Ayrı USB milestone iki tam 801/801 readback, 796/796 exact Git source, 4/4 evidence ve `f2145ecb…1365` manifestiyle sabitlendi. Yalnız acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done` ve final metadata Guard kapanışı kalır. Ardıl bounded child yalnız EPS12V/CPU cable routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.

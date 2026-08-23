@@ -34,8 +34,11 @@ The build was launched windowed at 1280×720 on the active Apple Silicon/Metal w
 ## Repository and external checkpoint
 
 - Feature Repository Guard: [32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494), success.
-- Source/docs checkpoint, final Repository Guard, exact USB source-plus-evidence readback, acceptance 20/20 and Issue/Roadmap closure are the remaining checkpoint metadata steps.
-- No USB success is claimed until the expected external physical volume, prior milestone chain, `.incoming-*` copy, full hash/size/path readback, Git-blob equality and atomic final rename have all been verified.
+- Source/docs checkpoint: `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, tree `d0bdb7bd39bb09a27565ed1d4a0fd77e22b7dfa3`; [Repository Guard 32614187494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32614187494), success.
+- Final external checkpoint: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`.
+- Manifest SHA-256: `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`. Both the pre-rename and post-rename full readbacks passed 801/801 payload hash/size/path checks, 796/796 exact Git-source checks and 4/4 evidence checks. Payload size is 15,237,662 bytes and the package contains 803 files in total.
+- Missing, hash mismatch, size mismatch, path-set difference, forbidden/cache/credential, internal AppleDouble and sibling AppleDouble counts are all zero. The final directory was created only after a collision-free `.incoming-*` copy and atomic rename; no earlier milestone was overwritten.
+- Acceptance 20/20, Issue/Roadmap closure and the final metadata Repository Guard are the remaining checkpoint steps.
 
 ## Bounded exclusions
 
