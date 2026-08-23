@@ -14,7 +14,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #61
+### Güncel checkpoint — Issue #62 aktif / Issue #61 kapalı
 
 - Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`; tek canonical serialized ATX24 power cable'ı typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri ve üç ordered waypoint ile GarageGraybox r30'a ekler.
 - Inventory authority sekiz managed container'ı atomik claim eder. Assembly yalnız `Loose ↔ Routed` lifecycle'ını, exact route/unroute receipt fold/replay'ini, host lineage'ını ve failure no-mutation yollarını kabul eder.
@@ -22,9 +22,10 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Tek physical root, üç connector child ve jointsiz LineRenderer route presentation'ı aynı Unity instance/stable ItemId'yi pickup, route, unroute ve recovery boyunca korur. WorldFloor capacity tam dokuzdur: sekiz loose assembly item + aktif delivery item.
 - Final EditMode `589/589`, PlayMode `49/49`; Universal macOS build `329082160` bayt ve aktif Apple M1/Metal 1280×720 exact r30 cable smoke başarılıdır.
 - Feature private `main`e push edilmiştir; [Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, tree `d0bdb7bd39bb09a27565ed1d4a0fd77e22b7dfa3` ve [Guard 32614187494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32614187494) ile private `main`e ulaştı.
-- Ayrı USB milestone `2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`, iki tam 801/801 hash+boyut+yol readback, 796/796 exact Git source, 4/4 evidence, 15.237.662 payload baytı ve `f2145ecb…1365` manifestiyle doğrulandı; güvenlik/AppleDouble farkları `0`dır. Acceptance `20/20` ve Issue/Project kapanışı bu checkpoint'in kalan son adımıdır.
+- Ayrı USB milestone `2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`, iki tam 801/801 hash+boyut+yol readback, 796/796 exact Git source, 4/4 evidence, 15.237.662 payload baytı ve `f2145ecb…1365` manifestiyle doğrulandı; güvenlik/AppleDouble farkları `0`dır. USB metadata `f9a5da8`, Guard `32632615041`, acceptance `20/20`; Issue #61 `CLOSED/COMPLETED`, Roadmap `Done`, parent #10 açık/In Progress'tir.
 - Ayrıntı: `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING-CHECKPOINT-2026-08-23.md`.
 - EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, electrical power-on, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
+- Aktif [Issue #62](https://github.com/cixanla/PC-Shop-Empire-3D/issues/62) yalnız tek canonical EPS12V/CPU 8-pin cable, iki typed/keyed endpoint, üç ordered waypoint, ayrı `CpuPowerCableRoute`, retained PSU + secured motherboard + retained CPU gate'i ve same-instance reversible route akışıdır. ATX24 identity/receipt/container state'inden izole kalır; electrical power-on ve completed benchmark üretmez.
 
 ### Önceki checkpoint — Issue #60
 

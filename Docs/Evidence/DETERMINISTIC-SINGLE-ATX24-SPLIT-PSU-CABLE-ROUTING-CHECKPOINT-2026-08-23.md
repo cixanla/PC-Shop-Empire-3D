@@ -38,7 +38,7 @@ The build was launched windowed at 1280×720 on the active Apple Silicon/Metal w
 - Final external checkpoint: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`.
 - Manifest SHA-256: `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`. Both the pre-rename and post-rename full readbacks passed 801/801 payload hash/size/path checks, 796/796 exact Git-source checks and 4/4 evidence checks. Payload size is 15,237,662 bytes and the package contains 803 files in total.
 - Missing, hash mismatch, size mismatch, path-set difference, forbidden/cache/credential, internal AppleDouble and sibling AppleDouble counts are all zero. The final directory was created only after a collision-free `.incoming-*` copy and atomic rename; no earlier milestone was overwritten.
-- Acceptance 20/20, Issue/Roadmap closure and the final metadata Repository Guard are the remaining checkpoint steps.
+- USB metadata commit `f9a5da8b23dedd3719c96d50846d4ba3143cc87f` and [Repository Guard 32632615041](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32632615041) passed. Acceptance is 20/20; Issue #61 is `CLOSED/COMPLETED`, its Roadmap item is `Done`, and parent Epic #10 remains open/In Progress for subsequent bounded assembly work.
 
 ## Bounded exclusions
 
