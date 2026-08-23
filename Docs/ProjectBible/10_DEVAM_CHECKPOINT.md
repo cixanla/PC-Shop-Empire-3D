@@ -1,28 +1,24 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 23 Ağustos 2026<br>
-**Durum:** Issue #61 bütün kaynak/test/build/runtime/CI/USB/acceptance kapılarıyla kapalı/Done; Issue #62 deterministic single EPS12V/CPU power cable routing açık/In Progress<br>
+**Durum:** Issue #62 kaynak/test/build/native/feature-CI kapıları tamamlandı; fiziksel USB checkpoint/readback beklediği için açık/In Progress<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #61 / Epic #10
+## En yeni teknik checkpoint — Issue #62 / Epic #10
 
-- Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`; tek canonical serialized power cable, typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri, üç stable ordered waypoint ve capacity-one CableRoute eklendi.
-- Workbench, ProcessorSocket, MemorySlot, StorageSlot, ProcessorCoolerSlot, GraphicsCardSlot, PowerSupplyBay ve CableRoute tek all-or-none claim ile Assembly planına aittir. `Loose ↔ Routed`, route/unroute immutable receipts, exact immediate/delayed replay, history fold ve cross-authority no-mutation testlidir.
-- Route yalnız retained PSU, secured motherboard, exact keyed connector orientation, range/focus/LOS ve obstruction-free authored beş segment üzerinde geçerlidir. Generic placement/stack/cart/raw-transfer bypass'ları, duplicate route ve routed durumdaki PSU/motherboard detach işlemleri fail-closed'dur.
-- GarageGraybox `garage-atx24-power-cable-routing-r30-v1`; tek kinematic root, üç görünür connector child, latch/key geometry ve LineRenderer branch/trunk taşır. Aynı Unity instance ve stable ItemId pickup→route→unroute→recovery boyunca korunur; gerçek keyboard/mouse ve gamepad dynamic compact prompt/co-edge/pause sözleşmesi testlidir.
-- Final EditMode `589/589`, PlayMode `49/49`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329082160` bayt; aktif Apple M1/Metal makinesinde 1280×720 readiness ve exact `GARAGE_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
-- [Feature Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, tree `d0bdb7bd39bb09a27565ed1d4a0fd77e22b7dfa3` ve [Guard 32614187494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32614187494) ile private `main`e ulaştı.
-- Final USB milestone `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING` altında atomik adlandırmayla sabitlendi. Manifest `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`; iki ayrı tam geri okumada 801/801 hash+boyut+yol, 796/796 exact Git source ve 4/4 evidence eşliği geçti. Payload 15.237.662 bayt, toplam paket dosyası 803; forbidden/cache/credential/internal AppleDouble/sibling sidecar farkları `0`dır.
-- USB metadata `f9a5da8b23dedd3719c96d50846d4ba3143cc87f` ve [Guard 32632615041](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32632615041) başarılıdır. Acceptance `20/20`; Issue #61 `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress kaldı.
-- Ayrıntı `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve tarihli Evidence belgesindedir. EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB kabloları; electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, free-rope physics, final art ve Windows/Steam ayrı kapılardır.
+- Feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`; tek canonical serialized EPS12V/CPU cable, iki typed/keyed 8-pin endpoint, üç stable ordered waypoint ve capacity-one `CpuPowerCableRoute` eklendi.
+- Dokuz managed container tek all-or-none Assembly claim'inde kalır. `Loose ↔ Routed`, exact Hands↔CpuPowerCableRoute custody, immutable route/unroute receipts, immediate/delayed replay, history fold ve ATX24 isolation testlidir.
+- Route yalnız retained PSU + secured motherboard + retained CPU, exact keyed orientation, range/focus/LOS ve obstruction-free authored route üzerinde geçerlidir. Wrong key/endpoint, duplicate, stale/conflict/full-hands, generic placement/stack/cart/raw-transfer ve dependent PSU/motherboard/CPU removal işlemleri no-mutation fail-closed'dur.
+- GarageGraybox `garage-eps12v-cpu-power-cable-routing-r31-v1`; tek kinematic root, iki visible connector/latch/key, loose braided presentation ve üç-waypoint preview/committed route taşır. Aynı Unity component instance ve stable ItemId pickup→route→unroute→recovery boyunca korunur.
+- Gerçek keyboard/mouse + Input System gamepad route/orientation/commit/unroute, dynamic compact prompt, pause/co-edge drain ve mode-kapalı sıfır-query sözleşmeleri testlidir.
+- Final EditMode `610/610`, PlayMode `51/51`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329206153` bayt; aktif Apple M1/Metal 1280×720 canonical readiness ve exact `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
+- [Feature Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Artifact hash/boyutları `Docs/Evidence/DETERMINISTIC-SINGLE-EPS12V-CPU-POWER-CABLE-ROUTING-CHECKPOINT-2026-08-23.md` içindedir.
+- Fiziksel USB bağlı değildir. Final external milestone, USB manifest/readback ve Issue completion iddiası yoktur; Issue #62 `OPEN`, Roadmap `In Progress` kalır. Electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, diğer kablo aileleri, final art ve Windows/Steam kapsam dışıdır.
 
-## Aktif bounded paket — Issue #62 / Epic #10
+## Önceki checkpoint — Issue #61 / Epic #10
 
-- [Issue #62](https://github.com/cixanla/PC-Shop-Empire-3D/issues/62) `OPEN`, Roadmap `In Progress`, Phase `Assembly`, Priority `P0`, Risk `Critical`; doğrudan #61'e bağlıdır.
-- Kapsam yalnız tek canonical serialized EPS12V/CPU 8-pin cable, ayrı capacity-one `CpuPowerCableRoute`, iki typed/keyed endpoint, üç ordered waypoint ve retained PSU + secured motherboard + retained CPU lineage'ında deterministic route/unroute akışıdır.
-- ATX24 ile EPS12V product/item/container/receipt/revision/route identity tam ayrılacak; mevcut prepared serialized transfer ve all-or-none managed claim yüzeyi kullanılacak, yeni Inventory authority veya raw-transfer API eklenmeyecektir.
-- Hedef görünür r31 akışı; keyboard/mouse + gerçek Input System gamepad, fail-closed route solver, same-instance recovery, full EditMode/PlayMode regresyonu, Universal macOS build ve exact native smoke kanıtıyla kapanacaktır.
-- Electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, PCIe/SATA/fan/front-panel/data/RGB kabloları, Save/Guardian, free-rope physics, final art ve Windows/Steam kapsam dışıdır.
+- Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, USB metadata `f9a5da8b23dedd3719c96d50846d4ba3143cc87f`; Guard `32613813494` + `32614187494` + `32632615041`, EditMode `589/589`, PlayMode `49/49`, exact r30 smoke ve iki tam 801/801 USB readback ile kapalı/Done'dur.
+- Ayrıntı `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve tarihli Evidence belgesindedir.
 
 ## Önceki checkpoint — Issue #60 / Epic #10
 
@@ -233,9 +229,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #62 domain/Inventory authority dilimini ayrı EPS12V model/container/receipt/revision kimlikleri ve dokuz-container all-or-none claim ile test-first uygulamak.
-2. Aynı bounded pakette world/input/scene r31 görünür route akışını eklemek; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Issue #62 source/docs checkpoint'ini private `main`e push edip Repository Guard sonucunu kaydetmek.
+2. Exact Git-source + final evidence yerel staging paketini hazırlayıp tam manifest readback yapmak; fiziksel USB yeniden bağlandığında yalnız doğrulanmış doğru volume'a atomik kopyalayıp ikinci tam readback sonrası Issue/Project kapanışını tamamlamak.
+3. Issue #62 kapanmadan yeni gameplay child'ı başlatmamak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #61 feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`, USB metadata `f9a5da8b23dedd3719c96d50846d4ba3143cc87f`, EditMode `589/589`, PlayMode `49/49`, Universal Mac `329082160` bayt, aktif Apple M1/Metal exact r30 ATX24 cable smoke ve başarılı Guard `32613813494` + `32614187494` + `32632615041` ile kapandı. Ayrı USB milestone iki tam 801/801 readback, 796/796 exact Git source, 4/4 evidence ve `f2145ecb…1365` manifestiyle sabitlendi; acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`, parent #10 açık/In Progress'tir. Aktif Issue #62 yalnız EPS12V/CPU cable routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.
+Issue #62 feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`, EditMode `610/610`, PlayMode `51/51`, Universal Mac `329206153` bayt, aktif Apple M1/Metal exact r31 EPS12V smoke ve başarılı Guard `32642211422` ile teknik olarak tamamlandı. Fiziksel USB milestone/readback olmadığı için Issue `OPEN`, Roadmap `In Progress` kalır. Kaynak/docs + yerel staging kapılarını bitir; USB bağlanınca doğru volume üzerinde atomik final readback yap ve yalnız o zaman Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.

@@ -331,13 +331,15 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Ayrı `2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING` USB milestone'u atomik adlandırmayla sabitlendi: iki tam 801/801 hash/boyut/yol readback, 796/796 exact Git source, 4/4 evidence, 15.237.662 payload baytı ve `f2145ecb…1365` manifest; bütün güvenlik/AppleDouble mismatch sayaçları `0`dır. USB metadata `f9a5da8`, Guard `32632615041`, acceptance `20/20`; Issue #61 `CLOSED/COMPLETED`, Roadmap `Done`, parent #10 açık/In Progress'tir.
 - EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, free-rope physics, final art ve Windows/Steam ayrı bounded kapılardır.
 
-## 9.6 Issue #62 deterministic single EPS12V/CPU power cable routing başlangıcı
+## 9.6 Issue #62 deterministic single EPS12V/CPU power cable routing teknik checkpoint'i
 
-- [Issue #62](https://github.com/cixanla/PC-Shop-Empire-3D/issues/62) parent Epic #10 altında `OPEN/In Progress`, Assembly/P0/Critical olarak açıldı ve #61'e bağlandı.
-- En küçük kapsam tek canonical serialized EPS12V/CPU 8-pin cable, iki typed/keyed endpoint, üç ordered waypoint, ayrı capacity-one `CpuPowerCableRoute` ve retained PSU + secured motherboard + retained CPU lineage'ında exact reversible routing'dir.
-- ATX24 ile EPS12V product/item/container/receipt/revision/route identity tam izole kalır. Dokuz-container claim all-or-none olacak; mevcut prepared serialized transfer kullanılacak, genel Inventory authority refactoru yapılmayacaktır.
-- Hedef scene marker `garage-eps12v-cpu-power-cable-routing-r31-v1`; exact native marker `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE ... identity=stable recovery=ok` sözleşmesidir.
-- Electrical power-on, completed benchmark, diğer kablo aileleri, Save/Guardian, free-rope physics, final art ve Windows/Steam ayrı bounded kapılardır.
+- [Issue #62](https://github.com/cixanla/PC-Shop-Empire-3D/issues/62) parent Epic #10 altında `OPEN/In Progress`, Assembly/P0/Critical kalır; yalnız fiziksel USB checkpoint/readback kapanışı beklemektedir.
+- Feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`; tek canonical serialized EPS12V/CPU cable, iki typed/keyed 8-pin endpoint, üç ordered waypoint, capacity-one `CpuPowerCableRoute` ve dokuz-container all-or-none claim ekledi.
+- Retained PSU + secured motherboard + retained CPU lineage, exact Hands↔route custody, immutable route/unroute receipts, immediate/delayed replay, receipt-history fold, ATX24 isolation ve dependent-detach/generic-bypass no-mutation testlidir.
+- GarageGraybox r31 tek kinematic root, iki connector/latch/key, loose braided presentation ve üç-waypoint authored route taşır. Gerçek keyboard/mouse ve gamepad akışı aynı Unity component instance/stable ItemId'yi pickup→route→unroute→recovery boyunca korur.
+- Final EditMode `610/610`, PlayMode `51/51`, Universal macOS `329206153` bayt ve aktif Apple M1/Metal 1280×720 exact EPS12V smoke başarılıdır. Feature Guard `32642211422` geçti.
+- Scene marker `garage-eps12v-cpu-power-cable-routing-r31-v1`; exact native marker `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE ... identity=stable recovery=ok` sözleşmesidir.
+- Fiziksel USB bağlı değildir; external milestone/readback veya Issue completion iddiası yoktur. Electrical power-on, completed benchmark, diğer kablo aileleri, Save/Guardian, free-rope physics, final art ve Windows/Steam ayrı bounded kapılardır.
 
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
@@ -353,4 +355,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #61 feature `1fc29f1`, source/docs `52795b6`, USB metadata `f9a5da8`, Guard `32613813494` + `32614187494` + `32632615041`, EditMode 589/589, PlayMode 49/49, Universal Mac `329082160` bayt, aktif Apple M1/Metal exact r30 cable smoke ve iki tam USB 801/801 + 796/796 readback ile kapandı. Acceptance 20/20, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent #10 açık/In Progress'tir. Aktif Issue #62 yalnız tek canonical EPS12V/CPU cable, ayrı identity/container/receipt/revision, üç ordered waypoint, real input ve same-instance recovery akışını electrical power-on ve completed benchmarktan ayrı uygulamalıdır.
+> Issue #62 feature `15d83ae`, tree `c14524f`, Guard `32642211422`, EditMode 610/610, PlayMode 51/51, Universal Mac `329206153` bayt ve aktif Apple M1/Metal exact r31 EPS12V smoke ile teknik olarak tamamlandı. Fiziksel USB milestone/readback olmadığı için Issue `OPEN/In Progress` kalır. Source/docs + yerel staging'i tamamla; USB bağlanınca doğru volume üzerinde atomik tam readback sonrası Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.
