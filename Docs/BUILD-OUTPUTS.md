@@ -73,6 +73,20 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
 
+## Stage B deterministic single ATX24 split-PSU cable routing doğrulaması — 23 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #61 feature `1fc29f1` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`), ad-hoc signed.
+- Unity build raporu: `329.082.160` bayt.
+- Ana executable: `117.179` bayt; SHA-256 `04060db71ecd39f083a526b88e9468bd26ca26c18b12499b6e9dca3da19d85ab`.
+- Runtime: aktif Apple M1/Metal makinesi, pencereli 1280×720; `garage-atx24-power-cable-routing-r30-v1` readiness ve exact cable smoke başarılı.
+- Test kapıları: EditMode `589/589`, PlayMode `49/49`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue61-final.log`, `605.068` bayt, SHA-256 `e8730ba8f2975c16fbdc8034f6554aeb32313048c2ce64202087795d7d930c4e`.
+- Runtime log: `runtime-power-cable-issue61-final.log`, `5.628` bayt, SHA-256 `c25c8cb9e95039d57b0ec70294f95efb69112705cd32baa171d65e34833df2d3`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
+
 ## Stage B deterministic single ATX PS/2 PSU seating ve four-screw rear retention doğrulaması — 23 Ağustos 2026
 
 `macOS/PC Shop Empire 3D.app`, Issue #60 feature `f998d7d` + authored-clearance fix `b6c3ff8` kaynak durumuyla yeniden üretildi:

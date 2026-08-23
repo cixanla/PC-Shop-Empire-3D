@@ -14,7 +14,18 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #60
+### Güncel checkpoint — Issue #61
+
+- Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`; tek canonical serialized ATX24 power cable'ı typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri ve üç ordered waypoint ile GarageGraybox r30'a ekler.
+- Inventory authority sekiz managed container'ı atomik claim eder. Assembly yalnız `Loose ↔ Routed` lifecycle'ını, exact route/unroute receipt fold/replay'ini, host lineage'ını ve failure no-mutation yollarını kabul eder.
+- Oyuncu gerçek keyboard/mouse veya gamepad ile route mode, iki keyed orientation, görünür authored route ve visible motherboard connector üzerinden exact unroute akışını oynar. Generic placement/stack/cart/raw-transfer bypass'ları kapalıdır; routed cable PSU/motherboard detach'i engeller.
+- Tek physical root, üç connector child ve jointsiz LineRenderer route presentation'ı aynı Unity instance/stable ItemId'yi pickup, route, unroute ve recovery boyunca korur. WorldFloor capacity tam dokuzdur: sekiz loose assembly item + aktif delivery item.
+- Final EditMode `589/589`, PlayMode `49/49`; Universal macOS build `329082160` bayt ve aktif Apple M1/Metal 1280×720 exact r30 cable smoke başarılıdır.
+- Feature private `main`e push edilmiştir; [Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs, expected USB tam readback, acceptance `20/20` ve Issue/Project kapanışı bu checkpoint'in kalan son adımlarıdır.
+- Ayrıntı: `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING-CHECKPOINT-2026-08-23.md`.
+- EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, electrical power-on, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
+
+### Önceki checkpoint — Issue #60
 
 - Feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, tree `78d62c46354cda45422ca947df10ba9d6823b7c9`; authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, tree `a15865346f52b6b39d84cec49c70babbc6550b89`; tek canonical serialized ATX PS/2 PSU item'ını stable chassis-owned bay/rear-mount/four-fastener topology ile GarageGraybox r29'a ekler.
 - Inventory authority yedi managed container'ı atomik claim eder. Assembly yalnız `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained` lifecycle'ını, exact receipt fold/replay'i, alternate-order isolation'ı ve no-mutation failure yollarını kabul eder.
@@ -107,8 +118,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `461/461` passed.
-- Play Mode `33/33` passed.
+- Edit Mode `589/589` passed.
+- Play Mode `49/49` passed.
 - `0` failed.
 - `0` skipped.
 

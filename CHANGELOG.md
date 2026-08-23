@@ -6,6 +6,12 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #61 ile tek canonical serialized ATX24 power cable, typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri, üç stable ordered waypoint, capacity-one CableRoute ve atomic eight-container Inventory claim eklendi.
+- `Loose ↔ Routed` route/unroute authority'si; immutable receipt/history fold, exact immediate/delayed replay, retained-PSU + secured-motherboard + key/range/focus/LOS/clearance gates ve dependent-detach no-mutation sözleşmeleri testlerle kilitlendi.
+- GarageGraybox r30'a tek physical cable root, üç görünür connector/latch/key child ve jointsiz authored LineRenderer route eklendi. Aynı Unity instance/stable ItemId pickup→route→unroute→recovery boyunca korunur; generic placement/stack/cart/raw-transfer bypass'ları kapalıdır.
+- Gerçek keyboard/mouse ve Input System gamepad route mode/orientation/confirm/unroute akışı, dynamic compact prompts, pause/co-edge drain ve dedicated routed connector focus testlidir. WorldFloor capacity sekiz assembly item + aktif delivery item için tam `9` olarak bounded tutuldu.
+- Feature `1fc29f1`, tree `d265332`; EditMode 589/589, PlayMode 49/49, 329082160 bayt Universal macOS build ve aktif Apple M1/Metal 1280×720 `garage-atx24-power-cable-routing-r30-v1` exact cable smoke başarılıdır. Feature Guard `32613813494` geçti; source/docs, USB ve GitHub kapanış metadata'sı sürüyor.
+
 - Issue #60 ile tek canonical serialized ATX PS/2 PSU item'ı, atomic seven-container Inventory claim, stable chassis-owned bay/rear-mount/four-fastener topology ve `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained` authority akışı eklendi.
 - İki keyed fan-intake orientation, exact ATX interface, filtered-floor support, rear-plane ve gerçek authored chassis-clearance kapıları; exact seat/retain/unretain/remove receipt fold/replay, alternate-order isolation ve bütün stale/conflict/full-hands/occupied failure no-mutation sözleşmeleri testlerle kilitlendi.
 - GarageGraybox r29'da PSU housing, fan/grille, filtered floor intake, AC inlet, rocker switch, disconnected modular panel, rear plate ve dört screw; gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.

@@ -321,6 +321,15 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Exact source-plus-evidence staging 770 Git source + 4 evidence + source kaydıyla 775/775 readback, 770/770 Git-blob, 14.729.691 bayt ve `705784c6…53d4` manifestiyle doğrulandı. macOS beklenen harici fiziksel USB'yi mount etmedi; yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası yoktur.
 - ATX/EPS/PCIe/SATA cabling, electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, final art ve Windows/Steam ayrı bounded kapılardır.
 
+## 9.5 Issue #61 deterministic single ATX24 split-PSU cable routing checkpoint'i
+
+- Epic #10'un dokuzuncu bounded child paketi [Issue #61](https://github.com/cixanla/PC-Shop-Empire-3D/issues/61) ile tek canonical serialized ATX24 power cable, typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri ve üç stable ordered route waypoint'ine sınırlandı; connector child'lar ayrı ürün/Inventory item değildir.
+- Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`; eight-container atomic claim, capacity-one CableRoute, `Loose ↔ Routed`, exact route/unroute receipt history/replay, host lineage ve same-instance recovery ekledi.
+- GarageGraybox r30'da tek kinematic cable root, üç visible connector/latch/key child ve jointsiz authored branch/trunk route görünürdür. Route focus görünür motherboard connector üzerinden deliberate unroute'a izin verirken gerçek chassis obstruction fail-closed kalır.
+- Gerçek keyboard/mouse ve gamepad route mode, iki keyed orientation, dynamic compact HUD, pause/co-edge drain; wrong-key/host/range/focus/LOS/clearance/duplicate/dependent-detach/generic-bypass failure yollarıyla testlidir.
+- Final EditMode `589/589`, PlayMode `49/49`, Universal macOS `329082160` bayt ve aktif Apple M1/Metal 1280×720 exact cable smoke başarılıdır. Feature Guard `32613813494` geçmiştir; source/docs, USB tam readback ve Issue/Project kapanış metadata'sı sürmektedir.
+- EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, free-rope physics, final art ve Windows/Steam ayrı bounded kapılardır.
+
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
 - Aynı karar kullanıcıya tekrar sorulmadan önce bu belge ve tam konuşma arşivi aranır.
@@ -335,4 +344,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, source/docs `4939a041635a8864f53f6613a9dc9b4e8972f235`, EditMode 577/577, PlayMode 47/47, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` + `32607886160` ile kapandı. Acceptance 20/20, Issue CLOSED/COMPLETED, Roadmap Done; parent Epic #10 açık/In Progress kalır. 775/775 exact local staging hazırdır; macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve fiziksel readback iddiası yoktur. Ardıl bounded Epic #10 child'ı fiziksel kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.
+> Issue #61 feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`, EditMode 589/589, PlayMode 49/49, Universal Mac `329082160` bayt, aktif Apple M1/Metal exact r30 cable smoke ve başarılı feature Guard `32613813494` ile doğrulandı. Tek canonical ATX24 cable, typed 18+10→24 endpoints, üç ordered waypoint, atomic eight-container claim ve same-instance reversible route akışı tamamlandı. Source/docs, exact USB readback, acceptance 20/20 ve Issue/Project kapanışı kalan son checkpoint metadata adımlarıdır; ardıl bounded child yalnız EPS12V/CPU cable routing'ini electrical power-on ve completed benchmarktan ayrı tutmalıdır.

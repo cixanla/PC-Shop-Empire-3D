@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 23 Ağustos 2026<br>
-**Durum:** Issue #60 deterministic single ATX PS/2 PSU seating + four-screw rear retention kaynak/test/build/native-runtime/CI/GitHub kapıları tamamlandı; Issue `CLOSED/COMPLETED`, Roadmap `Done`, 775/775 local staging hazır, fiziksel USB mount/readback iddiası yok<br>
+**Durum:** Issue #61 deterministic single ATX24 split-PSU cable routing feature/test/build/native-runtime kapıları tamamlandı; source/docs, exact USB readback ve GitHub acceptance/Project kapanışı sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #60 / Epic #10
+## En yeni checkpoint — Issue #61 / Epic #10
+
+- Feature `1fc29f13171925c2445eaa7334158e0f058e76a5`, tree `d265332f1d6655639e55db31f9b5a11e3d177f49`; tek canonical serialized power cable, typed PSU 18-pin + PSU 10-pin + motherboard 24-pin endpoint'leri, üç stable ordered waypoint ve capacity-one CableRoute eklendi.
+- Workbench, ProcessorSocket, MemorySlot, StorageSlot, ProcessorCoolerSlot, GraphicsCardSlot, PowerSupplyBay ve CableRoute tek all-or-none claim ile Assembly planına aittir. `Loose ↔ Routed`, route/unroute immutable receipts, exact immediate/delayed replay, history fold ve cross-authority no-mutation testlidir.
+- Route yalnız retained PSU, secured motherboard, exact keyed connector orientation, range/focus/LOS ve obstruction-free authored beş segment üzerinde geçerlidir. Generic placement/stack/cart/raw-transfer bypass'ları, duplicate route ve routed durumdaki PSU/motherboard detach işlemleri fail-closed'dur.
+- GarageGraybox `garage-atx24-power-cable-routing-r30-v1`; tek kinematic root, üç görünür connector child, latch/key geometry ve LineRenderer branch/trunk taşır. Aynı Unity instance ve stable ItemId pickup→route→unroute→recovery boyunca korunur; gerçek keyboard/mouse ve gamepad dynamic compact prompt/co-edge/pause sözleşmesi testlidir.
+- Final EditMode `589/589`, PlayMode `49/49`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329082160` bayt; aktif Apple M1/Metal makinesinde 1280×720 readiness ve exact `GARAGE_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
+- [Feature Guard 32613813494](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32613813494) başarılıdır. Source/docs commit/Guard, expected USB `.incoming-*` + iki tam readback, acceptance `20/20`, Issue `CLOSED/COMPLETED` ve Roadmap `Done` henüz tamamlanmamış son metadata kapılarıdır.
+- Ayrıntı `Docs/ADR-0039-DETERMINISTIC-SINGLE-ATX24-SPLIT-PSU-CABLE-ROUTING.md` ve tarihli Evidence belgesindedir. EPS/CPU, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB kabloları; electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, free-rope physics, final art ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #60 / Epic #10
 
 - Feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, tree `78d62c46354cda45422ca947df10ba9d6823b7c9`; authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, tree `a15865346f52b6b39d84cec49c70babbc6550b89`; tek canonical serialized `AtxPs2` PSU, immutable chassis-owned bay/rear-mount/dört-fastener topology ve atomik yedi-container claim'i eklendi.
 - Supported lifecycle `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained`dır. Seat/remove exact serialized custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez. Exact receipt-history fold, immediate/delayed replay, conflict/stale/full-hands/occupied no-mutation ve alternate-order authority isolation testlidir.
