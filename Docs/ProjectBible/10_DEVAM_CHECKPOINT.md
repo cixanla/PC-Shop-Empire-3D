@@ -230,10 +230,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #62 source/docs checkpoint'ini private `main`e push edip Repository Guard sonucunu kaydetmek.
-2. Exact Git-source + final evidence yerel staging paketini hazırlayıp tam manifest readback yapmak; fiziksel USB yeniden bağlandığında yalnız doğrulanmış doğru volume'a atomik kopyalayıp ikinci tam readback sonrası Issue/Project kapanışını tamamlamak.
+1. Issue #62 için doğrulanmış yerel staging paketini değiştirmeden korumak; fiziksel USB yeniden bağlandığında yalnız doğrulanmış doğru volume'a çakışmayan `.incoming-*` ile kopyalamak.
+2. Kopya ve atomik final adlandırma sonrasında 832/832 payload, 826/826 exact Git source ve 5/5 evidence tam readback'lerini yeniden geçirmek; yalnız ardından final metadata commit/push, Repository Guard, acceptance `21/21` ve Issue/Project kapanışını tamamlamak.
 3. Issue #62 kapanmadan yeni gameplay child'ı başlatmamak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #62 feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`, EditMode `610/610`, PlayMode `51/51`, Universal Mac `329206153` bayt, aktif Apple M1/Metal exact r31 EPS12V smoke ve başarılı Guard `32642211422` ile teknik olarak tamamlandı. Fiziksel USB milestone/readback olmadığı için Issue `OPEN`, Roadmap `In Progress` kalır. Kaynak/docs + yerel staging kapılarını bitir; USB bağlanınca doğru volume üzerinde atomik final readback yap ve yalnız o zaman Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.
+Issue #62 feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`, EditMode `610/610`, PlayMode `51/51`, Universal Mac `329206153` bayt, aktif Apple M1/Metal exact r31 EPS12V smoke ve başarılı Guard `32642211422` ile teknik olarak tamamlandı. Source/docs ve doğrulanmış yerel staging kapıları tamamlandı; acceptance `20/21`dir. Fiziksel USB milestone/readback olmadığı için Issue `OPEN`, Roadmap `In Progress` kalır. Yerel staging'i değiştirme; USB bağlanınca yalnız doğru volume üzerinde çakışmayan atomik kopya ve iki tam readback yap, yalnız o zaman Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.

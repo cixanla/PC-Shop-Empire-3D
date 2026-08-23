@@ -1,7 +1,7 @@
 # PC Shop Empire 3D – Yaşayan Proje Hafızası
 
 **Sürüm:** 1.0 — üç Codex görevi tek ana görev ve merkezî konuşma arşivinde birleştirildi<br>
-**Son güncelleme:** 16 Ağustos 2026<br>
+**Son güncelleme:** 23 Ağustos 2026<br>
 **Kural:** Bu dosya karar ID'lerinin yaşayan özetidir. Üç görevin birleşik uygulanabilir bağlamı [`11_BIRLESIK_CODEX_PROJE_HAFIZASI.md`](11_BIRLESIK_CODEX_PROJE_HAFIZASI.md), tam kullanıcı/Codex konuşmaları ise [`Docs/CodexHistory`](../CodexHistory/README.md) altında korunur. Onaylanmış bilgi tekrar sorulmaz; değişiklik olursa eski karar silinmez, yerine tarihli bir değişiklik kaydı eklenir.
 
 ## Durum işaretleri
@@ -395,7 +395,7 @@ Kullanıcının isteği doğrultusunda yalnız gerçekten büyük kararlar sorul
 
 ## Sonraki kayıt girişi
 
-Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Stage B; Core, oynanabilir GarageGraybox, Catalog/Inventory/Orders/Retail/Economy, deterministic customer zinciri ve fiziksel checkout sonrasında Epic #10'un anakart seating, captive fastener, CPU socket/retention ve single-DIMM dual-latch montaj dilimlerine ilerledi. Güncel baseline EditMode 461/461, PlayMode 33/33, Apple M4/Metal `garage-dimm-dual-latch-r25-v1` ve doğrulanmış Issue #56 USB milestone'udur; Issue #56 kapalı/Done, sonraki bounded aday tek M.2 2280 NVMe SSD seating + captive retention screw akışıdır.
+**Tarihsel baseline — 16 Ağustos 2026:** Paket ve Stage A kapsamı 11 Ağustos 2026'da onaylandı ve uygulandı. Stage B; Core, oynanabilir GarageGraybox, Catalog/Inventory/Orders/Retail/Economy, deterministic customer zinciri ve fiziksel checkout sonrasında Epic #10'un anakart seating, captive fastener, CPU socket/retention ve single-DIMM dual-latch montaj dilimlerine ilerledi. O tarihteki baseline EditMode 461/461, PlayMode 33/33, Apple M4/Metal `garage-dimm-dual-latch-r25-v1` ve doğrulanmış Issue #56 USB milestone'uydu; Issue #56 kapalı/Done, o tarihteki sonraki bounded aday tek M.2 2280 NVMe SSD seating + captive retention screw akışıydı.
 
 ## Oturum checkpoint'i — 10 Ağustos 2026
 
