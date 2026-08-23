@@ -14,7 +14,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #62 teknik ve fiziksel USB kapıları tamamlandı / metadata kapanışı bekleniyor
+### Güncel checkpoint — Issue #62 teknik ve fiziksel USB kapıları tamamlandı / kapalı ve Done
 
 - Feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`; tek canonical serialized EPS12V/CPU cable'ı iki typed/keyed 8-pin endpoint ve üç ordered waypoint ile GarageGraybox r31'e ekler.
 - Inventory dokuz managed container'ı atomik claim eder. Assembly yalnız `Loose ↔ Routed`, exact Hands↔CpuPowerCableRoute custody, immutable receipt/history/replay, retained PSU + secured motherboard + retained CPU lineage ve ATX24 isolation sözleşmelerini kabul eder.
@@ -23,7 +23,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Final EditMode `610/610`, PlayMode `51/51`; Universal macOS build `329206153` bayt ve aktif Apple M1/Metal 1280×720 exact r31 EPS12V smoke başarılıdır.
 - Feature private `main`e push edilmiştir; [Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Source/docs `cff75f8`, tree `aa5acd7`, [Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437) başarılıdır. Ayrıntı: `Docs/ADR-0040-DETERMINISTIC-SINGLE-EPS12V-CPU-POWER-CABLE-ROUTING.md` ve tarihli Evidence belgesi.
 - Yerel final staging iki tam 832/832 payload, 826/826 exact Git source ve 5/5 evidence readback'ini geçti; payload 15.757.786 bayt, manifest `afa89feb…6a73`, bütün fark sayaçları `0`dır.
-- Doğru fiziksel USB `/Volumes/cixanla/CIXANLA` olarak doğrulandı. Çakışmayan incoming paket ilk tam readback sonrasında atomik final adına taşındı; fiziksel USB üzerinde iki tam 832/832 payload, 826/826 exact Git source ve 5/5 evidence readback sıfır fark/AppleDouble ile geçti. Acceptance `21/21` kanıtı hazırdır; Issue #62 ve Roadmap durumu final metadata Guard sonrasında kapatılmalıdır.
+- Doğru fiziksel USB `/Volumes/cixanla/CIXANLA` olarak doğrulandı. Çakışmayan incoming paket ilk tam readback sonrasında atomik final adına taşındı; fiziksel USB üzerinde iki tam 832/832 payload, 826/826 exact Git source ve 5/5 evidence readback sıfır fark/AppleDouble ile geçti. USB metadata `2db7cf9` ve [Repository Guard 32672086464](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32672086464) başarılıdır; acceptance `21/21`, Issue #62 `CLOSED/COMPLETED`, Roadmap `Done`, parent Epic #10 açık/In Progress durumundadır.
 - Electrical power-on, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
 
 ### Önceki checkpoint — Issue #60

@@ -43,7 +43,7 @@ The build was launched windowed at 1280×720 on the active Apple Silicon/Metal w
 - Physical USB `/dev/disk4` was identified as the expected NTFS `cixanla` device mounted at `/Volumes/cixanla/CIXANLA`; `90_BACKUPS/PCShopEmpire3D` and the prior Issue #61 milestone chain were present before any write.
 - The verified package was present at collision-free `.incoming-2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING-904d0c98`. Its first physical-USB readback passed 832/832 payload hashes, sizes and paths with 15,757,786 bytes, manifest `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73` and zero missing/hash/size/AppleDouble counts.
 - With no existing final target, the incoming directory was atomically renamed to `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING` and synchronized. A second full physical-USB readback again passed 832/832 payload, 826/826 exact Git-source blob/size/path and 5/5 evidence equality with all mismatch and AppleDouble counts zero.
-- The final combined acceptance line therefore has current evidence (`21/21`). Issue #62 remains `OPEN/In Progress` only until this external result is committed, guarded and applied to the GitHub Issue/Project state.
+- USB closure metadata `2db7cf984974fd561873d3c06c815b7f47f41d07` passed [Repository Guard 32672086464](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32672086464). The final acceptance is `21/21`; Issue #62 is `CLOSED/COMPLETED`, Roadmap `Done`, while parent Epic #10 remains open/In Progress.
 
 ## Bounded exclusions
 
