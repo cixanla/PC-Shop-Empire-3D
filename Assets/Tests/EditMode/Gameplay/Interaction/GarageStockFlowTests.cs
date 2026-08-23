@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalBuildPartsAndAtx24PowerCable()
+        public void AssemblyPrototypeSeedsCanonicalBuildPartsAndPowerCables()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(8));
-            Assert.That(session.Components.Count, Is.EqualTo(8));
+            Assert.That(session.Catalog.Count, Is.EqualTo(9));
+            Assert.That(session.Components.Count, Is.EqualTo(9));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -167,11 +167,29 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.Atx24PowerCableProductId));
             Assert.That(powerCable.ContainerId,
                 Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Catalog.Get(session.Eps12vPowerCableProductId).IsSuccess,
+                Is.True);
+            OperationResult<PcComponentSpecification> eps12vSpecification =
+                session.Components.Get(session.Eps12vPowerCableProductId);
+            Assert.That(eps12vSpecification.IsSuccess, Is.True);
+            Assert.That(eps12vSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.PowerCable));
+            Assert.That(eps12vSpecification.Value.PowerCableType,
+                Is.EqualTo(PowerCableType.ModularEps12v8PinPsuToMotherboard));
+            Assert.That(session.TryGetEps12vPowerCableItem(
+                out InventoryItemRecord eps12vCable), Is.True);
+            Assert.That(eps12vCable.Id, Is.EqualTo(session.Eps12vPowerCableItemId));
+            Assert.That(eps12vCable.ProductId,
+                Is.EqualTo(session.Eps12vPowerCableProductId));
+            Assert.That(eps12vCable.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(eps12vCable.StateFlags,
+                Is.EqualTo(InventorySerializedItemStateFlags.None));
             Assert.That(session.Inventory.TryGetContainer(
                 session.WorldFloorContainerId,
                 out InventoryContainerDefinition worldFloor), Is.True);
-            Assert.That(worldFloor.UnitCapacity, Is.EqualTo(9));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(8));
+            Assert.That(worldFloor.UnitCapacity, Is.EqualTo(10));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(9));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -273,6 +291,33 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(
                 session.AssemblyBuild.Atx24PowerCableTopology.OrderedWaypoints.Count,
                 Is.EqualTo(3));
+            Assert.That(session.AssemblyBuild.HasEps12vPowerCableRoute, Is.True);
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableState,
+                Is.EqualTo(Eps12vPowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRouteContainerId,
+                Is.EqualTo(session.Eps12vPowerCableRouteContainerId));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableTopology.RouteId,
+                Is.EqualTo(session.Eps12vPowerCableRouteId));
+            Assert.That(
+                session.AssemblyBuild.Eps12vPowerCableTopology.PsuEndpoint.EndpointId,
+                Is.EqualTo(session.Eps12vPowerCablePsuEndpointId));
+            Assert.That(
+                session.AssemblyBuild.Eps12vPowerCableTopology.PsuEndpoint.PinCount,
+                Is.EqualTo(8));
+            Assert.That(
+                session.AssemblyBuild.Eps12vPowerCableTopology.MotherboardEndpoint.EndpointId,
+                Is.EqualTo(session.Eps12vPowerCableMotherboardEndpointId));
+            Assert.That(
+                session.AssemblyBuild.Eps12vPowerCableTopology.MotherboardEndpoint.PinCount,
+                Is.EqualTo(8));
+            Assert.That(
+                session.AssemblyBuild.Eps12vPowerCableTopology.OrderedWaypoints,
+                Is.EqualTo(new[]
+                {
+                    session.Eps12vPowerCableWaypoint1Id,
+                    session.Eps12vPowerCableWaypoint2Id,
+                    session.Eps12vPowerCableWaypoint3Id
+                }));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -426,6 +471,439 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.True);
             Assert.That(world.Id, Is.EqualTo(routed.Id));
             Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Eps12vPowerCableRouteRequiresCpuAndPreservesIsolatedIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            StableId<AssemblyOperationIdScope> motherboardAttach =
+                OperationId("eps12v-motherboard-attach");
+            StableId<AssemblyOperationIdScope> motherboardSecure =
+                OperationId("eps12v-motherboard-secure");
+            StableId<AssemblyOperationIdScope> powerSupplySeat =
+                OperationId("eps12v-psu-seat");
+            StableId<AssemblyOperationIdScope> powerSupplyRetain =
+                OperationId("eps12v-psu-retain");
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(motherboardAttach).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                motherboardSecure,
+                motherboardAttach,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            AssemblyOperationReceipt seatedPowerSupply = session.SeatPowerSupply(
+                powerSupplySeat,
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                session.AssemblyBuild.Revision).Value;
+            Assert.That(session.RetainPowerSupply(
+                powerSupplyRetain,
+                seatedPowerSupply.OperationId,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseEps12vPowerCableToHands().IsSuccess, Is.True);
+            long cpuGateInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.RouteEps12vPowerCable(
+                    OperationId("eps12v-cpu-missing"),
+                    PowerCableKeyOrientation.Keyed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableHostProcessorUnretained));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(cpuGateInventoryRevision));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.Zero);
+            Assert.That(session.DropHeldEps12vPowerCableToWorld().IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> processorSeat =
+                OperationId("eps12v-processor-seat");
+            StableId<AssemblyOperationIdScope> processorRetain =
+                OperationId("eps12v-processor-retain");
+            Assert.That(session.PickupLooseProcessorToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatProcessor(
+                processorSeat,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.CloseProcessorRetention(
+                processorRetain,
+                processorSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseEps12vPowerCableToHands().IsSuccess, Is.True);
+            long inventoryBeforeRoute = session.Inventory.Revision;
+            long assemblyRevisionBeforeRoute = session.AssemblyBuild.Revision;
+            Assert.That(session.RouteEps12vPowerCable(
+                    OperationId("eps12v-reversed"),
+                    PowerCableKeyOrientation.Reversed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableOrientationMismatch));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute));
+
+            StableId<AssemblyOperationIdScope> routeId = OperationId("eps12v-route");
+            Eps12vPowerCableOperationReceipt route = session.RouteEps12vPowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value;
+            Assert.That(session.RouteEps12vPowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value, Is.SameAs(route));
+            Assert.That(route.OperationKind,
+                Is.EqualTo(Eps12vPowerCableOperationKind.Route));
+            Assert.That(route.SourceMotherboardSecureOperationId,
+                Is.EqualTo(motherboardSecure));
+            Assert.That(route.SourcePowerSupplyRetentionOperationId,
+                Is.EqualTo(powerSupplyRetain));
+            Assert.That(route.SourceProcessorRetentionOperationId,
+                Is.EqualTo(processorRetain));
+            Assert.That(route.RouteFingerprint,
+                Is.EqualTo(session.AssemblyBuild.Eps12vPowerCableTopology.Fingerprint));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute + 1));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevisionBeforeRoute));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.EqualTo(1));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.Zero);
+            Assert.That(session.AssemblyBuild.IsEps12vPowerCableRouted, Is.True);
+            Assert.That(session.TryGetEps12vPowerCableItem(
+                out InventoryItemRecord routed), Is.True);
+            Assert.That(routed.Id, Is.EqualTo(session.Eps12vPowerCableItemId));
+            Assert.That(routed.ContainerId,
+                Is.EqualTo(session.Eps12vPowerCableRouteContainerId));
+
+            long lockedInventoryRevision = session.Inventory.Revision;
+            long lockedAssemblyRevision = session.AssemblyBuild.Revision;
+            long lockedCableRevision = session.AssemblyBuild.Eps12vPowerCableRevision;
+            Assert.That(session.UnretainPowerSupply(
+                    OperationId("eps12v-psu-unretain-blocked"),
+                    powerSupplySeat,
+                    powerSupplyRetain,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.RemovePowerSupply(
+                    OperationId("eps12v-psu-remove-blocked"),
+                    powerSupplySeat,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.UnsecureMotherboardFastener(
+                    OperationId("eps12v-board-unsecure-blocked"),
+                    motherboardAttach,
+                    motherboardSecure,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.DetachMotherboard(
+                    OperationId("eps12v-board-detach-blocked")).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.OpenProcessorRetention(
+                    OperationId("eps12v-cpu-open-blocked"),
+                    processorSeat,
+                    processorRetain,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.RemoveProcessor(
+                    OperationId("eps12v-cpu-remove-blocked"),
+                    processorSeat,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(lockedInventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(lockedAssemblyRevision));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision,
+                Is.EqualTo(lockedCableRevision));
+
+            Assert.That(session.PickupLooseAtx24PowerCableToHands().IsSuccess, Is.True);
+            Assert.That(session.UnrouteEps12vPowerCable(
+                    OperationId("eps12v-unroute-full-hands"),
+                    routeId,
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.HandsCapacityExceeded));
+            Assert.That(session.RouteAtx24PowerCable(
+                    routeId,
+                    PowerCableKeyOrientation.Keyed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.DropHeldAtx24PowerCableToWorld().IsSuccess, Is.True);
+
+            long staleInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.UnrouteEps12vPowerCable(
+                    OperationId("eps12v-unroute-stale-source"),
+                    OperationId("eps12v-wrong-route"),
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.PlanStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(staleInventoryRevision));
+
+            StableId<AssemblyOperationIdScope> unrouteId =
+                OperationId("eps12v-unroute");
+            Eps12vPowerCableOperationReceipt unroute = session.UnrouteEps12vPowerCable(
+                unrouteId,
+                routeId,
+                1).Value;
+            Assert.That(session.UnrouteEps12vPowerCable(
+                unrouteId,
+                routeId,
+                1).Value, Is.SameAs(unroute));
+            Assert.That(unroute.OperationKind,
+                Is.EqualTo(Eps12vPowerCableOperationKind.Unroute));
+            Assert.That(unroute.SourceRouteOperationId, Is.EqualTo(routeId));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableState,
+                Is.EqualTo(Eps12vPowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.EqualTo(2));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.Zero);
+            Assert.That(session.TryGetEps12vPowerCableItem(
+                out InventoryItemRecord held), Is.True);
+            Assert.That(held.Id, Is.EqualTo(routed.Id));
+            Assert.That(held.ProductId, Is.EqualTo(routed.ProductId));
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.AssemblyBuild.ValidateEps12vPowerCableReceiptHistory()
+                .IsSuccess, Is.True);
+            Assert.That(session.DropHeldEps12vPowerCableToWorld().IsSuccess, Is.True);
+            long delayedReplayInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.UnrouteEps12vPowerCable(
+                unrouteId,
+                routeId,
+                1).Value, Is.SameAs(unroute));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(delayedReplayInventoryRevision));
+            Assert.That(session.TryGetEps12vPowerCableItem(
+                out InventoryItemRecord world), Is.True);
+            Assert.That(world.Id, Is.EqualTo(routed.Id));
+            Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Atx24UnrouteLeavesEps12vDependentLocksActive()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+
+            StableId<AssemblyOperationIdScope> motherboardAttach =
+                OperationId("dual-cable-motherboard-attach");
+            StableId<AssemblyOperationIdScope> motherboardSecure =
+                OperationId("dual-cable-motherboard-secure");
+            StableId<AssemblyOperationIdScope> powerSupplySeat =
+                OperationId("dual-cable-psu-seat");
+            StableId<AssemblyOperationIdScope> powerSupplyRetain =
+                OperationId("dual-cable-psu-retain");
+            StableId<AssemblyOperationIdScope> processorSeat =
+                OperationId("dual-cable-processor-seat");
+            StableId<AssemblyOperationIdScope> processorRetain =
+                OperationId("dual-cable-processor-retain");
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(motherboardAttach).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                motherboardSecure,
+                motherboardAttach,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            AssemblyOperationReceipt seatedPowerSupply = session.SeatPowerSupply(
+                powerSupplySeat,
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                session.AssemblyBuild.Revision).Value;
+            Assert.That(session.RetainPowerSupply(
+                powerSupplyRetain,
+                seatedPowerSupply.OperationId,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseProcessorToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatProcessor(
+                processorSeat,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.CloseProcessorRetention(
+                processorRetain,
+                processorSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseAtx24PowerCableToHands().IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> atxRoute =
+                OperationId("dual-cable-atx-route");
+            Assert.That(session.RouteAtx24PowerCable(
+                atxRoute,
+                PowerCableKeyOrientation.Keyed,
+                expectedCableRevision: 0).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseEps12vPowerCableToHands().IsSuccess, Is.True);
+            StableId<AssemblyOperationIdScope> epsRoute =
+                OperationId("dual-cable-eps-route");
+            Assert.That(session.RouteEps12vPowerCable(
+                epsRoute,
+                PowerCableKeyOrientation.Keyed,
+                expectedCableRevision: 0).IsSuccess, Is.True);
+
+            Assert.That(session.AssemblyBuild.IsAtx24PowerCableRouted, Is.True);
+            Assert.That(session.AssemblyBuild.IsEps12vPowerCableRouted, Is.True);
+
+            Assert.That(session.UnrouteAtx24PowerCable(
+                OperationId("dual-cable-atx-unroute"),
+                atxRoute,
+                expectedCableRevision: 1).IsSuccess, Is.True);
+
+            Assert.That(session.AssemblyBuild.IsAtx24PowerCableRouted, Is.False);
+            Assert.That(session.AssemblyBuild.IsEps12vPowerCableRouted, Is.True);
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.EqualTo(2));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.EqualTo(1));
+
+            long inventoryRevision = session.Inventory.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            long epsCableRevision = session.AssemblyBuild.Eps12vPowerCableRevision;
+
+            Assert.That(session.UnretainPowerSupply(
+                    OperationId("dual-cable-psu-unretain-blocked"),
+                    powerSupplySeat,
+                    powerSupplyRetain,
+                    assemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.UnsecureMotherboardFastener(
+                    OperationId("dual-cable-motherboard-unsecure-blocked"),
+                    motherboardAttach,
+                    motherboardSecure,
+                    assemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.OpenProcessorRetention(
+                    OperationId("dual-cable-processor-open-blocked"),
+                    processorSeat,
+                    processorRetain,
+                    assemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision,
+                Is.EqualTo(epsCableRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Eps12vRouteDoesNotMakeBenchmarkReady()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+
+            StableId<AssemblyOperationIdScope> motherboardAttach =
+                OperationId("eps-benchmark-motherboard-attach");
+            StableId<AssemblyOperationIdScope> motherboardSecure =
+                OperationId("eps-benchmark-motherboard-secure");
+            StableId<AssemblyOperationIdScope> powerSupplySeat =
+                OperationId("eps-benchmark-psu-seat");
+            StableId<AssemblyOperationIdScope> powerSupplyRetain =
+                OperationId("eps-benchmark-psu-retain");
+            StableId<AssemblyOperationIdScope> processorSeat =
+                OperationId("eps-benchmark-processor-seat");
+            StableId<AssemblyOperationIdScope> processorRetain =
+                OperationId("eps-benchmark-processor-retain");
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(motherboardAttach).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                motherboardSecure,
+                motherboardAttach,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            AssemblyOperationReceipt seatedPowerSupply = session.SeatPowerSupply(
+                powerSupplySeat,
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                session.AssemblyBuild.Revision).Value;
+            Assert.That(session.RetainPowerSupply(
+                powerSupplyRetain,
+                seatedPowerSupply.OperationId,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseProcessorToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatProcessor(
+                processorSeat,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.CloseProcessorRetention(
+                processorRetain,
+                processorSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> memorySeat =
+                OperationId("eps-benchmark-memory-seat");
+            Assert.That(session.PickupLooseMemoryToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatMemoryModule(
+                memorySeat,
+                DimmKeyOrientation.NotchAligned,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.CloseMemoryRetention(
+                OperationId("eps-benchmark-memory-retain"),
+                memorySeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> storageSeat =
+                OperationId("eps-benchmark-storage-seat");
+            Assert.That(session.PickupLooseStorageToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatStorageDevice(
+                storageSeat,
+                M2KeyOrientation.KeyAligned,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.SecureStorageDevice(
+                OperationId("eps-benchmark-storage-secure"),
+                storageSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> coolerSeat =
+                OperationId("eps-benchmark-cooler-seat");
+            Assert.That(session.PickupLooseProcessorCoolerToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatProcessorCooler(
+                coolerSeat,
+                ProcessorCoolerMountOrientation.Primary,
+                motherboardAttach,
+                motherboardSecure,
+                processorSeat,
+                processorRetain,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.RetainProcessorCooler(
+                OperationId("eps-benchmark-cooler-retain"),
+                coolerSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> graphicsCardSeat =
+                OperationId("eps-benchmark-graphics-card-seat");
+            Assert.That(session.PickupLooseGraphicsCardToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatGraphicsCard(
+                graphicsCardSeat,
+                GraphicsCardMountOrientation.Primary,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.RetainGraphicsCard(
+                OperationId("eps-benchmark-graphics-card-retain"),
+                graphicsCardSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseAtx24PowerCableToHands().IsSuccess, Is.True);
+            Assert.That(session.RouteAtx24PowerCable(
+                OperationId("eps-benchmark-atx24-route"),
+                PowerCableKeyOrientation.Keyed,
+                expectedCableRevision: 0).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLooseEps12vPowerCableToHands().IsSuccess, Is.True);
+            Assert.That(session.RouteEps12vPowerCable(
+                OperationId("eps-benchmark-route"),
+                PowerCableKeyOrientation.Keyed,
+                expectedCableRevision: 0).IsSuccess, Is.True);
+
+            Assert.That(session.AssemblyBuild.IsEps12vPowerCableRouted, Is.True);
+
+            long inventoryRevision = session.Inventory.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
+                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.EqualTo(1));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

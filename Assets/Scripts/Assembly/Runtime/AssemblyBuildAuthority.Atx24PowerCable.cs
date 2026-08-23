@@ -63,7 +63,8 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
-            if (_receipts.ContainsKey(operationId))
+            if (_receipts.ContainsKey(operationId) ||
+                _eps12vPowerCableReceipts.ContainsKey(operationId))
             {
                 return OperationResult<Atx24PowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);
@@ -163,7 +164,8 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
-            if (_receipts.ContainsKey(operationId))
+            if (_receipts.ContainsKey(operationId) ||
+                _eps12vPowerCableReceipts.ContainsKey(operationId))
             {
                 return OperationResult<Atx24PowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);
@@ -542,7 +544,13 @@ namespace PCShopEmpire3D.Assembly
                 !_componentCatalog.OwnerCatalog.TryGet(
                     _atx24PowerCableDefinition.ProductId,
                     out ProductDefinition cableProduct) ||
-                cableProduct.TrackingPolicy != ProductTrackingPolicy.SerializedInstance)
+                cableProduct.TrackingPolicy != ProductTrackingPolicy.SerializedInstance ||
+                !_componentCatalog.TryGet(
+                    _atx24PowerCableDefinition.ProductId,
+                    out PcComponentSpecification cableSpecification) ||
+                cableSpecification.Kind != PcComponentKind.PowerCable ||
+                cableSpecification.PowerCableType !=
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard)
             {
                 return false;
             }

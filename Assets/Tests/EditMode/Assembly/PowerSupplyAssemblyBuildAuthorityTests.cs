@@ -67,6 +67,115 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
+        public void NinthCombinedCableRouteClaimConflictLeavesFirstEightUnmanaged()
+        {
+            PowerSupplyFixture fixture = PowerSupplyFixture.CreateUnclaimed();
+            Atx24PowerCableDefinition atx24Definition =
+                fixture.CreateAtx24PowerCableDefinition(
+                    fixture.Atx24PowerCableProductId);
+            Eps12vPowerCableDefinition eps12vDefinition =
+                fixture.CreateEps12vPowerCableDefinition(
+                    fixture.Eps12vPowerCableProductId);
+
+            Assert.That(fixture.Inventory.ClaimManagedSerializedTransferContainer(
+                    fixture.Eps12vPowerCableRouteContainerId).IsSuccess,
+                Is.True);
+            long revisionBeforeFactory = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result =
+                fixture.TryCreateAuthority(atx24Definition, eps12vDefinition);
+
+            Assert.That(result.Error, Is.EqualTo(AssemblyFailures.PlanForeign));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(revisionBeforeFactory));
+            Assert.That(fixture.Authority, Is.Null);
+
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.WorkbenchId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.ProcessorSocketContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.MemorySlotContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.StorageSlotContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.CoolerSlotContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.GraphicsCardSlotContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.PowerSupplyBayContainerId).IsSuccess,
+                Is.True);
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.Atx24PowerCableRouteContainerId).IsSuccess,
+                Is.True);
+
+            Assert.That(fixture.Inventory.PrepareSerializedItemTransfer(
+                    fixture.MotherboardItemId,
+                    fixture.Eps12vPowerCableRouteContainerId).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(revisionBeforeFactory));
+            Assert.That(fixture.Inventory.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void FactoryRejectsAtx24ProductAsEps12vDefinitionWithoutMutation()
+        {
+            PowerSupplyFixture fixture = PowerSupplyFixture.CreateUnclaimed();
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result =
+                fixture.TryCreateAuthority(
+                    eps12vPowerCableDefinition:
+                    fixture.CreateEps12vPowerCableDefinition(
+                        fixture.Atx24PowerCableProductId));
+
+            Assert.That(result.Error,
+                Is.EqualTo(AssemblyFailures.InvalidPowerCableDefinition));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority, Is.Null);
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                    fixture.MotherboardItemId,
+                    fixture.WorkbenchId).IsSuccess,
+                Is.True);
+        }
+
+        [Test]
+        public void FactoryRejectsEps12vProductAsAtx24DefinitionWithoutMutation()
+        {
+            PowerSupplyFixture fixture = PowerSupplyFixture.CreateUnclaimed();
+            long inventoryRevision = fixture.Inventory.Revision;
+
+            OperationResult<AssemblyBuildAuthority> result =
+                fixture.TryCreateAuthority(
+                    atx24PowerCableDefinition:
+                    fixture.CreateAtx24PowerCableDefinition(
+                        fixture.Eps12vPowerCableProductId));
+
+            Assert.That(result.Error,
+                Is.EqualTo(AssemblyFailures.InvalidPowerCableDefinition));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority, Is.Null);
+            Assert.That(fixture.Inventory.TransferSerializedItem(
+                    fixture.MotherboardItemId,
+                    fixture.WorkbenchId).IsSuccess,
+                Is.True);
+        }
+
+        [Test]
         public void ExactFullCycleIsReplaySafeAndRetentionDoesNotChangeInventoryRevision()
         {
             PowerSupplyFixture fixture = PowerSupplyFixture.Create();
@@ -575,6 +684,26 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
             public StableId<ContainerIdScope> CoolerSlotContainerId { get; private set; }
             public StableId<ContainerIdScope> GraphicsCardSlotContainerId { get; private set; }
             public StableId<ContainerIdScope> PowerSupplyBayContainerId { get; private set; }
+            public StableId<ContainerIdScope> Atx24PowerCableRouteContainerId
+            {
+                get;
+                private set;
+            }
+            public StableId<ContainerIdScope> Eps12vPowerCableRouteContainerId
+            {
+                get;
+                private set;
+            }
+            public StableId<ProductDefinitionIdScope> Atx24PowerCableProductId
+            {
+                get;
+                private set;
+            }
+            public StableId<ProductDefinitionIdScope> Eps12vPowerCableProductId
+            {
+                get;
+                private set;
+            }
             public StableId<ItemInstanceIdScope> MotherboardItemId { get; private set; }
             public StableId<ItemInstanceIdScope> ProcessorItemId { get; private set; }
             public StableId<ItemInstanceIdScope> MemoryItemId { get; private set; }
@@ -610,6 +739,14 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     CoolerSlotContainerId = Container("container.cooler-main"),
                     GraphicsCardSlotContainerId = Container("container.graphics-card"),
                     PowerSupplyBayContainerId = Container("container.power-supply-bay"),
+                    Atx24PowerCableRouteContainerId =
+                        Container("container.power-cable-atx24-route"),
+                    Eps12vPowerCableRouteContainerId =
+                        Container("container.power-cable-eps12v-route"),
+                    Atx24PowerCableProductId =
+                        Product("component.power-cable-atx24-split"),
+                    Eps12vPowerCableProductId =
+                        Product("component.power-cable-eps12v-8pin"),
                     MotherboardItemId = Item("item.power-supply-motherboard"),
                     ProcessorItemId = Item("item.power-supply-processor"),
                     MemoryItemId = Item("item.power-supply-memory"),
@@ -647,7 +784,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     Definition(storageProduct),
                     Definition(coolerProduct),
                     Definition(graphicsCardProduct),
-                    Definition(powerSupplyProduct)
+                    Definition(powerSupplyProduct),
+                    Definition(fixture.Atx24PowerCableProductId),
+                    Definition(fixture.Eps12vPowerCableProductId)
                 }).Value;
                 fixture.Components = PcComponentCatalog.Create(products, new[]
                 {
@@ -683,7 +822,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     PcComponentSpecification.CreatePowerSupply(
                         products,
                         powerSupplyProduct,
-                        PowerSupplyType.AtxPs2).Value
+                        PowerSupplyType.AtxPs2).Value,
+                    PcComponentSpecification.CreatePowerCable(
+                        products,
+                        fixture.Atx24PowerCableProductId,
+                        PowerCableType.ModularAtx24SplitPsuToMotherboard).Value,
+                    PcComponentSpecification.CreatePowerCable(
+                        products,
+                        fixture.Eps12vPowerCableProductId,
+                        PowerCableType.ModularEps12v8PinPsuToMotherboard).Value
                 }).Value;
 
                 fixture.MemorySlot = DimmSlotDefinition.Create(
@@ -749,6 +896,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                     InventoryContainerKind.Workbench, 1);
                 fixture.Register(fixture.PowerSupplyBayContainerId,
                     InventoryContainerKind.Workbench, 1);
+                fixture.Register(fixture.Atx24PowerCableRouteContainerId,
+                    InventoryContainerKind.Workbench, 1);
+                fixture.Register(fixture.Eps12vPowerCableRouteContainerId,
+                    InventoryContainerKind.Workbench, 1);
                 fixture.Receive(fixture.MotherboardItemId, motherboardProduct);
                 fixture.Receive(fixture.ProcessorItemId, processorProduct);
                 fixture.Receive(fixture.MemoryItemId, memoryProduct);
@@ -759,7 +910,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                 return fixture;
             }
 
-            public OperationResult<AssemblyBuildAuthority> TryCreateAuthority()
+            public OperationResult<AssemblyBuildAuthority> TryCreateAuthority(
+                Atx24PowerCableDefinition atx24PowerCableDefinition = default,
+                Eps12vPowerCableDefinition eps12vPowerCableDefinition = default)
             {
                 return AssemblyBuildAuthority
                     .CreateWithProcessorSocketMemoryStorageCoolerGraphicsCardAndPowerSupplySlots(
@@ -780,7 +933,50 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
                         WorkbenchId,
                         ProcessorSocketContainerId,
                         MotherboardFormFactor.MicroAtx,
-                        CpuSocketFamily.Lga1700);
+                        CpuSocketFamily.Lga1700,
+                        atx24PowerCableDefinition,
+                        eps12vPowerCableDefinition);
+            }
+
+            public Atx24PowerCableDefinition CreateAtx24PowerCableDefinition(
+                StableId<ProductDefinitionIdScope> productId)
+            {
+                return Atx24PowerCableDefinition.Create(
+                    productId,
+                    Atx24PowerCableRouteContainerId,
+                    Atx24PowerCableTopology.Create(
+                        CableRoute("route.power-supply-atx24"),
+                        PowerCableEndpointDefinition.Create(
+                            CableEndpoint("endpoint.atx24.psu-primary"),
+                            PowerCableConnectorType.PsuModularAtx24Primary18).Value,
+                        PowerCableEndpointDefinition.Create(
+                            CableEndpoint("endpoint.atx24.psu-sense"),
+                            PowerCableConnectorType.PsuModularAtx24Sense10).Value,
+                        PowerCableEndpointDefinition.Create(
+                            CableEndpoint("endpoint.atx24.motherboard"),
+                            PowerCableConnectorType.MotherboardAtx24).Value,
+                        CableWaypoint("waypoint.atx24.psu-exit"),
+                        CableWaypoint("waypoint.atx24.rear-channel"),
+                        CableWaypoint("waypoint.atx24.board-entry")).Value).Value;
+            }
+
+            public Eps12vPowerCableDefinition CreateEps12vPowerCableDefinition(
+                StableId<ProductDefinitionIdScope> productId)
+            {
+                return Eps12vPowerCableDefinition.Create(
+                    productId,
+                    Eps12vPowerCableRouteContainerId,
+                    Eps12vPowerCableTopology.Create(
+                        CableRoute("route.power-supply-eps12v"),
+                        PowerCableEndpointDefinition.Create(
+                            CableEndpoint("endpoint.eps12v.psu"),
+                            PowerCableConnectorType.PsuModularEps12v8).Value,
+                        PowerCableEndpointDefinition.Create(
+                            CableEndpoint("endpoint.eps12v.motherboard"),
+                            PowerCableConnectorType.MotherboardEps12v8).Value,
+                        CableWaypoint("waypoint.eps12v.psu-exit"),
+                        CableWaypoint("waypoint.eps12v.rear-channel"),
+                        CableWaypoint("waypoint.eps12v.board-entry")).Value).Value;
             }
 
             public StableId<AssemblyOperationIdScope> SeatPowerSupply()
@@ -965,6 +1161,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
 
             private static StableId<AssemblySlotIdScope> Slot(string value) =>
                 StableId<AssemblySlotIdScope>.Parse(value);
+
+            private static StableId<AssemblyPowerCableRouteIdScope> CableRoute(
+                string value) =>
+                StableId<AssemblyPowerCableRouteIdScope>.Parse(value);
+
+            private static StableId<AssemblyPowerCableEndpointIdScope> CableEndpoint(
+                string value) =>
+                StableId<AssemblyPowerCableEndpointIdScope>.Parse(value);
+
+            private static StableId<AssemblyPowerCableWaypointIdScope> CableWaypoint(
+                string value) =>
+                StableId<AssemblyPowerCableWaypointIdScope>.Parse(value);
 
             private static StableId<AssemblyFastenerIdScope> Fastener(string value) =>
                 StableId<AssemblyFastenerIdScope>.Parse(value);

@@ -6,138 +6,38 @@ using PCShopEmpire3D.Inventory;
 
 namespace PCShopEmpire3D.Assembly
 {
-    public sealed class AssemblyPowerCableRouteIdScope : IStableIdScope
-    {
-    }
-
-    public sealed class AssemblyPowerCableEndpointIdScope : IStableIdScope
-    {
-    }
-
-    public sealed class AssemblyPowerCableWaypointIdScope : IStableIdScope
-    {
-    }
-
-    public enum Atx24PowerCableState
+    public enum Eps12vPowerCableState
     {
         Unsupported = 0,
         Loose = 1,
         Routed = 2
     }
 
-    public enum PowerCableConnectorType
-    {
-        PsuModularAtx24Primary18 = 1,
-        PsuModularAtx24Sense10 = 2,
-        MotherboardAtx24 = 3,
-        PsuModularEps12v8 = 4,
-        MotherboardEps12v8 = 5
-    }
-
-    public enum PowerCableKeyOrientation
-    {
-        Keyed = 1,
-        Reversed = 2
-    }
-
-    public enum Atx24PowerCableOperationKind
+    public enum Eps12vPowerCableOperationKind
     {
         Route = 1,
         Unroute = 2
     }
 
-    public readonly struct PowerCableEndpointDefinition
-    {
-        private PowerCableEndpointDefinition(
-            StableId<AssemblyPowerCableEndpointIdScope> endpointId,
-            PowerCableConnectorType connectorType)
-        {
-            EndpointId = endpointId;
-            ConnectorType = connectorType;
-        }
-
-        public StableId<AssemblyPowerCableEndpointIdScope> EndpointId { get; }
-
-        public PowerCableConnectorType ConnectorType { get; }
-
-        public int Capacity => 1;
-
-        public int PinCount
-        {
-            get
-            {
-                switch (ConnectorType)
-                {
-                    case PowerCableConnectorType.PsuModularAtx24Primary18:
-                        return 18;
-                    case PowerCableConnectorType.PsuModularAtx24Sense10:
-                        return 10;
-                    case PowerCableConnectorType.MotherboardAtx24:
-                        return 24;
-                    case PowerCableConnectorType.PsuModularEps12v8:
-                    case PowerCableConnectorType.MotherboardEps12v8:
-                        return 8;
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public bool IsValid =>
-            !EndpointId.IsEmpty &&
-            (ConnectorType == PowerCableConnectorType.PsuModularAtx24Primary18 ||
-             ConnectorType == PowerCableConnectorType.PsuModularAtx24Sense10 ||
-             ConnectorType == PowerCableConnectorType.MotherboardAtx24 ||
-             ConnectorType == PowerCableConnectorType.PsuModularEps12v8 ||
-             ConnectorType == PowerCableConnectorType.MotherboardEps12v8);
-
-        public static OperationResult<PowerCableEndpointDefinition> Create(
-            StableId<AssemblyPowerCableEndpointIdScope> endpointId,
-            PowerCableConnectorType connectorType)
-        {
-            if (endpointId.IsEmpty)
-            {
-                return OperationResult<PowerCableEndpointDefinition>.Fail(
-                    AssemblyFailures.InvalidPowerCableEndpoint);
-            }
-
-            if (connectorType != PowerCableConnectorType.PsuModularAtx24Primary18 &&
-                connectorType != PowerCableConnectorType.PsuModularAtx24Sense10 &&
-                connectorType != PowerCableConnectorType.MotherboardAtx24 &&
-                connectorType != PowerCableConnectorType.PsuModularEps12v8 &&
-                connectorType != PowerCableConnectorType.MotherboardEps12v8)
-            {
-                return OperationResult<PowerCableEndpointDefinition>.Fail(
-                    AssemblyFailures.InvalidPowerCableConnectorType);
-            }
-
-            return OperationResult<PowerCableEndpointDefinition>.Success(
-                new PowerCableEndpointDefinition(endpointId, connectorType));
-        }
-    }
-
     /// <summary>
-    /// Immutable physical contract for one keyed modular ATX 24-pin cable. The three
-    /// waypoints are identifiers, not free rope particles, and therefore persist a stable
-    /// authored route without joints, spring state or physics-driven drift.
+    /// Immutable two-endpoint EPS12V contract. The authored waypoint order is identity;
+    /// no rope particles, joints or transient physics state participate in persistence.
     /// </summary>
-    public sealed class Atx24PowerCableTopology
+    public sealed class Eps12vPowerCableTopology
     {
         private readonly IReadOnlyList<StableId<AssemblyPowerCableWaypointIdScope>>
             _orderedWaypoints;
 
-        private Atx24PowerCableTopology(
+        private Eps12vPowerCableTopology(
             StableId<AssemblyPowerCableRouteIdScope> routeId,
-            PowerCableEndpointDefinition psuPrimaryEndpoint,
-            PowerCableEndpointDefinition psuSenseEndpoint,
+            PowerCableEndpointDefinition psuEndpoint,
             PowerCableEndpointDefinition motherboardEndpoint,
             StableId<AssemblyPowerCableWaypointIdScope> firstWaypointId,
             StableId<AssemblyPowerCableWaypointIdScope> secondWaypointId,
             StableId<AssemblyPowerCableWaypointIdScope> thirdWaypointId)
         {
             RouteId = routeId;
-            PsuPrimaryEndpoint = psuPrimaryEndpoint;
-            PsuSenseEndpoint = psuSenseEndpoint;
+            PsuEndpoint = psuEndpoint;
             MotherboardEndpoint = motherboardEndpoint;
             FirstWaypointId = firstWaypointId;
             SecondWaypointId = secondWaypointId;
@@ -151,10 +51,8 @@ namespace PCShopEmpire3D.Assembly
             Fingerprint = string.Join(
                 "|",
                 RouteId.Value,
-                PsuPrimaryEndpoint.EndpointId.Value,
-                ((int)PsuPrimaryEndpoint.ConnectorType).ToString(),
-                PsuSenseEndpoint.EndpointId.Value,
-                ((int)PsuSenseEndpoint.ConnectorType).ToString(),
+                PsuEndpoint.EndpointId.Value,
+                ((int)PsuEndpoint.ConnectorType).ToString(),
                 FirstWaypointId.Value,
                 SecondWaypointId.Value,
                 ThirdWaypointId.Value,
@@ -164,9 +62,7 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<AssemblyPowerCableRouteIdScope> RouteId { get; }
 
-        public PowerCableEndpointDefinition PsuPrimaryEndpoint { get; }
-
-        public PowerCableEndpointDefinition PsuSenseEndpoint { get; }
+        public PowerCableEndpointDefinition PsuEndpoint { get; }
 
         public PowerCableEndpointDefinition MotherboardEndpoint { get; }
 
@@ -183,29 +79,21 @@ namespace PCShopEmpire3D.Assembly
 
         public bool IsValid =>
             !RouteId.IsEmpty &&
-            PsuPrimaryEndpoint.IsValid &&
-            PsuPrimaryEndpoint.ConnectorType ==
-                PowerCableConnectorType.PsuModularAtx24Primary18 &&
-            PsuSenseEndpoint.IsValid &&
-            PsuSenseEndpoint.ConnectorType ==
-                PowerCableConnectorType.PsuModularAtx24Sense10 &&
+            PsuEndpoint.IsValid &&
+            PsuEndpoint.ConnectorType == PowerCableConnectorType.PsuModularEps12v8 &&
             MotherboardEndpoint.IsValid &&
             MotherboardEndpoint.ConnectorType ==
-                PowerCableConnectorType.MotherboardAtx24 &&
-            AreDistinctEndpointIds(
-                PsuPrimaryEndpoint.EndpointId,
-                PsuSenseEndpoint.EndpointId,
-                MotherboardEndpoint.EndpointId) &&
+                PowerCableConnectorType.MotherboardEps12v8 &&
+            PsuEndpoint.EndpointId != MotherboardEndpoint.EndpointId &&
             AreDistinctNonEmptyWaypoints(
                 FirstWaypointId,
                 SecondWaypointId,
                 ThirdWaypointId) &&
             !string.IsNullOrEmpty(Fingerprint);
 
-        public static OperationResult<Atx24PowerCableTopology> Create(
+        public static OperationResult<Eps12vPowerCableTopology> Create(
             StableId<AssemblyPowerCableRouteIdScope> routeId,
-            PowerCableEndpointDefinition psuPrimaryEndpoint,
-            PowerCableEndpointDefinition psuSenseEndpoint,
+            PowerCableEndpointDefinition psuEndpoint,
             PowerCableEndpointDefinition motherboardEndpoint,
             StableId<AssemblyPowerCableWaypointIdScope> firstWaypointId,
             StableId<AssemblyPowerCableWaypointIdScope> secondWaypointId,
@@ -213,33 +101,37 @@ namespace PCShopEmpire3D.Assembly
         {
             if (routeId.IsEmpty)
             {
-                return OperationResult<Atx24PowerCableTopology>.Fail(
+                return OperationResult<Eps12vPowerCableTopology>.Fail(
                     AssemblyFailures.InvalidPowerCableRoute);
             }
 
-            var topology = new Atx24PowerCableTopology(
+            var topology = new Eps12vPowerCableTopology(
                 routeId,
-                psuPrimaryEndpoint,
-                psuSenseEndpoint,
+                psuEndpoint,
                 motherboardEndpoint,
                 firstWaypointId,
                 secondWaypointId,
                 thirdWaypointId);
-            return topology.IsValid
-                ? OperationResult<Atx24PowerCableTopology>.Success(topology)
-                : OperationResult<Atx24PowerCableTopology>.Fail(
-                    !psuPrimaryEndpoint.IsValid ||
-                    !psuSenseEndpoint.IsValid ||
-                    !motherboardEndpoint.IsValid ||
-                    !AreDistinctEndpointIds(
-                        psuPrimaryEndpoint.EndpointId,
-                        psuSenseEndpoint.EndpointId,
-                        motherboardEndpoint.EndpointId)
-                        ? AssemblyFailures.InvalidPowerCableEndpointTopology
-                        : AssemblyFailures.InvalidPowerCableWaypointTopology);
+            if (topology.IsValid)
+            {
+                return OperationResult<Eps12vPowerCableTopology>.Success(topology);
+            }
+
+            bool endpointInvalid =
+                !psuEndpoint.IsValid ||
+                psuEndpoint.ConnectorType !=
+                    PowerCableConnectorType.PsuModularEps12v8 ||
+                !motherboardEndpoint.IsValid ||
+                motherboardEndpoint.ConnectorType !=
+                    PowerCableConnectorType.MotherboardEps12v8 ||
+                psuEndpoint.EndpointId == motherboardEndpoint.EndpointId;
+            return OperationResult<Eps12vPowerCableTopology>.Fail(
+                endpointInvalid
+                    ? AssemblyFailures.InvalidPowerCableEndpointTopology
+                    : AssemblyFailures.InvalidPowerCableWaypointTopology);
         }
 
-        internal bool HasExactIdentity(Atx24PowerCableTopology other)
+        internal bool HasExactIdentity(Eps12vPowerCableTopology other)
         {
             return other != null &&
                    string.Equals(Fingerprint, other.Fingerprint, StringComparison.Ordinal);
@@ -257,27 +149,14 @@ namespace PCShopEmpire3D.Assembly
                    first != third &&
                    second != third;
         }
-
-        private static bool AreDistinctEndpointIds(
-            StableId<AssemblyPowerCableEndpointIdScope> first,
-            StableId<AssemblyPowerCableEndpointIdScope> second,
-            StableId<AssemblyPowerCableEndpointIdScope> third)
-        {
-            return !first.IsEmpty &&
-                   !second.IsEmpty &&
-                   !third.IsEmpty &&
-                   first != second &&
-                   first != third &&
-                   second != third;
-        }
     }
 
-    public readonly struct Atx24PowerCableDefinition
+    public readonly struct Eps12vPowerCableDefinition
     {
-        private Atx24PowerCableDefinition(
+        private Eps12vPowerCableDefinition(
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> routeContainerId,
-            Atx24PowerCableTopology topology)
+            Eps12vPowerCableTopology topology)
         {
             ProductId = productId;
             RouteContainerId = routeContainerId;
@@ -288,7 +167,7 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<ContainerIdScope> RouteContainerId { get; }
 
-        public Atx24PowerCableTopology Topology { get; }
+        public Eps12vPowerCableTopology Topology { get; }
 
         public bool IsValid =>
             !ProductId.IsEmpty &&
@@ -301,34 +180,34 @@ namespace PCShopEmpire3D.Assembly
             !RouteContainerId.IsEmpty ||
             Topology != null;
 
-        public static OperationResult<Atx24PowerCableDefinition> Create(
+        public static OperationResult<Eps12vPowerCableDefinition> Create(
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> routeContainerId,
-            Atx24PowerCableTopology topology)
+            Eps12vPowerCableTopology topology)
         {
             if (productId.IsEmpty)
             {
-                return OperationResult<Atx24PowerCableDefinition>.Fail(
+                return OperationResult<Eps12vPowerCableDefinition>.Fail(
                     AssemblyFailures.InvalidPowerCableProduct);
             }
 
             if (routeContainerId.IsEmpty)
             {
-                return OperationResult<Atx24PowerCableDefinition>.Fail(
+                return OperationResult<Eps12vPowerCableDefinition>.Fail(
                     AssemblyFailures.InvalidPowerCableRouteContainer);
             }
 
             if (topology == null || !topology.IsValid)
             {
-                return OperationResult<Atx24PowerCableDefinition>.Fail(
+                return OperationResult<Eps12vPowerCableDefinition>.Fail(
                     AssemblyFailures.InvalidPowerCableTopology);
             }
 
-            return OperationResult<Atx24PowerCableDefinition>.Success(
-                new Atx24PowerCableDefinition(productId, routeContainerId, topology));
+            return OperationResult<Eps12vPowerCableDefinition>.Success(
+                new Eps12vPowerCableDefinition(productId, routeContainerId, topology));
         }
 
-        internal bool HasExactIdentity(Atx24PowerCableDefinition other)
+        internal bool HasExactIdentity(Eps12vPowerCableDefinition other)
         {
             return ProductId == other.ProductId &&
                    RouteContainerId == other.RouteContainerId &&
@@ -337,23 +216,24 @@ namespace PCShopEmpire3D.Assembly
         }
     }
 
-    public sealed class Atx24PowerCableOperationReceipt
+    public sealed class Eps12vPowerCableOperationReceipt
     {
-        internal Atx24PowerCableOperationReceipt(
+        internal Eps12vPowerCableOperationReceipt(
             StableId<AssemblyOperationIdScope> operationId,
-            Atx24PowerCableOperationKind operationKind,
+            Eps12vPowerCableOperationKind operationKind,
             StableId<PcBuildIdScope> buildId,
             StableId<ChassisIdScope> chassisId,
             StableId<ItemInstanceIdScope> itemId,
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> sourceContainerId,
             StableId<ContainerIdScope> targetContainerId,
-            Atx24PowerCableDefinition definition,
+            Eps12vPowerCableDefinition definition,
             PowerCableKeyOrientation orientation,
-            Atx24PowerCableState previousState,
-            Atx24PowerCableState resultingState,
+            Eps12vPowerCableState previousState,
+            Eps12vPowerCableState resultingState,
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             StableId<AssemblyOperationIdScope> sourcePowerSupplyRetentionOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
             long expectedCableRevision,
             long cableRevision,
@@ -372,7 +252,9 @@ namespace PCShopEmpire3D.Assembly
             PreviousState = previousState;
             ResultingState = resultingState;
             SourceMotherboardSecureOperationId = sourceMotherboardSecureOperationId;
-            SourcePowerSupplyRetentionOperationId = sourcePowerSupplyRetentionOperationId;
+            SourcePowerSupplyRetentionOperationId =
+                sourcePowerSupplyRetentionOperationId;
+            SourceProcessorRetentionOperationId = sourceProcessorRetentionOperationId;
             SourceRouteOperationId = sourceRouteOperationId;
             ExpectedCableRevision = expectedCableRevision;
             CableRevision = cableRevision;
@@ -381,7 +263,7 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<AssemblyOperationIdScope> OperationId { get; }
 
-        public Atx24PowerCableOperationKind OperationKind { get; }
+        public Eps12vPowerCableOperationKind OperationKind { get; }
 
         public StableId<PcBuildIdScope> BuildId { get; }
 
@@ -395,15 +277,15 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<ContainerIdScope> TargetContainerId { get; }
 
-        public Atx24PowerCableDefinition Definition { get; }
+        public Eps12vPowerCableDefinition Definition { get; }
 
         public string RouteFingerprint => Definition.Topology?.Fingerprint ?? string.Empty;
 
         public PowerCableKeyOrientation Orientation { get; }
 
-        public Atx24PowerCableState PreviousState { get; }
+        public Eps12vPowerCableState PreviousState { get; }
 
-        public Atx24PowerCableState ResultingState { get; }
+        public Eps12vPowerCableState ResultingState { get; }
 
         public StableId<AssemblyOperationIdScope> SourceMotherboardSecureOperationId
         {
@@ -411,6 +293,11 @@ namespace PCShopEmpire3D.Assembly
         }
 
         public StableId<AssemblyOperationIdScope> SourcePowerSupplyRetentionOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope> SourceProcessorRetentionOperationId
         {
             get;
         }
@@ -431,13 +318,14 @@ namespace PCShopEmpire3D.Assembly
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> sourceContainerId,
             StableId<ContainerIdScope> targetContainerId,
-            Atx24PowerCableDefinition definition,
+            Eps12vPowerCableDefinition definition,
             PowerCableKeyOrientation orientation,
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             StableId<AssemblyOperationIdScope> sourcePowerSupplyRetentionOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
             long expectedCableRevision)
         {
-            return OperationKind == Atx24PowerCableOperationKind.Route &&
+            return OperationKind == Eps12vPowerCableOperationKind.Route &&
                    OperationId == operationId &&
                    BuildId == buildId &&
                    ChassisId == chassisId &&
@@ -447,12 +335,14 @@ namespace PCShopEmpire3D.Assembly
                    TargetContainerId == targetContainerId &&
                    Definition.HasExactIdentity(definition) &&
                    Orientation == orientation &&
-                   PreviousState == Atx24PowerCableState.Loose &&
-                   ResultingState == Atx24PowerCableState.Routed &&
+                   PreviousState == Eps12vPowerCableState.Loose &&
+                   ResultingState == Eps12vPowerCableState.Routed &&
                    SourceMotherboardSecureOperationId ==
                        sourceMotherboardSecureOperationId &&
                    SourcePowerSupplyRetentionOperationId ==
                        sourcePowerSupplyRetentionOperationId &&
+                   SourceProcessorRetentionOperationId ==
+                       sourceProcessorRetentionOperationId &&
                    SourceRouteOperationId.IsEmpty &&
                    ExpectedCableRevision == expectedCableRevision;
         }
@@ -465,13 +355,14 @@ namespace PCShopEmpire3D.Assembly
             StableId<ProductDefinitionIdScope> productId,
             StableId<ContainerIdScope> sourceContainerId,
             StableId<ContainerIdScope> targetContainerId,
-            Atx24PowerCableDefinition definition,
+            Eps12vPowerCableDefinition definition,
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             StableId<AssemblyOperationIdScope> sourcePowerSupplyRetentionOperationId,
+            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
             long expectedCableRevision)
         {
-            return OperationKind == Atx24PowerCableOperationKind.Unroute &&
+            return OperationKind == Eps12vPowerCableOperationKind.Unroute &&
                    OperationId == operationId &&
                    BuildId == buildId &&
                    ChassisId == chassisId &&
@@ -481,12 +372,14 @@ namespace PCShopEmpire3D.Assembly
                    TargetContainerId == targetContainerId &&
                    Definition.HasExactIdentity(definition) &&
                    Orientation == PowerCableKeyOrientation.Keyed &&
-                   PreviousState == Atx24PowerCableState.Routed &&
-                   ResultingState == Atx24PowerCableState.Loose &&
+                   PreviousState == Eps12vPowerCableState.Routed &&
+                   ResultingState == Eps12vPowerCableState.Loose &&
                    SourceMotherboardSecureOperationId ==
                        sourceMotherboardSecureOperationId &&
                    SourcePowerSupplyRetentionOperationId ==
                        sourcePowerSupplyRetentionOperationId &&
+                   SourceProcessorRetentionOperationId ==
+                       sourceProcessorRetentionOperationId &&
                    SourceRouteOperationId == sourceRouteOperationId &&
                    ExpectedCableRevision == expectedCableRevision;
         }

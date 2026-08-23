@@ -16,6 +16,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             Assert.That((int)PcComponentKind.ProcessorCooler, Is.EqualTo(5));
             Assert.That((int)PcComponentKind.GraphicsCard, Is.EqualTo(6));
             Assert.That((int)PcComponentKind.PowerSupply, Is.EqualTo(7));
+            Assert.That((int)PcComponentKind.PowerCable, Is.EqualTo(8));
             Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
             Assert.That((int)M2StorageType.NvmePcie4X4_2280, Is.EqualTo(1));
             Assert.That(
@@ -25,6 +26,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 (int)GraphicsCardType.Pcie4X16FullHeightDualSlot,
                 Is.EqualTo(1));
             Assert.That((int)PowerSupplyType.AtxPs2, Is.EqualTo(1));
+            Assert.That(
+                (int)PowerCableType.ModularAtx24SplitPsuToMotherboard,
+                Is.EqualTo(1));
+            Assert.That(
+                (int)PowerCableType.ModularEps12v8PinPsuToMotherboard,
+                Is.EqualTo(2));
         }
 
         [Test]
@@ -304,6 +311,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     products,
                     ProductId("component.power-cable-atx24-split"),
                     PowerCableType.ModularAtx24SplitPsuToMotherboard).Value;
+            PcComponentSpecification eps12vPowerCable =
+                PcComponentSpecification.CreatePowerCable(
+                    products,
+                    ProductId("component.power-cable-eps12v-8pin"),
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
@@ -316,11 +328,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     cooler,
                     graphicsCard,
                     powerSupply,
-                    powerCable
+                    powerCable,
+                    eps12vPowerCable
                 });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(8));
+            Assert.That(result.Value.Count, Is.EqualTo(9));
             Assert.That(result.Value.Get(cooler.ProductId).Value, Is.SameAs(cooler));
             Assert.That(result.Value.Get(graphicsCard.ProductId).Value,
                 Is.SameAs(graphicsCard));
@@ -328,15 +341,18 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Is.SameAs(powerSupply));
             Assert.That(result.Value.Get(powerCable.ProductId).Value,
                 Is.SameAs(powerCable));
+            Assert.That(result.Value.Get(eps12vPowerCable.ProductId).Value,
+                Is.SameAs(eps12vPowerCable));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
             Assert.That(result.Value.Specifications[0], Is.SameAs(cooler));
             Assert.That(result.Value.Specifications[1], Is.SameAs(graphicsCard));
             Assert.That(result.Value.Specifications[2], Is.SameAs(memory));
             Assert.That(result.Value.Specifications[3], Is.SameAs(motherboard));
             Assert.That(result.Value.Specifications[4], Is.SameAs(powerCable));
-            Assert.That(result.Value.Specifications[5], Is.SameAs(powerSupply));
-            Assert.That(result.Value.Specifications[6], Is.SameAs(processor));
-            Assert.That(result.Value.Specifications[7], Is.SameAs(storage));
+            Assert.That(result.Value.Specifications[5], Is.SameAs(eps12vPowerCable));
+            Assert.That(result.Value.Specifications[6], Is.SameAs(powerSupply));
+            Assert.That(result.Value.Specifications[7], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[8], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
@@ -591,6 +607,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.graphics-card-pcie4-x16", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.power-supply-atx-ps2", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.power-cable-atx24-split", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.power-cable-eps12v-8pin", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

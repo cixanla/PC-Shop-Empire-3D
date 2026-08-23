@@ -401,6 +401,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProductTrackingPolicy.SerializedInstance,
                     1095).Value
                 : null;
+            ProductDefinition eps12vPowerCableProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(
+                        Eps12vPowerCableProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(
+                        Eps12vPowerCableCategoryIdValue),
+                    Eps12vPowerCableDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1_500).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
                 includeAssemblyPrototype
                     ? new[]
@@ -412,7 +422,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         storageProduct,
                         processorCoolerProduct,
                         powerSupplyProduct,
-                        atx24PowerCableProduct
+                        atx24PowerCableProduct,
+                        eps12vPowerCableProduct
                     }
                     : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
@@ -480,6 +491,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         atx24PowerCableProduct.Id,
                         PowerCableType.ModularAtx24SplitPsuToMotherboard).Value
                     : null;
+            PcComponentSpecification eps12vPowerCableSpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreatePowerCable(
+                        catalog,
+                        eps12vPowerCableProduct.Id,
+                        PowerCableType.ModularEps12v8PinPsuToMotherboard).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
@@ -492,7 +510,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         processorCoolerSpecification,
                         graphicsCardSpecification,
                         powerSupplySpecification,
-                        atx24PowerCableSpecification
+                        atx24PowerCableSpecification,
+                        eps12vPowerCableSpecification
                     }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
@@ -515,7 +534,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 inventory,
                 WorldFloorContainerIdValue,
                 InventoryContainerKind.WorldFloor,
-                9);
+                10);
             RegisterContainer(
                 inventory,
                 WorkbenchContainerIdValue,
@@ -556,6 +575,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 RegisterContainer(
                     inventory,
                     Atx24PowerCableRouteContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    Eps12vPowerCableRouteContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
             }
@@ -662,7 +686,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             StableId<AssemblyPowerCableWaypointIdScope>.Parse(
                                 Atx24PowerCableWaypoint2IdValue),
                             StableId<AssemblyPowerCableWaypointIdScope>.Parse(
-                                Atx24PowerCableWaypoint3IdValue)).Value).Value).Value
+                                Atx24PowerCableWaypoint3IdValue)).Value).Value,
+                    Eps12vPowerCableDefinition.Create(
+                        eps12vPowerCableProduct.Id,
+                        StableId<ContainerIdScope>.Parse(
+                            Eps12vPowerCableRouteContainerIdValue),
+                        Eps12vPowerCableTopology.Create(
+                            StableId<AssemblyPowerCableRouteIdScope>.Parse(
+                                Eps12vPowerCableRouteIdValue),
+                            PowerCableEndpointDefinition.Create(
+                                StableId<AssemblyPowerCableEndpointIdScope>.Parse(
+                                    Eps12vPowerCablePsuEndpointIdValue),
+                                PowerCableConnectorType.PsuModularEps12v8).Value,
+                            PowerCableEndpointDefinition.Create(
+                                StableId<AssemblyPowerCableEndpointIdScope>.Parse(
+                                    Eps12vPowerCableMotherboardEndpointIdValue),
+                                PowerCableConnectorType.MotherboardEps12v8).Value,
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                Eps12vPowerCableWaypoint1IdValue),
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                Eps12vPowerCableWaypoint2IdValue),
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                Eps12vPowerCableWaypoint3IdValue)).Value).Value).Value
                 : AssemblyBuildAuthority.Create(
                     components,
                     inventory,
@@ -800,6 +845,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         Atx24PowerCableUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(
+                        Eps12vPowerCableItemInstanceIdValue),
+                    eps12vPowerCableProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        Eps12vPowerCableUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(

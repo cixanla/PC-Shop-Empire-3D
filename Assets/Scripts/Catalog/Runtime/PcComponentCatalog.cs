@@ -93,7 +93,8 @@ namespace PCShopEmpire3D.Catalog
     /// </summary>
     public enum PowerCableType
     {
-        ModularAtx24SplitPsuToMotherboard = 1
+        ModularAtx24SplitPsuToMotherboard = 1,
+        ModularEps12v8PinPsuToMotherboard = 2
     }
 
     /// <summary>
@@ -756,7 +757,9 @@ namespace PCShopEmpire3D.Catalog
         public static bool IsValidPowerCableType(PowerCableType powerCableType)
         {
             return powerCableType ==
-                   PowerCableType.ModularAtx24SplitPsuToMotherboard;
+                       PowerCableType.ModularAtx24SplitPsuToMotherboard ||
+                   powerCableType ==
+                       PowerCableType.ModularEps12v8PinPsuToMotherboard;
         }
 
         private static Failure ValidateSerializedComponentProduct(

@@ -95,7 +95,9 @@ namespace PCShopEmpire3D.Assembly
             PowerSupplyBayDefinition powerSupplyBayDefinition = default,
             InventorySerializedTransferAccess powerSupplyInventoryTransferAccess = null,
             Atx24PowerCableDefinition atx24PowerCableDefinition = default,
-            InventorySerializedTransferAccess atx24PowerCableInventoryTransferAccess = null)
+            InventorySerializedTransferAccess atx24PowerCableInventoryTransferAccess = null,
+            Eps12vPowerCableDefinition eps12vPowerCableDefinition = default,
+            InventorySerializedTransferAccess eps12vPowerCableInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -126,6 +128,9 @@ namespace PCShopEmpire3D.Assembly
             _atx24PowerCableDefinition = atx24PowerCableDefinition;
             _atx24PowerCableInventoryTransferAccess =
                 atx24PowerCableInventoryTransferAccess;
+            _eps12vPowerCableDefinition = eps12vPowerCableDefinition;
+            _eps12vPowerCableInventoryTransferAccess =
+                eps12vPowerCableInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -159,6 +164,11 @@ namespace PCShopEmpire3D.Assembly
             if (atx24PowerCableDefinition.IsValid)
             {
                 _atx24PowerCableState = Atx24PowerCableState.Loose;
+            }
+
+            if (eps12vPowerCableDefinition.IsValid)
+            {
+                _eps12vPowerCableState = Eps12vPowerCableState.Loose;
             }
         }
 
@@ -583,6 +593,12 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            if (IsEps12vPowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
+            }
+
             Failure preflightFailure = ValidateDetach(itemId, slotId);
             if (!preflightFailure.IsNone)
             {
@@ -749,7 +765,7 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
-            if (IsAtx24PowerCableRouted)
+            if (IsAtx24PowerCableRouted || IsEps12vPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.PowerCableDependentComponentLocked);
@@ -1031,6 +1047,12 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            if (IsEps12vPowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
+            }
+
             Failure preflightFailure = ValidateProcessorRetention(
                 itemId,
                 slotId,
@@ -1118,6 +1140,12 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            if (IsEps12vPowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
             }
 
             Failure preflightFailure = ValidateRemoveProcessor(
@@ -1638,7 +1666,8 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
-            if (!ValidateAtx24PowerCableStateInvariants())
+            if (!ValidateAtx24PowerCableStateInvariants() ||
+                !ValidateEps12vPowerCableStateInvariants())
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
