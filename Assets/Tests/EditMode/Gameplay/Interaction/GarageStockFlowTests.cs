@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageCoolerAndGraphicsCard()
+        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageCoolerGraphicsCardAndPowerSupply()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(6));
-            Assert.That(session.Components.Count, Is.EqualTo(6));
+            Assert.That(session.Catalog.Count, Is.EqualTo(7));
+            Assert.That(session.Components.Count, Is.EqualTo(7));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -135,7 +135,23 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(graphicsCard.ContainerId,
                 Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(graphicsCard.Id, Is.Not.EqualTo(session.ItemId));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(6));
+            OperationResult<PcComponentSpecification> powerSupplySpecification =
+                session.Components.Get(session.PowerSupplyProductId);
+            Assert.That(powerSupplySpecification.IsSuccess, Is.True);
+            Assert.That(powerSupplySpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.PowerSupply));
+            Assert.That(powerSupplySpecification.Value.PowerSupplyType,
+                Is.EqualTo(PowerSupplyType.AtxPs2));
+            Assert.That(session.TryGetPowerSupplyItem(
+                out InventoryItemRecord powerSupply), Is.True);
+            Assert.That(powerSupply.Id, Is.EqualTo(session.PowerSupplyItemId));
+            Assert.That(powerSupply.ProductId,
+                Is.EqualTo(session.PowerSupplyProductId));
+            Assert.That(powerSupply.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(powerSupply.StateFlags,
+                Is.EqualTo(InventorySerializedItemStateFlags.None));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(7));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -177,6 +193,124 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(
                 session.AssemblyBuild.GraphicsCardRetentionTopology.BracketFastenerId,
                 Is.EqualTo(session.GraphicsCardBracketFastenerId));
+            Assert.That(session.AssemblyBuild.HasPowerSupplyBay, Is.True);
+            Assert.That(session.AssemblyBuild.PowerSupplyBayState,
+                Is.EqualTo(PowerSupplyBayState.EmptyOpen));
+            Assert.That(session.AssemblyBuild.PowerSupplyBaySlotId,
+                Is.EqualTo(session.PowerSupplyBaySlotId));
+            Assert.That(session.AssemblyBuild.PowerSupplyBayContainerId,
+                Is.EqualTo(session.PowerSupplyBayContainerId));
+            PowerSupplyRetentionTopology topology =
+                session.AssemblyBuild.PowerSupplyRetentionTopology;
+            Assert.That(topology.RearMountId,
+                Is.EqualTo(session.PowerSupplyRearMountId));
+            Assert.That(topology.PhysicalOrder, Is.EqualTo(new[]
+            {
+                session.PowerSupplyTopLeftFastenerId,
+                session.PowerSupplyTopRightFastenerId,
+                session.PowerSupplyBottomLeftFastenerId,
+                session.PowerSupplyBottomRightFastenerId
+            }));
+            Assert.That(topology.DeterministicRetentionOrder, Is.EqualTo(new[]
+            {
+                session.PowerSupplyTopLeftFastenerId,
+                session.PowerSupplyBottomRightFastenerId,
+                session.PowerSupplyTopRightFastenerId,
+                session.PowerSupplyBottomLeftFastenerId
+            }));
+            Assert.That(topology.ReverseRetentionOrder, Is.EqualTo(new[]
+            {
+                session.PowerSupplyBottomLeftFastenerId,
+                session.PowerSupplyTopRightFastenerId,
+                session.PowerSupplyBottomRightFastenerId,
+                session.PowerSupplyTopLeftFastenerId
+            }));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PowerSupplyWorldHandsSeatRetentionRemoveAndDropPreserveIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            Assert.That(session.DropHeldPowerSupplyToWorld().Error.Code,
+                Is.EqualTo("assembly-power-supply.world-drop-invalid"));
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            Assert.That(session.PickupLoosePowerSupplyToHands().Error.Code,
+                Is.EqualTo("assembly-power-supply.loose-pickup-invalid"));
+            Assert.That(session.TryGetPowerSupplyItem(out InventoryItemRecord held),
+                Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            AssemblyBuildSnapshot initial = session.AssemblyBuild.GetSnapshot();
+            long heldInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> wrongOrientation =
+                session.SeatPowerSupply(
+                    OperationId("psu-wrong-orientation"),
+                    PowerSupplyMountOrientation.FanAwayFromFilteredVent,
+                    initial.Revision);
+            Assert.That(wrongOrientation.Error,
+                Is.EqualTo(AssemblyFailures.PowerSupplyOrientationMismatch));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(heldInventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(initial.Revision));
+
+            OperationResult<AssemblyOperationReceipt> seat = session.SeatPowerSupply(
+                OperationId("psu-seat"),
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                initial.Revision);
+            Assert.That(seat.IsSuccess, Is.True);
+            Assert.That(session.TryGetPowerSupplyItem(out InventoryItemRecord seated),
+                Is.True);
+            Assert.That(seated.Id, Is.EqualTo(held.Id));
+            Assert.That(seated.ProductId, Is.EqualTo(held.ProductId));
+            Assert.That(seated.ContainerId,
+                Is.EqualTo(session.PowerSupplyBayContainerId));
+
+            long seatedInventoryRevision = session.Inventory.Revision;
+            OperationResult<AssemblyOperationReceipt> retain =
+                session.RetainPowerSupply(
+                    OperationId("psu-retain"),
+                    seat.Value.OperationId,
+                    session.AssemblyBuild.Revision);
+            Assert.That(retain.IsSuccess, Is.True);
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(seatedInventoryRevision));
+            Assert.That(session.RemovePowerSupply(
+                    OperationId("psu-remove-retained"),
+                    seat.Value.OperationId,
+                    session.AssemblyBuild.Revision).Error,
+                Is.EqualTo(AssemblyFailures.PowerSupplyRetained));
+
+            OperationResult<AssemblyOperationReceipt> unretain =
+                session.UnretainPowerSupply(
+                    OperationId("psu-unretain"),
+                    seat.Value.OperationId,
+                    retain.Value.OperationId,
+                    session.AssemblyBuild.Revision);
+            Assert.That(unretain.IsSuccess, Is.True);
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(seatedInventoryRevision));
+
+            OperationResult<AssemblyOperationReceipt> remove =
+                session.RemovePowerSupply(
+                    OperationId("psu-remove"),
+                    seat.Value.OperationId,
+                    session.AssemblyBuild.Revision);
+            Assert.That(remove.IsSuccess, Is.True);
+            Assert.That(session.TryGetPowerSupplyItem(out InventoryItemRecord removed),
+                Is.True);
+            Assert.That(removed.Id, Is.EqualTo(held.Id));
+            Assert.That(removed.ProductId, Is.EqualTo(held.ProductId));
+            Assert.That(removed.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.DropHeldPowerSupplyToWorld().IsSuccess, Is.True);
+            Assert.That(session.TryGetPowerSupplyItem(out InventoryItemRecord world),
+                Is.True);
+            Assert.That(world.Id, Is.EqualTo(held.Id));
+            Assert.That(world.ProductId, Is.EqualTo(held.ProductId));
+            Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.GetTotalQuantity(
+                session.PowerSupplyProductId).Value, Is.EqualTo(1));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
@@ -1253,6 +1387,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         private static SimulationTimestamp Timestamp(long tick)
         {
             return SimulationTimestamp.Create(tick, tick * 1000L);
+        }
+
+        private static StableId<AssemblyOperationIdScope> OperationId(string suffix)
+        {
+            return StableId<AssemblyOperationIdScope>.Parse(
+                $"assembly.operation.tests.presentation-{suffix}");
         }
 
         private readonly struct Fixture

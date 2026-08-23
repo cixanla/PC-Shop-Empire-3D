@@ -165,6 +165,46 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns seven distinct managed
+    /// serialized-item containers. Validation is all-or-none and advances Inventory by
+    /// exactly one revision only after every capability can be published together.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessSeptuple
+    {
+        internal InventorySerializedTransferAccessSeptuple(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second,
+            InventorySerializedTransferAccess third,
+            InventorySerializedTransferAccess fourth,
+            InventorySerializedTransferAccess fifth,
+            InventorySerializedTransferAccess sixth,
+            InventorySerializedTransferAccess seventh)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+            Fourth = fourth;
+            Fifth = fifth;
+            Sixth = sixth;
+            Seventh = seventh;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+
+        internal InventorySerializedTransferAccess Third { get; }
+
+        internal InventorySerializedTransferAccess Fourth { get; }
+
+        internal InventorySerializedTransferAccess Fifth { get; }
+
+        internal InventorySerializedTransferAccess Sixth { get; }
+
+        internal InventorySerializedTransferAccess Seventh { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -756,6 +796,103 @@ namespace PCShopEmpire3D.Inventory
                     fourth,
                     fifth,
                     sixth));
+        }
+
+        internal OperationResult<InventorySerializedTransferAccessSeptuple>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId,
+                StableId<ContainerIdScope> thirdContainerId,
+                StableId<ContainerIdScope> fourthContainerId,
+                StableId<ContainerIdScope> fifthContainerId,
+                StableId<ContainerIdScope> sixthContainerId,
+                StableId<ContainerIdScope> seventhContainerId)
+        {
+            if (!_containers.ContainsKey(firstContainerId) ||
+                !_containers.ContainsKey(secondContainerId) ||
+                !_containers.ContainsKey(thirdContainerId) ||
+                !_containers.ContainsKey(fourthContainerId) ||
+                !_containers.ContainsKey(fifthContainerId) ||
+                !_containers.ContainsKey(sixthContainerId) ||
+                !_containers.ContainsKey(seventhContainerId))
+            {
+                return OperationResult<InventorySerializedTransferAccessSeptuple>.Fail(
+                    InventoryFailures.UnknownContainer);
+            }
+
+            StableId<ContainerIdScope>[] containerIds =
+            {
+                firstContainerId,
+                secondContainerId,
+                thirdContainerId,
+                fourthContainerId,
+                fifthContainerId,
+                sixthContainerId,
+                seventhContainerId
+            };
+            for (int left = 0; left < containerIds.Length - 1; left++)
+            {
+                for (int right = left + 1; right < containerIds.Length; right++)
+                {
+                    if (containerIds[left] == containerIds[right])
+                    {
+                        return OperationResult<InventorySerializedTransferAccessSeptuple>.Fail(
+                            InventoryFailures.SameContainer);
+                    }
+                }
+            }
+
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                StableId<ContainerIdScope> containerId = containerIds[index];
+                if (_managedSerializedTransferContainers.ContainsKey(containerId))
+                {
+                    return OperationResult<InventorySerializedTransferAccessSeptuple>.Fail(
+                        InventoryFailures.SerializedTransferContainerManaged);
+                }
+            }
+
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                StableId<ContainerIdScope> containerId = containerIds[index];
+                if (GetContainerLoadUnsafe(containerId) != 0 ||
+                    HasReservationTargetingContainerUnsafe(containerId))
+                {
+                    return OperationResult<InventorySerializedTransferAccessSeptuple>.Fail(
+                        InventoryFailures.SerializedTransferContainerOccupied);
+                }
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessSeptuple>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var first = new InventorySerializedTransferAccess(this, firstContainerId);
+            var second = new InventorySerializedTransferAccess(this, secondContainerId);
+            var third = new InventorySerializedTransferAccess(this, thirdContainerId);
+            var fourth = new InventorySerializedTransferAccess(this, fourthContainerId);
+            var fifth = new InventorySerializedTransferAccess(this, fifthContainerId);
+            var sixth = new InventorySerializedTransferAccess(this, sixthContainerId);
+            var seventh = new InventorySerializedTransferAccess(this, seventhContainerId);
+            _managedSerializedTransferContainers.Add(firstContainerId, first);
+            _managedSerializedTransferContainers.Add(secondContainerId, second);
+            _managedSerializedTransferContainers.Add(thirdContainerId, third);
+            _managedSerializedTransferContainers.Add(fourthContainerId, fourth);
+            _managedSerializedTransferContainers.Add(fifthContainerId, fifth);
+            _managedSerializedTransferContainers.Add(sixthContainerId, sixth);
+            _managedSerializedTransferContainers.Add(seventhContainerId, seventh);
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessSeptuple>.Success(
+                new InventorySerializedTransferAccessSeptuple(
+                    first,
+                    second,
+                    third,
+                    fourth,
+                    fifth,
+                    sixth,
+                    seventh));
         }
 
         public OperationResult ReceiveSerializedItem(

@@ -91,7 +91,9 @@ namespace PCShopEmpire3D.Assembly
             ProcessorCoolerSlotDefinition processorCoolerSlotDefinition = default,
             InventorySerializedTransferAccess processorCoolerInventoryTransferAccess = null,
             GraphicsCardSlotDefinition graphicsCardSlotDefinition = default,
-            InventorySerializedTransferAccess graphicsCardInventoryTransferAccess = null)
+            InventorySerializedTransferAccess graphicsCardInventoryTransferAccess = null,
+            PowerSupplyBayDefinition powerSupplyBayDefinition = default,
+            InventorySerializedTransferAccess powerSupplyInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -117,6 +119,8 @@ namespace PCShopEmpire3D.Assembly
                 processorCoolerInventoryTransferAccess;
             _graphicsCardSlotDefinition = graphicsCardSlotDefinition;
             _graphicsCardInventoryTransferAccess = graphicsCardInventoryTransferAccess;
+            _powerSupplyBayDefinition = powerSupplyBayDefinition;
+            _powerSupplyInventoryTransferAccess = powerSupplyInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -140,6 +144,11 @@ namespace PCShopEmpire3D.Assembly
             if (graphicsCardSlotDefinition.IsValid)
             {
                 _graphicsCardSlotState = GraphicsCardSlotState.EmptyOpen;
+            }
+
+            if (powerSupplyBayDefinition.IsValid)
+            {
+                _powerSupplyBayState = PowerSupplyBayState.EmptyOpen;
             }
         }
 
@@ -1275,6 +1284,27 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.GraphicsCardUnretained);
             }
 
+            if (_graphicsCardSlotState != GraphicsCardSlotState.GraphicsCardRetained)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (!HasPowerSupplyBay)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (_powerSupplyBayState == PowerSupplyBayState.EmptyOpen)
+            {
+                return OperationResult.Fail(AssemblyFailures.PowerSupplyMissing);
+            }
+
+            if (_powerSupplyBayState ==
+                PowerSupplyBayState.PowerSupplySeatedUnsecured)
+            {
+                return OperationResult.Fail(AssemblyFailures.PowerSupplyUnretained);
+            }
+
             return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
@@ -1329,7 +1359,14 @@ namespace PCShopEmpire3D.Assembly
                 _graphicsCardProductId,
                 _graphicsCardSeatedByOperationId,
                 _graphicsCardRetainedByOperationId,
-                _graphicsCardMountOrientation);
+                _graphicsCardMountOrientation,
+                _powerSupplyBayDefinition,
+                _powerSupplyBayState,
+                _powerSupplyItemId,
+                _powerSupplyProductId,
+                _powerSupplySeatedByOperationId,
+                _powerSupplyRetainedByOperationId,
+                _powerSupplyMountOrientation);
         }
 
         public bool TryGetReceipt(
@@ -1575,6 +1612,11 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
 
+            if (!ValidatePowerSupplyStateInvariants())
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
             if (Revision != _receipts.Count)
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
@@ -1594,9 +1636,13 @@ namespace PCShopEmpire3D.Assembly
                     IsProcessorCoolerOperation(receipt.OperationKind);
                 bool graphicsCardOperation = receipt != null &&
                     IsGraphicsCardOperation(receipt.OperationKind);
-                StableId<AssemblySlotIdScope> expectedSlotId = graphicsCardOperation
-                    ? _graphicsCardSlotDefinition.SlotId
-                    : processorCoolerOperation
+                bool powerSupplyOperation = receipt != null &&
+                    IsPowerSupplyOperation(receipt.OperationKind);
+                StableId<AssemblySlotIdScope> expectedSlotId = powerSupplyOperation
+                    ? _powerSupplyBayDefinition.SlotId
+                    : graphicsCardOperation
+                        ? _graphicsCardSlotDefinition.SlotId
+                        : processorCoolerOperation
                         ? _processorCoolerSlotDefinition.SlotId
                         : storageOperation
                         ? _storageSlotDefinition.SlotId
@@ -2121,6 +2167,7 @@ namespace PCShopEmpire3D.Assembly
 
             if (!IsProcessorCoolerOperation(receipt.OperationKind) &&
                 !IsGraphicsCardOperation(receipt.OperationKind) &&
+                !IsPowerSupplyOperation(receipt.OperationKind) &&
                 (!receipt.SourceProcessorCoolerSeatOperationId.IsEmpty ||
                  !receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty ||
                  receipt.ProcessorCoolerMountOrientation != default ||
@@ -2133,6 +2180,7 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (!IsGraphicsCardOperation(receipt.OperationKind) &&
+                !IsPowerSupplyOperation(receipt.OperationKind) &&
                 (!receipt.SourceGraphicsCardSeatOperationId.IsEmpty ||
                  !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty ||
                  receipt.GraphicsCardMountOrientation != default ||
@@ -2140,6 +2188,18 @@ namespace PCShopEmpire3D.Assembly
                     receipt.ResultingGraphicsCardSlotState ||
                  !IsDefaultGraphicsCardSlotDefinition(
                      receipt.GraphicsCardSlotDefinition)))
+            {
+                return false;
+            }
+
+            if (!IsPowerSupplyOperation(receipt.OperationKind) &&
+                (!receipt.SourcePowerSupplySeatOperationId.IsEmpty ||
+                 !receipt.SourcePowerSupplyRetentionOperationId.IsEmpty ||
+                 receipt.PowerSupplyMountOrientation != default ||
+                 receipt.PreviousPowerSupplyBayState !=
+                    receipt.ResultingPowerSupplyBayState ||
+                 !IsDefaultPowerSupplyBayDefinition(
+                     receipt.PowerSupplyBayDefinition)))
             {
                 return false;
             }
@@ -2549,6 +2609,112 @@ namespace PCShopEmpire3D.Assembly
                                _graphicsCardSlotDefinition) &&
                            receipt.SequenceIndex == 0;
 
+                case AssemblyOperationKind.SeatPowerSupply:
+                    return HasPowerSupplyBay &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId ==
+                               _powerSupplyBayDefinition.ContainerId &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           receipt.SourcePowerSupplySeatOperationId.IsEmpty &&
+                           receipt.SourcePowerSupplyRetentionOperationId.IsEmpty &&
+                           receipt.PowerSupplyMountOrientation ==
+                               PowerSupplyMountOrientation.FanToFilteredVent &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.EmptyOpen &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.PowerSupplyBayDefinition.HasExactIdentity(
+                               _powerSupplyBayDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RemovePowerSupply:
+                    return HasPowerSupplyBay &&
+                           receipt.SourceContainerId ==
+                               _powerSupplyBayDefinition.ContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           !receipt.SourcePowerSupplySeatOperationId.IsEmpty &&
+                           receipt.SourcePowerSupplyRetentionOperationId.IsEmpty &&
+                           receipt.PowerSupplyMountOrientation ==
+                               PowerSupplyMountOrientation.FanToFilteredVent &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.EmptyOpen &&
+                           receipt.PowerSupplyBayDefinition.HasExactIdentity(
+                               _powerSupplyBayDefinition) &&
+                           receipt.SequenceIndex == -1;
+
+                case AssemblyOperationKind.RetainPowerSupply:
+                    return HasPowerSupplyBay &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           !receipt.SourcePowerSupplySeatOperationId.IsEmpty &&
+                           receipt.SourcePowerSupplyRetentionOperationId.IsEmpty &&
+                           receipt.PowerSupplyMountOrientation ==
+                               PowerSupplyMountOrientation.FanToFilteredVent &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplyRetained &&
+                           receipt.PowerSupplyBayDefinition.HasExactIdentity(
+                               _powerSupplyBayDefinition) &&
+                           receipt.SequenceIndex == 0;
+
+                case AssemblyOperationKind.UnretainPowerSupply:
+                    return HasPowerSupplyBay &&
+                           receipt.SourceContainerId.IsEmpty &&
+                           receipt.TargetContainerId.IsEmpty &&
+                           receipt.SourceAttachOperationId.IsEmpty &&
+                           receipt.SourceSecureOperationId.IsEmpty &&
+                           receipt.FastenerId.IsEmpty &&
+                           receipt.RetentionId.IsEmpty &&
+                           receipt.SourceProcessorSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerSeatOperationId.IsEmpty &&
+                           receipt.SourceProcessorCoolerRetentionOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                           receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
+                           !receipt.SourcePowerSupplySeatOperationId.IsEmpty &&
+                           !receipt.SourcePowerSupplyRetentionOperationId.IsEmpty &&
+                           receipt.PowerSupplyMountOrientation ==
+                               PowerSupplyMountOrientation.FanToFilteredVent &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplyRetained &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.PowerSupplyBayDefinition.HasExactIdentity(
+                               _powerSupplyBayDefinition) &&
+                           receipt.SequenceIndex == 0;
+
                 default:
                     return false;
             }
@@ -2579,7 +2745,11 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.SeatGraphicsCard ||
                    operationKind == AssemblyOperationKind.RemoveGraphicsCard ||
                    operationKind == AssemblyOperationKind.RetainGraphicsCard ||
-                   operationKind == AssemblyOperationKind.UnretainGraphicsCard;
+                   operationKind == AssemblyOperationKind.UnretainGraphicsCard ||
+                   operationKind == AssemblyOperationKind.SeatPowerSupply ||
+                   operationKind == AssemblyOperationKind.RemovePowerSupply ||
+                   operationKind == AssemblyOperationKind.RetainPowerSupply ||
+                   operationKind == AssemblyOperationKind.UnretainPowerSupply;
         }
 
         private static bool IsProcessorOperation(AssemblyOperationKind operationKind)
@@ -2624,11 +2794,27 @@ namespace PCShopEmpire3D.Assembly
                    operationKind == AssemblyOperationKind.UnretainGraphicsCard;
         }
 
+        private static bool IsPowerSupplyOperation(
+            AssemblyOperationKind operationKind)
+        {
+            return operationKind == AssemblyOperationKind.SeatPowerSupply ||
+                   operationKind == AssemblyOperationKind.RemovePowerSupply ||
+                   operationKind == AssemblyOperationKind.RetainPowerSupply ||
+                   operationKind == AssemblyOperationKind.UnretainPowerSupply;
+        }
+
         private static bool IsValidGraphicsCardOrientation(
             GraphicsCardMountOrientation orientation)
         {
             return orientation == GraphicsCardMountOrientation.Primary ||
                    orientation == GraphicsCardMountOrientation.Rotated180;
+        }
+
+        private static bool IsValidPowerSupplyOrientation(
+            PowerSupplyMountOrientation orientation)
+        {
+            return orientation == PowerSupplyMountOrientation.FanToFilteredVent ||
+                   orientation == PowerSupplyMountOrientation.FanAwayFromFilteredVent;
         }
 
         private static bool IsValidProcessorCoolerOrientation(
@@ -2658,6 +2844,15 @@ namespace PCShopEmpire3D.Assembly
                    definition.SupportedGraphicsCardType == default;
         }
 
+        private static bool IsDefaultPowerSupplyBayDefinition(
+            PowerSupplyBayDefinition definition)
+        {
+            return definition.SlotId.IsEmpty &&
+                   definition.ContainerId.IsEmpty &&
+                   definition.RetentionTopology == null &&
+                   definition.SupportedPowerSupplyType == default;
+        }
+
         private bool ValidateReceiptTransition(AssemblyOperationReceipt receipt)
         {
             if (!IsMemoryOperation(receipt.OperationKind) &&
@@ -2682,6 +2877,13 @@ namespace PCShopEmpire3D.Assembly
             if (!IsGraphicsCardOperation(receipt.OperationKind) &&
                 receipt.PreviousGraphicsCardSlotState !=
                     receipt.ResultingGraphicsCardSlotState)
+            {
+                return false;
+            }
+
+            if (!IsPowerSupplyOperation(receipt.OperationKind) &&
+                receipt.PreviousPowerSupplyBayState !=
+                    receipt.ResultingPowerSupplyBayState)
             {
                 return false;
             }
@@ -3023,6 +3225,63 @@ namespace PCShopEmpire3D.Assembly
                                receipt.SourceGraphicsCardRetentionOperationId,
                                receipt);
 
+                case AssemblyOperationKind.SeatPowerSupply:
+                    return receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.SourceContainerId == _handsContainerId &&
+                           receipt.TargetContainerId ==
+                               _powerSupplyBayDefinition.ContainerId &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.EmptyOpen &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.PowerSupplyMountOrientation ==
+                               PowerSupplyMountOrientation.FanToFilteredVent;
+
+                case AssemblyOperationKind.RemovePowerSupply:
+                    return receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.SourceContainerId ==
+                               _powerSupplyBayDefinition.ContainerId &&
+                           receipt.TargetContainerId == _handsContainerId &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.EmptyOpen &&
+                           IsMatchingPowerSupplySeatReceipt(
+                               receipt.SourcePowerSupplySeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.RetainPowerSupply:
+                    return receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplyRetained &&
+                           receipt.SourcePowerSupplyRetentionOperationId.IsEmpty &&
+                           IsMatchingPowerSupplySeatReceipt(
+                               receipt.SourcePowerSupplySeatOperationId,
+                               receipt);
+
+                case AssemblyOperationKind.UnretainPowerSupply:
+                    return receipt.ResultingSeatState == receipt.PreviousSeatState &&
+                           receipt.PreviousProcessorSocketState ==
+                               receipt.ResultingProcessorSocketState &&
+                           receipt.PreviousPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplyRetained &&
+                           receipt.ResultingPowerSupplyBayState ==
+                               PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                           IsMatchingPowerSupplySeatReceipt(
+                               receipt.SourcePowerSupplySeatOperationId,
+                               receipt) &&
+                           IsMatchingPowerSupplyRetentionReceipt(
+                               receipt.SourcePowerSupplyRetentionOperationId,
+                               receipt);
+
                 default:
                     return false;
             }
@@ -3081,6 +3340,16 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope>
                 foldedGraphicsCardRetentionOperationId = default;
             GraphicsCardMountOrientation foldedGraphicsCardOrientation = default;
+            PowerSupplyBayState foldedPowerSupplyState = HasPowerSupplyBay
+                ? PowerSupplyBayState.EmptyOpen
+                : PowerSupplyBayState.Unsupported;
+            StableId<ItemInstanceIdScope> foldedPowerSupplyItemId = default;
+            StableId<ProductDefinitionIdScope> foldedPowerSupplyProductId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedPowerSupplySeatOperationId = default;
+            StableId<AssemblyOperationIdScope>
+                foldedPowerSupplyRetentionOperationId = default;
+            PowerSupplyMountOrientation foldedPowerSupplyOrientation = default;
             long foldedInventoryRevision = 0;
 
             for (int index = 0; index < receiptsByRevision.Length; index++)
@@ -3106,6 +3375,9 @@ namespace PCShopEmpire3D.Assembly
                     (IsGraphicsCardOperation(receipt.OperationKind) &&
                      receipt.PreviousGraphicsCardSlotState !=
                          foldedGraphicsCardState) ||
+                    (IsPowerSupplyOperation(receipt.OperationKind) &&
+                     receipt.PreviousPowerSupplyBayState !=
+                         foldedPowerSupplyState) ||
                     receipt.InventoryRevision < foldedInventoryRevision)
                 {
                     return false;
@@ -3123,7 +3395,9 @@ namespace PCShopEmpire3D.Assembly
                     receipt.OperationKind == AssemblyOperationKind.SeatProcessorCooler ||
                     receipt.OperationKind == AssemblyOperationKind.RemoveProcessorCooler ||
                     receipt.OperationKind == AssemblyOperationKind.SeatGraphicsCard ||
-                    receipt.OperationKind == AssemblyOperationKind.RemoveGraphicsCard;
+                    receipt.OperationKind == AssemblyOperationKind.RemoveGraphicsCard ||
+                    receipt.OperationKind == AssemblyOperationKind.SeatPowerSupply ||
+                    receipt.OperationKind == AssemblyOperationKind.RemovePowerSupply;
                 if (inventoryTransfer &&
                     receipt.InventoryRevision <= foldedInventoryRevision)
                 {
@@ -3645,6 +3919,85 @@ namespace PCShopEmpire3D.Assembly
                         foldedGraphicsCardOrientation = default;
                         break;
 
+                    case AssemblyOperationKind.SeatPowerSupply:
+                        if (foldedPowerSupplyState != PowerSupplyBayState.EmptyOpen ||
+                            !foldedPowerSupplyItemId.IsEmpty ||
+                            !foldedPowerSupplyProductId.IsEmpty ||
+                            !foldedPowerSupplySeatOperationId.IsEmpty ||
+                            !foldedPowerSupplyRetentionOperationId.IsEmpty ||
+                            foldedPowerSupplyOrientation != default ||
+                            receipt.PowerSupplyMountOrientation !=
+                                PowerSupplyMountOrientation.FanToFilteredVent)
+                        {
+                            return false;
+                        }
+
+                        foldedPowerSupplyItemId = receipt.ItemId;
+                        foldedPowerSupplyProductId = receipt.ProductId;
+                        foldedPowerSupplySeatOperationId = receipt.OperationId;
+                        foldedPowerSupplyOrientation =
+                            receipt.PowerSupplyMountOrientation;
+                        break;
+
+                    case AssemblyOperationKind.RetainPowerSupply:
+                        if (foldedPowerSupplyState !=
+                                PowerSupplyBayState.PowerSupplySeatedUnsecured ||
+                            receipt.ItemId != foldedPowerSupplyItemId ||
+                            receipt.ProductId != foldedPowerSupplyProductId ||
+                            receipt.SourcePowerSupplySeatOperationId !=
+                                foldedPowerSupplySeatOperationId ||
+                            !receipt.SourcePowerSupplyRetentionOperationId.IsEmpty ||
+                            !foldedPowerSupplyRetentionOperationId.IsEmpty ||
+                            receipt.PowerSupplyMountOrientation !=
+                                foldedPowerSupplyOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedPowerSupplyRetentionOperationId = receipt.OperationId;
+                        break;
+
+                    case AssemblyOperationKind.UnretainPowerSupply:
+                        if (foldedPowerSupplyState !=
+                                PowerSupplyBayState.PowerSupplyRetained ||
+                            receipt.ItemId != foldedPowerSupplyItemId ||
+                            receipt.ProductId != foldedPowerSupplyProductId ||
+                            receipt.SourcePowerSupplySeatOperationId !=
+                                foldedPowerSupplySeatOperationId ||
+                            receipt.SourcePowerSupplyRetentionOperationId !=
+                                foldedPowerSupplyRetentionOperationId ||
+                            foldedPowerSupplyRetentionOperationId.IsEmpty ||
+                            receipt.PowerSupplyMountOrientation !=
+                                foldedPowerSupplyOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedPowerSupplyRetentionOperationId = default;
+                        break;
+
+                    case AssemblyOperationKind.RemovePowerSupply:
+                        if (foldedPowerSupplyState !=
+                                PowerSupplyBayState.PowerSupplySeatedUnsecured ||
+                            receipt.ItemId != foldedPowerSupplyItemId ||
+                            receipt.ProductId != foldedPowerSupplyProductId ||
+                            receipt.SourcePowerSupplySeatOperationId !=
+                                foldedPowerSupplySeatOperationId ||
+                            !receipt.SourcePowerSupplyRetentionOperationId.IsEmpty ||
+                            !foldedPowerSupplyRetentionOperationId.IsEmpty ||
+                            receipt.PowerSupplyMountOrientation !=
+                                foldedPowerSupplyOrientation)
+                        {
+                            return false;
+                        }
+
+                        foldedPowerSupplyItemId = default;
+                        foldedPowerSupplyProductId = default;
+                        foldedPowerSupplySeatOperationId = default;
+                        foldedPowerSupplyRetentionOperationId = default;
+                        foldedPowerSupplyOrientation = default;
+                        break;
+
                     default:
                         return false;
                 }
@@ -3661,6 +4014,10 @@ namespace PCShopEmpire3D.Assembly
                 {
                     foldedGraphicsCardState =
                         receipt.ResultingGraphicsCardSlotState;
+                }
+                if (IsPowerSupplyOperation(receipt.OperationKind))
+                {
+                    foldedPowerSupplyState = receipt.ResultingPowerSupplyBayState;
                 }
                 foldedInventoryRevision = receipt.InventoryRevision;
             }
@@ -3707,7 +4064,15 @@ namespace PCShopEmpire3D.Assembly
                    foldedGraphicsCardRetentionOperationId ==
                        _graphicsCardRetainedByOperationId &&
                    foldedGraphicsCardOrientation ==
-                       _graphicsCardMountOrientation;
+                       _graphicsCardMountOrientation &&
+                   foldedPowerSupplyState == _powerSupplyBayState &&
+                   foldedPowerSupplyItemId == _powerSupplyItemId &&
+                   foldedPowerSupplyProductId == _powerSupplyProductId &&
+                   foldedPowerSupplySeatOperationId ==
+                       _powerSupplySeatedByOperationId &&
+                   foldedPowerSupplyRetentionOperationId ==
+                       _powerSupplyRetainedByOperationId &&
+                   foldedPowerSupplyOrientation == _powerSupplyMountOrientation;
         }
 
         private bool HasExactProcessorHostLineage(

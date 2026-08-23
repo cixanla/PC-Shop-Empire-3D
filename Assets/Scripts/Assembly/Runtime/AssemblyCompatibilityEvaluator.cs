@@ -283,5 +283,48 @@ namespace PCShopEmpire3D.Assembly
                 : AssemblyCompatibilityResult.Incompatible(
                     AssemblyFailures.GraphicsCardTypeMismatch);
         }
+
+        public static AssemblyCompatibilityResult EvaluatePowerSupplySeat(
+            PcComponentSpecification powerSupplySpecification,
+            PowerSupplyType supportedPowerSupplyType,
+            PowerSupplyMountOrientation orientation)
+        {
+            if (powerSupplySpecification == null)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnknownComponentSpecification);
+            }
+
+            if (!PcComponentSpecification.IsValidPowerSupplyType(
+                    supportedPowerSupplyType))
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidPowerSupplyType);
+            }
+
+            if (orientation != PowerSupplyMountOrientation.FanToFilteredVent &&
+                orientation != PowerSupplyMountOrientation.FanAwayFromFilteredVent)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.InvalidPowerSupplyOrientation);
+            }
+
+            if (orientation != PowerSupplyMountOrientation.FanToFilteredVent)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.PowerSupplyOrientationMismatch);
+            }
+
+            if (powerSupplySpecification.Kind != PcComponentKind.PowerSupply)
+            {
+                return AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.UnsupportedComponentKind);
+            }
+
+            return powerSupplySpecification.PowerSupplyType == supportedPowerSupplyType
+                ? AssemblyCompatibilityResult.Compatible()
+                : AssemblyCompatibilityResult.Incompatible(
+                    AssemblyFailures.PowerSupplyTypeMismatch);
+        }
     }
 }

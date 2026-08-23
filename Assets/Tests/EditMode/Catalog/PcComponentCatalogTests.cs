@@ -15,6 +15,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             Assert.That((int)PcComponentKind.StorageDevice, Is.EqualTo(4));
             Assert.That((int)PcComponentKind.ProcessorCooler, Is.EqualTo(5));
             Assert.That((int)PcComponentKind.GraphicsCard, Is.EqualTo(6));
+            Assert.That((int)PcComponentKind.PowerSupply, Is.EqualTo(7));
             Assert.That((int)DimmType.Ddr5Udimm, Is.EqualTo(1));
             Assert.That((int)M2StorageType.NvmePcie4X4_2280, Is.EqualTo(1));
             Assert.That(
@@ -23,6 +24,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
             Assert.That(
                 (int)GraphicsCardType.Pcie4X16FullHeightDualSlot,
                 Is.EqualTo(1));
+            Assert.That((int)PowerSupplyType.AtxPs2, Is.EqualTo(1));
         }
 
         [Test]
@@ -225,6 +227,35 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
         }
 
         [Test]
+        public void PowerSupplyKeepsTypedAtxPs2MechanicalCompatibility()
+        {
+            ProductCatalog products = CreateProducts();
+            StableId<ProductDefinitionIdScope> powerSupplyId =
+                ProductId("component.power-supply-atx-ps2");
+
+            OperationResult<PcComponentSpecification> result =
+                PcComponentSpecification.CreatePowerSupply(
+                    products,
+                    powerSupplyId,
+                    PowerSupplyType.AtxPs2);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.ProductId, Is.EqualTo(powerSupplyId));
+            Assert.That(result.Value.Kind, Is.EqualTo(PcComponentKind.PowerSupply));
+            Assert.That(result.Value.PowerSupplyType, Is.EqualTo(PowerSupplyType.AtxPs2));
+            Assert.That(result.Value.MotherboardFormFactor,
+                Is.EqualTo(default(MotherboardFormFactor)));
+            Assert.That(result.Value.CpuSocketFamily,
+                Is.EqualTo(default(CpuSocketFamily)));
+            Assert.That(result.Value.DimmType, Is.EqualTo(default(DimmType)));
+            Assert.That(result.Value.M2StorageType, Is.EqualTo(default(M2StorageType)));
+            Assert.That(result.Value.ProcessorCoolerType,
+                Is.EqualTo(default(ProcessorCoolerType)));
+            Assert.That(result.Value.GraphicsCardType,
+                Is.EqualTo(default(GraphicsCardType)));
+        }
+
+        [Test]
         public void ComponentCatalogRegistersAllBoundedAssemblyMetadataTogether()
         {
             ProductCatalog products = CreateProducts();
@@ -263,23 +294,40 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     products,
                     ProductId("component.graphics-card-pcie4-x16"),
                     GraphicsCardType.Pcie4X16FullHeightDualSlot).Value;
+            PcComponentSpecification powerSupply =
+                PcComponentSpecification.CreatePowerSupply(
+                    products,
+                    ProductId("component.power-supply-atx-ps2"),
+                    PowerSupplyType.AtxPs2).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
-                new[] { motherboard, processor, memory, storage, cooler, graphicsCard });
+                new[]
+                {
+                    motherboard,
+                    processor,
+                    memory,
+                    storage,
+                    cooler,
+                    graphicsCard,
+                    powerSupply
+                });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(6));
+            Assert.That(result.Value.Count, Is.EqualTo(7));
             Assert.That(result.Value.Get(cooler.ProductId).Value, Is.SameAs(cooler));
             Assert.That(result.Value.Get(graphicsCard.ProductId).Value,
                 Is.SameAs(graphicsCard));
+            Assert.That(result.Value.Get(powerSupply.ProductId).Value,
+                Is.SameAs(powerSupply));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
             Assert.That(result.Value.Specifications[0], Is.SameAs(cooler));
             Assert.That(result.Value.Specifications[1], Is.SameAs(graphicsCard));
             Assert.That(result.Value.Specifications[2], Is.SameAs(memory));
             Assert.That(result.Value.Specifications[3], Is.SameAs(motherboard));
-            Assert.That(result.Value.Specifications[4], Is.SameAs(processor));
-            Assert.That(result.Value.Specifications[5], Is.SameAs(storage));
+            Assert.That(result.Value.Specifications[4], Is.SameAs(powerSupply));
+            Assert.That(result.Value.Specifications[5], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[6], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
@@ -428,6 +476,23 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     ProductId("consumable.screw"),
                     GraphicsCardType.Pcie4X16FullHeightDualSlot).Error,
                 Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
+            Assert.That(PcComponentSpecification.CreatePowerSupply(
+                    products,
+                    ProductId("component.power-supply-atx-ps2"),
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidPowerSupplyType));
+            Assert.That(PcComponentSpecification.CreatePowerSupply(
+                    products,
+                    ProductId("component.power-supply-atx-ps2"),
+                    (PowerSupplyType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidPowerSupplyType));
+            Assert.That(PcComponentSpecification.CreatePowerSupply(
+                    products,
+                    ProductId("consumable.screw"),
+                    PowerSupplyType.AtxPs2).Error,
+                Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
+            Assert.That(CatalogFailures.InvalidPowerSupplyType.Code,
+                Is.EqualTo("catalog.component.power-supply-type.invalid"));
         }
 
         [Test]
@@ -498,6 +563,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.storage-nvme-2280", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.cooler-lga1700-top-down-air", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.graphics-card-pcie4-x16", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.power-supply-atx-ps2", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

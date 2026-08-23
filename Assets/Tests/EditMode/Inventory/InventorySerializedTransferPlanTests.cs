@@ -24,6 +24,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ContainerIdScope>.Parse("container.benchmark-slot-primary");
         private static readonly StableId<ContainerIdScope> GraphicsCardSlot =
             StableId<ContainerIdScope>.Parse("container.graphics-card-slot-primary");
+        private static readonly StableId<ContainerIdScope> PowerSupplyBay =
+            StableId<ContainerIdScope>.Parse("container.power-supply-bay-primary");
         private static readonly StableId<ItemInstanceIdScope> Item =
             StableId<ItemInstanceIdScope>.Parse("item.motherboard-001");
         private static readonly StableId<ItemInstanceIdScope> MemorySlotItem =
@@ -34,6 +36,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ItemInstanceIdScope>.Parse("item.benchmark-slot-occupied");
         private static readonly StableId<ItemInstanceIdScope> GraphicsCardSlotItem =
             StableId<ItemInstanceIdScope>.Parse("item.graphics-card-slot-occupied");
+        private static readonly StableId<ItemInstanceIdScope> PowerSupplyBayItem =
+            StableId<ItemInstanceIdScope>.Parse("item.power-supply-bay-occupied");
 
         [Test]
         public void PrepareIsSideEffectFreeAndBindsExactSourceTargetAndRevision()
@@ -1083,6 +1087,150 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ManagedContainerSeptupleClaimSucceedsInOneRevisionAndEachAccessOnlyMovesItsOwnContainer()
+        {
+            InventoryAuthority authority = CreateSeptupleAuthority();
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessSeptuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(claim.Value.First.ManagedContainerId, Is.EqualTo(Workbench));
+            Assert.That(claim.Value.Second.ManagedContainerId, Is.EqualTo(ProcessorSocket));
+            Assert.That(claim.Value.Third.ManagedContainerId, Is.EqualTo(MemorySlot));
+            Assert.That(claim.Value.Fourth.ManagedContainerId, Is.EqualTo(StorageSlot));
+            Assert.That(claim.Value.Fifth.ManagedContainerId, Is.EqualTo(BenchmarkSlot));
+            Assert.That(claim.Value.Sixth.ManagedContainerId, Is.EqualTo(GraphicsCardSlot));
+            Assert.That(claim.Value.Seventh.ManagedContainerId, Is.EqualTo(PowerSupplyBay));
+
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, Workbench, claim.Value.First, claim.Value.Seventh);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, ProcessorSocket, claim.Value.Second, claim.Value.First);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, MemorySlot, claim.Value.Third, claim.Value.Second);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, StorageSlot, claim.Value.Fourth, claim.Value.Third);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, BenchmarkSlot, claim.Value.Fifth, claim.Value.Fourth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, GraphicsCardSlot, claim.Value.Sixth, claim.Value.Fifth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, PowerSupplyBay, claim.Value.Seventh, claim.Value.Sixth);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerSeptupleValidationPrecedenceLeavesNoPartialClaim()
+        {
+            InventoryAuthority unknownBeforeSame = CreateSeptupleAuthority();
+            Assert.That(unknownBeforeSame.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    StableId<ContainerIdScope>.Parse("container.unknown")).Error,
+                Is.EqualTo(InventoryFailures.UnknownContainer));
+
+            InventoryAuthority sameBeforeManaged = CreateSeptupleAuthority();
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainer(
+                PowerSupplyBay).IsSuccess, Is.True);
+            long sameRevision = sameBeforeManaged.Revision;
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay).Error,
+                Is.EqualTo(InventoryFailures.SameContainer));
+            Assert.That(sameBeforeManaged.Revision, Is.EqualTo(sameRevision));
+
+            InventoryAuthority managedBeforeOccupied = CreateSeptupleAuthority(
+                fillPowerSupplyBay: true);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainer(
+                ProcessorSocket).IsSuccess, Is.True);
+            SetRevision(managedBeforeOccupied, long.MaxValue);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(managedBeforeOccupied.Revision, Is.EqualTo(long.MaxValue));
+
+            InventoryAuthority occupiedBeforeOverflow = CreateSeptupleAuthority(
+                fillPowerSupplyBay: true);
+            SetRevision(occupiedBeforeOverflow, long.MaxValue);
+            Assert.That(occupiedBeforeOverflow.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(occupiedBeforeOverflow.Revision, Is.EqualTo(long.MaxValue));
+
+            InventoryAuthority overflow = CreateSeptupleAuthority();
+            SetRevision(overflow, long.MaxValue);
+            Assert.That(overflow.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay).Error,
+                Is.EqualTo(InventoryFailures.RevisionOverflow));
+            Assert.That(overflow.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(overflow.PrepareSerializedItemTransfer(Item, Workbench).Error,
+                Is.EqualTo(InventoryFailures.RevisionOverflow));
+        }
+
+        [Test]
+        public void ManagedContainerSeptupleAtRevisionBoundaryIsAtomic()
+        {
+            InventoryAuthority authority = CreateSeptupleAuthority();
+            SetRevision(authority, long.MaxValue - 1);
+
+            OperationResult<InventorySerializedTransferAccessSeptuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(authority.PrepareSerializedItemTransfer(Item, PowerSupplyBay).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TryGetSerializedItem(Item, out InventoryItemRecord unchanged),
+                Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void AssertManagedAccessMovesOnlyOwnContainer(
             InventoryAuthority authority,
             StableId<ItemInstanceIdScope> itemId,
@@ -1244,6 +1392,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                     GraphicsCardSlotItem,
                     ProductId,
                     GraphicsCardSlot,
+                    InventoryCondition.OpenBox,
+                    InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
+            }
+
+            return authority;
+        }
+
+        private static InventoryAuthority CreateSeptupleAuthority(
+            bool fillPowerSupplyBay = false)
+        {
+            InventoryAuthority authority = CreateSextupleAuthority();
+            Assert.That(authority.RegisterContainer(InventoryContainerDefinition.Create(
+                PowerSupplyBay,
+                InventoryContainerKind.Workbench,
+                1).Value).IsSuccess, Is.True);
+
+            if (fillPowerSupplyBay)
+            {
+                Assert.That(authority.ReceiveSerializedItem(
+                    PowerSupplyBayItem,
+                    ProductId,
+                    PowerSupplyBay,
                     InventoryCondition.OpenBox,
                     InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
             }

@@ -92,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(10));
+                Assert.That(physicalItems.Length, Is.EqualTo(11));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -126,9 +126,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     item => item.ItemIdValue ==
                             GarageStockFlowSession
                                 .GraphicsCardAssemblyItemInstanceIdValue);
+                PhysicalItemProjection powerSupply = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.PowerSupplyItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(6));
+                    Is.EqualTo(7));
+                Assert.That(powerSupply.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyDisplayName));
+                Assert.That(powerSupply.SupportsPlacement, Is.False);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -669,6 +675,141 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsPowerSupplyR29PhysicalMountContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
+                Assert.That(marker, Is.Not.Null);
+
+                PowerSupplyBayProjection bay = marker.PowerSupplyBay;
+                PowerSupplyAssemblyItemBinding binding = marker.PowerSupplyBinding;
+                PhysicalItemProjection powerSupply = marker.PowerSupply;
+                PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
+
+                Assert.That(GaragePrototypeMarker.Version,
+                    Is.EqualTo("garage-psu-four-screw-r29-v1"));
+                Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
+                Assert.That(bay, Is.Not.Null);
+                Assert.That(bay.IsConfigured, Is.True);
+                Assert.That(bay.SlotIdValue,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyBaySlotIdValue));
+                Assert.That(bay.RearMountIdValue,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyRearMountIdValue));
+                Assert.That(bay.TopLeftFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.PowerSupplyTopLeftFastenerIdValue));
+                Assert.That(bay.TopRightFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.PowerSupplyTopRightFastenerIdValue));
+                Assert.That(bay.BottomLeftFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.PowerSupplyBottomLeftFastenerIdValue));
+                Assert.That(bay.BottomRightFastenerIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.PowerSupplyBottomRightFastenerIdValue));
+                Assert.That(bay.BayFormFactor,
+                    Is.EqualTo(PowerSupplyFormFactor.AtxPs2));
+                Assert.That(bay.SnapAnchor.name, Is.EqualTo("PowerSupplyBaySnapAnchor"));
+                Assert.That(bay.FocusCollider.name,
+                    Is.EqualTo("PowerSupplyBayFocusTarget"));
+                Assert.That(bay.FocusCollider.isTrigger, Is.True);
+                Assert.That(bay.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(bay.SupportCollider.name,
+                    Is.EqualTo("PowerSupplyFilteredFloorIntake"));
+                Assert.That(bay.SupportCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(bay.FastenerPivots.Length, Is.EqualTo(4));
+                Assert.That(bay.FastenerPivots.Distinct().Count(), Is.EqualTo(4));
+                Assert.That(
+                    bay.FastenerPivots.Select(pivot => pivot.name),
+                    Is.EqualTo(new[]
+                    {
+                        "PowerSupplyRearFastenerPivot_1",
+                        "PowerSupplyRearFastenerPivot_2",
+                        "PowerSupplyRearFastenerPivot_3",
+                        "PowerSupplyRearFastenerPivot_4"
+                    }));
+
+                Assert.That(binding, Is.Not.Null);
+                Assert.That(binding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(binding.PhysicalItem, Is.SameAs(powerSupply));
+                Assert.That(binding.Slot, Is.SameAs(bay));
+                Assert.That(binding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyItemInstanceIdValue));
+                Assert.That(binding.IsAuthorityLooseWorld, Is.True);
+                Assert.That(binding.ValidateProjectionInvariant().IsSuccess, Is.True);
+                Assert.That(marker.PlayerCarry.MatchesPowerSupplyConfiguration(
+                    bay,
+                    binding), Is.True);
+                PowerSupplyAssemblyItemBinding[] allPowerSupplyBindings = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        PowerSupplyAssemblyItemBinding>(true))
+                    .ToArray();
+                Assert.That(allPowerSupplyBindings.Length, Is.EqualTo(1));
+                Assert.That(allPowerSupplyBindings[0], Is.SameAs(binding));
+                Assert.That(binding.gameObject, Is.SameAs(powerSupply.gameObject));
+
+                Assert.That(powerSupply, Is.Not.Null);
+                Assert.That(powerSupply.ItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyItemInstanceIdValue));
+                Assert.That(powerSupply.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.PowerSupplyDisplayName));
+                Assert.That(powerSupply.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(powerSupply.SupportsPlacement, Is.False);
+                Assert.That(powerSupply.Body.mass, Is.EqualTo(2.35f).Within(0.001f));
+                Assert.That(powerSupply.Body.isKinematic, Is.True);
+                Assert.That(powerSupply.Body.useGravity, Is.False);
+                Assert.That(Vector3.Distance(
+                    powerSupply.DropHalfExtents,
+                    new Vector3(0.075f, 0.043f, 0.070f)),
+                    Is.LessThan(0.0001f));
+
+                Assert.That(geometry, Is.Not.Null);
+                Assert.That(geometry.IsCanonical, Is.True);
+                Assert.That(geometry.Housing.name, Is.EqualTo("PowerSupplySteelHousing"));
+                Assert.That(geometry.FanAndGrille.name,
+                    Is.EqualTo("PowerSupplyIntakeFan"));
+                Assert.That(geometry.FilteredFloorIntake,
+                    Is.SameAs(bay.SupportCollider.transform));
+                Assert.That(geometry.AcInlet.name, Is.EqualTo("PowerSupplyAcInlet"));
+                Assert.That(geometry.RockerSwitch.name,
+                    Is.EqualTo("PowerSupplyRockerSwitch"));
+                Assert.That(geometry.ModularSocketPanel.name,
+                    Is.EqualTo("PowerSupplyDisconnectedModularSocketPanel"));
+                Assert.That(geometry.RearMountPlate.name,
+                    Is.EqualTo("PowerSupplyRearMountPlate"));
+                Assert.That(geometry.FastenerPivots,
+                    Is.EqualTo(bay.FastenerPivots));
+
+                Assert.That(marker.StockFlow.Session.TryGetPowerSupplyItem(
+                    out InventoryItemRecord item), Is.True);
+                Assert.That(item.Id,
+                    Is.EqualTo(marker.StockFlow.Session.PowerSupplyItemId));
+                Assert.That(item.ProductId,
+                    Is.EqualTo(marker.StockFlow.Session.PowerSupplyProductId));
+                Assert.That(item.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<PhysicalItemProjection>(true))
+                    .Count(itemProjection => itemProjection.ItemIdValue ==
+                        GarageStockFlowSession.PowerSupplyItemInstanceIdValue),
+                    Is.EqualTo(1));
+                Assert.That(marker.StockFlow.Session.ValidateInvariants().IsSuccess, Is.True);
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsReadableSemiRealisticBenchmarkContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -680,7 +821,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-gpu-rear-bracket-r28-v1"));
+                    Is.EqualTo("garage-psu-four-screw-r29-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -1531,9 +1672,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(108));
+                    Is.EqualTo(144));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(20));
+                    Is.EqualTo(23));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
                     Is.EqualTo(1));

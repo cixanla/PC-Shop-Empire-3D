@@ -99,6 +99,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasProcessorSocketContext ||
             IsDimmSeatMode ||
             HasDimmSlotContext ||
+            IsPowerSupplySeatMode ||
+            HasPowerSupplyBayContext ||
             IsGraphicsCardSeatMode ||
             HasGraphicsCardSlotContext ||
             IsProcessorCoolerSeatMode ||
@@ -109,6 +111,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
              (GetMotherboardBinding(HeldItem) != null ||
               GetProcessorBinding(HeldItem) != null ||
               GetDimmBinding(HeldItem) != null ||
+              GetPowerSupplyBinding(HeldItem) != null ||
               GetGraphicsCardBinding(HeldItem) != null ||
               GetProcessorCoolerBinding(HeldItem) != null ||
               GetM2StorageBinding(HeldItem) != null));
@@ -141,12 +144,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetProcessorBinding(HeldItem);
                     DimmAssemblyItemBinding dimmBinding =
                         GetDimmBinding(HeldItem);
+                    PowerSupplyAssemblyItemBinding powerSupplyAssemblyBinding =
+                        GetPowerSupplyBinding(HeldItem);
                     GraphicsCardAssemblyItemBinding graphicsCardAssemblyBinding =
                         GetGraphicsCardBinding(HeldItem);
                     ProcessorCoolerAssemblyItemBinding coolerBinding =
                         GetProcessorCoolerBinding(HeldItem);
                     M2StorageAssemblyItemBinding storageBinding =
                         GetM2StorageBinding(HeldItem);
+                    if (powerSupplyAssemblyBinding != null)
+                    {
+                        return GetHeldPowerSupplyPrompt(
+                            powerSupplyAssemblyBinding,
+                            placement,
+                            drop,
+                            rotate);
+                    }
                     if (graphicsCardAssemblyBinding != null)
                     {
                         return GetHeldGraphicsCardPrompt(
@@ -265,6 +278,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return unload +
                            $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: " +
                            $"{FocusedCart.DisplayName} tut{blocked}";
+                }
+
+                if (HasPowerSupplyBayContext && powerSupplyBinding != null)
+                {
+                    return GetPowerSupplyBayPrompt();
                 }
 
                 if (HasGraphicsCardSlotContext && graphicsCardBinding != null)
@@ -396,12 +414,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProcessorAssemblyItemBinding focusedProcessor =
                     GetProcessorBinding(FocusedItem);
                 DimmAssemblyItemBinding focusedDimm = GetDimmBinding(FocusedItem);
+                PowerSupplyAssemblyItemBinding focusedPowerSupply =
+                    GetPowerSupplyBinding(FocusedItem);
                 GraphicsCardAssemblyItemBinding focusedGraphicsCard =
                     GetGraphicsCardBinding(FocusedItem);
                 ProcessorCoolerAssemblyItemBinding focusedCooler =
                     GetProcessorCoolerBinding(FocusedItem);
                 M2StorageAssemblyItemBinding focusedStorage =
                     GetM2StorageBinding(FocusedItem);
+                if (focusedPowerSupply != null)
+                {
+                    return focusedPowerSupply.IsRetained
+                        ? "PSU ARKA PLAKA + 4 VİDA KİLİTLİ • sökme kilitli"
+                        : focusedPowerSupply.IsSeated
+                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: PSU'yu çıkar • 4 VİDA GEVŞEK"
+                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • ATX PS/2";
+                }
                 if (focusedGraphicsCard != null)
                 {
                     return focusedGraphicsCard.IsRetained
@@ -679,6 +707,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 m2StorageAssemblyBinding?.SyncProjectionToAuthority();
                 processorCoolerBinding?.SyncProjectionToAuthority();
                 graphicsCardBinding?.SyncProjectionToAuthority();
+                powerSupplyBinding?.SyncProjectionToAuthority();
             }
 
             return Remember(result);
@@ -884,10 +913,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            PowerSupplyAssemblyItemBinding powerSupplyAssemblyBinding =
+                GetPowerSupplyBinding(item);
             GraphicsCardAssemblyItemBinding graphicsCardAssemblyBinding =
                 GetGraphicsCardBinding(item);
             ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            if (powerSupplyAssemblyBinding != null)
+            {
+                return TryPickupPowerSupply(item, powerSupplyAssemblyBinding);
+            }
             if (graphicsCardAssemblyBinding != null)
             {
                 return TryPickupGraphicsCard(item, graphicsCardAssemblyBinding);
@@ -1131,11 +1166,34 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(HeldItem);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(HeldItem);
+            PowerSupplyAssemblyItemBinding powerSupplyAssemblyBinding =
+                GetPowerSupplyBinding(HeldItem);
             GraphicsCardAssemblyItemBinding graphicsCardAssemblyBinding =
                 GetGraphicsCardBinding(HeldItem);
             ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(HeldItem);
             M2StorageAssemblyItemBinding storageBinding =
                 GetM2StorageBinding(HeldItem);
+            if (powerSupplyAssemblyBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(
+                        Failure.FromCode("assembly-power-supply.paused")));
+                }
+
+                OperationResult drop =
+                    powerSupplyAssemblyBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess)
+                {
+                    CompleteHeldItemRelease();
+                }
+                else
+                {
+                    SetCarryHandsState(blocked: true);
+                }
+
+                return Remember(drop);
+            }
             if (graphicsCardAssemblyBinding != null)
             {
                 if (motor != null && motor.IsPaused)
@@ -1462,6 +1520,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
@@ -1476,6 +1535,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.DrainGameplayPressesThisFrame();
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
@@ -1487,6 +1547,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HeldItem != null)
             {
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
@@ -1494,6 +1555,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedCart = null;
+                if (ProcessHeldPowerSupplyInput())
+                {
+                    return;
+                }
                 if (ProcessHeldGraphicsCardInput())
                 {
                     return;
@@ -1684,6 +1749,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ActiveCart != null)
             {
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
@@ -1721,8 +1787,32 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
+            if (ProcessLoosePowerSupplyPickupInput())
+            {
+                ResetGraphicsCardSlotFocus();
+                ResetProcessorCoolerSlotFocus();
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
+            UpdatePowerSupplyBayFocus();
+            if (ProcessPowerSupplyBayInput())
+            {
+                ResetGraphicsCardSlotFocus();
+                ResetProcessorCoolerSlotFocus();
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
             if (ProcessLooseGraphicsCardPickupInput())
             {
+                ResetPowerSupplyBayFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
@@ -1734,6 +1824,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             UpdateGraphicsCardSlotFocus();
             if (ProcessGraphicsCardSlotInput())
             {
+                ResetPowerSupplyBayFocus();
                 ResetProcessorCoolerSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
@@ -1744,6 +1835,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ProcessLooseProcessorCoolerPickupInput())
             {
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
@@ -1755,6 +1847,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             UpdateProcessorCoolerSlotFocus();
             if (ProcessProcessorCoolerSlotInput())
             {
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetM2StorageSlotFocus();
                 ResetDimmSlotFocus();
@@ -1766,6 +1859,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             UpdateM2StorageSlotFocus();
             if (ProcessM2StorageSlotInput())
             {
+                ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetDimmSlotFocus();
                 ResetProcessorSocketFocus();
@@ -1967,11 +2061,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorAssemblyItemBinding processorBinding =
                 GetProcessorBinding(item);
             DimmAssemblyItemBinding dimmBinding = GetDimmBinding(item);
+            PowerSupplyAssemblyItemBinding powerSupplyAssemblyBinding =
+                GetPowerSupplyBinding(item);
             GraphicsCardAssemblyItemBinding graphicsCardAssemblyBinding =
                 GetGraphicsCardBinding(item);
             ProcessorCoolerAssemblyItemBinding coolerBinding =
                 GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            if (powerSupplyAssemblyBinding != null)
+            {
+                OperationResult recovery =
+                    powerSupplyAssemblyBinding.TryRecoverHeld(
+                        carryAnchor,
+                        heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                powerSupplyAssemblyBinding.SyncProjectionToAuthority();
+                return Remember(recovery);
+            }
+
             if (graphicsCardAssemblyBinding != null)
             {
                 OperationResult recovery =
@@ -2323,6 +2435,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                     GetMotherboardBinding(HeldItem) != null;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
@@ -2348,6 +2461,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                   GetProcessorBinding(HeldItem) != null;
             IsMotherboardSeatMode = false;
             IsDimmSeatMode = false;
+            IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
@@ -2373,6 +2487,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                              GetDimmBinding(HeldItem) != null;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
+            IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
@@ -2892,6 +3007,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetPlacementState();
             processorAssemblyBinding?.SyncProjectionToAuthority();
             dimmAssemblyBinding?.SyncProjectionToAuthority();
+            powerSupplyBinding?.SyncProjectionToAuthority();
             graphicsCardBinding?.SyncProjectionToAuthority();
             processorCoolerBinding?.SyncProjectionToAuthority();
             m2StorageAssemblyBinding?.SyncProjectionToAuthority();
@@ -2905,6 +3021,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
@@ -2955,6 +3072,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
+            IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
@@ -2965,11 +3083,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CurrentMotherboardSeatStatus = MotherboardSeatStatus.ContextMissing;
             CurrentProcessorSocketStatus = ProcessorSocketStatus.ContextMissing;
             CurrentDimmSlotStatus = DimmSlotStatus.ContextMissing;
+            CurrentPowerSupplyBayStatus = PowerSupplyBayStatus.ContextMissing;
             CurrentGraphicsCardSlotStatus =
                 GraphicsCardSlotStatus.ContextMissing;
             CurrentProcessorCoolerSlotStatus =
                 ProcessorCoolerSlotStatus.ContextMissing;
             CurrentM2StorageSlotStatus = M2StorageSlotStatus.ContextMissing;
+            ResetPowerSupplyBayFocus();
             ResetGraphicsCardSlotFocus();
             ResetProcessorCoolerSlotFocus();
             ResetM2StorageSlotFocus();
@@ -2980,6 +3100,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             motherboardSeat?.ResetFeedback();
             processorSocket?.ResetFeedback();
             dimmSlot?.ResetFeedback();
+            powerSupplyBay?.ResetFeedback();
             graphicsCardSlot?.ResetFeedback();
             processorCoolerSlot?.ResetFeedback();
             m2StorageSlot?.ResetFeedback();

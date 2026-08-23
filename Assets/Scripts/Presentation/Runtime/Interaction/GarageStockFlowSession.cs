@@ -381,6 +381,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProductTrackingPolicy.SerializedInstance,
                     1095).Value
                 : null;
+            ProductDefinition powerSupplyProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(
+                        PowerSupplyProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(
+                        PowerSupplyCategoryIdValue),
+                    PowerSupplyDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1095).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
                 includeAssemblyPrototype
                     ? new[]
@@ -390,7 +400,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         processorProduct,
                         memoryProduct,
                         storageProduct,
-                        processorCoolerProduct
+                        processorCoolerProduct,
+                        powerSupplyProduct
                     }
                     : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
@@ -444,6 +455,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         product.Id,
                         GraphicsCardType.Pcie4X16FullHeightDualSlot).Value
                     : null;
+            PcComponentSpecification powerSupplySpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreatePowerSupply(
+                        catalog,
+                        powerSupplyProduct.Id,
+                        PowerSupplyType.AtxPs2).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
@@ -454,7 +472,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         memorySpecification,
                         storageSpecification,
                         processorCoolerSpecification,
-                        graphicsCardSpecification
+                        graphicsCardSpecification,
+                        powerSupplySpecification
                     }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
@@ -510,11 +529,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     GraphicsCardSlotContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
+                RegisterContainer(
+                    inventory,
+                    PowerSupplyBayContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
                 ? AssemblyBuildAuthority
-                    .CreateWithProcessorSocketMemoryStorageCoolerAndGraphicsCardSlots(
+                    .CreateWithProcessorSocketMemoryStorageCoolerGraphicsCardAndPowerSupplySlots(
                     components,
                     inventory,
                     StableId<PcBuildIdScope>.Parse(PrototypeBuildIdValue),
@@ -568,6 +592,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             StableId<AssemblyFastenerIdScope>.Parse(
                                 GraphicsCardBracketFastenerIdValue)).Value,
                         GraphicsCardType.Pcie4X16FullHeightDualSlot).Value,
+                    PowerSupplyBayDefinition.Create(
+                        StableId<AssemblySlotIdScope>.Parse(
+                            PowerSupplyBaySlotIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            PowerSupplyBayContainerIdValue),
+                        PowerSupplyRetentionTopology.Create(
+                            StableId<AssemblyPowerSupplyRearMountIdScope>.Parse(
+                                PowerSupplyRearMountIdValue),
+                            StableId<AssemblyFastenerIdScope>.Parse(
+                                PowerSupplyTopLeftFastenerIdValue),
+                            StableId<AssemblyFastenerIdScope>.Parse(
+                                PowerSupplyTopRightFastenerIdValue),
+                            StableId<AssemblyFastenerIdScope>.Parse(
+                                PowerSupplyBottomLeftFastenerIdValue),
+                            StableId<AssemblyFastenerIdScope>.Parse(
+                                PowerSupplyBottomRightFastenerIdValue)).Value,
+                        PowerSupplyType.AtxPs2).Value,
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue),
@@ -692,6 +733,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         GraphicsCardAssemblyUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(
+                        PowerSupplyItemInstanceIdValue),
+                    powerSupplyProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        PowerSupplyUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(

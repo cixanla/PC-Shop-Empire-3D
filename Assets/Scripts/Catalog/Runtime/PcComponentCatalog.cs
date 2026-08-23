@@ -17,7 +17,8 @@ namespace PCShopEmpire3D.Catalog
         MemoryModule = 3,
         StorageDevice = 4,
         ProcessorCooler = 5,
-        GraphicsCard = 6
+        GraphicsCard = 6,
+        PowerSupply = 7
     }
 
     /// <summary>
@@ -77,6 +78,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted keyed power-supply mechanical envelope. Electrical capacity, rails,
+    /// efficiency and cabling remain separate later contracts.
+    /// </summary>
+    public enum PowerSupplyType
+    {
+        AtxPs2 = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -90,7 +100,8 @@ namespace PCShopEmpire3D.Catalog
             DimmType dimmType,
             M2StorageType m2StorageType,
             ProcessorCoolerType processorCoolerType,
-            GraphicsCardType graphicsCardType)
+            GraphicsCardType graphicsCardType,
+            PowerSupplyType powerSupplyType)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
@@ -101,6 +112,7 @@ namespace PCShopEmpire3D.Catalog
             M2StorageType = m2StorageType;
             ProcessorCoolerType = processorCoolerType;
             GraphicsCardType = graphicsCardType;
+            PowerSupplyType = powerSupplyType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -127,6 +139,11 @@ namespace PCShopEmpire3D.Catalog
         /// supported profile; graphics cards must carry one exact non-default value.
         /// </summary>
         public GraphicsCardType GraphicsCardType { get; }
+
+        /// <summary>
+        /// Typed ATX PSU mechanical envelope. It is populated only for power supplies.
+        /// </summary>
+        public PowerSupplyType PowerSupplyType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -186,6 +203,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     default,
+                    default,
                     default));
         }
 
@@ -222,6 +240,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Motherboard,
                     motherboardFormFactor,
                     cpuSocketFamily,
+                    default,
                     default,
                     default,
                     default,
@@ -269,6 +288,7 @@ namespace PCShopEmpire3D.Catalog
                     motherboardFormFactor,
                     cpuSocketFamily,
                     supportedDimmType,
+                    default,
                     default,
                     default,
                     default));
@@ -323,6 +343,7 @@ namespace PCShopEmpire3D.Catalog
                     cpuSocketFamily,
                     supportedDimmType,
                     supportedM2StorageType,
+                    default,
                     default,
                     default));
         }
@@ -384,7 +405,8 @@ namespace PCShopEmpire3D.Catalog
                     supportedDimmType,
                     supportedM2StorageType,
                     default,
-                    supportedGraphicsCardType));
+                    supportedGraphicsCardType,
+                    default));
         }
 
         public static OperationResult<PcComponentSpecification> CreateProcessor(
@@ -413,6 +435,7 @@ namespace PCShopEmpire3D.Catalog
                     PcComponentKind.Processor,
                     default,
                     cpuSocketFamily,
+                    default,
                     default,
                     default,
                     default,
@@ -448,6 +471,7 @@ namespace PCShopEmpire3D.Catalog
                     dimmType,
                     default,
                     default,
+                    default,
                     default));
         }
 
@@ -479,6 +503,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     m2StorageType,
+                    default,
                     default,
                     default));
         }
@@ -532,6 +557,7 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     processorCoolerType,
+                    default,
                     default));
         }
 
@@ -568,7 +594,46 @@ namespace PCShopEmpire3D.Catalog
                     default,
                     default,
                     default,
-                    graphicsCardType));
+                    graphicsCardType,
+                    default));
+        }
+
+        /// <summary>
+        /// Creates immutable assembly metadata for one serialized ATX PS/2 power supply.
+        /// Mechanical fitment is intentionally independent from future electrical and
+        /// cabling compatibility contracts.
+        /// </summary>
+        public static OperationResult<PcComponentSpecification> CreatePowerSupply(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            PowerSupplyType powerSupplyType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidPowerSupplyType(powerSupplyType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidPowerSupplyType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.PowerSupply,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    powerSupplyType));
         }
 
         public static bool IsValidComponentKind(PcComponentKind kind)
@@ -578,7 +643,8 @@ namespace PCShopEmpire3D.Catalog
                    kind == PcComponentKind.MemoryModule ||
                    kind == PcComponentKind.StorageDevice ||
                    kind == PcComponentKind.ProcessorCooler ||
-                   kind == PcComponentKind.GraphicsCard;
+                   kind == PcComponentKind.GraphicsCard ||
+                   kind == PcComponentKind.PowerSupply;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -624,6 +690,11 @@ namespace PCShopEmpire3D.Catalog
         {
             return graphicsCardType ==
                    GraphicsCardType.Pcie4X16FullHeightDualSlot;
+        }
+
+        public static bool IsValidPowerSupplyType(PowerSupplyType powerSupplyType)
+        {
+            return powerSupplyType == PowerSupplyType.AtxPs2;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -732,7 +803,8 @@ namespace PCShopEmpire3D.Catalog
                           specification.ProcessorCoolerType == default &&
                           (specification.GraphicsCardType == default ||
                            PcComponentSpecification.IsValidGraphicsCardType(
-                               specification.GraphicsCardType))
+                               specification.GraphicsCardType)) &&
+                          specification.PowerSupplyType == default
                         : (specification.Kind == PcComponentKind.Processor &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
@@ -740,7 +812,8 @@ namespace PCShopEmpire3D.Catalog
                            specification.DimmType == default &&
                            specification.M2StorageType == default &&
                            specification.ProcessorCoolerType == default &&
-                           specification.GraphicsCardType == default) ||
+                           specification.GraphicsCardType == default &&
+                           specification.PowerSupplyType == default) ||
                           (specification.Kind == PcComponentKind.MemoryModule &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -748,7 +821,8 @@ namespace PCShopEmpire3D.Catalog
                                specification.DimmType) &&
                            specification.M2StorageType == default &&
                            specification.ProcessorCoolerType == default &&
-                           specification.GraphicsCardType == default) ||
+                           specification.GraphicsCardType == default &&
+                           specification.PowerSupplyType == default) ||
                           (specification.Kind == PcComponentKind.StorageDevice &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -756,7 +830,8 @@ namespace PCShopEmpire3D.Catalog
                            PcComponentSpecification.IsValidM2StorageType(
                                specification.M2StorageType) &&
                            specification.ProcessorCoolerType == default &&
-                           specification.GraphicsCardType == default) ||
+                           specification.GraphicsCardType == default &&
+                           specification.PowerSupplyType == default) ||
                           (specification.Kind == PcComponentKind.ProcessorCooler &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
@@ -768,7 +843,8 @@ namespace PCShopEmpire3D.Catalog
                            PcComponentSpecification.IsProcessorCoolerCompatibleWithSocket(
                                specification.ProcessorCoolerType,
                                specification.CpuSocketFamily) &&
-                           specification.GraphicsCardType == default) ||
+                           specification.GraphicsCardType == default &&
+                           specification.PowerSupplyType == default) ||
                           (specification.Kind == PcComponentKind.GraphicsCard &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -776,7 +852,17 @@ namespace PCShopEmpire3D.Catalog
                            specification.M2StorageType == default &&
                            specification.ProcessorCoolerType == default &&
                            PcComponentSpecification.IsValidGraphicsCardType(
-                               specification.GraphicsCardType));
+                               specification.GraphicsCardType) &&
+                           specification.PowerSupplyType == default) ||
+                          (specification.Kind == PcComponentKind.PowerSupply &&
+                           specification.MotherboardFormFactor == default &&
+                           specification.CpuSocketFamily == default &&
+                           specification.DimmType == default &&
+                           specification.M2StorageType == default &&
+                           specification.ProcessorCoolerType == default &&
+                           specification.GraphicsCardType == default &&
+                           PcComponentSpecification.IsValidPowerSupplyType(
+                               specification.PowerSupplyType));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

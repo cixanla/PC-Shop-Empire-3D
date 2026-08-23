@@ -664,6 +664,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.PlayerCarryController
   graphicsCardSlot: {fileID: 0}
   graphicsCardBinding: {fileID: 0}
+  powerSupplyBay: {fileID: 0}
+  powerSupplyBinding: {fileID: 0}
   processorCoolerSlot: {fileID: 0}
   processorCoolerBinding: {fileID: 0}
   m2StorageSlot: {fileID: 0}

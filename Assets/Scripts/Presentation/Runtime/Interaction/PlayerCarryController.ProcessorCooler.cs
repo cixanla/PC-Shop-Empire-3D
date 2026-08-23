@@ -252,6 +252,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsDimmSeatMode = false;
             IsM2StorageSeatMode = false;
             IsGraphicsCardSeatMode = false;
+            IsPowerSupplySeatMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;

@@ -8,27 +8,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
 {
     public sealed partial class PlayerCarryController
     {
-        private static readonly Vector3 GraphicsCardSeatPreviewSize =
-            new Vector3(0.285f, 0.064f, 0.125f);
+        private static readonly Vector3 PowerSupplySeatPreviewSize =
+            new Vector3(0.15f, 0.086f, 0.14f);
 
-        [SerializeField] private GraphicsCardSlotProjection graphicsCardSlot;
-        [SerializeField] private GraphicsCardAssemblyItemBinding graphicsCardBinding;
+        [SerializeField] private PowerSupplyBayProjection powerSupplyBay;
+        [SerializeField] private PowerSupplyAssemblyItemBinding powerSupplyBinding;
 
-        public bool IsGraphicsCardSeatMode { get; private set; }
+        public bool IsPowerSupplySeatMode { get; private set; }
 
-        public GraphicsCardSlotStatus CurrentGraphicsCardSlotStatus
+        public PowerSupplyBayStatus CurrentPowerSupplyBayStatus
         {
             get;
             private set;
-        } = GraphicsCardSlotStatus.ContextMissing;
+        } = PowerSupplyBayStatus.ContextMissing;
 
-        public bool HasGraphicsCardSlotContext { get; private set; }
+        public bool HasPowerSupplyBayContext { get; private set; }
 
-        public bool IsGraphicsCardSlotFocused { get; private set; }
+        public bool IsPowerSupplyBayFocused { get; private set; }
 
-        public void ConfigureGraphicsCardSlot(
-            GraphicsCardSlotProjection slotProjection,
-            GraphicsCardAssemblyItemBinding assemblyBinding)
+        public void ConfigurePowerSupplyBay(
+            PowerSupplyBayProjection slotProjection,
+            PowerSupplyAssemblyItemBinding assemblyBinding)
         {
             if (slotProjection == null)
             {
@@ -43,126 +43,126 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (assemblyBinding.Slot != slotProjection)
             {
                 throw new ArgumentException(
-                    "The graphics-card binding must own the configured slot.",
+                    "The power-supply binding must own the configured slot.",
                     nameof(assemblyBinding));
             }
 
-            graphicsCardSlot = slotProjection;
-            graphicsCardBinding = assemblyBinding;
-            graphicsCardBinding.SyncProjectionToAuthority();
+            powerSupplyBay = slotProjection;
+            powerSupplyBinding = assemblyBinding;
+            powerSupplyBinding.SyncProjectionToAuthority();
         }
 
-        public bool MatchesGraphicsCardConfiguration(
-            GraphicsCardSlotProjection slotProjection,
-            GraphicsCardAssemblyItemBinding assemblyBinding)
+        public bool MatchesPowerSupplyConfiguration(
+            PowerSupplyBayProjection slotProjection,
+            PowerSupplyAssemblyItemBinding assemblyBinding)
         {
             return slotProjection != null &&
                    assemblyBinding != null &&
-                   graphicsCardSlot == slotProjection &&
-                   graphicsCardBinding == assemblyBinding &&
+                   powerSupplyBay == slotProjection &&
+                   powerSupplyBinding == assemblyBinding &&
                    assemblyBinding.Slot == slotProjection;
         }
 
-        public OperationResult TryOperateGraphicsCardRetention()
+        public OperationResult TryOperatePowerSupplyRetention()
         {
-            if (graphicsCardSlot == null || graphicsCardBinding == null)
+            if (powerSupplyBay == null || powerSupplyBinding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.context-missing")));
+                    Failure.FromCode("assembly-power-supply.context-missing")));
             }
 
-            GraphicsCardSlotEvaluation evaluation =
-                EvaluateGraphicsCardSlotInteraction();
-            ApplyGraphicsCardSlotEvaluation(evaluation);
+            PowerSupplyBayEvaluation evaluation =
+                EvaluatePowerSupplyBayInteraction();
+            ApplyPowerSupplyBayEvaluation(evaluation);
             if (!evaluation.CanOperateRetention)
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode(evaluation.FailureCode)));
             }
 
-            OperationResult result = graphicsCardBinding.TryOperateRetention();
+            OperationResult result = powerSupplyBinding.TryOperateRetention();
             if (result.IsSuccess)
             {
-                UpdateGraphicsCardSlotFocus();
+                UpdatePowerSupplyBayFocus();
             }
 
             return Remember(result);
         }
 
-        public OperationResult TrySetGraphicsCardSeatMode(bool enabled)
+        public OperationResult TrySetPowerSupplySeatMode(bool enabled)
         {
-            GraphicsCardAssemblyItemBinding binding =
-                GetGraphicsCardBinding(HeldItem);
+            PowerSupplyAssemblyItemBinding binding =
+                GetPowerSupplyBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.nothing-held")));
+                    Failure.FromCode("assembly-power-supply.nothing-held")));
             }
 
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.paused")));
+                    Failure.FromCode("assembly-power-supply.paused")));
             }
 
-            SetGraphicsCardSeatMode(enabled);
+            SetPowerSupplySeatMode(enabled);
             if (enabled)
             {
-                UpdateGraphicsCardSeatPreview(binding);
+                UpdatePowerSupplySeatPreview(binding);
             }
 
             return Remember(OperationResult.Success());
         }
 
-        public OperationResult TryRotateGraphicsCardSeatPreview()
+        public OperationResult TryRotatePowerSupplySeatPreview()
         {
-            GraphicsCardAssemblyItemBinding binding =
-                GetGraphicsCardBinding(HeldItem);
+            PowerSupplyAssemblyItemBinding binding =
+                GetPowerSupplyBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.nothing-held")));
+                    Failure.FromCode("assembly-power-supply.nothing-held")));
             }
 
-            if (!IsGraphicsCardSeatMode)
+            if (!IsPowerSupplySeatMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.mode-inactive")));
+                    Failure.FromCode("assembly-power-supply.mode-inactive")));
             }
 
             _placementRotationQuarterTurns =
                 (_placementRotationQuarterTurns + 1) % 2;
             LastFailureCode = string.Empty;
-            UpdateGraphicsCardSeatPreview(binding);
+            UpdatePowerSupplySeatPreview(binding);
             return OperationResult.Success();
         }
 
-        public OperationResult TryConfirmGraphicsCardSeat()
+        public OperationResult TryConfirmPowerSupplySeat()
         {
-            GraphicsCardAssemblyItemBinding binding =
-                GetGraphicsCardBinding(HeldItem);
+            PowerSupplyAssemblyItemBinding binding =
+                GetPowerSupplyBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.nothing-held")));
+                    Failure.FromCode("assembly-power-supply.nothing-held")));
             }
 
-            if (!IsGraphicsCardSeatMode)
+            if (!IsPowerSupplySeatMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.mode-inactive")));
+                    Failure.FromCode("assembly-power-supply.mode-inactive")));
             }
 
-            return TryConfirmGraphicsCardSeat(
+            return TryConfirmPowerSupplySeat(
                 binding,
-                EvaluateGraphicsCardSeat(binding));
+                EvaluatePowerSupplySeat(binding));
         }
 
-        private OperationResult TryConfirmGraphicsCardSeat(
-            GraphicsCardAssemblyItemBinding binding,
-            GraphicsCardSlotEvaluation evaluation)
+        private OperationResult TryConfirmPowerSupplySeat(
+            PowerSupplyAssemblyItemBinding binding,
+            PowerSupplyBayEvaluation evaluation)
         {
-            ApplyGraphicsCardSeatEvaluation(evaluation);
+            ApplyPowerSupplySeatEvaluation(evaluation);
             if (!evaluation.CanSeat)
             {
                 return Remember(OperationResult.Fail(
@@ -187,10 +187,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(attach);
         }
 
-        private bool ProcessHeldGraphicsCardInput()
+        private bool ProcessHeldPowerSupplyInput()
         {
-            GraphicsCardAssemblyItemBinding binding =
-                GetGraphicsCardBinding(HeldItem);
+            PowerSupplyAssemblyItemBinding binding =
+                GetPowerSupplyBinding(HeldItem);
             if (binding == null)
             {
                 return false;
@@ -201,22 +201,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetGraphicsCardSeatMode(!IsGraphicsCardSeatMode);
+                TrySetPowerSupplySeatMode(!IsPowerSupplySeatMode);
                 return true;
             }
 
-            if (IsGraphicsCardSeatMode &&
+            if (IsPowerSupplySeatMode &&
                 input.TryConsumeRotatePlacementPressThisFrame())
             {
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TryRotateGraphicsCardSeatPreview();
+                TryRotatePowerSupplySeatPreview();
                 return true;
             }
 
-            if (!IsGraphicsCardSeatMode)
+            if (!IsPowerSupplySeatMode)
             {
-                UpdateGraphicsCardSeatPreview(binding);
+                UpdatePowerSupplySeatPreview(binding);
                 if (input.TryConsumeDropPressThisFrame())
                 {
                     input.TryConsumePrimaryActionPressThisFrame();
@@ -228,75 +228,75 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            GraphicsCardSlotEvaluation evaluation =
-                EvaluateGraphicsCardSeat(binding);
-            ApplyGraphicsCardSeatEvaluation(evaluation);
+            PowerSupplyBayEvaluation evaluation =
+                EvaluatePowerSupplySeat(binding);
+            ApplyPowerSupplySeatEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmGraphicsCardSeat(binding, evaluation);
+                TryConfirmPowerSupplySeat(binding, evaluation);
             }
 
             return true;
         }
 
-        private void SetGraphicsCardSeatMode(bool enabled)
+        private void SetPowerSupplySeatMode(bool enabled)
         {
-            IsGraphicsCardSeatMode = enabled &&
+            IsPowerSupplySeatMode = enabled &&
                                         HeldItem != null &&
-                                        GetGraphicsCardBinding(HeldItem) != null;
+                                        GetPowerSupplyBinding(HeldItem) != null;
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsM2StorageSeatMode = false;
             IsProcessorCoolerSeatMode = false;
-            IsPowerSupplySeatMode = false;
+            IsGraphicsCardSeatMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
-            CurrentGraphicsCardSlotStatus =
-                GraphicsCardSlotStatus.ContextMissing;
+            CurrentPowerSupplyBayStatus =
+                PowerSupplyBayStatus.ContextMissing;
             LastFailureCode = string.Empty;
-            if (!IsGraphicsCardSeatMode)
+            if (!IsPowerSupplySeatMode)
             {
                 _placementRotationQuarterTurns = 0;
                 placementPreview?.Hide();
-                graphicsCardSlot?.ResetFeedback();
+                powerSupplyBay?.ResetFeedback();
                 SetCarryHandsState(blocked: false);
             }
         }
 
-        private void UpdateGraphicsCardSeatPreview(
-            GraphicsCardAssemblyItemBinding binding)
+        private void UpdatePowerSupplySeatPreview(
+            PowerSupplyAssemblyItemBinding binding)
         {
-            if (!IsGraphicsCardSeatMode || HeldItem == null)
+            if (!IsPowerSupplySeatMode || HeldItem == null)
             {
                 PlacementValid = false;
                 CurrentPlacementStatus = PlacementStatus.ContextMissing;
-                CurrentGraphicsCardSlotStatus =
-                    GraphicsCardSlotStatus.ContextMissing;
+                CurrentPowerSupplyBayStatus =
+                    PowerSupplyBayStatus.ContextMissing;
                 CurrentStackSupport = null;
                 placementPreview?.Hide();
-                graphicsCardSlot?.ResetFeedback();
+                powerSupplyBay?.ResetFeedback();
                 SetCarryHandsState(blocked: false);
                 return;
             }
 
-            ApplyGraphicsCardSeatEvaluation(
-                EvaluateGraphicsCardSeat(binding));
+            ApplyPowerSupplySeatEvaluation(
+                EvaluatePowerSupplySeat(binding));
         }
 
-        private GraphicsCardSlotEvaluation EvaluateGraphicsCardSeat(
-            GraphicsCardAssemblyItemBinding binding)
+        private PowerSupplyBayEvaluation EvaluatePowerSupplySeat(
+            PowerSupplyAssemblyItemBinding binding)
         {
-            GraphicsCardSlotProjection slotProjection =
-                binding?.Slot ?? graphicsCardSlot;
+            PowerSupplyBayProjection slotProjection =
+                binding?.Slot ?? powerSupplyBay;
             if (slotProjection == null)
             {
-                return new GraphicsCardSlotEvaluation(
-                    GraphicsCardSlotStatus.ContextMissing,
+                return new PowerSupplyBayEvaluation(
+                    PowerSupplyBayStatus.ContextMissing,
                     default,
                     false,
                     default);
@@ -304,7 +304,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             binding?.SyncProjectionToAuthority();
             return slotProjection.EvaluateSeat(
-                IsGraphicsCardSeatMode,
+                IsPowerSupplySeatMode,
                 resolver != null ? resolver.Origin : null,
                 transform,
                 HeldItem,
@@ -313,19 +313,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 motor == null || motor.IsPaused,
                 binding != null &&
                     binding.IsAuthorityInHands &&
-                    binding.IsHostReady &&
                     !binding.IsSeated,
                 binding != null
-                    ? binding.CardInterface
-                    : GraphicsCardPcieInterface.Unknown,
+                    ? binding.FormFactor
+                    : PowerSupplyFormFactor.Unknown,
                 binding != null && binding.HasChassisClearance,
-                binding != null && binding.HasCoolerClearance);
+                binding != null && binding.HasCableClearance);
         }
 
-        private void ApplyGraphicsCardSeatEvaluation(
-            GraphicsCardSlotEvaluation evaluation)
+        private void ApplyPowerSupplySeatEvaluation(
+            PowerSupplyBayEvaluation evaluation)
         {
-            CurrentGraphicsCardSlotStatus = evaluation.Status;
+            CurrentPowerSupplyBayStatus = evaluation.Status;
             PlacementValid = evaluation.CanSeat;
             CurrentPlacementStatus = evaluation.CanSeat
                 ? PlacementStatus.Valid
@@ -345,7 +344,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             : PlacementStatus.Blocked,
                         evaluation.Pose,
                         true),
-                    GraphicsCardSeatPreviewSize);
+                    PowerSupplySeatPreviewSize);
             }
             else
             {
@@ -355,79 +354,76 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.CanSeat);
         }
 
-        private void UpdateGraphicsCardSlotFocus()
+        private void UpdatePowerSupplyBayFocus()
         {
-            if (graphicsCardSlot == null || graphicsCardBinding == null)
+            if (powerSupplyBay == null || powerSupplyBinding == null)
             {
-                ResetGraphicsCardSlotFocus();
+                ResetPowerSupplyBayFocus();
                 return;
             }
 
-            graphicsCardBinding.SyncProjectionToAuthority();
-            ApplyGraphicsCardSlotEvaluation(
-                EvaluateGraphicsCardSlotInteraction());
+            powerSupplyBinding.SyncProjectionToAuthority();
+            ApplyPowerSupplyBayEvaluation(
+                EvaluatePowerSupplyBayInteraction());
         }
 
-        private GraphicsCardSlotEvaluation
-            EvaluateGraphicsCardSlotInteraction()
+        private PowerSupplyBayEvaluation
+            EvaluatePowerSupplyBayInteraction()
         {
-            return graphicsCardSlot.EvaluateInteraction(
+            return powerSupplyBay.EvaluateInteraction(
                 true,
                 resolver != null ? resolver.Origin : null,
                 transform,
-                graphicsCardBinding != null
-                    ? graphicsCardBinding.PhysicalItem.transform
+                powerSupplyBinding != null
+                    ? powerSupplyBinding.PhysicalItem.transform
                     : null,
                 obstructionMask,
                 motor == null || motor.IsPaused,
-                graphicsCardBinding != null &&
-                    graphicsCardBinding.IsSeated,
-                graphicsCardBinding != null &&
-                    (graphicsCardBinding.IsRetained ||
-                     graphicsCardBinding.IsHostReady));
+                powerSupplyBinding != null &&
+                    powerSupplyBinding.IsSeated);
         }
 
-        private void ApplyGraphicsCardSlotEvaluation(
-            GraphicsCardSlotEvaluation evaluation)
+        private void ApplyPowerSupplyBayEvaluation(
+            PowerSupplyBayEvaluation evaluation)
         {
-            CurrentGraphicsCardSlotStatus = evaluation.Status;
-            IsGraphicsCardSlotFocused =
+            CurrentPowerSupplyBayStatus = evaluation.Status;
+            IsPowerSupplyBayFocused =
                 evaluation.CanOperateRetention || evaluation.CanRemove;
-            HasGraphicsCardSlotContext = evaluation.HasOwnedContext;
-            if (!IsGraphicsCardSlotFocused && HasGraphicsCardSlotContext)
+            HasPowerSupplyBayContext = evaluation.HasOwnedContext;
+            if (!IsPowerSupplyBayFocused && HasPowerSupplyBayContext)
             {
                 LastFailureCode = evaluation.FailureCode;
             }
         }
 
-        private void ResetGraphicsCardSlotFocus()
+        private void ResetPowerSupplyBayFocus()
         {
-            IsGraphicsCardSlotFocused = false;
-            HasGraphicsCardSlotContext = false;
-            CurrentGraphicsCardSlotStatus =
-                GraphicsCardSlotStatus.ContextMissing;
-            graphicsCardSlot?.ResetFeedback();
+            IsPowerSupplyBayFocused = false;
+            HasPowerSupplyBayContext = false;
+            CurrentPowerSupplyBayStatus =
+                PowerSupplyBayStatus.ContextMissing;
+            powerSupplyBay?.ResetFeedback();
         }
 
-        private bool ProcessGraphicsCardSlotInput()
+        private bool ProcessPowerSupplyBayInput()
         {
-            if (!IsGraphicsCardSlotFocused &&
-                !HasGraphicsCardSlotContext)
+            if (!IsPowerSupplyBayFocused &&
+                !HasPowerSupplyBayContext)
             {
                 return false;
             }
 
             FocusedCart = null;
-            FocusedItem = graphicsCardBinding.PhysicalItem;
+            FocusedItem = powerSupplyBinding.PhysicalItem;
             SetHandsState(VisibleHandsState.TargetFocused);
-            if (IsGraphicsCardSlotFocused)
+            if (IsPowerSupplyBayFocused)
             {
                 if (input.TryConsumePrimaryActionPressThisFrame())
                 {
                     input.TryConsumeRotatePlacementPressThisFrame();
                     input.TryConsumeInteractPressThisFrame();
                     input.TryConsumeDropPressThisFrame();
-                    TryOperateGraphicsCardRetention();
+                    TryOperatePowerSupplyRetention();
                     return true;
                 }
 
@@ -435,7 +431,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 {
                     input.TryConsumeRotatePlacementPressThisFrame();
                     input.TryConsumeDropPressThisFrame();
-                    TryPickup(graphicsCardBinding.PhysicalItem);
+                    TryPickup(powerSupplyBinding.PhysicalItem);
                 }
 
                 return true;
@@ -447,30 +443,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             input.TryConsumeDropPressThisFrame();
             if (primaryPressed)
             {
-                TryOperateGraphicsCardRetention();
+                TryOperatePowerSupplyRetention();
             }
 
             return true;
         }
 
-        private bool ProcessLooseGraphicsCardPickupInput()
+        private bool ProcessLoosePowerSupplyPickupInput()
         {
             if (resolver == null ||
-                graphicsCardBinding == null ||
-                graphicsCardBinding.IsSeated ||
-                !graphicsCardBinding.IsAuthorityLooseWorld)
+                powerSupplyBinding == null ||
+                powerSupplyBinding.IsSeated ||
+                !powerSupplyBinding.IsAuthorityLooseWorld)
             {
                 return false;
             }
 
             OperationResult<PhysicalItemProjection> target = resolver.Resolve();
             if (target.IsFailure ||
-                target.Value != graphicsCardBinding.PhysicalItem)
+                target.Value != powerSupplyBinding.PhysicalItem)
             {
                 return false;
             }
 
-            ResetGraphicsCardSlotFocus();
+            ResetPowerSupplyBayFocus();
             FocusedCart = null;
             FocusedItem = target.Value;
             SetHandsState(VisibleHandsState.TargetFocused);
@@ -484,20 +480,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return true;
         }
 
-        private OperationResult TryPickupGraphicsCard(
+        private OperationResult TryPickupPowerSupply(
             PhysicalItemProjection item,
-            GraphicsCardAssemblyItemBinding binding)
+            PowerSupplyAssemblyItemBinding binding)
         {
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-graphics-card.paused")));
+                    Failure.FromCode("assembly-power-supply.paused")));
             }
 
             if (binding.IsRetained)
             {
                 return Remember(OperationResult.Fail(
-                    AssemblyFailures.GraphicsCardRetained));
+                    AssemblyFailures.PowerSupplyRetained));
             }
 
             bool wasSeated = binding.IsSeated;
@@ -518,7 +514,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (rollback.IsFailure)
                 {
                     Debug.LogError(
-                        $"GRAPHICS_CARD_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                        $"POWER_SUPPLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
                 }
 
                 binding.SyncProjectionToAuthority();
@@ -536,30 +532,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return physicalPickup;
         }
 
-        private string GetHeldGraphicsCardPrompt(
-            GraphicsCardAssemblyItemBinding binding,
+        private string GetHeldPowerSupplyPrompt(
+            PowerSupplyAssemblyItemBinding binding,
             string primary,
             string drop,
             string rotate)
         {
-            if (!IsGraphicsCardSeatMode)
+            if (!IsPowerSupplySeatMode)
             {
-                return $"{primary}: ekran kartını hizala • " +
-                       $"{drop}: güvenli bırak • PCIe x16";
+                return $"{primary}: PSU yuvasına hizala • " +
+                       $"{drop}: güvenli bırak • ATX PS/2";
             }
 
-            string state = GetGraphicsCardStatusLabel(
-                CurrentGraphicsCardSlotStatus);
+            string state = GetPowerSupplyStatusLabel(
+                CurrentPowerSupplyBayStatus);
             string orientation = _placementRotationQuarterTurns == 0
-                ? "0°"
+                ? "FAN FİLTREYE"
                 : "180°";
             return PlacementValid
-                ? $"[OK] PCIe x16 ANAHTARI HİZALI • YÖN {orientation} • " +
+                ? $"[OK] ATX PS/2 HİZALI • {orientation} • " +
                   $"{drop}: oturt • {rotate}: 180° döndür • {primary}: çık"
                 : $"[X] {state} • {rotate}: 180° döndür • {primary}: çık";
         }
 
-        private string GetGraphicsCardSlotPrompt()
+        private string GetPowerSupplyBayPrompt()
         {
             string primary = input != null
                 ? input.PrimaryBindingPrompt
@@ -567,66 +563,57 @@ namespace PCShopEmpire3D.Presentation.Interaction
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
-            if (!IsGraphicsCardSlotFocused)
+            if (!IsPowerSupplyBayFocused)
             {
-                return CurrentGraphicsCardSlotStatus switch
+                return CurrentPowerSupplyBayStatus switch
                 {
-                    GraphicsCardSlotStatus.LineOfSightBlocked =>
-                        "[X] EKRAN KARTI ENGELLİ • görüş hattını aç",
-                    GraphicsCardSlotStatus.ChassisClearanceBlocked =>
+                    PowerSupplyBayStatus.LineOfSightBlocked =>
+                        "[X] PSU YUVASI ENGELLİ • görüş hattını aç",
+                    PowerSupplyBayStatus.ChassisClearanceBlocked =>
                         "[X] KASA AÇIKLIĞI YETERSİZ",
-                    GraphicsCardSlotStatus.CoolerClearanceBlocked =>
-                        "[X] SOĞUTUCU EKRAN KARTI ALANINI ENGELLİYOR",
-                    GraphicsCardSlotStatus.Obstructed =>
-                        "[X] EKRAN KARTI ALANI ENGELLİ • önünü aç",
-                    _ => "[X] EKRAN KARTI BAĞLANTISI KULLANILAMIYOR"
+                    PowerSupplyBayStatus.CableClearanceBlocked =>
+                        "[X] KABLO ALANI PSU YUVASINI ENGELLİYOR",
+                    PowerSupplyBayStatus.Obstructed =>
+                        "[X] PSU MONTAJ ALANI ENGELLİ • önünü aç",
+                    _ => "[X] PSU YUVASI KULLANILAMIYOR"
                 };
             }
 
-            if (CurrentGraphicsCardSlotStatus ==
-                GraphicsCardSlotStatus.ValidSeatedUnsecuredRetentionBlocked)
-            {
-                return $"[GEVŞEK] EKRAN KARTI OTURDU • HOST HAZIR DEĞİL • " +
-                       $"{interact}: ekran kartını çıkar";
-            }
-
-            return graphicsCardBinding.IsRetained
-                ? $"[SABİT] PCIe MANDALI + ARKA BRAKET KİLİTLİ • {primary}: " +
+            return powerSupplyBinding.IsRetained
+                ? $"[SABİT] PSU ARKA PLAKA + 4 VİDA KİLİTLİ • {primary}: " +
                   $"gevşet • {interact}: çıkarma kilitli"
-                : $"[GEVŞEK] EKRAN KARTI OTURDU • {primary}: " +
-                  $"mandal + braketi sabitle • {interact}: ekran kartını çıkar";
+                : $"[GEVŞEK] PSU OTURDU • {primary}: " +
+                  $"4 vidayı çapraz sık • {interact}: PSU'yu çıkar";
         }
 
-        private static string GetGraphicsCardStatusLabel(
-            GraphicsCardSlotStatus status)
+        private static string GetPowerSupplyStatusLabel(
+            PowerSupplyBayStatus status)
         {
             return status switch
             {
-                GraphicsCardSlotStatus.ValidSeat => "PCIe x16 HİZALI",
-                GraphicsCardSlotStatus.OutOfRange => "YAKLAŞ",
-                GraphicsCardSlotStatus.NotFocused => "PCIe x16 SLOTUNU HEDEFLE",
-                GraphicsCardSlotStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
-                GraphicsCardSlotStatus.InterfaceInvalid => "PCIe TİPİ UYUMSUZ",
-                GraphicsCardSlotStatus.OrientationInvalid => "YÖN TERS",
-                GraphicsCardSlotStatus.Unsupported => "SLOT DESTEĞİ YOK",
-                GraphicsCardSlotStatus.ChassisClearanceBlocked =>
+                PowerSupplyBayStatus.ValidSeat => "ATX PS/2 HİZALI",
+                PowerSupplyBayStatus.OutOfRange => "YAKLAŞ",
+                PowerSupplyBayStatus.NotFocused => "PSU YUVASINI HEDEFLE",
+                PowerSupplyBayStatus.LineOfSightBlocked => "ÖNÜNÜ AÇ",
+                PowerSupplyBayStatus.FormFactorInvalid => "PSU FORMATI UYUMSUZ",
+                PowerSupplyBayStatus.OrientationInvalid => "FAN YÖNÜ TERS",
+                PowerSupplyBayStatus.Unsupported => "FİLTRELİ TABAN DESTEĞİ YOK",
+                PowerSupplyBayStatus.ChassisClearanceBlocked =>
                     "KASA AÇIKLIĞI YETERSİZ",
-                GraphicsCardSlotStatus.CoolerClearanceBlocked =>
-                    "SOĞUTUCU AÇIKLIĞI YETERSİZ",
-                GraphicsCardSlotStatus.Obstructed => "MONTAJ ALANI ENGELLİ",
-                GraphicsCardSlotStatus.Paused => "DURAKLATILDI",
-                GraphicsCardSlotStatus.AuthorityBlocked => "HOST HAZIR DEĞİL",
-                GraphicsCardSlotStatus.ValidSeatedUnsecuredRetentionBlocked =>
-                    "HOST HAZIR DEĞİL",
+                PowerSupplyBayStatus.CableClearanceBlocked =>
+                    "KABLO AÇIKLIĞI YETERSİZ",
+                PowerSupplyBayStatus.Obstructed => "MONTAJ ALANI ENGELLİ",
+                PowerSupplyBayStatus.Paused => "DURAKLATILDI",
+                PowerSupplyBayStatus.AuthorityBlocked => "AUTHORITY ENGELLİ",
                 _ => "BAĞLANTI YOK"
             };
         }
 
-        private static GraphicsCardAssemblyItemBinding GetGraphicsCardBinding(
+        private static PowerSupplyAssemblyItemBinding GetPowerSupplyBinding(
             PhysicalItemProjection item)
         {
             return item != null
-                ? item.GetComponent<GraphicsCardAssemblyItemBinding>()
+                ? item.GetComponent<PowerSupplyAssemblyItemBinding>()
                 : null;
         }
     }

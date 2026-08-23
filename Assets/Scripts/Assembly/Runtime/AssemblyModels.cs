@@ -36,7 +36,11 @@ namespace PCShopEmpire3D.Assembly
         SeatGraphicsCard = 21,
         RemoveGraphicsCard = 22,
         RetainGraphicsCard = 23,
-        UnretainGraphicsCard = 24
+        UnretainGraphicsCard = 24,
+        SeatPowerSupply = 25,
+        RemovePowerSupply = 26,
+        RetainPowerSupply = 27,
+        UnretainPowerSupply = 28
     }
 
     public enum ProcessorSocketState
@@ -225,7 +229,17 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope>
                 sourceGraphicsCardRetentionOperationId = default,
             GraphicsCardMountOrientation graphicsCardMountOrientation = default,
-            GraphicsCardSlotDefinition graphicsCardSlotDefinition = default)
+            GraphicsCardSlotDefinition graphicsCardSlotDefinition = default,
+            PowerSupplyBayState previousPowerSupplyBayState =
+                PowerSupplyBayState.Unsupported,
+            PowerSupplyBayState resultingPowerSupplyBayState =
+                PowerSupplyBayState.Unsupported,
+            StableId<AssemblyOperationIdScope> sourcePowerSupplySeatOperationId =
+                default,
+            StableId<AssemblyOperationIdScope>
+                sourcePowerSupplyRetentionOperationId = default,
+            PowerSupplyMountOrientation powerSupplyMountOrientation = default,
+            PowerSupplyBayDefinition powerSupplyBayDefinition = default)
         {
             OperationId = operationId;
             OperationKind = operationKind;
@@ -275,6 +289,13 @@ namespace PCShopEmpire3D.Assembly
                 sourceGraphicsCardRetentionOperationId;
             GraphicsCardMountOrientation = graphicsCardMountOrientation;
             GraphicsCardSlotDefinition = graphicsCardSlotDefinition;
+            PreviousPowerSupplyBayState = previousPowerSupplyBayState;
+            ResultingPowerSupplyBayState = resultingPowerSupplyBayState;
+            SourcePowerSupplySeatOperationId = sourcePowerSupplySeatOperationId;
+            SourcePowerSupplyRetentionOperationId =
+                sourcePowerSupplyRetentionOperationId;
+            PowerSupplyMountOrientation = powerSupplyMountOrientation;
+            PowerSupplyBayDefinition = powerSupplyBayDefinition;
             AssemblyRevision = assemblyRevision;
             InventoryRevision = inventoryRevision;
         }
@@ -382,6 +403,25 @@ namespace PCShopEmpire3D.Assembly
         public GraphicsCardMountOrientation GraphicsCardMountOrientation { get; }
 
         public GraphicsCardSlotDefinition GraphicsCardSlotDefinition { get; }
+
+        public PowerSupplyBayState PreviousPowerSupplyBayState { get; }
+
+        public PowerSupplyBayState ResultingPowerSupplyBayState { get; }
+
+        public StableId<AssemblyOperationIdScope> SourcePowerSupplySeatOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope>
+            SourcePowerSupplyRetentionOperationId
+        {
+            get;
+        }
+
+        public PowerSupplyMountOrientation PowerSupplyMountOrientation { get; }
+
+        public PowerSupplyBayDefinition PowerSupplyBayDefinition { get; }
 
         public long AssemblyRevision { get; }
 
@@ -770,6 +810,108 @@ namespace PCShopEmpire3D.Assembly
                        sourceGraphicsCardRetentionOperationId &&
                    ExpectedAssemblyRevision == expectedAssemblyRevision;
         }
+
+        internal bool MatchesSeatPowerSupply(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            PowerSupplyMountOrientation orientation,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.SeatPowerSupply &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   PowerSupplyMountOrientation == orientation &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRemovePowerSupply(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyOperationIdScope> sourcePowerSupplySeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RemovePowerSupply &&
+                   ItemId == itemId &&
+                   SlotId == slotId &&
+                   SourcePowerSupplySeatOperationId ==
+                       sourcePowerSupplySeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesRetainPowerSupply(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyPowerSupplyRearMountIdScope> rearMountId,
+            StableId<AssemblyFastenerIdScope> topLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> topRightFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomRightFastenerId,
+            StableId<AssemblyOperationIdScope> sourcePowerSupplySeatOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.RetainPowerSupply &&
+                   MatchesPowerSupplyTopology(
+                       itemId,
+                       slotId,
+                       rearMountId,
+                       topLeftFastenerId,
+                       topRightFastenerId,
+                       bottomLeftFastenerId,
+                       bottomRightFastenerId) &&
+                   SourcePowerSupplySeatOperationId ==
+                       sourcePowerSupplySeatOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        internal bool MatchesUnretainPowerSupply(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyPowerSupplyRearMountIdScope> rearMountId,
+            StableId<AssemblyFastenerIdScope> topLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> topRightFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomRightFastenerId,
+            StableId<AssemblyOperationIdScope> sourcePowerSupplySeatOperationId,
+            StableId<AssemblyOperationIdScope>
+                sourcePowerSupplyRetentionOperationId,
+            long expectedAssemblyRevision)
+        {
+            return OperationKind == AssemblyOperationKind.UnretainPowerSupply &&
+                   MatchesPowerSupplyTopology(
+                       itemId,
+                       slotId,
+                       rearMountId,
+                       topLeftFastenerId,
+                       topRightFastenerId,
+                       bottomLeftFastenerId,
+                       bottomRightFastenerId) &&
+                   SourcePowerSupplySeatOperationId ==
+                       sourcePowerSupplySeatOperationId &&
+                   SourcePowerSupplyRetentionOperationId ==
+                       sourcePowerSupplyRetentionOperationId &&
+                   ExpectedAssemblyRevision == expectedAssemblyRevision;
+        }
+
+        private bool MatchesPowerSupplyTopology(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<AssemblySlotIdScope> slotId,
+            StableId<AssemblyPowerSupplyRearMountIdScope> rearMountId,
+            StableId<AssemblyFastenerIdScope> topLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> topRightFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomLeftFastenerId,
+            StableId<AssemblyFastenerIdScope> bottomRightFastenerId)
+        {
+            PowerSupplyRetentionTopology topology =
+                PowerSupplyBayDefinition.RetentionTopology;
+            return ItemId == itemId &&
+                   SlotId == slotId &&
+                   PowerSupplyBayDefinition.IsValid &&
+                   topology.RearMountId == rearMountId &&
+                   topology.TopLeftFastenerId == topLeftFastenerId &&
+                   topology.TopRightFastenerId == topRightFastenerId &&
+                   topology.BottomLeftFastenerId == bottomLeftFastenerId &&
+                   topology.BottomRightFastenerId == bottomRightFastenerId;
+        }
     }
 
     /// <summary>
@@ -873,7 +1015,16 @@ namespace PCShopEmpire3D.Assembly
                 default,
             StableId<AssemblyOperationIdScope> graphicsCardRetainedByOperationId =
                 default,
-            GraphicsCardMountOrientation graphicsCardMountOrientation = default)
+            GraphicsCardMountOrientation graphicsCardMountOrientation = default,
+            PowerSupplyBayDefinition powerSupplyBayDefinition = default,
+            PowerSupplyBayState powerSupplyBayState = PowerSupplyBayState.Unsupported,
+            StableId<ItemInstanceIdScope> powerSupplyItemId = default,
+            StableId<ProductDefinitionIdScope> powerSupplyProductId = default,
+            StableId<AssemblyOperationIdScope> powerSupplySeatedByOperationId =
+                default,
+            StableId<AssemblyOperationIdScope> powerSupplyRetainedByOperationId =
+                default,
+            PowerSupplyMountOrientation powerSupplyMountOrientation = default)
         {
             BuildId = buildId;
             ChassisId = chassisId;
@@ -925,6 +1076,13 @@ namespace PCShopEmpire3D.Assembly
             GraphicsCardSeatedByOperationId = graphicsCardSeatedByOperationId;
             GraphicsCardRetainedByOperationId = graphicsCardRetainedByOperationId;
             GraphicsCardMountOrientation = graphicsCardMountOrientation;
+            PowerSupplyBayDefinition = powerSupplyBayDefinition;
+            PowerSupplyBayState = powerSupplyBayState;
+            PowerSupplyItemId = powerSupplyItemId;
+            PowerSupplyProductId = powerSupplyProductId;
+            PowerSupplySeatedByOperationId = powerSupplySeatedByOperationId;
+            PowerSupplyRetainedByOperationId = powerSupplyRetainedByOperationId;
+            PowerSupplyMountOrientation = powerSupplyMountOrientation;
             Revision = revision;
         }
 
@@ -1115,6 +1273,40 @@ namespace PCShopEmpire3D.Assembly
 
         public GraphicsCardMountOrientation GraphicsCardMountOrientation { get; }
 
+        public PowerSupplyBayDefinition PowerSupplyBayDefinition { get; }
+
+        public bool HasPowerSupplyBay => PowerSupplyBayDefinition.IsValid;
+
+        public StableId<AssemblySlotIdScope> PowerSupplyBaySlotId =>
+            PowerSupplyBayDefinition.SlotId;
+
+        public StableId<ContainerIdScope> PowerSupplyBayContainerId =>
+            PowerSupplyBayDefinition.ContainerId;
+
+        public PowerSupplyRetentionTopology PowerSupplyRetentionTopology =>
+            PowerSupplyBayDefinition.RetentionTopology;
+
+        public PowerSupplyType SupportedPowerSupplyType =>
+            PowerSupplyBayDefinition.SupportedPowerSupplyType;
+
+        public PowerSupplyBayState PowerSupplyBayState { get; }
+
+        public StableId<ItemInstanceIdScope> PowerSupplyItemId { get; }
+
+        public StableId<ProductDefinitionIdScope> PowerSupplyProductId { get; }
+
+        public StableId<AssemblyOperationIdScope> PowerSupplySeatedByOperationId
+        {
+            get;
+        }
+
+        public StableId<AssemblyOperationIdScope> PowerSupplyRetainedByOperationId
+        {
+            get;
+        }
+
+        public PowerSupplyMountOrientation PowerSupplyMountOrientation { get; }
+
         public long Revision { get; }
     }
 
@@ -1164,6 +1356,14 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.graphics-card-slot-latch.invalid");
         public static readonly Failure InvalidGraphicsCardBracketFastener =
             Failure.FromCode("assembly.graphics-card-bracket-fastener.invalid");
+        public static readonly Failure InvalidPowerSupplyBayContainer =
+            Failure.FromCode("assembly.power-supply-bay-container.invalid");
+        public static readonly Failure InvalidPowerSupplyBayDefinition =
+            Failure.FromCode("assembly.power-supply-bay-definition.invalid");
+        public static readonly Failure InvalidPowerSupplyRearMount =
+            Failure.FromCode("assembly.power-supply-rear-mount.invalid");
+        public static readonly Failure InvalidPowerSupplyFastenerTopology =
+            Failure.FromCode("assembly.power-supply-fastener-topology.invalid");
         public static readonly Failure SameInventoryContainer =
             Failure.FromCode("assembly.inventory-container.same");
         public static readonly Failure InvalidMotherboardFormFactor =
@@ -1178,6 +1378,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-type.invalid");
         public static readonly Failure InvalidGraphicsCardType =
             Failure.FromCode("assembly.graphics-card-type.invalid");
+        public static readonly Failure InvalidPowerSupplyType =
+            Failure.FromCode("assembly.power-supply-type.invalid");
         public static readonly Failure InvalidDimmOrientation =
             Failure.FromCode("assembly.dimm-orientation.invalid");
         public static readonly Failure DimmOrientationMismatch =
@@ -1192,6 +1394,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.graphics-card-orientation.invalid");
         public static readonly Failure GraphicsCardOrientationMismatch =
             Failure.FromCode("assembly.graphics-card-orientation.mismatch");
+        public static readonly Failure InvalidPowerSupplyOrientation =
+            Failure.FromCode("assembly.power-supply-orientation.invalid");
+        public static readonly Failure PowerSupplyOrientationMismatch =
+            Failure.FromCode("assembly.power-supply-orientation.mismatch");
         public static readonly Failure InvalidStorageStandoff =
             Failure.FromCode("assembly.storage-standoff.invalid");
         public static readonly Failure InvalidMemoryChannel =
@@ -1218,6 +1424,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-slot.occupied");
         public static readonly Failure GraphicsCardSlotOccupied =
             Failure.FromCode("assembly.graphics-card-slot.occupied");
+        public static readonly Failure PowerSupplyBayOccupied =
+            Failure.FromCode("assembly.power-supply-bay.occupied");
         public static readonly Failure InvalidComponent = Failure.FromCode("assembly.invalid-component");
         public static readonly Failure UnknownItem = InvalidComponent;
         public static readonly Failure ComponentNotInActorHands =
@@ -1261,6 +1469,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.graphics-card-retention.out-of-order");
         public static readonly Failure GraphicsCardRetained =
             Failure.FromCode("assembly.graphics-card.retained");
+        public static readonly Failure PowerSupplyRetentionOutOfOrder =
+            Failure.FromCode("assembly.power-supply-retention.out-of-order");
+        public static readonly Failure PowerSupplyRetained =
+            Failure.FromCode("assembly.power-supply.retained");
         public static readonly Failure SlotEmpty = ComponentNotSeated;
         public static readonly Failure ItemNotOnWorkbench = ComponentNotSeated;
         public static readonly Failure UnknownComponentSpecification = InvalidComponent;
@@ -1282,6 +1494,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-socket.mismatch");
         public static readonly Failure GraphicsCardTypeMismatch =
             Failure.FromCode("assembly.graphics-card-type.mismatch");
+        public static readonly Failure PowerSupplyTypeMismatch =
+            Failure.FromCode("assembly.power-supply-type.mismatch");
         public static readonly Failure WorkbenchCapacityExceeded =
             Failure.FromCode("assembly.workbench.capacity");
         public static readonly Failure ProcessorSocketCapacityExceeded =
@@ -1294,6 +1508,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.processor-cooler-slot.capacity");
         public static readonly Failure GraphicsCardSlotCapacityExceeded =
             Failure.FromCode("assembly.graphics-card-slot.capacity");
+        public static readonly Failure PowerSupplyBayCapacityExceeded =
+            Failure.FromCode("assembly.power-supply-bay.capacity");
         public static readonly Failure HandsCapacityExceeded =
             Failure.FromCode("assembly.hands.capacity");
         public static readonly Failure InventoryRevisionOverflow = RevisionOverflow;
@@ -1326,6 +1542,10 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.benchmark.graphics-card-missing");
         public static readonly Failure GraphicsCardUnretained =
             Failure.FromCode("assembly.benchmark.graphics-card-unretained");
+        public static readonly Failure PowerSupplyMissing =
+            Failure.FromCode("assembly.benchmark.power-supply-missing");
+        public static readonly Failure PowerSupplyUnretained =
+            Failure.FromCode("assembly.benchmark.power-supply-unretained");
         public static readonly Failure BuildIncomplete =
             Failure.FromCode("assembly.benchmark.build-incomplete");
         public static readonly Failure InvariantViolation =

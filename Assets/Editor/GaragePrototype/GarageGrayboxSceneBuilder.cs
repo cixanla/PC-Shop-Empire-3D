@@ -144,7 +144,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 ProcessorCoolerRuntimeGeometry processorCoolerGeometry,
                 GraphicsCardSlotProjection graphicsCardSlot,
                 GraphicsCardAssemblyItemBinding graphicsCardBinding,
-                PhysicalItemProjection graphicsCard)
+                PhysicalItemProjection graphicsCard,
+                PowerSupplyBayProjection powerSupplyBay,
+                PowerSupplyAssemblyItemBinding powerSupplyBinding,
+                PhysicalItemProjection powerSupply,
+                PowerSupplyRuntimeGeometry powerSupplyGeometry)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -166,6 +170,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 GraphicsCardSlot = graphicsCardSlot;
                 GraphicsCardBinding = graphicsCardBinding;
                 GraphicsCard = graphicsCard;
+                PowerSupplyBay = powerSupplyBay;
+                PowerSupplyBinding = powerSupplyBinding;
+                PowerSupply = powerSupply;
+                PowerSupplyGeometry = powerSupplyGeometry;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -207,6 +215,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public GraphicsCardAssemblyItemBinding GraphicsCardBinding { get; }
 
             public PhysicalItemProjection GraphicsCard { get; }
+
+            public PowerSupplyBayProjection PowerSupplyBay { get; }
+
+            public PowerSupplyAssemblyItemBinding PowerSupplyBinding { get; }
+
+            public PhysicalItemProjection PowerSupply { get; }
+
+            public PowerSupplyRuntimeGeometry PowerSupplyGeometry { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -511,6 +527,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.GraphicsCard,
                 assemblyBuild.GraphicsCardSlot,
                 GarageStockFlowSession.GraphicsCardAssemblyItemInstanceIdValue);
+            assemblyBuild.PowerSupplyBinding.Configure(
+                stockFlow,
+                assemblyBuild.PowerSupply,
+                assemblyBuild.PowerSupplyBay,
+                GarageStockFlowSession.PowerSupplyItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -530,6 +551,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureGraphicsCardSlot(
                 assemblyBuild.GraphicsCardSlot,
                 assemblyBuild.GraphicsCardBinding);
+            carry.ConfigurePowerSupplyBay(
+                assemblyBuild.PowerSupplyBay,
+                assemblyBuild.PowerSupplyBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -581,7 +605,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.ProcessorCoolerGeometry,
                 assemblyBuild.GraphicsCardSlot,
                 assemblyBuild.GraphicsCardBinding,
-                assemblyBuild.GraphicsCard);
+                assemblyBuild.GraphicsCard,
+                assemblyBuild.PowerSupplyBay,
+                assemblyBuild.PowerSupplyBinding,
+                assemblyBuild.PowerSupply,
+                assemblyBuild.PowerSupplyGeometry);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1985,6 +2013,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     tray.GetComponent<Collider>()
                 },
                 new Collider[] { processorCoolerCollider });
+            PowerSupplyBuildResult powerSupplyBuild = BuildPowerSupplyAssembly(
+                slice,
+                chassis,
+                metal,
+                brushedSteel,
+                accent,
+                rubber,
+                labelPaper,
+                interactableLayer);
 
             return new AssemblyBuildResult(
                 seat,
@@ -2006,7 +2043,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 processorCoolerGeometry,
                 graphicsCardBuild.Slot,
                 graphicsCardBuild.Binding,
-                graphicsCardBuild.Item);
+                graphicsCardBuild.Item,
+                powerSupplyBuild.Bay,
+                powerSupplyBuild.Binding,
+                powerSupplyBuild.Item,
+                powerSupplyBuild.Geometry);
         }
 
         private static void BuildLighting(
