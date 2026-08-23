@@ -311,6 +311,16 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Fiziksel USB kullanıcı talimatıyla ertelendi; Issue #58'in 717/717 staging'i korunur, Issue #59 için henüz milestone/readback iddiası yoktur. Kullanıcı USB'nin bağlandığını söyleyene kadar USB sorgulanmaz ve gameplay geliştirmesi sürer.
 - PSU, PCIe power cabling, alternate GPU dimensions/slots, tam benchmark ve Windows/Steam ayrı bounded kapılardır.
 
+## 9.4 Issue #60 deterministic single ATX PS/2 PSU seating checkpoint'i
+
+- Epic #10'un sekizinci bounded child paketi [Issue #60](https://github.com/cixanla/PC-Shop-Empire-3D/issues/60) ile tek canonical serialized ATX PS/2 PSU, chassis-owned bay/rear mount ve dört distinct fastener akışına sınırlandı; shadow SKU veya ikinci authority oluşturulmadı.
+- Feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, tree `78d62c46354cda45422ca947df10ba9d6823b7c9`; authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, tree `a15865346f52b6b39d84cec49c70babbc6550b89`; seven-container atomic claim, `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained`, exact receipt replay, alternate-order isolation ve same-instance recovery ekledi.
+- GarageGraybox r29'da PSU housing, fan/grille, filtered floor intake, AC inlet, rocker switch, disconnected modular panel, rear plate ve dört screw görünürdür. Production clearance gerçek dört authored chassis collider'ına bağlıdır; support ve future cable blocker'ları ayrıdır.
+- Gerçek keyboard/mouse ve gamepad akışı, dynamic compact HUD, pause/co-edge drain, wrong-orientation/interface/support/rear-plane/chassis-clearance/obstruction/duplicate-seat/retained-remove no-mutation kapılarıyla testlidir.
+- Final EditMode `577/577`, PlayMode `47/47`, Universal macOS `328937592` bayt ve aktif Apple Silicon/Metal 1280×720 exact PSU smoke başarılıdır. Feature/fix Guard `32606958882` + `32607437408`; source/docs/GitHub kapanışı sürer, parent Epic #10 açık/In Progress kalır.
+- macOS beklenen harici fiziksel USB'yi mount etmedi; yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası yoktur. Exact source-plus-evidence staging güvenli fiziksel aktarım için yerel hazırlanır.
+- ATX/EPS/PCIe/SATA cabling, electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, final art ve Windows/Steam ayrı bounded kapılardır.
+
 - Kullanıcıyla proje hakkındaki bütün yeni konuşma ve geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` içinde yapılır.
 - Eski iki görev geçmiş kayıt olarak arşivde kalır; normal geliştirme için yeniden açılmaz.
 - Aynı karar kullanıcıya tekrar sorulmadan önce bu belge ve tam konuşma arşivi aranır.
@@ -325,4 +335,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #59 feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, source/docs `a5bbca473e81455c44d2f95469c8faf2a11046ff`, EditMode 548/548, PlayMode 43/43, Universal Mac `328781520` bayt, aktif Apple Silicon/Metal exact r28 GPU smoke ve başarılı Guard `32599710154` + `32600012769` ile kapandı. Acceptance 20/20, Issue CLOSED/COMPLETED, Roadmap Done; parent Epic #10 açık/In Progress kalır. Fiziksel USB ertelendi, Issue #58 staging'i korunur ve Issue #59 için milestone/readback iddiası yoktur. Ardıl bounded Epic #10 child'ı PSU seating/retention kapsamını kablolama ve benchmarktan ayrı tutmalıdır.
+> Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, EditMode 577/577, PlayMode 47/47, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` ile teknik olarak tamamlandı. Source/docs/GitHub kapanışı bu checkpoint turunda sürer; parent Epic #10 açık/In Progress kalır. macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve readback iddiası yoktur. Ardıl bounded Epic #10 child'ı fiziksel kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.

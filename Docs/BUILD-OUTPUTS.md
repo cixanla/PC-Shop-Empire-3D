@@ -73,6 +73,20 @@ Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım
 
 Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
 
+## Stage B deterministic single ATX PS/2 PSU seating ve four-screw rear retention doğrulaması — 23 Ağustos 2026
+
+`macOS/PC Shop Empire 3D.app`, Issue #60 feature `f998d7d` + authored-clearance fix `b6c3ff8` kaynak durumuyla yeniden üretildi:
+
+- Tür: Development + StrictMode Player, Universal Mach-O (`arm64` + `x86_64`), ad-hoc signed.
+- Unity build raporu: `328.937.592` bayt.
+- Ana executable: `117.179` bayt; SHA-256 `44045bf514841be7bd268e9032448583499bc416fe809ceac0196dd51b0e91f6`.
+- Runtime: aktif Apple Silicon/Metal makinesi Apple M1, pencereli 1280×720; `garage-psu-four-screw-r29-v1` readiness ve exact PSU smoke başarılı.
+- Test kapıları: EditMode `577/577`, PlayMode `47/47`; failed/skipped/inconclusive `0`.
+- Build log: `build-macos-issue60-final.log`, `585.248` bayt, SHA-256 `462d0f5d3d07de4314ab89b356adc529e854541a332d1d43bf954a457e2dd305`.
+- Runtime log: `runtime-psu-issue60-final-activated.log`, `7.468` bayt, SHA-256 `574eb272912dcac4ca18590954a18fd6e711c4ef88576f713bccaba14b437b40`.
+
+Bu çıktı yalnız yerel geliştirme kanıtıdır. İmzalı/notarize dağıtım paketi değildir; gerçek Windows x64 hostta IL2CPP/DirectX/Steam kapısı ayrı kalır.
+
 ## Stage B deterministic single PCIe x16 graphics-card seating ve rear-bracket retention doğrulaması — 22 Ağustos 2026
 
 `macOS/PC Shop Empire 3D.app`, Issue #59 feature `1b29ad2` kaynak durumuyla yeniden üretildi:

@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
-**Tarih:** 22 Ağustos 2026<br>
-**Durum:** Issue #59 deterministic single PCIe x16 graphics-card seating + rear-bracket retention kaynak/test/build/native-runtime/CI/GitHub kapıları tamamlandı; Issue `CLOSED/COMPLETED`, Roadmap `Done`, fiziksel USB kullanıcı talimatıyla ertelendi<br>
+**Tarih:** 23 Ağustos 2026<br>
+**Durum:** Issue #60 deterministic single ATX PS/2 PSU seating + four-screw rear retention kaynak/test/build/native-runtime ve feature/fix CI kapıları tamamlandı; source/docs/GitHub kapanışı devam ediyor, macOS harici fiziksel USB göstermiyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni checkpoint — Issue #59 / Epic #10
+## En yeni checkpoint — Issue #60 / Epic #10
+
+- Feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, tree `78d62c46354cda45422ca947df10ba9d6823b7c9`; authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, tree `a15865346f52b6b39d84cec49c70babbc6550b89`; tek canonical serialized `AtxPs2` PSU, immutable chassis-owned bay/rear-mount/dört-fastener topology ve atomik yedi-container claim'i eklendi.
+- Supported lifecycle `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained`dır. Seat/remove exact serialized custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez. Exact receipt-history fold, immediate/delayed replay, conflict/stale/full-hands/occupied no-mutation ve alternate-order authority isolation testlidir.
+- Yalnız iki keyed 180° fan-intake orientation, exact ATX PS/2 interface, filtered-floor full support, rear-plane, range/focus/LOS/obstruction/tie/saturation kabul edilir. Production authored clearance tam olarak `ChassisBack`, `ChassisLeftRail`, `ChassisRightRail` ve `MotherboardTray` collider'larını kullanır; support yüzeyleri blocker değildir, cable listesi bounded kapsam gereği boştur.
+- GarageGraybox `garage-psu-four-screw-r29-v1`; housing, fan/grille, filtered floor intake, AC inlet, rocker switch, disconnected modular panel, rear plate ve dört screw görünürdür. Gerçek keyboard/mouse ve gamepad dynamic compact HUD, co-edge/pause, generic placement/stack/cart bypass yasağı ve same-instance recovery testlidir.
+- Final EditMode `577/577`, PlayMode `47/47`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328937592` bayt; aktif Apple Silicon/Metal makinesinde 1280×720 readiness ve exact PSU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
+- [Feature Guard 32606958882](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32606958882) ve [authored-clearance Guard 32607437408](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607437408) başarılıdır. Source/docs commit/Guard, acceptance `20/20`, Issue `CLOSED/COMPLETED` ve Roadmap `Done` metadata'sı bu belge commitinin ardından tamamlanacaktır; parent Epic #10 açık/In Progress kalır.
+- macOS `diskutil list external physical` ve `/Volumes` denetiminde beklenen USB'yi göstermedi. Yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası kurulmadı; exact source-plus-evidence paketi yerel staging'de hazırlanacaktır.
+- Ayrıntı `Docs/ADR-0038-DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION.md` ve tarihli Evidence belgesindedir. ATX/EPS/PCIe/SATA kablolama, electrical power-on, POST/BIOS/OS, tamamlanmış benchmark, final art ve Windows/Steam ayrı kapılardır.
+
+## Önceki checkpoint — Issue #59 / Epic #10
 
 - Feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`; canonical Northstar A60 ProductId'sini kullanan ayrı serialized assembly GPU item'ı, immutable PCIe x16 slot/latch/rear-bracket/fastener topology ve atomik Workbench+ProcessorSocket+MemorySlot+StorageSlot+ProcessorCoolerSlot+GraphicsCardSlot claim'i eklendi.
 - Supported lifecycle `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained`dır. Seat/remove exact serialized custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez. Retail Northstar A60 item'ı ayrı kalır ve shadow SKU yoktur.
@@ -16,7 +27,7 @@
 - Kullanıcı fiziksel USB'nin mevcut olmadığını ve yeniden bağlandığında haber vereceğini bildirdi. USB sorgulanmadı; Issue #58'in 717/717 staging'i korunur, Issue #59 için henüz fiziksel milestone/readback iddiası yoktur ve bu dış yedek kapısı gameplay geliştirmesini bloklamaz.
 - Ayrıntı `Docs/ADR-0037-DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION.md` ve tarihli Evidence belgesindedir. PSU, PCIe power cabling, alternate GPU biçimleri, tam benchmark, final art ve Windows/Steam ayrı kapılardır.
 
-## Önceki checkpoint — Issue #58 / Epic #10
+## Daha önceki checkpoint — Issue #58 / Epic #10
 
 - Feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`; tek canonical serialized `Lga1700TopDownAirPreAppliedTim` cooler, immutable slot/bracket/dört-point topology ve atomik Workbench+ProcessorSocket+MemorySlot+StorageSlot+ProcessorCoolerSlot claim'i eklendi.
 - Supported lifecycle `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained`dır. Seat/remove exact serialized custody'yi değiştirir; retain/unretain Inventory revision'ını değiştirmez. Pre-applied TIM başarılı seat'te yalnız bir kez tüketilir ve aynı item üzerinde kalıcıdır.
@@ -198,10 +209,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Sonraki Epic #10 child'ını ayrı issue/acceptance ile tek fiziksel PSU seating/retention bileşenine sınırlamak; kablolama ve tam benchmarkı tek pakette birleştirmemek.
-2. Kullanıcı USB'nin yeniden bağlı olduğunu söylediğinde hazır Issue #58 staging'i ve güncel Issue #59 GitHub checkpointini çakışmayan `.incoming-*`/full-readback disipliniyle fiziksel milestone'a taşımak; o zamana kadar USB'yi sorgulamamak.
-3. Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Issue #60 source/docs Guard, GitHub acceptance/Project kapanışı ve temiz checkpointini tamamlamak.
+2. Beklenen fiziksel USB gerçekten mount edildiğinde Issue #60 exact source-plus-evidence staging'ini çakışmayan `.incoming-*`/iki tam readback disipliniyle taşımak; yanlış volume'a yazmamak.
+3. Ardıl Epic #10 child'ını fiziksel kablo konektörü/routing akışına sınırlandırmak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
 
 ## Güvenli devam komutu
 
-Issue #59 feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, source/docs `a5bbca473e81455c44d2f95469c8faf2a11046ff`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`, EditMode `548/548`, PlayMode `43/43`, Universal Mac `328781520` bayt, aktif Apple Silicon/Metal exact r28 GPU smoke ve başarılı Guard `32599710154` + `32600012769` ile kapandı. Acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress kalır. Fiziksel USB ertelendi; Issue #58 staging'i korunur, Issue #59 için milestone/readback iddiası yoktur ve sonraki bounded gameplay bloklanmaz.
+Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, EditMode `577/577`, PlayMode `47/47`, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` ile teknik olarak tamamlandı. Source/docs/GitHub kapanışı bu checkpoint turunda sürer; parent Epic #10 açık/In Progress kalır. macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve readback iddiası yoktur. Ardıl bounded child kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.

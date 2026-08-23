@@ -6,6 +6,12 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #60 ile tek canonical serialized ATX PS/2 PSU item'ı, atomic seven-container Inventory claim, stable chassis-owned bay/rear-mount/four-fastener topology ve `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained` authority akışı eklendi.
+- İki keyed fan-intake orientation, exact ATX interface, filtered-floor support, rear-plane ve gerçek authored chassis-clearance kapıları; exact seat/retain/unretain/remove receipt fold/replay, alternate-order isolation ve bütün stale/conflict/full-hands/occupied failure no-mutation sözleşmeleri testlerle kilitlendi.
+- GarageGraybox r29'da PSU housing, fan/grille, filtered floor intake, AC inlet, rocker switch, disconnected modular panel, rear plate ve dört screw; gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.
+- Production blocker listesi yalnız `ChassisBack`, `ChassisLeftRail`, `ChassisRightRail` ve `MotherboardTray` collider'larını taşır. `ChassisBase` ve filtered-floor intake support olarak kalır; cable blocker listesi bounded kablolama kapsamı nedeniyle boştur.
+- Feature `f998d7d`, authored-clearance fix `b6c3ff8`; EditMode 577/577, PlayMode 47/47, 328937592 bayt Universal macOS build ve aktif Apple Silicon/Metal 1280×720 `garage-psu-four-screw-r29-v1` exact PSU smoke başarılıdır. Guard `32606958882` + `32607437408` geçti; source/docs/GitHub kapanışı devam etmektedir.
+
 - Issue #59 ile canonical Northstar A60 ProductId'sini koruyan ayrı serialized assembly GPU item'ı, atomic six-container Inventory claim, stable PCIe x16 slot/latch/rear-bracket/fastener topology ve `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained` authority akışı eklendi.
 - Keyed 0°/180° orientation, secured-host/PCIe-interface/support/chassis-clearance/cooler-clearance/obstruction kapıları; exact seat/retain/unretain/remove receipt lineage/replay, duplicate-seat, retained-remove ve installed-GPU motherboard-detach no-mutation sözleşmeleri testlerle kilitlendi.
 - GarageGraybox r28'de dual-fan GPU, PCB, PCIe contacts, rear bracket, latch ve screw; gerçek keyboard/gamepad dynamic HUD, same-instance recovery ve fail-closed generic placement/stack/cart bypass'ı tamamlandı.

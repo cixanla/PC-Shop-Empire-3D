@@ -14,7 +14,19 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #59
+### Güncel checkpoint — Issue #60
+
+- Feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, tree `78d62c46354cda45422ca947df10ba9d6823b7c9`; authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, tree `a15865346f52b6b39d84cec49c70babbc6550b89`; tek canonical serialized ATX PS/2 PSU item'ını stable chassis-owned bay/rear-mount/four-fastener topology ile GarageGraybox r29'a ekler.
+- Inventory authority yedi managed container'ı atomik claim eder. Assembly yalnız `EmptyOpen ↔ PowerSupplySeatedUnsecured ↔ PowerSupplyRetained` lifecycle'ını, exact receipt fold/replay'i, alternate-order isolation'ı ve no-mutation failure yollarını kabul eder.
+- Oyuncu gerçek keyboard/mouse veya gamepad ile guided mode, iki keyed fan orientation, exact ATX seat, görünür crossed four-screw retain/unretain ve same-instance remove/recovery akışını oynar. Generic placement/stack/cart bypass'ı kapalıdır.
+- Production clearance tam dört gerçek collider'a bağlıdır: `ChassisBack`, `ChassisLeftRail`, `ChassisRightRail`, `MotherboardTray`. Support yüzeyleri blocker değildir; cable blocker listesi kablolama kapsam dışı olduğu için boştur.
+- Final EditMode `577/577`, PlayMode `47/47`; Universal macOS build `328937592` bayt ve aktif Apple Silicon/Metal 1280×720 exact r29 PSU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
+- Feature/fix private `main`e push edilmiştir; Guard `32606958882` ve `32607437408` başarılıdır. Source/docs/GitHub closure metadata'sı bu checkpoint turunda tamamlanacaktır; parent Epic #10 açık/In Progress kalır.
+- macOS beklenen harici fiziksel USB'yi mount etmemiştir. Yanlış volume'a yazılmamış ve fiziksel milestone/readback iddiası kurulmamıştır; local exact staging güvenli USB geri geldiğinde atomik aktarım içindir.
+- Ayrıntı: `Docs/ADR-0038-DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION-CHECKPOINT-2026-08-23.md`.
+- ATX/EPS/PCIe/SATA cabling, electrical power-on, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
+
+### Önceki checkpoint — Issue #59
 
 - Feature `1b29ad29d6e4d8cc1ce09b0989a038a72297585c`, tree `e7b3d5d4ad13bf08f822570966660ab6c48e6a55`, canonical Northstar A60 ProductId'sini koruyan ayrı serialized assembly GPU item'ını stable PCIe x16 slot/latch/rear-bracket/fastener topology ile GarageGraybox r28'e ekler.
 - Inventory authority altı managed container'ı atomik claim eder. Assembly supported runtime'da yalnız `EmptyOpen ↔ GraphicsCardSeatedUnsecured ↔ GraphicsCardRetained` state'ini, exact receipt lineage/replay'i, installed-card motherboard-detach gate'ini ve no-mutation failure yollarını kabul eder.
@@ -25,7 +37,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Ayrıntı: `Docs/ADR-0037-DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-PCIE-X16-GRAPHICS-CARD-SEATING-AND-REAR-BRACKET-RETENTION-CHECKPOINT-2026-08-22.md`.
 - PSU, PCIe power cabling, alternate card/slot biçimleri, tam benchmark, final art ve native Windows/Steam ayrı kapılardır.
 
-### Önceki checkpoint — Issue #58
+### Daha önceki checkpoint — Issue #58
 
 - Feature `e2f10a22c37101cb12c5d6530c8f104deb72e99d`, tree `55d5f0d733530a2e4c1400f4f83c29f37dcafff8`, tek canonical serialized LGA1700 top-down air cooler'ı stable slot/bracket/four-point topology ile GarageGraybox r27'ye ekler.
 - Inventory authority beş managed container'ı atomik claim eder. Assembly supported runtime'da yalnız `EmptyOpen ↔ CoolerSeatedUnsecured ↔ CoolerRetained` state'ini, exact receipt lineage/replay'i, single-use pre-applied TIM'i, installed-cooler host gates'i ve no-mutation failure yollarını kabul eder.
@@ -183,7 +195,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Issue #59 feature `1b29ad2`, source/docs `a5bbca4`, Guard `32599710154` + `32600012769`, acceptance 20/20, Issue `CLOSED/COMPLETED` ve Roadmap `Done` ile kapandı; parent Epic #10 açık/In Progress kaldı. Ardıl bounded Epic #10 adayı yalnız tek fiziksel PSU seating/retention akışıdır; PCIe/PSU cabling, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Issue #60 feature `f998d7d`, authored-clearance fix `b6c3ff8`, Guard `32606958882` + `32607437408`, EditMode 577/577, PlayMode 47/47 ve exact r29 PSU smoke ile teknik olarak tamamlandı; source/docs/GitHub kapanışı sürer ve parent Epic #10 açık/In Progress kalır. Ardıl bounded Epic #10 adayı fiziksel kablo konektörü/routing akışıdır; electrical power-on, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 
