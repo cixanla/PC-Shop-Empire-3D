@@ -249,6 +249,54 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Atomically issued capabilities for an aggregate that owns nine distinct managed
+    /// serialized-item containers. Validation is all-or-none and advances Inventory by
+    /// exactly one revision only after every capability can be published together.
+    /// </summary>
+    internal sealed class InventorySerializedTransferAccessNonuple
+    {
+        internal InventorySerializedTransferAccessNonuple(
+            InventorySerializedTransferAccess first,
+            InventorySerializedTransferAccess second,
+            InventorySerializedTransferAccess third,
+            InventorySerializedTransferAccess fourth,
+            InventorySerializedTransferAccess fifth,
+            InventorySerializedTransferAccess sixth,
+            InventorySerializedTransferAccess seventh,
+            InventorySerializedTransferAccess eighth,
+            InventorySerializedTransferAccess ninth)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+            Fourth = fourth;
+            Fifth = fifth;
+            Sixth = sixth;
+            Seventh = seventh;
+            Eighth = eighth;
+            Ninth = ninth;
+        }
+
+        internal InventorySerializedTransferAccess First { get; }
+
+        internal InventorySerializedTransferAccess Second { get; }
+
+        internal InventorySerializedTransferAccess Third { get; }
+
+        internal InventorySerializedTransferAccess Fourth { get; }
+
+        internal InventorySerializedTransferAccess Fifth { get; }
+
+        internal InventorySerializedTransferAccess Sixth { get; }
+
+        internal InventorySerializedTransferAccess Seventh { get; }
+
+        internal InventorySerializedTransferAccess Eighth { get; }
+
+        internal InventorySerializedTransferAccess Ninth { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to move one exact serialized item between
     /// two logical containers. Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -1028,6 +1076,103 @@ namespace PCShopEmpire3D.Inventory
                     accesses[5],
                     accesses[6],
                     accesses[7]));
+        }
+
+        internal OperationResult<InventorySerializedTransferAccessNonuple>
+            ClaimManagedSerializedTransferContainers(
+                StableId<ContainerIdScope> firstContainerId,
+                StableId<ContainerIdScope> secondContainerId,
+                StableId<ContainerIdScope> thirdContainerId,
+                StableId<ContainerIdScope> fourthContainerId,
+                StableId<ContainerIdScope> fifthContainerId,
+                StableId<ContainerIdScope> sixthContainerId,
+                StableId<ContainerIdScope> seventhContainerId,
+                StableId<ContainerIdScope> eighthContainerId,
+                StableId<ContainerIdScope> ninthContainerId)
+        {
+            StableId<ContainerIdScope>[] containerIds =
+            {
+                firstContainerId,
+                secondContainerId,
+                thirdContainerId,
+                fourthContainerId,
+                fifthContainerId,
+                sixthContainerId,
+                seventhContainerId,
+                eighthContainerId,
+                ninthContainerId
+            };
+
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                if (!_containers.ContainsKey(containerIds[index]))
+                {
+                    return OperationResult<InventorySerializedTransferAccessNonuple>.Fail(
+                        InventoryFailures.UnknownContainer);
+                }
+            }
+
+            for (int left = 0; left < containerIds.Length - 1; left++)
+            {
+                for (int right = left + 1; right < containerIds.Length; right++)
+                {
+                    if (containerIds[left] == containerIds[right])
+                    {
+                        return OperationResult<InventorySerializedTransferAccessNonuple>.Fail(
+                            InventoryFailures.SameContainer);
+                    }
+                }
+            }
+
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                if (_managedSerializedTransferContainers.ContainsKey(containerIds[index]))
+                {
+                    return OperationResult<InventorySerializedTransferAccessNonuple>.Fail(
+                        InventoryFailures.SerializedTransferContainerManaged);
+                }
+            }
+
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                StableId<ContainerIdScope> containerId = containerIds[index];
+                if (GetContainerLoadUnsafe(containerId) != 0 ||
+                    HasReservationTargetingContainerUnsafe(containerId))
+                {
+                    return OperationResult<InventorySerializedTransferAccessNonuple>.Fail(
+                        InventoryFailures.SerializedTransferContainerOccupied);
+                }
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedTransferAccessNonuple>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var accesses = new InventorySerializedTransferAccess[containerIds.Length];
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                accesses[index] = new InventorySerializedTransferAccess(
+                    this,
+                    containerIds[index]);
+                _managedSerializedTransferContainers.Add(
+                    containerIds[index],
+                    accesses[index]);
+            }
+
+            Revision++;
+            return OperationResult<InventorySerializedTransferAccessNonuple>.Success(
+                new InventorySerializedTransferAccessNonuple(
+                    accesses[0],
+                    accesses[1],
+                    accesses[2],
+                    accesses[3],
+                    accesses[4],
+                    accesses[5],
+                    accesses[6],
+                    accesses[7],
+                    accesses[8]));
         }
 
         public OperationResult ReceiveSerializedItem(

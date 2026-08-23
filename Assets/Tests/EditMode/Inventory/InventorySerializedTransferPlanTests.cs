@@ -28,6 +28,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ContainerIdScope>.Parse("container.power-supply-bay-primary");
         private static readonly StableId<ContainerIdScope> PowerCableRoute =
             StableId<ContainerIdScope>.Parse("container.power-cable-route-primary");
+        private static readonly StableId<ContainerIdScope> CpuPowerCableRoute =
+            StableId<ContainerIdScope>.Parse("container.cpu-power-cable-route-primary");
         private static readonly StableId<ItemInstanceIdScope> Item =
             StableId<ItemInstanceIdScope>.Parse("item.motherboard-001");
         private static readonly StableId<ItemInstanceIdScope> MemorySlotItem =
@@ -42,6 +44,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ItemInstanceIdScope>.Parse("item.power-supply-bay-occupied");
         private static readonly StableId<ItemInstanceIdScope> PowerCableRouteItem =
             StableId<ItemInstanceIdScope>.Parse("item.power-cable-route-occupied");
+        private static readonly StableId<ItemInstanceIdScope> CpuPowerCableRouteItem =
+            StableId<ItemInstanceIdScope>.Parse("item.cpu-power-cable-route-occupied");
 
         [Test]
         public void PrepareIsSideEffectFreeAndBindsExactSourceTargetAndRevision()
@@ -1402,6 +1406,368 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ManagedContainerNonupleClaimSucceedsInOneRevisionAndEachAccessOnlyMovesItsOwnContainer()
+        {
+            InventoryAuthority authority = CreateNonupleAuthority();
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessNonuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(claim.Value.First.ManagedContainerId, Is.EqualTo(Workbench));
+            Assert.That(claim.Value.Second.ManagedContainerId, Is.EqualTo(ProcessorSocket));
+            Assert.That(claim.Value.Third.ManagedContainerId, Is.EqualTo(MemorySlot));
+            Assert.That(claim.Value.Fourth.ManagedContainerId, Is.EqualTo(StorageSlot));
+            Assert.That(claim.Value.Fifth.ManagedContainerId, Is.EqualTo(BenchmarkSlot));
+            Assert.That(claim.Value.Sixth.ManagedContainerId, Is.EqualTo(GraphicsCardSlot));
+            Assert.That(claim.Value.Seventh.ManagedContainerId, Is.EqualTo(PowerSupplyBay));
+            Assert.That(claim.Value.Eighth.ManagedContainerId, Is.EqualTo(PowerCableRoute));
+            Assert.That(claim.Value.Ninth.ManagedContainerId, Is.EqualTo(CpuPowerCableRoute));
+
+            StableId<ContainerIdScope>[] managedContainerIds =
+            {
+                Workbench,
+                ProcessorSocket,
+                MemorySlot,
+                StorageSlot,
+                BenchmarkSlot,
+                GraphicsCardSlot,
+                PowerSupplyBay,
+                PowerCableRoute,
+                CpuPowerCableRoute
+            };
+            InventorySerializedTransferAccess[] accesses =
+            {
+                claim.Value.First,
+                claim.Value.Second,
+                claim.Value.Third,
+                claim.Value.Fourth,
+                claim.Value.Fifth,
+                claim.Value.Sixth,
+                claim.Value.Seventh,
+                claim.Value.Eighth,
+                claim.Value.Ninth
+            };
+            for (int targetIndex = 0; targetIndex < managedContainerIds.Length; targetIndex++)
+            {
+                for (int accessIndex = 0; accessIndex < accesses.Length; accessIndex++)
+                {
+                    OperationResult<InventorySerializedTransferPlan> prepared =
+                        authority.PrepareSerializedItemTransfer(
+                            Item,
+                            managedContainerIds[targetIndex],
+                            accesses[accessIndex]);
+                    if (targetIndex == accessIndex)
+                    {
+                        Assert.That(prepared.IsSuccess, Is.True);
+                    }
+                    else
+                    {
+                        Assert.That(prepared.Error,
+                            Is.EqualTo(InventoryFailures.SerializedTransferAccessInvalid));
+                    }
+                }
+            }
+
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, Workbench, claim.Value.First, claim.Value.Ninth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, ProcessorSocket, claim.Value.Second, claim.Value.First);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, MemorySlot, claim.Value.Third, claim.Value.Second);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, StorageSlot, claim.Value.Fourth, claim.Value.Third);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, BenchmarkSlot, claim.Value.Fifth, claim.Value.Fourth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, GraphicsCardSlot, claim.Value.Sixth, claim.Value.Fifth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, PowerSupplyBay, claim.Value.Seventh, claim.Value.Sixth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, PowerCableRoute, claim.Value.Eighth, claim.Value.Seventh);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, CpuPowerCableRoute, claim.Value.Ninth, claim.Value.Eighth);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerNonupleValidationPrecedenceLeavesNoPartialClaim()
+        {
+            StableId<ContainerIdScope> unknown =
+                StableId<ContainerIdScope>.Parse("container.unknown");
+            InventoryAuthority unknownBeforeSame = CreateNonupleAuthority();
+            long unknownRevision = unknownBeforeSame.Revision;
+            Assert.That(unknownBeforeSame.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    unknown).Error,
+                Is.EqualTo(InventoryFailures.UnknownContainer));
+            AssertNonupleClaimFailureLeftPublicTransferAvailable(
+                unknownBeforeSame,
+                unknownRevision);
+
+            InventoryAuthority sameBeforeManaged = CreateNonupleAuthority();
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainer(
+                CpuPowerCableRoute).IsSuccess, Is.True);
+            long sameRevision = sameBeforeManaged.Revision;
+            Assert.That(sameBeforeManaged.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    Workbench,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SameContainer));
+            Assert.That(sameBeforeManaged.Revision, Is.EqualTo(sameRevision));
+            Assert.That(sameBeforeManaged.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            AssertPublicTransferAvailable(
+                sameBeforeManaged,
+                Workbench,
+                MemorySlot,
+                StorageSlot,
+                BenchmarkSlot,
+                GraphicsCardSlot,
+                PowerSupplyBay,
+                PowerCableRoute);
+            Assert.That(sameBeforeManaged.TryGetSerializedItem(
+                Item, out InventoryItemRecord sameUnchanged), Is.True);
+            Assert.That(sameUnchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(sameBeforeManaged.ValidateInvariants().IsSuccess, Is.True);
+
+            InventoryAuthority managedBeforeOccupied = CreateNonupleAuthority(
+                fillCpuPowerCableRoute: true);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainer(
+                ProcessorSocket).IsSuccess, Is.True);
+            long managedRevision = managedBeforeOccupied.Revision;
+            SetRevision(managedBeforeOccupied, long.MaxValue);
+            Assert.That(managedBeforeOccupied.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(managedBeforeOccupied.Revision, Is.EqualTo(long.MaxValue));
+            SetRevision(managedBeforeOccupied, managedRevision);
+            AssertPublicTransferAvailable(
+                managedBeforeOccupied,
+                Workbench,
+                MemorySlot,
+                StorageSlot,
+                BenchmarkSlot,
+                GraphicsCardSlot,
+                PowerSupplyBay,
+                PowerCableRoute);
+            Assert.That(managedBeforeOccupied.PrepareSerializedItemTransfer(
+                    Item, ProcessorSocket).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(managedBeforeOccupied.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded));
+            Assert.That(managedBeforeOccupied.TryGetSerializedItem(
+                Item, out InventoryItemRecord managedUnchanged), Is.True);
+            Assert.That(managedUnchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(managedBeforeOccupied.TryGetSerializedItem(
+                CpuPowerCableRouteItem, out InventoryItemRecord managedOccupied), Is.True);
+            Assert.That(managedOccupied.ContainerId, Is.EqualTo(CpuPowerCableRoute));
+            Assert.That(managedBeforeOccupied.ValidateInvariants().IsSuccess, Is.True);
+
+            InventoryAuthority occupiedOnly = CreateNonupleAuthority(
+                fillCpuPowerCableRoute: true);
+            long occupiedOnlyRevision = occupiedOnly.Revision;
+            Assert.That(occupiedOnly.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(occupiedOnly.Revision, Is.EqualTo(occupiedOnlyRevision));
+            AssertPublicTransferAvailable(
+                occupiedOnly,
+                Workbench,
+                ProcessorSocket,
+                MemorySlot,
+                StorageSlot,
+                BenchmarkSlot,
+                GraphicsCardSlot,
+                PowerSupplyBay,
+                PowerCableRoute);
+            Assert.That(occupiedOnly.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded));
+            Assert.That(occupiedOnly.TryGetSerializedItem(
+                CpuPowerCableRouteItem, out InventoryItemRecord occupiedOnlyItem), Is.True);
+            Assert.That(occupiedOnlyItem.ContainerId, Is.EqualTo(CpuPowerCableRoute));
+            Assert.That(occupiedOnly.ValidateInvariants().IsSuccess, Is.True);
+
+            InventoryAuthority occupiedBeforeOverflow = CreateNonupleAuthority(
+                fillCpuPowerCableRoute: true);
+            StableId<ReservationIdScope> reservationId =
+                StableId<ReservationIdScope>.Parse("reservation.cpu-power-cable-route");
+            StableId<InventoryClaimIdScope> claimId =
+                StableId<InventoryClaimIdScope>.Parse("claim.cpu-power-cable-route");
+            Assert.That(occupiedBeforeOverflow.ReserveSerializedItem(
+                reservationId, claimId, CpuPowerCableRouteItem).IsSuccess, Is.True);
+            long occupiedRevision = occupiedBeforeOverflow.Revision;
+            int reservationCount = occupiedBeforeOverflow.ReservationCount;
+            SetRevision(occupiedBeforeOverflow, long.MaxValue);
+            Assert.That(occupiedBeforeOverflow.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(occupiedBeforeOverflow.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(occupiedBeforeOverflow.ReservationCount, Is.EqualTo(reservationCount));
+            Assert.That(occupiedBeforeOverflow.TryGetSerializedItem(
+                CpuPowerCableRouteItem, out InventoryItemRecord reserved), Is.True);
+            Assert.That(reserved.ContainerId, Is.EqualTo(CpuPowerCableRoute));
+            SetRevision(occupiedBeforeOverflow, occupiedRevision);
+            AssertPublicTransferAvailable(
+                occupiedBeforeOverflow,
+                Workbench,
+                ProcessorSocket,
+                MemorySlot,
+                StorageSlot,
+                BenchmarkSlot,
+                GraphicsCardSlot,
+                PowerSupplyBay,
+                PowerCableRoute);
+            Assert.That(occupiedBeforeOverflow.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded));
+            Assert.That(occupiedBeforeOverflow.TryGetSerializedItem(
+                Item, out InventoryItemRecord reservedUnchanged), Is.True);
+            Assert.That(reservedUnchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(occupiedBeforeOverflow.ValidateInvariants().IsSuccess, Is.True);
+
+            InventoryAuthority overflow = CreateNonupleAuthority();
+            long overflowRevision = overflow.Revision;
+            SetRevision(overflow, long.MaxValue);
+            Assert.That(overflow.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.RevisionOverflow));
+            Assert.That(overflow.Revision, Is.EqualTo(long.MaxValue));
+            SetRevision(overflow, overflowRevision);
+            AssertNonupleClaimFailureLeftPublicTransferAvailable(
+                overflow,
+                overflowRevision);
+        }
+
+        [Test]
+        public void ManagedContainerNonupleAtRevisionBoundaryIsAtomic()
+        {
+            InventoryAuthority authority = CreateNonupleAuthority();
+            SetRevision(authority, long.MaxValue - 1);
+
+            OperationResult<InventorySerializedTransferAccessNonuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TryGetSerializedItem(
+                Item, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        private static void AssertPublicTransferAvailable(
+            InventoryAuthority authority,
+            params StableId<ContainerIdScope>[] containerIds)
+        {
+            for (int index = 0; index < containerIds.Length; index++)
+            {
+                Assert.That(authority.PrepareSerializedItemTransfer(
+                    Item, containerIds[index]).IsSuccess, Is.True);
+            }
+        }
+
+        private static void AssertNonupleClaimFailureLeftPublicTransferAvailable(
+            InventoryAuthority authority,
+            long expectedRevision)
+        {
+            Assert.That(authority.Revision, Is.EqualTo(expectedRevision));
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, Workbench).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, ProcessorSocket).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, MemorySlot).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, StorageSlot).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, BenchmarkSlot).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, GraphicsCardSlot).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, PowerSupplyBay).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, PowerCableRoute).IsSuccess, Is.True);
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                Item, CpuPowerCableRoute).IsSuccess, Is.True);
+            Assert.That(authority.TryGetSerializedItem(
+                Item, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void AssertOctupleClaimFailureLeftPublicTransferAvailable(
             InventoryAuthority authority,
             long expectedRevision)
@@ -1634,6 +2000,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                     PowerCableRouteItem,
                     ProductId,
                     PowerCableRoute,
+                    InventoryCondition.OpenBox,
+                    InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
+            }
+
+            return authority;
+        }
+
+        private static InventoryAuthority CreateNonupleAuthority(
+            bool fillCpuPowerCableRoute = false)
+        {
+            InventoryAuthority authority = CreateOctupleAuthority();
+            Assert.That(authority.RegisterContainer(InventoryContainerDefinition.Create(
+                CpuPowerCableRoute,
+                InventoryContainerKind.Workbench,
+                1).Value).IsSuccess, Is.True);
+
+            if (fillCpuPowerCableRoute)
+            {
+                Assert.That(authority.ReceiveSerializedItem(
+                    CpuPowerCableRouteItem,
+                    ProductId,
+                    CpuPowerCableRoute,
                     InventoryCondition.OpenBox,
                     InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
             }
