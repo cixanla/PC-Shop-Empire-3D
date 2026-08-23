@@ -57,7 +57,7 @@ namespace PCShopEmpire3D.Presentation
             long consultationRevision = session.CustomerConsultations.Revision;
             long actionRevision = session.CustomerOfferActions.Revision;
 
-            bool preflight = session.Inventory.SerializedItemCount == 8 &&
+            bool preflight = session.Inventory.SerializedItemCount == 9 &&
                              session.TryGetPowerSupplyItem(
                                  out InventoryItemRecord loose) &&
                              loose.Id == session.PowerSupplyItemId &&
@@ -324,7 +324,7 @@ namespace PCShopEmpire3D.Presentation
                 session.CustomerVisits.Revision == visitRevision &&
                 session.CustomerConsultations.Revision == consultationRevision &&
                 session.CustomerOfferActions.Revision == actionRevision &&
-                session.Inventory.SerializedItemCount == 8 &&
+                session.Inventory.SerializedItemCount == 9 &&
                 initialInventoryRevision < session.Inventory.Revision;
             bool identity = stableItemId == powerSupply.ItemIdValue &&
                             powerSupplyBinding.InventoryItemIdValue == stableItemId &&

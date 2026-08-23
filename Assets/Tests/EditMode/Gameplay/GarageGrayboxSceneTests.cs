@@ -92,7 +92,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(12));
+                Assert.That(physicalItems.Length, Is.EqualTo(13));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -132,15 +132,21 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection atx24PowerCable = physicalItems.Single(
                     item => item.ItemIdValue ==
                             GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue);
+                PhysicalItemProjection eps12vPowerCable = physicalItems.Single(
+                    item => item.ItemIdValue ==
+                            GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue);
                 Assert.That(physicalItems.Count(
                     item => item.CarryProfile == PhysicalCarryProfile.PcComponent),
-                    Is.EqualTo(8));
+                    Is.EqualTo(9));
                 Assert.That(powerSupply.DisplayName,
                     Is.EqualTo(GarageStockFlowSession.PowerSupplyDisplayName));
                 Assert.That(powerSupply.SupportsPlacement, Is.False);
                 Assert.That(atx24PowerCable.DisplayName,
                     Is.EqualTo(GarageStockFlowSession.Atx24PowerCableDisplayName));
                 Assert.That(atx24PowerCable.SupportsPlacement, Is.False);
+                Assert.That(eps12vPowerCable.DisplayName,
+                    Is.EqualTo(GarageStockFlowSession.Eps12vPowerCableDisplayName));
+                Assert.That(eps12vPowerCable.SupportsPlacement, Is.False);
                 Assert.That(smallBox.ItemIdValue, Is.EqualTo("prototype.garage-box-001"));
                 Assert.That(smallBox.SupportsPlacement, Is.True);
                 Assert.That(smallBox.DropHalfExtents, Is.EqualTo(new Vector3(0.35f, 0.225f, 0.25f)));
@@ -697,7 +703,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-routing-r30-v1"));
+                    Is.EqualTo("garage-eps12v-cpu-power-cable-routing-r31-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -843,7 +849,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-routing-r30-v1"));
+                    Is.EqualTo("garage-eps12v-cpu-power-cable-routing-r31-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -988,6 +994,167 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsEps12vPowerCableR31PhysicalRouteContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker =
+                    FindInScene<GaragePrototypeMarker>(scene);
+                Assert.That(marker, Is.Not.Null);
+                Assert.That(GaragePrototypeMarker.Version,
+                    Is.EqualTo("garage-eps12v-cpu-power-cable-routing-r31-v1"));
+                Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
+
+                Eps12vPowerCableRouteProjection route =
+                    marker.Eps12vPowerCableRoute;
+                Eps12vPowerCableAssemblyItemBinding binding =
+                    marker.Eps12vPowerCableBinding;
+                PhysicalItemProjection cable = marker.Eps12vPowerCable;
+                Eps12vPowerCableRuntimeGeometry geometry =
+                    marker.Eps12vPowerCableGeometry;
+
+                Assert.That(route, Is.Not.Null);
+                Assert.That(route.IsConfigured, Is.True);
+                Assert.That(route.RouteIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession.Eps12vPowerCableRouteIdValue));
+                Assert.That(route.PsuEndpointIdValue,
+                    Is.EqualTo(GarageStockFlowSession
+                        .Eps12vPowerCablePsuEndpointIdValue));
+                Assert.That(route.MotherboardEndpointIdValue,
+                    Is.EqualTo(GarageStockFlowSession
+                        .Eps12vPowerCableMotherboardEndpointIdValue));
+                Assert.That(route.WaypointIdValues, Is.EqualTo(new[]
+                {
+                    GarageStockFlowSession.Eps12vPowerCableWaypoint1IdValue,
+                    GarageStockFlowSession.Eps12vPowerCableWaypoint2IdValue,
+                    GarageStockFlowSession.Eps12vPowerCableWaypoint3IdValue
+                }));
+                Assert.That(route.Waypoints.Select(waypoint => waypoint.name),
+                    Is.EqualTo(new[]
+                    {
+                        "Eps12vWaypointPsuExit",
+                        "Eps12vWaypointRearChannel",
+                        "Eps12vWaypointBoardEntry"
+                    }));
+                Assert.That(route.Waypoints.Distinct().Count(), Is.EqualTo(3));
+                Assert.That(route.PsuEndpoint.name,
+                    Is.EqualTo("Eps12vPsuCpu8Anchor"));
+                Assert.That(route.PsuEndpoint.parent.name,
+                    Is.EqualTo("PowerSupplyDisconnectedModularSocketPanel"));
+                Assert.That(route.MotherboardEndpoint.name,
+                    Is.EqualTo("MotherboardEps12vCpuPowerHeader"));
+                Assert.That(route.MotherboardEndpoint.IsChildOf(
+                    marker.MotherboardBinding.PhysicalItem.transform), Is.True);
+                Assert.That(route.FocusCollider.name,
+                    Is.EqualTo("MotherboardEps12vRouteFocusTarget"));
+                Assert.That(route.FocusCollider.isTrigger, Is.True);
+                Assert.That(route.FocusCollider.enabled, Is.False);
+                Assert.That(route.FocusCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(route.PreviewLine.enabled, Is.False);
+                Assert.That(route.PreviewLine.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(route.AllowedRouteColliders.Length, Is.EqualTo(2));
+                Assert.That(route.AllowedRouteColliders,
+                    Does.Contain(marker.PowerSupply.GetComponent<Collider>()));
+                Assert.That(route.AllowedRouteColliders,
+                    Does.Contain(marker.MotherboardBinding.PhysicalItem.transform
+                        .Find("MotherboardPcb").GetComponent<Collider>()));
+
+                Assert.That(binding, Is.Not.Null);
+                Assert.That(binding.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(binding.PhysicalItem, Is.SameAs(cable));
+                Assert.That(binding.Route, Is.SameAs(route));
+                Assert.That(binding.Geometry, Is.SameAs(geometry));
+                Assert.That(binding.InventoryItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession
+                        .Eps12vPowerCableItemInstanceIdValue));
+                Assert.That(binding.IsAuthorityLooseWorld, Is.True);
+                Assert.That(binding.IsRouted, Is.False);
+                Assert.That(binding.ValidateProjectionInvariant().IsSuccess,
+                    Is.True);
+                Assert.That(marker.PlayerCarry
+                    .MatchesEps12vPowerCableConfiguration(route, binding),
+                    Is.True);
+
+                Assert.That(cable.ItemIdValue,
+                    Is.EqualTo(GarageStockFlowSession
+                        .Eps12vPowerCableItemInstanceIdValue));
+                Assert.That(cable.DisplayName,
+                    Is.EqualTo(
+                        GarageStockFlowSession.Eps12vPowerCableDisplayName));
+                Assert.That(cable.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.PcComponent));
+                Assert.That(cable.SupportsPlacement, Is.False);
+                Assert.That(cable.Body.mass, Is.EqualTo(0.24f).Within(0.001f));
+                Assert.That(cable.Body.isKinematic, Is.True);
+                Assert.That(cable.Body.useGravity, Is.False);
+                Assert.That(cable.GetComponentsInChildren<Collider>(true).Length,
+                    Is.EqualTo(1));
+                Assert.That(cable.GetComponentsInChildren<Joint>(true), Is.Empty);
+                Assert.That(cable.GetComponentsInChildren<Rigidbody>(true).Length,
+                    Is.EqualTo(1));
+
+                Assert.That(geometry, Is.Not.Null);
+                Assert.That(geometry.IsCanonical, Is.True);
+                Assert.That(geometry.IsRouted, Is.False);
+                Assert.That(geometry.Psu8Connector.name,
+                    Is.EqualTo("Eps12vPsuCpu8Connector"));
+                Assert.That(geometry.Motherboard8Connector.name,
+                    Is.EqualTo("Eps12vMotherboardCpu8Connector"));
+                Assert.That(geometry.LooseCoil.name,
+                    Is.EqualTo("Eps12vLooseBraidedCoil"));
+                Assert.That(geometry.LooseCoil.enabled, Is.True);
+                Assert.That(geometry.RoutedTrunk.enabled, Is.False);
+                Assert.That(new[]
+                    {
+                        geometry.LooseCoil,
+                        geometry.RoutedTrunk
+                    }.All(line => line.gameObject.layer ==
+                        LayerMask.NameToLayer("Ignore Raycast")),
+                    Is.True);
+
+                Eps12vPowerCableAssemblyItemBinding[] bindings = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        Eps12vPowerCableAssemblyItemBinding>(true))
+                    .ToArray();
+                Assert.That(bindings.Length, Is.EqualTo(1));
+                Assert.That(bindings[0], Is.SameAs(binding));
+                Assert.That(scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        PhysicalItemProjection>(true))
+                    .Count(item => item.ItemIdValue ==
+                        GarageStockFlowSession
+                            .Eps12vPowerCableItemInstanceIdValue),
+                    Is.EqualTo(1));
+
+                Assert.That(marker.Atx24PowerCableRoute.IsConfigured, Is.True);
+                Assert.That(marker.ProcessorSocket.IsConfigured, Is.True);
+                Assert.That(marker.ProcessorCoolerSlot.IsConfigured, Is.True);
+                Assert.That(marker.StockFlow.Session.TryGetEps12vPowerCableItem(
+                    out InventoryItemRecord item), Is.True);
+                Assert.That(item.Id,
+                    Is.EqualTo(marker.StockFlow.Session.Eps12vPowerCableItemId));
+                Assert.That(item.ProductId,
+                    Is.EqualTo(
+                        marker.StockFlow.Session.Eps12vPowerCableProductId));
+                Assert.That(item.ContainerId,
+                    Is.EqualTo(marker.StockFlow.Session.WorldFloorContainerId));
+                Assert.That(marker.StockFlow.Session.ValidateInvariants().IsSuccess,
+                    Is.True);
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsReadableSemiRealisticBenchmarkContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -999,7 +1166,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-routing-r30-v1"));
+                    Is.EqualTo("garage-eps12v-cpu-power-cable-routing-r31-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -1850,12 +2017,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(164));
+                    Is.EqualTo(176));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(25));
+                    Is.EqualTo(27));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
-                    Is.EqualTo(4));
+                    Is.EqualTo(6));
                 Assert.That(assemblySlice.GetComponentsInChildren<NavMeshObstacle>(true), Is.Empty);
                 Assert.That(
                     benchmark.GetComponentsInChildren<Transform>(true)

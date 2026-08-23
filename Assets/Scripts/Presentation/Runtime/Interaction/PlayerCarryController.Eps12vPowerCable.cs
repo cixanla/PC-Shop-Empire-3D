@@ -8,20 +8,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
 {
     public sealed partial class PlayerCarryController
     {
-        [SerializeField] private Atx24PowerCableRouteProjection atx24PowerCableRoute;
-        [SerializeField] private Atx24PowerCableAssemblyItemBinding atx24PowerCableBinding;
+        [SerializeField] private Eps12vPowerCableRouteProjection eps12vPowerCableRoute;
+        [SerializeField] private Eps12vPowerCableAssemblyItemBinding eps12vPowerCableBinding;
 
-        public bool IsAtx24PowerCableRouteMode { get; private set; }
+        public bool IsEps12vPowerCableRouteMode { get; private set; }
 
-        public Atx24PowerCableRouteStatus CurrentAtx24PowerCableRouteStatus
+        public Eps12vPowerCableRouteStatus CurrentEps12vPowerCableRouteStatus
         {
             get;
             private set;
-        } = Atx24PowerCableRouteStatus.ContextMissing;
+        } = Eps12vPowerCableRouteStatus.ContextMissing;
 
-        public void ConfigureAtx24PowerCableRoute(
-            Atx24PowerCableRouteProjection routeProjection,
-            Atx24PowerCableAssemblyItemBinding assemblyBinding)
+        public void ConfigureEps12vPowerCableRoute(
+            Eps12vPowerCableRouteProjection routeProjection,
+            Eps12vPowerCableAssemblyItemBinding assemblyBinding)
         {
             if (routeProjection == null)
             {
@@ -36,100 +36,100 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (assemblyBinding.Route != routeProjection)
             {
                 throw new ArgumentException(
-                    "The ATX24 binding must own the configured route.",
+                    "The EPS12V binding must own the configured route.",
                     nameof(assemblyBinding));
             }
 
-            atx24PowerCableRoute = routeProjection;
-            atx24PowerCableBinding = assemblyBinding;
-            atx24PowerCableBinding.SyncProjectionToAuthority();
+            eps12vPowerCableRoute = routeProjection;
+            eps12vPowerCableBinding = assemblyBinding;
+            eps12vPowerCableBinding.SyncProjectionToAuthority();
         }
 
-        public bool MatchesAtx24PowerCableConfiguration(
-            Atx24PowerCableRouteProjection routeProjection,
-            Atx24PowerCableAssemblyItemBinding assemblyBinding)
+        public bool MatchesEps12vPowerCableConfiguration(
+            Eps12vPowerCableRouteProjection routeProjection,
+            Eps12vPowerCableAssemblyItemBinding assemblyBinding)
         {
             return routeProjection != null &&
                    assemblyBinding != null &&
-                   atx24PowerCableRoute == routeProjection &&
-                   atx24PowerCableBinding == assemblyBinding &&
+                   eps12vPowerCableRoute == routeProjection &&
+                   eps12vPowerCableBinding == assemblyBinding &&
                    assemblyBinding.Route == routeProjection;
         }
 
-        public OperationResult TrySetAtx24PowerCableRouteMode(bool enabled)
+        public OperationResult TrySetEps12vPowerCableRouteMode(bool enabled)
         {
-            Atx24PowerCableAssemblyItemBinding binding =
-                GetAtx24PowerCableBinding(HeldItem);
+            Eps12vPowerCableAssemblyItemBinding binding =
+                GetEps12vPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.nothing-held")));
+                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
             }
 
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.paused")));
+                    Failure.FromCode("assembly-eps12v-cable.paused")));
             }
 
-            SetAtx24PowerCableRouteMode(enabled);
+            SetEps12vPowerCableRouteMode(enabled);
             if (enabled)
             {
-                UpdateAtx24PowerCableRoutePreview(binding);
+                UpdateEps12vPowerCableRoutePreview(binding);
             }
 
             return Remember(OperationResult.Success());
         }
 
-        public OperationResult TryRotateAtx24PowerCableConnectorPreview()
+        public OperationResult TryRotateEps12vPowerCableConnectorPreview()
         {
-            Atx24PowerCableAssemblyItemBinding binding =
-                GetAtx24PowerCableBinding(HeldItem);
+            Eps12vPowerCableAssemblyItemBinding binding =
+                GetEps12vPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.nothing-held")));
+                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
             }
 
-            if (!IsAtx24PowerCableRouteMode)
+            if (!IsEps12vPowerCableRouteMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.mode-inactive")));
+                    Failure.FromCode("assembly-eps12v-cable.mode-inactive")));
             }
 
             _placementRotationQuarterTurns =
                 (_placementRotationQuarterTurns + 1) % 2;
             LastFailureCode = string.Empty;
-            UpdateAtx24PowerCableRoutePreview(binding);
+            UpdateEps12vPowerCableRoutePreview(binding);
             return OperationResult.Success();
         }
 
-        public OperationResult TryConfirmAtx24PowerCableRoute()
+        public OperationResult TryConfirmEps12vPowerCableRoute()
         {
-            Atx24PowerCableAssemblyItemBinding binding =
-                GetAtx24PowerCableBinding(HeldItem);
+            Eps12vPowerCableAssemblyItemBinding binding =
+                GetEps12vPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.nothing-held")));
+                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
             }
 
-            if (!IsAtx24PowerCableRouteMode)
+            if (!IsEps12vPowerCableRouteMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.mode-inactive")));
+                    Failure.FromCode("assembly-eps12v-cable.mode-inactive")));
             }
 
-            return TryConfirmAtx24PowerCableRoute(
+            return TryConfirmEps12vPowerCableRoute(
                 binding,
-                EvaluateAtx24PowerCableRoute(binding));
+                EvaluateEps12vPowerCableRoute(binding));
         }
 
-        private OperationResult TryConfirmAtx24PowerCableRoute(
-            Atx24PowerCableAssemblyItemBinding binding,
-            Atx24PowerCableRouteEvaluation evaluation)
+        private OperationResult TryConfirmEps12vPowerCableRoute(
+            Eps12vPowerCableAssemblyItemBinding binding,
+            Eps12vPowerCableRouteEvaluation evaluation)
         {
-            ApplyAtx24PowerCableRouteEvaluation(evaluation);
+            ApplyEps12vPowerCableRouteEvaluation(evaluation);
             if (!evaluation.CanRoute)
             {
                 return Remember(OperationResult.Fail(
@@ -154,10 +154,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(route);
         }
 
-        private bool ProcessHeldAtx24PowerCableInput()
+        private bool ProcessHeldEps12vPowerCableInput()
         {
-            Atx24PowerCableAssemblyItemBinding binding =
-                GetAtx24PowerCableBinding(HeldItem);
+            Eps12vPowerCableAssemblyItemBinding binding =
+                GetEps12vPowerCableBinding(HeldItem);
             if (binding == null)
             {
                 return false;
@@ -168,23 +168,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetAtx24PowerCableRouteMode(
-                    !IsAtx24PowerCableRouteMode);
+                TrySetEps12vPowerCableRouteMode(
+                    !IsEps12vPowerCableRouteMode);
                 return true;
             }
 
-            if (IsAtx24PowerCableRouteMode &&
+            if (IsEps12vPowerCableRouteMode &&
                 input.TryConsumeRotatePlacementPressThisFrame())
             {
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TryRotateAtx24PowerCableConnectorPreview();
+                TryRotateEps12vPowerCableConnectorPreview();
                 return true;
             }
 
-            if (!IsAtx24PowerCableRouteMode)
+            if (!IsEps12vPowerCableRouteMode)
             {
-                atx24PowerCableRoute?.SetRouteModeActive(active: false);
+                eps12vPowerCableRoute?.SetRouteModeActive(active: false);
                 if (input.TryConsumeDropPressThisFrame())
                 {
                     input.TryConsumePrimaryActionPressThisFrame();
@@ -196,26 +196,26 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            Atx24PowerCableRouteEvaluation evaluation =
-                EvaluateAtx24PowerCableRoute(binding);
-            ApplyAtx24PowerCableRouteEvaluation(evaluation);
+            Eps12vPowerCableRouteEvaluation evaluation =
+                EvaluateEps12vPowerCableRoute(binding);
+            ApplyEps12vPowerCableRouteEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmAtx24PowerCableRoute(binding, evaluation);
+                TryConfirmEps12vPowerCableRoute(binding, evaluation);
             }
 
             return true;
         }
 
-        private void SetAtx24PowerCableRouteMode(bool enabled)
+        private void SetEps12vPowerCableRouteMode(bool enabled)
         {
-            IsAtx24PowerCableRouteMode = enabled &&
+            IsEps12vPowerCableRouteMode = enabled &&
                                          HeldItem != null &&
-                                         GetAtx24PowerCableBinding(HeldItem) != null;
-            IsEps12vPowerCableRouteMode = false;
-            eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+                                         GetEps12vPowerCableBinding(HeldItem) != null;
+            IsAtx24PowerCableRouteMode = false;
+            atx24PowerCableRoute?.SetRouteModeActive(active: false);
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
@@ -227,46 +227,46 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
-            CurrentAtx24PowerCableRouteStatus =
-                Atx24PowerCableRouteStatus.ContextMissing;
+            CurrentEps12vPowerCableRouteStatus =
+                Eps12vPowerCableRouteStatus.ContextMissing;
             LastFailureCode = string.Empty;
-            atx24PowerCableRoute?.SetRouteModeActive(
-                IsAtx24PowerCableRouteMode);
+            eps12vPowerCableRoute?.SetRouteModeActive(
+                IsEps12vPowerCableRouteMode);
             placementPreview?.Hide();
-            if (!IsAtx24PowerCableRouteMode)
+            if (!IsEps12vPowerCableRouteMode)
             {
                 _placementRotationQuarterTurns = 0;
                 SetCarryHandsState(blocked: false);
             }
         }
 
-        private void UpdateAtx24PowerCableRoutePreview(
-            Atx24PowerCableAssemblyItemBinding binding)
+        private void UpdateEps12vPowerCableRoutePreview(
+            Eps12vPowerCableAssemblyItemBinding binding)
         {
-            if (!IsAtx24PowerCableRouteMode || HeldItem == null)
+            if (!IsEps12vPowerCableRouteMode || HeldItem == null)
             {
                 PlacementValid = false;
                 CurrentPlacementStatus = PlacementStatus.ContextMissing;
-                CurrentAtx24PowerCableRouteStatus =
-                    Atx24PowerCableRouteStatus.ContextMissing;
-                atx24PowerCableRoute?.SetRouteModeActive(active: false);
+                CurrentEps12vPowerCableRouteStatus =
+                    Eps12vPowerCableRouteStatus.ContextMissing;
+                eps12vPowerCableRoute?.SetRouteModeActive(active: false);
                 SetCarryHandsState(blocked: false);
                 return;
             }
 
-            ApplyAtx24PowerCableRouteEvaluation(
-                EvaluateAtx24PowerCableRoute(binding));
+            ApplyEps12vPowerCableRouteEvaluation(
+                EvaluateEps12vPowerCableRoute(binding));
         }
 
-        private Atx24PowerCableRouteEvaluation EvaluateAtx24PowerCableRoute(
-            Atx24PowerCableAssemblyItemBinding binding)
+        private Eps12vPowerCableRouteEvaluation EvaluateEps12vPowerCableRoute(
+            Eps12vPowerCableAssemblyItemBinding binding)
         {
-            Atx24PowerCableRouteProjection routeProjection =
-                binding?.Route ?? atx24PowerCableRoute;
+            Eps12vPowerCableRouteProjection routeProjection =
+                binding?.Route ?? eps12vPowerCableRoute;
             if (routeProjection == null || binding?.Session == null)
             {
-                return new Atx24PowerCableRouteEvaluation(
-                    Atx24PowerCableRouteStatus.ContextMissing,
+                return new Eps12vPowerCableRouteEvaluation(
+                    Eps12vPowerCableRouteStatus.ContextMissing,
                     default,
                     false,
                     default);
@@ -288,13 +288,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
                     PowerSupplyBayState.PowerSupplyRetained,
+                session.AssemblyBuild.ProcessorSocketState ==
+                    ProcessorSocketState.ProcessorRetained,
                 orientation);
         }
 
-        private void ApplyAtx24PowerCableRouteEvaluation(
-            Atx24PowerCableRouteEvaluation evaluation)
+        private void ApplyEps12vPowerCableRouteEvaluation(
+            Eps12vPowerCableRouteEvaluation evaluation)
         {
-            CurrentAtx24PowerCableRouteStatus = evaluation.Status;
+            CurrentEps12vPowerCableRouteStatus = evaluation.Status;
             PlacementValid = evaluation.CanRoute;
             CurrentPlacementStatus = evaluation.CanRoute
                 ? PlacementStatus.Valid
@@ -307,29 +309,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.CanRoute);
         }
 
-        private bool ProcessAtx24PowerCableWorldInput()
+        private bool ProcessEps12vPowerCableWorldInput()
         {
             if (resolver == null ||
-                atx24PowerCableRoute == null ||
-                atx24PowerCableBinding == null ||
-                (!atx24PowerCableBinding.IsAuthorityLooseWorld &&
-                 !atx24PowerCableBinding.IsRouted))
+                eps12vPowerCableRoute == null ||
+                eps12vPowerCableBinding == null ||
+                (!eps12vPowerCableBinding.IsAuthorityLooseWorld &&
+                 !eps12vPowerCableBinding.IsRouted))
             {
                 return false;
             }
 
             PhysicalItemProjection cable =
-                atx24PowerCableBinding.PhysicalItem;
-            if (atx24PowerCableBinding.IsRouted)
+                eps12vPowerCableBinding.PhysicalItem;
+            if (eps12vPowerCableBinding.IsRouted)
             {
-                Atx24PowerCableRouteStatus routedFocus =
-                    atx24PowerCableRoute.EvaluateRoutedFocus(
+                Eps12vPowerCableRouteStatus routedFocus =
+                    eps12vPowerCableRoute.EvaluateRoutedFocus(
                         resolver.Origin,
                         transform,
                         cable,
                         obstructionMask,
                         motor != null && motor.IsPaused);
-                if (routedFocus != Atx24PowerCableRouteStatus.ValidRoute)
+                if (routedFocus != Eps12vPowerCableRouteStatus.ValidRoute)
                 {
                     return false;
                 }
@@ -357,14 +359,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return true;
         }
 
-        private OperationResult TryPickupAtx24PowerCable(
+        private OperationResult TryPickupEps12vPowerCable(
             PhysicalItemProjection item,
-            Atx24PowerCableAssemblyItemBinding binding)
+            Eps12vPowerCableAssemblyItemBinding binding)
         {
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-power-cable.paused")));
+                    Failure.FromCode("assembly-eps12v-cable.paused")));
             }
 
             bool wasRouted = binding.IsRouted;
@@ -385,7 +387,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (rollback.IsFailure)
                 {
                     Debug.LogError(
-                        $"ATX24_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                        $"EPS12V_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
                 }
 
                 binding.SyncProjectionToAuthority();
@@ -403,81 +405,83 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return physicalPickup;
         }
 
-        private string GetHeldAtx24PowerCablePrompt(
-            Atx24PowerCableAssemblyItemBinding binding,
+        private string GetHeldEps12vPowerCablePrompt(
+            Eps12vPowerCableAssemblyItemBinding binding,
             string primary,
             string drop,
             string rotate)
         {
-            if (!IsAtx24PowerCableRouteMode)
+            if (!IsEps12vPowerCableRouteMode)
             {
-                return $"{primary}: ATX24 rota önizlemesi • " +
-                       $"{drop}: güvenli bırak • PSU 18+10 → ANAKART 24";
+                return $"{primary}: EPS12V rota önizlemesi • " +
+                       $"{drop}: güvenli bırak • PSU CPU 8 → ANAKART CPU 8";
             }
 
-            string state = GetAtx24PowerCableStatusLabel(
-                CurrentAtx24PowerCableRouteStatus);
+            string state = GetEps12vPowerCableStatusLabel(
+                CurrentEps12vPowerCableRouteStatus);
             string orientation = (_placementRotationQuarterTurns % 2) == 0
                 ? "ANAHTAR HİZALI"
                 : "ANAHTAR TERS";
             return PlacementValid
-                ? $"[OK] ATX24 ROTA AÇIK • {orientation} • " +
+                ? $"[OK] EPS12V ROTA AÇIK • {orientation} • " +
                   $"{drop}: yönlendir • {rotate}: konektörü çevir • {primary}: çık"
                 : $"[X] {state} • {rotate}: konektörü çevir • {primary}: çık";
         }
 
-        private string GetFocusedAtx24PowerCablePrompt(
-            Atx24PowerCableAssemblyItemBinding binding)
+        private string GetFocusedEps12vPowerCablePrompt(
+            Eps12vPowerCableAssemblyItemBinding binding)
         {
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
             return binding.IsRouted
-                ? $"[ROUTE] PSU 18+10 → KANAL → ANAKART 24 • {interact}: çöz"
-                : $"{interact}: {binding.PhysicalItem.DisplayName} al • 3 KONEKTÖR";
+                ? $"[ROUTE] PSU CPU 8 → KANAL → ANAKART CPU 8 • {interact}: çöz"
+                : $"{interact}: {binding.PhysicalItem.DisplayName} al • 2 ANAHTARLI 8-PIN";
         }
 
-        private static string GetAtx24PowerCableStatusLabel(
-            Atx24PowerCableRouteStatus status)
+        private static string GetEps12vPowerCableStatusLabel(
+            Eps12vPowerCableRouteStatus status)
         {
             return status switch
             {
-                Atx24PowerCableRouteStatus.ValidRoute => "ROTA HAZIR",
-                Atx24PowerCableRouteStatus.HostMotherboardUnsecured =>
+                Eps12vPowerCableRouteStatus.ValidRoute => "ROTA HAZIR",
+                Eps12vPowerCableRouteStatus.HostMotherboardUnsecured =>
                     "ANAKART SABİT DEĞİL",
-                Atx24PowerCableRouteStatus.HostPowerSupplyUnretained =>
+                Eps12vPowerCableRouteStatus.HostPowerSupplyUnretained =>
                     "PSU 4 VİDA İLE SABİT DEĞİL",
-                Atx24PowerCableRouteStatus.OutOfRange => "YAKLAŞ",
-                Atx24PowerCableRouteStatus.NotFocused =>
-                    "24-PIN ANAKART GİRİŞİNİ HEDEFLE",
-                Atx24PowerCableRouteStatus.LineOfSightBlocked => "GÖRÜŞÜ AÇ",
-                Atx24PowerCableRouteStatus.OrientationInvalid =>
+                Eps12vPowerCableRouteStatus.HostProcessorUnretained =>
+                    "İŞLEMCİ MANDALI KİLİTLİ DEĞİL",
+                Eps12vPowerCableRouteStatus.OutOfRange => "YAKLAŞ",
+                Eps12vPowerCableRouteStatus.NotFocused =>
+                    "CPU 8-PIN ANAKART GİRİŞİNİ HEDEFLE",
+                Eps12vPowerCableRouteStatus.LineOfSightBlocked => "GÖRÜŞÜ AÇ",
+                Eps12vPowerCableRouteStatus.OrientationInvalid =>
                     "KONEKTÖR ANAHTARI TERS",
-                Atx24PowerCableRouteStatus.RouteObstructed =>
+                Eps12vPowerCableRouteStatus.RouteObstructed =>
                     "KABLO KANALI ENGELLİ",
-                Atx24PowerCableRouteStatus.QuerySaturated =>
+                Eps12vPowerCableRouteStatus.QuerySaturated =>
                     "ROTA GÜVENLE DOĞRULANAMADI",
-                Atx24PowerCableRouteStatus.Paused => "DURAKLATILDI",
-                Atx24PowerCableRouteStatus.AuthorityBlocked =>
+                Eps12vPowerCableRouteStatus.Paused => "DURAKLATILDI",
+                Eps12vPowerCableRouteStatus.AuthorityBlocked =>
                     "KABLO ELDE DEĞİL",
                 _ => "BAĞLANTI YOK"
             };
         }
 
-        private void ResetAtx24PowerCableState()
+        private void ResetEps12vPowerCableState()
         {
-            IsAtx24PowerCableRouteMode = false;
-            CurrentAtx24PowerCableRouteStatus =
-                Atx24PowerCableRouteStatus.ContextMissing;
-            atx24PowerCableRoute?.SetRouteModeActive(active: false);
-            atx24PowerCableRoute?.ResetFeedback();
+            IsEps12vPowerCableRouteMode = false;
+            CurrentEps12vPowerCableRouteStatus =
+                Eps12vPowerCableRouteStatus.ContextMissing;
+            eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+            eps12vPowerCableRoute?.ResetFeedback();
         }
 
-        private static Atx24PowerCableAssemblyItemBinding
-            GetAtx24PowerCableBinding(PhysicalItemProjection item)
+        private static Eps12vPowerCableAssemblyItemBinding
+            GetEps12vPowerCableBinding(PhysicalItemProjection item)
         {
             return item != null
-                ? item.GetComponent<Atx24PowerCableAssemblyItemBinding>()
+                ? item.GetComponent<Eps12vPowerCableAssemblyItemBinding>()
                 : null;
         }
     }

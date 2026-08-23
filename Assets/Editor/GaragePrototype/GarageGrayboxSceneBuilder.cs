@@ -152,7 +152,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Atx24PowerCableRouteProjection atx24PowerCableRoute,
                 Atx24PowerCableAssemblyItemBinding atx24PowerCableBinding,
                 PhysicalItemProjection atx24PowerCable,
-                Atx24PowerCableRuntimeGeometry atx24PowerCableGeometry)
+                Atx24PowerCableRuntimeGeometry atx24PowerCableGeometry,
+                Eps12vPowerCableRouteProjection eps12vPowerCableRoute,
+                Eps12vPowerCableAssemblyItemBinding eps12vPowerCableBinding,
+                PhysicalItemProjection eps12vPowerCable,
+                Eps12vPowerCableRuntimeGeometry eps12vPowerCableGeometry)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -182,6 +186,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Atx24PowerCableBinding = atx24PowerCableBinding;
                 Atx24PowerCable = atx24PowerCable;
                 Atx24PowerCableGeometry = atx24PowerCableGeometry;
+                Eps12vPowerCableRoute = eps12vPowerCableRoute;
+                Eps12vPowerCableBinding = eps12vPowerCableBinding;
+                Eps12vPowerCable = eps12vPowerCable;
+                Eps12vPowerCableGeometry = eps12vPowerCableGeometry;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -239,6 +247,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public PhysicalItemProjection Atx24PowerCable { get; }
 
             public Atx24PowerCableRuntimeGeometry Atx24PowerCableGeometry { get; }
+
+            public Eps12vPowerCableRouteProjection Eps12vPowerCableRoute { get; }
+
+            public Eps12vPowerCableAssemblyItemBinding Eps12vPowerCableBinding { get; }
+
+            public PhysicalItemProjection Eps12vPowerCable { get; }
+
+            public Eps12vPowerCableRuntimeGeometry Eps12vPowerCableGeometry { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -554,6 +570,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableGeometry,
                 GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue);
+            assemblyBuild.Eps12vPowerCableBinding.Configure(
+                stockFlow,
+                assemblyBuild.Eps12vPowerCable,
+                assemblyBuild.Eps12vPowerCableRoute,
+                assemblyBuild.Eps12vPowerCableGeometry,
+                GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -579,6 +601,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureAtx24PowerCableRoute(
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableBinding);
+            carry.ConfigureEps12vPowerCableRoute(
+                assemblyBuild.Eps12vPowerCableRoute,
+                assemblyBuild.Eps12vPowerCableBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -638,7 +663,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableBinding,
                 assemblyBuild.Atx24PowerCable,
-                assemblyBuild.Atx24PowerCableGeometry);
+                assemblyBuild.Atx24PowerCableGeometry,
+                assemblyBuild.Eps12vPowerCableRoute,
+                assemblyBuild.Eps12vPowerCableBinding,
+                assemblyBuild.Eps12vPowerCable,
+                assemblyBuild.Eps12vPowerCableGeometry);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -2072,6 +2101,20 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     labelPaper,
                     validMaterial,
                     interactableLayer);
+            Eps12vPowerCableBuildResult eps12vPowerCableBuild =
+                BuildEps12vPowerCableAssembly(
+                    slice,
+                    chassis,
+                    motherboardRoot.transform,
+                    motherboard,
+                    powerSupplyBuild.Item,
+                    powerSupplyBuild.Geometry,
+                    metal,
+                    accent,
+                    rubber,
+                    labelPaper,
+                    validMaterial,
+                    interactableLayer);
 
             return new AssemblyBuildResult(
                 seat,
@@ -2101,7 +2144,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 atx24PowerCableBuild.Route,
                 atx24PowerCableBuild.Binding,
                 atx24PowerCableBuild.Item,
-                atx24PowerCableBuild.Geometry);
+                atx24PowerCableBuild.Geometry,
+                eps12vPowerCableBuild.Route,
+                eps12vPowerCableBuild.Binding,
+                eps12vPowerCableBuild.Item,
+                eps12vPowerCableBuild.Geometry);
         }
 
         private static void BuildLighting(

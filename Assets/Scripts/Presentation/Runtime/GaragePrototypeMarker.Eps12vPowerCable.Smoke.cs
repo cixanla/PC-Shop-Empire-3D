@@ -10,64 +10,15 @@ namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker
     {
-        public const string Atx24PowerCableR30Marker =
-            Atx24PowerCableRuntimeGeometry.RuntimeMarker;
-
-        public const string Atx24PowerCableSmokeSuccessMarker =
-            "GARAGE_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok preflight=ok " +
-            "psu-retained-gate=ok motherboard-secured-gate=ok endpoint-key=ok " +
-            "route-waypoints=ok route-clearance=ok generic-bypass-blocked=ok " +
+        public const string Eps12vPowerCableSmokeSuccessMarker =
+            "GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok " +
+            "preflight=ok psu-retained-gate=ok motherboard-secured-gate=ok " +
+            "cpu-retained-gate=ok endpoint-key=ok route-waypoints=ok " +
+            "route-clearance=ok generic-bypass-blocked=ok " +
             "duplicate-route-blocked=ok dependent-detach-blocked=ok replay=ok " +
             "authority-isolated=ok identity=stable recovery=ok";
 
-        [SerializeField] private Atx24PowerCableRouteProjection atx24PowerCableRoute;
-        [SerializeField] private Atx24PowerCableAssemblyItemBinding atx24PowerCableBinding;
-        [SerializeField] private PhysicalItemProjection atx24PowerCable;
-        [SerializeField] private Atx24PowerCableRuntimeGeometry atx24PowerCableGeometry;
-
-        public Atx24PowerCableRouteProjection Atx24PowerCableRoute =>
-            atx24PowerCableRoute;
-
-        public Atx24PowerCableAssemblyItemBinding Atx24PowerCableBinding =>
-            atx24PowerCableBinding;
-
-        public PhysicalItemProjection Atx24PowerCable => atx24PowerCable;
-
-        public Atx24PowerCableRuntimeGeometry Atx24PowerCableGeometry =>
-            atx24PowerCableGeometry;
-
-        public bool HasAtx24PowerCableR30Runtime =>
-            atx24PowerCableGeometry != null &&
-            atx24PowerCableGeometry.IsCanonical &&
-            atx24PowerCableRoute != null &&
-            atx24PowerCableRoute.IsConfigured &&
-            atx24PowerCableBinding != null &&
-            atx24PowerCableBinding.Route == atx24PowerCableRoute &&
-            atx24PowerCableBinding.PhysicalItem == atx24PowerCable &&
-            atx24PowerCableBinding.Geometry == atx24PowerCableGeometry &&
-            atx24PowerCable != null &&
-            atx24PowerCableRoute.FocusCollider.isTrigger &&
-            atx24PowerCableRoute.FocusCollider.gameObject.layer ==
-                LayerMask.NameToLayer("Interactable") &&
-            atx24PowerCableRoute.PreviewLines.Length == 3 &&
-            CountCanonicalAtx24PowerCableProjections(
-                GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue) == 1 &&
-            FindObjectsByType<Atx24PowerCableRuntimeGeometry>(
-                FindObjectsSortMode.None).Length == 1;
-
-        private void ConfigureAtx24PowerCable(
-            Atx24PowerCableRouteProjection physicalRoute,
-            Atx24PowerCableAssemblyItemBinding physicalBinding,
-            PhysicalItemProjection physicalCable,
-            Atx24PowerCableRuntimeGeometry physicalGeometry)
-        {
-            atx24PowerCableRoute = physicalRoute;
-            atx24PowerCableBinding = physicalBinding;
-            atx24PowerCable = physicalCable;
-            atx24PowerCableGeometry = physicalGeometry;
-        }
-
-        private IEnumerator RunAtx24PowerCableSmoke()
+        private IEnumerator RunEps12vPowerCableSmoke()
         {
             yield return null;
             playerMotor?.SetPaused(false);
@@ -81,58 +32,67 @@ namespace PCShopEmpire3D.Presentation
                 playerCarry == null ||
                 transportCart == null ||
                 motherboardBinding == null ||
+                motherboardSeat == null ||
+                motherboardFastener == null ||
                 powerSupplyBinding == null ||
-                atx24PowerCableRoute == null ||
-                atx24PowerCableBinding == null ||
-                atx24PowerCable == null ||
-                atx24PowerCableGeometry == null)
+                processorSocket == null ||
+                processorBinding == null ||
+                processor == null ||
+                eps12vPowerCableRoute == null ||
+                eps12vPowerCableBinding == null ||
+                eps12vPowerCable == null ||
+                eps12vPowerCableGeometry == null)
             {
-                LogAtx24PowerCableSmokeFailure("smoke.context-missing");
+                LogEps12vPowerCableSmokeFailure("smoke.context-missing");
                 yield break;
             }
 
-            string stableItemId = atx24PowerCable.ItemIdValue;
-            Transform initialParent = atx24PowerCable.transform.parent;
+            int physicalIdentity = eps12vPowerCable.GetInstanceID();
+            string stableItemId = eps12vPowerCable.ItemIdValue;
+            Transform initialParent = eps12vPowerCable.transform.parent;
             Pose initialPose = new Pose(
-                atx24PowerCable.transform.position,
-                atx24PowerCable.transform.rotation);
-            Rigidbody body = atx24PowerCable.Body;
+                eps12vPowerCable.transform.position,
+                eps12vPowerCable.transform.rotation);
+            Rigidbody body = eps12vPowerCable.Body;
             bool preflight = session.Inventory.SerializedItemCount == 9 &&
-                             session.TryGetAtx24PowerCableItem(
+                             session.TryGetEps12vPowerCableItem(
                                  out InventoryItemRecord looseCable) &&
-                             looseCable.Id == session.Atx24PowerCableItemId &&
+                             looseCable.Id == session.Eps12vPowerCableItemId &&
                              looseCable.ProductId ==
-                                 session.Atx24PowerCableProductId &&
+                                 session.Eps12vPowerCableProductId &&
                              looseCable.ContainerId ==
                                  session.WorldFloorContainerId &&
-                             session.AssemblyBuild.Atx24PowerCableState ==
-                                 Atx24PowerCableState.Loose &&
-                             session.AssemblyBuild.Atx24PowerCableRevision == 0 &&
-                             atx24PowerCableRoute.Waypoints.Length == 3 &&
-                             atx24PowerCableGeometry.IsCanonical &&
-                             atx24PowerCableBinding
+                             session.AssemblyBuild.Eps12vPowerCableState ==
+                                 Eps12vPowerCableState.Loose &&
+                             session.AssemblyBuild.Eps12vPowerCableRevision == 0 &&
+                             eps12vPowerCableRoute.Waypoints.Length == 3 &&
+                             eps12vPowerCableGeometry.IsCanonical &&
+                             eps12vPowerCableBinding
                                  .ValidateProjectionInvariant().IsSuccess;
-            Atx24PowerCableTopology topology =
-                session.AssemblyBuild.Atx24PowerCableTopology;
+            Eps12vPowerCableTopology topology =
+                session.AssemblyBuild.Eps12vPowerCableTopology;
             bool connectors = topology != null &&
-                              topology.PsuPrimaryEndpoint.PinCount == 18 &&
-                              topology.PsuSenseEndpoint.PinCount == 10 &&
-                              topology.MotherboardEndpoint.PinCount == 24 &&
+                              topology.PsuEndpoint.PinCount == 8 &&
+                              topology.MotherboardEndpoint.PinCount == 8 &&
                               topology.OrderedWaypoints.Count == 3;
             if (!preflight || !connectors)
             {
-                LogAtx24PowerCableSmokeFailure("smoke.preflight-mismatch");
+                LogEps12vPowerCableSmokeFailure("smoke.preflight-mismatch");
                 yield break;
             }
 
             StableId<AssemblyOperationIdScope> motherboardAttach =
-                Atx24PowerCableSmokeOperationId("motherboard-attach");
+                Eps12vPowerCableSmokeOperationId("motherboard-attach");
             StableId<AssemblyOperationIdScope> motherboardSecure =
-                Atx24PowerCableSmokeOperationId("motherboard-secure");
+                Eps12vPowerCableSmokeOperationId("motherboard-secure");
             StableId<AssemblyOperationIdScope> powerSupplySeat =
-                Atx24PowerCableSmokeOperationId("power-supply-seat");
+                Eps12vPowerCableSmokeOperationId("power-supply-seat");
             StableId<AssemblyOperationIdScope> powerSupplyRetain =
-                Atx24PowerCableSmokeOperationId("power-supply-retain");
+                Eps12vPowerCableSmokeOperationId("power-supply-retain");
+            StableId<AssemblyOperationIdScope> processorSeat =
+                Eps12vPowerCableSmokeOperationId("processor-seat");
+            StableId<AssemblyOperationIdScope> processorRetain =
+                Eps12vPowerCableSmokeOperationId("processor-retain");
 
             OperationResult pickupMotherboard =
                 session.PickupLooseMotherboardToHands();
@@ -167,23 +127,57 @@ namespace PCShopEmpire3D.Presentation
                         session.AssemblyBuild.Revision)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         seatPowerSupply.Error);
-            motherboardBinding.PhysicalItem.SynchronizeStableWorldPose(
-                motherboardSeat.SnapPose);
+            OperationResult pickupProcessor =
+                session.PickupLooseProcessorToHands();
+            OperationResult<AssemblyOperationReceipt> seatProcessor =
+                pickupProcessor.IsSuccess
+                    ? session.SeatProcessor(
+                        processorSeat,
+                        motherboardAttach,
+                        motherboardSecure,
+                        session.AssemblyBuild.Revision)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        pickupProcessor.Error);
+            OperationResult<AssemblyOperationReceipt> retainProcessor =
+                seatProcessor.IsSuccess
+                    ? session.CloseProcessorRetention(
+                        processorRetain,
+                        processorSeat,
+                        session.AssemblyBuild.Revision)
+                    : OperationResult<AssemblyOperationReceipt>.Fail(
+                        seatProcessor.Error);
+
+            OperationResult syncMotherboard =
+                motherboardBinding.PhysicalItem.SynchronizeStableWorldPose(
+                    motherboardSeat.SnapPose);
             motherboardFastener.ApplyAuthoritativeState(
                 AssemblySeatState.SeatedSecured);
-            powerSupplyBinding.SyncProjectionToAuthority();
+            OperationResult syncPowerSupply =
+                powerSupplyBinding.SyncProjectionToAuthority();
+            OperationResult syncProcessorPose =
+                processor.SynchronizeStableWorldPose(processorSocket.SnapPose);
+            OperationResult syncProcessor =
+                processorBinding.SyncProjectionToAuthority();
             Physics.SyncTransforms();
             bool hostsReady = secureMotherboard.IsSuccess &&
                               retainPowerSupply.IsSuccess &&
+                              retainProcessor.IsSuccess &&
+                              syncMotherboard.IsSuccess &&
+                              syncPowerSupply.IsSuccess &&
+                              syncProcessorPose.IsSuccess &&
+                              syncProcessor.IsSuccess &&
                               motherboardBinding.IsSecured &&
                               powerSupplyBinding.IsRetained &&
+                              processorBinding.IsRetained &&
                               session.AssemblyBuild.MotherboardSeatState ==
                                   AssemblySeatState.SeatedSecured &&
                               session.AssemblyBuild.PowerSupplyBayState ==
-                                  PowerSupplyBayState.PowerSupplyRetained;
+                                  PowerSupplyBayState.PowerSupplyRetained &&
+                              session.AssemblyBuild.ProcessorSocketState ==
+                                  ProcessorSocketState.ProcessorRetained;
             if (!hostsReady)
             {
-                LogAtx24PowerCableSmokeFailure("smoke.host-setup-failed");
+                LogEps12vPowerCableSmokeFailure("smoke.host-setup-failed");
                 yield break;
             }
 
@@ -198,15 +192,19 @@ namespace PCShopEmpire3D.Presentation
                 session.CustomerConsultations.Revision;
             long offerActionsRevisionBefore =
                 session.CustomerOfferActions.Revision;
+            long atx24RevisionBefore =
+                session.AssemblyBuild.Atx24PowerCableRevision;
+            int atx24ReceiptCountBefore =
+                session.AssemblyBuild.Atx24PowerCableReceiptCount;
 
-            MovePlayerToAtx24PowerCableRoute();
-            OperationResult pickup = playerCarry.TryPickup(atx24PowerCable);
+            MovePlayerToEps12vPowerCableRoute();
+            OperationResult pickup = playerCarry.TryPickup(eps12vPowerCable);
             long assemblyRevisionBeforeBypass = session.AssemblyBuild.Revision;
             long inventoryRevisionBeforeBypass = session.Inventory.Revision;
             long cableRevisionBeforeBypass =
-                session.AssemblyBuild.Atx24PowerCableRevision;
+                session.AssemblyBuild.Eps12vPowerCableRevision;
             int cableReceiptsBeforeBypass =
-                session.AssemblyBuild.Atx24PowerCableReceiptCount;
+                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
             OperationResult genericPlacement = pickup.IsSuccess
                 ? playerCarry.TryConfirmPlacement()
                 : OperationResult.Fail(pickup.Error);
@@ -220,66 +218,86 @@ namespace PCShopEmpire3D.Presentation
                                             "cart.load-profile-unsupported" &&
                                         !transportCart.HasCargo &&
                                         playerCarry.HeldItem ==
-                                            atx24PowerCable &&
+                                            eps12vPowerCable &&
                                         session.AssemblyBuild.Revision ==
                                             assemblyRevisionBeforeBypass &&
                                         session.Inventory.Revision ==
                                             inventoryRevisionBeforeBypass &&
                                         session.AssemblyBuild
-                                                .Atx24PowerCableRevision ==
+                                                .Eps12vPowerCableRevision ==
                                             cableRevisionBeforeBypass &&
                                         session.AssemblyBuild
-                                                .Atx24PowerCableReceiptCount ==
+                                                .Eps12vPowerCableReceiptCount ==
                                             cableReceiptsBeforeBypass;
             OperationResult mode = genericBypassBlocked
-                ? playerCarry.TrySetAtx24PowerCableRouteMode(true)
+                ? playerCarry.TrySetEps12vPowerCableRouteMode(true)
                 : OperationResult.Fail(
                     Failure.FromCode("smoke.generic-bypass-mismatch"));
             long cableRevisionBeforeWrong =
-                session.AssemblyBuild.Atx24PowerCableRevision;
+                session.AssemblyBuild.Eps12vPowerCableRevision;
             long inventoryRevisionBeforeWrong = session.Inventory.Revision;
             OperationResult reverse = mode.IsSuccess
-                ? playerCarry.TryRotateAtx24PowerCableConnectorPreview()
+                ? playerCarry.TryRotateEps12vPowerCableConnectorPreview()
                 : OperationResult.Fail(mode.Error);
             OperationResult wrongConfirm = reverse.IsSuccess
-                ? playerCarry.TryConfirmAtx24PowerCableRoute()
+                ? playerCarry.TryConfirmEps12vPowerCableRoute()
                 : OperationResult.Fail(reverse.Error);
             bool keyedOrientationGate = wrongConfirm.IsFailure &&
                                         playerCarry
-                                                .CurrentAtx24PowerCableRouteStatus ==
-                                            Atx24PowerCableRouteStatus
+                                                .CurrentEps12vPowerCableRouteStatus ==
+                                            Eps12vPowerCableRouteStatus
                                                 .OrientationInvalid &&
                                         session.AssemblyBuild
-                                                .Atx24PowerCableRevision ==
+                                                .Eps12vPowerCableRevision ==
                                             cableRevisionBeforeWrong &&
                                         session.Inventory.Revision ==
                                             inventoryRevisionBeforeWrong &&
-                                        playerCarry.HeldItem == atx24PowerCable;
+                                        playerCarry.HeldItem ==
+                                            eps12vPowerCable;
 
             OperationResult restoreKey = playerCarry
-                .TryRotateAtx24PowerCableConnectorPreview();
-            OperationResult routeResult = restoreKey.IsSuccess
-                ? playerCarry.TryConfirmAtx24PowerCableRoute()
-                : OperationResult.Fail(restoreKey.Error);
+                .TryRotateEps12vPowerCableConnectorPreview();
+            bool routeClearance = restoreKey.IsSuccess &&
+                                  playerCarry.PlacementValid &&
+                                  playerCarry
+                                          .CurrentEps12vPowerCableRouteStatus ==
+                                      Eps12vPowerCableRouteStatus.ValidRoute;
+            OperationResult routeResult = routeClearance
+                ? playerCarry.TryConfirmEps12vPowerCableRoute()
+                : OperationResult.Fail(
+                    Failure.FromCode("smoke.route-clearance-mismatch"));
             StableId<AssemblyOperationIdScope> routeOperationId =
-                Atx24PowerCablePrototypeOperationId("route", 1);
+                Eps12vPowerCablePrototypeOperationId("route", 1);
             bool hasRouteReceipt = session.AssemblyBuild
-                .TryGetAtx24PowerCableReceipt(
+                .TryGetEps12vPowerCableReceipt(
                     routeOperationId,
-                    out Atx24PowerCableOperationReceipt routeReceipt);
+                    out Eps12vPowerCableOperationReceipt routeReceipt);
+            bool hostLineage = hasRouteReceipt &&
+                               routeReceipt
+                                       .SourceMotherboardSecureOperationId ==
+                                   motherboardSecure &&
+                               routeReceipt
+                                       .SourcePowerSupplyRetentionOperationId ==
+                                   powerSupplyRetain &&
+                               routeReceipt
+                                       .SourceProcessorRetentionOperationId ==
+                                   processorRetain;
             bool routed = routeResult.IsSuccess &&
                           !playerCarry.IsCarrying &&
-                          atx24PowerCableBinding.IsRouted &&
-                          atx24PowerCableGeometry.IsRouted &&
+                          eps12vPowerCableBinding.IsRouted &&
+                          eps12vPowerCableGeometry.IsRouted &&
                           hasRouteReceipt &&
                           routeReceipt.RouteFingerprint == topology.Fingerprint &&
-                          session.TryGetAtx24PowerCableItem(
+                          session.TryGetEps12vPowerCableItem(
                               out InventoryItemRecord routedCable) &&
                           routedCable.ContainerId ==
-                              session.Atx24PowerCableRouteContainerId;
-            if (!keyedOrientationGate || !routed)
+                              session.Eps12vPowerCableRouteContainerId;
+            if (!keyedOrientationGate ||
+                !routeClearance ||
+                !hostLineage ||
+                !routed)
             {
-                LogAtx24PowerCableSmokeFailure(
+                LogEps12vPowerCableSmokeFailure(
                     routeResult.IsFailure
                         ? routeResult.Error.Code
                         : "smoke.route-mismatch");
@@ -288,22 +306,34 @@ namespace PCShopEmpire3D.Presentation
 
             long assemblyRevisionBeforeGates = session.AssemblyBuild.Revision;
             long inventoryRevisionBeforeGates = session.Inventory.Revision;
-            OperationResult<Atx24PowerCableOperationReceipt> duplicateRoute =
-                session.RouteAtx24PowerCable(
-                    Atx24PowerCableSmokeOperationId("duplicate-route"),
+            long cableRevisionBeforeGates =
+                session.AssemblyBuild.Eps12vPowerCableRevision;
+            int cableReceiptsBeforeGates =
+                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
+            OperationResult<Eps12vPowerCableOperationReceipt> duplicateRoute =
+                session.RouteEps12vPowerCable(
+                    Eps12vPowerCableSmokeOperationId("duplicate-route"),
                     PowerCableKeyOrientation.Keyed,
-                    session.AssemblyBuild.Atx24PowerCableRevision);
+                    session.AssemblyBuild.Eps12vPowerCableRevision);
             OperationResult<AssemblyOperationReceipt> blockedUnretain =
                 session.UnretainPowerSupply(
-                    Atx24PowerCableSmokeOperationId("blocked-psu-unretain"),
+                    Eps12vPowerCableSmokeOperationId("blocked-psu-unretain"),
                     powerSupplySeat,
                     powerSupplyRetain,
                     session.AssemblyBuild.Revision);
             OperationResult<AssemblyOperationReceipt> blockedUnsecure =
                 session.UnsecureMotherboardFastener(
-                    Atx24PowerCableSmokeOperationId("blocked-board-unsecure"),
+                    Eps12vPowerCableSmokeOperationId(
+                        "blocked-board-unsecure"),
                     motherboardAttach,
                     motherboardSecure,
+                    session.AssemblyBuild.Revision);
+            OperationResult<AssemblyOperationReceipt> blockedProcessorOpen =
+                session.OpenProcessorRetention(
+                    Eps12vPowerCableSmokeOperationId(
+                        "blocked-processor-open"),
+                    processorSeat,
+                    processorRetain,
                     session.AssemblyBuild.Revision);
             bool dependentGates = duplicateRoute.Error ==
                                       AssemblyFailures.PowerCableAlreadyRouted &&
@@ -313,68 +343,82 @@ namespace PCShopEmpire3D.Presentation
                                   blockedUnsecure.Error ==
                                       AssemblyFailures
                                           .PowerCableDependentComponentLocked &&
+                                  blockedProcessorOpen.Error ==
+                                      AssemblyFailures
+                                          .PowerCableDependentComponentLocked &&
                                   session.AssemblyBuild.Revision ==
                                       assemblyRevisionBeforeGates &&
                                   session.Inventory.Revision ==
-                                      inventoryRevisionBeforeGates;
+                                      inventoryRevisionBeforeGates &&
+                                  session.AssemblyBuild
+                                      .Eps12vPowerCableRevision ==
+                                      cableRevisionBeforeGates &&
+                                  session.AssemblyBuild
+                                      .Eps12vPowerCableReceiptCount ==
+                                      cableReceiptsBeforeGates;
 
-            OperationResult<Atx24PowerCableOperationReceipt> routeReplay =
-                session.RouteAtx24PowerCable(
+            OperationResult<Eps12vPowerCableOperationReceipt> routeReplay =
+                session.RouteEps12vPowerCable(
                     routeOperationId,
                     PowerCableKeyOrientation.Keyed,
                     routeReceipt.ExpectedCableRevision);
             long cableRevisionBeforeUnroute =
-                session.AssemblyBuild.Atx24PowerCableRevision;
-            OperationResult unroutePickup = playerCarry.TryPickup(atx24PowerCable);
+                session.AssemblyBuild.Eps12vPowerCableRevision;
+            OperationResult unroutePickup =
+                playerCarry.TryPickup(eps12vPowerCable);
             StableId<AssemblyOperationIdScope> unrouteOperationId =
-                Atx24PowerCablePrototypeOperationId("unroute", 2);
+                Eps12vPowerCablePrototypeOperationId("unroute", 2);
             bool hasUnrouteReceipt = session.AssemblyBuild
-                .TryGetAtx24PowerCableReceipt(
+                .TryGetEps12vPowerCableReceipt(
                     unrouteOperationId,
-                    out Atx24PowerCableOperationReceipt unrouteReceipt);
+                    out Eps12vPowerCableOperationReceipt unrouteReceipt);
             bool unrouted = unroutePickup.IsSuccess &&
-                            playerCarry.HeldItem == atx24PowerCable &&
-                            !atx24PowerCableBinding.IsRouted &&
-                            !atx24PowerCableGeometry.IsRouted &&
+                            playerCarry.HeldItem == eps12vPowerCable &&
+                            !eps12vPowerCableBinding.IsRouted &&
+                            !eps12vPowerCableGeometry.IsRouted &&
                             hasUnrouteReceipt &&
                             unrouteReceipt.SourceRouteOperationId ==
                                 routeOperationId &&
-                            session.AssemblyBuild.Atx24PowerCableRevision ==
+                            session.AssemblyBuild.Eps12vPowerCableRevision ==
                                 cableRevisionBeforeUnroute + 1;
-            OperationResult<Atx24PowerCableOperationReceipt> unrouteReplay =
+            OperationResult<Eps12vPowerCableOperationReceipt> unrouteReplay =
                 hasUnrouteReceipt
-                    ? session.UnrouteAtx24PowerCable(
+                    ? session.UnrouteEps12vPowerCable(
                         unrouteOperationId,
                         routeOperationId,
                         unrouteReceipt.ExpectedCableRevision)
-                    : OperationResult<Atx24PowerCableOperationReceipt>.Fail(
+                    : OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
                         Failure.FromCode("smoke.receipt-missing"));
             bool replay = routeReplay.IsSuccess &&
                           unrouteReplay.IsSuccess &&
                           ReferenceEquals(routeReplay.Value, routeReceipt) &&
                           ReferenceEquals(unrouteReplay.Value, unrouteReceipt) &&
                           session.AssemblyBuild
-                              .ValidateAtx24PowerCableReceiptHistory().IsSuccess;
+                              .ValidateEps12vPowerCableReceiptHistory().IsSuccess;
 
             OperationResult recovery = unrouted
                 ? playerCarry.TryRecoverHeldItem()
                 : OperationResult.Fail(
                     Failure.FromCode("smoke.unroute-mismatch"));
-            bool identity = stableItemId == atx24PowerCable.ItemIdValue &&
+            bool identity = physicalIdentity ==
+                                eps12vPowerCable.GetInstanceID() &&
+                            stableItemId == eps12vPowerCable.ItemIdValue &&
                             stableItemId ==
-                                atx24PowerCableBinding.InventoryItemIdValue &&
-                            CountCanonicalAtx24PowerCableProjections(stableItemId) == 1;
+                                eps12vPowerCableBinding.InventoryItemIdValue &&
+                            CountCanonicalEps12vPowerCableProjections(
+                                stableItemId) == 1;
             bool recovered = recovery.IsSuccess &&
                              !playerCarry.IsCarrying &&
-                             atx24PowerCable.transform.parent == initialParent &&
+                             eps12vPowerCable.transform.parent ==
+                                 initialParent &&
                              ApproximatelySamePose(
                                  new Pose(
-                                     atx24PowerCable.transform.position,
-                                     atx24PowerCable.transform.rotation),
+                                     eps12vPowerCable.transform.position,
+                                     eps12vPowerCable.transform.rotation),
                                  initialPose) &&
-                             atx24PowerCable.Body == body &&
-                             atx24PowerCableBinding.IsAuthorityLooseWorld &&
-                             atx24PowerCableBinding
+                             eps12vPowerCable.Body == body &&
+                             eps12vPowerCableBinding.IsAuthorityLooseWorld &&
+                             eps12vPowerCableBinding
                                  .ValidateProjectionInvariant().IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
             bool authorityIsolated =
@@ -388,27 +432,33 @@ namespace PCShopEmpire3D.Presentation
                 session.CustomerConsultations.Revision ==
                     consultationsRevisionBefore &&
                 session.CustomerOfferActions.Revision ==
-                    offerActionsRevisionBefore;
+                    offerActionsRevisionBefore &&
+                session.AssemblyBuild.Atx24PowerCableRevision ==
+                    atx24RevisionBefore &&
+                session.AssemblyBuild.Atx24PowerCableReceiptCount ==
+                    atx24ReceiptCountBefore;
 
             if (!genericBypassBlocked ||
                 !dependentGates ||
                 !replay ||
+                !hostLineage ||
                 !authorityIsolated ||
                 !identity ||
                 !recovered)
             {
-                LogAtx24PowerCableSmokeFailure(
+                LogEps12vPowerCableSmokeFailure(
                     "smoke.final-invariant-mismatch");
                 yield break;
             }
 
-            Debug.Log(Atx24PowerCableSmokeSuccessMarker);
+            Debug.Log(Eps12vPowerCableSmokeSuccessMarker);
             yield return new WaitForEndOfFrame();
         }
 
-        private void MovePlayerToAtx24PowerCableRoute()
+        private void MovePlayerToEps12vPowerCableRoute()
         {
-            Vector3 target = atx24PowerCableRoute.FocusCollider.bounds.center;
+            Vector3 target =
+                eps12vPowerCableRoute.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.72f, 0.05f, 3.25f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;
@@ -416,7 +466,8 @@ namespace PCShopEmpire3D.Presentation
                 playerPosition,
                 Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
 
-            Camera playerCamera = playerMotor.GetComponentInChildren<Camera>(true);
+            Camera playerCamera =
+                playerMotor.GetComponentInChildren<Camera>(true);
             if (playerCamera != null)
             {
                 playerCamera.transform.rotation = Quaternion.LookRotation(
@@ -427,45 +478,28 @@ namespace PCShopEmpire3D.Presentation
             Physics.SyncTransforms();
         }
 
-        private static int CountCanonicalAtx24PowerCableProjections(
-            string canonicalItemId)
-        {
-            int count = 0;
-            foreach (PhysicalItemProjection item in
-                     FindObjectsByType<PhysicalItemProjection>(
-                         FindObjectsInactive.Include,
-                         FindObjectsSortMode.None))
-            {
-                if (item != null && item.ItemIdValue == canonicalItemId)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
         private static StableId<AssemblyOperationIdScope>
-            Atx24PowerCableSmokeOperationId(string suffix)
+            Eps12vPowerCableSmokeOperationId(string suffix)
         {
             return StableId<AssemblyOperationIdScope>.Parse(
-                $"assembly.operation.runtime-smoke.atx24-power-cable-{suffix}");
+                $"assembly.operation.runtime-smoke.eps12v-power-cable-{suffix}");
         }
 
         private static StableId<AssemblyOperationIdScope>
-            Atx24PowerCablePrototypeOperationId(
+            Eps12vPowerCablePrototypeOperationId(
                 string action,
                 long resultingRevision)
         {
             return StableId<AssemblyOperationIdScope>.Parse(
-                $"assembly.operation.prototype-001.atx24-power-cable-{action}." +
+                $"assembly.operation.prototype-001.eps12v-power-cable-{action}." +
                 $"r{resultingRevision:000000}");
         }
 
-        private static void LogAtx24PowerCableSmokeFailure(string code)
+        private static void LogEps12vPowerCableSmokeFailure(string code)
         {
             Debug.LogError(
-                $"GARAGE_POWER_CABLE_RUNTIME_SMOKE cable-flow=failed code={code}");
+                "GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE " +
+                $"cable-flow=failed code={code}");
         }
     }
 }

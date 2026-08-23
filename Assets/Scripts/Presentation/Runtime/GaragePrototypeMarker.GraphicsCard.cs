@@ -75,7 +75,7 @@ namespace PCShopEmpire3D.Presentation
                              graphicsCardBinding.HasCoolerClearance &&
                              CountCanonicalGraphicsCardProjections(
                                  session.GraphicsCardAssemblyItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 8 &&
+                             session.Inventory.SerializedItemCount == 9 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -503,7 +503,7 @@ namespace PCShopEmpire3D.Presentation
                                  session.WorldFloorContainerId &&
                              CountCanonicalGraphicsCardProjections(
                                  session.GraphicsCardAssemblyItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 8 &&
+                             session.Inventory.SerializedItemCount == 9 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
