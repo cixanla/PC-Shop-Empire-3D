@@ -2021,7 +2021,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 accent,
                 rubber,
                 labelPaper,
-                interactableLayer);
+                interactableLayer,
+                new[]
+                {
+                    chassisBack.GetComponent<Collider>(),
+                    chassisLeft.GetComponent<Collider>(),
+                    chassisRight.GetComponent<Collider>(),
+                    tray.GetComponent<Collider>()
+                });
 
             return new AssemblyBuildResult(
                 seat,

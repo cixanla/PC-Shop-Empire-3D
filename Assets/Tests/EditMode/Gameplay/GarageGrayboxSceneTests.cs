@@ -723,6 +723,23 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.EqualTo("PowerSupplyFilteredFloorIntake"));
                 Assert.That(bay.SupportCollider.gameObject.layer,
                     Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(bay.ChassisClearanceBlockers.Length, Is.EqualTo(4));
+                Assert.That(
+                    bay.ChassisClearanceBlockers.Select(collider => collider.name),
+                    Is.EqualTo(new[]
+                    {
+                        "ChassisBack",
+                        "ChassisLeftRail",
+                        "ChassisRightRail",
+                        "MotherboardTray"
+                    }));
+                Assert.That(
+                    bay.ChassisClearanceBlockers.Distinct().Count(),
+                    Is.EqualTo(4));
+                Assert.That(
+                    bay.ChassisClearanceBlockers,
+                    Has.None.SameAs(bay.SupportCollider));
+                Assert.That(bay.CableClearanceBlockers, Is.Empty);
                 Assert.That(bay.FastenerPivots.Length, Is.EqualTo(4));
                 Assert.That(bay.FastenerPivots.Distinct().Count(), Is.EqualTo(4));
                 Assert.That(

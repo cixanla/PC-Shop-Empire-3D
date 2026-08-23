@@ -35996,7 +35996,11 @@ MonoBehaviour:
   topRightFastenerPivot: {fileID: 1413237820}
   bottomLeftFastenerPivot: {fileID: 264705543}
   bottomRightFastenerPivot: {fileID: 1182383831}
-  chassisClearanceBlockers: []
+  chassisClearanceBlockers:
+  - {fileID: 172179141}
+  - {fileID: 1883566900}
+  - {fileID: 178321847}
+  - {fileID: 1521008491}
   cableClearanceBlockers: []
   maximumRange: 2
   minimumFocusDot: 0.94

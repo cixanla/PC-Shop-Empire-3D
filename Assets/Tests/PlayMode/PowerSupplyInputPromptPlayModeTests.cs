@@ -287,31 +287,39 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.ReceiptCount,
                 Is.EqualTo(blockedReceiptCount));
 
-            Pose seatPose = marker.PowerSupplyBay.ResolveSeatPose(0).Value;
-            var blockerObject = new GameObject("PowerSupplyChassisClearanceBlocker");
-            blockerObject.transform.SetParent(
-                marker.PowerSupplyBay.AssemblyRoot,
-                true);
-            blockerObject.transform.SetPositionAndRotation(
-                seatPose.position +
-                seatPose.rotation * new Vector3(0.055f, 0.022f, 0f),
-                seatPose.rotation);
-            BoxCollider blocker = blockerObject.AddComponent<BoxCollider>();
-            blocker.size = new Vector3(0.026f, 0.026f, 0.026f);
-            marker.PowerSupplyBay.ConfigureClearanceBlockers(
-                new Collider[] { blocker },
-                null);
-            Physics.SyncTransforms();
-
             MovePlayerToFocus(marker, marker.PowerSupplyBay.FocusCollider);
             marker.PlayerCarry.ProcessInputFrame();
             PressMouse(marker, mouse);
             Assert.That(marker.PlayerCarry.IsPowerSupplySeatMode, Is.True);
             Assert.That(marker.PlayerCarry.CurrentPowerSupplyBayStatus,
+                Is.EqualTo(PowerSupplyBayStatus.ValidSeat),
+                marker.PlayerCarry.LastFailureCode);
+            ReleaseMouse(marker, mouse);
+
+            Collider[] authoredBlockers =
+                marker.PowerSupplyBay.ChassisClearanceBlockers;
+            Assert.That(authoredBlockers.Length, Is.EqualTo(4));
+            BoxCollider blocker = authoredBlockers[0] as BoxCollider;
+            Assert.That(blocker, Is.Not.Null);
+            Transform blockerTransform = blocker.transform;
+            Vector3 originalBlockerPosition = blockerTransform.position;
+            Quaternion originalBlockerRotation = blockerTransform.rotation;
+            Vector3 originalBlockerCenter = blocker.center;
+            Vector3 originalBlockerSize = blocker.size;
+            Pose seatPose = marker.PowerSupplyBay.ResolveSeatPose(0).Value;
+            blockerTransform.SetPositionAndRotation(
+                seatPose.position +
+                seatPose.rotation * new Vector3(0.055f, 0.022f, 0f),
+                seatPose.rotation);
+            blocker.center = Vector3.zero;
+            blocker.size = new Vector3(0.026f, 0.026f, 0.026f);
+            Physics.SyncTransforms();
+
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentPowerSupplyBayStatus,
                 Is.EqualTo(PowerSupplyBayStatus.ChassisClearanceBlocked),
                 marker.PlayerCarry.LastFailureCode);
             Assert.That(marker.PlayerCarry.PlacementValid, Is.False);
-            ReleaseMouse(marker, mouse);
 
             PressKeyboard(marker, keyboard, Key.G);
             Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(powerSupply));
@@ -328,10 +336,16 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerSupply.GetInstanceID(), Is.EqualTo(physicalIdentity));
             ReleaseKeyboard(marker, keyboard);
 
-            marker.PowerSupplyBay.ConfigureClearanceBlockers(null, null);
-            blocker.enabled = false;
-            Object.Destroy(blockerObject);
+            blockerTransform.SetPositionAndRotation(
+                originalBlockerPosition,
+                originalBlockerRotation);
+            blocker.center = originalBlockerCenter;
+            blocker.size = originalBlockerSize;
             Physics.SyncTransforms();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentPowerSupplyBayStatus,
+                Is.EqualTo(PowerSupplyBayStatus.ValidSeat),
+                marker.PlayerCarry.LastFailureCode);
             OperationResult recovery = marker.PlayerCarry.TryRecoverHeldItem();
             AssertRecoveredPowerSupply(
                 marker,

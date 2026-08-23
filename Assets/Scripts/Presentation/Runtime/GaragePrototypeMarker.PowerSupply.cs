@@ -94,7 +94,18 @@ namespace PCShopEmpire3D.Presentation
                              topology.ReverseRetentionOrder[0] ==
                                  session.PowerSupplyBottomLeftFastenerId &&
                              powerSupplyBay.FastenerPivots.Length == 4;
-            bool clearance = powerSupplyBay.SupportCollider != null &&
+            Collider[] chassisBlockers = powerSupplyBay.ChassisClearanceBlockers;
+            bool clearance = chassisBlockers.Length == 4 &&
+                             chassisBlockers[0] != null &&
+                             chassisBlockers[0].name == "ChassisBack" &&
+                             chassisBlockers[1] != null &&
+                             chassisBlockers[1].name == "ChassisLeftRail" &&
+                             chassisBlockers[2] != null &&
+                             chassisBlockers[2].name == "ChassisRightRail" &&
+                             chassisBlockers[3] != null &&
+                             chassisBlockers[3].name == "MotherboardTray" &&
+                             powerSupplyBay.CableClearanceBlockers.Length == 0 &&
+                             powerSupplyBay.SupportCollider != null &&
                              powerSupplyBay.SupportCollider.enabled &&
                              powerSupplyGeometry.FilteredFloorIntake != null &&
                              powerSupplyGeometry.IsCanonical;

@@ -37,7 +37,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material accent,
             Material rubber,
             Material labelPaper,
-            int interactableLayer)
+            int interactableLayer,
+            Collider[] chassisClearanceBlockers)
         {
             Transform bayRoot = new GameObject("PowerSupplyBottomRearBay").transform;
             bayRoot.SetParent(chassisRoot, false);
@@ -145,7 +146,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 PowerSupplyFormFactor.AtxPs2,
                 2f,
                 0.94f);
-            bay.ConfigureClearanceBlockers(null, null);
+            bay.ConfigureClearanceBlockers(chassisClearanceBlockers, null);
             SetLayerRecursively(bayRoot.gameObject, interactableLayer);
             floorFilter.layer = LayerMask.NameToLayer("Ignore Raycast");
 
