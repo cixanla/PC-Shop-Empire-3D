@@ -337,7 +337,8 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 - Feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`; tek canonical serialized EPS12V/CPU cable, iki typed/keyed 8-pin endpoint, üç ordered waypoint, capacity-one `CpuPowerCableRoute` ve dokuz-container all-or-none claim ekledi.
 - Retained PSU + secured motherboard + retained CPU lineage, exact Hands↔route custody, immutable route/unroute receipts, immediate/delayed replay, receipt-history fold, ATX24 isolation ve dependent-detach/generic-bypass no-mutation testlidir.
 - GarageGraybox r31 tek kinematic root, iki connector/latch/key, loose braided presentation ve üç-waypoint authored route taşır. Gerçek keyboard/mouse ve gamepad akışı aynı Unity component instance/stable ItemId'yi pickup→route→unroute→recovery boyunca korur.
-- Final EditMode `610/610`, PlayMode `51/51`, Universal macOS `329206153` bayt ve aktif Apple M1/Metal 1280×720 exact EPS12V smoke başarılıdır. Feature Guard `32642211422` geçti.
+- Final EditMode `610/610`, PlayMode `51/51`, Universal macOS `329206153` bayt ve aktif Apple M1/Metal 1280×720 exact EPS12V smoke başarılıdır. Feature Guard `32642211422`; source/docs `cff75f8`, tree `aa5acd7`, Guard `32642638437` geçti.
+- Yerel final staging iki tam 832/832 payload, 826/826 exact Git source ve 5/5 evidence readback'ini geçti; payload 15.757.786 bayt, manifest `afa89feb…6a73`, bütün fark sayaçları `0`dır.
 - Scene marker `garage-eps12v-cpu-power-cable-routing-r31-v1`; exact native marker `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE ... identity=stable recovery=ok` sözleşmesidir.
 - Fiziksel USB bağlı değildir; external milestone/readback veya Issue completion iddiası yoktur. Electrical power-on, completed benchmark, diğer kablo aileleri, Save/Guardian, free-rope physics, final art ve Windows/Steam ayrı bounded kapılardır.
 
@@ -355,4 +356,4 @@ Snapshotlara `.git`, Unity cache, build, geçici log, token, parola veya credent
 
 Ana görev bir sonraki turda şu anlamla devam etmelidir:
 
-> Issue #62 feature `15d83ae`, tree `c14524f`, Guard `32642211422`, EditMode 610/610, PlayMode 51/51, Universal Mac `329206153` bayt ve aktif Apple M1/Metal exact r31 EPS12V smoke ile teknik olarak tamamlandı. Fiziksel USB milestone/readback olmadığı için Issue `OPEN/In Progress` kalır. Source/docs + yerel staging'i tamamla; USB bağlanınca doğru volume üzerinde atomik tam readback sonrası Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.
+> Issue #62 feature `15d83ae`, source/docs `cff75f8`, Guard `32642211422` + `32642638437`, EditMode 610/610, PlayMode 51/51, Universal Mac `329206153` bayt, aktif Apple M1/Metal exact r31 EPS12V smoke ve iki tam 832/832 yerel staging readback'iyle teknik olarak tamamlandı. Fiziksel USB milestone/readback olmadığı için Issue `OPEN/In Progress` kalır. USB bağlanınca doğrulanmış staging'i doğru volume'a atomik kopyala, tam readback sonrası Issue/Project'i kapat. Electrical power-on ve completed benchmark ayrı kalmalıdır.

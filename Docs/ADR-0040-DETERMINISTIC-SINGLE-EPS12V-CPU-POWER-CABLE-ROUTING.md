@@ -33,4 +33,6 @@ GarageGraybox now contains a second, separately authoritative power-cable family
 - Active Apple Silicon/Metal workstation (Apple M1), 1280×720: canonical r31 readiness and exact `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE` passed.
 - Feature commit: `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`; tree `c14524fecee561eff3a144bd15e67be5a48f8335`.
 - Feature Repository Guard: [32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422), success.
-- The physical USB source-plus-evidence milestone and full readback are intentionally still pending; Issue #62 remains open/In Progress until that external gate is completed.
+- Source/docs commit `cff75f8876f893888ca3a98fe5f149dab0f74a1b`, tree `aa5acd799a8190d871aa0c5493fd7484a83b4c4f`; [Repository Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437), success.
+- Verified local staging passed two full 832/832 payload, 826/826 exact Git-source and 5/5 evidence readbacks with manifest `afa89feb…6a73` and all mismatch counters zero.
+- The physical USB source-plus-evidence milestone and USB readback are intentionally still pending; Issue #62 remains open/In Progress until that external gate is completed.

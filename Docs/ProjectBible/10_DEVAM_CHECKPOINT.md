@@ -12,8 +12,9 @@
 - GarageGraybox `garage-eps12v-cpu-power-cable-routing-r31-v1`; tek kinematic root, iki visible connector/latch/key, loose braided presentation ve üç-waypoint preview/committed route taşır. Aynı Unity component instance ve stable ItemId pickup→route→unroute→recovery boyunca korunur.
 - Gerçek keyboard/mouse + Input System gamepad route/orientation/commit/unroute, dynamic compact prompt, pause/co-edge drain ve mode-kapalı sıfır-query sözleşmeleri testlidir.
 - Final EditMode `610/610`, PlayMode `51/51`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329206153` bayt; aktif Apple M1/Metal 1280×720 canonical readiness ve exact `GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
-- [Feature Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Artifact hash/boyutları `Docs/Evidence/DETERMINISTIC-SINGLE-EPS12V-CPU-POWER-CABLE-ROUTING-CHECKPOINT-2026-08-23.md` içindedir.
-- Fiziksel USB bağlı değildir. Final external milestone, USB manifest/readback ve Issue completion iddiası yoktur; Issue #62 `OPEN`, Roadmap `In Progress` kalır. Electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, diğer kablo aileleri, final art ve Windows/Steam kapsam dışıdır.
+- [Feature Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Source/docs `cff75f8876f893888ca3a98fe5f149dab0f74a1b`, tree `aa5acd799a8190d871aa0c5493fd7484a83b4c4f` ve [Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437) ile private `main`e ulaştı.
+- Yerel final staging `2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING` iki tam 832/832 hash+boyut+yol, 826/826 exact Git source ve 5/5 evidence readback'ini geçti. Payload `15.757.786` bayt, toplam dosya `834`, manifest `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73`; bütün mismatch/forbidden/AppleDouble sayaçları `0`dır.
+- Fiziksel USB bağlı değildir. Final external milestone, USB copy/readback ve Issue completion iddiası yoktur; Issue #62 `OPEN`, Roadmap `In Progress` kalır. Electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark, diğer kablo aileleri, final art ve Windows/Steam kapsam dışıdır.
 
 ## Önceki checkpoint — Issue #61 / Epic #10
 

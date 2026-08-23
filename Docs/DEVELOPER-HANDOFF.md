@@ -21,8 +21,9 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Oyuncu gerçek keyboard/mouse veya gamepad ile dedicated route mode, iki keyed orientation, görünür authored route, exact unroute ve recovery akışını oynar. Generic placement/stack/cart/raw-transfer bypass'ları kapalıdır; routed cable PSU/motherboard/CPU dependent removal işlemlerini engeller.
 - Tek physical root, iki connector/latch/key, loose braided presentation ve üç-waypoint jointsiz LineRenderer route aynı Unity component instance/stable ItemId'yi pickup, route, unroute ve recovery boyunca korur.
 - Final EditMode `610/610`, PlayMode `51/51`; Universal macOS build `329206153` bayt ve aktif Apple M1/Metal 1280×720 exact r31 EPS12V smoke başarılıdır.
-- Feature private `main`e push edilmiştir; [Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Ayrıntı: `Docs/ADR-0040-DETERMINISTIC-SINGLE-EPS12V-CPU-POWER-CABLE-ROUTING.md` ve tarihli Evidence belgesi.
-- Fiziksel USB bağlı değildir; final external milestone/readback veya Issue completion iddiası yoktur. Issue #62 `OPEN/In Progress` kalır. Source/docs + doğrulanmış yerel staging tamamlandıktan sonra USB bağlandığında atomik kopya ve ikinci readback ile kapatılmalıdır.
+- Feature private `main`e push edilmiştir; [Guard 32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422) başarılıdır. Source/docs `cff75f8`, tree `aa5acd7`, [Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437) başarılıdır. Ayrıntı: `Docs/ADR-0040-DETERMINISTIC-SINGLE-EPS12V-CPU-POWER-CABLE-ROUTING.md` ve tarihli Evidence belgesi.
+- Yerel final staging iki tam 832/832 payload, 826/826 exact Git source ve 5/5 evidence readback'ini geçti; payload 15.757.786 bayt, manifest `afa89feb…6a73`, bütün fark sayaçları `0`dır.
+- Fiziksel USB bağlı değildir; final external milestone/readback veya Issue completion iddiası yoktur. Issue #62 `OPEN/In Progress` kalır. USB bağlandığında doğrulanmış staging doğru volume'a atomik kopyalanıp ikinci readback ile kapatılmalıdır.
 - Electrical power-on, PCIe/GPU, SATA/Molex/fan/front-panel/data/RGB cabling, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
 
 ### Önceki checkpoint — Issue #60

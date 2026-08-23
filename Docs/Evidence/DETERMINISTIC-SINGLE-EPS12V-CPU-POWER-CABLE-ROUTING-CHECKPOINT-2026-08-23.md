@@ -35,9 +35,12 @@ The build was launched windowed at 1280×720 on the active Apple Silicon/Metal w
 ## Repository and pending external checkpoint
 
 - Feature Repository Guard: [32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422), success.
-- Source/docs checkpoint metadata will be recorded after this evidence commit reaches private `main` and its Guard passes.
-- No physical USB is currently available. No external milestone path, USB manifest, atomic rename, full USB readback or Issue completion is claimed.
-- Issue #62 remains `OPEN/In Progress`; the first twenty acceptance lines have current source/test/build/runtime evidence, while the final combined checkpoint line remains pending until source/docs/Guard and physical USB readback are complete.
+- Source/docs checkpoint: `cff75f8876f893888ca3a98fe5f149dab0f74a1b`, tree `aa5acd799a8190d871aa0c5493fd7484a83b4c4f`; [Repository Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437), success.
+- Verified local staging: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING`.
+- Manifest SHA-256: `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73`. Both pre-rename and post-rename full readbacks passed 832/832 payload hash/size/path checks, 826/826 exact Git-source checks and 5/5 evidence checks. Payload size is 15,757,786 bytes; the package contains 834 files in total.
+- Missing, hash mismatch, size mismatch, duplicate-path, forbidden/cache, internal AppleDouble and source mismatch counts are all zero. The local final directory was created only after a collision-free `.incoming-*` build and atomic rename.
+- No physical USB is currently available. No external USB path, USB copy, atomic USB rename, USB readback or Issue completion is claimed.
+- Issue #62 remains `OPEN/In Progress`; the first twenty acceptance lines have current evidence, while the final combined checkpoint line remains pending until the verified package is copied to the correct physical USB and read back in full.
 
 ## Bounded exclusions
 
