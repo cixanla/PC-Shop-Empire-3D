@@ -1,6 +1,7 @@
 # Deterministic Single EPS12V/CPU Power Cable Routing — Checkpoint Evidence
 
 **Date:** 23 August 2026<br>
+**Physical USB closure evidence:** 24 August 2026<br>
 **Issue:** [#62](https://github.com/cixanla/PC-Shop-Empire-3D/issues/62)<br>
 **Feature:** `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`<br>
 **Feature tree:** `c14524fecee561eff3a144bd15e67be5a48f8335`
@@ -32,15 +33,17 @@ GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok preflight=ok psu-retained-
 
 The build was launched windowed at 1280×720 on the active Apple Silicon/Metal workstation with `-pse-eps12v-power-cable-smoke`. The runtime identified Apple M1/Metal and emitted canonical readiness `garage-eps12v-cpu-power-cable-routing-r31-v1`. The exact success marker appeared once; no EPS failure marker, assertion, missing-reference or unhandled exception appeared.
 
-## Repository and pending external checkpoint
+## Repository and verified external checkpoint
 
 - Feature Repository Guard: [32642211422](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642211422), success.
 - Source/docs checkpoint: `cff75f8876f893888ca3a98fe5f149dab0f74a1b`, tree `aa5acd799a8190d871aa0c5493fd7484a83b4c4f`; [Repository Guard 32642638437](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32642638437), success.
 - Verified local staging: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING`.
 - Manifest SHA-256: `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73`. Both pre-rename and post-rename full readbacks passed 832/832 payload hash/size/path checks, 826/826 exact Git-source checks and 5/5 evidence checks. Payload size is 15,757,786 bytes; the package contains 834 files in total.
 - Missing, hash mismatch, size mismatch, duplicate-path, forbidden/cache, internal AppleDouble and source mismatch counts are all zero. The local final directory was created only after a collision-free `.incoming-*` build and atomic rename.
-- No physical USB is currently available. No external USB path, USB copy, atomic USB rename, USB readback or Issue completion is claimed.
-- Issue #62 remains `OPEN/In Progress`; the first twenty acceptance lines have current evidence, while the final combined checkpoint line remains pending until the verified package is copied to the correct physical USB and read back in full.
+- Physical USB `/dev/disk4` was identified as the expected NTFS `cixanla` device mounted at `/Volumes/cixanla/CIXANLA`; `90_BACKUPS/PCShopEmpire3D` and the prior Issue #61 milestone chain were present before any write.
+- The verified package was present at collision-free `.incoming-2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING-904d0c98`. Its first physical-USB readback passed 832/832 payload hashes, sizes and paths with 15,757,786 bytes, manifest `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73` and zero missing/hash/size/AppleDouble counts.
+- With no existing final target, the incoming directory was atomically renamed to `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING` and synchronized. A second full physical-USB readback again passed 832/832 payload, 826/826 exact Git-source blob/size/path and 5/5 evidence equality with all mismatch and AppleDouble counts zero.
+- The final combined acceptance line therefore has current evidence (`21/21`). Issue #62 remains `OPEN/In Progress` only until this external result is committed, guarded and applied to the GitHub Issue/Project state.
 
 ## Bounded exclusions
 
