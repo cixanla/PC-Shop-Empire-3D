@@ -39,9 +39,11 @@ The build was launched windowed at 1280×720 on the active Apple Silicon/Metal w
 
 - Feature Repository Guard: [32606958882](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32606958882), success.
 - Authored-clearance Repository Guard: [32607437408](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607437408), success.
-- Source/docs checkpoint: `SOURCE_DOCS_PENDING`; Repository Guard: `SOURCE_DOCS_GUARD_PENDING`.
-- Acceptance, Issue state and Roadmap state are finalized only after the source/docs Guard succeeds.
-- macOS currently exposes no external physical disk and no `/Volumes/cixanla/CIXANLA` mount. No wrong-volume write or physical USB milestone/readback is claimed. The exact source-plus-evidence package is prepared locally and may be copied only after the expected volume and prior milestone chain are revalidated.
+- Source/docs checkpoint: `4939a041635a8864f53f6613a9dc9b4e8972f235`; tree `77a8f66e1fdd53ac2b21e748c6a26a934c49ed02`.
+- Source/docs Repository Guard: [32607886160](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607886160), success.
+- Acceptance: 20/20; Issue #60 `CLOSED/COMPLETED` and Development Roadmap item `Done`. Parent Epic #10 remains open/In Progress.
+- Local exact package: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX_PS2_POWER_SUPPLY_FOUR_SCREW_RETENTION`; 770 exact Git source + 4 evidence + one source record, 775/775 full hash/size/path readback, 770/770 Git-blob equality, 14,729,691 payload bytes, manifest `705784c6b619876fbe6a900a20f870292396a882e0bdcea1f6464bef9a8e53d4`, forbidden/credential/AppleDouble count zero.
+- macOS currently exposes no external physical disk and no `/Volumes/cixanla/CIXANLA` mount. No wrong-volume write or physical USB milestone/readback is claimed. The validated local package may be copied only after the expected volume and prior milestone chain are revalidated.
 
 ## Bounded exclusions
 

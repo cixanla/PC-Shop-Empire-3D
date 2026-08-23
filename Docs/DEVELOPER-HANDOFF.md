@@ -21,8 +21,8 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Oyuncu gerçek keyboard/mouse veya gamepad ile guided mode, iki keyed fan orientation, exact ATX seat, görünür crossed four-screw retain/unretain ve same-instance remove/recovery akışını oynar. Generic placement/stack/cart bypass'ı kapalıdır.
 - Production clearance tam dört gerçek collider'a bağlıdır: `ChassisBack`, `ChassisLeftRail`, `ChassisRightRail`, `MotherboardTray`. Support yüzeyleri blocker değildir; cable blocker listesi kablolama kapsam dışı olduğu için boştur.
 - Final EditMode `577/577`, PlayMode `47/47`; Universal macOS build `328937592` bayt ve aktif Apple Silicon/Metal 1280×720 exact r29 PSU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
-- Feature/fix private `main`e push edilmiştir; Guard `32606958882` ve `32607437408` başarılıdır. Source/docs/GitHub closure metadata'sı bu checkpoint turunda tamamlanacaktır; parent Epic #10 açık/In Progress kalır.
-- macOS beklenen harici fiziksel USB'yi mount etmemiştir. Yanlış volume'a yazılmamış ve fiziksel milestone/readback iddiası kurulmamıştır; local exact staging güvenli USB geri geldiğinde atomik aktarım içindir.
+- Feature `f998d7d`, authored-clearance fix `b6c3ff8` ve source/docs `4939a04` private `main`e push edilmiştir; Guard `32606958882`, `32607437408` ve `32607886160` başarılı, acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`dur. Parent Epic #10 açık/In Progress kalır.
+- Exact local staging 770 Git source + 4 evidence + source kaydıyla 775/775 readback, 770/770 Git-blob eşliği, 14.729.691 bayt ve `705784c6…53d4` manifestiyle doğrulandı. macOS beklenen harici fiziksel USB'yi mount etmedi; yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası kurulmadı.
 - Ayrıntı: `Docs/ADR-0038-DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION.md` ve `Docs/Evidence/DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION-CHECKPOINT-2026-08-23.md`.
 - ATX/EPS/PCIe/SATA cabling, electrical power-on, POST/BIOS/OS, completed benchmark, final art ve native Windows/Steam ayrı kapılardır.
 
@@ -195,7 +195,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steam entegrasyonu ve native Windows IL2CPP doğrulaması.
 
-Issue #60 feature `f998d7d`, authored-clearance fix `b6c3ff8`, Guard `32606958882` + `32607437408`, EditMode 577/577, PlayMode 47/47 ve exact r29 PSU smoke ile teknik olarak tamamlandı; source/docs/GitHub kapanışı sürer ve parent Epic #10 açık/In Progress kalır. Ardıl bounded Epic #10 adayı fiziksel kablo konektörü/routing akışıdır; electrical power-on, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
+Issue #60 feature `f998d7d`, authored-clearance fix `b6c3ff8`, source/docs `4939a04`, Guard `32606958882` + `32607437408` + `32607886160`, acceptance 20/20, Issue `CLOSED/COMPLETED` ve Roadmap `Done` ile kapandı; parent Epic #10 açık/In Progress kaldı. 775/775 exact local staging hazırdır fakat fiziksel USB readback iddiası yoktur. Ardıl bounded Epic #10 adayı fiziksel kablo konektörü/routing akışıdır; electrical power-on, tam PC benchmarkı, Inventory revision-max hardening, Save, Guardian veya final sanata gizlice büyütülmez.
 
 ## 7. Çalışma akışı
 

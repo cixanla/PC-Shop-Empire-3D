@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 23 Ağustos 2026<br>
-**Durum:** Issue #60 deterministic single ATX PS/2 PSU seating + four-screw rear retention kaynak/test/build/native-runtime ve feature/fix CI kapıları tamamlandı; source/docs/GitHub kapanışı devam ediyor, macOS harici fiziksel USB göstermiyor<br>
+**Durum:** Issue #60 deterministic single ATX PS/2 PSU seating + four-screw rear retention kaynak/test/build/native-runtime/CI/GitHub kapıları tamamlandı; Issue `CLOSED/COMPLETED`, Roadmap `Done`, 775/775 local staging hazır, fiziksel USB mount/readback iddiası yok<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
 ## En yeni checkpoint — Issue #60 / Epic #10
@@ -11,8 +11,8 @@
 - Yalnız iki keyed 180° fan-intake orientation, exact ATX PS/2 interface, filtered-floor full support, rear-plane, range/focus/LOS/obstruction/tie/saturation kabul edilir. Production authored clearance tam olarak `ChassisBack`, `ChassisLeftRail`, `ChassisRightRail` ve `MotherboardTray` collider'larını kullanır; support yüzeyleri blocker değildir, cable listesi bounded kapsam gereği boştur.
 - GarageGraybox `garage-psu-four-screw-r29-v1`; housing, fan/grille, filtered floor intake, AC inlet, rocker switch, disconnected modular panel, rear plate ve dört screw görünürdür. Gerçek keyboard/mouse ve gamepad dynamic compact HUD, co-edge/pause, generic placement/stack/cart bypass yasağı ve same-instance recovery testlidir.
 - Final EditMode `577/577`, PlayMode `47/47`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `328937592` bayt; aktif Apple Silicon/Metal makinesinde 1280×720 readiness ve exact PSU smoke başarılıdır. Runtime makineyi Apple M1 olarak tanımlamıştır.
-- [Feature Guard 32606958882](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32606958882) ve [authored-clearance Guard 32607437408](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607437408) başarılıdır. Source/docs commit/Guard, acceptance `20/20`, Issue `CLOSED/COMPLETED` ve Roadmap `Done` metadata'sı bu belge commitinin ardından tamamlanacaktır; parent Epic #10 açık/In Progress kalır.
-- macOS `diskutil list external physical` ve `/Volumes` denetiminde beklenen USB'yi göstermedi. Yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası kurulmadı; exact source-plus-evidence paketi yerel staging'de hazırlanacaktır.
+- Source/docs `4939a041635a8864f53f6613a9dc9b4e8972f235`, tree `77a8f66e1fdd53ac2b21e748c6a26a934c49ed02`; [feature Guard 32606958882](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32606958882), [authored-clearance Guard 32607437408](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607437408) ve [source/docs Guard 32607886160](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32607886160) başarılıdır. Acceptance `20/20`; Issue #60 `CLOSED/COMPLETED`, Roadmap `Done`, parent Epic #10 açık/In Progress durumundadır.
+- Exact source-plus-evidence staging 770 Git source + 4 evidence + source kaydı, 775/775 hash/boyut/path readback, 770/770 Git-blob eşliği, 14.729.691 bayt ve `705784c6b619876fbe6a900a20f870292396a882e0bdcea1f6464bef9a8e53d4` manifestiyle doğrulandı. macOS beklenen USB'yi göstermedi; yanlış volume'a yazılmadı ve fiziksel milestone/readback iddiası kurulmadı.
 - Ayrıntı `Docs/ADR-0038-DETERMINISTIC-SINGLE-ATX-PS2-POWER-SUPPLY-SEATING-AND-FOUR-SCREW-RETENTION.md` ve tarihli Evidence belgesindedir. ATX/EPS/PCIe/SATA kablolama, electrical power-on, POST/BIOS/OS, tamamlanmış benchmark, final art ve Windows/Steam ayrı kapılardır.
 
 ## Önceki checkpoint — Issue #59 / Epic #10
@@ -209,10 +209,9 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #60 source/docs Guard, GitHub acceptance/Project kapanışı ve temiz checkpointini tamamlamak.
-2. Beklenen fiziksel USB gerçekten mount edildiğinde Issue #60 exact source-plus-evidence staging'ini çakışmayan `.incoming-*`/iki tam readback disipliniyle taşımak; yanlış volume'a yazmamak.
-3. Ardıl Epic #10 child'ını fiziksel kablo konektörü/routing akışına sınırlandırmak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Ardıl Epic #10 child'ını fiziksel kablo konektörü/routing akışına sınırlandırmak; electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+2. Beklenen fiziksel USB gerçekten mount edildiğinde doğrulanmış Issue #60 staging'ini çakışmayan `.incoming-*`/iki tam readback disipliniyle taşımak; yanlış volume'a yazmamak veya gameplay'i bloklamamak.
 
 ## Güvenli devam komutu
 
-Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, EditMode `577/577`, PlayMode `47/47`, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` ile teknik olarak tamamlandı. Source/docs/GitHub kapanışı bu checkpoint turunda sürer; parent Epic #10 açık/In Progress kalır. macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve readback iddiası yoktur. Ardıl bounded child kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.
+Issue #60 feature `f998d7d1c400c9328afa226f0727e6591c02d4e2`, authored-clearance fix `b6c3ff8e95a4da75161b51cdbcbab87cb529f076`, source/docs `4939a041635a8864f53f6613a9dc9b4e8972f235`, EditMode `577/577`, PlayMode `47/47`, Universal Mac `328937592` bayt, aktif Apple Silicon/Metal exact r29 PSU smoke ve başarılı Guard `32606958882` + `32607437408` + `32607886160` ile kapandı. Acceptance `20/20`, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress kalır. 775/775 exact local staging hazırdır; macOS harici fiziksel USB göstermediği için yanlış volume'a yazılmadı ve fiziksel readback iddiası yoktur. Ardıl bounded child kablo routing'ini electrical power-on ve tamamlanmış benchmarktan ayrı tutmalıdır.
