@@ -1366,7 +1366,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyBeforeRecovery));
             Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRecovery + 1));
             Assert.That(session.AssemblyBuild.ReceiptCount, Is.EqualTo(receiptsBeforeRecovery));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(7));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(8));
             Assert.That(session.TryGetMemoryItem(out InventoryItemRecord recovered), Is.True);
             Assert.That(recovered.Id, Is.EqualTo(session.MemoryItemId));
             Assert.That(recovered.ProductId, Is.EqualTo(session.MemoryProductId));
@@ -3270,7 +3270,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(binding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(7));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(8));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,
@@ -3398,7 +3398,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.Update();
             marker.PlayerCarry.ProcessInputFrame();
 
-            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(
+                marker.PlayerCarry.HeldItem,
+                Is.Null,
+                marker.PlayerCarry.LastFailureCode);
             Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
             Assert.That(item.ItemIdValue, Is.EqualTo(GarageStockFlowSession.ItemInstanceIdValue));
             AssertInventoryLocation(stockFlow, stockFlow.Session.WorldFloorContainerId);
@@ -3691,7 +3694,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.ItemBinding.IsCustomerReserved, Is.False);
             Assert.That(item.gameObject.activeSelf, Is.False);
             Assert.That(stockFlow.Session.TryGetItem(out _), Is.False);
-            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(7));
+            Assert.That(stockFlow.Session.Inventory.SerializedItemCount, Is.EqualTo(8));
             Assert.That(stockFlow.Session.TryGetMotherboardItem(
                 out InventoryItemRecord remainingMotherboard), Is.True);
             Assert.That(remainingMotherboard.ContainerId,

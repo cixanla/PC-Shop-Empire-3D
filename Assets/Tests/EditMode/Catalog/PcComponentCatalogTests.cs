@@ -299,6 +299,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     products,
                     ProductId("component.power-supply-atx-ps2"),
                     PowerSupplyType.AtxPs2).Value;
+            PcComponentSpecification powerCable =
+                PcComponentSpecification.CreatePowerCable(
+                    products,
+                    ProductId("component.power-cable-atx24-split"),
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard).Value;
 
             OperationResult<PcComponentCatalog> result = PcComponentCatalog.Create(
                 products,
@@ -310,24 +315,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     storage,
                     cooler,
                     graphicsCard,
-                    powerSupply
+                    powerSupply,
+                    powerCable
                 });
 
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value.Count, Is.EqualTo(7));
+            Assert.That(result.Value.Count, Is.EqualTo(8));
             Assert.That(result.Value.Get(cooler.ProductId).Value, Is.SameAs(cooler));
             Assert.That(result.Value.Get(graphicsCard.ProductId).Value,
                 Is.SameAs(graphicsCard));
             Assert.That(result.Value.Get(powerSupply.ProductId).Value,
                 Is.SameAs(powerSupply));
+            Assert.That(result.Value.Get(powerCable.ProductId).Value,
+                Is.SameAs(powerCable));
             Assert.That(result.Value.Get(memory.ProductId).Value, Is.SameAs(memory));
             Assert.That(result.Value.Specifications[0], Is.SameAs(cooler));
             Assert.That(result.Value.Specifications[1], Is.SameAs(graphicsCard));
             Assert.That(result.Value.Specifications[2], Is.SameAs(memory));
             Assert.That(result.Value.Specifications[3], Is.SameAs(motherboard));
-            Assert.That(result.Value.Specifications[4], Is.SameAs(powerSupply));
-            Assert.That(result.Value.Specifications[5], Is.SameAs(processor));
-            Assert.That(result.Value.Specifications[6], Is.SameAs(storage));
+            Assert.That(result.Value.Specifications[4], Is.SameAs(powerCable));
+            Assert.That(result.Value.Specifications[5], Is.SameAs(powerSupply));
+            Assert.That(result.Value.Specifications[6], Is.SameAs(processor));
+            Assert.That(result.Value.Specifications[7], Is.SameAs(storage));
             Assert.That(PcComponentSpecification.Create(
                     products,
                     memory.ProductId,
@@ -491,8 +500,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                     ProductId("consumable.screw"),
                     PowerSupplyType.AtxPs2).Error,
                 Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
+            Assert.That(PcComponentSpecification.CreatePowerCable(
+                    products,
+                    ProductId("component.power-cable-atx24-split"),
+                    default).Error,
+                Is.EqualTo(CatalogFailures.InvalidPowerCableType));
+            Assert.That(PcComponentSpecification.CreatePowerCable(
+                    products,
+                    ProductId("component.power-cable-atx24-split"),
+                    (PowerCableType)99).Error,
+                Is.EqualTo(CatalogFailures.InvalidPowerCableType));
+            Assert.That(PcComponentSpecification.CreatePowerCable(
+                    products,
+                    ProductId("consumable.screw"),
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard).Error,
+                Is.EqualTo(CatalogFailures.ComponentTrackingMismatch));
             Assert.That(CatalogFailures.InvalidPowerSupplyType.Code,
                 Is.EqualTo("catalog.component.power-supply-type.invalid"));
+            Assert.That(CatalogFailures.InvalidPowerCableType.Code,
+                Is.EqualTo("catalog.component.power-cable-type.invalid"));
         }
 
         [Test]
@@ -564,6 +590,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Catalog
                 Definition("component.cooler-lga1700-top-down-air", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.graphics-card-pcie4-x16", ProductTrackingPolicy.SerializedInstance),
                 Definition("component.power-supply-atx-ps2", ProductTrackingPolicy.SerializedInstance),
+                Definition("component.power-cable-atx24-split", ProductTrackingPolicy.SerializedInstance),
                 Definition("consumable.screw", ProductTrackingPolicy.BatchQuantity)
             }).Value;
         }

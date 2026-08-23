@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-psu-four-screw-r29-v1";
+        public const string Version = "garage-atx24-power-cable-routing-r30-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -204,7 +204,11 @@ namespace PCShopEmpire3D.Presentation
             PowerSupplyBayProjection physicalPowerSupplyBay = null,
             PowerSupplyAssemblyItemBinding physicalPowerSupplyBinding = null,
             PhysicalItemProjection physicalPowerSupply = null,
-            PowerSupplyRuntimeGeometry physicalPowerSupplyGeometry = null)
+            PowerSupplyRuntimeGeometry physicalPowerSupplyGeometry = null,
+            Atx24PowerCableRouteProjection physicalAtx24PowerCableRoute = null,
+            Atx24PowerCableAssemblyItemBinding physicalAtx24PowerCableBinding = null,
+            PhysicalItemProjection physicalAtx24PowerCable = null,
+            Atx24PowerCableRuntimeGeometry physicalAtx24PowerCableGeometry = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -236,6 +240,11 @@ namespace PCShopEmpire3D.Presentation
             powerSupplyBinding = physicalPowerSupplyBinding;
             powerSupply = physicalPowerSupply;
             powerSupplyGeometry = physicalPowerSupplyGeometry;
+            ConfigureAtx24PowerCable(
+                physicalAtx24PowerCableRoute,
+                physicalAtx24PowerCableBinding,
+                physicalAtx24PowerCable,
+                physicalAtx24PowerCableGeometry);
         }
 
         private void Start()
@@ -340,7 +349,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 7 &&
+                                          assemblySession.Inventory.SerializedItemCount == 8 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -675,6 +684,67 @@ namespace PCShopEmpire3D.Presentation
                                           assemblySession.AssemblyBuild.PowerSupplyBayState ==
                                               PowerSupplyBayState.EmptyOpen &&
                                           HasPowerSupplyR29Runtime;
+            bool hasAtx24PowerCableRoute = assemblySession != null &&
+                                           atx24PowerCableRoute != null &&
+                                           atx24PowerCableRoute.IsConfigured &&
+                                           atx24PowerCableRoute.RouteIdValue ==
+                                               GarageStockFlowSession
+                                                   .Atx24PowerCableRouteIdValue &&
+                                           atx24PowerCableRoute
+                                                   .PsuPrimaryEndpointIdValue ==
+                                               GarageStockFlowSession
+                                                   .Atx24PowerCablePsuPrimaryEndpointIdValue &&
+                                           atx24PowerCableRoute
+                                                   .PsuSenseEndpointIdValue ==
+                                               GarageStockFlowSession
+                                                   .Atx24PowerCablePsuSenseEndpointIdValue &&
+                                           atx24PowerCableRoute
+                                                   .MotherboardEndpointIdValue ==
+                                               GarageStockFlowSession
+                                                   .Atx24PowerCableMotherboardEndpointIdValue;
+            bool hasAtx24PowerCableIdentity = assemblySession != null &&
+                                              atx24PowerCableBinding != null &&
+                                              atx24PowerCable != null &&
+                                              atx24PowerCableBinding.Runtime == stockFlow &&
+                                              atx24PowerCableBinding.PhysicalItem ==
+                                                  atx24PowerCable &&
+                                              atx24PowerCableBinding
+                                                      .InventoryItemIdValue ==
+                                                  assemblySession
+                                                      .Atx24PowerCableItemId.Value &&
+                                              atx24PowerCable.ItemIdValue ==
+                                                  assemblySession
+                                                      .Atx24PowerCableItemId.Value &&
+                                              assemblySession
+                                                  .TryGetAtx24PowerCableItem(
+                                                      out InventoryItemRecord cableItem) &&
+                                              cableItem.Id ==
+                                                  assemblySession.Atx24PowerCableItemId &&
+                                              cableItem.ProductId ==
+                                                  assemblySession.Atx24PowerCableProductId &&
+                                              cableItem.ContainerId ==
+                                                  assemblySession.WorldFloorContainerId &&
+                                              CountCanonicalAtx24PowerCableProjections(
+                                                  cableItem.Id.Value) == 1 &&
+                                              atx24PowerCableBinding
+                                                  .ValidateProjectionInvariant().IsSuccess;
+            bool hasAtx24PowerCableAssembly = hasAtx24PowerCableRoute &&
+                                              hasAtx24PowerCableIdentity &&
+                                              atx24PowerCableBinding.Route ==
+                                                  atx24PowerCableRoute &&
+                                              playerCarry != null &&
+                                              playerCarry
+                                                  .MatchesAtx24PowerCableConfiguration(
+                                                      atx24PowerCableRoute,
+                                                      atx24PowerCableBinding) &&
+                                              atx24PowerCable.CarryProfile ==
+                                                  PhysicalCarryProfile.PcComponent &&
+                                              assemblySession.AssemblyBuild
+                                                  .HasAtx24PowerCableRoute &&
+                                              assemblySession.AssemblyBuild
+                                                      .Atx24PowerCableState ==
+                                                  Atx24PowerCableState.Loose &&
+                                              HasAtx24PowerCableR30Runtime;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -704,7 +774,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly && hasGraphicsCardAssembly && hasPowerSupplyAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly && hasGraphicsCardAssembly && hasPowerSupplyAssembly && hasAtx24PowerCableAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -727,6 +797,9 @@ namespace PCShopEmpire3D.Presentation
                 $"power-supply-bay={(hasPowerSupplyBay ? "ready" : "missing")} " +
                 $"power-supply-four-screw={(hasPowerSupplyAssembly ? "ready" : "missing")} " +
                 $"power-supply-identity={(hasPowerSupplyIdentity ? "stable" : "missing")} " +
+                $"power-cable-route={(hasAtx24PowerCableRoute ? "ready" : "missing")} " +
+                $"power-cable-connectors={(hasAtx24PowerCableAssembly ? "3" : "missing")} " +
+                $"power-cable-identity={(hasAtx24PowerCableIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -742,6 +815,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-gpu-smoke");
             bool runPowerSupplySmoke =
                 HasCommandLineArgument("-pse-psu-smoke");
+            bool runAtx24PowerCableSmoke =
+                HasCommandLineArgument("-pse-power-cable-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
@@ -751,7 +826,8 @@ namespace PCShopEmpire3D.Presentation
                              (runStorageSmoke ? 1 : 0) +
                              (runProcessorCoolerSmoke ? 1 : 0) +
                              (runGraphicsCardSmoke ? 1 : 0) +
-                             (runPowerSupplySmoke ? 1 : 0);
+                             (runPowerSupplySmoke ? 1 : 0) +
+                             (runAtx24PowerCableSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -821,6 +897,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runAtx24PowerCableSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_ATX24_POWER_CABLE_RUNTIME_SMOKE " +
+                    "cable-flow=failed code=smoke.power-cable-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -878,6 +962,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPowerSupplySmoke());
+            }
+
+            if (runAtx24PowerCableSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunAtx24PowerCableSmoke());
             }
         }
 
@@ -1675,7 +1765,7 @@ namespace PCShopEmpire3D.Presentation
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 7 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 8 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -2617,7 +2707,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -3013,7 +3103,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3084,7 +3174,7 @@ namespace PCShopEmpire3D.Presentation
                              looseMemory.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              dimmBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3417,7 +3507,7 @@ namespace PCShopEmpire3D.Presentation
                              memoryModule.IsStablePlacement &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3516,7 +3606,7 @@ namespace PCShopEmpire3D.Presentation
                              looseStorage.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              storageBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3758,7 +3848,7 @@ namespace PCShopEmpire3D.Presentation
                              storageDevice.IsStablePlacement &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3888,7 +3978,7 @@ namespace PCShopEmpire3D.Presentation
                                  InventorySerializedItemStateFlags.None &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              processorCoolerBinding.ValidateProjectionInvariant()
                                  .IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
@@ -4252,7 +4342,7 @@ namespace PCShopEmpire3D.Presentation
                              processorCooler.IsStablePlacement &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 7 &&
+                             session.Inventory.SerializedItemCount == 8 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(

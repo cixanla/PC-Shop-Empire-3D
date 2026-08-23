@@ -151,6 +151,8 @@ namespace PCShopEmpire3D.Catalog
             Failure.FromCode("catalog.component.graphics-card-type.invalid");
         public static readonly Failure InvalidPowerSupplyType =
             Failure.FromCode("catalog.component.power-supply-type.invalid");
+        public static readonly Failure InvalidPowerCableType =
+            Failure.FromCode("catalog.component.power-cable-type.invalid");
         public static readonly Failure ComponentMetadataMismatch =
             Failure.FromCode("catalog.component.metadata-mismatch");
         public static readonly Failure EmptyComponentCatalog =

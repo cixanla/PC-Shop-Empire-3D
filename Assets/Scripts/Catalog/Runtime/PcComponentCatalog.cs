@@ -18,7 +18,8 @@ namespace PCShopEmpire3D.Catalog
         StorageDevice = 4,
         ProcessorCooler = 5,
         GraphicsCard = 6,
-        PowerSupply = 7
+        PowerSupply = 7,
+        PowerCable = 8
     }
 
     /// <summary>
@@ -87,6 +88,15 @@ namespace PCShopEmpire3D.Catalog
     }
 
     /// <summary>
+    /// Persisted physical cable-family contract. One serialized cable can expose more
+    /// than one PSU-side connector while remaining a single inventory item.
+    /// </summary>
+    public enum PowerCableType
+    {
+        ModularAtx24SplitPsuToMotherboard = 1
+    }
+
+    /// <summary>
     /// Immutable assembly-facing extension of one authoritative product definition.
     /// </summary>
     public sealed class PcComponentSpecification
@@ -101,7 +111,8 @@ namespace PCShopEmpire3D.Catalog
             M2StorageType m2StorageType,
             ProcessorCoolerType processorCoolerType,
             GraphicsCardType graphicsCardType,
-            PowerSupplyType powerSupplyType)
+            PowerSupplyType powerSupplyType,
+            PowerCableType powerCableType = default)
         {
             OwnerCatalog = ownerCatalog;
             ProductId = productId;
@@ -113,6 +124,7 @@ namespace PCShopEmpire3D.Catalog
             ProcessorCoolerType = processorCoolerType;
             GraphicsCardType = graphicsCardType;
             PowerSupplyType = powerSupplyType;
+            PowerCableType = powerCableType;
         }
 
         internal ProductCatalog OwnerCatalog { get; }
@@ -144,6 +156,11 @@ namespace PCShopEmpire3D.Catalog
         /// Typed ATX PSU mechanical envelope. It is populated only for power supplies.
         /// </summary>
         public PowerSupplyType PowerSupplyType { get; }
+
+        /// <summary>
+        /// Typed modular-cable topology family. It is populated only for power cables.
+        /// </summary>
+        public PowerCableType PowerCableType { get; }
 
         public static OperationResult<PcComponentSpecification> Create(
             ProductCatalog productCatalog,
@@ -636,6 +653,44 @@ namespace PCShopEmpire3D.Catalog
                     powerSupplyType));
         }
 
+        /// <summary>
+        /// Creates immutable assembly metadata for one serialized modular power cable.
+        /// Connector identities and route geometry remain separate assembly contracts.
+        /// </summary>
+        public static OperationResult<PcComponentSpecification> CreatePowerCable(
+            ProductCatalog productCatalog,
+            StableId<ProductDefinitionIdScope> productId,
+            PowerCableType powerCableType)
+        {
+            Failure productFailure = ValidateSerializedComponentProduct(
+                productCatalog,
+                productId);
+            if (!productFailure.IsNone)
+            {
+                return OperationResult<PcComponentSpecification>.Fail(productFailure);
+            }
+
+            if (!IsValidPowerCableType(powerCableType))
+            {
+                return OperationResult<PcComponentSpecification>.Fail(
+                    CatalogFailures.InvalidPowerCableType);
+            }
+
+            return OperationResult<PcComponentSpecification>.Success(
+                new PcComponentSpecification(
+                    productCatalog,
+                    productId,
+                    PcComponentKind.PowerCable,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    default,
+                    powerCableType));
+        }
+
         public static bool IsValidComponentKind(PcComponentKind kind)
         {
             return kind == PcComponentKind.Motherboard ||
@@ -644,7 +699,8 @@ namespace PCShopEmpire3D.Catalog
                    kind == PcComponentKind.StorageDevice ||
                    kind == PcComponentKind.ProcessorCooler ||
                    kind == PcComponentKind.GraphicsCard ||
-                   kind == PcComponentKind.PowerSupply;
+                   kind == PcComponentKind.PowerSupply ||
+                   kind == PcComponentKind.PowerCable;
         }
 
         public static bool IsValidMotherboardFormFactor(MotherboardFormFactor formFactor)
@@ -695,6 +751,12 @@ namespace PCShopEmpire3D.Catalog
         public static bool IsValidPowerSupplyType(PowerSupplyType powerSupplyType)
         {
             return powerSupplyType == PowerSupplyType.AtxPs2;
+        }
+
+        public static bool IsValidPowerCableType(PowerCableType powerCableType)
+        {
+            return powerCableType ==
+                   PowerCableType.ModularAtx24SplitPsuToMotherboard;
         }
 
         private static Failure ValidateSerializedComponentProduct(
@@ -804,7 +866,8 @@ namespace PCShopEmpire3D.Catalog
                           (specification.GraphicsCardType == default ||
                            PcComponentSpecification.IsValidGraphicsCardType(
                                specification.GraphicsCardType)) &&
-                          specification.PowerSupplyType == default
+                          specification.PowerSupplyType == default &&
+                          specification.PowerCableType == default
                         : (specification.Kind == PcComponentKind.Processor &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
@@ -813,7 +876,8 @@ namespace PCShopEmpire3D.Catalog
                            specification.M2StorageType == default &&
                            specification.ProcessorCoolerType == default &&
                            specification.GraphicsCardType == default &&
-                           specification.PowerSupplyType == default) ||
+                           specification.PowerSupplyType == default &&
+                           specification.PowerCableType == default) ||
                           (specification.Kind == PcComponentKind.MemoryModule &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -822,7 +886,8 @@ namespace PCShopEmpire3D.Catalog
                            specification.M2StorageType == default &&
                            specification.ProcessorCoolerType == default &&
                            specification.GraphicsCardType == default &&
-                           specification.PowerSupplyType == default) ||
+                           specification.PowerSupplyType == default &&
+                           specification.PowerCableType == default) ||
                           (specification.Kind == PcComponentKind.StorageDevice &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -831,7 +896,8 @@ namespace PCShopEmpire3D.Catalog
                                specification.M2StorageType) &&
                            specification.ProcessorCoolerType == default &&
                            specification.GraphicsCardType == default &&
-                           specification.PowerSupplyType == default) ||
+                           specification.PowerSupplyType == default &&
+                           specification.PowerCableType == default) ||
                           (specification.Kind == PcComponentKind.ProcessorCooler &&
                            specification.MotherboardFormFactor == default &&
                            PcComponentSpecification.IsValidCpuSocketFamily(
@@ -844,7 +910,8 @@ namespace PCShopEmpire3D.Catalog
                                specification.ProcessorCoolerType,
                                specification.CpuSocketFamily) &&
                            specification.GraphicsCardType == default &&
-                           specification.PowerSupplyType == default) ||
+                           specification.PowerSupplyType == default &&
+                           specification.PowerCableType == default) ||
                           (specification.Kind == PcComponentKind.GraphicsCard &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -853,7 +920,8 @@ namespace PCShopEmpire3D.Catalog
                            specification.ProcessorCoolerType == default &&
                            PcComponentSpecification.IsValidGraphicsCardType(
                                specification.GraphicsCardType) &&
-                           specification.PowerSupplyType == default) ||
+                           specification.PowerSupplyType == default &&
+                           specification.PowerCableType == default) ||
                           (specification.Kind == PcComponentKind.PowerSupply &&
                            specification.MotherboardFormFactor == default &&
                            specification.CpuSocketFamily == default &&
@@ -862,7 +930,18 @@ namespace PCShopEmpire3D.Catalog
                            specification.ProcessorCoolerType == default &&
                            specification.GraphicsCardType == default &&
                            PcComponentSpecification.IsValidPowerSupplyType(
-                               specification.PowerSupplyType));
+                               specification.PowerSupplyType) &&
+                           specification.PowerCableType == default) ||
+                          (specification.Kind == PcComponentKind.PowerCable &&
+                           specification.MotherboardFormFactor == default &&
+                           specification.CpuSocketFamily == default &&
+                           specification.DimmType == default &&
+                           specification.M2StorageType == default &&
+                           specification.ProcessorCoolerType == default &&
+                           specification.GraphicsCardType == default &&
+                           specification.PowerSupplyType == default &&
+                           PcComponentSpecification.IsValidPowerCableType(
+                               specification.PowerCableType));
                 if (!metadataIsValid)
                 {
                     return OperationResult<PcComponentCatalog>.Fail(

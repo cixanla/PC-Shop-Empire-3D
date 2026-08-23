@@ -46,13 +46,13 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
-        public void AssemblyPrototypeSeedsCanonicalMotherboardProcessorMemoryStorageCoolerGraphicsCardAndPowerSupply()
+        public void AssemblyPrototypeSeedsCanonicalBuildPartsAndAtx24PowerCable()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(7));
-            Assert.That(session.Components.Count, Is.EqualTo(7));
+            Assert.That(session.Catalog.Count, Is.EqualTo(8));
+            Assert.That(session.Components.Count, Is.EqualTo(8));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -151,7 +151,27 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(powerSupply.StateFlags,
                 Is.EqualTo(InventorySerializedItemStateFlags.None));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(7));
+            Assert.That(session.Catalog.Get(session.Atx24PowerCableProductId).IsSuccess,
+                Is.True);
+            OperationResult<PcComponentSpecification> powerCableSpecification =
+                session.Components.Get(session.Atx24PowerCableProductId);
+            Assert.That(powerCableSpecification.IsSuccess, Is.True);
+            Assert.That(powerCableSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.PowerCable));
+            Assert.That(powerCableSpecification.Value.PowerCableType,
+                Is.EqualTo(PowerCableType.ModularAtx24SplitPsuToMotherboard));
+            Assert.That(session.TryGetAtx24PowerCableItem(
+                out InventoryItemRecord powerCable), Is.True);
+            Assert.That(powerCable.Id, Is.EqualTo(session.Atx24PowerCableItemId));
+            Assert.That(powerCable.ProductId,
+                Is.EqualTo(session.Atx24PowerCableProductId));
+            Assert.That(powerCable.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.Inventory.TryGetContainer(
+                session.WorldFloorContainerId,
+                out InventoryContainerDefinition worldFloor), Is.True);
+            Assert.That(worldFloor.UnitCapacity, Is.EqualTo(9));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(8));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -225,6 +245,187 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 session.PowerSupplyBottomRightFastenerId,
                 session.PowerSupplyTopLeftFastenerId
             }));
+            Assert.That(session.AssemblyBuild.HasAtx24PowerCableRoute, Is.True);
+            Assert.That(session.AssemblyBuild.Atx24PowerCableState,
+                Is.EqualTo(Atx24PowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRouteContainerId,
+                Is.EqualTo(session.Atx24PowerCableRouteContainerId));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableTopology.RouteId,
+                Is.EqualTo(session.Atx24PowerCableRouteId));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.PsuPrimaryEndpoint.EndpointId,
+                Is.EqualTo(session.Atx24PowerCablePsuPrimaryEndpointId));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.PsuPrimaryEndpoint.PinCount,
+                Is.EqualTo(18));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.PsuSenseEndpoint.EndpointId,
+                Is.EqualTo(session.Atx24PowerCablePsuSenseEndpointId));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.PsuSenseEndpoint.PinCount,
+                Is.EqualTo(10));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.MotherboardEndpoint.EndpointId,
+                Is.EqualTo(session.Atx24PowerCableMotherboardEndpointId));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.MotherboardEndpoint.PinCount,
+                Is.EqualTo(24));
+            Assert.That(
+                session.AssemblyBuild.Atx24PowerCableTopology.OrderedWaypoints.Count,
+                Is.EqualTo(3));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Atx24PowerCableRouteReplayDependentGatesAndReversePreserveIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            StableId<AssemblyOperationIdScope> motherboardAttach =
+                OperationId("atx24-motherboard-attach");
+            StableId<AssemblyOperationIdScope> motherboardSecure =
+                OperationId("atx24-motherboard-secure");
+            StableId<AssemblyOperationIdScope> powerSupplySeat =
+                OperationId("atx24-psu-seat");
+            StableId<AssemblyOperationIdScope> powerSupplyRetain =
+                OperationId("atx24-psu-retain");
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(motherboardAttach).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                motherboardSecure,
+                motherboardAttach,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            AssemblyOperationReceipt seated = session.SeatPowerSupply(
+                powerSupplySeat,
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                session.AssemblyBuild.Revision).Value;
+            AssemblyOperationReceipt retained = session.RetainPowerSupply(
+                powerSupplyRetain,
+                seated.OperationId,
+                session.AssemblyBuild.Revision).Value;
+            Assert.That(retained.OperationKind,
+                Is.EqualTo(AssemblyOperationKind.RetainPowerSupply));
+
+            Assert.That(session.PickupLooseAtx24PowerCableToHands().IsSuccess, Is.True);
+            long inventoryBeforeRoute = session.Inventory.Revision;
+            Assert.That(session.RouteAtx24PowerCable(
+                    OperationId("atx24-reversed"),
+                    PowerCableKeyOrientation.Reversed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableOrientationMismatch));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute));
+
+            StableId<AssemblyOperationIdScope> routeId = OperationId("atx24-route");
+            Atx24PowerCableOperationReceipt route = session.RouteAtx24PowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value;
+            Assert.That(session.RouteAtx24PowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value, Is.SameAs(route));
+            long routeReplayInventoryRevision = session.Inventory.Revision;
+            long routeReplayCableRevision =
+                session.AssemblyBuild.Atx24PowerCableRevision;
+            int routeReplayReceiptCount =
+                session.AssemblyBuild.Atx24PowerCableReceiptCount;
+            Assert.That(session.RouteAtx24PowerCable(
+                    routeId,
+                    PowerCableKeyOrientation.Reversed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(routeReplayInventoryRevision));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision,
+                Is.EqualTo(routeReplayCableRevision));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableReceiptCount,
+                Is.EqualTo(routeReplayReceiptCount));
+            Assert.That(route.OperationKind,
+                Is.EqualTo(Atx24PowerCableOperationKind.Route));
+            Assert.That(route.SourceMotherboardSecureOperationId,
+                Is.EqualTo(motherboardSecure));
+            Assert.That(route.SourcePowerSupplyRetentionOperationId,
+                Is.EqualTo(powerSupplyRetain));
+            Assert.That(route.RouteFingerprint,
+                Is.EqualTo(session.AssemblyBuild.Atx24PowerCableTopology.Fingerprint));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute + 1));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.EqualTo(1));
+            Assert.That(session.AssemblyBuild.IsAtx24PowerCableRouted, Is.True);
+            Assert.That(session.TryGetAtx24PowerCableItem(out InventoryItemRecord routed),
+                Is.True);
+            Assert.That(routed.Id, Is.EqualTo(session.Atx24PowerCableItemId));
+            Assert.That(routed.ContainerId,
+                Is.EqualTo(session.Atx24PowerCableRouteContainerId));
+            Assert.That(session.RouteAtx24PowerCable(
+                    OperationId("atx24-duplicate"),
+                    PowerCableKeyOrientation.Keyed,
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableAlreadyRouted));
+
+            Assert.That(session.UnretainPowerSupply(
+                    OperationId("atx24-psu-unretain-blocked"),
+                    powerSupplySeat,
+                    powerSupplyRetain,
+                    session.AssemblyBuild.Revision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.UnsecureMotherboardFastener(
+                    OperationId("atx24-board-unsecure-blocked"),
+                    motherboardAttach,
+                    motherboardSecure,
+                    session.AssemblyBuild.Revision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+
+            StableId<AssemblyOperationIdScope> unrouteId =
+                OperationId("atx24-unroute");
+            Atx24PowerCableOperationReceipt unroute = session.UnrouteAtx24PowerCable(
+                unrouteId,
+                routeId,
+                1).Value;
+            Assert.That(session.UnrouteAtx24PowerCable(
+                unrouteId,
+                routeId,
+                1).Value, Is.SameAs(unroute));
+            long unrouteReplayInventoryRevision = session.Inventory.Revision;
+            long unrouteReplayCableRevision =
+                session.AssemblyBuild.Atx24PowerCableRevision;
+            int unrouteReplayReceiptCount =
+                session.AssemblyBuild.Atx24PowerCableReceiptCount;
+            Assert.That(session.UnrouteAtx24PowerCable(
+                    unrouteId,
+                    OperationId("atx24-route-conflict"),
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.UnrouteAtx24PowerCable(
+                    unrouteId,
+                    routeId,
+                    2).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(unrouteReplayInventoryRevision));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision,
+                Is.EqualTo(unrouteReplayCableRevision));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableReceiptCount,
+                Is.EqualTo(unrouteReplayReceiptCount));
+            Assert.That(unroute.OperationKind,
+                Is.EqualTo(Atx24PowerCableOperationKind.Unroute));
+            Assert.That(unroute.SourceRouteOperationId, Is.EqualTo(routeId));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableState,
+                Is.EqualTo(Atx24PowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.EqualTo(2));
+            Assert.That(session.TryGetAtx24PowerCableItem(out InventoryItemRecord held),
+                Is.True);
+            Assert.That(held.Id, Is.EqualTo(routed.Id));
+            Assert.That(held.ProductId, Is.EqualTo(routed.ProductId));
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.AssemblyBuild.ValidateAtx24PowerCableReceiptHistory()
+                .IsSuccess, Is.True);
+            Assert.That(session.DropHeldAtx24PowerCableToWorld().IsSuccess, Is.True);
+            Assert.That(session.TryGetAtx24PowerCableItem(out InventoryItemRecord world),
+                Is.True);
+            Assert.That(world.Id, Is.EqualTo(routed.Id));
+            Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

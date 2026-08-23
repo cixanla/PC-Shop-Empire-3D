@@ -1546,6 +1546,44 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.benchmark.power-supply-missing");
         public static readonly Failure PowerSupplyUnretained =
             Failure.FromCode("assembly.benchmark.power-supply-unretained");
+        public static readonly Failure InvalidPowerCableProduct =
+            Failure.FromCode("assembly.power-cable.product.invalid");
+        public static readonly Failure InvalidPowerCableRouteContainer =
+            Failure.FromCode("assembly.power-cable.route-container.invalid");
+        public static readonly Failure InvalidPowerCableRoute =
+            Failure.FromCode("assembly.power-cable.route.invalid");
+        public static readonly Failure InvalidPowerCableEndpoint =
+            Failure.FromCode("assembly.power-cable.endpoint.invalid");
+        public static readonly Failure InvalidPowerCableConnectorType =
+            Failure.FromCode("assembly.power-cable.connector-type.invalid");
+        public static readonly Failure InvalidPowerCableEndpointTopology =
+            Failure.FromCode("assembly.power-cable.endpoint-topology.invalid");
+        public static readonly Failure InvalidPowerCableWaypointTopology =
+            Failure.FromCode("assembly.power-cable.waypoint-topology.invalid");
+        public static readonly Failure InvalidPowerCableTopology =
+            Failure.FromCode("assembly.power-cable.topology.invalid");
+        public static readonly Failure InvalidPowerCableDefinition =
+            Failure.FromCode("assembly.power-cable.definition.invalid");
+        public static readonly Failure PowerCableUnsupported =
+            Failure.FromCode("assembly.power-cable.unsupported");
+        public static readonly Failure PowerCableAlreadyRouted =
+            Failure.FromCode("assembly.power-cable.already-routed");
+        public static readonly Failure PowerCableNotRouted =
+            Failure.FromCode("assembly.power-cable.not-routed");
+        public static readonly Failure PowerCableOrientationMismatch =
+            Failure.FromCode("assembly.power-cable.orientation-mismatch");
+        public static readonly Failure PowerCableProductMismatch =
+            Failure.FromCode("assembly.power-cable.product-mismatch");
+        public static readonly Failure PowerCableHostMotherboardUnsecured =
+            Failure.FromCode("assembly.power-cable.host-motherboard-unsecured");
+        public static readonly Failure PowerCableHostPowerSupplyUnretained =
+            Failure.FromCode("assembly.power-cable.host-power-supply-unretained");
+        public static readonly Failure PowerCableDependentComponentLocked =
+            Failure.FromCode("assembly.power-cable.dependent-component-locked");
+        public static readonly Failure PowerCableReceiptHistoryInvalid =
+            Failure.FromCode("assembly.power-cable.receipt-history.invalid");
+        public static readonly Failure PowerCableMissing =
+            Failure.FromCode("assembly.benchmark.power-cable-missing");
         public static readonly Failure BuildIncomplete =
             Failure.FromCode("assembly.benchmark.build-incomplete");
         public static readonly Failure InvariantViolation =

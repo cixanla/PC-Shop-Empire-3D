@@ -662,6 +662,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddbea1589bbbf4050be6a6c5ca711466, type: 3}
   m_Name:
   m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.PlayerCarryController
+  atx24PowerCableRoute: {fileID: 0}
+  atx24PowerCableBinding: {fileID: 0}
   graphicsCardSlot: {fileID: 0}
   graphicsCardBinding: {fileID: 0}
   powerSupplyBay: {fileID: 0}

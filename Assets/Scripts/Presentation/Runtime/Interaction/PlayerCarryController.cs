@@ -93,6 +93,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasDimmSlotContext { get; private set; }
 
         public bool HasAssemblyPromptOwnership =>
+            IsAtx24PowerCableRouteMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -108,7 +109,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsM2StorageSeatMode ||
             HasM2StorageSlotContext ||
             (HeldItem != null &&
-             (GetMotherboardBinding(HeldItem) != null ||
+             (GetAtx24PowerCableBinding(HeldItem) != null ||
+              GetMotherboardBinding(HeldItem) != null ||
               GetProcessorBinding(HeldItem) != null ||
               GetDimmBinding(HeldItem) != null ||
               GetPowerSupplyBinding(HeldItem) != null ||
@@ -152,6 +154,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetProcessorCoolerBinding(HeldItem);
                     M2StorageAssemblyItemBinding storageBinding =
                         GetM2StorageBinding(HeldItem);
+                    Atx24PowerCableAssemblyItemBinding cableBinding =
+                        GetAtx24PowerCableBinding(HeldItem);
+                    if (cableBinding != null)
+                    {
+                        return GetHeldAtx24PowerCablePrompt(
+                            cableBinding,
+                            placement,
+                            drop,
+                            rotate);
+                    }
                     if (powerSupplyAssemblyBinding != null)
                     {
                         return GetHeldPowerSupplyPrompt(
@@ -422,6 +434,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     GetProcessorCoolerBinding(FocusedItem);
                 M2StorageAssemblyItemBinding focusedStorage =
                     GetM2StorageBinding(FocusedItem);
+                Atx24PowerCableAssemblyItemBinding focusedCable =
+                    GetAtx24PowerCableBinding(FocusedItem);
+                if (focusedCable != null)
+                {
+                    return GetFocusedAtx24PowerCablePrompt(focusedCable);
+                }
                 if (focusedPowerSupply != null)
                 {
                     return focusedPowerSupply.IsRetained
@@ -919,6 +937,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetGraphicsCardBinding(item);
             ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            Atx24PowerCableAssemblyItemBinding cableBinding =
+                GetAtx24PowerCableBinding(item);
+            if (cableBinding != null)
+            {
+                return TryPickupAtx24PowerCable(item, cableBinding);
+            }
             if (powerSupplyAssemblyBinding != null)
             {
                 return TryPickupPowerSupply(item, powerSupplyAssemblyBinding);
@@ -1173,6 +1197,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorCoolerAssemblyItemBinding coolerBinding = GetProcessorCoolerBinding(HeldItem);
             M2StorageAssemblyItemBinding storageBinding =
                 GetM2StorageBinding(HeldItem);
+            Atx24PowerCableAssemblyItemBinding cableBinding =
+                GetAtx24PowerCableBinding(HeldItem);
+            if (cableBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(
+                        Failure.FromCode("assembly-power-cable.paused")));
+                }
+
+                OperationResult drop = cableBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess)
+                {
+                    CompleteHeldItemRelease();
+                }
+                else
+                {
+                    SetCarryHandsState(blocked: true);
+                }
+
+                return Remember(drop);
+            }
             if (powerSupplyAssemblyBinding != null)
             {
                 if (motor != null && motor.IsPaused)
@@ -1520,6 +1566,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetAtx24PowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1535,6 +1582,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.DrainGameplayPressesThisFrame();
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                ResetAtx24PowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1555,6 +1603,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedCart = null;
+                if (ProcessHeldAtx24PowerCableInput())
+                {
+                    return;
+                }
                 if (ProcessHeldPowerSupplyInput())
                 {
                     return;
@@ -1749,6 +1801,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (ActiveCart != null)
             {
+                ResetAtx24PowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1784,6 +1837,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     SetHandsState(VisibleHandsState.TargetFocused);
                 }
 
+                return;
+            }
+
+            if (ProcessAtx24PowerCableWorldInput())
+            {
+                ResetPowerSupplyBayFocus();
+                ResetGraphicsCardSlotFocus();
+                ResetProcessorCoolerSlotFocus();
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
                 return;
             }
 
@@ -2068,6 +2133,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ProcessorCoolerAssemblyItemBinding coolerBinding =
                 GetProcessorCoolerBinding(item);
             M2StorageAssemblyItemBinding storageBinding = GetM2StorageBinding(item);
+            Atx24PowerCableAssemblyItemBinding cableBinding =
+                GetAtx24PowerCableBinding(item);
+            if (cableBinding != null)
+            {
+                OperationResult recovery = cableBinding.TryRecoverHeld(
+                    carryAnchor,
+                    heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                cableBinding.SyncProjectionToAuthority();
+                return Remember(recovery);
+            }
             if (powerSupplyAssemblyBinding != null)
             {
                 OperationResult recovery =
@@ -3005,6 +3086,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HeldItem = null;
             _heldItemId = string.Empty;
             ResetPlacementState();
+            atx24PowerCableBinding?.SyncProjectionToAuthority();
             processorAssemblyBinding?.SyncProjectionToAuthority();
             dimmAssemblyBinding?.SyncProjectionToAuthority();
             powerSupplyBinding?.SyncProjectionToAuthority();
@@ -3019,6 +3101,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void SetPlacementMode(bool enabled)
         {
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
+            IsAtx24PowerCableRouteMode = false;
+            atx24PowerCableRoute?.SetRouteModeActive(active: false);
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsPowerSupplySeatMode = false;
@@ -3069,6 +3153,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void ResetPlacementState()
         {
             IsPlacementMode = false;
+            ResetAtx24PowerCableState();
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;

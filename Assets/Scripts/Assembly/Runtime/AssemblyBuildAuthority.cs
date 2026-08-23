@@ -93,7 +93,9 @@ namespace PCShopEmpire3D.Assembly
             GraphicsCardSlotDefinition graphicsCardSlotDefinition = default,
             InventorySerializedTransferAccess graphicsCardInventoryTransferAccess = null,
             PowerSupplyBayDefinition powerSupplyBayDefinition = default,
-            InventorySerializedTransferAccess powerSupplyInventoryTransferAccess = null)
+            InventorySerializedTransferAccess powerSupplyInventoryTransferAccess = null,
+            Atx24PowerCableDefinition atx24PowerCableDefinition = default,
+            InventorySerializedTransferAccess atx24PowerCableInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -121,6 +123,9 @@ namespace PCShopEmpire3D.Assembly
             _graphicsCardInventoryTransferAccess = graphicsCardInventoryTransferAccess;
             _powerSupplyBayDefinition = powerSupplyBayDefinition;
             _powerSupplyInventoryTransferAccess = powerSupplyInventoryTransferAccess;
+            _atx24PowerCableDefinition = atx24PowerCableDefinition;
+            _atx24PowerCableInventoryTransferAccess =
+                atx24PowerCableInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -149,6 +154,11 @@ namespace PCShopEmpire3D.Assembly
             if (powerSupplyBayDefinition.IsValid)
             {
                 _powerSupplyBayState = PowerSupplyBayState.EmptyOpen;
+            }
+
+            if (atx24PowerCableDefinition.IsValid)
+            {
+                _atx24PowerCableState = Atx24PowerCableState.Loose;
             }
         }
 
@@ -739,6 +749,12 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            if (IsAtx24PowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
+            }
+
             Failure preflightFailure = ValidateFastenerOperation(
                 itemId,
                 slotId,
@@ -1305,6 +1321,11 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.PowerSupplyUnretained);
             }
 
+            if (HasAtx24PowerCableRoute && !IsAtx24PowerCableRouted)
+            {
+                return OperationResult.Fail(AssemblyFailures.PowerCableMissing);
+            }
+
             return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
         }
 
@@ -1613,6 +1634,11 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (!ValidatePowerSupplyStateInvariants())
+            {
+                return OperationResult.Fail(AssemblyFailures.InvariantViolation);
+            }
+
+            if (!ValidateAtx24PowerCableStateInvariants())
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }
