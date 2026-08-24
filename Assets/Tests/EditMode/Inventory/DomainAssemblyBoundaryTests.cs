@@ -7,6 +7,7 @@ using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
+using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Retail;
 
 namespace PCShopEmpire3D.Tests.EditMode.Inventory
@@ -62,7 +63,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
         }
 
         [Test]
-        public void OrdersHasStableNameAndDependsOnlyOnCoreCatalogAndInventoryDomains()
+        public void OrdersHasStableNameAndDependsDownstreamOnRetailWithoutAssemblyCycle()
         {
             string[] references = typeof(OrdersAssembly).Assembly
                 .GetReferencedAssemblies()
@@ -73,6 +74,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(references, Does.Contain("PSE.Core"));
             Assert.That(references, Does.Contain("PSE.Catalog"));
             Assert.That(references, Does.Contain("PSE.Inventory"));
+            Assert.That(references, Does.Contain("PSE.Retail"));
+            Assert.That(references, Does.Not.Contain("PSE.Assembly"));
+            Assert.That(references, Does.Not.Contain("PSE.Presentation"));
             AssertNoUnityReferences(references);
         }
 
@@ -126,6 +130,53 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                     System.Reflection.BindingFlags.Instance |
                     System.Reflection.BindingFlags.NonPublic),
                 Is.Not.Null);
+        }
+
+        [Test]
+        public void CustomPcWorkOrderIssueRequiresOpaqueAccessAndHasNoPublicSessionBypass()
+        {
+            System.Reflection.MethodInfo publicIssue =
+                typeof(CustomPcWorkOrderAuthority).GetMethod(
+                    "Issue",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public);
+            System.Reflection.MethodInfo issue =
+                typeof(CustomPcWorkOrderAuthority).GetMethod(
+                    "Issue",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic);
+
+            Assert.That(publicIssue, Is.Null);
+            Assert.That(issue, Is.Not.Null);
+            Assert.That(issue.GetParameters()[0].ParameterType,
+                Is.EqualTo(typeof(CustomPcWorkOrderIssueAccess)));
+            Assert.That(typeof(CustomPcWorkOrderIssueAccess).IsPublic, Is.False);
+            Assert.That(typeof(CustomPcWorkOrderAuthorityCreation).IsPublic, Is.False);
+            Assert.That(
+                typeof(CustomPcWorkOrderIssueAccess).GetConstructors(
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public),
+                Is.Empty);
+            Assert.That(
+                typeof(CustomPcWorkOrderAuthority).GetMethod(
+                    "Create",
+                    System.Reflection.BindingFlags.Static |
+                    System.Reflection.BindingFlags.Public),
+                Is.Null);
+            Assert.That(
+                typeof(GarageStockFlowSession).GetMethod(
+                    "IssuePrototypeCustomPcWorkOrder",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public),
+                Is.Null);
+            Assert.That(
+                typeof(CustomPcWorkOrderAuthority).GetMethod(
+                    "GetIssueAccessForTests",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic),
+                Is.Null,
+                "Production assemblies must not expose the authority-owned issue capability.");
         }
 
         [Test]

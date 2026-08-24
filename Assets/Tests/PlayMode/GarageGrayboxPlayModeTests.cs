@@ -142,6 +142,12 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     typeof(DefaultExecutionOrder));
             Assert.That(executionOrder, Is.Not.Null);
             Assert.That(executionOrder.order, Is.GreaterThan(0));
+            DefaultExecutionOrder carryExecutionOrder =
+                (DefaultExecutionOrder)System.Attribute.GetCustomAttribute(
+                    typeof(PlayerCarryController),
+                    typeof(DefaultExecutionOrder));
+            Assert.That(carryExecutionOrder, Is.Not.Null);
+            Assert.That(executionOrder.order, Is.LessThan(carryExecutionOrder.order));
 
             Object.Destroy(adapterObject);
             yield return null;
@@ -222,6 +228,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
         [UnityTest]
         public IEnumerator KeyboardMouseAndGamepadDriveTheLiveMotor()
         {
+            const float SimulatedFrameDeltaTime = 1f / 60f;
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             Mouse mouse = InputSystem.AddDevice<Mouse>();
             Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
@@ -240,15 +247,133 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Transform player = marker.PlayerMotor.transform;
             Transform cameraPivot = player.Find("CameraPivot");
             Assert.That(cameraPivot, Is.Not.Null);
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(controller, Is.Not.Null);
+            controller.enabled = false;
+            player.SetPositionAndRotation(
+                FindOpenMovementTestPosition(controller),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
 
             Vector3 keyboardStart = player.position;
+            Vector3 forward = player.forward;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.LeftShift));
             InputSystem.Update();
             Assert.That(keyboard.wKey.isPressed, Is.True);
             Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
             Assert.That(marker.PlayerInput.SprintHeld, Is.True);
-            yield return null;
-            Assert.That(player.position.z, Is.GreaterThan(keyboardStart.z));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.Dot(player.position - keyboardStart, forward),
+                Is.GreaterThan(0.001f),
+                "W must move the live CharacterController forward.");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            keyboardStart = player.position;
+            forward = player.forward;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+            InputSystem.Update();
+            Assert.That(keyboard.sKey.isPressed, Is.True);
+            Assert.That(marker.PlayerInput.Move.y, Is.LessThan(-0.9f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.Dot(player.position - keyboardStart, forward),
+                Is.LessThan(-0.001f),
+                "S must move the live CharacterController backward.");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            keyboardStart = player.position;
+            Vector3 right = player.right;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+            InputSystem.Update();
+            Assert.That(keyboard.aKey.isPressed, Is.True);
+            Assert.That(marker.PlayerInput.Move.x, Is.LessThan(-0.9f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.Dot(player.position - keyboardStart, right),
+                Is.LessThan(-0.001f),
+                "A must move the live CharacterController left.");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            keyboardStart = player.position;
+            right = player.right;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            InputSystem.Update();
+            Assert.That(keyboard.dKey.isPressed, Is.True);
+            Assert.That(marker.PlayerInput.Move.x, Is.GreaterThan(0.9f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.Dot(player.position - keyboardStart, right),
+                Is.GreaterThan(0.001f),
+                "D must move the live CharacterController right.");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.Move, Is.EqualTo(Vector2.zero));
+
+            keyboardStart = player.position;
+            forward = player.forward;
+            right = player.right;
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.W, Key.D));
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.Move.x, Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.Move.magnitude,
+                Is.LessThanOrEqualTo(1.001f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Vector3 diagonalDelta = player.position - keyboardStart;
+            Assert.That(Vector3.Dot(diagonalDelta, forward), Is.GreaterThan(0.001f));
+            Assert.That(Vector3.Dot(diagonalDelta, right), Is.GreaterThan(0.001f));
+
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.W, Key.S, Key.A, Key.D));
+            InputSystem.Update();
+            Assert.That(
+                marker.PlayerInput.Move.sqrMagnitude,
+                Is.LessThan(0.000001f),
+                "Opposite movement keys must resolve to a neutral input vector.");
+            keyboardStart = player.position;
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.ProjectOnPlane(
+                    player.position - keyboardStart,
+                    Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "Opposite movement keys must cancel without horizontal drift.");
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.Update();
+            keyboardStart = player.position;
+            marker.PlayerMotor.SetPaused(true);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(
+                Vector3.ProjectOnPlane(
+                    player.position - keyboardStart,
+                    Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "Paused gameplay must not consume movement input.");
+            marker.PlayerMotor.SetPaused(false);
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
 
@@ -257,22 +382,171 @@ namespace PCShopEmpire3D.Tests.PlayMode
             InputSystem.QueueStateEvent(mouse, new MouseState { delta = new Vector2(30f, -12f) });
             InputSystem.Update();
             Assert.That(marker.PlayerInput.Look.sqrMagnitude, Is.GreaterThan(0f));
-            marker.PlayerMotor.SendMessage("Update");
+            marker.PlayerMotor.SetPaused(false);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
             Assert.That(Mathf.DeltaAngle(yawBeforeMouse, player.eulerAngles.y), Is.Not.EqualTo(0f).Within(0.001f));
             Assert.That(Mathf.DeltaAngle(pitchBeforeMouse, cameraPivot.localEulerAngles.x), Is.Not.EqualTo(0f).Within(0.001f));
 
             Vector3 gamepadStart = player.position;
+            forward = player.forward;
+            right = player.right;
             float yawBeforeGamepad = player.eulerAngles.y;
             InputSystem.QueueStateEvent(gamepad, new GamepadState
             {
-                leftStick = Vector2.up,
-                rightStick = Vector2.right
+                leftStick = new Vector2(-0.8f, -0.8f),
+                rightStick = new Vector2(0.75f, -0.65f)
             });
             InputSystem.Update();
-            Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
-            yield return null;
-            Assert.That(Vector3.Distance(gamepadStart, player.position), Is.GreaterThan(0.001f));
+            Assert.That(marker.PlayerInput.Move.x, Is.LessThan(0f));
+            Assert.That(marker.PlayerInput.Move.y, Is.LessThan(0f));
+            Assert.That(marker.PlayerInput.Move.magnitude,
+                Is.LessThanOrEqualTo(1.001f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Vector3 gamepadHorizontalDelta = Vector3.ProjectOnPlane(
+                player.position - gamepadStart,
+                Vector3.up);
+            Assert.That(Vector3.Dot(gamepadHorizontalDelta, forward),
+                Is.LessThan(-0.001f));
+            Assert.That(Vector3.Dot(gamepadHorizontalDelta, right),
+                Is.LessThan(-0.001f));
             Assert.That(Mathf.DeltaAngle(yawBeforeGamepad, player.eulerAngles.y), Is.Not.EqualTo(0f).Within(0.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator PauseToggleInputFramesNeverLurchOrLook()
+        {
+            const float SimulatedFrameDeltaTime = 1f / 60f;
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            Transform player = marker.PlayerMotor.transform;
+            Transform cameraPivot = player.Find("CameraPivot");
+            Assert.That(cameraPivot, Is.Not.Null);
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(controller, Is.Not.Null);
+            controller.enabled = false;
+            player.SetPositionAndRotation(
+                FindOpenMovementTestPosition(controller),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+
+            marker.PlayerMotor.SetPaused(true);
+            Vector3 start = player.position;
+            float yaw = player.eulerAngles.y;
+            float pitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.Escape, Key.W));
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(80f, -40f) });
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.PausePressedThisFrame, Is.True);
+            Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
+            Assert.That(marker.PlayerInput.Look.sqrMagnitude, Is.GreaterThan(0f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+
+            start = player.position;
+            Vector3 forward = player.forward;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.Dot(player.position - start, forward),
+                Is.GreaterThan(0.001f));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            start = player.position;
+            yaw = player.eulerAngles.y;
+            pitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = 1u << (int)GamepadButton.Start,
+                    leftStick = Vector2.up,
+                    rightStick = new Vector2(0.75f, -0.65f)
+                });
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.PausePressedThisFrame, Is.True);
+            Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0.9f));
+            Assert.That(marker.PlayerInput.Look.sqrMagnitude, Is.GreaterThan(0f));
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.True);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+
+            start = player.position;
+            yaw = player.eulerAngles.y;
+            pitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = 1u << (int)GamepadButton.Start,
+                    leftStick = Vector2.up,
+                    rightStick = new Vector2(0.75f, -0.65f)
+                });
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.PausePressedThisFrame, Is.True);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
         }
 
         [UnityTest]
@@ -2940,11 +3214,19 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Object.DestroyImmediate(consultationBlocker);
             Physics.SyncTransforms();
             Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
             marker.PlayerMotor.SetPaused(true);
             Assert.That(customerFlow.CanConsultCurrentCustomer, Is.False);
-            customerFlow.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.Escape, Key.E));
+            yield return null;
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
             Assert.That(customerFlow.ConsultationCompleted, Is.False);
-            marker.PlayerMotor.SetPaused(false);
+            Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
             Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
             Assert.That(customerFlow.ContextualPromptText,
                 Does.Contain(marker.PlayerInput.InteractBindingPrompt));
@@ -2968,11 +3250,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.FocusedItem, Is.SameAs(overlapItem));
             string carryFailureBeforeConsultation = marker.PlayerCarry.LastFailureCode;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
-            InputSystem.Update();
-            customerFlow.ProcessInputFrame();
+            yield return null;
             Assert.That(customerFlow.ConsultationCompleted, Is.True);
             Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
-            marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
             Assert.That(overlapItem.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
             Assert.That(marker.PlayerCarry.LastFailureCode,
@@ -3073,6 +3353,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.StatusText, Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain("SATIN ALMA ONAYLANDI"));
+            Assert.That(marker.PlayerCarry.HasCompetingWorldInteractOwner, Is.False,
+                "A customer-reserved shelf item rejects pickup and must not steal " +
+                "Interact from a later valid world station.");
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
@@ -5159,6 +5442,53 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Quaternion.identity);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static Vector3 FindOpenMovementTestPosition(
+            CharacterController controller)
+        {
+            Vector3[] clearanceOffsets =
+            {
+                Vector3.zero,
+                Vector3.forward * 0.6f,
+                Vector3.back * 0.6f,
+                Vector3.left * 0.6f,
+                Vector3.right * 0.6f
+            };
+            for (float z = -3.5f; z <= 3.5f; z += 0.5f)
+            {
+                for (float x = -3f; x <= 3f; x += 0.5f)
+                {
+                    Vector3 candidate = new Vector3(x, 0.05f, z);
+                    if (clearanceOffsets.All(offset =>
+                            IsPlayerCapsuleClear(controller, candidate + offset)))
+                    {
+                        return candidate;
+                    }
+                }
+            }
+
+            Assert.Fail("Garage must contain an open movement-test area.");
+            return default;
+        }
+
+        private static bool IsPlayerCapsuleClear(
+            CharacterController controller,
+            Vector3 position)
+        {
+            float radius = controller.radius + 0.04f;
+            float halfHeight = Mathf.Max(controller.height * 0.5f, radius);
+            Vector3 center = position + controller.center;
+            Vector3 segment = Vector3.up * (halfHeight - radius);
+            return Physics.OverlapCapsule(
+                    center - segment,
+                    center + segment,
+                    radius,
+                    ~0,
+                    QueryTriggerInteraction.Ignore)
+                .All(collider =>
+                    collider == controller ||
+                    collider.transform.IsChildOf(controller.transform));
         }
 
         private static void MovePlayerToStackSupport(GaragePrototypeMarker marker)

@@ -121,6 +121,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CheckoutSettlementAuthority checkoutSettlements,
             CustomerVisitAuthority customerVisits,
             CustomerConsultationAuthority customerConsultations,
+            CustomPcQuoteAuthority customPcQuotes,
+            CustomPcWorkOrderAuthority customPcWorkOrders,
+            CustomPcWorkOrderIssueAccess customPcWorkOrderIssueAccess,
             CustomerOfferDecisionActionAuthority customerOfferActions,
             CustomerRetailIdentityBinding prototypeCustomerBinding)
         {
@@ -135,6 +138,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CheckoutSettlements = checkoutSettlements;
             CustomerVisits = customerVisits;
             CustomerConsultations = customerConsultations;
+            CustomPcQuotes = customPcQuotes;
+            CustomPcWorkOrders = customPcWorkOrders;
+            _customPcWorkOrderIssueAccess = customPcWorkOrderIssueAccess;
             CustomerOfferActions = customerOfferActions;
             PrototypeCustomerBinding = prototypeCustomerBinding;
         }
@@ -160,6 +166,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public CustomerVisitAuthority CustomerVisits { get; }
 
         public CustomerConsultationAuthority CustomerConsultations { get; }
+
+        public CustomPcQuoteAuthority CustomPcQuotes { get; }
+
+        public CustomPcWorkOrderAuthority CustomPcWorkOrders { get; }
+
+        private readonly CustomPcWorkOrderIssueAccess _customPcWorkOrderIssueAccess;
+
+        private CustomPcWorkTicketStationProjection _canonicalCustomPcWorkTicketStation;
 
         public CustomerOfferDecisionActionAuthority CustomerOfferActions { get; }
 
@@ -778,6 +792,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 CustomerVisitAuthority.RequiredRouteAttemptLimit).Value;
             CustomerConsultationAuthority customerConsultations =
                 CustomerConsultationAuthority.Create(customerVisits).Value;
+            CustomPcQuoteAuthority customPcQuotes = CustomPcQuoteAuthority.Create(
+                catalog,
+                components,
+                inventory,
+                customerConsultations).Value;
+            CustomPcWorkOrderAuthorityCreation customPcWorkOrderCreation =
+                CustomPcWorkOrderAuthority.Create(
+                    customPcQuotes,
+                    StableId<ContainerIdScope>.Parse(
+                        WorkbenchContainerIdValue)).Value;
+            CustomPcWorkOrderAuthority customPcWorkOrders =
+                customPcWorkOrderCreation.Authority;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
                     retailOffers,
@@ -922,6 +948,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 checkoutSettlements,
                 customerVisits,
                 customerConsultations,
+                customPcQuotes,
+                customPcWorkOrders,
+                customPcWorkOrderCreation.IssueAccess,
                 customerOfferActions,
                 prototypeCustomerBinding);
             RequireSuccess(session.ValidateInvariants());
@@ -1691,6 +1720,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (consultationResult.IsFailure)
             {
                 return consultationResult;
+            }
+
+            OperationResult customPcQuoteResult = CustomPcQuotes.ValidateInvariants();
+            if (customPcQuoteResult.IsFailure)
+            {
+                return customPcQuoteResult;
+            }
+
+            OperationResult customPcWorkOrderResult =
+                CustomPcWorkOrders.ValidateInvariants();
+            if (customPcWorkOrderResult.IsFailure)
+            {
+                return customPcWorkOrderResult;
             }
 
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();

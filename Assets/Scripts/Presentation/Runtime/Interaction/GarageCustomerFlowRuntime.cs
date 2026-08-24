@@ -16,7 +16,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// only report arrival or route failure; customer intent and lifecycle remain domain-owned.
     /// </summary>
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(100)]
+    [DefaultExecutionOrder(50)]
     public sealed class GarageCustomerFlowRuntime : MonoBehaviour
     {
         private const float ArrivalTolerance = 0.10f;
@@ -62,6 +62,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private StableId<CustomerVisitIdScope> _lastOfferActionVisitId;
         private string _lastConsultationFailureCode = string.Empty;
         private StableId<CustomerVisitIdScope> _lastConsultationVisitId;
+        private string _lastCustomPcFailureCode = string.Empty;
+        private StableId<CustomerVisitIdScope> _lastCustomPcVisitId;
+        private bool _hasDeferredBrowsingDeadline;
+        private StableId<CustomerVisitIdScope> _deferredDeadlineVisitId;
+        private CustomerVisitState _deferredDeadlineState;
+        private SimulationTimestamp _deferredStateDeadline;
+        private int _deferredAtRenderedFrame;
 
         public GarageStockFlowRuntime StockFlow => stockFlow;
 
@@ -137,6 +144,40 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool ConsultationCompleted => CurrentConsultation != null;
 
+        public CustomPcRequestRecord CurrentCustomPcRequest
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
+                    : null;
+                return session != null &&
+                       session.TryGetPrototypeCustomPcRequest(
+                           out CustomPcRequestRecord request)
+                    ? request
+                    : null;
+            }
+        }
+
+        public CustomPcQuoteRecord CurrentCustomPcQuote
+        {
+            get
+            {
+                GarageStockFlowSession session = stockFlow != null
+                    ? stockFlow.EnsureInitialized()
+                    : null;
+                return session != null &&
+                       session.TryGetPrototypeCustomPcQuote(
+                           out CustomPcQuoteRecord quote)
+                    ? quote
+                    : null;
+            }
+        }
+
+        public bool CustomPcRequestAccepted => CurrentCustomPcRequest != null;
+
+        public bool CustomPcQuoteReady => CurrentCustomPcQuote != null;
+
         public bool CanConsultCurrentCustomer
         {
             get
@@ -145,6 +186,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return visit != null &&
                        visit.State == CustomerVisitState.Browsing &&
                        !ConsultationCompleted &&
+                       CustomerVisible &&
+                       playerMotor != null &&
+                       !playerMotor.IsPaused &&
+                       HasCustomerFocus();
+            }
+        }
+
+        public bool CanProgressCurrentCustomPc
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                return visit != null &&
+                       visit.State == CustomerVisitState.Browsing &&
+                       ConsultationCompleted &&
+                       !CustomPcQuoteReady &&
                        CustomerVisible &&
                        playerMotor != null &&
                        !playerMotor.IsPaused &&
@@ -165,6 +222,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public string LastCustomPcFailureCode
+        {
+            get
+            {
+                CustomerVisitRecord visit = CurrentVisit;
+                return visit != null &&
+                       visit.State == CustomerVisitState.Browsing &&
+                       visit.Id == _lastCustomPcVisitId
+                    ? _lastCustomPcFailureCode
+                    : string.Empty;
+            }
+        }
+
         public string ContextualPromptText
         {
             get
@@ -181,15 +251,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return $"GÖRÜŞME ENGELLİ • {failure}";
                 }
 
-                if (ConsultationCompleted)
+                if (!ConsultationCompleted)
+                {
+                    return CanConsultCurrentCustomer
+                        ? $"{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: " +
+                          "müşterinin ihtiyacını sor"
+                        : string.Empty;
+                }
+
+                string customPcFailure = LastCustomPcFailureCode;
+                if (!string.IsNullOrEmpty(customPcFailure))
+                {
+                    string failureText =
+                        $"ÖZEL PC İŞLEMİ ENGELLİ • {customPcFailure}";
+                    return CanProgressCurrentCustomPc
+                        ? $"{failureText} • " +
+                          $"{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: " +
+                          "tekrar dene"
+                        : failureText;
+                }
+
+                if (CustomPcQuoteReady || !CanProgressCurrentCustomPc)
                 {
                     return string.Empty;
                 }
 
-                return CanConsultCurrentCustomer
-                    ? $"{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: " +
-                      "müşterinin ihtiyacını sor"
-                    : string.Empty;
+                string action = CustomPcRequestAccepted
+                    ? "10 parçayı ayır ve teklifi hazırla"
+                    : "özel oyun PC'si talebini kabul et";
+                return $"{(playerInput != null ? playerInput.InteractBindingPrompt : "E / A")}: " +
+                       action;
             }
         }
 
@@ -210,7 +301,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (ConsultationCompleted)
                 {
-                    return "MÜŞTERİ 001\n\"EKRAN KARTIMI\nYÜKSELTMEK İSTİYORUM\"";
+                    CustomPcQuoteRecord quote = CurrentCustomPcQuote;
+                    if (quote != null)
+                    {
+                        return "MÜŞTERİ 001\nÖZEL OYUN PC'Sİ TEKLİFİ HAZIR\n" +
+                               $"{quote.ReservedSerializedItemCount} PARÇA • " +
+                               GarageStockFlowRuntime.FormatPrice(quote.TotalPrice);
+                    }
+
+                    return CustomPcRequestAccepted
+                        ? "MÜŞTERİ 001\n\"EKRAN KARTIMI YÜKSELTMEK İSTİYORUM\nVE TAM BİR OYUN PC'Sİ TOPLAYALIM\"\nTALEP ALINDI • TEKLİF BEKLİYOR"
+                        : "MÜŞTERİ 001\n\"EKRAN KARTIMI YÜKSELTMEK İSTİYORUM\nVE TAM BİR OYUN PC'Sİ TOPLAYALIM\"";
                 }
 
                 return CanConsultCurrentCustomer
@@ -229,6 +330,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (session == null ||
                     !session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord visit) ||
                     visit.State != CustomerVisitState.Browsing)
+                {
+                    _displayedOfferDecision = null;
+                    _displayedDecisionVisitId = default;
+                    return null;
+                }
+
+                if (CustomPcRequestAccepted)
                 {
                     _displayedOfferDecision = null;
                     _displayedDecisionVisitId = default;
@@ -358,9 +466,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         }
 
                         string decisionText = OfferDecisionText;
-                        return string.IsNullOrEmpty(decisionText)
+                        string baseState = string.IsNullOrEmpty(decisionText)
                             ? "İHTİYAÇ KAYDEDİLDİ • KARAR HAZIRLANIYOR"
                             : $"İHTİYAÇ: EKRAN KARTI YÜKSELTMESİ • {decisionText}";
+                        CustomPcQuoteRecord quote = CurrentCustomPcQuote;
+                        if (quote != null)
+                        {
+                            return $"{baseState} • ÖZEL PC TEKLİFİ HAZIR • " +
+                                   $"{quote.ReservedSerializedItemCount} PARÇA AYRILDI • " +
+                                   GarageStockFlowRuntime.FormatPrice(quote.TotalPrice);
+                        }
+
+                        return CustomPcRequestAccepted
+                            ? $"{baseState} • ÖZEL PC TALEBİ KAYITLI • TEKLİF BEKLİYOR"
+                            : $"{baseState} • ÖZEL PC TALEBİ BEKLİYOR";
                     case CustomerVisitState.NavigatingToCheckout:
                         return "KASAYA İLERLİYOR";
                     case CustomerVisitState.AwaitingCheckout:
@@ -395,12 +514,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 string reasonCode = OfferDecisionReasonCode;
                 string actionStatus = OfferActionStatusText;
                 string consultationFailure = LastConsultationFailureCode;
+                string customPcFailure = LastCustomPcFailureCode;
                 string status = string.IsNullOrEmpty(reasonCode)
                     ? $"MÜŞTERİ AKIŞI: {StateText}\n{route}"
                     : $"MÜŞTERİ AKIŞI: {StateText}\n{route}\n{reasonCode}";
                 if (!string.IsNullOrEmpty(consultationFailure))
                 {
                     status = $"{status}\nGÖRÜŞME ENGELLİ • {consultationFailure}";
+                }
+
+                if (!string.IsNullOrEmpty(customPcFailure))
+                {
+                    status = $"{status}\nÖZEL PC İŞLEMİ ENGELLİ • {customPcFailure}";
                 }
 
                 return string.IsNullOrEmpty(actionStatus)
@@ -429,16 +554,48 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return RecordConsultationResult(result);
         }
 
+        public OperationResult TryProgressCurrentCustomPc()
+        {
+            CustomerVisitRecord visit = CurrentVisit;
+            if (visit == null ||
+                visit.State != CustomerVisitState.Browsing ||
+                !ConsultationCompleted ||
+                CustomPcQuoteReady ||
+                !CanProgressCurrentCustomPc)
+            {
+                return RecordCustomPcResult(
+                    OperationResult.Fail(
+                        GarageCustomerCustomPcFailures.FocusRequired));
+            }
+
+            GarageStockFlowSession session = stockFlow != null
+                ? stockFlow.EnsureInitialized()
+                : null;
+            OperationResult result = session == null
+                ? OperationResult.Fail(CustomPcQuoteFailures.InputInvalid)
+                : CustomPcRequestAccepted
+                    ? session.CreatePrototypeCustomPcQuote(CurrentConsultationTime)
+                    : session.AcceptPrototypeCustomPcRequest(CurrentConsultationTime);
+            return RecordCustomPcResult(result);
+        }
+
         public void ProcessInputFrame()
         {
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
-                !CanConsultCurrentCustomer ||
+                playerInput.PausePressedThisFrame ||
+                (!CanConsultCurrentCustomer && !CanProgressCurrentCustomPc) ||
                 !playerInput.TryConsumeInteractPressThisFrame())
             {
                 return;
             }
 
-            TryConsultCurrentCustomer();
+            if (CanConsultCurrentCustomer)
+            {
+                TryConsultCurrentCustomer();
+                return;
+            }
+
+            TryProgressCurrentCustomPc();
         }
 
         public void RecordOfferActionResult(OperationResult result)
@@ -589,9 +746,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void FixedUpdate()
         {
+            ProcessFixedStep(Time.frameCount);
+        }
+
+        internal void ProcessFixedStep(int renderedFrame)
+        {
             bool paused = playerMotor != null && playerMotor.IsPaused;
             if (paused)
             {
+                ClearDeferredBrowsingDeadline();
                 _simulationClock.Pause();
                 SetAgentPaused(true);
                 _wasPaused = true;
@@ -643,6 +806,32 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             DriveVisit(session, visit);
+            if (!session.TryGetPrototypeCustomerVisit(out CustomerVisitRecord currentVisit))
+            {
+                LogConfigurationFailureOnce("customer-flow.visit-missing-after-drive");
+                return;
+            }
+
+            bool customPcServiceOwnsVisit =
+                currentVisit.State == CustomerVisitState.Browsing &&
+                CustomPcRequestAccepted;
+            if (customPcServiceOwnsVisit)
+            {
+                ClearDeferredBrowsingDeadline();
+                RefreshPresentation();
+                return;
+            }
+
+            if (ShouldDeferBrowsingDeadline(
+                    currentVisit,
+                    CurrentSimulationTime,
+                    renderedFrame))
+            {
+                RefreshPresentation();
+                return;
+            }
+
+            ClearDeferredBrowsingDeadline();
             OperationResult advance = session.AdvanceCustomerTime(CurrentSimulationTime);
             if (advance.IsFailure)
             {
@@ -657,6 +846,45 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             RefreshPresentation();
+        }
+
+        private bool ShouldDeferBrowsingDeadline(
+            CustomerVisitRecord visit,
+            SimulationTimestamp now,
+            int renderedFrame)
+        {
+            if (visit == null ||
+                visit.State != CustomerVisitState.Browsing ||
+                !now.IsAtOrAfter(visit.StateDeadline))
+            {
+                ClearDeferredBrowsingDeadline();
+                return false;
+            }
+
+            bool exactDeadline = _hasDeferredBrowsingDeadline &&
+                                 _deferredDeadlineVisitId == visit.Id &&
+                                 _deferredDeadlineState == visit.State &&
+                                 _deferredStateDeadline == visit.StateDeadline;
+            if (!exactDeadline)
+            {
+                _hasDeferredBrowsingDeadline = true;
+                _deferredDeadlineVisitId = visit.Id;
+                _deferredDeadlineState = visit.State;
+                _deferredStateDeadline = visit.StateDeadline;
+                _deferredAtRenderedFrame = renderedFrame;
+                return true;
+            }
+
+            return _deferredAtRenderedFrame == renderedFrame;
+        }
+
+        private void ClearDeferredBrowsingDeadline()
+        {
+            _hasDeferredBrowsingDeadline = false;
+            _deferredDeadlineVisitId = default;
+            _deferredDeadlineState = default;
+            _deferredStateDeadline = default;
+            _deferredAtRenderedFrame = 0;
         }
 
         private void StartVisit(GarageStockFlowSession session)
@@ -983,6 +1211,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return result;
         }
 
+        private OperationResult RecordCustomPcResult(OperationResult result)
+        {
+            CustomerVisitRecord visit = CurrentVisit;
+            bool showFailure = result.IsFailure &&
+                               visit != null &&
+                               visit.State == CustomerVisitState.Browsing;
+            _lastCustomPcFailureCode = showFailure
+                ? result.Error.Code
+                : string.Empty;
+            _lastCustomPcVisitId = showFailure ? visit.Id : default;
+            stockFlow?.RefreshPresentation();
+            RefreshPresentation();
+            return result;
+        }
+
         private bool HasCustomerFocus()
         {
             if (playerCamera == null || customerVisualRoot == null || !CustomerVisible)
@@ -1139,5 +1382,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
     {
         public static readonly Failure FocusRequired =
             Failure.FromCode("presentation.customer-consultation.focus-required");
+    }
+
+    public static class GarageCustomerCustomPcFailures
+    {
+        public static readonly Failure FocusRequired =
+            Failure.FromCode("presentation.customer-custom-pc.focus-required");
     }
 }

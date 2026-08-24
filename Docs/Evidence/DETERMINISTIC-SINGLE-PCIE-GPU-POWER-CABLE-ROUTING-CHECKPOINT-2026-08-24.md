@@ -6,7 +6,8 @@
 **Feature tree:** `ecc32279a8e17e8179114a9b6cfcfe4737827601`<br>
 **Explicit 6+2 visual fix:** `d655f1a5aab0c882cf40702472ec1b8ad44747ad`<br>
 **Visual-fix tree:** `c3fff116317db7e3388e0faf04e38a7ffaa7ce77`<br>
-**Closure status:** Technical macOS checkpoint verified; Windows license and USB gates pending
+**Source/docs:** `d597941a20afd0491547513abbc68e0b9d890aab`<br>
+**Closure status:** macOS and Windows technical checkpoints verified; physical USB gate pending
 
 ## Delivered playable result
 
@@ -26,7 +27,8 @@ The routed cable remains the same Unity component instance and stable ItemId. Th
 | Native runtime | Success | `issue63-r32-6plus2-surgical-native-smoke-final.log` (6,141 bytes) | `0d31f2903038221a350bf8a7e32c7a61da30491bac27262bd2f03eca20777e0c` |
 | Surgical scene patch | Success | `issue63-r32-6plus2-scene-surgical-patch.log` (37,634 bytes) | `ef34f8fd8df7ff2d23afdbf2221617e30cabfd1a243a5f0452cc8327d4d1491a` |
 | Scene | Deterministic r32 | `Assets/Scenes/Prototypes/GarageGraybox.unity` (2,854,602 bytes) | `7fc63ba4686db17f5ca7800bf2421a526df591659dc84c201439f153416ff338` |
-| Windows IL2CPP | Blocked before compile | `issue63-r32-windows-il2cpp-license-blocked.log` (6,669 bytes) | `e876e5d8fe08873484f7e6dfbf9b33680ed4658f558d334b54105dd8a9385429` |
+| Windows x64 IL2CPP build | Success | `windows-il2cpp-strict-build-r3.log` (1,554,549 bytes) | `459e95bb43ab79a1004e13e71b74c8500f484c9cd33e1f698deb7f277f844799` |
+| Windows Direct3D 11 runtime | Success | `runtime-r32-native-interactive-r3.log` (4,765 bytes) | `853dd5bd75b63d8938dcd6f9b664e979b43aeafa1409b3678dad143d931b3f9e` |
 
 Both full XML suites report zero failed, skipped, and inconclusive tests. The build is a 329,334,656-byte Universal Mach-O macOS application with `arm64` and `x86_64` slices. Its 117,179-byte executable has SHA-256 `3e74cdd08573d81381e152e56828fd5b1b38cae520dac0b544c1e7736f7d8062`. `/Users/cixanla/Desktop/PC Shop Empire 3D.app` resolves to this current build.
 
@@ -38,15 +40,17 @@ GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok preflight=ok psu-retaine
 
 The player was launched windowed at 1280×720 on the active Apple Silicon/Metal workstation with `-pse-pcie-gpu-power-cable-smoke`. The runtime identified Apple M1/Metal and emitted canonical readiness `garage-pcie-gpu-power-cable-routing-r32-v1`. The exact success marker appeared once; no PCIe/GPU failure marker, assertion, missing-reference, or unhandled exception appeared.
 
+The same r32 native contract later passed on the real Windows host from clean/exact source `d597941`. The IL2CPP build reported `STAGE_A_BUILD_OK target=StandaloneWindows64 bytes=1320679269`. The interactive player initialized Intel Iris Xe Graphics through Direct3D 11.0 feature level 11.1, emitted the same canonical readiness and exact PCIe/GPU success marker once, and shut down cleanly. The earlier non-licensed attempts are retained only as diagnostic history.
+
 ## Repository, Windows, and external checkpoint status
 
 - Feature Repository Guard: [32676069923](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676069923), success.
 - Repeatable Windows IL2CPP gate commit `cdfe9d6a3bed20a6529fb045f69d7394b3b147c8` passed [Repository Guard 32676154473](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676154473).
 - Explicit GPU-side 6+2 visual correction `d655f1a5aab0c882cf40702472ec1b8ad44747ad` passed [Repository Guard 32677267023](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677267023).
-- The Windows validation clone was clean and exact at `cdfe9d6` when the build gate ran. Unity 6000.3.21f1 with Windows IL2CPP support and the required Microsoft C++ toolchain is installed. It must be fast-forwarded to the final Issue #63 source/docs head before the retry.
-- The first Windows build attempt ended before compilation with `No valid Unity Editor license found` and process exit code 198. This is an environment-license blocker, not a source/build failure. Windows IL2CPP build size, executable hash, DirectX device, and native r32 smoke are not claimed.
-- The expected USB is now safely mounted at `/Volumes/cixanla/CIXANLA`; `90_BACKUPS/PCShopEmpire3D` and the prior Issue #62 milestone chain are verified. No Issue #63 write is attempted before Windows native proof and final source/docs identity. Local final staging and physical two-pass manifest readback remain pending.
-- Issue #63 remains open and Roadmap `In Progress`; acceptance closure is intentionally withheld until Windows native and USB gates pass.
+- Source/docs checkpoint `d597941a20afd0491547513abbc68e0b9d890aab` passed [Repository Guard 32677495639](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677495639).
+- The Windows validation clone was clean and exact at `d597941`. Unity 6000.3.21f1 with Windows IL2CPP support and the Microsoft C++ toolchain produced the real x64 player; the active console session supplied the Direct3D 11 r32 native proof recorded above.
+- The user currently reports that the physical USB is disconnected. It is not queried or written. The prior Issue #62 milestone remains the latest verified physical chain; Issue #63 local staging and physical two-pass manifest readback remain pending.
+- Issue #63 remains open and Roadmap `In Progress`; acceptance closure is intentionally withheld only for the remaining staging/USB/final-metadata gate.
 
 ## Bounded exclusions
 

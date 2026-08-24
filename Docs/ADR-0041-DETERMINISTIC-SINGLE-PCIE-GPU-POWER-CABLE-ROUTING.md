@@ -1,6 +1,6 @@
 # ADR-0041 — Deterministic Single PCIe/GPU Power Cable Routing
 
-**Status:** Implemented and verified on macOS; Windows/USB closure pending<br>
+**Status:** Implemented and verified on macOS and Windows; physical USB closure pending<br>
 **Date:** 24 August 2026<br>
 **Scope:** Issue #63, child of Epic #10
 
@@ -34,5 +34,7 @@ GarageGraybox r32 now contains three separately authoritative power-cable famili
 - Feature commit: `ea1e51f862d4094936c03bccf9fbfaee7bb7d12b`; tree `ecc32279a8e17e8179114a9b6cfcfe4737827601`; Repository Guard [32676069923](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676069923), success.
 - Repeatable Windows IL2CPP build gate commit: `cdfe9d6a3bed20a6529fb045f69d7394b3b147c8`; tree `3b1b06966cbc39759756ec0ec2220647b5348319`; Repository Guard [32676154473](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676154473), success.
 - Explicit 6+2 visual correction commit: `d655f1a5aab0c882cf40702472ec1b8ad44747ad`; tree `c3fff116317db7e3388e0faf04e38a7ffaa7ce77`; Repository Guard [32677267023](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677267023), success. A bounded independent read-only re-audit found no remaining P0/P1 visual or physics-contract issue.
-- The Windows clone was clean and exact at `cdfe9d6` when the gate ran; Unity 6000.3.21f1 Windows IL2CPP support, Visual Studio Build Tools, MSVC, MSBuild, and Windows SDK are installed. The first native build attempt stopped before compilation with Unity exit code 198 because that machine has no activated Editor license. Windows IL2CPP/DirectX runtime proof therefore remains pending and is not claimed; the clone must be fast-forwarded to the final Issue #63 source/docs head before retry.
-- The expected USB is now safely mounted at `/Volumes/cixanla/CIXANLA`, and its `90_BACKUPS/PCShopEmpire3D` root plus prior Issue #62 milestone chain are verified. No Issue #63 final package is written until the Windows gate passes and the final source/docs identity is fixed. Local final staging, two-pass physical USB readback, final metadata commit, Issue closure, and Roadmap `Done` remain pending.
+- Source/docs checkpoint `d597941a20afd0491547513abbc68e0b9d890aab` passed Repository Guard [32677495639](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677495639).
+- The Windows validation clone was clean and exact at `d597941`. Unity 6000.3.21f1, Windows IL2CPP support, Visual Studio Build Tools, MSVC, MSBuild and the Windows SDK produced a Development/StrictMode x64 IL2CPP player with report size `1,320,679,269` bytes. The active Windows console session then ran the player on Intel Iris Xe / Direct3D 11.0 feature level 11.1 and emitted canonical r32 readiness plus the exact PCIe/GPU success marker once.
+- The Windows build log is `1,554,549` bytes with SHA-256 `459e95bb43ab79a1004e13e71b74c8500f484c9cd33e1f698deb7f277f844799`; the interactive runtime log is `4,765` bytes with SHA-256 `853dd5bd75b63d8938dcd6f9b664e979b43aeafa1409b3678dad143d931b3f9e`. The earlier exit-198 license attempts remain diagnostic history and are not the final Windows result.
+- The user currently reports that the physical USB is disconnected. No USB query or write is performed. Local final staging, two-pass physical USB readback, final metadata commit, Issue closure, and Roadmap `Done` remain pending.

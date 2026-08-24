@@ -13,17 +13,21 @@ using PCShopEmpire3D.Presentation.Player;
 using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-pcie-gpu-power-cable-routing-r32-v1";
+        public const string Version = "garage-custom-pc-work-ticket-r34-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
             PowerSupplyRuntimeGeometry.RuntimeMarker;
+        internal const string WindowsD3D11RuntimeHostMarker =
+            "GARAGE_RUNTIME_HOST platform=WindowsPlayer graphics-api=Direct3D11 " +
+            "force-d3d11=requested";
 
         [SerializeField] private FirstPersonMotor playerMotor;
         [SerializeField] private PlayerInputAdapter playerInput;
@@ -32,6 +36,7 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private GarageStockFlowRuntime stockFlow;
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
         [SerializeField] private CheckoutStationProjection checkoutStation;
+        [SerializeField] private CustomPcWorkTicketStationProjection customPcWorkTicketStation;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -69,6 +74,9 @@ namespace PCShopEmpire3D.Presentation
         public GarageCustomerFlowRuntime CustomerFlow => customerFlow;
 
         public CheckoutStationProjection CheckoutStation => checkoutStation;
+
+        public CustomPcWorkTicketStationProjection CustomPcWorkTicketStation =>
+            customPcWorkTicketStation;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -182,6 +190,7 @@ namespace PCShopEmpire3D.Presentation
             GarageStockFlowRuntime garageStockFlow = null,
             GarageCustomerFlowRuntime garageCustomerFlow = null,
             CheckoutStationProjection physicalCheckoutStation = null,
+            CustomPcWorkTicketStationProjection physicalCustomPcWorkTicketStation = null,
             MotherboardSeatProjection physicalMotherboardSeat = null,
             MotherboardFastenerProjection physicalMotherboardFastener = null,
             MotherboardAssemblyItemBinding physicalMotherboardBinding = null,
@@ -225,6 +234,7 @@ namespace PCShopEmpire3D.Presentation
             stockFlow = garageStockFlow;
             customerFlow = garageCustomerFlow;
             checkoutStation = physicalCheckoutStation;
+            customPcWorkTicketStation = physicalCustomPcWorkTicketStation;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -267,6 +277,21 @@ namespace PCShopEmpire3D.Presentation
 
         private void Start()
         {
+            if (stockFlow == null || customPcWorkTicketStation == null)
+            {
+                throw new InvalidOperationException(
+                    CustomPcWorkTicketStationFailures.ConfigurationMissing.Code);
+            }
+
+            OperationResult stationRegistration = stockFlow
+                .EnsureInitialized()
+                .RegisterCanonicalCustomPcWorkTicketStation(
+                    customPcWorkTicketStation);
+            if (stationRegistration.IsFailure)
+            {
+                throw new InvalidOperationException(stationRegistration.Error.Code);
+            }
+
             bool hasLargeBox = false;
             int smallBoxCount = 0;
             PhysicalItemProjection[] items = FindObjectsByType<PhysicalItemProjection>(
@@ -334,6 +359,27 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerConsultationAuthority = hasCustomerVisitAuthority &&
                                                     stockFlow.Session.CustomerConsultations != null &&
                                                     !stockFlow.Session.PrototypeCustomerConsultationId.IsEmpty;
+            bool hasCustomPcQuoteAuthority = hasCustomerConsultationAuthority &&
+                                             stockFlow.Session.CustomPcQuotes != null &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Catalog,
+                                                 stockFlow.Session.Catalog) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Components,
+                                                 stockFlow.Session.Components) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Inventory,
+                                                 stockFlow.Session.Inventory) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Consultations,
+                                                 stockFlow.Session.CustomerConsultations) &&
+                                             !stockFlow.Session.PrototypeCustomPcRequestId.IsEmpty &&
+                                             !stockFlow.Session.PrototypeCustomPcQuoteId.IsEmpty &&
+                                             !stockFlow.Session.PrototypeCustomPcClaimId.IsEmpty &&
+                                             stockFlow.Session.CreatePrototypeCustomPcQuoteLines().Count ==
+                                                 CustomPcQuoteAuthority.GraphicsFirstGamingLineCount &&
+                                             customerFlow != null &&
+                                             customerFlow.StockFlow == stockFlow;
             bool hasCustomerBuyActionAuthority = hasArrivedStockFlow &&
                                                  stockFlow.Session.CustomerOfferActions != null &&
                                                  stockFlow.Session.CustomerOfferActions.Count == 0;
@@ -349,6 +395,32 @@ namespace PCShopEmpire3D.Presentation
                                               checkoutStation.StationStatusText != null &&
                                               checkoutStation.StationIdValue ==
                                                   CheckoutStationProjection.PrototypeStationIdValue;
+            bool hasCustomPcWorkOrderAuthority = hasCustomPcQuoteAuthority &&
+                                                 stockFlow.Session.CustomPcWorkOrders != null &&
+                                                 ReferenceEquals(
+                                                     stockFlow.Session.CustomPcWorkOrders.Quotes,
+                                                     stockFlow.Session.CustomPcQuotes) &&
+                                                 ReferenceEquals(
+                                                     stockFlow.Session.CustomPcWorkOrders.Inventory,
+                                                     stockFlow.Session.Inventory) &&
+                                                 stockFlow.Session.CustomPcWorkOrders.WorkbenchContainerId ==
+                                                     stockFlow.Session.WorkbenchContainerId &&
+                                                 stockFlow.Session.CustomPcWorkOrders.WorkOrderCount == 0 &&
+                                                 stockFlow.Session.CustomPcWorkOrders.WorkTicketCount == 0;
+            Renderer customPcWorkTicketTextRenderer =
+                customPcWorkTicketStation?.StationStatusText?.GetComponent<Renderer>();
+            bool hasPhysicalCustomPcWorkTicketStation =
+                customPcWorkTicketStation != null &&
+                customPcWorkTicketStation.InteractionCollider != null &&
+                customPcWorkTicketStation.InteractionCollider.isTrigger &&
+                customPcWorkTicketStation.InteractionCollider.gameObject.layer ==
+                    LayerMask.NameToLayer("Interactable") &&
+                customPcWorkTicketStation.StationStatusText != null &&
+                customPcWorkTicketStation.StationStatusText.gameObject.activeInHierarchy &&
+                customPcWorkTicketTextRenderer != null &&
+                customPcWorkTicketTextRenderer.enabled &&
+                customPcWorkTicketStation.StationIdValue ==
+                    CustomPcWorkTicketStationProjection.PrototypeStationIdValue;
             GarageStockFlowSession assemblySession = stockFlow?.Session;
             bool hasMotherboardSeat = motherboardSeat != null &&
                                       motherboardSeat.IsConfigured;
@@ -904,6 +976,11 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
                 $"customer-consultation={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
                 $"consultation-decision-gate={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
+                $"custom-pc-request={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
+                $"custom-pc-quote={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
+                $"custom-pc-reservation-set={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
+                $"custom-pc-work-order={(hasCustomPcWorkOrderAuthority ? "ready" : "missing")} " +
+                $"custom-pc-work-ticket={(hasPhysicalCustomPcWorkTicketStation ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -963,6 +1040,12 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-eps12v-power-cable-smoke");
             bool runPcieGpuPowerCableSmoke =
                 HasCommandLineArgument("-pse-pcie-gpu-power-cable-smoke");
+            bool runCustomPcQuoteSmoke =
+                HasCommandLineArgument("-pse-custom-pc-quote-smoke");
+            bool runCustomPcWorkTicketSmoke =
+                HasCommandLineArgument("-pse-custom-pc-work-ticket-smoke");
+            bool requireWindowsD3D11 =
+                HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
@@ -975,11 +1058,27 @@ namespace PCShopEmpire3D.Presentation
                              (runPowerSupplySmoke ? 1 : 0) +
                              (runAtx24PowerCableSmoke ? 1 : 0) +
                              (runEps12vPowerCableSmoke ? 1 : 0) +
-                             (runPcieGpuPowerCableSmoke ? 1 : 0);
+                             (runPcieGpuPowerCableSmoke ? 1 : 0) +
+                             (runCustomPcQuoteSmoke ? 1 : 0) +
+                             (runCustomPcWorkTicketSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
                 return;
+            }
+
+            if (requireWindowsD3D11)
+            {
+                if (!runCustomPcWorkTicketSmoke ||
+                    !IsRequiredWindowsD3D11Runtime(
+                        Application.platform,
+                        SystemInfo.graphicsDeviceType))
+                {
+                    LogCustomPcWorkTicketSmokeFailure("smoke.graphics-api-mismatch");
+                    return;
+                }
+
+                Debug.Log(WindowsD3D11RuntimeHostMarker);
             }
 
             if (cartSmokeRequested && !Debug.isDebugBuild)
@@ -1069,6 +1168,23 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runCustomPcQuoteSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_CUSTOM_PC_QUOTE_RUNTIME_SMOKE " +
+                    "custom-pc-flow=failed code=smoke.custom-pc-quote-requires-development-build");
+                return;
+            }
+
+            if (runCustomPcWorkTicketSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_CUSTOM_PC_WORK_TICKET_RUNTIME_SMOKE " +
+                    "work-ticket-flow=failed " +
+                    "code=smoke.custom-pc-work-ticket-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1144,6 +1260,18 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableSmoke());
+            }
+
+            if (runCustomPcQuoteSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunCustomPcQuoteSmoke());
+            }
+
+            if (runCustomPcWorkTicketSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunCustomPcWorkTicketSmoke());
             }
         }
 
@@ -4978,6 +5106,14 @@ namespace PCShopEmpire3D.Presentation
             return Array.Exists(
                 Environment.GetCommandLineArgs(),
                 candidate => string.Equals(candidate, argument, StringComparison.Ordinal));
+        }
+
+        internal static bool IsRequiredWindowsD3D11Runtime(
+            RuntimePlatform platform,
+            GraphicsDeviceType graphicsDeviceType)
+        {
+            return platform == RuntimePlatform.WindowsPlayer &&
+                   graphicsDeviceType == GraphicsDeviceType.Direct3D11;
         }
 
         private static bool ApproximatelySamePose(Pose left, Pose right)

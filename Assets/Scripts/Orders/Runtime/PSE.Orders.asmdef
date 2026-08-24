@@ -4,7 +4,8 @@
   "references": [
     "PSE.Core",
     "PSE.Catalog",
-    "PSE.Inventory"
+    "PSE.Inventory",
+    "PSE.Retail"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

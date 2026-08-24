@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using PCShopEmpire3D.Presentation;
 using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
@@ -32,6 +33,26 @@ namespace PCShopEmpire3D.Tests.EditMode
         {
             string projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
             Assert.That(File.Exists(Path.Combine(projectRoot, "Packages", "packages-lock.json")), Is.True);
+        }
+
+        [Test]
+        public void WindowsD3d11RuntimeGateAcceptsOnlyWindowsPlayerAndDirect3d11()
+        {
+            Assert.That(
+                GaragePrototypeMarker.IsRequiredWindowsD3D11Runtime(
+                    RuntimePlatform.WindowsPlayer,
+                    GraphicsDeviceType.Direct3D11),
+                Is.True);
+            Assert.That(
+                GaragePrototypeMarker.IsRequiredWindowsD3D11Runtime(
+                    RuntimePlatform.WindowsPlayer,
+                    GraphicsDeviceType.Direct3D12),
+                Is.False);
+            Assert.That(
+                GaragePrototypeMarker.IsRequiredWindowsD3D11Runtime(
+                    RuntimePlatform.OSXPlayer,
+                    GraphicsDeviceType.Direct3D11),
+                Is.False);
         }
     }
 }
