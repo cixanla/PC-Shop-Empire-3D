@@ -2551,25 +2551,59 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"ASSEMBLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"ASSEMBLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-build-kit.pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
             }
 
             HeldItem = item;

@@ -138,6 +138,62 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         }
 
         [Test]
+        public void OccupiedBuildKitContainerRejectsAuthorityClaimWithoutAnyMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StableId<ContainerIdScope> buildKitContainerId =
+                StableId<ContainerIdScope>.Parse(BuildKitContainerIdValue);
+            Assert.That(session.Inventory.RegisterContainer(
+                InventoryContainerDefinition.Create(
+                    buildKitContainerId,
+                    InventoryContainerKind.BuildKit,
+                    1).Value).IsSuccess, Is.True);
+
+            CustomPcBuildOrderLineSnapshot processor = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.Processor);
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                processor.ItemId,
+                out InventoryItemRecord processorItem), Is.True);
+            StableId<ItemInstanceIdScope> foreignItemId =
+                StableId<ItemInstanceIdScope>.Parse(
+                    "inventory.item.custom-pc-build-kit-occupied-test");
+            Assert.That(session.Inventory.ReceiveSerializedItem(
+                foreignItemId,
+                processor.ProductId,
+                buildKitContainerId,
+                InventoryCondition.New,
+                processorItem.UnitCost).IsSuccess, Is.True);
+            long inventoryRevision = session.Inventory.Revision;
+            long workOrderRevision = session.CustomPcWorkOrders.Revision;
+
+            OperationResult<CustomPcBuildKitAuthority> result =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    buildKitContainerId);
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitContainerInvalid));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcWorkOrders.Revision,
+                Is.EqualTo(workOrderRevision));
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                foreignItemId,
+                out InventoryItemRecord foreignItem), Is.True);
+            Assert.That(foreignItem.ProductId, Is.EqualTo(processor.ProductId));
+            Assert.That(foreignItem.ContainerId, Is.EqualTo(buildKitContainerId));
+            Assert.That(foreignItem.UnitCost, Is.EqualTo(processorItem.UnitCost));
+            Assert.That(session.Inventory.GetContainerQuantity(buildKitContainerId).Value,
+                Is.EqualTo(1));
+            Assert.That(session.Inventory.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(session.CustomPcWorkOrders.ValidateInvariants().IsSuccess,
+                Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void PickupRejectsReservedMotherboardOutsideExactWorldFloorSource()
         {
             Fixture fixture = CreateFixture();
@@ -256,6 +312,42 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(fixture.Session.Inventory.Revision,
                 Is.EqualTo(inventoryRevision));
             Assert.That(fixture.BuildKit.Revision, Is.EqualTo(buildKitRevision));
+            AssertInvariants(fixture);
+        }
+
+        [Test]
+        public void StalePlacementRevisionFailsBeforeAnyCustodyMutation()
+        {
+            Fixture fixture = CreateFixture();
+            CustomPcBuildKitReceipt pickup = fixture.BuildKit.PickupCanonicalMotherboard(
+                OperationId(),
+                fixture.WorkOrder).Value;
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long buildKitRevision = fixture.BuildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> staleBuildKit =
+                fixture.BuildKit.PlaceCanonicalMotherboard(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+            Assert.That(staleBuildKit.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(fixture.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.BuildKit.Revision, Is.EqualTo(buildKitRevision));
+            AssertMotherboardStillInHands(fixture, pickup);
+
+            OperationResult<CustomPcBuildKitReceipt> staleInventory =
+                fixture.BuildKit.PlaceCanonicalMotherboard(
+                    pickup,
+                    buildKitRevision,
+                    inventoryRevision - 1);
+            Assert.That(staleInventory.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(fixture.Session.Inventory.Revision,
+                Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.BuildKit.Revision, Is.EqualTo(buildKitRevision));
+            AssertMotherboardStillInHands(fixture, pickup);
             AssertInvariants(fixture);
         }
 
@@ -429,6 +521,33 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
 
         private static Fixture CreateFixture()
         {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StableId<ContainerIdScope> buildKitContainerId =
+                StableId<ContainerIdScope>.Parse(BuildKitContainerIdValue);
+            Assert.That(session.Inventory.RegisterContainer(
+                InventoryContainerDefinition.Create(
+                    buildKitContainerId,
+                    InventoryContainerKind.BuildKit,
+                    1).Value).IsSuccess, Is.True);
+            OperationResult<CustomPcBuildKitAuthority> buildKit =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    buildKitContainerId);
+            Assert.That(buildKit.IsSuccess, Is.True);
+
+            return new Fixture(
+                session,
+                workOrder,
+                buildKit.Value,
+                buildKitContainerId);
+        }
+
+        private static GarageStockFlowSession CreateIssuedSession(
+            out CustomPcBuildOrderRecord workOrder)
+        {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(true);
             Assert.That(session.StartPrototypeCustomerVisit(Time(10)).IsSuccess, Is.True);
             Assert.That(session.MarkPrototypeCustomerBrowseArrival(Time(11)).IsSuccess,
@@ -447,27 +566,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     quote,
                     Time(15));
             Assert.That(issued.IsSuccess, Is.True);
-
-            StableId<ContainerIdScope> buildKitContainerId =
-                StableId<ContainerIdScope>.Parse(BuildKitContainerIdValue);
-            Assert.That(session.Inventory.RegisterContainer(
-                InventoryContainerDefinition.Create(
-                    buildKitContainerId,
-                    InventoryContainerKind.BuildKit,
-                    1).Value).IsSuccess, Is.True);
-            OperationResult<CustomPcBuildKitAuthority> buildKit =
-                CustomPcBuildKitAuthority.Create(
-                    session.CustomPcWorkOrders,
-                    session.WorldFloorContainerId,
-                    session.HandsContainerId,
-                    buildKitContainerId);
-            Assert.That(buildKit.IsSuccess, Is.True);
-
-            return new Fixture(
-                session,
-                issued.Value.BuildOrder,
-                buildKit.Value,
-                buildKitContainerId);
+            workOrder = issued.Value.BuildOrder;
+            return session;
         }
 
         private static CustomPcBuildOrderLineSnapshot CanonicalMotherboard(
@@ -519,6 +619,17 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 Is.True);
             Assert.That(fixture.BuildKit.ValidateInvariants().IsSuccess, Is.True);
             Assert.That(fixture.Session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        private static void AssertMotherboardStillInHands(
+            Fixture fixture,
+            CustomPcBuildKitReceipt pickup)
+        {
+            Assert.That(fixture.Session.Inventory.TryGetSerializedItem(
+                pickup.Line.ItemId,
+                out InventoryItemRecord item), Is.True);
+            Assert.That(item.ContainerId, Is.EqualTo(fixture.Session.HandsContainerId));
+            Assert.That(fixture.BuildKit.StagedComponentCount, Is.Zero);
         }
 
         private static StableId<CustomPcBuildKitOperationIdScope> OperationId()

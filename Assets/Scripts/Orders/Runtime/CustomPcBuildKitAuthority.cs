@@ -261,6 +261,17 @@ namespace PCShopEmpire3D.Orders
         internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalMotherboard(
             CustomPcBuildKitReceipt pickupReceipt)
         {
+            return PlaceCanonicalMotherboard(
+                pickupReceipt,
+                Revision,
+                _inventory.Revision);
+        }
+
+        internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalMotherboard(
+            CustomPcBuildKitReceipt pickupReceipt,
+            long expectedBuildKitRevision,
+            long expectedInventoryRevision)
+        {
             if (!OwnsReceipt(pickupReceipt) ||
                 pickupReceipt.Stage != CustomPcBuildKitStage.MotherboardInHands)
             {
@@ -277,6 +288,13 @@ namespace PCShopEmpire3D.Orders
                         registration.PlacementReceipt)
                     : OperationResult<CustomPcBuildKitReceipt>.Fail(
                         CustomPcWorkOrderFailures.BuildKitIdentityConflict);
+            }
+
+            if (Revision != expectedBuildKitRevision ||
+                _inventory.Revision != expectedInventoryRevision)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitRevisionStale);
             }
 
             if (Revision == long.MaxValue)

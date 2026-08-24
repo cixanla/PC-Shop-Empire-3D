@@ -139,7 +139,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 resolver != null ? resolver.Origin : null,
                 transform,
                 carryAnchor,
-                heldItemLayer,
                 obstructionMask,
                 _placementRotationQuarterTurns,
                 motor == null || motor.IsPaused);

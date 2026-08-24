@@ -260,5 +260,7 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.stage-invalid");
         public static readonly Failure BuildKitReceiptInvalid =
             Failure.FromCode("orders.custom-pc-build-kit.receipt-invalid");
+        public static readonly Failure BuildKitRevisionStale =
+            Failure.FromCode("orders.custom-pc-build-kit.revision-stale");
     }
 }

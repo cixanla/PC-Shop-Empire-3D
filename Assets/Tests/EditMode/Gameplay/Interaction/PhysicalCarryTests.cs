@@ -65,6 +65,55 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void DomainFirstCarryAndPlacementRecoveryPreserveTheSameWorldInstance()
+        {
+            PhysicalItemProjection item = CreateItem(
+                "tests.item-domain-first-recovery",
+                new Vector3(1f, 2f, 3f),
+                PhysicalCarryProfile.PcComponent);
+            Transform worldParent = item.transform.parent;
+            Transform anchor = new GameObject("AuthorityCarryAnchor").transform;
+            anchor.SetParent(_root.transform);
+            Vector3 worldPosition = item.transform.position;
+            Quaternion worldRotation = item.transform.rotation;
+            bool colliderEnabled = item.GetComponent<Collider>().enabled;
+            string identity = item.ItemIdValue;
+            int instanceId = item.GetInstanceID();
+
+            Assert.That(item.ValidateBeginCarry(anchor).IsSuccess, Is.True);
+            Assert.That(item.transform.parent, Is.EqualTo(worldParent));
+            Assert.That(item.transform.position, Is.EqualTo(worldPosition));
+            Assert.That(item.transform.rotation, Is.EqualTo(worldRotation));
+            Assert.That(item.GetComponent<Collider>().enabled,
+                Is.EqualTo(colliderEnabled));
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+
+            Assert.That(item.RecoverToCarryAfterAuthority(anchor, 8).IsSuccess,
+                Is.True);
+            Assert.That(item.IsCarried, Is.True);
+            Assert.That(item.transform.parent, Is.EqualTo(anchor));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.GetInstanceID(), Is.EqualTo(instanceId));
+
+            Pose buildKitPose = new Pose(
+                new Vector3(4f, 1.25f, 5f),
+                Quaternion.Euler(0f, 90f, 0f));
+            Assert.That(item.RecoverToStablePlacementAfterAuthority(buildKitPose)
+                .IsSuccess, Is.True);
+            Assert.That(item.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
+            Assert.That(item.IsStablePlacement, Is.True);
+            Assert.That(item.transform.parent, Is.EqualTo(worldParent));
+            Assert.That(Vector3.Distance(item.transform.position, buildKitPose.position),
+                Is.LessThan(0.0001f));
+            Assert.That(Quaternion.Angle(item.transform.rotation, buildKitPose.rotation),
+                Is.LessThan(0.01f));
+            Assert.That(item.GetComponent<Collider>().enabled,
+                Is.EqualTo(colliderEnabled));
+            Assert.That(item.ItemIdValue, Is.EqualTo(identity));
+            Assert.That(item.GetInstanceID(), Is.EqualTo(instanceId));
+        }
+
+        [Test]
         public void ACarriedItemCannotBePickedUpTwice()
         {
             _root = new GameObject("TestRoot");

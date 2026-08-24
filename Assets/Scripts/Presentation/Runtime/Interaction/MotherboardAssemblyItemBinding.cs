@@ -131,7 +131,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || IsSeated || !IsAuthorityLooseWorld)
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                IsSeated ||
+                !IsAuthorityLooseWorld)
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-seat.pickup-authority-mismatch"));
@@ -226,7 +228,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform interactionOrigin,
             Transform playerRoot,
             Transform carryAnchor,
-            int heldLayer,
             LayerMask obstructionMask,
             int clockwiseQuarterTurns,
             bool paused)
@@ -250,6 +251,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(
                     Failure.FromCode("custom-pc-build-kit.authority-mismatch"));
             }
+
+            long expectedBuildKitRevision = Session.CustomPcBuildKit.Revision;
+            long expectedInventoryRevision = Session.Inventory.Revision;
 
             MotherboardBuildKitEvaluation evaluation = buildKit.Evaluate(
                 interactionOrigin,
@@ -278,35 +282,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : CustomPcWorkOrderFailures.RevisionOverflow);
             }
 
-            var previousSafePose = new Pose(
-                physicalItem.LastSafePosition,
-                physicalItem.LastSafeRotation);
+            OperationResult<PCShopEmpire3D.Orders.CustomPcBuildKitReceipt> domain =
+                Session.PlaceHeldMotherboardInCustomPcBuildKit(
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            if (domain.IsFailure)
+            {
+                return OperationResult.Fail(domain.Error);
+            }
+
             OperationResult physicalCommit = physicalItem.PlaceAt(evaluation.Pose);
             if (physicalCommit.IsFailure)
             {
-                return physicalCommit;
-            }
-
-            OperationResult<PCShopEmpire3D.Orders.CustomPcBuildKitReceipt> domain =
-                Session.PlaceHeldMotherboardInCustomPcBuildKit();
-            if (domain.IsFailure)
-            {
-                OperationResult safePoseRestore =
-                    physicalItem.RestoreLastSafePoseSnapshot(previousSafePose);
-                if (safePoseRestore.IsFailure)
+                OperationResult recovery =
+                    physicalItem.RecoverToStablePlacementAfterAuthority(
+                        evaluation.Pose);
+                if (recovery.IsFailure ||
+                    !physicalItem.IsStablePlacement ||
+                    physicalItem.Ownership != PhysicalItemOwnership.World)
                 {
                     return OperationResult.Fail(
                         Failure.FromCode(
-                            "custom-pc-build-kit.safe-pose-compensation-failed"));
+                            "custom-pc-build-kit.projection-recovery-failed"));
                 }
-
-                OperationResult compensation = physicalItem.BeginCarry(
-                    carryAnchor,
-                    heldLayer);
-                return compensation.IsFailure || !physicalItem.IsCarried
-                    ? OperationResult.Fail(
-                        Failure.FromCode("custom-pc-build-kit.compensation-failed"))
-                    : OperationResult.Fail(domain.Error);
             }
 
             _carryOrigin = CarryOrigin.None;

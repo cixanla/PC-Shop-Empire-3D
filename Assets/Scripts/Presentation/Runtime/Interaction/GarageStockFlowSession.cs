@@ -1050,6 +1050,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public OperationResult<CustomPcBuildKitReceipt>
             PlaceHeldMotherboardInCustomPcBuildKit()
         {
+            return PlaceHeldMotherboardInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldMotherboardInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
             if (CustomPcBuildKit == null ||
                 !CustomPcBuildKit.TryGetReceipt(
                     PrototypeCustomPcBuildKitOperationId,
@@ -1060,7 +1070,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     CustomPcWorkOrderFailures.BuildKitStageInvalid);
             }
 
-            return CustomPcBuildKit.PlaceCanonicalMotherboard(pickup);
+            return CustomPcBuildKit.PlaceCanonicalMotherboard(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
         }
 
         public OperationResult DropHeldMotherboardToWorld()
