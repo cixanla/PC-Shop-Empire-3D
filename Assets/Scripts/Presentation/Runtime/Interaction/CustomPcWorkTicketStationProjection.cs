@@ -24,6 +24,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Failure.FromCode("custom-pc-work-ticket-station.already-issued");
         public static readonly Failure HandsBusy =
             Failure.FromCode("custom-pc-work-ticket-station.hands-busy");
+        public static readonly Failure CompetingInteractOwner =
+            Failure.FromCode("custom-pc-work-ticket-station.competing-interact-owner");
         public static readonly Failure OutOfRange =
             Failure.FromCode("custom-pc-work-ticket-station.out-of-range");
         public static readonly Failure FocusMissing =
@@ -165,6 +167,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return "İŞ EMRİ ENGELLİ • ELLERİNİ BOŞALT";
                 }
 
+                if (PlayerHasCompetingWorldInteractOwner())
+                {
+                    return "İŞ EMRİ ENGELLİ • ODAKTAKİ NESNE ÖNCELİKLİ";
+                }
+
                 string interact = playerInput != null
                     ? playerInput.InteractBindingPrompt
                     : "E / A";
@@ -214,6 +221,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
                 playerInput.PausePressedThisFrame || !HasPendingAction ||
                 !_isFocused || PlayerIsBusy() ||
+                PlayerHasCompetingWorldInteractOwner() ||
                 !playerInput.TryConsumeInteractPressThisFrame())
             {
                 return;
@@ -375,6 +383,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     CustomPcWorkTicketStationFailures.HandsBusy);
             }
 
+            if (PlayerHasCompetingWorldInteractOwner())
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkTicketStationFailures.CompetingInteractOwner);
+            }
+
             RefreshFocusState();
             return _isFocused
                 ? OperationResult.Success()
@@ -387,6 +401,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    (playerCarry.IsCarrying ||
                     playerCarry.IsDrivingCart ||
                     playerCarry.HasAssemblyPromptOwnership);
+        }
+
+        private bool PlayerHasCompetingWorldInteractOwner()
+        {
+            return playerCarry != null &&
+                   playerCarry.HasCompetingWorldInteractOwner;
         }
 
         private void RefreshFocusState()

@@ -3353,6 +3353,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.StatusText, Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain("SATIN ALMA ONAYLANDI"));
+            Assert.That(marker.PlayerCarry.HasCompetingWorldInteractOwner, Is.False,
+                "A customer-reserved shelf item rejects pickup and must not steal " +
+                "Interact from a later valid world station.");
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();

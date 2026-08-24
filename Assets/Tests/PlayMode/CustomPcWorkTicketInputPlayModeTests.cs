@@ -267,6 +267,29 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(cart.Cargo, Is.SameAs(largeBox));
             Assert.That(largeBox.IsMountedOnTransportCart, Is.True);
             AssertUnissued(session, inventoryRevision);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            station.RefreshPresentation();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.PlayerCarry.FocusedCart, Is.SameAs(cart));
+            Assert.That(station.InspectInteractionGateForTests().Error,
+                Is.EqualTo(
+                    CustomPcWorkTicketStationFailures.CompetingInteractOwner));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            InputSystem.Update();
+            station.ProcessInputFrame();
+            Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.True,
+                "A loaded focused cart must own Interact before an overlapping ticket.");
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
+            Assert.That(cart.Cargo, Is.Null);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(largeBox));
+            Assert.That(largeBox.IsMountedOnTransportCart, Is.False);
+            AssertUnissued(session, inventoryRevision);
             Object.DestroyImmediate(cartObject);
         }
 
@@ -491,33 +514,39 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Physics.SyncTransforms();
             Assert.That(customerFlow.CanConsultCurrentCustomer, Is.True);
 
-            PressRouteInteract(
+            PressRouteInteractWithoutPhysicalMutation(
                 marker,
                 device,
                 keyboard,
                 gamepad,
                 customerFlow,
-                null);
+                null,
+                session,
+                "customer-consultation");
             Assert.That(customerFlow.ConsultationCompleted, Is.True);
             yield return new WaitForFixedUpdate();
 
-            PressRouteInteract(
+            PressRouteInteractWithoutPhysicalMutation(
                 marker,
                 device,
                 keyboard,
                 gamepad,
                 customerFlow,
-                null);
+                null,
+                session,
+                "custom-pc-request");
             Assert.That(customerFlow.CustomPcRequestAccepted, Is.True);
             yield return new WaitForFixedUpdate();
 
-            PressRouteInteract(
+            PressRouteInteractWithoutPhysicalMutation(
                 marker,
                 device,
                 keyboard,
                 gamepad,
                 customerFlow,
-                null);
+                null,
+                session,
+                "custom-pc-quote");
             Assert.That(customerFlow.CustomPcQuoteReady, Is.True);
             Assert.That(session.TryGetPrototypeCustomPcQuote(out _), Is.True);
             inventoryRevisionBeforeIssue = session.Inventory.Revision;
@@ -551,13 +580,15 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(station.CanIssue, Is.True);
             AssertUnissued(session, inventoryRevisionBeforeIssue);
 
-            PressRouteInteract(
+            PressRouteInteractWithoutPhysicalMutation(
                 marker,
                 device,
                 keyboard,
                 gamepad,
                 null,
-                station);
+                station,
+                session,
+                "physical-work-ticket");
 
             Assert.That(session.CustomPcWorkOrders.WorkOrderCount, Is.EqualTo(1));
             Assert.That(session.CustomPcWorkOrders.WorkTicketCount, Is.EqualTo(1));
@@ -870,6 +901,204 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False,
                 "The focused physical interaction must be the single input consumer.");
             ReleaseRouteInput(device, keyboard, null, gamepad);
+        }
+
+        private static void PressRouteInteractWithoutPhysicalMutation(
+            GaragePrototypeMarker marker,
+            RouteDevice device,
+            Keyboard keyboard,
+            Gamepad gamepad,
+            GarageCustomerFlowRuntime customerFlow,
+            CustomPcWorkTicketStationProjection station,
+            GarageStockFlowSession session,
+            string stage)
+        {
+            Pose playerPose = new Pose(
+                marker.PlayerMotor.transform.position,
+                marker.PlayerMotor.transform.rotation);
+            PhysicalItemPoseSnapshot[] physicalItems =
+                CapturePhysicalItemPoses();
+            InventoryItemRecord[] inventoryItems =
+                session.Inventory.GetSerializedItems().ToArray();
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+
+            PressRouteInteract(
+                marker,
+                device,
+                keyboard,
+                gamepad,
+                customerFlow,
+                station);
+
+            Assert.That(
+                Vector3.Distance(
+                    marker.PlayerMotor.transform.position,
+                    playerPose.position),
+                Is.LessThan(0.0001f),
+                $"{stage} must not teleport the player.");
+            Assert.That(
+                Quaternion.Angle(
+                    marker.PlayerMotor.transform.rotation,
+                    playerPose.rotation),
+                Is.LessThan(0.01f),
+                $"{stage} must not rotate the player automatically.");
+            AssertPhysicalItemPosesUnchanged(physicalItems, stage);
+            AssertInventoryItemsUnchanged(session, inventoryItems, stage);
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevision),
+                $"{stage} must not mutate Assembly revision.");
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount),
+                $"{stage} must not publish an Assembly receipt.");
+        }
+
+        private static PhysicalItemPoseSnapshot[] CapturePhysicalItemPoses()
+        {
+            return Object
+                .FindObjectsByType<PhysicalItemProjection>(FindObjectsSortMode.None)
+                .OrderBy(item => item.ItemIdValue)
+                .ThenBy(item => item.GetInstanceID())
+                .Select(item => new PhysicalItemPoseSnapshot(item))
+                .ToArray();
+        }
+
+        private static void AssertPhysicalItemPosesUnchanged(
+            PhysicalItemPoseSnapshot[] expected,
+            string stage)
+        {
+            PhysicalItemProjection[] current = Object
+                .FindObjectsByType<PhysicalItemProjection>(FindObjectsSortMode.None)
+                .OrderBy(item => item.ItemIdValue)
+                .ThenBy(item => item.GetInstanceID())
+                .ToArray();
+            Assert.That(current.Length, Is.EqualTo(expected.Length),
+                $"{stage} must not create or remove a physical item projection.");
+            for (int index = 0; index < expected.Length; index++)
+            {
+                PhysicalItemPoseSnapshot snapshot = expected[index];
+                PhysicalItemProjection item = current[index];
+                Assert.That(item, Is.SameAs(snapshot.Item),
+                    $"{stage} changed physical-item identity at index {index}.");
+                Assert.That(item.transform.parent, Is.SameAs(snapshot.Parent),
+                    $"{stage} reparented {item.ItemIdValue}.");
+                Assert.That(
+                    Vector3.Distance(item.transform.position, snapshot.Position),
+                    Is.LessThan(0.0001f),
+                    $"{stage} moved {item.ItemIdValue}.");
+                Assert.That(
+                    Quaternion.Angle(item.transform.rotation, snapshot.Rotation),
+                    Is.LessThan(0.01f),
+                    $"{stage} rotated {item.ItemIdValue}.");
+                Assert.That(item.gameObject.activeSelf,
+                    Is.EqualTo(snapshot.ActiveSelf),
+                    $"{stage} changed active state for {item.ItemIdValue}.");
+                Assert.That(item.IsCarried, Is.EqualTo(snapshot.IsCarried),
+                    $"{stage} changed carry state for {item.ItemIdValue}.");
+                Assert.That(item.IsMountedOnTransportCart,
+                    Is.EqualTo(snapshot.IsMountedOnTransportCart),
+                    $"{stage} changed cart state for {item.ItemIdValue}.");
+                Assert.That(item.Ownership, Is.EqualTo(snapshot.Ownership),
+                    $"{stage} changed ownership for {item.ItemIdValue}.");
+                Assert.That(item.StackSupport, Is.SameAs(snapshot.StackSupport),
+                    $"{stage} changed stack support for {item.ItemIdValue}.");
+                Assert.That(item.StackedItem, Is.SameAs(snapshot.StackedItem),
+                    $"{stage} changed stacked child for {item.ItemIdValue}.");
+                Assert.That(item.IsStacked, Is.EqualTo(snapshot.IsStacked),
+                    $"{stage} changed stacked state for {item.ItemIdValue}.");
+                Assert.That(item.HasStackedItem,
+                    Is.EqualTo(snapshot.HasStackedItem),
+                    $"{stage} changed stack-child state for {item.ItemIdValue}.");
+                Assert.That(item.IsStablePlacement,
+                    Is.EqualTo(snapshot.IsStablePlacement),
+                    $"{stage} changed stable-placement state for {item.ItemIdValue}.");
+                Assert.That(
+                    Vector3.Distance(item.LastSafePosition, snapshot.LastSafePosition),
+                    Is.LessThan(0.0001f),
+                    $"{stage} changed last-safe position for {item.ItemIdValue}.");
+                Assert.That(
+                    Quaternion.Angle(item.LastSafeRotation, snapshot.LastSafeRotation),
+                    Is.LessThan(0.01f),
+                    $"{stage} changed last-safe rotation for {item.ItemIdValue}.");
+            }
+        }
+
+        private static void AssertInventoryItemsUnchanged(
+            GarageStockFlowSession session,
+            InventoryItemRecord[] expected,
+            string stage)
+        {
+            InventoryItemRecord[] current =
+                session.Inventory.GetSerializedItems().ToArray();
+            Assert.That(current.Length, Is.EqualTo(expected.Length),
+                $"{stage} must not create or remove serialized inventory items.");
+            for (int index = 0; index < expected.Length; index++)
+            {
+                Assert.That(current[index].Id, Is.EqualTo(expected[index].Id));
+                Assert.That(current[index].ProductId,
+                    Is.EqualTo(expected[index].ProductId));
+                Assert.That(current[index].ContainerId,
+                    Is.EqualTo(expected[index].ContainerId),
+                    $"{stage} moved inventory item {expected[index].Id.Value}.");
+                Assert.That(current[index].Condition,
+                    Is.EqualTo(expected[index].Condition));
+                Assert.That(current[index].UnitCost,
+                    Is.EqualTo(expected[index].UnitCost));
+                Assert.That(current[index].StateFlags,
+                    Is.EqualTo(expected[index].StateFlags));
+            }
+        }
+
+        private sealed class PhysicalItemPoseSnapshot
+        {
+            public PhysicalItemPoseSnapshot(PhysicalItemProjection item)
+            {
+                Item = item;
+                Parent = item.transform.parent;
+                Position = item.transform.position;
+                Rotation = item.transform.rotation;
+                ActiveSelf = item.gameObject.activeSelf;
+                IsCarried = item.IsCarried;
+                IsMountedOnTransportCart = item.IsMountedOnTransportCart;
+                Ownership = item.Ownership;
+                StackSupport = item.StackSupport;
+                StackedItem = item.StackedItem;
+                IsStacked = item.IsStacked;
+                HasStackedItem = item.HasStackedItem;
+                IsStablePlacement = item.IsStablePlacement;
+                LastSafePosition = item.LastSafePosition;
+                LastSafeRotation = item.LastSafeRotation;
+            }
+
+            public PhysicalItemProjection Item { get; }
+
+            public Transform Parent { get; }
+
+            public Vector3 Position { get; }
+
+            public Quaternion Rotation { get; }
+
+            public bool ActiveSelf { get; }
+
+            public bool IsCarried { get; }
+
+            public bool IsMountedOnTransportCart { get; }
+
+            public PhysicalItemOwnership Ownership { get; }
+
+            public PhysicalItemProjection StackSupport { get; }
+
+            public PhysicalItemProjection StackedItem { get; }
+
+            public bool IsStacked { get; }
+
+            public bool HasStackedItem { get; }
+
+            public bool IsStablePlacement { get; }
+
+            public Vector3 LastSafePosition { get; }
+
+            public Quaternion LastSafeRotation { get; }
         }
 
         private static void ReleaseRouteInput(

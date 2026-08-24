@@ -126,6 +126,40 @@ namespace PCShopEmpire3D.Presentation.Interaction
               GetProcessorCoolerBinding(HeldItem) != null ||
               GetM2StorageBinding(HeldItem) != null));
 
+        /// <summary>
+        /// Reports whether an empty-handed Interact press currently belongs to a physical
+        /// carry target instead of a later world interaction such as the work-ticket board.
+        /// The resolver is queried directly so earlier execution-order consumers do not rely
+        /// on the previous frame's FocusedCart/FocusedItem cache.
+        /// </summary>
+        public bool HasCompetingWorldInteractOwner
+        {
+            get
+            {
+                if (resolver == null || HeldItem != null || IsDrivingCart ||
+                    HasAssemblyPromptOwnership)
+                {
+                    return false;
+                }
+
+                OperationResult<TransportCartProjection> cart =
+                    resolver.ResolveTransportCart();
+                if (cart.IsSuccess && cart.Value != null && cart.Value.HasCargo)
+                {
+                    return true;
+                }
+
+                OperationResult<PhysicalItemProjection> item = resolver.Resolve();
+                if (item.IsFailure || item.Value == null)
+                {
+                    return false;
+                }
+
+                InventoryItemWorldBinding binding = GetInventoryBinding(item.Value);
+                return binding == null || !binding.IsCustomerReserved;
+            }
+        }
+
         public PlacementPreview PlacementPreview => placementPreview;
 
         public PhysicalItemProjection CurrentStackSupport { get; private set; }
