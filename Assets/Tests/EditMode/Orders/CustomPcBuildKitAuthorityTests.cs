@@ -519,6 +519,139 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             AssertInvariants(foreign);
         }
 
+        [Test]
+        public void ProcessorBuildKitRequiresStagedMotherboardThenPreservesExactIdentity()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildOrderLineSnapshot motherboard = CanonicalMotherboard(workOrder);
+            CustomPcBuildOrderLineSnapshot processor = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.Processor);
+            long initialInventoryRevision = session.Inventory.Revision;
+            long initialBuildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> blocked =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(blocked.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(initialInventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(initialBuildKitRevision));
+            Assert.That(session.TryGetProcessorItem(out InventoryItemRecord looseProcessor),
+                Is.True);
+            Assert.That(looseProcessor.Id, Is.EqualTo(processor.ItemId));
+            Assert.That(looseProcessor.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            CustomPcBuildKitReceipt motherboardPlacement =
+                buildKit.PlaceCanonicalMotherboard(motherboardPickup).Value;
+            Assert.That(motherboardPlacement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MotherboardStaged));
+            Assert.That(motherboardPlacement.Line, Is.SameAs(motherboard));
+
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(processorPickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.ProcessorInHands));
+            Assert.That(processorPickup.Line, Is.SameAs(processor));
+            Assert.That(processorPickup.Line.LineId, Is.EqualTo(processor.LineId));
+            Assert.That(processorPickup.Line.ProductId, Is.EqualTo(processor.ProductId));
+            Assert.That(processorPickup.Line.ItemId, Is.EqualTo(processor.ItemId));
+            Assert.That(processorPickup.Line.ReservationId,
+                Is.EqualTo(processor.ReservationId));
+            Assert.That(session.TryGetProcessorItem(out InventoryItemRecord heldProcessor),
+                Is.True);
+            Assert.That(heldProcessor.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt processorPlacement =
+                buildKit.PlaceCanonicalProcessor(processorPickup).Value;
+
+            Assert.That(processorPlacement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.ProcessorStaged));
+            Assert.That(processorPlacement.Line, Is.SameAs(processor));
+            Assert.That(session.TryGetProcessorItem(out InventoryItemRecord stagedProcessor),
+                Is.True);
+            Assert.That(stagedProcessor.Id, Is.EqualTo(processor.ItemId));
+            Assert.That(stagedProcessor.ProductId, Is.EqualTo(processor.ProductId));
+            Assert.That(stagedProcessor.ContainerId,
+                Is.EqualTo(session.ProcessorBuildKitContainerId));
+            Assert.That(session.TryGetMotherboardItem(
+                out InventoryItemRecord stagedMotherboard), Is.True);
+            Assert.That(stagedMotherboard.ContainerId,
+                Is.EqualTo(session.CustomPcBuildKitContainerId));
+            Assert.That(buildKit.ActiveKitCount, Is.EqualTo(2));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(2));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorPlacementRejectsStaleRevisionAndExactReplayIsNoMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMotherboard(motherboardPickup).IsSuccess,
+                Is.True);
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> stale =
+                buildKit.PlaceCanonicalProcessor(
+                    processorPickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+
+            Assert.That(stale.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(session.TryGetProcessorItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalProcessor(processorPickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalProcessor(
+                    processorPickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(processorPickup));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(2));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(

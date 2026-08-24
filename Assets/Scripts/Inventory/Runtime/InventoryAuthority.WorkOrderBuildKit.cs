@@ -140,7 +140,7 @@ namespace PCShopEmpire3D.Inventory
             _serializedReservationWorkOrderBuildKitsByOperation.Count;
 
         /// <summary>
-        /// Moves one exact reserved motherboard from its current un-managed stock/world
+        /// Moves one exact supported reserved PC component from its current un-managed stock/world
         /// container to ActorHands. Exact replay returns the original receipt without advancing
         /// Inventory Revision. The dedicated BuildKit capability and parent work-order
         /// allocation are bound before the first custody mutation.
@@ -438,7 +438,7 @@ namespace PCShopEmpire3D.Inventory
             }
 
             if (productId.IsEmpty || itemId.IsEmpty || reservationId.IsEmpty ||
-                componentKind != PcComponentKind.Motherboard)
+                !IsSupportedWorkOrderBuildKitComponent(componentKind))
             {
                 return InventoryFailures.SerializedReservationWorkOrderBuildKitLineInvalid;
             }
@@ -511,7 +511,7 @@ namespace PCShopEmpire3D.Inventory
                 pickup.ProductId.IsEmpty ||
                 pickup.ItemId.IsEmpty ||
                 pickup.ReservationId.IsEmpty ||
-                pickup.ComponentKind != PcComponentKind.Motherboard ||
+                !IsSupportedWorkOrderBuildKitComponent(pickup.ComponentKind) ||
                 pickup.SourceContainerId.IsEmpty ||
                 pickup.HandsContainerId.IsEmpty ||
                 pickup.BuildKitContainerId.IsEmpty ||
@@ -652,6 +652,13 @@ namespace PCShopEmpire3D.Inventory
             }
 
             return matchCount == 1;
+        }
+
+        private static bool IsSupportedWorkOrderBuildKitComponent(
+            PcComponentKind componentKind)
+        {
+            return componentKind == PcComponentKind.Motherboard ||
+                   componentKind == PcComponentKind.Processor;
         }
 
         private static InventoryItemRecord MoveSerializedItem(

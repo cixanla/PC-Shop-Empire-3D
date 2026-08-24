@@ -65,8 +65,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.container.assembly-workbench";
         public const string CustomPcBuildKitContainerIdValue =
             "inventory.container.custom-pc-build-kit";
+        public const string ProcessorBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.processor";
         public const string PrototypeCustomPcBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-motherboard";
+        public const string PrototypeProcessorBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-processor";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -223,10 +227,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ContainerIdScope> CustomPcBuildKitContainerId =>
             StableId<ContainerIdScope>.Parse(CustomPcBuildKitContainerIdValue);
 
+        public StableId<ContainerIdScope> ProcessorBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(ProcessorBuildKitContainerIdValue);
+
         public StableId<CustomPcBuildKitOperationIdScope>
             PrototypeCustomPcBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
                     PrototypeCustomPcBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeProcessorBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeProcessorBuildKitOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -641,6 +653,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     CustomPcBuildKitContainerIdValue,
                     InventoryContainerKind.BuildKit,
                     1);
+                RegisterContainer(
+                    inventory,
+                    ProcessorBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
@@ -829,9 +846,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ? CustomPcBuildKitAuthority.Create(
                     customPcWorkOrders,
                     StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
-                    StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
-                    StableId<ContainerIdScope>.Parse(
-                        CustomPcBuildKitContainerIdValue)).Value
+                        StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            CustomPcBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorBuildKitContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
@@ -1102,7 +1121,48 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-processor.loose-pickup-invalid"));
             }
 
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalProcessor(
+                        PrototypeProcessorBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             return Inventory.TransferSerializedItem(ProcessorItemId, HandsContainerId);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldProcessorInCustomPcBuildKit()
+        {
+            return PlaceHeldProcessorInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldProcessorInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeProcessorBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.ProcessorInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalProcessor(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
         }
 
         public OperationResult DropHeldProcessorToWorld()
