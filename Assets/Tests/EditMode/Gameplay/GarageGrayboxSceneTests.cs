@@ -1278,6 +1278,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.EqualTo("PcieGpuPsuGpu8Connector"));
                 Assert.That(geometry.GraphicsCard8Connector.name,
                     Is.EqualTo("PcieGpuGraphicsCardGpu8Connector"));
+                Assert.That(geometry.Psu8Connector.Find(
+                    "PcieGpuPsuGpu8ConnectorHousing"), Is.Not.Null);
+                Assert.That(geometry.Psu8Connector.Find(
+                    "PcieGpuPsuGpu8ConnectorPinCount_8"), Is.Not.Null);
+
+                Transform gpuSixPinHousing =
+                    geometry.GraphicsCard8Connector.Find(
+                        "PcieGpuGraphicsCardGpu8ConnectorSixPinHousing");
+                Transform gpuTwoPinHousing =
+                    geometry.GraphicsCard8Connector.Find(
+                        "PcieGpuGraphicsCardGpu8ConnectorTwoPinHousing");
+                Assert.That(gpuSixPinHousing, Is.Not.Null);
+                Assert.That(gpuTwoPinHousing, Is.Not.Null);
+                Assert.That(
+                    gpuSixPinHousing.GetComponent<Renderer>().bounds.size.x,
+                    Is.GreaterThan(gpuTwoPinHousing
+                        .GetComponent<Renderer>().bounds.size.x));
+                Assert.That(gpuSixPinHousing.localPosition.x,
+                    Is.LessThan(gpuTwoPinHousing.localPosition.x));
+                Assert.That(geometry.GraphicsCard8Connector.Find(
+                    "PcieGpuGraphicsCardGpu8ConnectorSixPinKeyedLatch"),
+                    Is.Not.Null);
+                Assert.That(geometry.GraphicsCard8Connector.Find(
+                    "PcieGpuGraphicsCardGpu8ConnectorTwoPinRetentionClip"),
+                    Is.Not.Null);
+                TextMesh gpuSixPinLabel = geometry.GraphicsCard8Connector.Find(
+                        "PcieGpuGraphicsCardGpu8ConnectorPinCount_6")
+                    .GetComponent<TextMesh>();
+                TextMesh gpuTwoPinLabel = geometry.GraphicsCard8Connector.Find(
+                        "PcieGpuGraphicsCardGpu8ConnectorPinCount_2")
+                    .GetComponent<TextMesh>();
+                Assert.That(gpuSixPinLabel.text, Is.EqualTo("6"));
+                Assert.That(gpuTwoPinLabel.text, Is.EqualTo("2"));
+                Assert.That(geometry.GraphicsCard8Connector
+                    .GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(geometry.LooseCoil.name,
                     Is.EqualTo("PcieGpuLooseBraidedCoil"));
                 Assert.That(geometry.LooseCoil.enabled, Is.True);
@@ -2190,12 +2225,12 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("BrushedSteel"));
                 Assert.That(fastener.MatchesAuthorityState(AssemblySeatState.Empty), Is.True);
                 Assert.That(assemblySlice.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(188));
+                    Is.EqualTo(191));
                 Assert.That(assemblySlice.GetComponentsInChildren<Collider>(true).Length,
                     Is.EqualTo(29));
                 Assert.That(assemblySlice.GetComponentsInChildren<Light>(true), Is.Empty);
                 Assert.That(assemblySlice.GetComponentsInChildren<TextMesh>(true).Length,
-                    Is.EqualTo(8));
+                    Is.EqualTo(9));
                 Assert.That(assemblySlice.GetComponentsInChildren<NavMeshObstacle>(true), Is.Empty);
                 Assert.That(
                     benchmark.GetComponentsInChildren<Transform>(true)

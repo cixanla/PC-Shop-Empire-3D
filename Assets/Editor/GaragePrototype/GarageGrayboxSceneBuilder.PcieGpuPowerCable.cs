@@ -170,13 +170,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 itemRoot.transform,
                 new Vector3(-0.030f, 0.006f, 0f),
                 metal,
-                accent);
+                accent,
+                false);
             Transform graphicsCardConnector = CreatePcieGpuConnector(
                 "PcieGpuGraphicsCardGpu8Connector",
                 itemRoot.transform,
                 new Vector3(0.030f, 0.006f, 0f),
                 rubber,
-                accent);
+                accent,
+                true);
 
             Transform identityPlate = CreateDetailCube(
                 "PcieGpuCableIdentityPlate",
@@ -243,12 +245,99 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform parent,
             Vector3 localPosition,
             Material housingMaterial,
-            Material keyMaterial)
+            Material keyMaterial,
+            bool splitSixPlusTwo)
         {
             Transform root = new GameObject(name).transform;
             root.SetParent(parent, false);
             root.localPosition = localPosition;
             Vector3 size = new Vector3(0.034f, 0.028f, 0.024f);
+
+            if (splitSixPlusTwo)
+            {
+                const float splitGap = 0.0015f;
+                const float sixPinWidth = 0.024f;
+                const float twoPinWidth = 0.008f;
+                float totalWidth = sixPinWidth + splitGap + twoPinWidth;
+                float sixPinCenter = (-totalWidth + sixPinWidth) * 0.5f;
+                float twoPinCenter = (totalWidth - twoPinWidth) * 0.5f;
+
+                Transform sixPinHousing = CreateBeveledCube(
+                    $"{name}SixPinHousing",
+                    root,
+                    new Vector3(sixPinCenter, 0f, 0f),
+                    new Vector3(sixPinWidth, size.y, size.z),
+                    0.0025f,
+                    housingMaterial,
+                    false).transform;
+                Object.DestroyImmediate(sixPinHousing.GetComponent<Collider>());
+                DisableDecorativeRendererCost(
+                    sixPinHousing.GetComponent<Renderer>());
+
+                Transform twoPinHousing = CreateBeveledCube(
+                    $"{name}TwoPinHousing",
+                    root,
+                    new Vector3(twoPinCenter, 0f, 0f),
+                    new Vector3(twoPinWidth, size.y, size.z),
+                    0.0015f,
+                    housingMaterial,
+                    false).transform;
+                Object.DestroyImmediate(twoPinHousing.GetComponent<Collider>());
+                DisableDecorativeRendererCost(
+                    twoPinHousing.GetComponent<Renderer>());
+
+                Transform sixPinLatch = CreateDetailCube(
+                    $"{name}SixPinKeyedLatch",
+                    root,
+                    new Vector3(
+                        sixPinCenter,
+                        (size.y * 0.5f) + 0.004f,
+                        0f),
+                    new Vector3(
+                        sixPinWidth * 0.48f,
+                        0.006f,
+                        size.z * 0.34f),
+                    keyMaterial).transform;
+                Object.DestroyImmediate(sixPinLatch.GetComponent<Collider>());
+                DisableDecorativeRendererCost(
+                    sixPinLatch.GetComponent<Renderer>());
+
+                Transform twoPinRetentionClip = CreateDetailCube(
+                    $"{name}TwoPinRetentionClip",
+                    root,
+                    new Vector3(
+                        twoPinCenter,
+                        (size.y * 0.5f) + 0.0025f,
+                        0f),
+                    new Vector3(
+                        twoPinWidth * 0.62f,
+                        0.004f,
+                        size.z * 0.28f),
+                    keyMaterial).transform;
+                Object.DestroyImmediate(
+                    twoPinRetentionClip.GetComponent<Collider>());
+                DisableDecorativeRendererCost(
+                    twoPinRetentionClip.GetComponent<Renderer>());
+
+                CreatePcieGpuPinCountLabel(
+                    $"{name}PinCount_6",
+                    root,
+                    new Vector3(
+                        sixPinCenter,
+                        0f,
+                        -(size.z * 0.5f) - 0.002f),
+                    "6");
+                CreatePcieGpuPinCountLabel(
+                    $"{name}PinCount_2",
+                    root,
+                    new Vector3(
+                        twoPinCenter,
+                        0f,
+                        -(size.z * 0.5f) - 0.002f),
+                    "2");
+                return root;
+            }
+
             Transform housing = CreateBeveledCube(
                 $"{name}Housing",
                 root,
@@ -269,21 +358,30 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Object.DestroyImmediate(keyedLatch.GetComponent<Collider>());
             DisableDecorativeRendererCost(keyedLatch.GetComponent<Renderer>());
 
-            TextMesh label = new GameObject($"{name}PinCount_8")
-                .AddComponent<TextMesh>();
-            label.transform.SetParent(root, false);
-            label.transform.localPosition = new Vector3(
-                0f,
-                0f,
-                -(size.z * 0.5f) - 0.002f);
+            CreatePcieGpuPinCountLabel(
+                $"{name}PinCount_8",
+                root,
+                new Vector3(0f, 0f, -(size.z * 0.5f) - 0.002f),
+                "8");
+            return root;
+        }
+
+        private static void CreatePcieGpuPinCountLabel(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            string text)
+        {
+            TextMesh label = new GameObject(name).AddComponent<TextMesh>();
+            label.transform.SetParent(parent, false);
+            label.transform.localPosition = localPosition;
             label.anchor = TextAnchor.MiddleCenter;
             label.alignment = TextAlignment.Center;
             label.characterSize = 0.005f;
             label.fontSize = 32;
-            label.text = "8";
+            label.text = text;
             label.color = Color.white;
             DisableDecorativeRendererCost(label.GetComponent<Renderer>());
-            return root;
         }
 
         private static LineRenderer CreatePcieGpuCableLine(
