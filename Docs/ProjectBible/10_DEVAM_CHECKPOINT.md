@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #66 Mac+Windows teknik, source/docs/CI, yerel/fiziksel USB, final metadata/Guard ve lifecycle kapılarıyla tamamlandı; acceptance 18/18<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
+**Durum:** Issue #68 canonical motherboard physical BuildKit domain/scene/input, exact-head regression ve Mac+Windows teknik kapıları tamamlandı; source/docs/CI, immutable staging, fiziksel USB ve lifecycle ayrı açık kapılar<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, feature branch + draft PR #69; `main` son tamamlanmış checkpoint'i Issue #66'dır
 
-## En yeni teknik checkpoint — Issue #66 / Epic #10
+## En yeni teknik checkpoint — Issue #68 / Epic #10
+
+- Feature chain `2a69436` + `b0d2a97`; current technical head `480874191ee2c950e046ab2aee8be92d61d79fe4`, tree `e229788741df4c456840d356633e2a4bc1702516`. Canonical motherboard exact work-order/ticket/allocation line/product/item/reservation tuple'ıyla seçilir.
+- Stable child operation ve immutable pickup/place receipt'leri exact replay'de revision artırmaz; foreign/value-equal/wrong-kind/line/item/reservation/order, stale ve conflict yolları no-mutation fail-closed'dur.
+- Capacity-one managed BuildKit, Assembly Workbench/seat custody'sinden ayrıdır. Reserved item yalnız dar allocation-specific bridge ile source → ActorHands → BuildKit taşınır; reservation/allocation live ve exact kalır.
+- World projection domain commit'ten sonra değişir. Aynı Unity component/stable ItemId carry, rotation, preview, placement ve recovery boyunca korunur; duplicate/ghost/teleport yoktur. Work ticket `0/10 → 1/10`, Assembly untouched'dır.
+- Real `E / Gamepad South`, range/focus/LOS/empty-hands/capacity/obstruction/pose/revision kapıları ve same-frame Interact/Drop/Primary, hold, pause co-edge, release-repress single-consumer matrisi testlidir.
+- Exact detached-clean `4808741/e2297887` clone üzerinde Unity 6000.3.21f1 full EditMode `675/675`, PlayMode `73/73`; failed/skipped/inconclusive `0`. Unity'nin iki generated editor-setting deltası dedicated clone içinde kaldırıldı ve post-test exact HEAD/tree/clean readback geçti.
+- Universal Mac Development/StrictMode build report `329571495` bayt; signed Universal executable ve Apple M1/Metal r35 exact smoke başarılıdır. Exact clean Windows x64 IL2CPP/only-D3D11 report `1327308678` bayt; Intel Iris Xe/feature level 11.1 interactive runtime host/readiness/success/shutdown markerlarını birer kez, forbidden `0`, graceful/task/player cleanup `ok` verdi.
+- Technical-source [Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996) başarılıdır. ADR-0044, tarihli Evidence ve `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue68-4808741` task-cleanup receipt dahil canonical procedure-bound `14/14` kanıt kaynağıdır. Draft [PR #69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69) açıktır.
+- Henüz source/docs commit/Guard, local immutable package, doğru USB incoming/final iki tam readback, final metadata/Guard, acceptance 20/20, Issue closure ve Roadmap Done iddiası yoktur. Issue #68 açık/In Progress; parent Epic #10 açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #66 / Epic #10
 
 - Core feature `f9545605baff423f05615e7326902e24dc82aeeb`; current technical head `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`. Stable typed BuildOrderId/WorkTicketId/OperationId accepted exact quote/reservation setini tek immutable job ve ticket'a bağlar.
 - BuildOrder/WorkTicket exact customer, request, quote, managed claim, workbench ve on line/ProductId/ItemInstanceId/ReservationId identity'yi dondurur. Bir quote/claim/workbench yalnız bir active order/ticket sahibi olabilir.

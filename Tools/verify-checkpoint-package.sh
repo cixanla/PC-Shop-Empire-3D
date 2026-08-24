@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66) ;;
+  canonical|issue66|issue68) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -199,20 +199,36 @@ done < "$git_paths"
 ) | LC_ALL=C sort > "$canonical_evidence_paths"
 cmp -s "$evidence_paths" "$canonical_evidence_paths" || { echo "ERROR EVIDENCE allowlist does not equal canonical evidence directory" >&2; exit 1; }
 
-if [[ "$evidence_contract" == "issue66" ]]; then
-  printf '%s\n' \
-    binary-manifest.json \
-    build-il2cpp-d3d11-rerun.log \
-    editmode.xml \
-    macos-build.log \
-    macos-runtime.log \
-    playmode.xml \
-    runtime-d3d11.log \
-    runtime-summary.json \
-    source-receipt.json \
-    | LC_ALL=C sort > "$contract_evidence_paths"
+if [[ "$evidence_contract" == "issue66" || "$evidence_contract" == "issue68" ]]; then
+  contract_issue=${evidence_contract#issue}
+  contract_build_log=build-il2cpp-d3d11.log
+  contract_evidence_count=14
+  if [[ "$evidence_contract" == "issue66" ]]; then
+    contract_build_log=build-il2cpp-d3d11-rerun.log
+    contract_evidence_count=9
+  fi
+  {
+    printf '%s\n' \
+      binary-manifest.json \
+      "$contract_build_log" \
+      editmode.xml \
+      macos-build.log \
+      macos-runtime.log \
+      playmode.xml \
+      runtime-d3d11.log \
+      runtime-summary.json \
+      source-receipt.json
+    if [[ "$evidence_contract" == "issue68" ]]; then
+      printf '%s\n' \
+        build-procedure.ps1 \
+        launch-procedure.ps1 \
+        procedure-manifest.json \
+        runtime-procedure.ps1 \
+        task-receipt.json
+    fi
+  } | LC_ALL=C sort > "$contract_evidence_paths"
   cmp -s "$canonical_evidence_paths" "$contract_evidence_paths" || {
-    echo "ERROR Issue #66 canonical evidence does not equal the exact 9-file contract" >&2
+    echo "ERROR Issue #$contract_issue canonical evidence does not equal the exact $contract_evidence_count-file contract" >&2
     exit 1
   }
 fi
@@ -234,9 +250,16 @@ done < "$evidence_paths"
   echo "ERROR canonical evidence contract must contain at least one file" >&2
   exit 1
 }
-if [[ "$evidence_contract" == "issue66" && "$evidence_rows" != "9" ]]; then
-  echo "ERROR Issue #66 requires exactly 9 evidence files: actual=$evidence_rows" >&2
-  exit 1
+if [[ "$evidence_contract" == "issue66" || "$evidence_contract" == "issue68" ]]; then
+  contract_issue=${evidence_contract#issue}
+  contract_evidence_count=14
+  if [[ "$evidence_contract" == "issue66" ]]; then
+    contract_evidence_count=9
+  fi
+  if [[ "$evidence_rows" != "$contract_evidence_count" ]]; then
+    echo "ERROR Issue #$contract_issue requires exactly $contract_evidence_count evidence files: actual=$evidence_rows" >&2
+    exit 1
+  fi
 fi
 
 echo "CHECKPOINT_PACKAGE_OK manifest=$manifest_rows bytes=$manifest_bytes git_source=$git_rows evidence=$evidence_rows commit=$source_commit tree=$source_tree"
