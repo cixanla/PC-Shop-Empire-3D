@@ -89,6 +89,18 @@ namespace PCShopEmpire3D.Editor
             Require(
                 previousGraphicsApis.Length > 0,
                 "Windows graphics API snapshot is empty; refusing to mutate player settings.");
+            string projectSettingsPath = Path.Combine(
+                ProjectRoot,
+                "ProjectSettings",
+                "ProjectSettings.asset");
+            Require(
+                File.Exists(projectSettingsPath),
+                "ProjectSettings.asset is missing; refusing to mutate player settings.");
+            byte[] previousProjectSettingsBytes =
+                File.ReadAllBytes(projectSettingsPath);
+            Require(
+                previousProjectSettingsBytes.Length > 0,
+                "ProjectSettings.asset snapshot is empty; refusing to mutate player settings.");
 
             string outputPath = Path.Combine(
                 BuildRoot,
@@ -150,6 +162,9 @@ namespace PCShopEmpire3D.Editor
                             PlayerSettings.GetGraphicsAPIs(target),
                             previousGraphicsApis),
                         "Windows graphics API list restore readback mismatch.");
+                    RestoreProjectSettingsFileExactly(
+                        projectSettingsPath,
+                        previousProjectSettingsBytes);
                 }
                 catch (Exception exception)
                 {
@@ -181,7 +196,8 @@ namespace PCShopEmpire3D.Editor
             Debug.Log(
                 $"STAGE_A_BUILD_OK target={target} bytes={report.summary.totalSize} " +
                 $"path={outputPath} scripting-backend=IL2CPP " +
-                "graphics-api=Direct3D11 settings-restored=ok");
+                "graphics-api=Direct3D11 settings-restored=ok " +
+                "project-settings=byte-exact");
         }
 
         [MenuItem("PC Shop Empire/Stage A/Configure Unity Version Control %#u")]
@@ -631,6 +647,31 @@ namespace PCShopEmpire3D.Editor
             return actual != null &&
                    expected != null &&
                    actual.SequenceEqual(expected);
+        }
+
+        private static void RestoreProjectSettingsFileExactly(
+            string projectSettingsPath,
+            byte[] expectedBytes)
+        {
+            Require(
+                !string.IsNullOrWhiteSpace(projectSettingsPath) &&
+                expectedBytes != null &&
+                expectedBytes.Length > 0,
+                "ProjectSettings.asset restore snapshot is invalid.");
+
+            AssetDatabase.SaveAssets();
+            byte[] currentBytes = File.ReadAllBytes(projectSettingsPath);
+            if (!currentBytes.SequenceEqual(expectedBytes))
+            {
+                File.WriteAllBytes(projectSettingsPath, expectedBytes);
+                AssetDatabase.Refresh(
+                    ImportAssetOptions.ForceSynchronousImport |
+                    ImportAssetOptions.ForceUpdate);
+            }
+
+            Require(
+                File.ReadAllBytes(projectSettingsPath).SequenceEqual(expectedBytes),
+                "ProjectSettings.asset byte-exact restore readback mismatch.");
         }
 
         private static void Require(bool condition, string message)
