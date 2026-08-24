@@ -7,7 +7,9 @@
 **Core feature tree:** `c0ed1add79162c334df4fc833eedf1dfaeb5cbc8`<br>
 **Technical head:** `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`<br>
 **Technical tree:** `69ea366cc49e99b653f5d02d9c0f238b4906de69`<br>
-**Closure status:** current-source macOS, Windows and CI technical gates verified; source/docs, local staging and physical USB closure pending
+**Source/docs checkpoint:** `4e1ef4322d9ef049e3aac915c611474f6bee92fd`<br>
+**Source/docs tree:** `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`<br>
+**Closure status:** macOS/Windows technical evidence, exact source/docs checkpoint CI and local immutable staging verified; physical USB, final metadata/lifecycle closure pending
 
 ## Delivered playable result
 
@@ -103,7 +105,7 @@ This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance
 | 15 | Dashboard cannot teleport player, items, kit or assembly state. | TECHNICAL PASS | Every customer/request/quote/ticket progression edge in both real-input routes snapshots and rejects automatic player pose, physical projection identity/parent/pose/active/ownership/carry/cart/stack/stable-placement/last-safe state, serialized item/container state and Assembly revision/receipt mutation; no Dashboard handoff path exists. |
 | 16 | EditMode and PlayMode prove atomicity, replay, recovery, targeting, input, visible state and invariant preservation. | TECHNICAL PASS | Current-source full EditMode `661/661` and PlayMode `66/66` passed on Mac and Windows after the input-owner/no-teleport strengthening. |
 | 17 | macOS Development/StrictMode and native Metal smoke pass. | TECHNICAL PASS | Universal Mac build and accepted Apple M1/Metal r34 receipt above. |
-| 18 | Windows x64 IL2CPP/D3D11 and physical USB readback are separate final gates before Done. | PARTIAL — WINDOWS PASS / USB PENDING | Exact Windows IL2CPP/D3D11 receipts above; local immutable staging, physical two-readback and final metadata are still pending. |
+| 18 | Windows x64 IL2CPP/D3D11 and physical USB readback are separate final gates before Done. | PARTIAL — WINDOWS + LOCAL STAGING PASS / USB PENDING | Exact Windows IL2CPP/D3D11 receipts above. The immutable local package passed incoming and final readback; physical USB two-readback and final metadata are still pending. |
 
 ## Normative local and physical checkpoint package contract
 
@@ -145,8 +147,9 @@ All Issue #66 local/incoming/final readbacks invoke `Tools/verify-checkpoint-pac
 
 ## Repository and external checkpoint status
 
-- Current-source Repository Guard [32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) passed for `f8afd62`.
-- Draft PR [#67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) points exactly to `f8afd62` at this technical evidence revision.
+- Technical-source Repository Guard [32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) passed for `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`.
+- Exact source/docs checkpoint `4e1ef4322d9ef049e3aac915c611474f6bee92fd`, tree `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`, passed [Repository Guard 32723213686](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32723213686). Draft PR [#67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) points to that source/docs checkpoint.
+- Local immutable package `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF` passed the verifier before and after atomic final naming: manifest `906/906`, exact Git source `896/896`, evidence `9/9`, payload `17,330,935` bytes and manifest SHA-256 `1514481a5b8dc90aae89f6de1d0e49ac4c6e964ee280c8170e6e224206444121`.
 - Physical USB identity and the previous milestone chain must be revalidated immediately before any write; no alternate volume is used and no physical closure is claimed here.
 - The intended local/USB milestone name is `2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF`.
 - The final package must use a collision-free `.incoming-*` target, remove AppleDouble files only inside that new incoming target, pass complete hash+size+path plus exact Git-source/evidence readback, atomically rename and pass a second complete readback.
