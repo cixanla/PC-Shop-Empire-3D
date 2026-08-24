@@ -34,12 +34,20 @@ Yeni iki test aşağıdaki sınırları doğrudan kilitler:
 1. Motherboard staged olmadan CPU pickup no-mutation reddi; ardından exact motherboard→CPU sıra, iki ayrı BuildKit slotu, stable CPU kimliği ve Assembly izolasyonu.
 2. CPU placement stale-revision reddi; başarılı placement sonrası exact pickup/place replay ve revision no-mutation.
 
+## GitHub ve fiziksel checkpoint yaşam döngüsü
+
+- Source/docs commit `5f92fb4986b13cf540630bb7b24e950e6185a7fa`, tree `ec74674cde60d9af43b4349448d429e827c7d7d8`; [Repository Guard 32755318218](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32755318218) başarılıdır.
+- [Draft PR #72](https://github.com/cixanla/PC-Shop-Empire-3D/pull/72) bu ara checkpoint'in review/integration yüzeyidir; Issue #71'i kapatmaz.
+- Yerel immutable paket: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-24_STAGE_B_ISSUE71_CPU_BUILDKIT_DOMAIN_FOUNDATION`.
+- Paket exact `915` Git source + `4` evidence + `SOURCE_COMMIT.txt` içerir: manifest `920/920`, payload `16.581.584` bayt, manifest SHA-256 `23bafb1e2b3f5c0995efa7396e50c42529196134cccb5ca08637a7ba4a764e16`; local verifier `CHECKPOINT_PACKAGE_OK`, AppleDouble `0`.
+- Windows'ta doğru removable `cixanla` USB yalnız `D:\CIXANLA\90_BACKUPS\PCShopEmpire3D` ve önceki Issue #68 milestone'u doğrulandıktan sonra kullanıldı. Çakışmayan `.incoming-...-5f92fb4` hedefi ilk tam `920/920` Windows SHA/size/path readback'ini geçince atomik final adına taşındı; final ikinci readback aynı `915/4/920/16.581.584/23bafb1e...a764e16` sonucunu ve AppleDouble `0` verdi. Incoming residue ve geçici verifier dosyası kaldırıldı.
+
 ## Bu checkpoint'in iddia etmediği kapılar
 
 - CPU için authored scene support collider/snap anchor/preview veya raycast focus hedefi yoktur.
 - Gerçek `E / Gamepad South`, rotate/drop/primary single-consumer ve pause/co-edge PlayMode matrisi henüz eklenmemiştir.
 - Work-ticket görünümünde authoritative `1/10 → 2/10` aggregate projection henüz bağlanmamıştır.
-- PlayMode, Universal macOS build/runtime smoke, exact-head Windows IL2CPP/D3D11 native gate ve Repository Guard sonucu bu ara checkpoint için henüz iddia edilmez.
+- PlayMode, Universal macOS build/runtime smoke ve exact-head Windows IL2CPP/D3D11 native gate bu ara checkpoint için henüz iddia edilmez. Repository Guard ve fiziksel yedek yalnız bu bounded domain checkpoint'ini korur; player-visible acceptance yerine geçmez.
 - Issue #71 acceptance tamamlanmış sayılmaz; Issue ve Roadmap `In Progress` kalır.
 
 ## Yarın için tek devam noktası
