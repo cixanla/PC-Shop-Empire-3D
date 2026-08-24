@@ -2,11 +2,11 @@
 
 **Date:** 24 August 2026<br>
 **Issue:** [#68](https://github.com/cixanla/PC-Shop-Empire-3D/issues/68)<br>
-**Draft PR:** [#69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69)<br>
+**Merged PR:** [#69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69), merge commit `f60464db00bfa7262648248aebb18bfc6558ccb1`<br>
 **Feature chain:** `2a69436` + `b0d2a97`<br>
 **Technical head:** `480874191ee2c950e046ab2aee8be92d61d79fe4`<br>
 **Technical tree:** `e229788741df4c456840d356633e2a4bc1702516`<br>
-**Closure status:** domain/scene/input, exact-head regression, macOS and Windows native, source/docs, immutable local package and physical USB two-readback gates passed; final metadata/Guard and Issue/Roadmap lifecycle remain independent pending gates
+**Closure status:** complete — domain/scene/input, exact-head regression, macOS and Windows native, source/docs, immutable local package, physical USB two-readback, final metadata/Guard and Issue/Roadmap lifecycle gates passed
 
 ## Delivered playable result
 
@@ -107,7 +107,7 @@ The canonical local evidence source is `/Users/cixanla/Developer/PCShopEmpire3D/
 - USB incoming and USB final targets both returned `CHECKPOINT_PACKAGE_OK`. The historical final path is `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-24_STAGE_B_CANONICAL_MOTHERBOARD_PHYSICAL_BUILD_KIT_HANDOFF`.
 - All four readbacks — local incoming, local final, USB incoming and USB final — matched exactly: manifest `929/929`, exact Git source `914/914`, evidence `14/14`, payload `18,882,211` bytes, source/docs commit/tree above and manifest SHA-256 `6d59ddb9ce79cba9ce657f537e32d941467213b241b86a6da424c1c186f112a9`.
 - Internal AppleDouble, sibling AppleDouble and incoming residue counts were `0`. Filesystem writes were synchronized and `/dev/disk4` was safely ejected after the second physical readback.
-- This section proves the physical USB checkpoint only. The physical-metadata commit/Guard, acceptance `20/20`, Issue/Project lifecycle and PR merge remain pending below.
+- Physical metadata commit `3e1de005bfb7662ca74a00809a14810f45286c12`, tree `0973c18e1b09f01043737935564d57d01dc84730` and [Repository Guard 32751777063](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32751777063) passed after this physical proof. Acceptance `20/20`, Issue/Project lifecycle and PR merge are recorded below.
 
 ## Canonical Issue #68 acceptance matrix
 
@@ -134,17 +134,17 @@ This is the repository-owned one-to-one rendering of the 20 acceptance bullets. 
 | 17 | EditMode domain/invariant/replay/failure and real-input PlayMode pickup/carry/place/recovery matrices pass. | TECHNICAL PASS | Exact-head EditMode `675/675`, PlayMode `73/73`; failed/skipped/inconclusive `0`. |
 | 18 | Full regression, Repository Guard and diff hygiene pass. | TECHNICAL PASS | Exact detached clean-clone regression, local guard, `git diff --check`, [Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996). |
 | 19 | Universal macOS and exact-head Windows x64 IL2CPP/D3D11 build/native smoke pass. | TECHNICAL PASS | Mac and Windows tables, receipts and exact marker/cleanup readbacks above. |
-| 20 | Living docs, private push/CI, correct USB incoming→two full readbacks→atomic final and Issue/Project lifecycle are separately proven. | IN PROGRESS | Source/docs `374094c` + Guard `32750065918`, immutable local package and physical USB incoming/final double readback passed exactly as recorded above. Final physical-metadata Guard and Issue/Project lifecycle remain pending. |
+| 20 | Living docs, private push/CI, correct USB incoming→two full readbacks→atomic final and Issue/Project lifecycle are separately proven. | PASS | Source/docs `374094c` + Guard `32750065918`, immutable local and physical USB double readback, physical metadata `3e1de00` + Guard `32751777063`, acceptance `20/20`, Issue #68 `CLOSED/COMPLETED`, Roadmap `Done` and PR #69 merge `f60464d`. |
 
 ## Closure boundary
 
-Technical gameplay acceptance rows 1–19 are complete. Closure steps 1–5 below are complete; row 20 remains open until step 6 passes:
+All twenty acceptance rows and all six independent closure steps are complete:
 
 1. **COMPLETE** — Commit/push this ADR, Evidence, Project Bible, handoff, changelog and verifier contract; run exact Repository Guard.
 2. **COMPLETE** — Export exact source/docs commit into a collision-free local immutable milestone and verify it with `issue68` mode.
 3. **COMPLETE** — Verify the external physical USB identity and prior milestone chain read-only.
 4. **COMPLETE** — Copy only to a collision-free `.incoming-*` target and run a complete verifier readback with AppleDouble/residue `0`.
 5. **COMPLETE** — Rename atomically on the same filesystem, then run the complete verifier a second time on the final name and safely eject the USB.
-6. Commit/push physical metadata, pass final Guard, check all 20 Issue acceptance boxes, close Issue #68, move it to Roadmap Done, and keep parent Epic #10 open/In Progress.
+6. **COMPLETE** — Physical metadata `3e1de00` was pushed and Guard `32751777063` passed; all 20 Issue acceptance boxes were checked, PR #69 merged as `f60464d`, Issue #68 closed as completed, its Roadmap item moved to Done, and parent Epic #10 remained open/In Progress.
 
-The physical USB milestone is now proven. Until step 6 passes, this document does not claim final physical-metadata Guard, Issue closure, Project Done or merged PR.
+Issue #68 is fully closed across technical, two-platform native, source/docs, immutable local, physical USB, metadata/Guard and lifecycle gates. The remaining nine component transfers and later assembly/electrical/POST/OS/benchmark/delivery/release work remain separate dependent packages under open Epic #10.

@@ -1,8 +1,8 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #68 canonical motherboard physical BuildKit teknik, source/docs ve fiziksel USB kapıları tamamlandı; final metadata/Guard ve lifecycle ayrı açık kapılar<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, feature branch + draft PR #69; `main` son tamamlanmış checkpoint'i Issue #66'dır
+**Durum:** Issue #68 canonical motherboard physical BuildKit teknik, source/docs, fiziksel USB ve lifecycle kapılarıyla tamamlandı<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main` merge commit `f60464db00bfa7262648248aebb18bfc6558ccb1`; Issue #68 kapalı/Done
 
 ## En yeni teknik checkpoint — Issue #68 / Epic #10
 
@@ -13,8 +13,8 @@
 - Real `E / Gamepad South`, range/focus/LOS/empty-hands/capacity/obstruction/pose/revision kapıları ve same-frame Interact/Drop/Primary, hold, pause co-edge, release-repress single-consumer matrisi testlidir.
 - Exact detached-clean `4808741/e2297887` clone üzerinde Unity 6000.3.21f1 full EditMode `675/675`, PlayMode `73/73`; failed/skipped/inconclusive `0`. Unity'nin iki generated editor-setting deltası dedicated clone içinde kaldırıldı ve post-test exact HEAD/tree/clean readback geçti.
 - Universal Mac Development/StrictMode build report `329571495` bayt; signed Universal executable ve Apple M1/Metal r35 exact smoke başarılıdır. Exact clean Windows x64 IL2CPP/only-D3D11 report `1327308678` bayt; Intel Iris Xe/feature level 11.1 interactive runtime host/readiness/success/shutdown markerlarını birer kez, forbidden `0`, graceful/task/player cleanup `ok` verdi.
-- Technical-source [Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996) başarılıdır. Exact source/docs `374094ceda9f8f65991e3906c62e1e4ba768b134`, tree `65418d089bc88c9f3dd435b93536c754fd4fef41` ve [Guard 32750065918](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32750065918) başarılıdır. ADR-0044, tarihli Evidence ve `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue68-4808741` task-cleanup receipt dahil canonical procedure-bound `14/14` kanıt kaynağıdır. Draft [PR #69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69) açıktır.
-- Collision-free local immutable incoming/final ile doğru USB incoming/atomik final hedefleri dört tam readback'te aynı `929/929` payload, `914/914` exact Git source, `14/14` evidence, `18.882.211` bayt ve `6d59ddb9ce79cba9ce657f537e32d941467213b241b86a6da424c1c186f112a9` manifest sonucunu verdi. Internal/sibling AppleDouble ve incoming residue `0`; USB final doğrulamadan sonra güvenle eject edildi. Henüz final physical metadata commit/Guard, acceptance `20/20`, Issue closure, Roadmap Done veya PR merge iddiası yoktur. Issue #68 açık/In Progress; parent Epic #10 açık/In Progress kalır.
+- Technical-source [Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996) başarılıdır. Exact source/docs `374094ceda9f8f65991e3906c62e1e4ba768b134`, tree `65418d089bc88c9f3dd435b93536c754fd4fef41` ve [Guard 32750065918](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32750065918) başarılıdır. ADR-0044, tarihli Evidence ve `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue68-4808741` task-cleanup receipt dahil canonical procedure-bound `14/14` kanıt kaynağıdır. [PR #69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69) accepted checkpoint'i merge etmiştir.
+- Collision-free local immutable incoming/final ile doğru USB incoming/atomik final hedefleri dört tam readback'te aynı `929/929` payload, `914/914` exact Git source, `14/14` evidence, `18.882.211` bayt ve `6d59ddb9ce79cba9ce657f537e32d941467213b241b86a6da424c1c186f112a9` manifest sonucunu verdi. Internal/sibling AppleDouble ve incoming residue `0`; USB final doğrulamadan sonra güvenle eject edildi. Physical metadata `3e1de005bfb7662ca74a00809a14810f45286c12`, tree `0973c18e1b09f01043737935564d57d01dc84730` ve [Guard 32751777063](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32751777063) başarılıdır. Acceptance `20/20`, Issue #68 `CLOSED/COMPLETED`, Roadmap `Done`; PR #69 merge commit `f60464db00bfa7262648248aebb18bfc6558ccb1` ile birleşti. Parent Epic #10 açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #66 / Epic #10
 
