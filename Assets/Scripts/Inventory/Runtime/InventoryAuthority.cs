@@ -423,6 +423,75 @@ namespace PCShopEmpire3D.Inventory
     }
 
     /// <summary>
+    /// Revision-bound permission to publish one complete set of exact serialized
+    /// reservations. Retail is the only friend consumer; public callers use the atomic
+    /// ReserveSerializedItems command.
+    /// </summary>
+    internal sealed class InventorySerializedReservationSetPlan
+    {
+        private readonly IReadOnlyList<InventorySerializedReservationRequest> _requests;
+        private readonly IReadOnlyList<InventoryReservation> _reservations;
+
+        internal InventorySerializedReservationSetPlan(
+            InventoryAuthority owner,
+            long expectedRevision,
+            IReadOnlyList<InventorySerializedReservationRequest> requests,
+            IReadOnlyList<InventoryReservation> reservations,
+            bool isReplay)
+        {
+            Owner = owner;
+            ExpectedRevision = expectedRevision;
+            _requests = requests;
+            _reservations = reservations;
+            IsReplay = isReplay;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal IReadOnlyList<InventorySerializedReservationRequest> Requests => _requests;
+
+        internal IReadOnlyList<InventoryReservation> Reservations => _reservations;
+
+        internal bool IsReplay { get; }
+
+        public long ExpectedRevision { get; }
+    }
+
+    /// <summary>
+    /// Inventory-issued proof that one aggregate exclusively owns an exact serialized
+    /// reservation set. Public reservation commands cannot extend, release or consume a
+    /// managed claim; the owning aggregate must present this capability to validate it.
+    /// </summary>
+    internal sealed class InventorySerializedReservationSetAccess
+    {
+        private readonly IReadOnlyList<InventorySerializedReservationRequest> _requests;
+
+        internal InventorySerializedReservationSetAccess(
+            InventoryAuthority owner,
+            StableId<InventorySerializedReservationSetOperationIdScope> operationId,
+            StableId<InventoryClaimIdScope> managedClaimId,
+            IReadOnlyList<InventorySerializedReservationRequest> requests,
+            long appliedRevision)
+        {
+            Owner = owner;
+            OperationId = operationId;
+            ManagedClaimId = managedClaimId;
+            _requests = requests;
+            AppliedRevision = appliedRevision;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal StableId<InventorySerializedReservationSetOperationIdScope> OperationId { get; }
+
+        internal StableId<InventoryClaimIdScope> ManagedClaimId { get; }
+
+        internal IReadOnlyList<InventorySerializedReservationRequest> Requests => _requests;
+
+        internal long AppliedRevision { get; }
+    }
+
+    /// <summary>
     /// Immutable, revision-bound permission to consume one exact reservation set for checkout.
     /// Only the authority that prepared the plan may commit it.
     /// </summary>
@@ -485,6 +554,45 @@ namespace PCShopEmpire3D.Inventory
             public IReadOnlyDictionary<BatchPositionKey, long> BatchConsumption { get; }
         }
 
+        private sealed class ManagedSerializedReservationSetRegistration
+        {
+            private readonly IReadOnlyList<InventorySerializedReservationRequest> _requests;
+
+            public ManagedSerializedReservationSetRegistration(
+                StableId<InventorySerializedReservationSetOperationIdScope> operationId,
+                StableId<InventoryClaimIdScope> claimId,
+                long appliedRevision,
+                IReadOnlyList<InventorySerializedReservationRequest> requests,
+                InventorySerializedReservationSetAccess access)
+            {
+                OperationId = operationId;
+                ClaimId = claimId;
+                AppliedRevision = appliedRevision;
+                Access = access;
+
+                var exactRequests = new InventorySerializedReservationRequest[
+                    requests.Count];
+                for (int index = 0; index < requests.Count; index++)
+                {
+                    exactRequests[index] = requests[index];
+                }
+
+                _requests = Array.AsReadOnly(exactRequests);
+            }
+
+            public StableId<InventorySerializedReservationSetOperationIdScope>
+                OperationId { get; }
+
+            public StableId<InventoryClaimIdScope> ClaimId { get; }
+
+            public long AppliedRevision { get; }
+
+            public IReadOnlyList<InventorySerializedReservationRequest> Requests =>
+                _requests;
+
+            public InventorySerializedReservationSetAccess Access { get; }
+        }
+
         private readonly ProductCatalog _catalog;
         private readonly Dictionary<StableId<ContainerIdScope>, InventoryContainerDefinition> _containers =
             new Dictionary<StableId<ContainerIdScope>, InventoryContainerDefinition>();
@@ -499,6 +607,17 @@ namespace PCShopEmpire3D.Inventory
         private readonly Dictionary<StableId<ContainerIdScope>, InventorySerializedTransferAccess>
             _managedSerializedTransferContainers =
                 new Dictionary<StableId<ContainerIdScope>, InventorySerializedTransferAccess>();
+        private readonly Dictionary<StableId<InventoryClaimIdScope>,
+            ManagedSerializedReservationSetRegistration> _managedSerializedReservationSets =
+                new Dictionary<StableId<InventoryClaimIdScope>,
+                    ManagedSerializedReservationSetRegistration>();
+        private readonly Dictionary<
+            StableId<InventorySerializedReservationSetOperationIdScope>,
+            ManagedSerializedReservationSetRegistration>
+            _managedSerializedReservationSetOperations =
+                new Dictionary<
+                    StableId<InventorySerializedReservationSetOperationIdScope>,
+                    ManagedSerializedReservationSetRegistration>();
 
         private InventoryAuthority(ProductCatalog catalog)
         {
@@ -1869,6 +1988,351 @@ namespace PCShopEmpire3D.Inventory
                 : CommitPreparedSerializedItemReservation(prepared.Value);
         }
 
+        /// <summary>
+        /// Atomically reserves a complete exact serialized-item set. All identities,
+        /// ownership conflicts and managed-container restrictions are preflighted before
+        /// one successful set advances Inventory Revision exactly once.
+        /// </summary>
+        public OperationResult ReserveSerializedItems(
+            IReadOnlyList<InventorySerializedReservationRequest> requests)
+        {
+            OperationResult<InventorySerializedReservationSetPlan> prepared =
+                PrepareSerializedItemReservationSet(requests);
+            return prepared.IsFailure
+                ? OperationResult.Fail(prepared.Error)
+                : CommitPreparedSerializedItemReservationSet(prepared.Value);
+        }
+
+        /// <summary>
+        /// Atomically reserves and exclusively manages one exact serialized-item set for a
+        /// friend aggregate. The claim must be unused, every member must share that claim,
+        /// and Inventory publishes both reservations and their ownership capability in one
+        /// revision.
+        /// </summary>
+        internal OperationResult<InventorySerializedReservationSetAccess>
+            ReserveManagedSerializedItems(
+                StableId<InventorySerializedReservationSetOperationIdScope> operationId,
+                IReadOnlyList<InventorySerializedReservationRequest> requests)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.InvalidSerializedReservationSetOperationId);
+            }
+
+            if (requests == null)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.MissingSerializedReservationSet);
+            }
+
+            if (requests.Count == 0)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.EmptySerializedReservationSet);
+            }
+
+            StableId<InventoryClaimIdScope> claimId = default;
+            for (int index = 0; index < requests.Count; index++)
+            {
+                InventorySerializedReservationRequest request = requests[index];
+                if (request == null)
+                {
+                    return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                        InventoryFailures.NullSerializedReservationRequest);
+                }
+
+                if (index == 0)
+                {
+                    claimId = request.ClaimId;
+                }
+                else if (request.ClaimId != claimId)
+                {
+                    return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                        InventoryFailures.SerializedReservationSetClaimMismatch);
+                }
+            }
+
+            if (claimId.IsEmpty)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.InvalidClaimId);
+            }
+
+            if (_managedSerializedReservationSetOperations.TryGetValue(
+                    operationId,
+                    out ManagedSerializedReservationSetRegistration
+                        existingForOperation))
+            {
+                if (existingForOperation.ClaimId != claimId ||
+                    !MatchesManagedSerializedReservationRequests(
+                        existingForOperation.Requests,
+                        requests))
+                {
+                    return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                        InventoryFailures.SerializedReservationSetOperationConflict);
+                }
+
+                return OwnsManagedSerializedReservationSet(
+                        existingForOperation.Access)
+                    ? OperationResult<InventorySerializedReservationSetAccess>.Success(
+                        existingForOperation.Access)
+                    : OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                        InventoryFailures.SerializedReservationSetAccessInvalid);
+            }
+
+            if (_managedSerializedReservationSets.ContainsKey(claimId))
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.SerializedReservationSetOperationConflict);
+            }
+
+            foreach (InventoryReservation reservation in _reservations.Values)
+            {
+                if (reservation.ClaimId == claimId)
+                {
+                    return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                        InventoryFailures.SerializedReservationClaimOccupied);
+                }
+            }
+
+            OperationResult<InventorySerializedReservationSetPlan> prepared =
+                PrepareSerializedItemReservationSet(requests);
+            if (prepared.IsFailure)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    prepared.Error);
+            }
+
+            InventorySerializedReservationSetPlan plan = prepared.Value;
+            if (plan.IsReplay || plan.ExpectedRevision != Revision)
+            {
+                return OperationResult<InventorySerializedReservationSetAccess>.Fail(
+                    InventoryFailures.SerializedReservationClaimOccupied);
+            }
+
+            var exactRequests = new InventorySerializedReservationRequest[
+                plan.Requests.Count];
+            for (int index = 0; index < plan.Requests.Count; index++)
+            {
+                exactRequests[index] = plan.Requests[index];
+            }
+
+            var access = new InventorySerializedReservationSetAccess(
+                this,
+                operationId,
+                claimId,
+                Array.AsReadOnly(exactRequests),
+                Revision + 1);
+            var registration =
+                new ManagedSerializedReservationSetRegistration(
+                    operationId,
+                    claimId,
+                    Revision + 1,
+                    exactRequests,
+                    access);
+            for (int index = 0; index < plan.Reservations.Count; index++)
+            {
+                InventoryReservation reservation = plan.Reservations[index];
+                _reservations.Add(reservation.Id, reservation);
+            }
+
+            _managedSerializedReservationSets.Add(claimId, registration);
+            _managedSerializedReservationSetOperations.Add(
+                operationId,
+                registration);
+            Revision++;
+            return OperationResult<InventorySerializedReservationSetAccess>.Success(access);
+        }
+
+        internal OperationResult<InventorySerializedReservationSetPlan>
+            PrepareSerializedItemReservationSet(
+                IReadOnlyList<InventorySerializedReservationRequest> requests)
+        {
+            if (requests == null)
+            {
+                return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                    InventoryFailures.MissingSerializedReservationSet);
+            }
+
+            if (requests.Count == 0)
+            {
+                return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                    InventoryFailures.EmptySerializedReservationSet);
+            }
+
+            var requestIds = new HashSet<StableId<ReservationIdScope>>();
+            var itemIds = new HashSet<StableId<ItemInstanceIdScope>>();
+            var exactRequests = new List<InventorySerializedReservationRequest>(
+                requests.Count);
+            var reservations = new List<InventoryReservation>(requests.Count);
+            int replayCount = 0;
+
+            for (int index = 0; index < requests.Count; index++)
+            {
+                InventorySerializedReservationRequest request = requests[index];
+                if (request == null)
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.NullSerializedReservationRequest);
+                }
+
+                Failure identityFailure = ValidateReservationIdentity(
+                    request.ReservationId,
+                    request.ClaimId);
+                if (!identityFailure.IsNone)
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        identityFailure);
+                }
+
+                if (_managedSerializedReservationSets.ContainsKey(request.ClaimId))
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.SerializedReservationClaimManaged);
+                }
+
+                if (request.ItemId.IsEmpty)
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.InvalidItemId);
+                }
+
+                if (!requestIds.Add(request.ReservationId))
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.DuplicateSerializedReservationRequest);
+                }
+
+                if (!itemIds.Add(request.ItemId))
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.DuplicateSerializedReservationItem);
+                }
+
+                if (!_items.TryGetValue(request.ItemId, out InventoryItemRecord item))
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.UnknownItem);
+                }
+
+                if (_managedSerializedTransferContainers.ContainsKey(item.ContainerId))
+                {
+                    return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                        InventoryFailures.SerializedTransferContainerManaged);
+                }
+
+                InventoryReservation exactExisting = null;
+                if (_reservations.TryGetValue(
+                        request.ReservationId,
+                        out InventoryReservation byId))
+                {
+                    if (!MatchesSerializedReservation(byId, request))
+                    {
+                        return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                            InventoryFailures.DuplicateReservation);
+                    }
+
+                    exactExisting = byId;
+                    replayCount++;
+                }
+
+                foreach (InventoryReservation existing in _reservations.Values)
+                {
+                    if (existing.TargetKind ==
+                            InventoryReservationTargetKind.SerializedItem &&
+                        existing.ItemId == request.ItemId &&
+                        !ReferenceEquals(existing, exactExisting))
+                    {
+                        return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                            InventoryFailures.ItemAlreadyReserved);
+                    }
+                }
+
+                exactRequests.Add(request);
+                reservations.Add(exactExisting ?? new InventoryReservation(
+                    request.ReservationId,
+                    request.ClaimId,
+                    InventoryReservationTargetKind.SerializedItem,
+                    request.ItemId,
+                    default,
+                    default,
+                    1,
+                    InventoryReservationReleasePolicy.Releasable));
+            }
+
+            if (replayCount > 0 && replayCount != requests.Count)
+            {
+                return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                    InventoryFailures.PartialSerializedReservationReplay);
+            }
+
+            if (replayCount == 0 && Revision == long.MaxValue)
+            {
+                return OperationResult<InventorySerializedReservationSetPlan>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            exactRequests.Sort((left, right) => string.Compare(
+                left.ReservationId.Value,
+                right.ReservationId.Value,
+                StringComparison.Ordinal));
+            reservations.Sort((left, right) => string.Compare(
+                left.Id.Value,
+                right.Id.Value,
+                StringComparison.Ordinal));
+            return OperationResult<InventorySerializedReservationSetPlan>.Success(
+                new InventorySerializedReservationSetPlan(
+                    this,
+                    Revision,
+                    Array.AsReadOnly(exactRequests.ToArray()),
+                    Array.AsReadOnly(reservations.ToArray()),
+                    replayCount == requests.Count));
+        }
+
+        internal OperationResult CommitPreparedSerializedItemReservationSet(
+            InventorySerializedReservationSetPlan plan)
+        {
+            if (plan == null ||
+                !ReferenceEquals(plan.Owner, this) ||
+                plan.Requests == null ||
+                plan.Reservations == null ||
+                plan.Requests.Count == 0 ||
+                plan.Requests.Count != plan.Reservations.Count)
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedReservationSetPlanInvalid);
+            }
+
+            if (HasExactSerializedReservationSet(plan.Requests))
+            {
+                return OperationResult.Success();
+            }
+
+            if (Revision != plan.ExpectedRevision)
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedReservationSetPlanStale);
+            }
+
+            OperationResult<InventorySerializedReservationSetPlan> current =
+                PrepareSerializedItemReservationSet(plan.Requests);
+            if (current.IsFailure || current.Value.IsReplay)
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedReservationSetPlanStale);
+            }
+
+            for (int index = 0; index < plan.Reservations.Count; index++)
+            {
+                InventoryReservation reservation = plan.Reservations[index];
+                _reservations.Add(reservation.Id, reservation);
+            }
+
+            Revision++;
+            return OperationResult.Success();
+        }
+
         public OperationResult<InventorySerializedReservationPlan>
             PrepareSerializedItemReservation(
                 StableId<ReservationIdScope> reservationId,
@@ -1906,6 +2370,12 @@ namespace PCShopEmpire3D.Inventory
             if (!identityFailure.IsNone)
             {
                 return OperationResult<InventorySerializedReservationPlan>.Fail(identityFailure);
+            }
+
+            if (_managedSerializedReservationSets.ContainsKey(claimId))
+            {
+                return OperationResult<InventorySerializedReservationPlan>.Fail(
+                    InventoryFailures.SerializedReservationClaimManaged);
             }
 
             if (_reservations.ContainsKey(reservationId))
@@ -1953,6 +2423,184 @@ namespace PCShopEmpire3D.Inventory
                 releasePolicy);
             return OperationResult<InventorySerializedReservationPlan>.Success(
                 new InventorySerializedReservationPlan(this, Revision, reservation));
+        }
+
+        private bool HasExactSerializedReservationSet(
+            IReadOnlyList<InventorySerializedReservationRequest> requests)
+        {
+            if (requests == null || requests.Count == 0)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < requests.Count; index++)
+            {
+                InventorySerializedReservationRequest request = requests[index];
+                if (request == null ||
+                    !_reservations.TryGetValue(
+                        request.ReservationId,
+                        out InventoryReservation reservation) ||
+                    !MatchesSerializedReservation(reservation, request))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        internal bool OwnsManagedSerializedReservationSet(
+            InventorySerializedReservationSetAccess access)
+        {
+            if (access == null ||
+                !ReferenceEquals(access.Owner, this) ||
+                access.OperationId.IsEmpty ||
+                access.ManagedClaimId.IsEmpty ||
+                access.AppliedRevision <= 0 ||
+                access.AppliedRevision > Revision ||
+                !_managedSerializedReservationSets.TryGetValue(
+                    access.ManagedClaimId,
+                    out ManagedSerializedReservationSetRegistration byClaim) ||
+                !_managedSerializedReservationSetOperations.TryGetValue(
+                    access.OperationId,
+                    out ManagedSerializedReservationSetRegistration byOperation))
+            {
+                return false;
+            }
+
+            return ReferenceEquals(byClaim, byOperation) &&
+                   ReferenceEquals(access, byClaim.Access) &&
+                   byClaim.OperationId == access.OperationId &&
+                   byClaim.ClaimId == access.ManagedClaimId &&
+                   byClaim.AppliedRevision == access.AppliedRevision &&
+                   MatchesManagedSerializedReservationRequests(
+                       byClaim.Requests,
+                       access.Requests) &&
+                   HasExactManagedSerializedReservationSet(access);
+        }
+
+        private bool HasExactManagedSerializedReservationSet(
+            InventorySerializedReservationSetAccess access)
+        {
+            if (access == null ||
+                !ReferenceEquals(access.Owner, this) ||
+                access.OperationId.IsEmpty ||
+                access.ManagedClaimId.IsEmpty ||
+                access.AppliedRevision <= 0 ||
+                access.AppliedRevision > Revision ||
+                access.Requests == null ||
+                access.Requests.Count == 0)
+            {
+                return false;
+            }
+
+            int claimReservationCount = 0;
+            foreach (InventoryReservation reservation in _reservations.Values)
+            {
+                if (reservation.ClaimId == access.ManagedClaimId)
+                {
+                    claimReservationCount++;
+                }
+            }
+
+            if (claimReservationCount != access.Requests.Count)
+            {
+                return false;
+            }
+
+            var reservationIds = new HashSet<StableId<ReservationIdScope>>();
+            var itemIds = new HashSet<StableId<ItemInstanceIdScope>>();
+            string previousReservationId = null;
+            for (int index = 0; index < access.Requests.Count; index++)
+            {
+                InventorySerializedReservationRequest request = access.Requests[index];
+                if (request == null ||
+                    request.ClaimId != access.ManagedClaimId ||
+                    !reservationIds.Add(request.ReservationId) ||
+                    !itemIds.Add(request.ItemId) ||
+                    (previousReservationId != null &&
+                     string.Compare(
+                         previousReservationId,
+                         request.ReservationId.Value,
+                         StringComparison.Ordinal) >= 0) ||
+                    !_reservations.TryGetValue(
+                        request.ReservationId,
+                        out InventoryReservation reservation) ||
+                    !MatchesSerializedReservation(reservation, request))
+                {
+                    return false;
+                }
+
+                previousReservationId = request.ReservationId.Value;
+            }
+
+            return true;
+        }
+
+        private static bool MatchesManagedSerializedReservationRequests(
+            IReadOnlyList<InventorySerializedReservationRequest> expected,
+            IReadOnlyList<InventorySerializedReservationRequest> actual)
+        {
+            if (expected == null ||
+                actual == null ||
+                expected.Count == 0 ||
+                expected.Count != actual.Count)
+            {
+                return false;
+            }
+
+            var matched = new bool[expected.Count];
+            for (int actualIndex = 0; actualIndex < actual.Count; actualIndex++)
+            {
+                InventorySerializedReservationRequest candidate = actual[actualIndex];
+                if (candidate == null)
+                {
+                    return false;
+                }
+
+                bool found = false;
+                for (int expectedIndex = 0; expectedIndex < expected.Count; expectedIndex++)
+                {
+                    InventorySerializedReservationRequest owned = expected[expectedIndex];
+                    if (matched[expectedIndex] ||
+                        owned == null ||
+                        owned.ReservationId != candidate.ReservationId ||
+                        owned.ClaimId != candidate.ClaimId ||
+                        owned.ItemId != candidate.ItemId)
+                    {
+                        continue;
+                    }
+
+                    matched[expectedIndex] = true;
+                    found = true;
+                    break;
+                }
+
+                if (!found)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool MatchesSerializedReservation(
+            InventoryReservation reservation,
+            InventorySerializedReservationRequest request)
+        {
+            return reservation != null &&
+                   request != null &&
+                   reservation.Id == request.ReservationId &&
+                   reservation.ClaimId == request.ClaimId &&
+                   reservation.TargetKind ==
+                       InventoryReservationTargetKind.SerializedItem &&
+                   reservation.ItemId == request.ItemId &&
+                   reservation.BatchId.IsEmpty &&
+                   reservation.ContainerId.IsEmpty &&
+                   reservation.Quantity == 1 &&
+                   reservation.ReleasePolicy ==
+                       InventoryReservationReleasePolicy.Releasable;
         }
 
         public OperationResult CommitPreparedSerializedItemReservation(
@@ -2004,6 +2652,12 @@ namespace PCShopEmpire3D.Inventory
             if (!identityFailure.IsNone)
             {
                 return OperationResult.Fail(identityFailure);
+            }
+
+            if (_managedSerializedReservationSets.ContainsKey(claimId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedReservationClaimManaged);
             }
 
             if (quantity <= 0)
@@ -2061,6 +2715,12 @@ namespace PCShopEmpire3D.Inventory
                     out InventoryReservation reservation))
             {
                 return OperationResult.Fail(InventoryFailures.UnknownReservation);
+            }
+
+            if (_managedSerializedReservationSets.ContainsKey(reservation.ClaimId))
+            {
+                return OperationResult.Fail(
+                    InventoryFailures.SerializedReservationClaimManaged);
             }
 
             if (reservation.ReleasePolicy == InventoryReservationReleasePolicy.ConsumeOnly)
@@ -2193,6 +2853,12 @@ namespace PCShopEmpire3D.Inventory
                 {
                     return OperationResult<ReservationConsumptionSelection>.Fail(
                         InventoryFailures.InvariantViolation);
+                }
+
+                if (_managedSerializedReservationSets.ContainsKey(reservation.ClaimId))
+                {
+                    return OperationResult<ReservationConsumptionSelection>.Fail(
+                        InventoryFailures.SerializedReservationClaimManaged);
                 }
 
                 if (!allowConsumeOnly &&
@@ -2577,6 +3243,45 @@ namespace PCShopEmpire3D.Inventory
                     reservedBatches[key] = quantity + reservation.Quantity;
                 }
                 else
+                {
+                    return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                }
+            }
+
+            if (_managedSerializedReservationSets.Count !=
+                _managedSerializedReservationSetOperations.Count)
+            {
+                return OperationResult.Fail(InventoryFailures.InvariantViolation);
+            }
+
+            foreach (KeyValuePair<StableId<InventoryClaimIdScope>,
+                ManagedSerializedReservationSetRegistration> entry in
+                _managedSerializedReservationSets)
+            {
+                ManagedSerializedReservationSetRegistration registration = entry.Value;
+                if (entry.Key.IsEmpty ||
+                    registration == null ||
+                    entry.Key != registration.ClaimId ||
+                    !OwnsManagedSerializedReservationSet(registration.Access))
+                {
+                    return OperationResult.Fail(InventoryFailures.InvariantViolation);
+                }
+            }
+
+            foreach (KeyValuePair<
+                StableId<InventorySerializedReservationSetOperationIdScope>,
+                ManagedSerializedReservationSetRegistration> entry in
+                _managedSerializedReservationSetOperations)
+            {
+                ManagedSerializedReservationSetRegistration registration = entry.Value;
+                if (entry.Key.IsEmpty ||
+                    registration == null ||
+                    entry.Key != registration.OperationId ||
+                    !_managedSerializedReservationSets.TryGetValue(
+                        registration.ClaimId,
+                        out ManagedSerializedReservationSetRegistration byClaim) ||
+                    !ReferenceEquals(registration, byClaim) ||
+                    !OwnsManagedSerializedReservationSet(registration.Access))
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
                 }

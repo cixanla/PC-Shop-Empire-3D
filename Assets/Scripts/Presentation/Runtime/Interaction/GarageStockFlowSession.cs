@@ -121,6 +121,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CheckoutSettlementAuthority checkoutSettlements,
             CustomerVisitAuthority customerVisits,
             CustomerConsultationAuthority customerConsultations,
+            CustomPcQuoteAuthority customPcQuotes,
             CustomerOfferDecisionActionAuthority customerOfferActions,
             CustomerRetailIdentityBinding prototypeCustomerBinding)
         {
@@ -135,6 +136,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CheckoutSettlements = checkoutSettlements;
             CustomerVisits = customerVisits;
             CustomerConsultations = customerConsultations;
+            CustomPcQuotes = customPcQuotes;
             CustomerOfferActions = customerOfferActions;
             PrototypeCustomerBinding = prototypeCustomerBinding;
         }
@@ -160,6 +162,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public CustomerVisitAuthority CustomerVisits { get; }
 
         public CustomerConsultationAuthority CustomerConsultations { get; }
+
+        public CustomPcQuoteAuthority CustomPcQuotes { get; }
 
         public CustomerOfferDecisionActionAuthority CustomerOfferActions { get; }
 
@@ -778,6 +782,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 CustomerVisitAuthority.RequiredRouteAttemptLimit).Value;
             CustomerConsultationAuthority customerConsultations =
                 CustomerConsultationAuthority.Create(customerVisits).Value;
+            CustomPcQuoteAuthority customPcQuotes = CustomPcQuoteAuthority.Create(
+                catalog,
+                components,
+                inventory,
+                customerConsultations).Value;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
                     retailOffers,
@@ -922,6 +931,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 checkoutSettlements,
                 customerVisits,
                 customerConsultations,
+                customPcQuotes,
                 customerOfferActions,
                 prototypeCustomerBinding);
             RequireSuccess(session.ValidateInvariants());
@@ -1691,6 +1701,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (consultationResult.IsFailure)
             {
                 return consultationResult;
+            }
+
+            OperationResult customPcQuoteResult = CustomPcQuotes.ValidateInvariants();
+            if (customPcQuoteResult.IsFailure)
+            {
+                return customPcQuoteResult;
             }
 
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();

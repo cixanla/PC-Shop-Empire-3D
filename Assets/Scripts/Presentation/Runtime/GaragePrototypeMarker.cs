@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-pcie-gpu-power-cable-routing-r32-v1";
+        public const string Version = "garage-custom-pc-quote-reservation-r33-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -334,6 +334,27 @@ namespace PCShopEmpire3D.Presentation
             bool hasCustomerConsultationAuthority = hasCustomerVisitAuthority &&
                                                     stockFlow.Session.CustomerConsultations != null &&
                                                     !stockFlow.Session.PrototypeCustomerConsultationId.IsEmpty;
+            bool hasCustomPcQuoteAuthority = hasCustomerConsultationAuthority &&
+                                             stockFlow.Session.CustomPcQuotes != null &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Catalog,
+                                                 stockFlow.Session.Catalog) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Components,
+                                                 stockFlow.Session.Components) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Inventory,
+                                                 stockFlow.Session.Inventory) &&
+                                             ReferenceEquals(
+                                                 stockFlow.Session.CustomPcQuotes.Consultations,
+                                                 stockFlow.Session.CustomerConsultations) &&
+                                             !stockFlow.Session.PrototypeCustomPcRequestId.IsEmpty &&
+                                             !stockFlow.Session.PrototypeCustomPcQuoteId.IsEmpty &&
+                                             !stockFlow.Session.PrototypeCustomPcClaimId.IsEmpty &&
+                                             stockFlow.Session.CreatePrototypeCustomPcQuoteLines().Count ==
+                                                 CustomPcQuoteAuthority.GraphicsFirstGamingLineCount &&
+                                             customerFlow != null &&
+                                             customerFlow.StockFlow == stockFlow;
             bool hasCustomerBuyActionAuthority = hasArrivedStockFlow &&
                                                  stockFlow.Session.CustomerOfferActions != null &&
                                                  stockFlow.Session.CustomerOfferActions.Count == 0;
@@ -904,6 +925,9 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-visit={(hasCustomerVisitAuthority ? "ready" : "missing")} " +
                 $"customer-consultation={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
                 $"consultation-decision-gate={(hasCustomerConsultationAuthority ? "ready" : "missing")} " +
+                $"custom-pc-request={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
+                $"custom-pc-quote={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
+                $"custom-pc-reservation-set={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -963,6 +987,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-eps12v-power-cable-smoke");
             bool runPcieGpuPowerCableSmoke =
                 HasCommandLineArgument("-pse-pcie-gpu-power-cable-smoke");
+            bool runCustomPcQuoteSmoke =
+                HasCommandLineArgument("-pse-custom-pc-quote-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
@@ -975,7 +1001,8 @@ namespace PCShopEmpire3D.Presentation
                              (runPowerSupplySmoke ? 1 : 0) +
                              (runAtx24PowerCableSmoke ? 1 : 0) +
                              (runEps12vPowerCableSmoke ? 1 : 0) +
-                             (runPcieGpuPowerCableSmoke ? 1 : 0);
+                             (runPcieGpuPowerCableSmoke ? 1 : 0) +
+                             (runCustomPcQuoteSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1069,6 +1096,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runCustomPcQuoteSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_CUSTOM_PC_QUOTE_RUNTIME_SMOKE " +
+                    "custom-pc-flow=failed code=smoke.custom-pc-quote-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1144,6 +1179,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableSmoke());
+            }
+
+            if (runCustomPcQuoteSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunCustomPcQuoteSmoke());
             }
         }
 

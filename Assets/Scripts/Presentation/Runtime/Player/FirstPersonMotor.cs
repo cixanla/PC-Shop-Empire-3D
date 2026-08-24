@@ -169,6 +169,11 @@ namespace PCShopEmpire3D.Presentation.Player
 
         public void ProcessInputFrame()
         {
+            ProcessInputFrame(Time.deltaTime, Time.unscaledDeltaTime);
+        }
+
+        internal void ProcessInputFrame(float deltaTime, float unscaledDeltaTime)
+        {
             if (input == null || characterController == null || cameraPivot == null)
             {
                 return;
@@ -177,6 +182,7 @@ namespace PCShopEmpire3D.Presentation.Player
             if (input.PausePressedThisFrame)
             {
                 SetPaused(!IsPaused);
+                return;
             }
 
             if (IsPaused)
@@ -184,9 +190,9 @@ namespace PCShopEmpire3D.Presentation.Player
                 return;
             }
 
-            UpdateFieldOfView(Time.unscaledDeltaTime);
-            UpdateLook(Time.unscaledDeltaTime);
-            UpdateMovement(Time.deltaTime);
+            UpdateFieldOfView(Mathf.Max(0f, unscaledDeltaTime));
+            UpdateLook(Mathf.Max(0f, unscaledDeltaTime));
+            UpdateMovement(Mathf.Max(0f, deltaTime));
         }
 
         private void UpdateLook(float unscaledDeltaTime)

@@ -306,6 +306,56 @@ namespace PCShopEmpire3D.Inventory
         public InventoryReservationReleasePolicy ReleasePolicy { get; }
     }
 
+    /// <summary>
+    /// Immutable input for one member of an all-or-none serialized reservation set.
+    /// The Inventory authority remains the only object that can create live reservations.
+    /// </summary>
+    public sealed class InventorySerializedReservationRequest
+    {
+        private InventorySerializedReservationRequest(
+            StableId<ReservationIdScope> reservationId,
+            StableId<InventoryClaimIdScope> claimId,
+            StableId<ItemInstanceIdScope> itemId)
+        {
+            ReservationId = reservationId;
+            ClaimId = claimId;
+            ItemId = itemId;
+        }
+
+        public StableId<ReservationIdScope> ReservationId { get; }
+
+        public StableId<InventoryClaimIdScope> ClaimId { get; }
+
+        public StableId<ItemInstanceIdScope> ItemId { get; }
+
+        public static OperationResult<InventorySerializedReservationRequest> Create(
+            StableId<ReservationIdScope> reservationId,
+            StableId<InventoryClaimIdScope> claimId,
+            StableId<ItemInstanceIdScope> itemId)
+        {
+            if (reservationId.IsEmpty)
+            {
+                return OperationResult<InventorySerializedReservationRequest>.Fail(
+                    InventoryFailures.InvalidReservationId);
+            }
+
+            if (claimId.IsEmpty)
+            {
+                return OperationResult<InventorySerializedReservationRequest>.Fail(
+                    InventoryFailures.InvalidClaimId);
+            }
+
+            return itemId.IsEmpty
+                ? OperationResult<InventorySerializedReservationRequest>.Fail(
+                    InventoryFailures.InvalidItemId)
+                : OperationResult<InventorySerializedReservationRequest>.Success(
+                    new InventorySerializedReservationRequest(
+                        reservationId,
+                        claimId,
+                        itemId));
+        }
+    }
+
     internal readonly struct BatchPositionKey : System.IEquatable<BatchPositionKey>
     {
         public BatchPositionKey(
@@ -423,6 +473,34 @@ namespace PCShopEmpire3D.Inventory
             Failure.FromCode("inventory.reservation-plan-invalid");
         public static readonly Failure ReservationPlanStale =
             Failure.FromCode("inventory.reservation-plan-stale");
+        public static readonly Failure MissingSerializedReservationSet =
+            Failure.FromCode("inventory.serialized-reservation-set.missing");
+        public static readonly Failure EmptySerializedReservationSet =
+            Failure.FromCode("inventory.serialized-reservation-set.empty");
+        public static readonly Failure NullSerializedReservationRequest =
+            Failure.FromCode("inventory.serialized-reservation-set.request-null");
+        public static readonly Failure DuplicateSerializedReservationRequest =
+            Failure.FromCode("inventory.serialized-reservation-set.reservation-duplicate");
+        public static readonly Failure DuplicateSerializedReservationItem =
+            Failure.FromCode("inventory.serialized-reservation-set.item-duplicate");
+        public static readonly Failure PartialSerializedReservationReplay =
+            Failure.FromCode("inventory.serialized-reservation-set.partial-replay");
+        public static readonly Failure SerializedReservationSetClaimMismatch =
+            Failure.FromCode("inventory.serialized-reservation-set.claim-mismatch");
+        public static readonly Failure SerializedReservationClaimOccupied =
+            Failure.FromCode("inventory.serialized-reservation-set.claim-occupied");
+        public static readonly Failure SerializedReservationClaimManaged =
+            Failure.FromCode("inventory.serialized-reservation-set.claim-managed");
+        public static readonly Failure InvalidSerializedReservationSetOperationId =
+            Failure.FromCode("inventory.serialized-reservation-set.operation-id.invalid");
+        public static readonly Failure SerializedReservationSetOperationConflict =
+            Failure.FromCode("inventory.serialized-reservation-set.operation-conflict");
+        public static readonly Failure SerializedReservationSetAccessInvalid =
+            Failure.FromCode("inventory.serialized-reservation-set.access-invalid");
+        public static readonly Failure SerializedReservationSetPlanInvalid =
+            Failure.FromCode("inventory.serialized-reservation-set.plan-invalid");
+        public static readonly Failure SerializedReservationSetPlanStale =
+            Failure.FromCode("inventory.serialized-reservation-set.plan-stale");
         public static readonly Failure CheckoutConsumptionPlanInvalid =
             Failure.FromCode("inventory.checkout-consumption-plan-invalid");
         public static readonly Failure CheckoutConsumptionPlanStale =

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PCShopEmpire3D.Core.Primitives;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Assembly")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Retail")]
 
 namespace PCShopEmpire3D.Catalog
 {
