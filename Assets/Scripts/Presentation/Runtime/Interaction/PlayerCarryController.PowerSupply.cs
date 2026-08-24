@@ -246,6 +246,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPowerSupplySeatMode = enabled &&
                                         HeldItem != null &&
                                         GetPowerSupplyBinding(HeldItem) != null;
+            ResetPcieGpuPowerCableState();
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;

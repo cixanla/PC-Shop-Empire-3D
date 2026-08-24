@@ -30,6 +30,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ContainerIdScope>.Parse("container.power-cable-route-primary");
         private static readonly StableId<ContainerIdScope> CpuPowerCableRoute =
             StableId<ContainerIdScope>.Parse("container.cpu-power-cable-route-primary");
+        private static readonly StableId<ContainerIdScope> GpuPowerCableRoute =
+            StableId<ContainerIdScope>.Parse("container.gpu-power-cable-route-primary");
         private static readonly StableId<ItemInstanceIdScope> Item =
             StableId<ItemInstanceIdScope>.Parse("item.motherboard-001");
         private static readonly StableId<ItemInstanceIdScope> MemorySlotItem =
@@ -46,6 +48,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             StableId<ItemInstanceIdScope>.Parse("item.power-cable-route-occupied");
         private static readonly StableId<ItemInstanceIdScope> CpuPowerCableRouteItem =
             StableId<ItemInstanceIdScope>.Parse("item.cpu-power-cable-route-occupied");
+        private static readonly StableId<ItemInstanceIdScope> GpuPowerCableRouteItem =
+            StableId<ItemInstanceIdScope>.Parse("item.gpu-power-cable-route-occupied");
 
         [Test]
         public void PrepareIsSideEffectFreeAndBindsExactSourceTargetAndRevision()
@@ -1728,6 +1732,113 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ManagedContainerDecupleClaimSucceedsInOneRevisionAndKeepsExactAccessIdentity()
+        {
+            InventoryAuthority authority = CreateDecupleAuthority();
+            long revision = authority.Revision;
+
+            OperationResult<InventorySerializedTransferAccessDecuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute,
+                    GpuPowerCableRoute);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(revision + 1));
+            Assert.That(claim.Value.First.ManagedContainerId, Is.EqualTo(Workbench));
+            Assert.That(claim.Value.Second.ManagedContainerId, Is.EqualTo(ProcessorSocket));
+            Assert.That(claim.Value.Third.ManagedContainerId, Is.EqualTo(MemorySlot));
+            Assert.That(claim.Value.Fourth.ManagedContainerId, Is.EqualTo(StorageSlot));
+            Assert.That(claim.Value.Fifth.ManagedContainerId, Is.EqualTo(BenchmarkSlot));
+            Assert.That(claim.Value.Sixth.ManagedContainerId, Is.EqualTo(GraphicsCardSlot));
+            Assert.That(claim.Value.Seventh.ManagedContainerId, Is.EqualTo(PowerSupplyBay));
+            Assert.That(claim.Value.Eighth.ManagedContainerId, Is.EqualTo(PowerCableRoute));
+            Assert.That(claim.Value.Ninth.ManagedContainerId, Is.EqualTo(CpuPowerCableRoute));
+            Assert.That(claim.Value.Tenth.ManagedContainerId, Is.EqualTo(GpuPowerCableRoute));
+
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, Workbench, claim.Value.First, claim.Value.Tenth);
+            AssertManagedAccessMovesOnlyOwnContainer(
+                authority, Item, GpuPowerCableRoute, claim.Value.Tenth, claim.Value.First);
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerDecupleValidationIsAllOrNoneAndOccupiedPrecedesOverflow()
+        {
+            InventoryAuthority occupied = CreateDecupleAuthority(
+                fillGpuPowerCableRoute: true);
+            long revision = occupied.Revision;
+            SetRevision(occupied, long.MaxValue);
+
+            Assert.That(occupied.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute,
+                    GpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerOccupied));
+            Assert.That(occupied.Revision, Is.EqualTo(long.MaxValue));
+
+            SetRevision(occupied, revision);
+            Assert.That(occupied.PrepareSerializedItemTransfer(
+                    Item, Workbench).IsSuccess,
+                Is.True);
+            Assert.That(occupied.PrepareSerializedItemTransfer(
+                    Item, CpuPowerCableRoute).IsSuccess,
+                Is.True);
+            Assert.That(occupied.PrepareSerializedItemTransfer(
+                    Item, GpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.ContainerCapacityExceeded));
+            Assert.That(occupied.TryGetSerializedItem(
+                GpuPowerCableRouteItem, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(GpuPowerCableRoute));
+            Assert.That(occupied.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ManagedContainerDecupleAtRevisionBoundaryIsAtomic()
+        {
+            InventoryAuthority authority = CreateDecupleAuthority();
+            SetRevision(authority, long.MaxValue - 1);
+
+            OperationResult<InventorySerializedTransferAccessDecuple> claim =
+                authority.ClaimManagedSerializedTransferContainers(
+                    Workbench,
+                    ProcessorSocket,
+                    MemorySlot,
+                    StorageSlot,
+                    BenchmarkSlot,
+                    GraphicsCardSlot,
+                    PowerSupplyBay,
+                    PowerCableRoute,
+                    CpuPowerCableRoute,
+                    GpuPowerCableRoute);
+
+            Assert.That(claim.IsSuccess, Is.True);
+            Assert.That(authority.Revision, Is.EqualTo(long.MaxValue));
+            Assert.That(authority.PrepareSerializedItemTransfer(
+                    Item, GpuPowerCableRoute).Error,
+                Is.EqualTo(InventoryFailures.SerializedTransferContainerManaged));
+            Assert.That(authority.TryGetSerializedItem(
+                Item, out InventoryItemRecord unchanged), Is.True);
+            Assert.That(unchanged.ContainerId, Is.EqualTo(Hands));
+            Assert.That(authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static void AssertPublicTransferAvailable(
             InventoryAuthority authority,
             params StableId<ContainerIdScope>[] containerIds)
@@ -2022,6 +2133,28 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
                     CpuPowerCableRouteItem,
                     ProductId,
                     CpuPowerCableRoute,
+                    InventoryCondition.OpenBox,
+                    InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
+            }
+
+            return authority;
+        }
+
+        private static InventoryAuthority CreateDecupleAuthority(
+            bool fillGpuPowerCableRoute = false)
+        {
+            InventoryAuthority authority = CreateNonupleAuthority();
+            Assert.That(authority.RegisterContainer(InventoryContainerDefinition.Create(
+                GpuPowerCableRoute,
+                InventoryContainerKind.Workbench,
+                1).Value).IsSuccess, Is.True);
+
+            if (fillGpuPowerCableRoute)
+            {
+                Assert.That(authority.ReceiveSerializedItem(
+                    GpuPowerCableRouteItem,
+                    ProductId,
+                    GpuPowerCableRoute,
                     InventoryCondition.OpenBox,
                     InventoryUnitCost.Create("EUR", 9_900).Value).IsSuccess, Is.True);
             }

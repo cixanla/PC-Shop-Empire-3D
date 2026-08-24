@@ -156,7 +156,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Eps12vPowerCableRouteProjection eps12vPowerCableRoute,
                 Eps12vPowerCableAssemblyItemBinding eps12vPowerCableBinding,
                 PhysicalItemProjection eps12vPowerCable,
-                Eps12vPowerCableRuntimeGeometry eps12vPowerCableGeometry)
+                Eps12vPowerCableRuntimeGeometry eps12vPowerCableGeometry,
+                PcieGpuPowerCableRouteProjection pcieGpuPowerCableRoute,
+                PcieGpuPowerCableAssemblyItemBinding pcieGpuPowerCableBinding,
+                PhysicalItemProjection pcieGpuPowerCable,
+                PcieGpuPowerCableRuntimeGeometry pcieGpuPowerCableGeometry)
             {
                 Seat = seat;
                 Fastener = fastener;
@@ -190,6 +194,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Eps12vPowerCableBinding = eps12vPowerCableBinding;
                 Eps12vPowerCable = eps12vPowerCable;
                 Eps12vPowerCableGeometry = eps12vPowerCableGeometry;
+                PcieGpuPowerCableRoute = pcieGpuPowerCableRoute;
+                PcieGpuPowerCableBinding = pcieGpuPowerCableBinding;
+                PcieGpuPowerCable = pcieGpuPowerCable;
+                PcieGpuPowerCableGeometry = pcieGpuPowerCableGeometry;
             }
 
             public MotherboardSeatProjection Seat { get; }
@@ -255,6 +263,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             public PhysicalItemProjection Eps12vPowerCable { get; }
 
             public Eps12vPowerCableRuntimeGeometry Eps12vPowerCableGeometry { get; }
+
+            public PcieGpuPowerCableRouteProjection PcieGpuPowerCableRoute { get; }
+
+            public PcieGpuPowerCableAssemblyItemBinding PcieGpuPowerCableBinding { get; }
+
+            public PhysicalItemProjection PcieGpuPowerCable { get; }
+
+            public PcieGpuPowerCableRuntimeGeometry PcieGpuPowerCableGeometry { get; }
         }
 
         [MenuItem("PC Shop Empire/Prototype/Rebuild Garage Graybox")]
@@ -576,6 +592,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableGeometry,
                 GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue);
+            assemblyBuild.PcieGpuPowerCableBinding.Configure(
+                stockFlow,
+                assemblyBuild.PcieGpuPowerCable,
+                assemblyBuild.PcieGpuPowerCableRoute,
+                assemblyBuild.PcieGpuPowerCableGeometry,
+                GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -604,6 +626,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureEps12vPowerCableRoute(
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableBinding);
+            carry.ConfigurePcieGpuPowerCableRoute(
+                assemblyBuild.PcieGpuPowerCableRoute,
+                assemblyBuild.PcieGpuPowerCableBinding);
             GarageCustomerFlowRuntime customerFlow =
                 systems.gameObject.AddComponent<GarageCustomerFlowRuntime>();
             customerFlow.Configure(
@@ -667,7 +692,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableBinding,
                 assemblyBuild.Eps12vPowerCable,
-                assemblyBuild.Eps12vPowerCableGeometry);
+                assemblyBuild.Eps12vPowerCableGeometry,
+                assemblyBuild.PcieGpuPowerCableRoute,
+                assemblyBuild.PcieGpuPowerCableBinding,
+                assemblyBuild.PcieGpuPowerCable,
+                assemblyBuild.PcieGpuPowerCableGeometry);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -2115,6 +2144,20 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     labelPaper,
                     validMaterial,
                     interactableLayer);
+            PcieGpuPowerCableBuildResult pcieGpuPowerCableBuild =
+                BuildPcieGpuPowerCableAssembly(
+                    slice,
+                    chassis,
+                    graphicsCardBuild.Item.transform,
+                    graphicsCardBuild.Item,
+                    powerSupplyBuild.Item,
+                    powerSupplyBuild.Geometry,
+                    metal,
+                    accent,
+                    rubber,
+                    labelPaper,
+                    validMaterial,
+                    interactableLayer);
 
             return new AssemblyBuildResult(
                 seat,
@@ -2148,7 +2191,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 eps12vPowerCableBuild.Route,
                 eps12vPowerCableBuild.Binding,
                 eps12vPowerCableBuild.Item,
-                eps12vPowerCableBuild.Geometry);
+                eps12vPowerCableBuild.Geometry,
+                pcieGpuPowerCableBuild.Route,
+                pcieGpuPowerCableBuild.Binding,
+                pcieGpuPowerCableBuild.Item,
+                pcieGpuPowerCableBuild.Geometry);
         }
 
         private static void BuildLighting(

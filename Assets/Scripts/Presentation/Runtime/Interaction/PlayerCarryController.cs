@@ -93,6 +93,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasDimmSlotContext { get; private set; }
 
         public bool HasAssemblyPromptOwnership =>
+            IsPcieGpuPowerCableRouteMode ||
             IsAtx24PowerCableRouteMode ||
             IsEps12vPowerCableRouteMode ||
             IsMotherboardSeatMode ||
@@ -111,10 +112,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasM2StorageSlotContext ||
             (FocusedItem != null &&
              (GetAtx24PowerCableBinding(FocusedItem) != null ||
-              GetEps12vPowerCableBinding(FocusedItem) != null)) ||
+              GetEps12vPowerCableBinding(FocusedItem) != null ||
+              GetPcieGpuPowerCableBinding(FocusedItem) != null)) ||
             (HeldItem != null &&
              (GetAtx24PowerCableBinding(HeldItem) != null ||
               GetEps12vPowerCableBinding(HeldItem) != null ||
+              GetPcieGpuPowerCableBinding(HeldItem) != null ||
               GetMotherboardBinding(HeldItem) != null ||
               GetProcessorBinding(HeldItem) != null ||
               GetDimmBinding(HeldItem) != null ||
@@ -163,6 +166,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetAtx24PowerCableBinding(HeldItem);
                     Eps12vPowerCableAssemblyItemBinding eps12vCableBinding =
                         GetEps12vPowerCableBinding(HeldItem);
+                    PcieGpuPowerCableAssemblyItemBinding pcieGpuCableBinding =
+                        GetPcieGpuPowerCableBinding(HeldItem);
+                    if (pcieGpuCableBinding != null)
+                    {
+                        return GetHeldPcieGpuPowerCablePrompt(
+                            pcieGpuCableBinding,
+                            placement,
+                            drop,
+                            rotate);
+                    }
                     if (eps12vCableBinding != null)
                     {
                         return GetHeldEps12vPowerCablePrompt(
@@ -453,6 +466,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     GetAtx24PowerCableBinding(FocusedItem);
                 Eps12vPowerCableAssemblyItemBinding focusedEps12vCable =
                     GetEps12vPowerCableBinding(FocusedItem);
+                PcieGpuPowerCableAssemblyItemBinding focusedPcieGpuCable =
+                    GetPcieGpuPowerCableBinding(FocusedItem);
+                if (focusedPcieGpuCable != null)
+                {
+                    return GetFocusedPcieGpuPowerCablePrompt(focusedPcieGpuCable);
+                }
                 if (focusedEps12vCable != null)
                 {
                     return GetFocusedEps12vPowerCablePrompt(focusedEps12vCable);
@@ -962,6 +981,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetAtx24PowerCableBinding(item);
             Eps12vPowerCableAssemblyItemBinding eps12vCableBinding =
                 GetEps12vPowerCableBinding(item);
+            PcieGpuPowerCableAssemblyItemBinding pcieGpuCableBinding =
+                GetPcieGpuPowerCableBinding(item);
+            if (pcieGpuCableBinding != null)
+            {
+                return TryPickupPcieGpuPowerCable(item, pcieGpuCableBinding);
+            }
             if (eps12vCableBinding != null)
             {
                 return TryPickupEps12vPowerCable(item, eps12vCableBinding);
@@ -1618,6 +1643,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 motherboardSeat?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
+                ResetPcieGpuPowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1635,6 +1661,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 motherboardSeat?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
+                ResetPcieGpuPowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1655,6 +1682,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ResetProcessorSocketFocus();
                 ResetMotherboardFastenerFocus();
                 FocusedCart = null;
+                if (ProcessHeldPcieGpuPowerCableInput())
+                {
+                    return;
+                }
                 if (ProcessHeldEps12vPowerCableInput())
                 {
                     return;
@@ -1859,6 +1890,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
+                ResetPcieGpuPowerCableState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1898,6 +1930,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (ProcessEps12vPowerCableWorldInput())
+            {
+                ResetPowerSupplyBayFocus();
+                ResetGraphicsCardSlotFocus();
+                ResetProcessorCoolerSlotFocus();
+                ResetM2StorageSlotFocus();
+                ResetDimmSlotFocus();
+                ResetProcessorSocketFocus();
+                ResetMotherboardFastenerFocus();
+                return;
+            }
+
+            if (ProcessPcieGpuPowerCableWorldInput())
             {
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
@@ -2206,6 +2250,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetAtx24PowerCableBinding(item);
             Eps12vPowerCableAssemblyItemBinding eps12vCableBinding =
                 GetEps12vPowerCableBinding(item);
+            PcieGpuPowerCableAssemblyItemBinding pcieGpuCableBinding =
+                GetPcieGpuPowerCableBinding(item);
+            if (pcieGpuCableBinding != null)
+            {
+                OperationResult recovery = pcieGpuCableBinding.TryRecoverHeld(
+                    carryAnchor,
+                    heldItemLayer);
+                if (recovery.IsFailure)
+                {
+                    return Remember(recovery);
+                }
+
+                CompleteHeldItemRelease();
+                pcieGpuCableBinding.SyncProjectionToAuthority();
+                return Remember(recovery);
+            }
             if (eps12vCableBinding != null)
             {
                 OperationResult recovery = eps12vCableBinding.TryRecoverHeld(
@@ -3243,6 +3303,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = false;
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
+            ResetPcieGpuPowerCableState();
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;

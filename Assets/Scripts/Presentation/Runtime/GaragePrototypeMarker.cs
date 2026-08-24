@@ -19,7 +19,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-eps12v-cpu-power-cable-routing-r31-v1";
+        public const string Version = "garage-pcie-gpu-power-cable-routing-r32-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -212,7 +212,11 @@ namespace PCShopEmpire3D.Presentation
             Eps12vPowerCableRouteProjection physicalEps12vPowerCableRoute = null,
             Eps12vPowerCableAssemblyItemBinding physicalEps12vPowerCableBinding = null,
             PhysicalItemProjection physicalEps12vPowerCable = null,
-            Eps12vPowerCableRuntimeGeometry physicalEps12vPowerCableGeometry = null)
+            Eps12vPowerCableRuntimeGeometry physicalEps12vPowerCableGeometry = null,
+            PcieGpuPowerCableRouteProjection physicalPcieGpuPowerCableRoute = null,
+            PcieGpuPowerCableAssemblyItemBinding physicalPcieGpuPowerCableBinding = null,
+            PhysicalItemProjection physicalPcieGpuPowerCable = null,
+            PcieGpuPowerCableRuntimeGeometry physicalPcieGpuPowerCableGeometry = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -254,6 +258,11 @@ namespace PCShopEmpire3D.Presentation
                 physicalEps12vPowerCableBinding,
                 physicalEps12vPowerCable,
                 physicalEps12vPowerCableGeometry);
+            ConfigurePcieGpuPowerCable(
+                physicalPcieGpuPowerCableRoute,
+                physicalPcieGpuPowerCableBinding,
+                physicalPcieGpuPowerCable,
+                physicalPcieGpuPowerCableGeometry);
         }
 
         private void Start()
@@ -358,7 +367,7 @@ namespace PCShopEmpire3D.Presentation
                                               assemblySession.MotherboardItemId.Value &&
                                           motherboardBinding.PhysicalItem.ItemIdValue ==
                                               assemblySession.MotherboardItemId.Value &&
-                                          assemblySession.Inventory.SerializedItemCount == 9 &&
+                                          assemblySession.Inventory.SerializedItemCount == 10 &&
                                           assemblySession.TryGetMotherboardItem(
                                               out InventoryItemRecord motherboardItem) &&
                                           motherboardItem.Id == assemblySession.MotherboardItemId &&
@@ -810,8 +819,66 @@ namespace PCShopEmpire3D.Presentation
                                                     .HasEps12vPowerCableRoute &&
                                                 assemblySession.AssemblyBuild
                                                         .Eps12vPowerCableState ==
-                                                    Eps12vPowerCableState.Loose &&
+                                                Eps12vPowerCableState.Loose &&
                                                 HasEps12vPowerCableR31Runtime;
+            bool hasPcieGpuPowerCableRoute = assemblySession != null &&
+                                             pcieGpuPowerCableRoute != null &&
+                                             pcieGpuPowerCableRoute.IsConfigured &&
+                                             pcieGpuPowerCableRoute.RouteIdValue ==
+                                                 GarageStockFlowSession
+                                                     .PcieGpuPowerCableRouteIdValue &&
+                                             pcieGpuPowerCableRoute
+                                                     .PsuEndpointIdValue ==
+                                                 GarageStockFlowSession
+                                                     .PcieGpuPowerCablePsuEndpointIdValue &&
+                                             pcieGpuPowerCableRoute
+                                                     .GraphicsCardEndpointIdValue ==
+                                                 GarageStockFlowSession
+                                                     .PcieGpuPowerCableGraphicsCardEndpointIdValue;
+            bool hasPcieGpuPowerCableIdentity = assemblySession != null &&
+                                                pcieGpuPowerCableBinding != null &&
+                                                pcieGpuPowerCable != null &&
+                                                pcieGpuPowerCableBinding.Runtime ==
+                                                    stockFlow &&
+                                                pcieGpuPowerCableBinding.PhysicalItem ==
+                                                    pcieGpuPowerCable &&
+                                                pcieGpuPowerCableBinding
+                                                        .InventoryItemIdValue ==
+                                                    assemblySession
+                                                        .PcieGpuPowerCableItemId.Value &&
+                                                pcieGpuPowerCable.ItemIdValue ==
+                                                    assemblySession
+                                                        .PcieGpuPowerCableItemId.Value &&
+                                                assemblySession
+                                                    .TryGetPcieGpuPowerCableItem(
+                                                        out InventoryItemRecord pcieCableItem) &&
+                                                pcieCableItem.Id ==
+                                                    assemblySession.PcieGpuPowerCableItemId &&
+                                                pcieCableItem.ProductId ==
+                                                    assemblySession.PcieGpuPowerCableProductId &&
+                                                pcieCableItem.ContainerId ==
+                                                    assemblySession.WorldFloorContainerId &&
+                                                CountCanonicalPcieGpuPowerCableProjections(
+                                                    pcieCableItem.Id.Value) == 1 &&
+                                                pcieGpuPowerCableBinding
+                                                    .ValidateProjectionInvariant().IsSuccess;
+            bool hasPcieGpuPowerCableAssembly = hasPcieGpuPowerCableRoute &&
+                                                hasPcieGpuPowerCableIdentity &&
+                                                pcieGpuPowerCableBinding.Route ==
+                                                    pcieGpuPowerCableRoute &&
+                                                playerCarry != null &&
+                                                playerCarry
+                                                    .MatchesPcieGpuPowerCableConfiguration(
+                                                        pcieGpuPowerCableRoute,
+                                                        pcieGpuPowerCableBinding) &&
+                                                pcieGpuPowerCable.CarryProfile ==
+                                                    PhysicalCarryProfile.PcComponent &&
+                                                assemblySession.AssemblyBuild
+                                                    .HasPcieGpuPowerCableRoute &&
+                                                assemblySession.AssemblyBuild
+                                                        .PcieGpuPowerCableState ==
+                                                    PcieGpuPowerCableState.Loose &&
+                                                HasPcieGpuPowerCableR32Runtime;
 
             Debug.Log(
                 $"GARAGE_GRAYBOX_RUNTIME_READY version={Version} " +
@@ -841,7 +908,7 @@ namespace PCShopEmpire3D.Presentation
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
                 $"checkout-station={(hasPhysicalCheckoutStation ? "ready" : "missing")} " +
-                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly && hasGraphicsCardAssembly && hasPowerSupplyAssembly && hasAtx24PowerCableAssembly && hasEps12vPowerCableAssembly ? "ready" : "missing")} " +
+                $"assembly={(hasMotherboardAssembly && hasProcessorAssembly && hasMemoryAssembly && hasStorageAssembly && hasProcessorCoolerAssembly && hasGraphicsCardAssembly && hasPowerSupplyAssembly && hasAtx24PowerCableAssembly && hasEps12vPowerCableAssembly && hasPcieGpuPowerCableAssembly ? "ready" : "missing")} " +
                 $"motherboard-seat={(hasMotherboardSeat ? "ready" : "missing")} " +
                 $"motherboard-fastener={(hasMotherboardFastener ? "ready" : "missing")} " +
                 $"screwdriver={(hasMotherboardFastener ? "ready" : "missing")} " +
@@ -871,6 +938,10 @@ namespace PCShopEmpire3D.Presentation
                 $"eps12v-power-cable-connectors={(hasEps12vPowerCableAssembly ? "2" : "missing")} " +
                 $"eps12v-power-cable-waypoints={(hasEps12vPowerCableAssembly ? "3" : "missing")} " +
                 $"eps12v-power-cable-identity={(hasEps12vPowerCableIdentity ? "stable" : "missing")} " +
+                $"pcie-gpu-power-cable-route={(hasPcieGpuPowerCableRoute ? "ready" : "missing")} " +
+                $"pcie-gpu-power-cable-connectors={(hasPcieGpuPowerCableAssembly ? "2" : "missing")} " +
+                $"pcie-gpu-power-cable-waypoints={(hasPcieGpuPowerCableAssembly ? "3" : "missing")} " +
+                $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -890,6 +961,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-power-cable-smoke");
             bool runEps12vPowerCableSmoke =
                 HasCommandLineArgument("-pse-eps12v-power-cable-smoke");
+            bool runPcieGpuPowerCableSmoke =
+                HasCommandLineArgument("-pse-pcie-gpu-power-cable-smoke");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
                              (runStockFlowSmoke ? 1 : 0) +
                              (runCustomerFlowSmoke ? 1 : 0) +
@@ -901,7 +974,8 @@ namespace PCShopEmpire3D.Presentation
                              (runGraphicsCardSmoke ? 1 : 0) +
                              (runPowerSupplySmoke ? 1 : 0) +
                              (runAtx24PowerCableSmoke ? 1 : 0) +
-                             (runEps12vPowerCableSmoke ? 1 : 0);
+                             (runEps12vPowerCableSmoke ? 1 : 0) +
+                             (runPcieGpuPowerCableSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -987,6 +1061,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runPcieGpuPowerCableSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE " +
+                    "cable-flow=failed code=smoke.pcie-gpu-power-cable-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1056,6 +1138,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunEps12vPowerCableSmoke());
+            }
+
+            if (runPcieGpuPowerCableSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPcieGpuPowerCableSmoke());
             }
         }
 
@@ -1853,7 +1941,7 @@ namespace PCShopEmpire3D.Presentation
                                                 motherboardBinding.ValidateProjectionInvariant().IsSuccess;
             bool processorProjectionValid = processorBinding != null &&
                                               processorBinding.ValidateProjectionInvariant().IsSuccess;
-            bool motherboardIsolated = session.Inventory.SerializedItemCount == 9 &&
+            bool motherboardIsolated = session.Inventory.SerializedItemCount == 10 &&
                                        hasRemainingMotherboard &&
                                        remainingMotherboard.Id == session.MotherboardItemId &&
                                        remainingMotherboard.ProductId == session.MotherboardProductId &&
@@ -2795,7 +2883,7 @@ namespace PCShopEmpire3D.Presentation
                              recoveredItem.Id == session.MotherboardItemId &&
                              recoveredItem.ProductId == session.MotherboardProductId &&
                              recoveredItem.ContainerId == session.WorkbenchContainerId &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              session.TryGetProcessorItem(
                                  out InventoryItemRecord unchangedProcessor) &&
                              unchangedProcessor.Id == session.ProcessorItemId &&
@@ -3191,7 +3279,7 @@ namespace PCShopEmpire3D.Presentation
                              processor.IsStablePlacement &&
                              CountCanonicalProcessorProjections(
                                  session.ProcessorItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3262,7 +3350,7 @@ namespace PCShopEmpire3D.Presentation
                              looseMemory.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              dimmBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3595,7 +3683,7 @@ namespace PCShopEmpire3D.Presentation
                              memoryModule.IsStablePlacement &&
                              CountCanonicalMemoryProjections(
                                  session.MemoryItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -3694,7 +3782,7 @@ namespace PCShopEmpire3D.Presentation
                              looseStorage.ContainerId == session.WorldFloorContainerId &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              storageBinding.ValidateProjectionInvariant().IsSuccess;
             if (!preflight)
             {
@@ -3936,7 +4024,7 @@ namespace PCShopEmpire3D.Presentation
                              storageDevice.IsStablePlacement &&
                              CountCanonicalStorageProjections(
                                  session.StorageItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(
@@ -4066,7 +4154,7 @@ namespace PCShopEmpire3D.Presentation
                                  InventorySerializedItemStateFlags.None &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              processorCoolerBinding.ValidateProjectionInvariant()
                                  .IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
@@ -4430,7 +4518,7 @@ namespace PCShopEmpire3D.Presentation
                              processorCooler.IsStablePlacement &&
                              CountCanonicalProcessorCoolerProjections(
                                  session.ProcessorCoolerItemId.Value) == 1 &&
-                             session.Inventory.SerializedItemCount == 9 &&
+                             session.Inventory.SerializedItemCount == 10 &&
                              session.Inventory.GetContainerQuantity(
                                  session.HandsContainerId).Value == 0 &&
                              session.Inventory.GetContainerQuantity(

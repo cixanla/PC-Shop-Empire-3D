@@ -411,6 +411,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ProductTrackingPolicy.SerializedInstance,
                     1_500).Value
                 : null;
+            ProductDefinition pcieGpuPowerCableProduct = includeAssemblyPrototype
+                ? ProductDefinition.Create(
+                    StableId<ProductDefinitionIdScope>.Parse(
+                        PcieGpuPowerCableProductIdValue),
+                    StableId<ProductCategoryIdScope>.Parse(
+                        PcieGpuPowerCableCategoryIdValue),
+                    PcieGpuPowerCableDisplayName,
+                    ProductTrackingPolicy.SerializedInstance,
+                    1_500).Value
+                : null;
             ProductCatalog catalog = ProductCatalog.Create(
                 includeAssemblyPrototype
                     ? new[]
@@ -423,7 +433,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         processorCoolerProduct,
                         powerSupplyProduct,
                         atx24PowerCableProduct,
-                        eps12vPowerCableProduct
+                        eps12vPowerCableProduct,
+                        pcieGpuPowerCableProduct
                     }
                     : new[] { product, motherboardProduct }).Value;
             PcComponentSpecification motherboardSpecification =
@@ -498,6 +509,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         eps12vPowerCableProduct.Id,
                         PowerCableType.ModularEps12v8PinPsuToMotherboard).Value
                     : null;
+            PcComponentSpecification pcieGpuPowerCableSpecification =
+                includeAssemblyPrototype
+                    ? PcComponentSpecification.CreatePowerCable(
+                        catalog,
+                        pcieGpuPowerCableProduct.Id,
+                        PowerCableType.ModularPcie8PinPsuToGraphicsCard).Value
+                    : null;
             PcComponentCatalog components = PcComponentCatalog.Create(
                 catalog,
                 includeAssemblyPrototype
@@ -511,7 +529,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         graphicsCardSpecification,
                         powerSupplySpecification,
                         atx24PowerCableSpecification,
-                        eps12vPowerCableSpecification
+                        eps12vPowerCableSpecification,
+                        pcieGpuPowerCableSpecification
                     }
                     : new[] { motherboardSpecification }).Value;
             InventoryAuthority inventory = InventoryAuthority.Create(catalog).Value;
@@ -534,7 +553,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 inventory,
                 WorldFloorContainerIdValue,
                 InventoryContainerKind.WorldFloor,
-                10);
+                11);
             RegisterContainer(
                 inventory,
                 WorkbenchContainerIdValue,
@@ -580,6 +599,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 RegisterContainer(
                     inventory,
                     Eps12vPowerCableRouteContainerIdValue,
+                    InventoryContainerKind.Workbench,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    PcieGpuPowerCableRouteContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
             }
@@ -707,7 +731,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             StableId<AssemblyPowerCableWaypointIdScope>.Parse(
                                 Eps12vPowerCableWaypoint2IdValue),
                             StableId<AssemblyPowerCableWaypointIdScope>.Parse(
-                                Eps12vPowerCableWaypoint3IdValue)).Value).Value).Value
+                                Eps12vPowerCableWaypoint3IdValue)).Value).Value,
+                    PcieGpuPowerCableDefinition.Create(
+                        pcieGpuPowerCableProduct.Id,
+                        StableId<ContainerIdScope>.Parse(
+                            PcieGpuPowerCableRouteContainerIdValue),
+                        PcieGpuPowerCableTopology.Create(
+                            StableId<AssemblyPowerCableRouteIdScope>.Parse(
+                                PcieGpuPowerCableRouteIdValue),
+                            PowerCableEndpointDefinition.Create(
+                                StableId<AssemblyPowerCableEndpointIdScope>.Parse(
+                                    PcieGpuPowerCablePsuEndpointIdValue),
+                                PowerCableConnectorType.PsuModularPcie8).Value,
+                            PowerCableEndpointDefinition.Create(
+                                StableId<AssemblyPowerCableEndpointIdScope>.Parse(
+                                    PcieGpuPowerCableGraphicsCardEndpointIdValue),
+                                PowerCableConnectorType.GraphicsCardPcie8).Value,
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                PcieGpuPowerCableWaypoint1IdValue),
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                PcieGpuPowerCableWaypoint2IdValue),
+                            StableId<AssemblyPowerCableWaypointIdScope>.Parse(
+                                PcieGpuPowerCableWaypoint3IdValue)).Value).Value).Value
                 : AssemblyBuildAuthority.Create(
                     components,
                     inventory,
@@ -854,6 +899,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     InventoryUnitCost.Create(
                         PrototypeCurrencyCode,
                         Eps12vPowerCableUnitCostMinorUnits).Value));
+                RequireSuccess(inventory.ReceiveSerializedItem(
+                    StableId<ItemInstanceIdScope>.Parse(
+                        PcieGpuPowerCableItemInstanceIdValue),
+                    pcieGpuPowerCableProduct.Id,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    InventoryCondition.New,
+                    InventoryUnitCost.Create(
+                        PrototypeCurrencyCode,
+                        PcieGpuPowerCableUnitCostMinorUnits).Value));
             }
 
             var session = new GarageStockFlowSession(

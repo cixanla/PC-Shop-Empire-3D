@@ -51,8 +51,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
                 includeAssemblyPrototype: true);
 
-            Assert.That(session.Catalog.Count, Is.EqualTo(9));
-            Assert.That(session.Components.Count, Is.EqualTo(9));
+            Assert.That(session.Catalog.Count, Is.EqualTo(10));
+            Assert.That(session.Components.Count, Is.EqualTo(10));
             OperationResult<PcComponentSpecification> specification =
                 session.Components.Get(session.MotherboardProductId);
             Assert.That(specification.IsSuccess, Is.True);
@@ -185,11 +185,29 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 Is.EqualTo(session.WorldFloorContainerId));
             Assert.That(eps12vCable.StateFlags,
                 Is.EqualTo(InventorySerializedItemStateFlags.None));
+            Assert.That(session.Catalog.Get(session.PcieGpuPowerCableProductId).IsSuccess,
+                Is.True);
+            OperationResult<PcComponentSpecification> pcieGpuSpecification =
+                session.Components.Get(session.PcieGpuPowerCableProductId);
+            Assert.That(pcieGpuSpecification.IsSuccess, Is.True);
+            Assert.That(pcieGpuSpecification.Value.Kind,
+                Is.EqualTo(PcComponentKind.PowerCable));
+            Assert.That(pcieGpuSpecification.Value.PowerCableType,
+                Is.EqualTo(PowerCableType.ModularPcie8PinPsuToGraphicsCard));
+            Assert.That(session.TryGetPcieGpuPowerCableItem(
+                out InventoryItemRecord pcieGpuCable), Is.True);
+            Assert.That(pcieGpuCable.Id, Is.EqualTo(session.PcieGpuPowerCableItemId));
+            Assert.That(pcieGpuCable.ProductId,
+                Is.EqualTo(session.PcieGpuPowerCableProductId));
+            Assert.That(pcieGpuCable.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(pcieGpuCable.StateFlags,
+                Is.EqualTo(InventorySerializedItemStateFlags.None));
             Assert.That(session.Inventory.TryGetContainer(
                 session.WorldFloorContainerId,
                 out InventoryContainerDefinition worldFloor), Is.True);
-            Assert.That(worldFloor.UnitCapacity, Is.EqualTo(10));
-            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(9));
+            Assert.That(worldFloor.UnitCapacity, Is.EqualTo(11));
+            Assert.That(session.Inventory.SerializedItemCount, Is.EqualTo(10));
             Assert.That(session.Inventory.GetTotalQuantity(session.MotherboardProductId).Value,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.MotherboardSeatState,
@@ -317,6 +335,35 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                     session.Eps12vPowerCableWaypoint1Id,
                     session.Eps12vPowerCableWaypoint2Id,
                     session.Eps12vPowerCableWaypoint3Id
+                }));
+            Assert.That(session.AssemblyBuild.HasPcieGpuPowerCableRoute, Is.True);
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                Is.EqualTo(PcieGpuPowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRouteContainerId,
+                Is.EqualTo(session.PcieGpuPowerCableRouteContainerId));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableTopology.RouteId,
+                Is.EqualTo(session.PcieGpuPowerCableRouteId));
+            Assert.That(
+                session.AssemblyBuild.PcieGpuPowerCableTopology.PsuEndpoint.EndpointId,
+                Is.EqualTo(session.PcieGpuPowerCablePsuEndpointId));
+            Assert.That(
+                session.AssemblyBuild.PcieGpuPowerCableTopology.PsuEndpoint.PinCount,
+                Is.EqualTo(8));
+            Assert.That(
+                session.AssemblyBuild.PcieGpuPowerCableTopology.GraphicsCardEndpoint
+                    .EndpointId,
+                Is.EqualTo(session.PcieGpuPowerCableGraphicsCardEndpointId));
+            Assert.That(
+                session.AssemblyBuild.PcieGpuPowerCableTopology.GraphicsCardEndpoint
+                    .PinCount,
+                Is.EqualTo(8));
+            Assert.That(
+                session.AssemblyBuild.PcieGpuPowerCableTopology.OrderedWaypoints,
+                Is.EqualTo(new[]
+                {
+                    session.PcieGpuPowerCableWaypoint1Id,
+                    session.PcieGpuPowerCableWaypoint2Id,
+                    session.PcieGpuPowerCableWaypoint3Id
                 }));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
@@ -664,6 +711,237 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             Assert.That(session.Inventory.Revision,
                 Is.EqualTo(delayedReplayInventoryRevision));
             Assert.That(session.TryGetEps12vPowerCableItem(
+                out InventoryItemRecord world), Is.True);
+            Assert.That(world.Id, Is.EqualTo(routed.Id));
+            Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void PcieGpuPowerCableRouteReplayDependentGatesAndReversePreserveIdentity()
+        {
+            GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(
+                includeAssemblyPrototype: true);
+            StableId<AssemblyOperationIdScope> motherboardAttach =
+                OperationId("pcie-gpu-motherboard-attach");
+            StableId<AssemblyOperationIdScope> motherboardSecure =
+                OperationId("pcie-gpu-motherboard-secure");
+            StableId<AssemblyOperationIdScope> powerSupplySeat =
+                OperationId("pcie-gpu-psu-seat");
+            StableId<AssemblyOperationIdScope> powerSupplyRetain =
+                OperationId("pcie-gpu-psu-retain");
+
+            Assert.That(session.PickupLooseMotherboardToHands().IsSuccess, Is.True);
+            Assert.That(session.AttachMotherboard(motherboardAttach).IsSuccess, Is.True);
+            Assert.That(session.SecureMotherboardFastener(
+                motherboardSecure,
+                motherboardAttach,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.PickupLoosePowerSupplyToHands().IsSuccess, Is.True);
+            AssemblyOperationReceipt seatedPowerSupply = session.SeatPowerSupply(
+                powerSupplySeat,
+                PowerSupplyMountOrientation.FanToFilteredVent,
+                session.AssemblyBuild.Revision).Value;
+            Assert.That(session.RetainPowerSupply(
+                powerSupplyRetain,
+                seatedPowerSupply.OperationId,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLoosePcieGpuPowerCableToHands().IsSuccess, Is.True);
+            long gpuGateInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.RoutePcieGpuPowerCable(
+                    OperationId("pcie-gpu-card-missing"),
+                    PowerCableKeyOrientation.Keyed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableHostGraphicsCardUnretained));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(gpuGateInventoryRevision));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.Zero);
+            Assert.That(session.DropHeldPcieGpuPowerCableToWorld().IsSuccess, Is.True);
+
+            StableId<AssemblyOperationIdScope> graphicsCardSeat =
+                OperationId("pcie-gpu-card-seat");
+            StableId<AssemblyOperationIdScope> graphicsCardRetain =
+                OperationId("pcie-gpu-card-retain");
+            Assert.That(session.PickupLooseGraphicsCardToHands().IsSuccess, Is.True);
+            Assert.That(session.SeatGraphicsCard(
+                graphicsCardSeat,
+                GraphicsCardMountOrientation.Primary,
+                motherboardAttach,
+                motherboardSecure,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.RetainGraphicsCard(
+                graphicsCardRetain,
+                graphicsCardSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+
+            Assert.That(session.PickupLoosePcieGpuPowerCableToHands().IsSuccess, Is.True);
+            long inventoryBeforeRoute = session.Inventory.Revision;
+            long assemblyRevisionBeforeRoute = session.AssemblyBuild.Revision;
+            int atxReceiptCount = session.AssemblyBuild.Atx24PowerCableReceiptCount;
+            int epsReceiptCount = session.AssemblyBuild.Eps12vPowerCableReceiptCount;
+            Assert.That(session.RoutePcieGpuPowerCable(
+                    OperationId("pcie-gpu-reversed"),
+                    PowerCableKeyOrientation.Reversed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableOrientationMismatch));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute));
+
+            StableId<AssemblyOperationIdScope> routeId = OperationId("pcie-gpu-route");
+            PcieGpuPowerCableOperationReceipt route = session.RoutePcieGpuPowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value;
+            Assert.That(session.RoutePcieGpuPowerCable(
+                routeId,
+                PowerCableKeyOrientation.Keyed,
+                0).Value, Is.SameAs(route));
+            Assert.That(session.RoutePcieGpuPowerCable(
+                    routeId,
+                    PowerCableKeyOrientation.Reversed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(route.OperationKind,
+                Is.EqualTo(PcieGpuPowerCableOperationKind.Route));
+            Assert.That(route.SourceMotherboardSecureOperationId,
+                Is.EqualTo(motherboardSecure));
+            Assert.That(route.SourcePowerSupplyRetentionOperationId,
+                Is.EqualTo(powerSupplyRetain));
+            Assert.That(route.SourceGraphicsCardRetentionOperationId,
+                Is.EqualTo(graphicsCardRetain));
+            Assert.That(route.RouteFingerprint,
+                Is.EqualTo(session.AssemblyBuild.PcieGpuPowerCableTopology.Fingerprint));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryBeforeRoute + 1));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(assemblyRevisionBeforeRoute));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(1));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.Zero);
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.Zero);
+            Assert.That(session.AssemblyBuild.IsPcieGpuPowerCableRouted, Is.True);
+            Assert.That(session.TryGetPcieGpuPowerCableItem(
+                out InventoryItemRecord routed), Is.True);
+            Assert.That(routed.Id, Is.EqualTo(session.PcieGpuPowerCableItemId));
+            Assert.That(routed.ContainerId,
+                Is.EqualTo(session.PcieGpuPowerCableRouteContainerId));
+
+            long lockedInventoryRevision = session.Inventory.Revision;
+            long lockedAssemblyRevision = session.AssemblyBuild.Revision;
+            long lockedCableRevision = session.AssemblyBuild.PcieGpuPowerCableRevision;
+            Assert.That(session.UnsecureMotherboardFastener(
+                    routeId,
+                    motherboardAttach,
+                    motherboardSecure,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.UnretainPowerSupply(
+                    OperationId("pcie-gpu-psu-unretain-blocked"),
+                    powerSupplySeat,
+                    powerSupplyRetain,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.RemovePowerSupply(
+                    OperationId("pcie-gpu-psu-remove-blocked"),
+                    powerSupplySeat,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.UnsecureMotherboardFastener(
+                    OperationId("pcie-gpu-board-unsecure-blocked"),
+                    motherboardAttach,
+                    motherboardSecure,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.DetachMotherboard(
+                    OperationId("pcie-gpu-board-detach-blocked")).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.UnretainGraphicsCard(
+                    OperationId("pcie-gpu-card-unretain-blocked"),
+                    graphicsCardSeat,
+                    graphicsCardRetain,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.RemoveGraphicsCard(
+                    OperationId("pcie-gpu-card-remove-blocked"),
+                    graphicsCardSeat,
+                    lockedAssemblyRevision).Error,
+                Is.EqualTo(AssemblyFailures.PowerCableDependentComponentLocked));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(lockedInventoryRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(lockedAssemblyRevision));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision,
+                Is.EqualTo(lockedCableRevision));
+
+            Assert.That(session.PickupLooseAtx24PowerCableToHands().IsSuccess, Is.True);
+            Assert.That(session.UnroutePcieGpuPowerCable(
+                    OperationId("pcie-gpu-unroute-full-hands"),
+                    routeId,
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.HandsCapacityExceeded));
+            Assert.That(session.RouteAtx24PowerCable(
+                    routeId,
+                    PowerCableKeyOrientation.Keyed,
+                    0).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(session.DropHeldAtx24PowerCableToWorld().IsSuccess, Is.True);
+
+            long staleInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.UnroutePcieGpuPowerCable(
+                    OperationId("pcie-gpu-unroute-stale-source"),
+                    OperationId("pcie-gpu-wrong-route"),
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.PlanStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(staleInventoryRevision));
+
+            StableId<AssemblyOperationIdScope> unrouteId =
+                OperationId("pcie-gpu-unroute");
+            PcieGpuPowerCableOperationReceipt unroute =
+                session.UnroutePcieGpuPowerCable(unrouteId, routeId, 1).Value;
+            Assert.That(session.UnroutePcieGpuPowerCable(
+                unrouteId,
+                routeId,
+                1).Value, Is.SameAs(unroute));
+            Assert.That(session.UnroutePcieGpuPowerCable(
+                    unrouteId,
+                    OperationId("pcie-gpu-wrong-route"),
+                    1).Error,
+                Is.EqualTo(AssemblyFailures.OperationConflict));
+            Assert.That(unroute.OperationKind,
+                Is.EqualTo(PcieGpuPowerCableOperationKind.Unroute));
+            Assert.That(unroute.SourceRouteOperationId, Is.EqualTo(routeId));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                Is.EqualTo(PcieGpuPowerCableState.Loose));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(2));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision, Is.Zero);
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision, Is.Zero);
+            Assert.That(session.TryGetPcieGpuPowerCableItem(
+                out InventoryItemRecord held), Is.True);
+            Assert.That(held.Id, Is.EqualTo(routed.Id));
+            Assert.That(held.ProductId, Is.EqualTo(routed.ProductId));
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.AssemblyBuild.ValidatePcieGpuPowerCableReceiptHistory()
+                .IsSuccess, Is.True);
+            Assert.That(session.DropHeldPcieGpuPowerCableToWorld().IsSuccess, Is.True);
+            long delayedReplayInventoryRevision = session.Inventory.Revision;
+            Assert.That(session.UnroutePcieGpuPowerCable(
+                unrouteId,
+                routeId,
+                1).Value, Is.SameAs(unroute));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(delayedReplayInventoryRevision));
+
+            Assert.That(session.UnretainGraphicsCard(
+                OperationId("pcie-gpu-card-unretain"),
+                graphicsCardSeat,
+                graphicsCardRetain,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.RemoveGraphicsCard(
+                OperationId("pcie-gpu-card-remove"),
+                graphicsCardSeat,
+                session.AssemblyBuild.Revision).IsSuccess, Is.True);
+            Assert.That(session.AssemblyBuild.ValidatePcieGpuPowerCableReceiptHistory()
+                .IsSuccess, Is.True);
+            Assert.That(session.AssemblyBuild.Atx24PowerCableReceiptCount,
+                Is.EqualTo(atxReceiptCount));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableReceiptCount,
+                Is.EqualTo(epsReceiptCount));
+            Assert.That(session.TryGetPcieGpuPowerCableItem(
                 out InventoryItemRecord world), Is.True);
             Assert.That(world.Id, Is.EqualTo(routed.Id));
             Assert.That(world.ContainerId, Is.EqualTo(session.WorldFloorContainerId));

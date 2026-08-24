@@ -412,6 +412,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesSeatGraphicsCard(
@@ -534,6 +540,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesRetainGraphicsCard(
@@ -598,6 +610,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesUnretainGraphicsCard(
@@ -611,6 +629,12 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            if (IsPcieGpuPowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
             }
 
             Failure preflightFailure = ValidateGraphicsCardRetention(
@@ -660,6 +684,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesRemoveGraphicsCard(
@@ -670,6 +700,12 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            if (IsPcieGpuPowerCableRouted)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.PowerCableDependentComponentLocked);
             }
 
             Failure preflightFailure = ValidateRemoveGraphicsCard(

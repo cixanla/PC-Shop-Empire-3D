@@ -10,15 +10,15 @@ namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker
     {
-        public const string Eps12vPowerCableSmokeSuccessMarker =
-            "GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok " +
+        public const string PcieGpuPowerCableSmokeSuccessMarker =
+            "GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE cable-flow=ok " +
             "preflight=ok psu-retained-gate=ok motherboard-secured-gate=ok " +
-            "cpu-retained-gate=ok endpoint-key=ok route-waypoints=ok " +
+            "gpu-retained-gate=ok endpoint-key=ok route-waypoints=ok " +
             "route-clearance=ok generic-bypass-blocked=ok " +
             "duplicate-route-blocked=ok dependent-detach-blocked=ok replay=ok " +
             "authority-isolated=ok identity=stable recovery=ok";
 
-        private IEnumerator RunEps12vPowerCableSmoke()
+        private IEnumerator RunPcieGpuPowerCableSmoke()
         {
             yield return null;
             playerMotor?.SetPaused(false);
@@ -35,64 +35,64 @@ namespace PCShopEmpire3D.Presentation
                 motherboardSeat == null ||
                 motherboardFastener == null ||
                 powerSupplyBinding == null ||
-                processorSocket == null ||
-                processorBinding == null ||
-                processor == null ||
-                eps12vPowerCableRoute == null ||
-                eps12vPowerCableBinding == null ||
-                eps12vPowerCable == null ||
-                eps12vPowerCableGeometry == null)
+                graphicsCardSlot == null ||
+                graphicsCardBinding == null ||
+                graphicsCard == null ||
+                pcieGpuPowerCableRoute == null ||
+                pcieGpuPowerCableBinding == null ||
+                pcieGpuPowerCable == null ||
+                pcieGpuPowerCableGeometry == null)
             {
-                LogEps12vPowerCableSmokeFailure("smoke.context-missing");
+                LogPcieGpuPowerCableSmokeFailure("smoke.context-missing");
                 yield break;
             }
 
-            int physicalIdentity = eps12vPowerCable.GetInstanceID();
-            string stableItemId = eps12vPowerCable.ItemIdValue;
-            Transform initialParent = eps12vPowerCable.transform.parent;
+            int physicalIdentity = pcieGpuPowerCable.GetInstanceID();
+            string stableItemId = pcieGpuPowerCable.ItemIdValue;
+            Transform initialParent = pcieGpuPowerCable.transform.parent;
             Pose initialPose = new Pose(
-                eps12vPowerCable.transform.position,
-                eps12vPowerCable.transform.rotation);
-            Rigidbody body = eps12vPowerCable.Body;
+                pcieGpuPowerCable.transform.position,
+                pcieGpuPowerCable.transform.rotation);
+            Rigidbody body = pcieGpuPowerCable.Body;
             bool preflight = session.Inventory.SerializedItemCount == 10 &&
-                             session.TryGetEps12vPowerCableItem(
+                             session.TryGetPcieGpuPowerCableItem(
                                  out InventoryItemRecord looseCable) &&
-                             looseCable.Id == session.Eps12vPowerCableItemId &&
+                             looseCable.Id == session.PcieGpuPowerCableItemId &&
                              looseCable.ProductId ==
-                                 session.Eps12vPowerCableProductId &&
+                                 session.PcieGpuPowerCableProductId &&
                              looseCable.ContainerId ==
                                  session.WorldFloorContainerId &&
-                             session.AssemblyBuild.Eps12vPowerCableState ==
-                                 Eps12vPowerCableState.Loose &&
-                             session.AssemblyBuild.Eps12vPowerCableRevision == 0 &&
-                             eps12vPowerCableRoute.Waypoints.Length == 3 &&
-                             eps12vPowerCableGeometry.IsCanonical &&
-                             eps12vPowerCableBinding
+                             session.AssemblyBuild.PcieGpuPowerCableState ==
+                                 PcieGpuPowerCableState.Loose &&
+                             session.AssemblyBuild.PcieGpuPowerCableRevision == 0 &&
+                             pcieGpuPowerCableRoute.Waypoints.Length == 3 &&
+                             pcieGpuPowerCableGeometry.IsCanonical &&
+                             pcieGpuPowerCableBinding
                                  .ValidateProjectionInvariant().IsSuccess;
-            Eps12vPowerCableTopology topology =
-                session.AssemblyBuild.Eps12vPowerCableTopology;
+            PcieGpuPowerCableTopology topology =
+                session.AssemblyBuild.PcieGpuPowerCableTopology;
             bool connectors = topology != null &&
                               topology.PsuEndpoint.PinCount == 8 &&
-                              topology.MotherboardEndpoint.PinCount == 8 &&
+                              topology.GraphicsCardEndpoint.PinCount == 8 &&
                               topology.OrderedWaypoints.Count == 3;
             if (!preflight || !connectors)
             {
-                LogEps12vPowerCableSmokeFailure("smoke.preflight-mismatch");
+                LogPcieGpuPowerCableSmokeFailure("smoke.preflight-mismatch");
                 yield break;
             }
 
             StableId<AssemblyOperationIdScope> motherboardAttach =
-                Eps12vPowerCableSmokeOperationId("motherboard-attach");
+                PcieGpuPowerCableSmokeOperationId("motherboard-attach");
             StableId<AssemblyOperationIdScope> motherboardSecure =
-                Eps12vPowerCableSmokeOperationId("motherboard-secure");
+                PcieGpuPowerCableSmokeOperationId("motherboard-secure");
             StableId<AssemblyOperationIdScope> powerSupplySeat =
-                Eps12vPowerCableSmokeOperationId("power-supply-seat");
+                PcieGpuPowerCableSmokeOperationId("power-supply-seat");
             StableId<AssemblyOperationIdScope> powerSupplyRetain =
-                Eps12vPowerCableSmokeOperationId("power-supply-retain");
-            StableId<AssemblyOperationIdScope> processorSeat =
-                Eps12vPowerCableSmokeOperationId("processor-seat");
-            StableId<AssemblyOperationIdScope> processorRetain =
-                Eps12vPowerCableSmokeOperationId("processor-retain");
+                PcieGpuPowerCableSmokeOperationId("power-supply-retain");
+            StableId<AssemblyOperationIdScope> graphicsCardSeat =
+                PcieGpuPowerCableSmokeOperationId("graphics-card-seat");
+            StableId<AssemblyOperationIdScope> graphicsCardRetain =
+                PcieGpuPowerCableSmokeOperationId("graphics-card-retain");
 
             OperationResult pickupMotherboard =
                 session.PickupLooseMotherboardToHands();
@@ -127,25 +127,26 @@ namespace PCShopEmpire3D.Presentation
                         session.AssemblyBuild.Revision)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         seatPowerSupply.Error);
-            OperationResult pickupProcessor =
-                session.PickupLooseProcessorToHands();
-            OperationResult<AssemblyOperationReceipt> seatProcessor =
-                pickupProcessor.IsSuccess
-                    ? session.SeatProcessor(
-                        processorSeat,
+            OperationResult pickupGraphicsCard =
+                session.PickupLooseGraphicsCardToHands();
+            OperationResult<AssemblyOperationReceipt> seatGraphicsCard =
+                pickupGraphicsCard.IsSuccess
+                    ? session.SeatGraphicsCard(
+                        graphicsCardSeat,
+                        GraphicsCardMountOrientation.Primary,
                         motherboardAttach,
                         motherboardSecure,
                         session.AssemblyBuild.Revision)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
-                        pickupProcessor.Error);
-            OperationResult<AssemblyOperationReceipt> retainProcessor =
-                seatProcessor.IsSuccess
-                    ? session.CloseProcessorRetention(
-                        processorRetain,
-                        processorSeat,
+                        pickupGraphicsCard.Error);
+            OperationResult<AssemblyOperationReceipt> retainGraphicsCard =
+                seatGraphicsCard.IsSuccess
+                    ? session.RetainGraphicsCard(
+                        graphicsCardRetain,
+                        graphicsCardSeat,
                         session.AssemblyBuild.Revision)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
-                        seatProcessor.Error);
+                        seatGraphicsCard.Error);
 
             OperationResult syncMotherboard =
                 motherboardBinding.PhysicalItem.SynchronizeStableWorldPose(
@@ -154,30 +155,34 @@ namespace PCShopEmpire3D.Presentation
                 AssemblySeatState.SeatedSecured);
             OperationResult syncPowerSupply =
                 powerSupplyBinding.SyncProjectionToAuthority();
-            OperationResult syncProcessorPose =
-                processor.SynchronizeStableWorldPose(processorSocket.SnapPose);
-            OperationResult syncProcessor =
-                processorBinding.SyncProjectionToAuthority();
+            OperationResult<Pose> resolvedGraphicsCardPose =
+                graphicsCardSlot.ResolveSeatPose(0);
+            OperationResult syncGraphicsCardPose = resolvedGraphicsCardPose.IsSuccess
+                ? graphicsCard.SynchronizeStableWorldPose(
+                    resolvedGraphicsCardPose.Value)
+                : OperationResult.Fail(resolvedGraphicsCardPose.Error);
+            OperationResult syncGraphicsCard =
+                graphicsCardBinding.SyncProjectionToAuthority();
             Physics.SyncTransforms();
             bool hostsReady = secureMotherboard.IsSuccess &&
                               retainPowerSupply.IsSuccess &&
-                              retainProcessor.IsSuccess &&
+                              retainGraphicsCard.IsSuccess &&
                               syncMotherboard.IsSuccess &&
                               syncPowerSupply.IsSuccess &&
-                              syncProcessorPose.IsSuccess &&
-                              syncProcessor.IsSuccess &&
+                              syncGraphicsCardPose.IsSuccess &&
+                              syncGraphicsCard.IsSuccess &&
                               motherboardBinding.IsSecured &&
                               powerSupplyBinding.IsRetained &&
-                              processorBinding.IsRetained &&
+                              graphicsCardBinding.IsRetained &&
                               session.AssemblyBuild.MotherboardSeatState ==
                                   AssemblySeatState.SeatedSecured &&
                               session.AssemblyBuild.PowerSupplyBayState ==
                                   PowerSupplyBayState.PowerSupplyRetained &&
-                              session.AssemblyBuild.ProcessorSocketState ==
-                                  ProcessorSocketState.ProcessorRetained;
+                              session.AssemblyBuild.GraphicsCardSlotState ==
+                                  GraphicsCardSlotState.GraphicsCardRetained;
             if (!hostsReady)
             {
-                LogEps12vPowerCableSmokeFailure("smoke.host-setup-failed");
+                LogPcieGpuPowerCableSmokeFailure("smoke.host-setup-failed");
                 yield break;
             }
 
@@ -196,15 +201,19 @@ namespace PCShopEmpire3D.Presentation
                 session.AssemblyBuild.Atx24PowerCableRevision;
             int atx24ReceiptCountBefore =
                 session.AssemblyBuild.Atx24PowerCableReceiptCount;
+            long eps12vRevisionBefore =
+                session.AssemblyBuild.Eps12vPowerCableRevision;
+            int eps12vReceiptCountBefore =
+                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
 
-            MovePlayerToEps12vPowerCableRoute();
-            OperationResult pickup = playerCarry.TryPickup(eps12vPowerCable);
+            MovePlayerToPcieGpuPowerCableRoute();
+            OperationResult pickup = playerCarry.TryPickup(pcieGpuPowerCable);
             long assemblyRevisionBeforeBypass = session.AssemblyBuild.Revision;
             long inventoryRevisionBeforeBypass = session.Inventory.Revision;
             long cableRevisionBeforeBypass =
-                session.AssemblyBuild.Eps12vPowerCableRevision;
+                session.AssemblyBuild.PcieGpuPowerCableRevision;
             int cableReceiptsBeforeBypass =
-                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
+                session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
             OperationResult genericPlacement = pickup.IsSuccess
                 ? playerCarry.TryConfirmPlacement()
                 : OperationResult.Fail(pickup.Error);
@@ -218,60 +227,60 @@ namespace PCShopEmpire3D.Presentation
                                             "cart.load-profile-unsupported" &&
                                         !transportCart.HasCargo &&
                                         playerCarry.HeldItem ==
-                                            eps12vPowerCable &&
+                                            pcieGpuPowerCable &&
                                         session.AssemblyBuild.Revision ==
                                             assemblyRevisionBeforeBypass &&
                                         session.Inventory.Revision ==
                                             inventoryRevisionBeforeBypass &&
                                         session.AssemblyBuild
-                                                .Eps12vPowerCableRevision ==
+                                                .PcieGpuPowerCableRevision ==
                                             cableRevisionBeforeBypass &&
                                         session.AssemblyBuild
-                                                .Eps12vPowerCableReceiptCount ==
+                                                .PcieGpuPowerCableReceiptCount ==
                                             cableReceiptsBeforeBypass;
             OperationResult mode = genericBypassBlocked
-                ? playerCarry.TrySetEps12vPowerCableRouteMode(true)
+                ? playerCarry.TrySetPcieGpuPowerCableRouteMode(true)
                 : OperationResult.Fail(
                     Failure.FromCode("smoke.generic-bypass-mismatch"));
             long cableRevisionBeforeWrong =
-                session.AssemblyBuild.Eps12vPowerCableRevision;
+                session.AssemblyBuild.PcieGpuPowerCableRevision;
             long inventoryRevisionBeforeWrong = session.Inventory.Revision;
             OperationResult reverse = mode.IsSuccess
-                ? playerCarry.TryRotateEps12vPowerCableConnectorPreview()
+                ? playerCarry.TryRotatePcieGpuPowerCableConnectorPreview()
                 : OperationResult.Fail(mode.Error);
             OperationResult wrongConfirm = reverse.IsSuccess
-                ? playerCarry.TryConfirmEps12vPowerCableRoute()
+                ? playerCarry.TryConfirmPcieGpuPowerCableRoute()
                 : OperationResult.Fail(reverse.Error);
             bool keyedOrientationGate = wrongConfirm.IsFailure &&
                                         playerCarry
-                                                .CurrentEps12vPowerCableRouteStatus ==
-                                            Eps12vPowerCableRouteStatus
+                                                .CurrentPcieGpuPowerCableRouteStatus ==
+                                            PcieGpuPowerCableRouteStatus
                                                 .OrientationInvalid &&
                                         session.AssemblyBuild
-                                                .Eps12vPowerCableRevision ==
+                                                .PcieGpuPowerCableRevision ==
                                             cableRevisionBeforeWrong &&
                                         session.Inventory.Revision ==
                                             inventoryRevisionBeforeWrong &&
                                         playerCarry.HeldItem ==
-                                            eps12vPowerCable;
+                                            pcieGpuPowerCable;
 
             OperationResult restoreKey = playerCarry
-                .TryRotateEps12vPowerCableConnectorPreview();
+                .TryRotatePcieGpuPowerCableConnectorPreview();
             bool routeClearance = restoreKey.IsSuccess &&
                                   playerCarry.PlacementValid &&
                                   playerCarry
-                                          .CurrentEps12vPowerCableRouteStatus ==
-                                      Eps12vPowerCableRouteStatus.ValidRoute;
+                                          .CurrentPcieGpuPowerCableRouteStatus ==
+                                      PcieGpuPowerCableRouteStatus.ValidRoute;
             OperationResult routeResult = routeClearance
-                ? playerCarry.TryConfirmEps12vPowerCableRoute()
+                ? playerCarry.TryConfirmPcieGpuPowerCableRoute()
                 : OperationResult.Fail(
                     Failure.FromCode("smoke.route-clearance-mismatch"));
             StableId<AssemblyOperationIdScope> routeOperationId =
-                Eps12vPowerCablePrototypeOperationId("route", 1);
+                PcieGpuPowerCablePrototypeOperationId("route", 1);
             bool hasRouteReceipt = session.AssemblyBuild
-                .TryGetEps12vPowerCableReceipt(
+                .TryGetPcieGpuPowerCableReceipt(
                     routeOperationId,
-                    out Eps12vPowerCableOperationReceipt routeReceipt);
+                    out PcieGpuPowerCableOperationReceipt routeReceipt);
             bool hostLineage = hasRouteReceipt &&
                                routeReceipt
                                        .SourceMotherboardSecureOperationId ==
@@ -280,24 +289,24 @@ namespace PCShopEmpire3D.Presentation
                                        .SourcePowerSupplyRetentionOperationId ==
                                    powerSupplyRetain &&
                                routeReceipt
-                                       .SourceProcessorRetentionOperationId ==
-                                   processorRetain;
+                                       .SourceGraphicsCardRetentionOperationId ==
+                                   graphicsCardRetain;
             bool routed = routeResult.IsSuccess &&
                           !playerCarry.IsCarrying &&
-                          eps12vPowerCableBinding.IsRouted &&
-                          eps12vPowerCableGeometry.IsRouted &&
+                          pcieGpuPowerCableBinding.IsRouted &&
+                          pcieGpuPowerCableGeometry.IsRouted &&
                           hasRouteReceipt &&
                           routeReceipt.RouteFingerprint == topology.Fingerprint &&
-                          session.TryGetEps12vPowerCableItem(
+                          session.TryGetPcieGpuPowerCableItem(
                               out InventoryItemRecord routedCable) &&
                           routedCable.ContainerId ==
-                              session.Eps12vPowerCableRouteContainerId;
+                              session.PcieGpuPowerCableRouteContainerId;
             if (!keyedOrientationGate ||
                 !routeClearance ||
                 !hostLineage ||
                 !routed)
             {
-                LogEps12vPowerCableSmokeFailure(
+                LogPcieGpuPowerCableSmokeFailure(
                     routeResult.IsFailure
                         ? routeResult.Error.Code
                         : "smoke.route-mismatch");
@@ -307,33 +316,33 @@ namespace PCShopEmpire3D.Presentation
             long assemblyRevisionBeforeGates = session.AssemblyBuild.Revision;
             long inventoryRevisionBeforeGates = session.Inventory.Revision;
             long cableRevisionBeforeGates =
-                session.AssemblyBuild.Eps12vPowerCableRevision;
+                session.AssemblyBuild.PcieGpuPowerCableRevision;
             int cableReceiptsBeforeGates =
-                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
-            OperationResult<Eps12vPowerCableOperationReceipt> duplicateRoute =
-                session.RouteEps12vPowerCable(
-                    Eps12vPowerCableSmokeOperationId("duplicate-route"),
+                session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
+            OperationResult<PcieGpuPowerCableOperationReceipt> duplicateRoute =
+                session.RoutePcieGpuPowerCable(
+                    PcieGpuPowerCableSmokeOperationId("duplicate-route"),
                     PowerCableKeyOrientation.Keyed,
-                    session.AssemblyBuild.Eps12vPowerCableRevision);
+                    session.AssemblyBuild.PcieGpuPowerCableRevision);
             OperationResult<AssemblyOperationReceipt> blockedUnretain =
                 session.UnretainPowerSupply(
-                    Eps12vPowerCableSmokeOperationId("blocked-psu-unretain"),
+                    PcieGpuPowerCableSmokeOperationId("blocked-psu-unretain"),
                     powerSupplySeat,
                     powerSupplyRetain,
                     session.AssemblyBuild.Revision);
             OperationResult<AssemblyOperationReceipt> blockedUnsecure =
                 session.UnsecureMotherboardFastener(
-                    Eps12vPowerCableSmokeOperationId(
+                    PcieGpuPowerCableSmokeOperationId(
                         "blocked-board-unsecure"),
                     motherboardAttach,
                     motherboardSecure,
                     session.AssemblyBuild.Revision);
-            OperationResult<AssemblyOperationReceipt> blockedProcessorOpen =
-                session.OpenProcessorRetention(
-                    Eps12vPowerCableSmokeOperationId(
-                        "blocked-processor-open"),
-                    processorSeat,
-                    processorRetain,
+            OperationResult<AssemblyOperationReceipt> blockedGraphicsCardOpen =
+                session.UnretainGraphicsCard(
+                    PcieGpuPowerCableSmokeOperationId(
+                        "blocked-graphics-card-open"),
+                    graphicsCardSeat,
+                    graphicsCardRetain,
                     session.AssemblyBuild.Revision);
             bool dependentGates = duplicateRoute.Error ==
                                       AssemblyFailures.PowerCableAlreadyRouted &&
@@ -343,7 +352,7 @@ namespace PCShopEmpire3D.Presentation
                                   blockedUnsecure.Error ==
                                       AssemblyFailures
                                           .PowerCableDependentComponentLocked &&
-                                  blockedProcessorOpen.Error ==
+                                  blockedGraphicsCardOpen.Error ==
                                       AssemblyFailures
                                           .PowerCableDependentComponentLocked &&
                                   session.AssemblyBuild.Revision ==
@@ -351,74 +360,74 @@ namespace PCShopEmpire3D.Presentation
                                   session.Inventory.Revision ==
                                       inventoryRevisionBeforeGates &&
                                   session.AssemblyBuild
-                                      .Eps12vPowerCableRevision ==
+                                      .PcieGpuPowerCableRevision ==
                                       cableRevisionBeforeGates &&
                                   session.AssemblyBuild
-                                      .Eps12vPowerCableReceiptCount ==
+                                      .PcieGpuPowerCableReceiptCount ==
                                       cableReceiptsBeforeGates;
 
-            OperationResult<Eps12vPowerCableOperationReceipt> routeReplay =
-                session.RouteEps12vPowerCable(
+            OperationResult<PcieGpuPowerCableOperationReceipt> routeReplay =
+                session.RoutePcieGpuPowerCable(
                     routeOperationId,
                     PowerCableKeyOrientation.Keyed,
                     routeReceipt.ExpectedCableRevision);
             long cableRevisionBeforeUnroute =
-                session.AssemblyBuild.Eps12vPowerCableRevision;
+                session.AssemblyBuild.PcieGpuPowerCableRevision;
             OperationResult unroutePickup =
-                playerCarry.TryPickup(eps12vPowerCable);
+                playerCarry.TryPickup(pcieGpuPowerCable);
             StableId<AssemblyOperationIdScope> unrouteOperationId =
-                Eps12vPowerCablePrototypeOperationId("unroute", 2);
+                PcieGpuPowerCablePrototypeOperationId("unroute", 2);
             bool hasUnrouteReceipt = session.AssemblyBuild
-                .TryGetEps12vPowerCableReceipt(
+                .TryGetPcieGpuPowerCableReceipt(
                     unrouteOperationId,
-                    out Eps12vPowerCableOperationReceipt unrouteReceipt);
+                    out PcieGpuPowerCableOperationReceipt unrouteReceipt);
             bool unrouted = unroutePickup.IsSuccess &&
-                            playerCarry.HeldItem == eps12vPowerCable &&
-                            !eps12vPowerCableBinding.IsRouted &&
-                            !eps12vPowerCableGeometry.IsRouted &&
+                            playerCarry.HeldItem == pcieGpuPowerCable &&
+                            !pcieGpuPowerCableBinding.IsRouted &&
+                            !pcieGpuPowerCableGeometry.IsRouted &&
                             hasUnrouteReceipt &&
                             unrouteReceipt.SourceRouteOperationId ==
                                 routeOperationId &&
-                            session.AssemblyBuild.Eps12vPowerCableRevision ==
+                            session.AssemblyBuild.PcieGpuPowerCableRevision ==
                                 cableRevisionBeforeUnroute + 1;
-            OperationResult<Eps12vPowerCableOperationReceipt> unrouteReplay =
+            OperationResult<PcieGpuPowerCableOperationReceipt> unrouteReplay =
                 hasUnrouteReceipt
-                    ? session.UnrouteEps12vPowerCable(
+                    ? session.UnroutePcieGpuPowerCable(
                         unrouteOperationId,
                         routeOperationId,
                         unrouteReceipt.ExpectedCableRevision)
-                    : OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                    : OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                         Failure.FromCode("smoke.receipt-missing"));
             bool replay = routeReplay.IsSuccess &&
                           unrouteReplay.IsSuccess &&
                           ReferenceEquals(routeReplay.Value, routeReceipt) &&
                           ReferenceEquals(unrouteReplay.Value, unrouteReceipt) &&
                           session.AssemblyBuild
-                              .ValidateEps12vPowerCableReceiptHistory().IsSuccess;
+                              .ValidatePcieGpuPowerCableReceiptHistory().IsSuccess;
 
             OperationResult recovery = unrouted
                 ? playerCarry.TryRecoverHeldItem()
                 : OperationResult.Fail(
                     Failure.FromCode("smoke.unroute-mismatch"));
             bool identity = physicalIdentity ==
-                                eps12vPowerCable.GetInstanceID() &&
-                            stableItemId == eps12vPowerCable.ItemIdValue &&
+                                pcieGpuPowerCable.GetInstanceID() &&
+                            stableItemId == pcieGpuPowerCable.ItemIdValue &&
                             stableItemId ==
-                                eps12vPowerCableBinding.InventoryItemIdValue &&
-                            CountCanonicalEps12vPowerCableProjections(
+                                pcieGpuPowerCableBinding.InventoryItemIdValue &&
+                            CountCanonicalPcieGpuPowerCableProjections(
                                 stableItemId) == 1;
             bool recovered = recovery.IsSuccess &&
                              !playerCarry.IsCarrying &&
-                             eps12vPowerCable.transform.parent ==
+                             pcieGpuPowerCable.transform.parent ==
                                  initialParent &&
                              ApproximatelySamePose(
                                  new Pose(
-                                     eps12vPowerCable.transform.position,
-                                     eps12vPowerCable.transform.rotation),
+                                     pcieGpuPowerCable.transform.position,
+                                     pcieGpuPowerCable.transform.rotation),
                                  initialPose) &&
-                             eps12vPowerCable.Body == body &&
-                             eps12vPowerCableBinding.IsAuthorityLooseWorld &&
-                             eps12vPowerCableBinding
+                             pcieGpuPowerCable.Body == body &&
+                             pcieGpuPowerCableBinding.IsAuthorityLooseWorld &&
+                             pcieGpuPowerCableBinding
                                  .ValidateProjectionInvariant().IsSuccess &&
                              session.ValidateInvariants().IsSuccess;
             bool authorityIsolated =
@@ -436,7 +445,11 @@ namespace PCShopEmpire3D.Presentation
                 session.AssemblyBuild.Atx24PowerCableRevision ==
                     atx24RevisionBefore &&
                 session.AssemblyBuild.Atx24PowerCableReceiptCount ==
-                    atx24ReceiptCountBefore;
+                    atx24ReceiptCountBefore &&
+                session.AssemblyBuild.Eps12vPowerCableRevision ==
+                    eps12vRevisionBefore &&
+                session.AssemblyBuild.Eps12vPowerCableReceiptCount ==
+                    eps12vReceiptCountBefore;
 
             if (!genericBypassBlocked ||
                 !dependentGates ||
@@ -446,19 +459,19 @@ namespace PCShopEmpire3D.Presentation
                 !identity ||
                 !recovered)
             {
-                LogEps12vPowerCableSmokeFailure(
+                LogPcieGpuPowerCableSmokeFailure(
                     "smoke.final-invariant-mismatch");
                 yield break;
             }
 
-            Debug.Log(Eps12vPowerCableSmokeSuccessMarker);
+            Debug.Log(PcieGpuPowerCableSmokeSuccessMarker);
             yield return new WaitForEndOfFrame();
         }
 
-        private void MovePlayerToEps12vPowerCableRoute()
+        private void MovePlayerToPcieGpuPowerCableRoute()
         {
             Vector3 target =
-                eps12vPowerCableRoute.FocusCollider.bounds.center;
+                pcieGpuPowerCableRoute.FocusCollider.bounds.center;
             Vector3 playerPosition = new Vector3(-0.72f, 0.05f, 3.25f);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;
@@ -479,26 +492,26 @@ namespace PCShopEmpire3D.Presentation
         }
 
         private static StableId<AssemblyOperationIdScope>
-            Eps12vPowerCableSmokeOperationId(string suffix)
+            PcieGpuPowerCableSmokeOperationId(string suffix)
         {
             return StableId<AssemblyOperationIdScope>.Parse(
-                $"assembly.operation.runtime-smoke.eps12v-power-cable-{suffix}");
+                $"assembly.operation.runtime-smoke.pcie-gpu-power-cable-{suffix}");
         }
 
         private static StableId<AssemblyOperationIdScope>
-            Eps12vPowerCablePrototypeOperationId(
+            PcieGpuPowerCablePrototypeOperationId(
                 string action,
                 long resultingRevision)
         {
             return StableId<AssemblyOperationIdScope>.Parse(
-                $"assembly.operation.prototype-001.eps12v-power-cable-{action}." +
+                $"assembly.operation.prototype-001.pcie-gpu-power-cable-{action}." +
                 $"r{resultingRevision:000000}");
         }
 
-        private static void LogEps12vPowerCableSmokeFailure(string code)
+        private static void LogPcieGpuPowerCableSmokeFailure(string code)
         {
             Debug.LogError(
-                "GARAGE_EPS12V_POWER_CABLE_RUNTIME_SMOKE " +
+                "GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE " +
                 $"cable-flow=failed code={code}");
         }
     }

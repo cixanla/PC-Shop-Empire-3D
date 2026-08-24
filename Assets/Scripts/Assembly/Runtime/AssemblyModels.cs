@@ -1580,6 +1580,8 @@ namespace PCShopEmpire3D.Assembly
             Failure.FromCode("assembly.power-cable.host-power-supply-unretained");
         public static readonly Failure PowerCableHostProcessorUnretained =
             Failure.FromCode("assembly.power-cable.host-processor-unretained");
+        public static readonly Failure PowerCableHostGraphicsCardUnretained =
+            Failure.FromCode("assembly.power-cable.host-graphics-card-unretained");
         public static readonly Failure PowerCableDependentComponentLocked =
             Failure.FromCode("assembly.power-cable.dependent-component-locked");
         public static readonly Failure PowerCableReceiptHistoryInvalid =

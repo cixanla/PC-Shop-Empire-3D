@@ -97,7 +97,9 @@ namespace PCShopEmpire3D.Assembly
             Atx24PowerCableDefinition atx24PowerCableDefinition = default,
             InventorySerializedTransferAccess atx24PowerCableInventoryTransferAccess = null,
             Eps12vPowerCableDefinition eps12vPowerCableDefinition = default,
-            InventorySerializedTransferAccess eps12vPowerCableInventoryTransferAccess = null)
+            InventorySerializedTransferAccess eps12vPowerCableInventoryTransferAccess = null,
+            PcieGpuPowerCableDefinition pcieGpuPowerCableDefinition = default,
+            InventorySerializedTransferAccess pcieGpuPowerCableInventoryTransferAccess = null)
         {
             _componentCatalog = componentCatalog;
             _inventory = inventory;
@@ -131,6 +133,9 @@ namespace PCShopEmpire3D.Assembly
             _eps12vPowerCableDefinition = eps12vPowerCableDefinition;
             _eps12vPowerCableInventoryTransferAccess =
                 eps12vPowerCableInventoryTransferAccess;
+            _pcieGpuPowerCableDefinition = pcieGpuPowerCableDefinition;
+            _pcieGpuPowerCableInventoryTransferAccess =
+                pcieGpuPowerCableInventoryTransferAccess;
             if (!processorSlotId.IsEmpty)
             {
                 _processorSocketState = ProcessorSocketState.EmptyOpen;
@@ -169,6 +174,11 @@ namespace PCShopEmpire3D.Assembly
             if (eps12vPowerCableDefinition.IsValid)
             {
                 _eps12vPowerCableState = Eps12vPowerCableState.Loose;
+            }
+
+            if (pcieGpuPowerCableDefinition.IsValid)
+            {
+                _pcieGpuPowerCableState = PcieGpuPowerCableState.Loose;
             }
         }
 
@@ -505,6 +515,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesAttach(itemId, slotId)
@@ -585,6 +601,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesDetach(itemId, slotId)
@@ -593,7 +615,7 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
-            if (IsEps12vPowerCableRouted)
+            if (IsEps12vPowerCableRouted || IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.PowerCableDependentComponentLocked);
@@ -677,6 +699,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesSecure(
@@ -751,6 +779,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesUnsecure(
@@ -765,7 +799,9 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
-            if (IsAtx24PowerCableRouted || IsEps12vPowerCableRouted)
+            if (IsAtx24PowerCableRouted ||
+                IsEps12vPowerCableRouted ||
+                IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.PowerCableDependentComponentLocked);
@@ -829,6 +865,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
+            }
+
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
             }
 
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
@@ -941,6 +983,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesCloseProcessorRetention(
@@ -1031,6 +1079,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
+            }
+
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
             }
 
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
@@ -1128,6 +1182,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
+            }
+
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
             }
 
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
@@ -1425,6 +1485,14 @@ namespace PCShopEmpire3D.Assembly
             return _receipts.TryGetValue(operationId, out receipt);
         }
 
+        private bool HasPowerCableOperationReceipt(
+            StableId<AssemblyOperationIdScope> operationId)
+        {
+            return _atx24PowerCableReceipts.ContainsKey(operationId) ||
+                   _eps12vPowerCableReceipts.ContainsKey(operationId) ||
+                   _pcieGpuPowerCableReceipts.ContainsKey(operationId);
+        }
+
         public IReadOnlyList<AssemblyOperationReceipt> GetReceipts()
         {
             var receipts = new List<AssemblyOperationReceipt>(_receipts.Values);
@@ -1667,7 +1735,8 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (!ValidateAtx24PowerCableStateInvariants() ||
-                !ValidateEps12vPowerCableStateInvariants())
+                !ValidateEps12vPowerCableStateInvariants() ||
+                !ValidatePcieGpuPowerCableStateInvariants())
             {
                 return OperationResult.Fail(AssemblyFailures.InvariantViolation);
             }

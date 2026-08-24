@@ -74,7 +74,8 @@ namespace PCShopEmpire3D.Assembly
                 MotherboardFormFactor supportedMotherboardFormFactor,
                 CpuSocketFamily supportedCpuSocketFamily,
                 Atx24PowerCableDefinition atx24PowerCableDefinition = default,
-                Eps12vPowerCableDefinition eps12vPowerCableDefinition = default)
+                Eps12vPowerCableDefinition eps12vPowerCableDefinition = default,
+                PcieGpuPowerCableDefinition pcieGpuPowerCableDefinition = default)
         {
             if (componentCatalog == null)
             {
@@ -195,11 +196,61 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidPowerCableDefinition);
             }
 
+            bool hasPcieGpuPowerCable = pcieGpuPowerCableDefinition.IsValid;
+            if (!hasPcieGpuPowerCable && pcieGpuPowerCableDefinition.HasAnyValue)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableDefinition);
+            }
+
+            if (hasPcieGpuPowerCable &&
+                (!componentCatalog.OwnerCatalog.TryGet(
+                    pcieGpuPowerCableDefinition.ProductId,
+                    out ProductDefinition pcieCableProduct) ||
+                 pcieCableProduct.TrackingPolicy !=
+                    ProductTrackingPolicy.SerializedInstance))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableProduct);
+            }
+
+            if (hasPcieGpuPowerCable &&
+                (!componentCatalog.TryGet(
+                    pcieGpuPowerCableDefinition.ProductId,
+                    out PcComponentSpecification pcieCableSpecification) ||
+                 pcieCableSpecification.Kind != PcComponentKind.PowerCable ||
+                 pcieCableSpecification.PowerCableType !=
+                     PowerCableType.ModularPcie8PinPsuToGraphicsCard))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableDefinition);
+            }
+
             if (hasAtx24PowerCable &&
                 hasEps12vPowerCable &&
                 HasPowerCableDefinitionIdentityConflict(
                     atx24PowerCableDefinition,
                     eps12vPowerCableDefinition))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableDefinition);
+            }
+
+            if (hasAtx24PowerCable &&
+                hasPcieGpuPowerCable &&
+                HasPowerCableDefinitionIdentityConflict(
+                    atx24PowerCableDefinition,
+                    pcieGpuPowerCableDefinition))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableDefinition);
+            }
+
+            if (hasEps12vPowerCable &&
+                hasPcieGpuPowerCable &&
+                HasPowerCableDefinitionIdentityConflict(
+                    eps12vPowerCableDefinition,
+                    pcieGpuPowerCableDefinition))
             {
                 return OperationResult<AssemblyBuildAuthority>.Fail(
                     AssemblyFailures.InvalidPowerCableDefinition);
@@ -333,6 +384,15 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidPowerCableRouteContainer);
             }
 
+            if (hasPcieGpuPowerCable &&
+                !IsCapacityOneWorkbenchContainer(
+                    inventory,
+                    pcieGpuPowerCableDefinition.RouteContainerId))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.InvalidPowerCableRouteContainer);
+            }
+
             if (HasDuplicatePowerSupplyFactoryContainer(
                     handsContainerId,
                     workbenchContainerId,
@@ -375,6 +435,24 @@ namespace PCShopEmpire3D.Assembly
                     graphicsCardSlotDefinition.ContainerId,
                     powerSupplyBayDefinition.ContainerId,
                     atx24PowerCableDefinition.RouteContainerId))
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.SameInventoryContainer);
+            }
+
+            if (hasPcieGpuPowerCable &&
+                IsDuplicatePowerCableFactoryContainer(
+                    pcieGpuPowerCableDefinition.RouteContainerId,
+                    handsContainerId,
+                    workbenchContainerId,
+                    processorSocketContainerId,
+                    memorySlotDefinition.ContainerId,
+                    storageSlotDefinition.ContainerId,
+                    processorCoolerSlotDefinition.ContainerId,
+                    graphicsCardSlotDefinition.ContainerId,
+                    powerSupplyBayDefinition.ContainerId,
+                    atx24PowerCableDefinition.RouteContainerId,
+                    eps12vPowerCableDefinition.RouteContainerId))
             {
                 return OperationResult<AssemblyBuildAuthority>.Fail(
                     AssemblyFailures.SameInventoryContainer);
@@ -462,6 +540,71 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.PowerCableAlreadyRouted);
             }
 
+            if (hasPcieGpuPowerCable &&
+                inventory.GetContainerQuantity(
+                    pcieGpuPowerCableDefinition.RouteContainerId).Value != 0)
+            {
+                return OperationResult<AssemblyBuildAuthority>.Fail(
+                    AssemblyFailures.PowerCableAlreadyRouted);
+            }
+
+            if (hasAtx24PowerCable &&
+                hasEps12vPowerCable &&
+                hasPcieGpuPowerCable)
+            {
+                OperationResult<InventorySerializedTransferAccessDecuple> cableAccess =
+                    inventory.ClaimManagedSerializedTransferContainers(
+                        workbenchContainerId,
+                        processorSocketContainerId,
+                        memorySlotDefinition.ContainerId,
+                        storageSlotDefinition.ContainerId,
+                        processorCoolerSlotDefinition.ContainerId,
+                        graphicsCardSlotDefinition.ContainerId,
+                        powerSupplyBayDefinition.ContainerId,
+                        atx24PowerCableDefinition.RouteContainerId,
+                        eps12vPowerCableDefinition.RouteContainerId,
+                        pcieGpuPowerCableDefinition.RouteContainerId);
+                if (cableAccess.IsFailure)
+                {
+                    return OperationResult<AssemblyBuildAuthority>.Fail(
+                        MapManagedFactoryClaimFailure(cableAccess.Error));
+                }
+
+                return OperationResult<AssemblyBuildAuthority>.Success(
+                    new AssemblyBuildAuthority(
+                        componentCatalog,
+                        inventory,
+                        buildId,
+                        chassisId,
+                        motherboardSlotId,
+                        motherboardFastenerId,
+                        handsContainerId,
+                        workbenchContainerId,
+                        supportedMotherboardFormFactor,
+                        cableAccess.Value.First,
+                        processorSlotId,
+                        processorRetentionId,
+                        processorSocketContainerId,
+                        supportedCpuSocketFamily,
+                        cableAccess.Value.Second,
+                        memorySlotDefinition,
+                        cableAccess.Value.Third,
+                        storageSlotDefinition,
+                        cableAccess.Value.Fourth,
+                        processorCoolerSlotDefinition,
+                        cableAccess.Value.Fifth,
+                        graphicsCardSlotDefinition,
+                        cableAccess.Value.Sixth,
+                        powerSupplyBayDefinition,
+                        cableAccess.Value.Seventh,
+                        atx24PowerCableDefinition,
+                        cableAccess.Value.Eighth,
+                        eps12vPowerCableDefinition,
+                        cableAccess.Value.Ninth,
+                        pcieGpuPowerCableDefinition,
+                        cableAccess.Value.Tenth));
+            }
+
             if (hasAtx24PowerCable && hasEps12vPowerCable)
             {
                 OperationResult<InventorySerializedTransferAccessNonuple> cableAccess =
@@ -511,6 +654,114 @@ namespace PCShopEmpire3D.Assembly
                         atx24PowerCableDefinition,
                         cableAccess.Value.Eighth,
                         eps12vPowerCableDefinition,
+                        cableAccess.Value.Ninth));
+            }
+
+            if (hasAtx24PowerCable && hasPcieGpuPowerCable)
+            {
+                OperationResult<InventorySerializedTransferAccessNonuple> cableAccess =
+                    inventory.ClaimManagedSerializedTransferContainers(
+                        workbenchContainerId,
+                        processorSocketContainerId,
+                        memorySlotDefinition.ContainerId,
+                        storageSlotDefinition.ContainerId,
+                        processorCoolerSlotDefinition.ContainerId,
+                        graphicsCardSlotDefinition.ContainerId,
+                        powerSupplyBayDefinition.ContainerId,
+                        atx24PowerCableDefinition.RouteContainerId,
+                        pcieGpuPowerCableDefinition.RouteContainerId);
+                if (cableAccess.IsFailure)
+                {
+                    return OperationResult<AssemblyBuildAuthority>.Fail(
+                        MapManagedFactoryClaimFailure(cableAccess.Error));
+                }
+
+                return OperationResult<AssemblyBuildAuthority>.Success(
+                    new AssemblyBuildAuthority(
+                        componentCatalog,
+                        inventory,
+                        buildId,
+                        chassisId,
+                        motherboardSlotId,
+                        motherboardFastenerId,
+                        handsContainerId,
+                        workbenchContainerId,
+                        supportedMotherboardFormFactor,
+                        cableAccess.Value.First,
+                        processorSlotId,
+                        processorRetentionId,
+                        processorSocketContainerId,
+                        supportedCpuSocketFamily,
+                        cableAccess.Value.Second,
+                        memorySlotDefinition,
+                        cableAccess.Value.Third,
+                        storageSlotDefinition,
+                        cableAccess.Value.Fourth,
+                        processorCoolerSlotDefinition,
+                        cableAccess.Value.Fifth,
+                        graphicsCardSlotDefinition,
+                        cableAccess.Value.Sixth,
+                        powerSupplyBayDefinition,
+                        cableAccess.Value.Seventh,
+                        atx24PowerCableDefinition,
+                        cableAccess.Value.Eighth,
+                        default,
+                        null,
+                        pcieGpuPowerCableDefinition,
+                        cableAccess.Value.Ninth));
+            }
+
+            if (hasEps12vPowerCable && hasPcieGpuPowerCable)
+            {
+                OperationResult<InventorySerializedTransferAccessNonuple> cableAccess =
+                    inventory.ClaimManagedSerializedTransferContainers(
+                        workbenchContainerId,
+                        processorSocketContainerId,
+                        memorySlotDefinition.ContainerId,
+                        storageSlotDefinition.ContainerId,
+                        processorCoolerSlotDefinition.ContainerId,
+                        graphicsCardSlotDefinition.ContainerId,
+                        powerSupplyBayDefinition.ContainerId,
+                        eps12vPowerCableDefinition.RouteContainerId,
+                        pcieGpuPowerCableDefinition.RouteContainerId);
+                if (cableAccess.IsFailure)
+                {
+                    return OperationResult<AssemblyBuildAuthority>.Fail(
+                        MapManagedFactoryClaimFailure(cableAccess.Error));
+                }
+
+                return OperationResult<AssemblyBuildAuthority>.Success(
+                    new AssemblyBuildAuthority(
+                        componentCatalog,
+                        inventory,
+                        buildId,
+                        chassisId,
+                        motherboardSlotId,
+                        motherboardFastenerId,
+                        handsContainerId,
+                        workbenchContainerId,
+                        supportedMotherboardFormFactor,
+                        cableAccess.Value.First,
+                        processorSlotId,
+                        processorRetentionId,
+                        processorSocketContainerId,
+                        supportedCpuSocketFamily,
+                        cableAccess.Value.Second,
+                        memorySlotDefinition,
+                        cableAccess.Value.Third,
+                        storageSlotDefinition,
+                        cableAccess.Value.Fourth,
+                        processorCoolerSlotDefinition,
+                        cableAccess.Value.Fifth,
+                        graphicsCardSlotDefinition,
+                        cableAccess.Value.Sixth,
+                        powerSupplyBayDefinition,
+                        cableAccess.Value.Seventh,
+                        default,
+                        null,
+                        eps12vPowerCableDefinition,
+                        cableAccess.Value.Eighth,
+                        pcieGpuPowerCableDefinition,
                         cableAccess.Value.Ninth));
             }
 
@@ -611,6 +862,59 @@ namespace PCShopEmpire3D.Assembly
                         default,
                         null,
                         eps12vPowerCableDefinition,
+                        cableAccess.Value.Eighth));
+            }
+
+            if (hasPcieGpuPowerCable)
+            {
+                OperationResult<InventorySerializedTransferAccessOctuple> cableAccess =
+                    inventory.ClaimManagedSerializedTransferContainers(
+                        workbenchContainerId,
+                        processorSocketContainerId,
+                        memorySlotDefinition.ContainerId,
+                        storageSlotDefinition.ContainerId,
+                        processorCoolerSlotDefinition.ContainerId,
+                        graphicsCardSlotDefinition.ContainerId,
+                        powerSupplyBayDefinition.ContainerId,
+                        pcieGpuPowerCableDefinition.RouteContainerId);
+                if (cableAccess.IsFailure)
+                {
+                    return OperationResult<AssemblyBuildAuthority>.Fail(
+                        MapManagedFactoryClaimFailure(cableAccess.Error));
+                }
+
+                return OperationResult<AssemblyBuildAuthority>.Success(
+                    new AssemblyBuildAuthority(
+                        componentCatalog,
+                        inventory,
+                        buildId,
+                        chassisId,
+                        motherboardSlotId,
+                        motherboardFastenerId,
+                        handsContainerId,
+                        workbenchContainerId,
+                        supportedMotherboardFormFactor,
+                        cableAccess.Value.First,
+                        processorSlotId,
+                        processorRetentionId,
+                        processorSocketContainerId,
+                        supportedCpuSocketFamily,
+                        cableAccess.Value.Second,
+                        memorySlotDefinition,
+                        cableAccess.Value.Third,
+                        storageSlotDefinition,
+                        cableAccess.Value.Fourth,
+                        processorCoolerSlotDefinition,
+                        cableAccess.Value.Fifth,
+                        graphicsCardSlotDefinition,
+                        cableAccess.Value.Sixth,
+                        powerSupplyBayDefinition,
+                        cableAccess.Value.Seventh,
+                        default,
+                        null,
+                        default,
+                        null,
+                        pcieGpuPowerCableDefinition,
                         cableAccess.Value.Eighth));
             }
 
@@ -722,6 +1026,92 @@ namespace PCShopEmpire3D.Assembly
             return false;
         }
 
+        private static bool HasPowerCableDefinitionIdentityConflict(
+            Atx24PowerCableDefinition atx24,
+            PcieGpuPowerCableDefinition pcieGpu)
+        {
+            if (atx24.ProductId == pcieGpu.ProductId ||
+                atx24.RouteContainerId == pcieGpu.RouteContainerId ||
+                atx24.Topology.RouteId == pcieGpu.Topology.RouteId)
+            {
+                return true;
+            }
+
+            StableId<AssemblyPowerCableEndpointIdScope> pciePsu =
+                pcieGpu.Topology.PsuEndpoint.EndpointId;
+            StableId<AssemblyPowerCableEndpointIdScope> pcieGpuEndpoint =
+                pcieGpu.Topology.GraphicsCardEndpoint.EndpointId;
+            if (pciePsu == atx24.Topology.PsuPrimaryEndpoint.EndpointId ||
+                pciePsu == atx24.Topology.PsuSenseEndpoint.EndpointId ||
+                pciePsu == atx24.Topology.MotherboardEndpoint.EndpointId ||
+                pcieGpuEndpoint == atx24.Topology.PsuPrimaryEndpoint.EndpointId ||
+                pcieGpuEndpoint == atx24.Topology.PsuSenseEndpoint.EndpointId ||
+                pcieGpuEndpoint == atx24.Topology.MotherboardEndpoint.EndpointId)
+            {
+                return true;
+            }
+
+            for (int pcieIndex = 0;
+                 pcieIndex < pcieGpu.Topology.OrderedWaypoints.Count;
+                 pcieIndex++)
+            {
+                for (int atxIndex = 0;
+                     atxIndex < atx24.Topology.OrderedWaypoints.Count;
+                     atxIndex++)
+                {
+                    if (pcieGpu.Topology.OrderedWaypoints[pcieIndex] ==
+                        atx24.Topology.OrderedWaypoints[atxIndex])
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasPowerCableDefinitionIdentityConflict(
+            Eps12vPowerCableDefinition eps12v,
+            PcieGpuPowerCableDefinition pcieGpu)
+        {
+            if (eps12v.ProductId == pcieGpu.ProductId ||
+                eps12v.RouteContainerId == pcieGpu.RouteContainerId ||
+                eps12v.Topology.RouteId == pcieGpu.Topology.RouteId)
+            {
+                return true;
+            }
+
+            if (eps12v.Topology.PsuEndpoint.EndpointId ==
+                    pcieGpu.Topology.PsuEndpoint.EndpointId ||
+                eps12v.Topology.PsuEndpoint.EndpointId ==
+                    pcieGpu.Topology.GraphicsCardEndpoint.EndpointId ||
+                eps12v.Topology.MotherboardEndpoint.EndpointId ==
+                    pcieGpu.Topology.PsuEndpoint.EndpointId ||
+                eps12v.Topology.MotherboardEndpoint.EndpointId ==
+                    pcieGpu.Topology.GraphicsCardEndpoint.EndpointId)
+            {
+                return true;
+            }
+
+            for (int epsIndex = 0;
+                 epsIndex < eps12v.Topology.OrderedWaypoints.Count;
+                 epsIndex++)
+            {
+                for (int pcieIndex = 0;
+                     pcieIndex < pcieGpu.Topology.OrderedWaypoints.Count;
+                     pcieIndex++)
+                {
+                    if (eps12v.Topology.OrderedWaypoints[epsIndex] ==
+                        pcieGpu.Topology.OrderedWaypoints[pcieIndex])
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private static Failure MapManagedFactoryClaimFailure(Failure failure)
         {
             return failure == InventoryFailures.RevisionOverflow
@@ -742,6 +1132,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
+            }
+
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
             }
 
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
@@ -829,6 +1225,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesRetainPowerSupply(
@@ -904,6 +1306,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesUnretainPowerSupply(
@@ -922,7 +1330,9 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
-            if (IsAtx24PowerCableRouted || IsEps12vPowerCableRouted)
+            if (IsAtx24PowerCableRouted ||
+                IsEps12vPowerCableRouted ||
+                IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.PowerCableDependentComponentLocked);
@@ -979,6 +1389,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesRemovePowerSupply(
@@ -991,7 +1407,7 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
-            if (IsEps12vPowerCableRouted)
+            if (IsEps12vPowerCableRouted || IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.PowerCableDependentComponentLocked);

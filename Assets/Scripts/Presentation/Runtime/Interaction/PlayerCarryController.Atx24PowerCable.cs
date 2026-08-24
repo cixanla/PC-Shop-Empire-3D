@@ -216,6 +216,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                          GetAtx24PowerCableBinding(HeldItem) != null;
             IsEps12vPowerCableRouteMode = false;
             eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+            IsPcieGpuPowerCableRouteMode = false;
+            pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;

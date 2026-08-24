@@ -8,156 +8,156 @@ namespace PCShopEmpire3D.Assembly
 {
     public sealed partial class AssemblyBuildAuthority
     {
-        private Eps12vPowerCableDefinition _eps12vPowerCableDefinition;
-        private InventorySerializedTransferAccess _eps12vPowerCableInventoryTransferAccess;
-        private Eps12vPowerCableState _eps12vPowerCableState =
-            Eps12vPowerCableState.Unsupported;
-        private StableId<ItemInstanceIdScope> _eps12vPowerCableItemId;
-        private StableId<ProductDefinitionIdScope> _eps12vPowerCableProductId;
-        private StableId<AssemblyOperationIdScope> _eps12vPowerCableRoutedByOperationId;
+        private PcieGpuPowerCableDefinition _pcieGpuPowerCableDefinition;
+        private InventorySerializedTransferAccess _pcieGpuPowerCableInventoryTransferAccess;
+        private PcieGpuPowerCableState _pcieGpuPowerCableState =
+            PcieGpuPowerCableState.Unsupported;
+        private StableId<ItemInstanceIdScope> _pcieGpuPowerCableItemId;
+        private StableId<ProductDefinitionIdScope> _pcieGpuPowerCableProductId;
+        private StableId<AssemblyOperationIdScope> _pcieGpuPowerCableRoutedByOperationId;
         private readonly Dictionary<StableId<AssemblyOperationIdScope>,
-            Eps12vPowerCableOperationReceipt> _eps12vPowerCableReceipts =
+            PcieGpuPowerCableOperationReceipt> _pcieGpuPowerCableReceipts =
                 new Dictionary<StableId<AssemblyOperationIdScope>,
-                    Eps12vPowerCableOperationReceipt>();
+                    PcieGpuPowerCableOperationReceipt>();
 
-        public bool HasEps12vPowerCableRoute => _eps12vPowerCableDefinition.IsValid;
+        public bool HasPcieGpuPowerCableRoute => _pcieGpuPowerCableDefinition.IsValid;
 
-        public Eps12vPowerCableDefinition Eps12vPowerCableDefinition =>
-            _eps12vPowerCableDefinition;
+        public PcieGpuPowerCableDefinition PcieGpuPowerCableDefinition =>
+            _pcieGpuPowerCableDefinition;
 
-        public Eps12vPowerCableTopology Eps12vPowerCableTopology =>
-            _eps12vPowerCableDefinition.Topology;
+        public PcieGpuPowerCableTopology PcieGpuPowerCableTopology =>
+            _pcieGpuPowerCableDefinition.Topology;
 
-        public StableId<ContainerIdScope> Eps12vPowerCableRouteContainerId =>
-            _eps12vPowerCableDefinition.RouteContainerId;
+        public StableId<ContainerIdScope> PcieGpuPowerCableRouteContainerId =>
+            _pcieGpuPowerCableDefinition.RouteContainerId;
 
-        public Eps12vPowerCableState Eps12vPowerCableState => _eps12vPowerCableState;
+        public PcieGpuPowerCableState PcieGpuPowerCableState => _pcieGpuPowerCableState;
 
-        public bool IsEps12vPowerCableRouted =>
-            _eps12vPowerCableState == Eps12vPowerCableState.Routed;
+        public bool IsPcieGpuPowerCableRouted =>
+            _pcieGpuPowerCableState == PcieGpuPowerCableState.Routed;
 
-        public StableId<ItemInstanceIdScope> Eps12vPowerCableItemId =>
-            _eps12vPowerCableItemId;
+        public StableId<ItemInstanceIdScope> PcieGpuPowerCableItemId =>
+            _pcieGpuPowerCableItemId;
 
-        public StableId<ProductDefinitionIdScope> Eps12vPowerCableProductId =>
-            _eps12vPowerCableProductId;
+        public StableId<ProductDefinitionIdScope> PcieGpuPowerCableProductId =>
+            _pcieGpuPowerCableProductId;
 
-        public StableId<AssemblyOperationIdScope> Eps12vPowerCableRoutedByOperationId =>
-            _eps12vPowerCableRoutedByOperationId;
+        public StableId<AssemblyOperationIdScope> PcieGpuPowerCableRoutedByOperationId =>
+            _pcieGpuPowerCableRoutedByOperationId;
 
-        public long Eps12vPowerCableRevision { get; private set; }
+        public long PcieGpuPowerCableRevision { get; private set; }
 
-        public int Eps12vPowerCableReceiptCount => _eps12vPowerCableReceipts.Count;
+        public int PcieGpuPowerCableReceiptCount => _pcieGpuPowerCableReceipts.Count;
 
-        public OperationResult<Eps12vPowerCableOperationReceipt> RouteEps12vPowerCable(
+        public OperationResult<PcieGpuPowerCableOperationReceipt> RoutePcieGpuPowerCable(
             StableId<AssemblyOperationIdScope> operationId,
             StableId<ItemInstanceIdScope> itemId,
             PowerCableKeyOrientation orientation,
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             StableId<AssemblyOperationIdScope> sourcePowerSupplyRetentionOperationId,
-            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardRetentionOperationId,
             long expectedCableRevision)
         {
             if (operationId.IsEmpty)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
             }
 
             if (_receipts.ContainsKey(operationId) ||
                 _atx24PowerCableReceipts.ContainsKey(operationId) ||
-                _pcieGpuPowerCableReceipts.ContainsKey(operationId))
+                _eps12vPowerCableReceipts.ContainsKey(operationId))
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);
             }
 
-            if (_eps12vPowerCableReceipts.TryGetValue(
+            if (_pcieGpuPowerCableReceipts.TryGetValue(
                     operationId,
-                    out Eps12vPowerCableOperationReceipt replay))
+                    out PcieGpuPowerCableOperationReceipt replay))
             {
                 return replay.MatchesRoute(
                         operationId,
                         BuildId,
                         ChassisId,
                         itemId,
-                        _eps12vPowerCableDefinition.ProductId,
+                        _pcieGpuPowerCableDefinition.ProductId,
                         _handsContainerId,
-                        _eps12vPowerCableDefinition.RouteContainerId,
-                        _eps12vPowerCableDefinition,
+                        _pcieGpuPowerCableDefinition.RouteContainerId,
+                        _pcieGpuPowerCableDefinition,
                         orientation,
                         sourceMotherboardSecureOperationId,
                         sourcePowerSupplyRetentionOperationId,
-                        sourceProcessorRetentionOperationId,
+                        sourceGraphicsCardRetentionOperationId,
                         expectedCableRevision)
-                    ? OperationResult<Eps12vPowerCableOperationReceipt>.Success(replay)
-                    : OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                    ? OperationResult<PcieGpuPowerCableOperationReceipt>.Success(replay)
+                    : OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
             }
 
-            Failure preflight = ValidateEps12vPowerCableRoute(
+            Failure preflight = ValidatePcieGpuPowerCableRoute(
                 itemId,
                 orientation,
                 sourceMotherboardSecureOperationId,
                 sourcePowerSupplyRetentionOperationId,
-                sourceProcessorRetentionOperationId,
+                sourceGraphicsCardRetentionOperationId,
                 expectedCableRevision);
             if (!preflight.IsNone)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(preflight);
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(preflight);
             }
 
             _inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item);
             OperationResult<InventorySerializedTransferPlan> prepared =
                 _inventory.PrepareSerializedItemTransfer(
                     itemId,
-                    _eps12vPowerCableDefinition.RouteContainerId,
-                    _eps12vPowerCableInventoryTransferAccess);
+                    _pcieGpuPowerCableDefinition.RouteContainerId,
+                    _pcieGpuPowerCableInventoryTransferAccess);
             if (prepared.IsFailure)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
-                    MapEps12vPowerCableInventoryFailure(prepared.Error, routing: true));
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
+                    MapPcieGpuPowerCableInventoryFailure(prepared.Error, routing: true));
             }
 
             OperationResult committed =
                 _inventory.CommitPreparedSerializedItemTransfer(prepared.Value);
             if (committed.IsFailure)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
-                    MapEps12vPowerCableInventoryFailure(committed.Error, routing: true));
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
+                    MapPcieGpuPowerCableInventoryFailure(committed.Error, routing: true));
             }
 
-            _eps12vPowerCableState = Eps12vPowerCableState.Routed;
-            _eps12vPowerCableItemId = item.Id;
-            _eps12vPowerCableProductId = item.ProductId;
-            _eps12vPowerCableRoutedByOperationId = operationId;
-            Eps12vPowerCableRevision++;
+            _pcieGpuPowerCableState = PcieGpuPowerCableState.Routed;
+            _pcieGpuPowerCableItemId = item.Id;
+            _pcieGpuPowerCableProductId = item.ProductId;
+            _pcieGpuPowerCableRoutedByOperationId = operationId;
+            PcieGpuPowerCableRevision++;
 
-            var receipt = new Eps12vPowerCableOperationReceipt(
+            var receipt = new PcieGpuPowerCableOperationReceipt(
                 operationId,
-                Eps12vPowerCableOperationKind.Route,
+                PcieGpuPowerCableOperationKind.Route,
                 BuildId,
                 ChassisId,
                 item.Id,
                 item.ProductId,
                 _handsContainerId,
-                _eps12vPowerCableDefinition.RouteContainerId,
-                _eps12vPowerCableDefinition,
+                _pcieGpuPowerCableDefinition.RouteContainerId,
+                _pcieGpuPowerCableDefinition,
                 orientation,
-                Eps12vPowerCableState.Loose,
-                Eps12vPowerCableState.Routed,
+                PcieGpuPowerCableState.Loose,
+                PcieGpuPowerCableState.Routed,
                 sourceMotherboardSecureOperationId,
                 sourcePowerSupplyRetentionOperationId,
-                sourceProcessorRetentionOperationId,
+                sourceGraphicsCardRetentionOperationId,
                 default,
                 expectedCableRevision,
-                Eps12vPowerCableRevision,
+                PcieGpuPowerCableRevision,
                 _inventory.Revision);
-            _eps12vPowerCableReceipts.Add(operationId, receipt);
-            return OperationResult<Eps12vPowerCableOperationReceipt>.Success(receipt);
+            _pcieGpuPowerCableReceipts.Add(operationId, receipt);
+            return OperationResult<PcieGpuPowerCableOperationReceipt>.Success(receipt);
         }
 
-        public OperationResult<Eps12vPowerCableOperationReceipt> UnrouteEps12vPowerCable(
+        public OperationResult<PcieGpuPowerCableOperationReceipt> UnroutePcieGpuPowerCable(
             StableId<AssemblyOperationIdScope> operationId,
             StableId<ItemInstanceIdScope> itemId,
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
@@ -165,29 +165,29 @@ namespace PCShopEmpire3D.Assembly
         {
             if (operationId.IsEmpty)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
             }
 
             if (_receipts.ContainsKey(operationId) ||
                 _atx24PowerCableReceipts.ContainsKey(operationId) ||
-                _pcieGpuPowerCableReceipts.ContainsKey(operationId))
+                _eps12vPowerCableReceipts.ContainsKey(operationId))
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);
             }
 
-            if (_eps12vPowerCableReceipts.TryGetValue(
+            if (_pcieGpuPowerCableReceipts.TryGetValue(
                     operationId,
-                    out Eps12vPowerCableOperationReceipt replay))
+                    out PcieGpuPowerCableOperationReceipt replay))
             {
-                if (!_eps12vPowerCableReceipts.TryGetValue(
+                if (!_pcieGpuPowerCableReceipts.TryGetValue(
                         sourceRouteOperationId,
-                        out Eps12vPowerCableOperationReceipt sourceRouteReceipt) ||
+                        out PcieGpuPowerCableOperationReceipt sourceRouteReceipt) ||
                     sourceRouteReceipt.OperationKind !=
-                        Eps12vPowerCableOperationKind.Route)
+                        PcieGpuPowerCableOperationKind.Route)
                 {
-                    return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                    return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
                 }
 
@@ -196,27 +196,27 @@ namespace PCShopEmpire3D.Assembly
                         BuildId,
                         ChassisId,
                         itemId,
-                        _eps12vPowerCableDefinition.ProductId,
-                        _eps12vPowerCableDefinition.RouteContainerId,
+                        _pcieGpuPowerCableDefinition.ProductId,
+                        _pcieGpuPowerCableDefinition.RouteContainerId,
                         _handsContainerId,
-                        _eps12vPowerCableDefinition,
+                        _pcieGpuPowerCableDefinition,
                         sourceRouteReceipt.SourceMotherboardSecureOperationId,
                         sourceRouteReceipt.SourcePowerSupplyRetentionOperationId,
-                        sourceRouteReceipt.SourceProcessorRetentionOperationId,
+                        sourceRouteReceipt.SourceGraphicsCardRetentionOperationId,
                         sourceRouteOperationId,
                         expectedCableRevision)
-                    ? OperationResult<Eps12vPowerCableOperationReceipt>.Success(replay)
-                    : OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
+                    ? OperationResult<PcieGpuPowerCableOperationReceipt>.Success(replay)
+                    : OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
             }
 
-            Failure preflight = ValidateEps12vPowerCableUnroute(
+            Failure preflight = ValidatePcieGpuPowerCableUnroute(
                 itemId,
                 sourceRouteOperationId,
                 expectedCableRevision);
             if (!preflight.IsNone)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(preflight);
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(preflight);
             }
 
             InventoryItemRecord item = GetItem(itemId);
@@ -224,65 +224,65 @@ namespace PCShopEmpire3D.Assembly
                 _inventory.PrepareSerializedItemTransfer(
                     itemId,
                     _handsContainerId,
-                    _eps12vPowerCableInventoryTransferAccess);
+                    _pcieGpuPowerCableInventoryTransferAccess);
             if (prepared.IsFailure)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
-                    MapEps12vPowerCableInventoryFailure(prepared.Error, routing: false));
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
+                    MapPcieGpuPowerCableInventoryFailure(prepared.Error, routing: false));
             }
 
             OperationResult committed =
                 _inventory.CommitPreparedSerializedItemTransfer(prepared.Value);
             if (committed.IsFailure)
             {
-                return OperationResult<Eps12vPowerCableOperationReceipt>.Fail(
-                    MapEps12vPowerCableInventoryFailure(committed.Error, routing: false));
+                return OperationResult<PcieGpuPowerCableOperationReceipt>.Fail(
+                    MapPcieGpuPowerCableInventoryFailure(committed.Error, routing: false));
             }
 
-            Eps12vPowerCableOperationReceipt sourceRoute =
-                _eps12vPowerCableReceipts[sourceRouteOperationId];
-            _eps12vPowerCableState = Eps12vPowerCableState.Loose;
-            _eps12vPowerCableItemId = default;
-            _eps12vPowerCableProductId = default;
-            _eps12vPowerCableRoutedByOperationId = default;
-            Eps12vPowerCableRevision++;
+            PcieGpuPowerCableOperationReceipt sourceRoute =
+                _pcieGpuPowerCableReceipts[sourceRouteOperationId];
+            _pcieGpuPowerCableState = PcieGpuPowerCableState.Loose;
+            _pcieGpuPowerCableItemId = default;
+            _pcieGpuPowerCableProductId = default;
+            _pcieGpuPowerCableRoutedByOperationId = default;
+            PcieGpuPowerCableRevision++;
 
-            var receipt = new Eps12vPowerCableOperationReceipt(
+            var receipt = new PcieGpuPowerCableOperationReceipt(
                 operationId,
-                Eps12vPowerCableOperationKind.Unroute,
+                PcieGpuPowerCableOperationKind.Unroute,
                 BuildId,
                 ChassisId,
                 item.Id,
                 item.ProductId,
-                _eps12vPowerCableDefinition.RouteContainerId,
+                _pcieGpuPowerCableDefinition.RouteContainerId,
                 _handsContainerId,
-                _eps12vPowerCableDefinition,
+                _pcieGpuPowerCableDefinition,
                 PowerCableKeyOrientation.Keyed,
-                Eps12vPowerCableState.Routed,
-                Eps12vPowerCableState.Loose,
+                PcieGpuPowerCableState.Routed,
+                PcieGpuPowerCableState.Loose,
                 sourceRoute.SourceMotherboardSecureOperationId,
                 sourceRoute.SourcePowerSupplyRetentionOperationId,
-                sourceRoute.SourceProcessorRetentionOperationId,
+                sourceRoute.SourceGraphicsCardRetentionOperationId,
                 sourceRouteOperationId,
                 expectedCableRevision,
-                Eps12vPowerCableRevision,
+                PcieGpuPowerCableRevision,
                 _inventory.Revision);
-            _eps12vPowerCableReceipts.Add(operationId, receipt);
-            return OperationResult<Eps12vPowerCableOperationReceipt>.Success(receipt);
+            _pcieGpuPowerCableReceipts.Add(operationId, receipt);
+            return OperationResult<PcieGpuPowerCableOperationReceipt>.Success(receipt);
         }
 
-        public bool TryGetEps12vPowerCableReceipt(
+        public bool TryGetPcieGpuPowerCableReceipt(
             StableId<AssemblyOperationIdScope> operationId,
-            out Eps12vPowerCableOperationReceipt receipt)
+            out PcieGpuPowerCableOperationReceipt receipt)
         {
-            return _eps12vPowerCableReceipts.TryGetValue(operationId, out receipt);
+            return _pcieGpuPowerCableReceipts.TryGetValue(operationId, out receipt);
         }
 
-        public IReadOnlyList<Eps12vPowerCableOperationReceipt>
-            GetEps12vPowerCableReceipts()
+        public IReadOnlyList<PcieGpuPowerCableOperationReceipt>
+            GetPcieGpuPowerCableReceipts()
         {
-            var receipts = new List<Eps12vPowerCableOperationReceipt>(
-                _eps12vPowerCableReceipts.Values);
+            var receipts = new List<PcieGpuPowerCableOperationReceipt>(
+                _pcieGpuPowerCableReceipts.Values);
             receipts.Sort((left, right) =>
             {
                 int revision = left.CableRevision.CompareTo(right.CableRevision);
@@ -296,63 +296,63 @@ namespace PCShopEmpire3D.Assembly
             return Array.AsReadOnly(receipts.ToArray());
         }
 
-        public OperationResult ValidateEps12vPowerCableReceiptHistory()
+        public OperationResult ValidatePcieGpuPowerCableReceiptHistory()
         {
-            if (!HasEps12vPowerCableRoute)
+            if (!HasPcieGpuPowerCableRoute)
             {
-                return Eps12vPowerCableRevision == 0 &&
-                       _eps12vPowerCableReceipts.Count == 0
+                return PcieGpuPowerCableRevision == 0 &&
+                       _pcieGpuPowerCableReceipts.Count == 0
                     ? OperationResult.Success()
                     : OperationResult.Fail(
                         AssemblyFailures.PowerCableReceiptHistoryInvalid);
             }
 
-            if (Eps12vPowerCableRevision != _eps12vPowerCableReceipts.Count)
+            if (PcieGpuPowerCableRevision != _pcieGpuPowerCableReceipts.Count)
             {
                 return OperationResult.Fail(
                     AssemblyFailures.PowerCableReceiptHistoryInvalid);
             }
 
-            IReadOnlyList<Eps12vPowerCableOperationReceipt> receipts =
-                GetEps12vPowerCableReceipts();
-            Eps12vPowerCableState foldedState = Eps12vPowerCableState.Loose;
+            IReadOnlyList<PcieGpuPowerCableOperationReceipt> receipts =
+                GetPcieGpuPowerCableReceipts();
+            PcieGpuPowerCableState foldedState = PcieGpuPowerCableState.Loose;
             StableId<ItemInstanceIdScope> foldedItemId = default;
             StableId<ProductDefinitionIdScope> foldedProductId = default;
             StableId<AssemblyOperationIdScope> foldedRouteOperationId = default;
             StableId<AssemblyOperationIdScope> foldedMotherboardOperationId = default;
             StableId<AssemblyOperationIdScope> foldedPowerSupplyOperationId = default;
-            StableId<AssemblyOperationIdScope> foldedProcessorOperationId = default;
+            StableId<AssemblyOperationIdScope> foldedGraphicsCardOperationId = default;
             long previousInventoryRevision = -1;
 
             for (int index = 0; index < receipts.Count; index++)
             {
-                Eps12vPowerCableOperationReceipt receipt = receipts[index];
+                PcieGpuPowerCableOperationReceipt receipt = receipts[index];
                 if (receipt == null ||
                     receipt.CableRevision != index + 1L ||
                     receipt.ExpectedCableRevision != index ||
                     receipt.BuildId != BuildId ||
                     receipt.ChassisId != ChassisId ||
                     receipt.ItemId.IsEmpty ||
-                    receipt.ProductId != _eps12vPowerCableDefinition.ProductId ||
-                    !receipt.Definition.HasExactIdentity(_eps12vPowerCableDefinition) ||
+                    receipt.ProductId != _pcieGpuPowerCableDefinition.ProductId ||
+                    !receipt.Definition.HasExactIdentity(_pcieGpuPowerCableDefinition) ||
                     receipt.RouteFingerprint !=
-                        _eps12vPowerCableDefinition.Topology.Fingerprint ||
+                        _pcieGpuPowerCableDefinition.Topology.Fingerprint ||
                     receipt.InventoryRevision <= previousInventoryRevision ||
                     receipt.PreviousState != foldedState ||
-                    !HasValidEps12vHostLineage(receipt))
+                    !HasValidPcieGpuHostLineage(receipt))
                 {
                     return OperationResult.Fail(
                         AssemblyFailures.PowerCableReceiptHistoryInvalid);
                 }
 
-                if (receipt.OperationKind == Eps12vPowerCableOperationKind.Route)
+                if (receipt.OperationKind == PcieGpuPowerCableOperationKind.Route)
                 {
-                    if (foldedState != Eps12vPowerCableState.Loose ||
+                    if (foldedState != PcieGpuPowerCableState.Loose ||
                         receipt.SourceContainerId != _handsContainerId ||
                         receipt.TargetContainerId !=
-                            _eps12vPowerCableDefinition.RouteContainerId ||
+                            _pcieGpuPowerCableDefinition.RouteContainerId ||
                         receipt.Orientation != PowerCableKeyOrientation.Keyed ||
-                        receipt.ResultingState != Eps12vPowerCableState.Routed ||
+                        receipt.ResultingState != PcieGpuPowerCableState.Routed ||
                         !receipt.SourceRouteOperationId.IsEmpty)
                     {
                         return OperationResult.Fail(
@@ -366,26 +366,26 @@ namespace PCShopEmpire3D.Assembly
                         receipt.SourceMotherboardSecureOperationId;
                     foldedPowerSupplyOperationId =
                         receipt.SourcePowerSupplyRetentionOperationId;
-                    foldedProcessorOperationId =
-                        receipt.SourceProcessorRetentionOperationId;
+                    foldedGraphicsCardOperationId =
+                        receipt.SourceGraphicsCardRetentionOperationId;
                 }
                 else if (receipt.OperationKind ==
-                         Eps12vPowerCableOperationKind.Unroute)
+                         PcieGpuPowerCableOperationKind.Unroute)
                 {
-                    if (foldedState != Eps12vPowerCableState.Routed ||
+                    if (foldedState != PcieGpuPowerCableState.Routed ||
                         receipt.ItemId != foldedItemId ||
                         receipt.ProductId != foldedProductId ||
                         receipt.SourceContainerId !=
-                            _eps12vPowerCableDefinition.RouteContainerId ||
+                            _pcieGpuPowerCableDefinition.RouteContainerId ||
                         receipt.TargetContainerId != _handsContainerId ||
                         receipt.SourceRouteOperationId != foldedRouteOperationId ||
                         receipt.SourceMotherboardSecureOperationId !=
                             foldedMotherboardOperationId ||
                         receipt.SourcePowerSupplyRetentionOperationId !=
                             foldedPowerSupplyOperationId ||
-                        receipt.SourceProcessorRetentionOperationId !=
-                            foldedProcessorOperationId ||
-                        receipt.ResultingState != Eps12vPowerCableState.Loose)
+                        receipt.SourceGraphicsCardRetentionOperationId !=
+                            foldedGraphicsCardOperationId ||
+                        receipt.ResultingState != PcieGpuPowerCableState.Loose)
                     {
                         return OperationResult.Fail(
                             AssemblyFailures.PowerCableReceiptHistoryInvalid);
@@ -396,7 +396,7 @@ namespace PCShopEmpire3D.Assembly
                     foldedRouteOperationId = default;
                     foldedMotherboardOperationId = default;
                     foldedPowerSupplyOperationId = default;
-                    foldedProcessorOperationId = default;
+                    foldedGraphicsCardOperationId = default;
                 }
                 else
                 {
@@ -408,49 +408,49 @@ namespace PCShopEmpire3D.Assembly
                 previousInventoryRevision = receipt.InventoryRevision;
             }
 
-            if (foldedState == Eps12vPowerCableState.Routed &&
+            if (foldedState == PcieGpuPowerCableState.Routed &&
                 (foldedMotherboardOperationId != _securedByOperationId ||
                  foldedPowerSupplyOperationId !=
                      _powerSupplyRetainedByOperationId ||
-                 foldedProcessorOperationId != _processorRetainedByOperationId))
+                 foldedGraphicsCardOperationId != _graphicsCardRetainedByOperationId))
             {
                 return OperationResult.Fail(
                     AssemblyFailures.PowerCableReceiptHistoryInvalid);
             }
 
-            return foldedState == _eps12vPowerCableState &&
-                   foldedItemId == _eps12vPowerCableItemId &&
-                   foldedProductId == _eps12vPowerCableProductId &&
-                   foldedRouteOperationId == _eps12vPowerCableRoutedByOperationId
+            return foldedState == _pcieGpuPowerCableState &&
+                   foldedItemId == _pcieGpuPowerCableItemId &&
+                   foldedProductId == _pcieGpuPowerCableProductId &&
+                   foldedRouteOperationId == _pcieGpuPowerCableRoutedByOperationId
                 ? OperationResult.Success()
                 : OperationResult.Fail(
                     AssemblyFailures.PowerCableReceiptHistoryInvalid);
         }
 
-        private Failure ValidateEps12vPowerCableRoute(
+        private Failure ValidatePcieGpuPowerCableRoute(
             StableId<ItemInstanceIdScope> itemId,
             PowerCableKeyOrientation orientation,
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             StableId<AssemblyOperationIdScope> sourcePowerSupplyRetentionOperationId,
-            StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
+            StableId<AssemblyOperationIdScope> sourceGraphicsCardRetentionOperationId,
             long expectedCableRevision)
         {
-            if (!HasEps12vPowerCableRoute)
+            if (!HasPcieGpuPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;
             }
 
-            if (expectedCableRevision != Eps12vPowerCableRevision)
+            if (expectedCableRevision != PcieGpuPowerCableRevision)
             {
                 return AssemblyFailures.PlanStale;
             }
 
-            if (Eps12vPowerCableRevision == long.MaxValue)
+            if (PcieGpuPowerCableRevision == long.MaxValue)
             {
                 return AssemblyFailures.RevisionOverflow;
             }
 
-            if (_eps12vPowerCableState != Eps12vPowerCableState.Loose)
+            if (_pcieGpuPowerCableState != PcieGpuPowerCableState.Loose)
             {
                 return AssemblyFailures.PowerCableAlreadyRouted;
             }
@@ -489,22 +489,23 @@ namespace PCShopEmpire3D.Assembly
                 return AssemblyFailures.PowerCableHostPowerSupplyUnretained;
             }
 
-            if (_processorSocketState != ProcessorSocketState.ProcessorRetained ||
-                sourceProcessorRetentionOperationId.IsEmpty ||
-                sourceProcessorRetentionOperationId !=
-                    _processorRetainedByOperationId ||
+            if (_graphicsCardSlotState != GraphicsCardSlotState.GraphicsCardRetained ||
+                sourceGraphicsCardRetentionOperationId.IsEmpty ||
+                sourceGraphicsCardRetentionOperationId !=
+                    _graphicsCardRetainedByOperationId ||
                 !_receipts.TryGetValue(
-                    sourceProcessorRetentionOperationId,
-                    out AssemblyOperationReceipt processorReceipt) ||
-                processorReceipt.OperationKind !=
-                    AssemblyOperationKind.CloseProcessorRetention ||
-                processorReceipt.ItemId != _processorItemId ||
-                processorReceipt.SlotId != _processorSlotId ||
-                processorReceipt.RetentionId != _processorRetentionId ||
-                processorReceipt.SourceProcessorSeatOperationId !=
-                    _processorSeatedByOperationId)
+                    sourceGraphicsCardRetentionOperationId,
+                    out AssemblyOperationReceipt graphicsCardReceipt) ||
+                graphicsCardReceipt.OperationKind !=
+                    AssemblyOperationKind.RetainGraphicsCard ||
+                graphicsCardReceipt.ItemId != _graphicsCardItemId ||
+                graphicsCardReceipt.SlotId != _graphicsCardSlotDefinition.SlotId ||
+                graphicsCardReceipt.SourceGraphicsCardSeatOperationId !=
+                    _graphicsCardSeatedByOperationId ||
+                !graphicsCardReceipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                    _graphicsCardSlotDefinition))
             {
-                return AssemblyFailures.PowerCableHostProcessorUnretained;
+                return AssemblyFailures.PowerCableHostGraphicsCardUnretained;
             }
 
             if (!_inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item))
@@ -517,55 +518,55 @@ namespace PCShopEmpire3D.Assembly
                 return AssemblyFailures.ItemNotInActorHands;
             }
 
-            return item.ProductId == _eps12vPowerCableDefinition.ProductId
+            return item.ProductId == _pcieGpuPowerCableDefinition.ProductId
                 ? Failure.None
                 : AssemblyFailures.PowerCableProductMismatch;
         }
 
-        private Failure ValidateEps12vPowerCableUnroute(
+        private Failure ValidatePcieGpuPowerCableUnroute(
             StableId<ItemInstanceIdScope> itemId,
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
             long expectedCableRevision)
         {
-            if (!HasEps12vPowerCableRoute)
+            if (!HasPcieGpuPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;
             }
 
-            if (expectedCableRevision != Eps12vPowerCableRevision)
+            if (expectedCableRevision != PcieGpuPowerCableRevision)
             {
                 return AssemblyFailures.PlanStale;
             }
 
-            if (Eps12vPowerCableRevision == long.MaxValue)
+            if (PcieGpuPowerCableRevision == long.MaxValue)
             {
                 return AssemblyFailures.RevisionOverflow;
             }
 
-            if (_eps12vPowerCableState != Eps12vPowerCableState.Routed ||
-                itemId != _eps12vPowerCableItemId)
+            if (_pcieGpuPowerCableState != PcieGpuPowerCableState.Routed ||
+                itemId != _pcieGpuPowerCableItemId)
             {
                 return AssemblyFailures.PowerCableNotRouted;
             }
 
             if (sourceRouteOperationId.IsEmpty ||
-                sourceRouteOperationId != _eps12vPowerCableRoutedByOperationId ||
-                !_eps12vPowerCableReceipts.TryGetValue(
+                sourceRouteOperationId != _pcieGpuPowerCableRoutedByOperationId ||
+                !_pcieGpuPowerCableReceipts.TryGetValue(
                     sourceRouteOperationId,
-                    out Eps12vPowerCableOperationReceipt routeReceipt) ||
-                routeReceipt.OperationKind != Eps12vPowerCableOperationKind.Route ||
+                    out PcieGpuPowerCableOperationReceipt routeReceipt) ||
+                routeReceipt.OperationKind != PcieGpuPowerCableOperationKind.Route ||
                 routeReceipt.ItemId != itemId)
             {
                 return AssemblyFailures.PlanStale;
             }
 
-            return IsEps12vPowerCableRoutedItem(itemId)
+            return IsPcieGpuPowerCableRoutedItem(itemId)
                 ? Failure.None
                 : AssemblyFailures.PowerCableNotRouted;
         }
 
-        private bool HasValidEps12vHostLineage(
-            Eps12vPowerCableOperationReceipt receipt)
+        private bool HasValidPcieGpuHostLineage(
+            PcieGpuPowerCableOperationReceipt receipt)
         {
             return !receipt.SourceMotherboardSecureOperationId.IsEmpty &&
                    _receipts.TryGetValue(
@@ -581,96 +582,111 @@ namespace PCShopEmpire3D.Assembly
                    powerSupplyReceipt.OperationKind ==
                        AssemblyOperationKind.RetainPowerSupply &&
                    powerSupplyReceipt.SlotId == _powerSupplyBayDefinition.SlotId &&
-                   !receipt.SourceProcessorRetentionOperationId.IsEmpty &&
+                   !receipt.SourceGraphicsCardRetentionOperationId.IsEmpty &&
                    _receipts.TryGetValue(
-                       receipt.SourceProcessorRetentionOperationId,
-                       out AssemblyOperationReceipt processorReceipt) &&
-                   processorReceipt.OperationKind ==
-                       AssemblyOperationKind.CloseProcessorRetention &&
-                   processorReceipt.SlotId == _processorSlotId &&
-                   processorReceipt.RetentionId == _processorRetentionId;
+                       receipt.SourceGraphicsCardRetentionOperationId,
+                       out AssemblyOperationReceipt graphicsCardReceipt) &&
+                   graphicsCardReceipt.OperationKind ==
+                       AssemblyOperationKind.RetainGraphicsCard &&
+                   graphicsCardReceipt.SlotId == _graphicsCardSlotDefinition.SlotId &&
+                   !graphicsCardReceipt.SourceGraphicsCardSeatOperationId.IsEmpty &&
+                   _receipts.TryGetValue(
+                       graphicsCardReceipt.SourceGraphicsCardSeatOperationId,
+                       out AssemblyOperationReceipt graphicsCardSeatReceipt) &&
+                   graphicsCardSeatReceipt.OperationKind ==
+                       AssemblyOperationKind.SeatGraphicsCard &&
+                   graphicsCardSeatReceipt.ItemId == graphicsCardReceipt.ItemId &&
+                   graphicsCardSeatReceipt.ProductId == graphicsCardReceipt.ProductId &&
+                   graphicsCardSeatReceipt.SlotId == graphicsCardReceipt.SlotId &&
+                   graphicsCardReceipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                       _graphicsCardSlotDefinition) &&
+                   graphicsCardSeatReceipt.GraphicsCardSlotDefinition.HasExactIdentity(
+                       _graphicsCardSlotDefinition);
         }
 
-        private bool ValidateEps12vPowerCableStateInvariants()
+        private bool ValidatePcieGpuPowerCableStateInvariants()
         {
-            if (!HasEps12vPowerCableRoute)
+            if (!HasPcieGpuPowerCableRoute)
             {
-                return _eps12vPowerCableInventoryTransferAccess == null &&
-                       _eps12vPowerCableState == Eps12vPowerCableState.Unsupported &&
-                       !_eps12vPowerCableDefinition.HasAnyValue &&
-                       _eps12vPowerCableItemId.IsEmpty &&
-                       _eps12vPowerCableProductId.IsEmpty &&
-                       _eps12vPowerCableRoutedByOperationId.IsEmpty &&
-                       Eps12vPowerCableRevision == 0 &&
-                       _eps12vPowerCableReceipts.Count == 0;
+                return _pcieGpuPowerCableInventoryTransferAccess == null &&
+                       _pcieGpuPowerCableState == PcieGpuPowerCableState.Unsupported &&
+                       !_pcieGpuPowerCableDefinition.HasAnyValue &&
+                       _pcieGpuPowerCableItemId.IsEmpty &&
+                       _pcieGpuPowerCableProductId.IsEmpty &&
+                       _pcieGpuPowerCableRoutedByOperationId.IsEmpty &&
+                       PcieGpuPowerCableRevision == 0 &&
+                       _pcieGpuPowerCableReceipts.Count == 0;
             }
 
-            if (_eps12vPowerCableInventoryTransferAccess == null ||
-                _eps12vPowerCableDefinition.RouteContainerId == _handsContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId == _workbenchContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+            if (_pcieGpuPowerCableInventoryTransferAccess == null ||
+                _pcieGpuPowerCableDefinition.RouteContainerId == _handsContainerId ||
+                _pcieGpuPowerCableDefinition.RouteContainerId == _workbenchContainerId ||
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _processorSocketContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _memorySlotDefinition.ContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _storageSlotDefinition.ContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _processorCoolerSlotDefinition.ContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _graphicsCardSlotDefinition.ContainerId ||
-                _eps12vPowerCableDefinition.RouteContainerId ==
+                _pcieGpuPowerCableDefinition.RouteContainerId ==
                     _powerSupplyBayDefinition.ContainerId ||
                 (HasAtx24PowerCableRoute &&
-                 _eps12vPowerCableDefinition.RouteContainerId ==
+                 _pcieGpuPowerCableDefinition.RouteContainerId ==
                      _atx24PowerCableDefinition.RouteContainerId) ||
+                (HasEps12vPowerCableRoute &&
+                 _pcieGpuPowerCableDefinition.RouteContainerId ==
+                     _eps12vPowerCableDefinition.RouteContainerId) ||
                 !_inventory.TryGetContainer(
-                    _eps12vPowerCableDefinition.RouteContainerId,
+                    _pcieGpuPowerCableDefinition.RouteContainerId,
                     out InventoryContainerDefinition routeContainer) ||
                 routeContainer.Kind != InventoryContainerKind.Workbench ||
                 routeContainer.UnitCapacity != 1 ||
                 !_componentCatalog.OwnerCatalog.TryGet(
-                    _eps12vPowerCableDefinition.ProductId,
+                    _pcieGpuPowerCableDefinition.ProductId,
                     out ProductDefinition cableProduct) ||
                 cableProduct.TrackingPolicy != ProductTrackingPolicy.SerializedInstance ||
                 !_componentCatalog.TryGet(
-                    _eps12vPowerCableDefinition.ProductId,
+                    _pcieGpuPowerCableDefinition.ProductId,
                     out PcComponentSpecification cableSpecification) ||
                 cableSpecification.Kind != PcComponentKind.PowerCable ||
                 cableSpecification.PowerCableType !=
-                    PowerCableType.ModularEps12v8PinPsuToMotherboard)
+                    PowerCableType.ModularPcie8PinPsuToGraphicsCard)
             {
                 return false;
             }
 
-            if (_eps12vPowerCableState == Eps12vPowerCableState.Loose)
+            if (_pcieGpuPowerCableState == PcieGpuPowerCableState.Loose)
             {
-                return _eps12vPowerCableItemId.IsEmpty &&
-                       _eps12vPowerCableProductId.IsEmpty &&
-                       _eps12vPowerCableRoutedByOperationId.IsEmpty &&
+                return _pcieGpuPowerCableItemId.IsEmpty &&
+                       _pcieGpuPowerCableProductId.IsEmpty &&
+                       _pcieGpuPowerCableRoutedByOperationId.IsEmpty &&
                        _inventory.GetContainerQuantity(
-                           _eps12vPowerCableDefinition.RouteContainerId).Value == 0 &&
-                       ValidateEps12vPowerCableReceiptHistory().IsSuccess;
+                           _pcieGpuPowerCableDefinition.RouteContainerId).Value == 0 &&
+                       ValidatePcieGpuPowerCableReceiptHistory().IsSuccess;
             }
 
-            return _eps12vPowerCableState == Eps12vPowerCableState.Routed &&
-                   _eps12vPowerCableProductId ==
-                       _eps12vPowerCableDefinition.ProductId &&
-                   !_eps12vPowerCableRoutedByOperationId.IsEmpty &&
-                   IsEps12vPowerCableRoutedItem(_eps12vPowerCableItemId) &&
-                   ValidateEps12vPowerCableReceiptHistory().IsSuccess;
+            return _pcieGpuPowerCableState == PcieGpuPowerCableState.Routed &&
+                   _pcieGpuPowerCableProductId ==
+                       _pcieGpuPowerCableDefinition.ProductId &&
+                   !_pcieGpuPowerCableRoutedByOperationId.IsEmpty &&
+                   IsPcieGpuPowerCableRoutedItem(_pcieGpuPowerCableItemId) &&
+                   ValidatePcieGpuPowerCableReceiptHistory().IsSuccess;
         }
 
-        private bool IsEps12vPowerCableRoutedItem(
+        private bool IsPcieGpuPowerCableRoutedItem(
             StableId<ItemInstanceIdScope> itemId)
         {
             return !itemId.IsEmpty &&
-                   itemId == _eps12vPowerCableItemId &&
+                   itemId == _pcieGpuPowerCableItemId &&
                    _inventory.TryGetSerializedItem(itemId, out InventoryItemRecord item) &&
-                   item.ProductId == _eps12vPowerCableDefinition.ProductId &&
-                   item.ContainerId == _eps12vPowerCableDefinition.RouteContainerId;
+                   item.ProductId == _pcieGpuPowerCableDefinition.ProductId &&
+                   item.ContainerId == _pcieGpuPowerCableDefinition.RouteContainerId;
         }
 
-        private static Failure MapEps12vPowerCableInventoryFailure(
+        private static Failure MapPcieGpuPowerCableInventoryFailure(
             Failure failure,
             bool routing)
         {

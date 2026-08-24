@@ -352,6 +352,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesSeatProcessorCooler(
@@ -471,6 +477,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesRetainProcessorCooler(
@@ -532,6 +544,12 @@ namespace PCShopEmpire3D.Assembly
                     AssemblyFailures.InvalidOperationId);
             }
 
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
+            }
+
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))
             {
                 return replay.MatchesUnretainProcessorCooler(
@@ -590,6 +608,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
                     AssemblyFailures.InvalidOperationId);
+            }
+
+            if (HasPowerCableOperationReceipt(operationId))
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    AssemblyFailures.OperationConflict);
             }
 
             if (_receipts.TryGetValue(operationId, out AssemblyOperationReceipt replay))

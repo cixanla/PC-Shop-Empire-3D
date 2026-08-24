@@ -64,7 +64,8 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (_receipts.ContainsKey(operationId) ||
-                _eps12vPowerCableReceipts.ContainsKey(operationId))
+                _eps12vPowerCableReceipts.ContainsKey(operationId) ||
+                _pcieGpuPowerCableReceipts.ContainsKey(operationId))
             {
                 return OperationResult<Atx24PowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);
@@ -165,7 +166,8 @@ namespace PCShopEmpire3D.Assembly
             }
 
             if (_receipts.ContainsKey(operationId) ||
-                _eps12vPowerCableReceipts.ContainsKey(operationId))
+                _eps12vPowerCableReceipts.ContainsKey(operationId) ||
+                _pcieGpuPowerCableReceipts.ContainsKey(operationId))
             {
                 return OperationResult<Atx24PowerCableOperationReceipt>.Fail(
                     AssemblyFailures.OperationConflict);

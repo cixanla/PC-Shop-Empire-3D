@@ -97,7 +97,7 @@ namespace PCShopEmpire3D.Presentation
                 atx24PowerCable.transform.position,
                 atx24PowerCable.transform.rotation);
             Rigidbody body = atx24PowerCable.Body;
-            bool preflight = session.Inventory.SerializedItemCount == 9 &&
+            bool preflight = session.Inventory.SerializedItemCount == 10 &&
                              session.TryGetAtx24PowerCableItem(
                                  out InventoryItemRecord looseCable) &&
                              looseCable.Id == session.Atx24PowerCableItemId &&

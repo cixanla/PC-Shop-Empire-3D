@@ -8,20 +8,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
 {
     public sealed partial class PlayerCarryController
     {
-        [SerializeField] private Eps12vPowerCableRouteProjection eps12vPowerCableRoute;
-        [SerializeField] private Eps12vPowerCableAssemblyItemBinding eps12vPowerCableBinding;
+        [SerializeField] private PcieGpuPowerCableRouteProjection pcieGpuPowerCableRoute;
+        [SerializeField] private PcieGpuPowerCableAssemblyItemBinding pcieGpuPowerCableBinding;
 
-        public bool IsEps12vPowerCableRouteMode { get; private set; }
+        public bool IsPcieGpuPowerCableRouteMode { get; private set; }
 
-        public Eps12vPowerCableRouteStatus CurrentEps12vPowerCableRouteStatus
+        public PcieGpuPowerCableRouteStatus CurrentPcieGpuPowerCableRouteStatus
         {
             get;
             private set;
-        } = Eps12vPowerCableRouteStatus.ContextMissing;
+        } = PcieGpuPowerCableRouteStatus.ContextMissing;
 
-        public void ConfigureEps12vPowerCableRoute(
-            Eps12vPowerCableRouteProjection routeProjection,
-            Eps12vPowerCableAssemblyItemBinding assemblyBinding)
+        public void ConfigurePcieGpuPowerCableRoute(
+            PcieGpuPowerCableRouteProjection routeProjection,
+            PcieGpuPowerCableAssemblyItemBinding assemblyBinding)
         {
             if (routeProjection == null)
             {
@@ -36,100 +36,100 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (assemblyBinding.Route != routeProjection)
             {
                 throw new ArgumentException(
-                    "The EPS12V binding must own the configured route.",
+                    "The PCIe GPU binding must own the configured route.",
                     nameof(assemblyBinding));
             }
 
-            eps12vPowerCableRoute = routeProjection;
-            eps12vPowerCableBinding = assemblyBinding;
-            eps12vPowerCableBinding.SyncProjectionToAuthority();
+            pcieGpuPowerCableRoute = routeProjection;
+            pcieGpuPowerCableBinding = assemblyBinding;
+            pcieGpuPowerCableBinding.SyncProjectionToAuthority();
         }
 
-        public bool MatchesEps12vPowerCableConfiguration(
-            Eps12vPowerCableRouteProjection routeProjection,
-            Eps12vPowerCableAssemblyItemBinding assemblyBinding)
+        public bool MatchesPcieGpuPowerCableConfiguration(
+            PcieGpuPowerCableRouteProjection routeProjection,
+            PcieGpuPowerCableAssemblyItemBinding assemblyBinding)
         {
             return routeProjection != null &&
                    assemblyBinding != null &&
-                   eps12vPowerCableRoute == routeProjection &&
-                   eps12vPowerCableBinding == assemblyBinding &&
+                   pcieGpuPowerCableRoute == routeProjection &&
+                   pcieGpuPowerCableBinding == assemblyBinding &&
                    assemblyBinding.Route == routeProjection;
         }
 
-        public OperationResult TrySetEps12vPowerCableRouteMode(bool enabled)
+        public OperationResult TrySetPcieGpuPowerCableRouteMode(bool enabled)
         {
-            Eps12vPowerCableAssemblyItemBinding binding =
-                GetEps12vPowerCableBinding(HeldItem);
+            PcieGpuPowerCableAssemblyItemBinding binding =
+                GetPcieGpuPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.nothing-held")));
             }
 
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.paused")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.paused")));
             }
 
-            SetEps12vPowerCableRouteMode(enabled);
+            SetPcieGpuPowerCableRouteMode(enabled);
             if (enabled)
             {
-                UpdateEps12vPowerCableRoutePreview(binding);
+                UpdatePcieGpuPowerCableRoutePreview(binding);
             }
 
             return Remember(OperationResult.Success());
         }
 
-        public OperationResult TryRotateEps12vPowerCableConnectorPreview()
+        public OperationResult TryRotatePcieGpuPowerCableConnectorPreview()
         {
-            Eps12vPowerCableAssemblyItemBinding binding =
-                GetEps12vPowerCableBinding(HeldItem);
+            PcieGpuPowerCableAssemblyItemBinding binding =
+                GetPcieGpuPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.nothing-held")));
             }
 
-            if (!IsEps12vPowerCableRouteMode)
+            if (!IsPcieGpuPowerCableRouteMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.mode-inactive")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.mode-inactive")));
             }
 
             _placementRotationQuarterTurns =
                 (_placementRotationQuarterTurns + 1) % 2;
             LastFailureCode = string.Empty;
-            UpdateEps12vPowerCableRoutePreview(binding);
+            UpdatePcieGpuPowerCableRoutePreview(binding);
             return OperationResult.Success();
         }
 
-        public OperationResult TryConfirmEps12vPowerCableRoute()
+        public OperationResult TryConfirmPcieGpuPowerCableRoute()
         {
-            Eps12vPowerCableAssemblyItemBinding binding =
-                GetEps12vPowerCableBinding(HeldItem);
+            PcieGpuPowerCableAssemblyItemBinding binding =
+                GetPcieGpuPowerCableBinding(HeldItem);
             if (HeldItem == null || binding == null)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.nothing-held")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.nothing-held")));
             }
 
-            if (!IsEps12vPowerCableRouteMode)
+            if (!IsPcieGpuPowerCableRouteMode)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.mode-inactive")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.mode-inactive")));
             }
 
-            return TryConfirmEps12vPowerCableRoute(
+            return TryConfirmPcieGpuPowerCableRoute(
                 binding,
-                EvaluateEps12vPowerCableRoute(binding));
+                EvaluatePcieGpuPowerCableRoute(binding));
         }
 
-        private OperationResult TryConfirmEps12vPowerCableRoute(
-            Eps12vPowerCableAssemblyItemBinding binding,
-            Eps12vPowerCableRouteEvaluation evaluation)
+        private OperationResult TryConfirmPcieGpuPowerCableRoute(
+            PcieGpuPowerCableAssemblyItemBinding binding,
+            PcieGpuPowerCableRouteEvaluation evaluation)
         {
-            ApplyEps12vPowerCableRouteEvaluation(evaluation);
+            ApplyPcieGpuPowerCableRouteEvaluation(evaluation);
             if (!evaluation.CanRoute)
             {
                 return Remember(OperationResult.Fail(
@@ -154,10 +154,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Remember(route);
         }
 
-        private bool ProcessHeldEps12vPowerCableInput()
+        private bool ProcessHeldPcieGpuPowerCableInput()
         {
-            Eps12vPowerCableAssemblyItemBinding binding =
-                GetEps12vPowerCableBinding(HeldItem);
+            PcieGpuPowerCableAssemblyItemBinding binding =
+                GetPcieGpuPowerCableBinding(HeldItem);
             if (binding == null)
             {
                 return false;
@@ -168,23 +168,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetEps12vPowerCableRouteMode(
-                    !IsEps12vPowerCableRouteMode);
+                TrySetPcieGpuPowerCableRouteMode(
+                    !IsPcieGpuPowerCableRouteMode);
                 return true;
             }
 
-            if (IsEps12vPowerCableRouteMode &&
+            if (IsPcieGpuPowerCableRouteMode &&
                 input.TryConsumeRotatePlacementPressThisFrame())
             {
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TryRotateEps12vPowerCableConnectorPreview();
+                TryRotatePcieGpuPowerCableConnectorPreview();
                 return true;
             }
 
-            if (!IsEps12vPowerCableRouteMode)
+            if (!IsPcieGpuPowerCableRouteMode)
             {
-                eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+                pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
                 if (input.TryConsumeDropPressThisFrame())
                 {
                     input.TryConsumePrimaryActionPressThisFrame();
@@ -196,28 +196,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            Eps12vPowerCableRouteEvaluation evaluation =
-                EvaluateEps12vPowerCableRoute(binding);
-            ApplyEps12vPowerCableRouteEvaluation(evaluation);
+            PcieGpuPowerCableRouteEvaluation evaluation =
+                EvaluatePcieGpuPowerCableRoute(binding);
+            ApplyPcieGpuPowerCableRouteEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmEps12vPowerCableRoute(binding, evaluation);
+                TryConfirmPcieGpuPowerCableRoute(binding, evaluation);
             }
 
             return true;
         }
 
-        private void SetEps12vPowerCableRouteMode(bool enabled)
+        private void SetPcieGpuPowerCableRouteMode(bool enabled)
         {
-            IsEps12vPowerCableRouteMode = enabled &&
+            IsPcieGpuPowerCableRouteMode = enabled &&
                                          HeldItem != null &&
-                                         GetEps12vPowerCableBinding(HeldItem) != null;
+                                         GetPcieGpuPowerCableBinding(HeldItem) != null;
             IsAtx24PowerCableRouteMode = false;
             atx24PowerCableRoute?.SetRouteModeActive(active: false);
-            IsPcieGpuPowerCableRouteMode = false;
-            pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
+            IsEps12vPowerCableRouteMode = false;
+            eps12vPowerCableRoute?.SetRouteModeActive(active: false);
             IsPlacementMode = false;
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
@@ -229,46 +229,46 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PlacementValid = false;
             CurrentStackSupport = null;
             CurrentPlacementStatus = PlacementStatus.ContextMissing;
-            CurrentEps12vPowerCableRouteStatus =
-                Eps12vPowerCableRouteStatus.ContextMissing;
+            CurrentPcieGpuPowerCableRouteStatus =
+                PcieGpuPowerCableRouteStatus.ContextMissing;
             LastFailureCode = string.Empty;
-            eps12vPowerCableRoute?.SetRouteModeActive(
-                IsEps12vPowerCableRouteMode);
+            pcieGpuPowerCableRoute?.SetRouteModeActive(
+                IsPcieGpuPowerCableRouteMode);
             placementPreview?.Hide();
-            if (!IsEps12vPowerCableRouteMode)
+            if (!IsPcieGpuPowerCableRouteMode)
             {
                 _placementRotationQuarterTurns = 0;
                 SetCarryHandsState(blocked: false);
             }
         }
 
-        private void UpdateEps12vPowerCableRoutePreview(
-            Eps12vPowerCableAssemblyItemBinding binding)
+        private void UpdatePcieGpuPowerCableRoutePreview(
+            PcieGpuPowerCableAssemblyItemBinding binding)
         {
-            if (!IsEps12vPowerCableRouteMode || HeldItem == null)
+            if (!IsPcieGpuPowerCableRouteMode || HeldItem == null)
             {
                 PlacementValid = false;
                 CurrentPlacementStatus = PlacementStatus.ContextMissing;
-                CurrentEps12vPowerCableRouteStatus =
-                    Eps12vPowerCableRouteStatus.ContextMissing;
-                eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+                CurrentPcieGpuPowerCableRouteStatus =
+                    PcieGpuPowerCableRouteStatus.ContextMissing;
+                pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
                 SetCarryHandsState(blocked: false);
                 return;
             }
 
-            ApplyEps12vPowerCableRouteEvaluation(
-                EvaluateEps12vPowerCableRoute(binding));
+            ApplyPcieGpuPowerCableRouteEvaluation(
+                EvaluatePcieGpuPowerCableRoute(binding));
         }
 
-        private Eps12vPowerCableRouteEvaluation EvaluateEps12vPowerCableRoute(
-            Eps12vPowerCableAssemblyItemBinding binding)
+        private PcieGpuPowerCableRouteEvaluation EvaluatePcieGpuPowerCableRoute(
+            PcieGpuPowerCableAssemblyItemBinding binding)
         {
-            Eps12vPowerCableRouteProjection routeProjection =
-                binding?.Route ?? eps12vPowerCableRoute;
+            PcieGpuPowerCableRouteProjection routeProjection =
+                binding?.Route ?? pcieGpuPowerCableRoute;
             if (routeProjection == null || binding?.Session == null)
             {
-                return new Eps12vPowerCableRouteEvaluation(
-                    Eps12vPowerCableRouteStatus.ContextMissing,
+                return new PcieGpuPowerCableRouteEvaluation(
+                    PcieGpuPowerCableRouteStatus.ContextMissing,
                     default,
                     false,
                     default);
@@ -290,15 +290,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
                     PowerSupplyBayState.PowerSupplyRetained,
-                session.AssemblyBuild.ProcessorSocketState ==
-                    ProcessorSocketState.ProcessorRetained,
+                session.AssemblyBuild.GraphicsCardSlotState ==
+                    GraphicsCardSlotState.GraphicsCardRetained,
                 orientation);
         }
 
-        private void ApplyEps12vPowerCableRouteEvaluation(
-            Eps12vPowerCableRouteEvaluation evaluation)
+        private void ApplyPcieGpuPowerCableRouteEvaluation(
+            PcieGpuPowerCableRouteEvaluation evaluation)
         {
-            CurrentEps12vPowerCableRouteStatus = evaluation.Status;
+            CurrentPcieGpuPowerCableRouteStatus = evaluation.Status;
             PlacementValid = evaluation.CanRoute;
             CurrentPlacementStatus = evaluation.CanRoute
                 ? PlacementStatus.Valid
@@ -311,29 +311,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SetCarryHandsState(blocked: !evaluation.CanRoute);
         }
 
-        private bool ProcessEps12vPowerCableWorldInput()
+        private bool ProcessPcieGpuPowerCableWorldInput()
         {
             if (resolver == null ||
-                eps12vPowerCableRoute == null ||
-                eps12vPowerCableBinding == null ||
-                (!eps12vPowerCableBinding.IsAuthorityLooseWorld &&
-                 !eps12vPowerCableBinding.IsRouted))
+                pcieGpuPowerCableRoute == null ||
+                pcieGpuPowerCableBinding == null ||
+                (!pcieGpuPowerCableBinding.IsAuthorityLooseWorld &&
+                 !pcieGpuPowerCableBinding.IsRouted))
             {
                 return false;
             }
 
             PhysicalItemProjection cable =
-                eps12vPowerCableBinding.PhysicalItem;
-            if (eps12vPowerCableBinding.IsRouted)
+                pcieGpuPowerCableBinding.PhysicalItem;
+            if (pcieGpuPowerCableBinding.IsRouted)
             {
-                Eps12vPowerCableRouteStatus routedFocus =
-                    eps12vPowerCableRoute.EvaluateRoutedFocus(
+                PcieGpuPowerCableRouteStatus routedFocus =
+                    pcieGpuPowerCableRoute.EvaluateRoutedFocus(
                         resolver.Origin,
                         transform,
                         cable,
                         obstructionMask,
                         motor != null && motor.IsPaused);
-                if (routedFocus != Eps12vPowerCableRouteStatus.ValidRoute)
+                if (routedFocus != PcieGpuPowerCableRouteStatus.ValidRoute)
                 {
                     return false;
                 }
@@ -361,14 +361,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return true;
         }
 
-        private OperationResult TryPickupEps12vPowerCable(
+        private OperationResult TryPickupPcieGpuPowerCable(
             PhysicalItemProjection item,
-            Eps12vPowerCableAssemblyItemBinding binding)
+            PcieGpuPowerCableAssemblyItemBinding binding)
         {
             if (motor != null && motor.IsPaused)
             {
                 return Remember(OperationResult.Fail(
-                    Failure.FromCode("assembly-eps12v-cable.paused")));
+                    Failure.FromCode("assembly-pcie-gpu-cable.paused")));
             }
 
             bool wasRouted = binding.IsRouted;
@@ -389,7 +389,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (rollback.IsFailure)
                 {
                     Debug.LogError(
-                        $"EPS12V_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                        $"PCIe GPU_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
                 }
 
                 binding.SyncProjectionToAuthority();
@@ -407,83 +407,83 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return physicalPickup;
         }
 
-        private string GetHeldEps12vPowerCablePrompt(
-            Eps12vPowerCableAssemblyItemBinding binding,
+        private string GetHeldPcieGpuPowerCablePrompt(
+            PcieGpuPowerCableAssemblyItemBinding binding,
             string primary,
             string drop,
             string rotate)
         {
-            if (!IsEps12vPowerCableRouteMode)
+            if (!IsPcieGpuPowerCableRouteMode)
             {
-                return $"{primary}: EPS12V rota önizlemesi • " +
-                       $"{drop}: güvenli bırak • PSU CPU 8 → ANAKART CPU 8";
+                return $"{primary}: PCIe GPU rota önizlemesi • " +
+                       $"{drop}: güvenli bırak • PSU PCIe 8 → GPU 6+2";
             }
 
-            string state = GetEps12vPowerCableStatusLabel(
-                CurrentEps12vPowerCableRouteStatus);
+            string state = GetPcieGpuPowerCableStatusLabel(
+                CurrentPcieGpuPowerCableRouteStatus);
             string orientation = (_placementRotationQuarterTurns % 2) == 0
                 ? "ANAHTAR HİZALI"
                 : "ANAHTAR TERS";
             return PlacementValid
-                ? $"[OK] EPS12V ROTA AÇIK • {orientation} • " +
+                ? $"[OK] PCIe GPU ROTA AÇIK • {orientation} • " +
                   $"{drop}: yönlendir • {rotate}: konektörü çevir • {primary}: çık"
                 : $"[X] {state} • {rotate}: konektörü çevir • {primary}: çık";
         }
 
-        private string GetFocusedEps12vPowerCablePrompt(
-            Eps12vPowerCableAssemblyItemBinding binding)
+        private string GetFocusedPcieGpuPowerCablePrompt(
+            PcieGpuPowerCableAssemblyItemBinding binding)
         {
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
             return binding.IsRouted
-                ? $"[ROUTE] PSU CPU 8 → KANAL → ANAKART CPU 8 • {interact}: çöz"
-                : $"{interact}: {binding.PhysicalItem.DisplayName} al • 2 ANAHTARLI 8-PIN";
+                ? $"[ROUTE] PSU PCIe 8 → KANAL → GPU 6+2 • {interact}: çöz"
+                : $"{interact}: {binding.PhysicalItem.DisplayName} al • ANAHTARLI 6+2-PIN";
         }
 
-        private static string GetEps12vPowerCableStatusLabel(
-            Eps12vPowerCableRouteStatus status)
+        private static string GetPcieGpuPowerCableStatusLabel(
+            PcieGpuPowerCableRouteStatus status)
         {
             return status switch
             {
-                Eps12vPowerCableRouteStatus.ValidRoute => "ROTA HAZIR",
-                Eps12vPowerCableRouteStatus.HostMotherboardUnsecured =>
+                PcieGpuPowerCableRouteStatus.ValidRoute => "ROTA HAZIR",
+                PcieGpuPowerCableRouteStatus.HostMotherboardUnsecured =>
                     "ANAKART SABİT DEĞİL",
-                Eps12vPowerCableRouteStatus.HostPowerSupplyUnretained =>
+                PcieGpuPowerCableRouteStatus.HostPowerSupplyUnretained =>
                     "PSU 4 VİDA İLE SABİT DEĞİL",
-                Eps12vPowerCableRouteStatus.HostProcessorUnretained =>
-                    "İŞLEMCİ MANDALI KİLİTLİ DEĞİL",
-                Eps12vPowerCableRouteStatus.OutOfRange => "YAKLAŞ",
-                Eps12vPowerCableRouteStatus.NotFocused =>
-                    "CPU 8-PIN ANAKART GİRİŞİNİ HEDEFLE",
-                Eps12vPowerCableRouteStatus.LineOfSightBlocked => "GÖRÜŞÜ AÇ",
-                Eps12vPowerCableRouteStatus.OrientationInvalid =>
+                PcieGpuPowerCableRouteStatus.HostGraphicsCardUnretained =>
+                    "EKRAN KARTI MANDAL VE BRAKETLE SABİT DEĞİL",
+                PcieGpuPowerCableRouteStatus.OutOfRange => "YAKLAŞ",
+                PcieGpuPowerCableRouteStatus.NotFocused =>
+                    "GPU 6+2-PIN GÜÇ GİRİŞİNİ HEDEFLE",
+                PcieGpuPowerCableRouteStatus.LineOfSightBlocked => "GÖRÜŞÜ AÇ",
+                PcieGpuPowerCableRouteStatus.OrientationInvalid =>
                     "KONEKTÖR ANAHTARI TERS",
-                Eps12vPowerCableRouteStatus.RouteObstructed =>
+                PcieGpuPowerCableRouteStatus.RouteObstructed =>
                     "KABLO KANALI ENGELLİ",
-                Eps12vPowerCableRouteStatus.QuerySaturated =>
+                PcieGpuPowerCableRouteStatus.QuerySaturated =>
                     "ROTA GÜVENLE DOĞRULANAMADI",
-                Eps12vPowerCableRouteStatus.Paused => "DURAKLATILDI",
-                Eps12vPowerCableRouteStatus.AuthorityBlocked =>
+                PcieGpuPowerCableRouteStatus.Paused => "DURAKLATILDI",
+                PcieGpuPowerCableRouteStatus.AuthorityBlocked =>
                     "KABLO ELDE DEĞİL",
                 _ => "BAĞLANTI YOK"
             };
         }
 
-        private void ResetEps12vPowerCableState()
+        private void ResetPcieGpuPowerCableState()
         {
-            IsEps12vPowerCableRouteMode = false;
-            CurrentEps12vPowerCableRouteStatus =
-                Eps12vPowerCableRouteStatus.ContextMissing;
-            eps12vPowerCableRoute?.SetRouteModeActive(active: false);
-            eps12vPowerCableRoute?.ResetFeedback();
+            IsPcieGpuPowerCableRouteMode = false;
+            CurrentPcieGpuPowerCableRouteStatus =
+                PcieGpuPowerCableRouteStatus.ContextMissing;
+            pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
+            pcieGpuPowerCableRoute?.ResetFeedback();
         }
 
-        private static Eps12vPowerCableAssemblyItemBinding
-            GetEps12vPowerCableBinding(PhysicalItemProjection item)
+        private static PcieGpuPowerCableAssemblyItemBinding
+            GetPcieGpuPowerCableBinding(PhysicalItemProjection item)
         {
             return item != null
-                ? item.GetComponent<Eps12vPowerCableAssemblyItemBinding>()
+                ? item.GetComponent<PcieGpuPowerCableAssemblyItemBinding>()
                 : null;
         }
     }
