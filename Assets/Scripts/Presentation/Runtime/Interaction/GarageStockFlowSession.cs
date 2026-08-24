@@ -63,6 +63,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.item.northstar-mb-matx-001";
         public const string WorkbenchContainerIdValue =
             "inventory.container.assembly-workbench";
+        public const string CustomPcBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit";
+        public const string PrototypeCustomPcBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-motherboard";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -123,6 +127,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CustomerConsultationAuthority customerConsultations,
             CustomPcQuoteAuthority customPcQuotes,
             CustomPcWorkOrderAuthority customPcWorkOrders,
+            CustomPcBuildKitAuthority customPcBuildKit,
             CustomPcWorkOrderIssueAccess customPcWorkOrderIssueAccess,
             CustomerOfferDecisionActionAuthority customerOfferActions,
             CustomerRetailIdentityBinding prototypeCustomerBinding)
@@ -140,6 +145,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CustomerConsultations = customerConsultations;
             CustomPcQuotes = customPcQuotes;
             CustomPcWorkOrders = customPcWorkOrders;
+            CustomPcBuildKit = customPcBuildKit;
             _customPcWorkOrderIssueAccess = customPcWorkOrderIssueAccess;
             CustomerOfferActions = customerOfferActions;
             PrototypeCustomerBinding = prototypeCustomerBinding;
@@ -170,6 +176,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public CustomPcQuoteAuthority CustomPcQuotes { get; }
 
         public CustomPcWorkOrderAuthority CustomPcWorkOrders { get; }
+
+        public CustomPcBuildKitAuthority CustomPcBuildKit { get; }
 
         private readonly CustomPcWorkOrderIssueAccess _customPcWorkOrderIssueAccess;
 
@@ -211,6 +219,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public StableId<ContainerIdScope> WorkbenchContainerId =>
             StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue);
+
+        public StableId<ContainerIdScope> CustomPcBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(CustomPcBuildKitContainerIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeCustomPcBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeCustomPcBuildKitOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -620,6 +636,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     PcieGpuPowerCableRouteContainerIdValue,
                     InventoryContainerKind.Workbench,
                     1);
+                RegisterContainer(
+                    inventory,
+                    CustomPcBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
@@ -804,6 +825,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         WorkbenchContainerIdValue)).Value;
             CustomPcWorkOrderAuthority customPcWorkOrders =
                 customPcWorkOrderCreation.Authority;
+            CustomPcBuildKitAuthority customPcBuildKit = includeAssemblyPrototype
+                ? CustomPcBuildKitAuthority.Create(
+                    customPcWorkOrders,
+                    StableId<ContainerIdScope>.Parse(WorldFloorContainerIdValue),
+                    StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
+                    StableId<ContainerIdScope>.Parse(
+                        CustomPcBuildKitContainerIdValue)).Value
+                : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
                     retailOffers,
@@ -950,6 +979,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 customerConsultations,
                 customPcQuotes,
                 customPcWorkOrders,
+                customPcBuildKit,
                 customPcWorkOrderCreation.IssueAccess,
                 customerOfferActions,
                 prototypeCustomerBinding);
@@ -1002,7 +1032,48 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-seat.loose-pickup-invalid"));
             }
 
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalMotherboard(
+                        PrototypeCustomPcBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             return Inventory.TransferSerializedItem(MotherboardItemId, HandsContainerId);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldMotherboardInCustomPcBuildKit()
+        {
+            return PlaceHeldMotherboardInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldMotherboardInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeCustomPcBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.MotherboardInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalMotherboard(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
         }
 
         public OperationResult DropHeldMotherboardToWorld()
@@ -1733,6 +1804,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (customPcWorkOrderResult.IsFailure)
             {
                 return customPcWorkOrderResult;
+            }
+
+            if (CustomPcBuildKit != null)
+            {
+                OperationResult customPcBuildKitResult =
+                    CustomPcBuildKit.ValidateInvariants();
+                if (customPcBuildKitResult.IsFailure)
+                {
+                    return customPcBuildKitResult;
+                }
             }
 
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();

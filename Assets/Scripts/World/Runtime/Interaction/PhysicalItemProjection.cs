@@ -46,6 +46,7 @@ namespace PCShopEmpire3D.World.Interaction
         private Quaternion _lastSafeRotation = Quaternion.identity;
         private PhysicalItemProjection _stackSupport;
         private PhysicalItemProjection _stackedItem;
+        [NonSerialized] private bool _failNextStablePlacementForTests;
 
         public StableId<PhysicalItemIdScope> ItemId => StableId<PhysicalItemIdScope>.Parse(itemId);
 
@@ -198,7 +199,7 @@ namespace PCShopEmpire3D.World.Interaction
             RecordSafePose();
         }
 
-        public OperationResult BeginCarry(Transform carryAnchor, int heldLayer)
+        public OperationResult ValidateBeginCarry(Transform carryAnchor)
         {
             if (carryAnchor == null)
             {
@@ -222,18 +223,51 @@ namespace PCShopEmpire3D.World.Interaction
                 return OperationResult.Fail(Failure.FromCode("pickup.stack-occupied"));
             }
 
+            return OperationResult.Success();
+        }
+
+        public OperationResult BeginCarry(Transform carryAnchor, int heldLayer)
+        {
+            OperationResult validation = ValidateBeginCarry(carryAnchor);
+            if (validation.IsFailure)
+            {
+                return validation;
+            }
+
             CaptureWorldState();
             DetachFromStackSupport();
             Ownership = PhysicalItemOwnership.PlayerHands;
+            ApplyCarryState(carryAnchor, heldLayer);
+            return OperationResult.Success();
+        }
 
-            ClearDynamicMotion();
-            body.useGravity = false;
-            body.isKinematic = true;
-            body.detectCollisions = false;
-            SetColliderState(false, heldLayer);
-            transform.SetParent(carryAnchor, false);
-            transform.localPosition = carryLocalPosition;
-            transform.localRotation = Quaternion.Euler(carryLocalEulerAngles);
+        public OperationResult RecoverToCarryAfterAuthority(
+            Transform carryAnchor,
+            int heldLayer)
+        {
+            if (carryAnchor == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.carry-anchor-missing"));
+            }
+
+            EnsureRuntimeReferences();
+            if (Ownership == PhysicalItemOwnership.PlayerHands && _hasCarrySnapshot)
+            {
+                ApplyCarryState(carryAnchor, heldLayer);
+                return OperationResult.Success();
+            }
+
+            if (Ownership != PhysicalItemOwnership.World || _hasCarrySnapshot)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.carry-state-unavailable"));
+            }
+
+            CaptureWorldState();
+            DetachFromStackSupport();
+            Ownership = PhysicalItemOwnership.PlayerHands;
+            ApplyCarryState(carryAnchor, heldLayer);
             return OperationResult.Success();
         }
 
@@ -317,6 +351,44 @@ namespace PCShopEmpire3D.World.Interaction
             return ReleaseInternal(worldPose, stabilizePlacement: true, stackSupport);
         }
 
+        public OperationResult RecoverToStablePlacementAfterAuthority(Pose worldPose)
+        {
+            Quaternion rotation = worldPose.rotation;
+            if (!IsFinite(worldPose.position) ||
+                !float.IsFinite(rotation.x) ||
+                !float.IsFinite(rotation.y) ||
+                !float.IsFinite(rotation.z) ||
+                !float.IsFinite(rotation.w) ||
+                Quaternion.Dot(rotation, rotation) <= Mathf.Epsilon)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("recovery.authority-placement-pose-invalid"));
+            }
+
+            Pose normalizedPose = new Pose(
+                worldPose.position,
+                Quaternion.Normalize(rotation));
+            EnsureRuntimeReferences();
+            if (_hasCarrySnapshot)
+            {
+                Ownership = PhysicalItemOwnership.Recovery;
+                DetachFromStackSupport();
+                CommitWorldRelease(
+                    normalizedPose,
+                    stabilizePlacement: true,
+                    stackSupport: null);
+                return OperationResult.Success();
+            }
+
+            if (Ownership == PhysicalItemOwnership.World && IsStablePlacement)
+            {
+                return SynchronizeStableWorldPose(normalizedPose);
+            }
+
+            return OperationResult.Fail(
+                Failure.FromCode("recovery.authority-placement-state-unavailable"));
+        }
+
         private OperationResult ReleaseInternal(
             Pose worldPose,
             bool stabilizePlacement,
@@ -332,27 +404,14 @@ namespace PCShopEmpire3D.World.Interaction
                 return OperationResult.Fail(Failure.FromCode("placement.stack-support-unavailable"));
             }
 
-            transform.SetParent(_worldParent, true);
-            SetWorldPose(worldPose);
-            RestoreWorldState();
-            if (stabilizePlacement)
+            if (stabilizePlacement && _failNextStablePlacementForTests)
             {
-                ClearDynamicMotion();
-                body.useGravity = false;
-                body.isKinematic = true;
-                body.interpolation = RigidbodyInterpolation.None;
-                SetWorldPose(worldPose);
+                _failNextStablePlacementForTests = false;
+                return OperationResult.Fail(
+                    Failure.FromCode("placement.test-injected-failure"));
             }
 
-            Physics.SyncTransforms();
-
-            Ownership = PhysicalItemOwnership.World;
-            _hasCarrySnapshot = false;
-            if (stackSupport != null)
-            {
-                AttachToStackSupport(stackSupport);
-            }
-            RecordSafePose();
+            CommitWorldRelease(worldPose, stabilizePlacement, stackSupport);
             return OperationResult.Success();
         }
 
@@ -491,6 +550,46 @@ namespace PCShopEmpire3D.World.Interaction
             _colliderEnabled = _colliders.Select(collider => collider.enabled).ToArray();
             _colliderLayers = _colliders.Select(collider => collider.gameObject.layer).ToArray();
             _hasCarrySnapshot = true;
+        }
+
+        private void ApplyCarryState(Transform carryAnchor, int heldLayer)
+        {
+            ClearDynamicMotion();
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.detectCollisions = false;
+            SetColliderState(false, heldLayer);
+            transform.SetParent(carryAnchor, false);
+            transform.localPosition = carryLocalPosition;
+            transform.localRotation = Quaternion.Euler(carryLocalEulerAngles);
+        }
+
+        private void CommitWorldRelease(
+            Pose worldPose,
+            bool stabilizePlacement,
+            PhysicalItemProjection stackSupport)
+        {
+            transform.SetParent(_worldParent, true);
+            SetWorldPose(worldPose);
+            RestoreWorldState();
+            if (stabilizePlacement)
+            {
+                ClearDynamicMotion();
+                body.useGravity = false;
+                body.isKinematic = true;
+                body.interpolation = RigidbodyInterpolation.None;
+                SetWorldPose(worldPose);
+            }
+
+            Physics.SyncTransforms();
+            Ownership = PhysicalItemOwnership.World;
+            _hasCarrySnapshot = false;
+            if (stackSupport != null)
+            {
+                AttachToStackSupport(stackSupport);
+            }
+
+            RecordSafePose();
         }
 
         private void RestoreWorldState()

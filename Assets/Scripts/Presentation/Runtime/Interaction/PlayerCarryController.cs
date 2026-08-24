@@ -96,6 +96,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPcieGpuPowerCableRouteMode ||
             IsAtx24PowerCableRouteMode ||
             IsEps12vPowerCableRouteMode ||
+            IsMotherboardBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -289,6 +290,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                     if (motherboardBinding != null)
                     {
+                        if (IsMotherboardBuildKitMode ||
+                            (motherboardBuildKit != null &&
+                             motherboardBuildKit.HasContextualAttention &&
+                             motherboardBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldMotherboardBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         if (!IsMotherboardSeatMode)
                         {
                             return $"{placement}: kasaya hizala • " +
@@ -579,6 +591,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedMotherboard.IsAuthorityInBuildKit)
+                    {
+                        return "BUILD KIT • 1/10 • ANAKART HAZIR • " +
+                               "MONTAJ HATTI DEVİR TESLİMİNİ BEKLİYOR";
+                    }
+
                     return focusedMotherboard.IsSecured
                         ? $"VIDA SIKILI • vidayı hedefle ve " +
                           $"{(input != null ? input.PrimaryBindingPrompt : "Mouse Left / RT")}: gevşet"
@@ -1675,6 +1693,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                motherboardBuildKit?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
                 ResetPcieGpuPowerCableState();
@@ -1693,6 +1712,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 input.DrainGameplayPressesThisFrame();
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
+                motherboardBuildKit?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
                 ResetPcieGpuPowerCableState();
@@ -1843,39 +1863,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return;
                 }
 
-                MotherboardAssemblyItemBinding motherboardBinding =
-                    GetMotherboardBinding(HeldItem);
-                if (motherboardBinding != null)
+                if (ProcessHeldMotherboardInput())
                 {
-                    if (input.TryConsumePrimaryActionPressThisFrame())
-                    {
-                        TrySetMotherboardSeatMode(!IsMotherboardSeatMode);
-                        input.TryConsumeDropPressThisFrame();
-                        UpdateMotherboardSeatPreview(motherboardBinding);
-                        return;
-                    }
-
-                    if (IsMotherboardSeatMode &&
-                        input.TryConsumeRotatePlacementPressThisFrame())
-                    {
-                        _placementRotationQuarterTurns =
-                            (_placementRotationQuarterTurns + 1) % 4;
-                        LastFailureCode = string.Empty;
-                    }
-
-                    UpdateMotherboardSeatPreview(motherboardBinding);
-                    if (input.TryConsumeDropPressThisFrame())
-                    {
-                        if (IsMotherboardSeatMode)
-                        {
-                            TryConfirmMotherboardSeat();
-                        }
-                        else
-                        {
-                            TryDrop();
-                        }
-                    }
-
                     return;
                 }
 
@@ -2533,6 +2522,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ComponentSecured));
             }
 
+            if (binding.IsAuthorityInBuildKit)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("custom-pc-build-kit.already-staged")));
+            }
+
             if (binding.Session != null &&
                 binding.Session.AssemblyBuild.HasProcessorSocket &&
                 binding.Session.AssemblyBuild.ProcessorSocketState !=
@@ -2556,25 +2551,59 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"ASSEMBLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"ASSEMBLY_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-build-kit.pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
             }
 
             HeldItem = item;
@@ -2699,6 +2728,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
+            IsMotherboardBuildKitMode = false;
+            motherboardBuildKit?.ResetFeedback();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3285,6 +3316,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             atx24PowerCableRoute?.SetRouteModeActive(active: false);
             IsEps12vPowerCableRouteMode = false;
             eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+            IsMotherboardBuildKitMode = false;
+            motherboardBuildKit?.ResetFeedback();
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsPowerSupplySeatMode = false;
@@ -3335,6 +3368,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void ResetPlacementState()
         {
             IsPlacementMode = false;
+            ResetMotherboardBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

@@ -1800,6 +1800,12 @@ namespace PCShopEmpire3D.Inventory
                     InventoryFailures.SerializedItemStateConflict);
             }
 
+            if (_serializedReservationWorkOrderBuildKitsByItem.ContainsKey(itemId))
+            {
+                return OperationResult<InventorySerializedTransferPlan>.Fail(
+                    InventoryFailures.SerializedReservationWorkOrderBuildKitConflict);
+            }
+
             Failure accessFailure = ValidateSerializedTransferAccess(
                 item.ContainerId,
                 targetContainerId,
@@ -3224,7 +3230,10 @@ namespace PCShopEmpire3D.Inventory
                 {
                     if (reservation.Quantity != 1 ||
                         !_items.TryGetValue(reservation.ItemId, out InventoryItemRecord item) ||
-                        _managedSerializedTransferContainers.ContainsKey(item.ContainerId) ||
+                        (_managedSerializedTransferContainers.ContainsKey(item.ContainerId) &&
+                         !IsValidReservedSerializedWorkOrderBuildKitCustody(
+                             reservation,
+                             item)) ||
                         !reservedItems.Add(reservation.ItemId))
                     {
                         return OperationResult.Fail(InventoryFailures.InvariantViolation);
@@ -3289,6 +3298,11 @@ namespace PCShopEmpire3D.Inventory
             }
 
             if (!HasValidSerializedReservationWorkOrderAllocations())
+            {
+                return OperationResult.Fail(InventoryFailures.InvariantViolation);
+            }
+
+            if (!HasValidSerializedReservationWorkOrderBuildKits())
             {
                 return OperationResult.Fail(InventoryFailures.InvariantViolation);
             }
