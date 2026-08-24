@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #63 Mac gameplay/domain/görsel/test/build/native/CI teknik checkpoint'i tamamlandı; Windows Unity lisansı ve final USB kapanışı bekliyor<br>
+**Durum:** Issue #64 Mac+Windows gameplay/domain/test/build/native teknik checkpoint'i tamamlandı; final docs/CI ve fiziksel USB kapanışı bekliyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni teknik checkpoint — Issue #63 / Epic #10
+## En yeni teknik checkpoint — Issue #64 / Epic #10
+
+- Feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`; exact customer/visit/consultation provenance'ına bağlı accepted graphics-first request ve immutable on-satırlı quote/BOM ekledi.
+- BOM exact motherboard, CPU, DIMM, M.2 SSD, cooler, GPU, PSU, ATX24, EPS12V ve PCIe/GPU 6+2 rollerini stable line/reservation identity, integer price/currency, compatibility ve budget kapılarıyla bağlar.
+- Inventory exact serialized seti tek managed operation/claim ve tek revision ile atomik reserve eder. Claim/operation indexleri aynı registration'ı tutar; access/revision/payload drift'i, external adoption, eleventh item, direct release/consume, duplicate/conflict ve partial failure no-mutation'dır.
+- Quote publication kesintisi matching owned Inventory operation üzerinden exact recover edilir; exact replay revision artırmaz. Customer, basket/checkout/economy ve Assembly authority'leri izoledir.
+- GarageGraybox `garage-custom-pc-quote-reservation-r33-v1`; gerçek keyboard/mouse ve gamepad input ile consultation→request accepted→visible ten-line quote/BOM→10 exact reservations akışını taşır. Range/focus/LOS/pause/release-repress/single-consumer, accepted deadline ve pause-toggle no-lurch testlidir.
+- Mac ve Windows full EditMode `647/647`, PlayMode `59/59`; failed/skipped/inconclusive `0`. Universal Mac build `329396456` bayt ve Apple M1/Metal exact r33 smoke; Windows x64 IL2CPP build `1326137709` report baytı ve Intel Iris Xe/Direct3D 11.0 exact r33 smoke başarılıdır.
+- Kısa görünür Mac turu sağ/geri/sol konum değişimini ve pause/resume no-lurch davranışını gözledi. Mouse-look için ayrı manuel geçiş iddiası kurulmadı; automated Input System/native readiness kanıtı korunur.
+- Feature [Guard 32698054990](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32698054990) başarılı; draft [PR #65](https://github.com/cixanla/PC-Shop-Empire-3D/pull/65) açıktır. Mac ve Windows masaüstü bağlantıları doğrulanmış build'lere çözülür.
+- ADR-0042, tarihli Evidence ve `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` kapanış belge setidir. Kullanıcı USB kablosunun bağlı olduğunu bildirmiştir; ancak son salt-okunur denetimde beklenen `/Volumes/cixanla/CIXANLA` mount'u görünmemiş ve yanlış volume'a yazılmamıştır. Doğru mount göründüğünde iki tam fiziksel readback ve final metadata/Guard yapılacaktır. Issue #64/Roadmap açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #63 / Epic #10
 
 - Feature `ea1e51f862d4094936c03bccf9fbfaee7bb7d12b`, tree `ecc32279a8e17e8179114a9b6cfcfe4737827601`; tek canonical serialized PCIe/GPU 8-pin 6+2 cable, iki distinct typed/keyed endpoint, üç stable ordered waypoint ve capacity-one `GpuPowerCableRoute` eklendi.
 - Mevcut dokuz managed container + `GpuPowerCableRoute` tek on-container all-or-none claim'dir. `Loose ↔ Routed`, exact Hands↔route custody, immutable route/unroute receipts, immediate/delayed replay, history fold, retained PSU + secured motherboard + retained GPU lineage ve ATX24/EPS12V isolation testlidir.
@@ -13,8 +25,9 @@
 - Explicit visual fix `d655f1a5aab0c882cf40702472ec1b8ad44747ad`, tree `c3fff116317db7e3388e0faf04e38a7ffaa7ce77`; PSU ucunu monolitik 8-pin bırakır, GPU ucunu ayrı 6-pin + 2-pin housing, 6-pin keyed latch, 2-pin retention clip ve ayrı `6`/`2` etiketleriyle gösterir. Dekoratif child'lar collider/joint/raycast authority değildir; bağımsız salt-okunur yeniden denetim kalan P0/P1 bulmadı.
 - Final exact committed-scene kanıtı EditMode `626/626`, PlayMode `53/53`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329334656` bayt; aktif Apple M1/Metal 1280×720 canonical readiness ve exact `GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
 - Feature [Guard 32676069923](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676069923), Windows gate [Guard 32676154473](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676154473) ve explicit 6+2 visual-fix [Guard 32677267023](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677267023) başarılıdır.
-- Windows clone build denemesi anında clean/exact `cdfe9d6` idi; Unity 6000.3.21f1 Windows IL2CPP support, VS Build Tools, MSVC, MSBuild ve Windows SDK hazırdır. İlk StrictMode IL2CPP build kaynak derlemesinden önce `No valid Unity Editor license found` nedeniyle exit `198` ile durdu; Windows IL2CPP/DirectX/r32 smoke başarı iddiası yoktur.
-- Beklenen USB `/Volumes/cixanla/CIXANLA`, `90_BACKUPS/PCShopEmpire3D` ve önceki Issue #62 milestone zinciriyle güvenle doğrulandı. Windows native kanıtı ve final source/docs kimliği oluşmadan Issue #63 final package yazılmadı. Issue/Roadmap açık/In Progress; electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark ve diğer kablo aileleri kapsam dışıdır.
+- Final source/docs `d597941a20afd0491547513abbc68e0b9d890aab`; clean/exact Windows clone Unity 6000.3.21f1 StrictMode x64 IL2CPP build'ini tamamladı. Build report `1320679269` bayt; build log SHA-256 `459e95bb43ab79a1004e13e71b74c8500f484c9cd33e1f698deb7f277f844799`dır.
+- Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact r32 readiness ve `GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE ... recovery=ok` markerını verdi; runtime log SHA-256 `853dd5bd75b63d8938dcd6f9b664e979b43aeafa1409b3678dad143d931b3f9e`dir. [Guard 32677495639](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677495639) başarılıdır; önceki exit `198` denemeleri yalnız tarihsel lisans tanısıdır.
+- Issue #63 Mac+Windows teknik kapılarını geçti; final fiziksel USB paketi ve Issue/Roadmap metadata kapanışı henüz yapılmadı. Electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark ve diğer kablo aileleri kapsam dışıdır.
 
 ## Önceki checkpoint — Issue #62 / Epic #10
 
@@ -172,17 +185,17 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #63 feature `ea1e51f8`, Windows gate `cdfe9d6a` ve explicit GPU-side 6+2 fix `d655f1a5` private remote'a ulaştı; üç Repository Guard başarılıdır. Mac teknik checkpoint tamamdır, Issue/Roadmap Windows + final USB kapıları nedeniyle açık/In Progress kalır.
+- Branch: `feature/issue64-custom-pc-request-quote-reservation`; exact remote HEAD `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`; draft PR #65 ve Guard `32698054990` başarılıdır. Issue #64 Mac+Windows teknik checkpoint'i tamamdır; final docs/CI ve fiziksel USB kapıları nedeniyle Issue/Roadmap açık/In Progress kalır.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-pcie-gpu-power-cable-routing-r32-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-custom-pc-quote-reservation-r33-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
-- PC assembly dilimi exact serialized anakart, fastener, CPU, DDR5 DIMM, M.2 NVMe, air cooler, PCIe GPU, ATX PS/2 PSU, ATX24, EPS12V ve PCIe/GPU 6+2 kablo authority'lerini tek managed Inventory gerçeği üzerinde korur. Attach/secure/seat/retention/route/detach/recovery lineage'ı ve stable world identity authoritative'dir.
+- PC assembly dilimi exact serialized anakart, fastener, CPU, DDR5 DIMM, M.2 NVMe, air cooler, PCIe GPU, ATX PS/2 PSU, ATX24, EPS12V ve PCIe/GPU 6+2 kablo authority'lerini tek managed Inventory gerçeği üzerinde korur. Attach/secure/seat/retention/route/detach/recovery lineage'ı ve stable world identity authoritative'dir. Issue #64 accepted request'ten immutable on-satırlı quote/BOM ve aynı exact serialized setin atomik reservation'ına uzanır.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
-- Gerçek Windows x64 IL2CPP toolchain hazırdır; Unity Editor lisansı olmadığı için native build/DirectX r32 smoke henüz dış platform kapısıdır. Steam entegrasyonu ayrıca yapılmamıştır.
+- Gerçek Windows x64 IL2CPP toolchain ve Unity Editor lisansı hazırdır; exact r32 ve r33 Windows build/DirectX native smoke kapıları başarılıdır. Steam entegrasyonu, release depot/signing ve geniş uyumluluk QA'sı ayrıca yapılmamıştır.
 
 ## Önceki tamamlanmış feature checkpoint ve doğrulama kanıtı — Issue #52
 
@@ -222,7 +235,8 @@
 - En yeni doğrulanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING`.
 - Source/docs `cff75f8876f893888ca3a98fe5f149dab0f74a1b`; 826 tracked `SOURCE`, 5 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt`; 832 manifest payload satırı, toplam 834 dosya ve 15.757.786 payload baytı.
 - `MANIFEST.tsv` SHA-256: `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73`.
-- `.incoming-*` kopyası ve atomik final adlandırmadan sonra iki tam geri okuma da 832/832 hash+boyut+yol, 826/826 exact Git source ve 5/5 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır. Issue #63 için USB kökü güvenle görünür fakat Windows native kapısı geçmeden final package yazılmamıştır.
+- `.incoming-*` kopyası ve atomik final adlandırmadan sonra iki tam geri okuma da 832/832 hash+boyut+yol, 826/826 exact Git source ve 5/5 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır. Bu Issue #62 milestone'udur; Issue #63 ve #64 için henüz fiziksel final package/readback iddiası yoktur.
+- Kullanıcı 24 Ağustos'ta USB kablosunun bağlı olduğunu bildirdi; son salt-okunur `diskutil` ve `/Volumes` denetiminde beklenen `/Volumes/cixanla/CIXANLA` mount'u görünmedi. Yanlış volume'a yazılmaz; doğru volume görünene kadar yalnız yerel staging/GitHub kapıları ilerletilir.
 - Önceki Issue #50 milestone'u tarihsel olarak korunur: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
 - Source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı.
 - `MANIFEST.tsv` SHA-256: `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`.
@@ -242,10 +256,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Windows makinede Unity Personal Editor lisansını etkinleştir; clone'u final Issue #63 source/docs head'ine fast-forward et, StrictMode IL2CPP x64 build ve DirectX r32 native smoke'u çalıştır. Lisans engelini Mono veya Mac sonucu ile ikame etme.
-2. Windows gate geçince exact final source-plus-evidence staging üret; doğrulanmış USB kökünde çakışmayan `.incoming-*`, AppleDouble temizliği yalnız incoming hedefinde, iki tam manifest/Git/evidence readback ve atomik final adlandırma ile Issue #63'ü kapat.
-3. #63 kapandıktan sonra yeni kablo ailesine atlamadan tek gerçek özel-PC işi için accepted request → immutable quote/BOM → exact serialized Inventory reservation bounded dilimini başlat; power-on/POST/OS/benchmark daha sonraki bağımlı kapılar olarak kalsın.
+1. Issue #64 yaşayan belge setini doğrula, docs checkpoint commitini feature branch'e push et ve Repository Guard/PR #65 durumunu yeniden doğrula.
+2. Issue #63 ve #64 için exact source-plus-evidence yerel staging paketlerini çakışmayan adlarla hazırla. Beklenen `/Volumes/cixanla/CIXANLA` görünürse yalnız doğrulanmış kökte `.incoming-*`, AppleDouble temizliği yalnız incoming hedefinde, iki tam manifest/Git/evidence readback ve atomik final adlandırma uygula; mount görünmüyorsa USB'ye yazma.
+3. Ana gameplay hattında accepted request → immutable quote/BOM → exact serialized reservation akışını, tek fiziksel build-order/work-ticket ve iş tezgâhı devrine bağlayan bounded dilimi başlat. Reservation authority'sini Assembly custody ile karıştırma; electrical power-on/POST/OS/benchmark daha sonraki bağımlı kapılar olarak kalsın.
 
 ## Güvenli devam komutu
 
-Issue #63 feature `ea1e51f8`, Windows IL2CPP gate `cdfe9d6a` ve explicit GPU-side 6+2 fix `d655f1a5`; Guard `32676069923` + `32676154473` + `32677267023`, EditMode `626/626`, PlayMode `53/53`, Universal Mac `329334656` bayt ve aktif Apple M1/Metal exact r32 PCIe/GPU smoke ile Mac teknik checkpoint'e ulaştı. Windows toolchain hazır fakat Unity Editor lisansı yokluğu build'i kaynak derlemesinden önce exit `198` ile durdurdu. Doğru USB kökü ve Issue #62 zinciri görünürdür; Windows native kanıtı ve final source/docs kimliği oluşmadan Issue #63 final package yazılmadı. Issue/Roadmap açık/In Progress; electrical readiness ve completed benchmark iddiası yoktur.
+Issue #64 feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`, Guard `32698054990`, EditMode `647/647`, PlayMode `59/59`, Universal Mac `329396456` bayt ve Windows x64 IL2CPP report `1326137709` bayt ile Apple M1/Metal ve Intel Iris Xe/Direct3D 11.0 exact r33 native smoke kapılarını geçti. Draft PR #65 açık; final docs/CI ve fiziksel USB kapanışı bekler. USB kablosu bildirilmiş olsa da beklenen mount görünmemiştir; yanlış volume'a yazma. Sonraki bounded gameplay işi exact reservation'dan fiziksel build-order/work-ticket ve iş tezgâhı devridir; electrical readiness ve completed benchmark iddiası yoktur.

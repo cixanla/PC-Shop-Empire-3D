@@ -6,6 +6,13 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #64 ile owned müşteri consultation'ından stable typed accepted custom-PC request, immutable on-satırlı graphics-first quote/BOM ve exact serialized component reservation set akışı eklendi.
+- Motherboard, CPU, DIMM, M.2 SSD, cooler, GPU, PSU, ATX24, EPS12V ve PCIe/GPU 6+2 satırları deterministic sırada exact ProductId/ItemInstanceId/ReservationId, integer minor-unit fiyat, tek currency ve compatibility/budget kapılarıyla donar.
+- Inventory tam on-item seti tek managed operation ve tek revision ile atomik reserve eder. Claim/operation/access/revision/payload cross-check, exact replay, interrupted-publication recovery ve direct release/consume/eleventh-item/conflict/drift fail-closed sözleşmeleri testlidir.
+- GarageGraybox r33 gerçek keyboard/mouse ve Input System gamepad ile consultation→request accepted→visible quote/BOM ready→10 exact reservations akışını gösterir. Range/focus/LOS/pause/release-repress/single-consumer kapıları ve accepted-request deadline dayanıklılığı korunur; pause-toggle frame'i stale movement/look işlemez.
+- Feature `c7d3884`, tree `615c9c4`; Mac ve Windows EditMode `647/647`, PlayMode `59/59`. Universal Mac build `329396456` bayt, Apple M1/Metal exact r33 smoke; Windows x64 IL2CPP build `1326137709` rapor baytı, Intel Iris Xe/Direct3D 11.0 exact r33 smoke başarılıdır. Guard [32698054990](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32698054990) geçti; draft PR #65 açıktır. Fiziksel USB ve final docs/CI kapanışı tamamlanana kadar Issue/Roadmap açık/In Progress kalır.
+- Proje geneli `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` ile domain, scene/input, full regression, iki-platform native ve görünür insan oturumu kapılarını birbirinden ayırır. Issue #64 görünür turunda sağ/geri/sol hareket ve pause/resume no-lurch gözlendi; mouse-look yalnız otomatik/native kanıt olarak tutuldu.
+
 - Issue #63 ile tek canonical serialized PCIe/GPU 8-pin 6+2 power cable, distinct typed/keyed PSU/GPU endpoint'leri, üç stable ordered waypoint, capacity-one `GpuPowerCableRoute` ve atomic ten-container Inventory claim eklendi.
 - `Loose ↔ Routed` route/unroute authority'si; exact Hands↔route custody, immutable receipt/history fold, immediate/delayed replay, retained-PSU + secured-motherboard + retained-GPU lineage, ATX24/EPS12V isolation ve dependent-detach no-mutation sözleşmeleri testlerle kilitlendi.
 - GarageGraybox r32 aynı Unity component instance/stable ItemId ile pickup→preview→route→unroute→world-drop/recovery akışını taşır. GPU anchor canonical moving GPU'ya bağlı, preview/committed route jointsiz ve generic placement/stack/cart/raw-transfer bypass'ları kapalıdır.

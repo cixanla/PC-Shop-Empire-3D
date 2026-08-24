@@ -2,6 +2,20 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B accepted custom-PC request, immutable quote and exact reservation doğrulaması — 24 Ağustos 2026
+
+Issue #64 feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95` aynı kaynak kimliğiyle iki gerçek platformda doğrulandı:
+
+- macOS: Development + StrictMode Universal Mach-O (`arm64` + `x86_64`), Unity report `329.396.456` bayt; executable `117.179` bayt, SHA-256 `9cfdbf7d17583135550bd6a507164f644b8242e9bfbcfaf26641191a69c249bf`.
+- macOS testleri: EditMode `647/647`, PlayMode `59/59`; failed/skipped/inconclusive `0`.
+- macOS runtime: aktif Apple M1/Metal, 1280×720; readiness `garage-custom-pc-quote-reservation-r33-v1` ve exact custom-PC quote/reservation smoke başarılı.
+- Windows: Development + StrictMode x64 IL2CPP, Unity report `1.326.137.709` bayt. `PC Shop Empire 3D.exe` `667.136` bayt / SHA-256 `9688ae089d590352dbe0cba8722328926cd4d9b7722f68ec9942243925c1282a`; `GameAssembly.dll` `44.777.472` bayt / `2978b79b47d4c6aefef58d81f7235940b9df4d4794fb0935dfa3a5233b960021`; `UnityPlayer.dll` `84.237.744` bayt / `cc018c912f461b0f7bdcaeadd5c1d8d9361d92fe5a1c3aeac27a0ac1186a4a59`.
+- Windows testleri: EditMode `647/647`, PlayMode `59/59`; failed/skipped/inconclusive `0`.
+- Windows runtime: aktif console oturumunda Intel Iris Xe Graphics, Direct3D 11.0 feature level 11.1; readiness r33 ve exact custom-PC smoke bir kez başarılı. Windows masaüstü kısayolu bu doğrulanmış IL2CPP player'a okunarak bağlandı.
+- Kısa görünür Mac insan turu sağ/geri/sol konum değişimini, pause sırasında sıfır hareketi ve resume sonrası fresh-input hareketini gözledi. Fare sürükleme aracı pencere erişimini kaybettiği için ayrıca manuel mouse-look iddiası kurulmadı.
+
+Bu çıktılar geliştirme doğrulamasıdır; Steam packaging/signing, performans matrisi ve release candidate iddiası değildir. Ayrıntılı hashler tarihli Issue #64 evidence belgesindedir.
+
 ## Stage A doğrulama çıktıları — 11 Ağustos 2026
 
 | Çıktı | Tür | Unity rapor boyutu | Yerel disk kullanımı | Sonuç |
