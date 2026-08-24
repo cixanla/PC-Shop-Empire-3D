@@ -80,6 +80,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 CheckoutStationProjection[] checkoutStations = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<CheckoutStationProjection>(true))
                     .ToArray();
+                CustomPcWorkTicketStationProjection[] workTicketStations = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        CustomPcWorkTicketStationProjection>(true))
+                    .ToArray();
                 PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
@@ -549,6 +554,51 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeHud hud = FindInScene<GaragePrototypeHud>(scene);
                 Assert.That(hud, Is.Not.Null);
                 Assert.That(hud.CheckoutStation, Is.SameAs(checkoutStation));
+                Assert.That(workTicketStations.Length, Is.EqualTo(1));
+                CustomPcWorkTicketStationProjection workTicketStation =
+                    workTicketStations[0];
+                Assert.That(marker.CustomPcWorkTicketStation,
+                    Is.SameAs(workTicketStation));
+                Assert.That(hud.CustomPcWorkTicketStation,
+                    Is.SameAs(workTicketStation));
+                Assert.That(workTicketStation.StationIdValue,
+                    Is.EqualTo(
+                        CustomPcWorkTicketStationProjection.PrototypeStationIdValue));
+                Assert.That(workTicketStation.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(workTicketStation.PlayerInput,
+                    Is.SameAs(marker.PlayerInput));
+                Assert.That(workTicketStation.PlayerMotor,
+                    Is.SameAs(marker.PlayerMotor));
+                Assert.That(workTicketStation.PlayerCarry,
+                    Is.SameAs(marker.PlayerCarry));
+                Assert.That(workTicketStation.PlayerCamera, Is.SameAs(camera));
+                Assert.That(workTicketStation.isActiveAndEnabled, Is.True);
+                Assert.That(camera.isActiveAndEnabled, Is.True);
+                Assert.That(workTicketStation.InteractionCollider.isTrigger, Is.True);
+                Assert.That(workTicketStation.InteractionCollider.gameObject.name,
+                    Is.EqualTo("CustomPcWorkTicketFocusTarget"));
+                Assert.That(workTicketStation.InteractionCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(workTicketStation.GetComponentsInChildren<Collider>(true).Length,
+                    Is.EqualTo(1));
+                Assert.That(workTicketStation.StationStatusText.text,
+                    Does.Contain("TEKLİF BEKLENİYOR"));
+                Renderer workTicketTextRenderer =
+                    workTicketStation.StationStatusText.GetComponent<Renderer>();
+                Assert.That(workTicketTextRenderer, Is.Not.Null);
+                Assert.That(workTicketTextRenderer.enabled, Is.True);
+                Assert.That(workTicketTextRenderer.gameObject.activeInHierarchy, Is.True);
+                Assert.That(
+                    camera.cullingMask &
+                    (1 << workTicketTextRenderer.gameObject.layer),
+                    Is.Not.Zero);
+                Assert.That(workTicketStation.InteractionRange,
+                    Is.EqualTo(
+                        CustomPcWorkTicketStationProjection.DefaultInteractionRange)
+                        .Within(0.001f));
+                Assert.That(workTicketStation.FocusDegrees,
+                    Is.EqualTo(CustomPcWorkTicketStationProjection.DefaultFocusDegrees)
+                        .Within(0.001f));
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -711,7 +761,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-custom-pc-quote-reservation-r33-v1"));
+                    Is.EqualTo("garage-custom-pc-work-ticket-r34-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -857,7 +907,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-custom-pc-quote-reservation-r33-v1"));
+                    Is.EqualTo("garage-custom-pc-work-ticket-r34-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1013,7 +1063,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-custom-pc-quote-reservation-r33-v1"));
+                    Is.EqualTo("garage-custom-pc-work-ticket-r34-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1174,7 +1224,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-custom-pc-quote-reservation-r33-v1"));
+                    Is.EqualTo("garage-custom-pc-work-ticket-r34-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -1374,7 +1424,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-custom-pc-quote-reservation-r33-v1"));
+                    Is.EqualTo("garage-custom-pc-work-ticket-r34-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

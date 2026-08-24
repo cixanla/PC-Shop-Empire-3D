@@ -11,8 +11,12 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private GarageStockFlowRuntime stockFlow;
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
         [SerializeField] private CheckoutStationProjection checkoutStation;
+        [SerializeField] private CustomPcWorkTicketStationProjection customPcWorkTicketStation;
 
         public CheckoutStationProjection CheckoutStation => checkoutStation;
+
+        public CustomPcWorkTicketStationProjection CustomPcWorkTicketStation =>
+            customPcWorkTicketStation;
 
         public bool UsesCompactAssemblyUi =>
             carryController != null && carryController.HasAssemblyPromptOwnership;
@@ -29,6 +33,11 @@ namespace PCShopEmpire3D.Presentation
                 string prompt = checkoutStation != null
                     ? checkoutStation.PromptText
                     : string.Empty;
+                if (string.IsNullOrEmpty(prompt) && customPcWorkTicketStation != null)
+                {
+                    prompt = customPcWorkTicketStation.PromptText;
+                }
+
                 if (string.IsNullOrEmpty(prompt) && customerFlow != null)
                 {
                     prompt = customerFlow.ContextualPromptText;
@@ -48,13 +57,15 @@ namespace PCShopEmpire3D.Presentation
             PlayerCarryController playerCarryController,
             GarageStockFlowRuntime garageStockFlow = null,
             GarageCustomerFlowRuntime garageCustomerFlow = null,
-            CheckoutStationProjection physicalCheckoutStation = null)
+            CheckoutStationProjection physicalCheckoutStation = null,
+            CustomPcWorkTicketStationProjection physicalCustomPcWorkTicketStation = null)
         {
             motor = playerMotor;
             carryController = playerCarryController;
             stockFlow = garageStockFlow;
             customerFlow = garageCustomerFlow;
             checkoutStation = physicalCheckoutStation;
+            customPcWorkTicketStation = physicalCustomPcWorkTicketStation;
         }
 
         private void OnGUI()

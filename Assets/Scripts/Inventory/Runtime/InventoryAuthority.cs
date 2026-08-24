@@ -5,6 +5,7 @@ using PCShopEmpire3D.Core.Primitives;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Retail")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Assembly")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Orders")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PCShopEmpire3D.EditModeTests")]
 
 namespace PCShopEmpire3D.Inventory
@@ -533,7 +534,7 @@ namespace PCShopEmpire3D.Inventory
     /// The single authoritative owner of logical stock. Unity world objects are projections and never mutate
     /// quantities directly. Every failed command leaves state and Revision unchanged.
     /// </summary>
-    public sealed class InventoryAuthority
+    public sealed partial class InventoryAuthority
     {
         private sealed class ReservationConsumptionSelection
         {
@@ -3285,6 +3286,11 @@ namespace PCShopEmpire3D.Inventory
                 {
                     return OperationResult.Fail(InventoryFailures.InvariantViolation);
                 }
+            }
+
+            if (!HasValidSerializedReservationWorkOrderAllocations())
+            {
+                return OperationResult.Fail(InventoryFailures.InvariantViolation);
             }
 
             foreach (KeyValuePair<BatchPositionKey, long> reserved in reservedBatches)

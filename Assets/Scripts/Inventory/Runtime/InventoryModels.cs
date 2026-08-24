@@ -501,6 +501,18 @@ namespace PCShopEmpire3D.Inventory
             Failure.FromCode("inventory.serialized-reservation-set.plan-invalid");
         public static readonly Failure SerializedReservationSetPlanStale =
             Failure.FromCode("inventory.serialized-reservation-set.plan-stale");
+        public static readonly Failure InvalidSerializedReservationWorkOrderOperationId =
+            Failure.FromCode("inventory.serialized-reservation-work-order.operation-id.invalid");
+        public static readonly Failure InvalidSerializedReservationWorkOrderId =
+            Failure.FromCode("inventory.serialized-reservation-work-order.order-id.invalid");
+        public static readonly Failure InvalidSerializedReservationWorkTicketId =
+            Failure.FromCode("inventory.serialized-reservation-work-order.ticket-id.invalid");
+        public static readonly Failure SerializedReservationWorkOrderWorkbenchInvalid =
+            Failure.FromCode("inventory.serialized-reservation-work-order.workbench.invalid");
+        public static readonly Failure SerializedReservationWorkOrderConflict =
+            Failure.FromCode("inventory.serialized-reservation-work-order.conflict");
+        public static readonly Failure SerializedReservationWorkOrderReceiptInvalid =
+            Failure.FromCode("inventory.serialized-reservation-work-order.receipt-invalid");
         public static readonly Failure CheckoutConsumptionPlanInvalid =
             Failure.FromCode("inventory.checkout-consumption-plan-invalid");
         public static readonly Failure CheckoutConsumptionPlanStale =

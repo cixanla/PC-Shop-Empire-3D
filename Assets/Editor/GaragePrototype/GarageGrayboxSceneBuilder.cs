@@ -501,6 +501,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 wood,
                 metal,
                 screenGlass);
+            CustomPcWorkTicketBuildResult customPcWorkTicketBuild =
+                BuildCustomPcWorkTicketStation(
+                    environment,
+                    metal,
+                    brushedSteel,
+                    accent,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -653,6 +660,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 playerCamera,
                 customerFlowBuild.CheckoutInteractionCollider,
                 customerFlowBuild.CheckoutStatusText);
+            customPcWorkTicketBuild.Projection.Configure(
+                stockFlow,
+                input,
+                motor,
+                playerCamera,
+                carry,
+                customPcWorkTicketBuild.InteractionCollider,
+                customPcWorkTicketBuild.StatusText);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
             marker.Configure(
                 motor,
@@ -662,6 +677,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 customerFlow,
                 customerFlowBuild.CheckoutStation,
+                customPcWorkTicketBuild.Projection,
                 assemblyBuild.Seat,
                 assemblyBuild.Fastener,
                 assemblyBuild.Binding,
@@ -703,7 +719,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 carry,
                 stockFlow,
                 customerFlow,
-                customerFlowBuild.CheckoutStation);
+                customerFlowBuild.CheckoutStation,
+                customPcWorkTicketBuild.Projection);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",

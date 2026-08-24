@@ -25,4 +25,16 @@ namespace PCShopEmpire3D.Inventory
     public sealed class InventorySerializedReservationSetOperationIdScope : IStableIdScope
     {
     }
+
+    public sealed class InventorySerializedReservationWorkOrderOperationIdScope : IStableIdScope
+    {
+    }
+
+    public sealed class InventorySerializedReservationWorkOrderIdScope : IStableIdScope
+    {
+    }
+
+    public sealed class InventorySerializedReservationWorkTicketIdScope : IStableIdScope
+    {
+    }
 }

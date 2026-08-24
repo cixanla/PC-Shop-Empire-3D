@@ -6,6 +6,8 @@ using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
 using PCShopEmpire3D.Inventory;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PSE.Orders")]
+
 namespace PCShopEmpire3D.Retail
 {
     /// <summary>
@@ -39,6 +41,9 @@ namespace PCShopEmpire3D.Retail
             InventorySerializedReservationSetAccess> _reservationSetsByQuote =
                 new Dictionary<StableId<CustomPcQuoteIdScope>,
                     InventorySerializedReservationSetAccess>();
+        private readonly Dictionary<StableId<ContainerIdScope>, object>
+            _workOrderPublishersByWorkbench =
+                new Dictionary<StableId<ContainerIdScope>, object>();
 
         private CustomPcQuoteAuthority(
             ProductCatalog catalog,
@@ -254,6 +259,67 @@ namespace PCShopEmpire3D.Retail
             return _quotesByRequest.TryGetValue(requestId, out quote);
         }
 
+        internal bool TryGetOwnedReservationSet(
+            CustomPcQuoteRecord quote,
+            out InventorySerializedReservationSetAccess reservationSetAccess)
+        {
+            reservationSetAccess = null;
+            if (quote == null ||
+                !_quotes.TryGetValue(quote.Id, out CustomPcQuoteRecord owned) ||
+                !ReferenceEquals(quote, owned) ||
+                !HasExactLiveReservations(quote) ||
+                !_reservationSetsByQuote.TryGetValue(
+                    quote.Id,
+                    out InventorySerializedReservationSetAccess access))
+            {
+                return false;
+            }
+
+            reservationSetAccess = access;
+            return true;
+        }
+
+        /// <summary>
+        /// Grants one opaque downstream work-order publisher the exclusive capability for a
+        /// workbench. Keeping the lease on the shared quote authority prevents independently
+        /// created publishers from representing one quote and Inventory receipt as two jobs.
+        /// </summary>
+        internal bool TryRegisterWorkOrderPublisher(
+            StableId<ContainerIdScope> workbenchContainerId,
+            object publisher)
+        {
+            if (workbenchContainerId.IsEmpty ||
+                publisher == null ||
+                !_inventory.TryGetContainer(
+                    workbenchContainerId,
+                    out InventoryContainerDefinition workbench) ||
+                workbench.Kind != InventoryContainerKind.Workbench)
+            {
+                return false;
+            }
+
+            if (_workOrderPublishersByWorkbench.TryGetValue(
+                    workbenchContainerId,
+                    out object existing))
+            {
+                return ReferenceEquals(existing, publisher);
+            }
+
+            _workOrderPublishersByWorkbench.Add(workbenchContainerId, publisher);
+            return true;
+        }
+
+        internal bool OwnsWorkOrderPublisher(
+            StableId<ContainerIdScope> workbenchContainerId,
+            object publisher)
+        {
+            return publisher != null &&
+                   _workOrderPublishersByWorkbench.TryGetValue(
+                       workbenchContainerId,
+                       out object existing) &&
+                   ReferenceEquals(existing, publisher);
+        }
+
         public IReadOnlyList<CustomPcRequestRecord> GetRequests()
         {
             var values = new List<CustomPcRequestRecord>(_requests.Values);
@@ -332,6 +398,21 @@ namespace PCShopEmpire3D.Retail
                     !_reservationSetsByQuote.ContainsKey(quote.Id) ||
                     !HasValidQuote(quote) ||
                     !HasExactLiveReservations(quote))
+                {
+                    return OperationResult.Fail(
+                        CustomPcQuoteFailures.InvariantViolation);
+                }
+            }
+
+            foreach (KeyValuePair<StableId<ContainerIdScope>, object> entry in
+                     _workOrderPublishersByWorkbench)
+            {
+                if (entry.Key.IsEmpty ||
+                    entry.Value == null ||
+                    !_inventory.TryGetContainer(
+                        entry.Key,
+                        out InventoryContainerDefinition workbench) ||
+                    workbench.Kind != InventoryContainerKind.Workbench)
                 {
                     return OperationResult.Fail(
                         CustomPcQuoteFailures.InvariantViolation);
@@ -625,7 +706,7 @@ namespace PCShopEmpire3D.Retail
                 : Failure.None;
         }
 
-        private bool HasExactLiveReservations(CustomPcQuoteRecord quote)
+        internal bool HasExactLiveReservations(CustomPcQuoteRecord quote)
         {
             if (quote == null ||
                 quote.Lines == null ||

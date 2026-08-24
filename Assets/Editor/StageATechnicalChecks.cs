@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -76,26 +77,111 @@ namespace PCShopEmpire3D.Editor
         [MenuItem("PC Shop Empire/Stage A/Build Windows IL2CPP Development Player")]
         public static void BuildWindowsIl2CppDevelopmentPlayer()
         {
+            const BuildTarget target = BuildTarget.StandaloneWindows64;
             NamedBuildTarget standalone = NamedBuildTarget.Standalone;
             ScriptingImplementation previousBackend =
                 PlayerSettings.GetScriptingBackend(standalone);
+            bool previousUseDefaultGraphicsApis =
+                PlayerSettings.GetUseDefaultGraphicsAPIs(target);
+            GraphicsDeviceType[] previousGraphicsApis =
+                PlayerSettings.GetGraphicsAPIs(target)?.ToArray() ??
+                Array.Empty<GraphicsDeviceType>();
+            Require(
+                previousGraphicsApis.Length > 0,
+                "Windows graphics API snapshot is empty; refusing to mutate player settings.");
+
+            string outputPath = Path.Combine(
+                BuildRoot,
+                "Windows-IL2CPP-x64",
+                "PC Shop Empire 3D.exe");
+            BuildReport report = null;
+            Exception primaryFailure = null;
+            Exception restoreFailure = null;
 
             try
             {
                 PlayerSettings.SetScriptingBackend(
                     standalone,
                     ScriptingImplementation.IL2CPP);
-                Build(
-                    BuildTarget.StandaloneWindows64,
-                    Path.Combine(
-                        BuildRoot,
-                        "Windows-IL2CPP-x64",
-                        "PC Shop Empire 3D.exe"));
+                PlayerSettings.SetUseDefaultGraphicsAPIs(target, false);
+                PlayerSettings.SetGraphicsAPIs(
+                    target,
+                    new[] { GraphicsDeviceType.Direct3D11 });
+
+                Require(
+                    PlayerSettings.GetScriptingBackend(standalone) ==
+                    ScriptingImplementation.IL2CPP,
+                    "Windows IL2CPP backend readback mismatch.");
+                Require(
+                    !PlayerSettings.GetUseDefaultGraphicsAPIs(target),
+                    "Windows D3D11 automatic graphics API readback mismatch.");
+                Require(
+                    GraphicsApisMatchExactly(
+                        PlayerSettings.GetGraphicsAPIs(target),
+                        GraphicsDeviceType.Direct3D11),
+                    "Windows D3D11 graphics API readback mismatch.");
+
+                report = Build(target, outputPath, emitSuccessMarker: false);
+            }
+            catch (Exception exception)
+            {
+                primaryFailure = exception;
             }
             finally
             {
-                PlayerSettings.SetScriptingBackend(standalone, previousBackend);
+                try
+                {
+                    PlayerSettings.SetUseDefaultGraphicsAPIs(target, false);
+                    PlayerSettings.SetGraphicsAPIs(target, previousGraphicsApis);
+                    PlayerSettings.SetUseDefaultGraphicsAPIs(
+                        target,
+                        previousUseDefaultGraphicsApis);
+                    PlayerSettings.SetScriptingBackend(standalone, previousBackend);
+
+                    Require(
+                        PlayerSettings.GetScriptingBackend(standalone) == previousBackend,
+                        "Windows scripting backend restore readback mismatch.");
+                    Require(
+                        PlayerSettings.GetUseDefaultGraphicsAPIs(target) ==
+                        previousUseDefaultGraphicsApis,
+                        "Windows automatic graphics API restore readback mismatch.");
+                    Require(
+                        GraphicsApisMatchExactly(
+                            PlayerSettings.GetGraphicsAPIs(target),
+                            previousGraphicsApis),
+                        "Windows graphics API list restore readback mismatch.");
+                }
+                catch (Exception exception)
+                {
+                    restoreFailure = exception;
+                }
             }
+
+            if (primaryFailure != null && restoreFailure != null)
+            {
+                throw new AggregateException(
+                    "Windows IL2CPP/D3D11 build and settings restore both failed.",
+                    primaryFailure,
+                    restoreFailure);
+            }
+
+            if (primaryFailure != null)
+            {
+                ExceptionDispatchInfo.Capture(primaryFailure).Throw();
+            }
+
+            if (restoreFailure != null)
+            {
+                ExceptionDispatchInfo.Capture(restoreFailure).Throw();
+            }
+
+            Require(
+                report != null && report.summary.result == BuildResult.Succeeded,
+                "Windows IL2CPP build report is missing or not successful.");
+            Debug.Log(
+                $"STAGE_A_BUILD_OK target={target} bytes={report.summary.totalSize} " +
+                $"path={outputPath} scripting-backend=IL2CPP " +
+                "graphics-api=Direct3D11 settings-restored=ok");
         }
 
         [MenuItem("PC Shop Empire/Stage A/Configure Unity Version Control %#u")]
@@ -499,7 +585,10 @@ namespace PCShopEmpire3D.Editor
             }
         }
 
-        private static void Build(BuildTarget target, string locationPathName)
+        private static BuildReport Build(
+            BuildTarget target,
+            string locationPathName,
+            bool emitSuccessMarker = true)
         {
             ValidateTechnicalBaseline();
             string outputDirectory = Path.GetDirectoryName(locationPathName);
@@ -525,7 +614,23 @@ namespace PCShopEmpire3D.Editor
                     $"{target} build failed: {report.summary.result}; errors={report.summary.totalErrors}");
             }
 
-            Debug.Log($"STAGE_A_BUILD_OK target={target} bytes={report.summary.totalSize} path={locationPathName}");
+            if (emitSuccessMarker)
+            {
+                Debug.Log(
+                    $"STAGE_A_BUILD_OK target={target} bytes={report.summary.totalSize} " +
+                    $"path={locationPathName}");
+            }
+
+            return report;
+        }
+
+        private static bool GraphicsApisMatchExactly(
+            GraphicsDeviceType[] actual,
+            params GraphicsDeviceType[] expected)
+        {
+            return actual != null &&
+                   expected != null &&
+                   actual.SequenceEqual(expected);
         }
 
         private static void Require(bool condition, string message)
