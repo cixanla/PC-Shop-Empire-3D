@@ -6,6 +6,10 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #71 için tamamlanmış full physical slice iddiası kurmadan, testli CPU BuildKit domain temeli checkpoint'lendi. Canonical Processor line exact `LineId/ProductId/ItemId/ReservationId` ile çözülür; CPU, motherboard'dan ayrı managed capacity-one BuildKit slotu ve ayrı stable operation üzerinden `WorldFloor → ActorHands → CPU BuildKit` custody'sine taşınır.
+- Motherboard-staged prerequisite, `BuildOrderId + ComponentKind` registration ownership'i, exact Inventory allocation/receipt çapraz doğrulaması, stale-revision no-mutation ve pickup/place replay korunur. ProcessorSocket/Assembly authority ve revision untouched kalır.
+- Source commit `28da056a703556768c533e51dfcc4220cbed1834`, tree `00be75d089848c5244fb843cd6a67e26af8c1bd5`; CPU BuildKit hedefli EditMode `15/15` ve tam EditMode `677/677`, failed/skipped/inconclusive `0` geçti. Scene/input, visible `1/10 → 2/10`, PlayMode, native Mac/Windows ve final USB/Issue kapanışı yarınki devam dilimidir; Issue #71 açık/In Progress kalır.
+
 - Issue #68 ile accepted work order/ticket allocation'ındaki canonical motherboard exact line/ProductId/ItemId/ReservationId tuple'ıyla çözülüp stable child operation ve immutable pickup/place receipts üzerinden source → ActorHands → dedicated capacity-one BuildKit custody'sine bağlandı.
 - BuildKit, Assembly Workbench/seat custody'sinden ayrıdır. Narrow allocation-specific Inventory bridge live reservation/allocation'ı korur; generic raw transfer, world drop, stack, cart ve Assembly bypass'ları fail-closed'dur. Exact/mismatched replay, stale/conflict/capacity/foreign/value-equal/forged identity ve bütün failure yolları no-mutation testlidir.
 - GarageGraybox r35 domain-first physical projection, aynı Unity component/stable ItemId, gerçek keyboard/mouse + gamepad pickup/carry/90° rotation/preview/place/recovery ve exact work-ticket `0/10 → 1/10` görünümünü ekler. Diğer dokuz reservation/item, quote price ve Assembly state/receipts untouched kalır.

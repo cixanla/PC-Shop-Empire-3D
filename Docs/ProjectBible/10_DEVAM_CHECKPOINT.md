@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #68 canonical motherboard physical BuildKit teknik, source/docs, fiziksel USB ve lifecycle kapılarıyla tamamlandı<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main` merge commit `f60464db00bfa7262648248aebb18bfc6558ccb1`; Issue #68 kapalı/Done
+**Durum:** Issue #71 CPU BuildKit domain temeli testli ara checkpoint olarak kaydedildi; fiziksel scene/input dilimi açık<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue71-cpu-build-kit-handoff`, source commit `28da056a703556768c533e51dfcc4220cbed1834`; Issue #71 açık/In Progress
 
-## En yeni teknik checkpoint — Issue #68 / Epic #10
+## En yeni ara checkpoint — Issue #71 / Epic #10
+
+- Canonical CPU accepted work order'da yalnız exact `ComponentKind == Processor` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal/display-name authority değildir.
+- CPU için motherboard'dan ayrı stable operation ve managed capacity-one BuildKit container vardır. Registration ownership'i `BuildOrderId + ComponentKind` anahtarıyla iki component'i aynı work order altında çakışmadan tutar.
+- CPU pickup, exact motherboard aynı order için staged olmadan no-mutation `BuildKitPrerequisiteMissing` verir. Başarılı custody yalnız `WorldFloor → ActorHands → CPU BuildKit`tir; canlı reservation/allocation korunur ve ProcessorSocket/Assembly authority untouched kalır.
+- Exact pickup/place replay receipt/revision drift'i üretmez; stale BuildKit/Inventory revision fail-closed'dur. Existing motherboard dört-parametreli factory ve receipt/replay contract'ı geriye uyumludur.
+- Source commit `28da056a703556768c533e51dfcc4220cbed1834`, tree `00be75d089848c5244fb843cd6a67e26af8c1bd5`; Unity 6000.3.21f1 CPU BuildKit targeted EditMode `15/15` ve full EditMode `677/677`, failed/skipped/inconclusive `0` geçti. `git diff --check` temizdir.
+- Bu ara checkpoint fiziksel CPU support/anchor/preview, gerçek keyboard/gamepad input, work-ticket visible `1/10 → 2/10`, PlayMode, Mac/Windows native build/runtime veya Issue kapanışı iddia etmez. Issue #71/Roadmap açık/In Progress kalır.
+- Yarınki tek devam noktası authored CPU BuildKit physical projection + domain-success/recovery + work-ticket `2/10` aggregate + single-consumer input matrisi; ardından full regressions, iki native platform, docs/CI ve final USB lifecycle'dır.
+- Ayrıntılı kanıt: `Docs/Evidence/ISSUE-71-CPU-BUILDKIT-DOMAIN-FOUNDATION-CHECKPOINT-2026-08-24.md`.
+
+## Önceki teknik checkpoint — Issue #68 / Epic #10
 
 - Feature chain `2a69436` + `b0d2a97`; current technical head `480874191ee2c950e046ab2aee8be92d61d79fe4`, tree `e229788741df4c456840d356633e2a4bc1702516`. Canonical motherboard exact work-order/ticket/allocation line/product/item/reservation tuple'ıyla seçilir.
 - Stable child operation ve immutable pickup/place receipt'leri exact replay'de revision artırmaz; foreign/value-equal/wrong-kind/line/item/reservation/order, stale ve conflict yolları no-mutation fail-closed'dur.
