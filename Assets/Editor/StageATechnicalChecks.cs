@@ -73,6 +73,31 @@ namespace PCShopEmpire3D.Editor
                 Path.Combine(BuildRoot, "Windows-Mono-x64", "PC Shop Empire 3D.exe"));
         }
 
+        [MenuItem("PC Shop Empire/Stage A/Build Windows IL2CPP Development Player")]
+        public static void BuildWindowsIl2CppDevelopmentPlayer()
+        {
+            NamedBuildTarget standalone = NamedBuildTarget.Standalone;
+            ScriptingImplementation previousBackend =
+                PlayerSettings.GetScriptingBackend(standalone);
+
+            try
+            {
+                PlayerSettings.SetScriptingBackend(
+                    standalone,
+                    ScriptingImplementation.IL2CPP);
+                Build(
+                    BuildTarget.StandaloneWindows64,
+                    Path.Combine(
+                        BuildRoot,
+                        "Windows-IL2CPP-x64",
+                        "PC Shop Empire 3D.exe"));
+            }
+            finally
+            {
+                PlayerSettings.SetScriptingBackend(standalone, previousBackend);
+            }
+        }
+
         [MenuItem("PC Shop Empire/Stage A/Configure Unity Version Control %#u")]
         public static void ConfigureUvcsCredentials()
         {
