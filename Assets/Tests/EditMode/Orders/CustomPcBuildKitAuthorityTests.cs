@@ -260,6 +260,125 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         }
 
         [Test]
+        public void ForgedPickupReceiptIdentityMatrixFailsBeforeAnyMutation()
+        {
+            Fixture fixture = CreateFixture();
+            Fixture foreign = CreateFixture();
+            CustomPcBuildKitReceipt pickup = fixture.BuildKit.PickupCanonicalMotherboard(
+                OperationId(),
+                fixture.WorkOrder).Value;
+            CustomPcBuildOrderLineSnapshot motherboard = pickup.Line;
+            CustomPcBuildOrderLineSnapshot processor = fixture.WorkOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.Processor);
+            long inventoryRevision = fixture.Session.Inventory.Revision;
+            long buildKitRevision = fixture.BuildKit.Revision;
+
+            var valueEqualReceipt = new CustomPcBuildKitReceipt(
+                pickup.OperationId,
+                pickup.BuildOrder,
+                pickup.Line,
+                pickup.SourceContainerId,
+                pickup.HandsContainerId,
+                pickup.BuildKitContainerId,
+                pickup.Stage,
+                pickup.InventoryAppliedRevision);
+            var wrongLineReceipt = CloneReceipt(
+                pickup,
+                CloneLine(
+                    motherboard,
+                    StableId<CustomPcBomLineIdScope>.Parse(
+                        motherboard.LineId.Value + ".wrong"),
+                    motherboard.ProductId,
+                    motherboard.ItemId,
+                    motherboard.ReservationId,
+                    motherboard.ComponentKind));
+            var wrongProductReceipt = CloneReceipt(
+                pickup,
+                CloneLine(
+                    motherboard,
+                    motherboard.LineId,
+                    processor.ProductId,
+                    motherboard.ItemId,
+                    motherboard.ReservationId,
+                    motherboard.ComponentKind));
+            var wrongItemReceipt = CloneReceipt(
+                pickup,
+                CloneLine(
+                    motherboard,
+                    motherboard.LineId,
+                    motherboard.ProductId,
+                    processor.ItemId,
+                    motherboard.ReservationId,
+                    motherboard.ComponentKind));
+            var wrongReservationReceipt = CloneReceipt(
+                pickup,
+                CloneLine(
+                    motherboard,
+                    motherboard.LineId,
+                    motherboard.ProductId,
+                    motherboard.ItemId,
+                    processor.ReservationId,
+                    motherboard.ComponentKind));
+            var wrongKindReceipt = CloneReceipt(
+                pickup,
+                CloneLine(
+                    motherboard,
+                    motherboard.LineId,
+                    motherboard.ProductId,
+                    motherboard.ItemId,
+                    motherboard.ReservationId,
+                    PcComponentKind.Processor));
+            var wrongWorkOrderReceipt = new CustomPcBuildKitReceipt(
+                pickup.OperationId,
+                foreign.WorkOrder,
+                pickup.Line,
+                pickup.SourceContainerId,
+                pickup.HandsContainerId,
+                pickup.BuildKitContainerId,
+                pickup.Stage,
+                pickup.InventoryAppliedRevision);
+            var wrongStageReceipt = new CustomPcBuildKitReceipt(
+                pickup.OperationId,
+                pickup.BuildOrder,
+                pickup.Line,
+                pickup.SourceContainerId,
+                pickup.HandsContainerId,
+                pickup.BuildKitContainerId,
+                CustomPcBuildKitStage.MotherboardStaged,
+                pickup.InventoryAppliedRevision);
+
+            CustomPcBuildKitReceipt[] forgeries =
+            {
+                valueEqualReceipt,
+                wrongLineReceipt,
+                wrongProductReceipt,
+                wrongItemReceipt,
+                wrongReservationReceipt,
+                wrongKindReceipt,
+                wrongWorkOrderReceipt,
+                wrongStageReceipt
+            };
+            foreach (CustomPcBuildKitReceipt forgery in forgeries)
+            {
+                OperationResult<CustomPcBuildKitReceipt> result =
+                    fixture.BuildKit.PlaceCanonicalMotherboard(forgery);
+                Assert.That(result.Error,
+                    Is.EqualTo(CustomPcWorkOrderFailures.BuildKitReceiptInvalid));
+                Assert.That(fixture.Session.Inventory.Revision,
+                    Is.EqualTo(inventoryRevision));
+                Assert.That(fixture.BuildKit.Revision, Is.EqualTo(buildKitRevision));
+                Assert.That(fixture.BuildKit.StagedComponentCount, Is.Zero);
+            }
+
+            Assert.That(fixture.Session.Inventory.TryGetSerializedItem(
+                motherboard.ItemId,
+                out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(fixture.Session.HandsContainerId));
+            AssertInvariants(fixture);
+            AssertInvariants(foreign);
+        }
+
+        [Test]
         public void GenericTransferCannotBypassManagedBuildKitCustody()
         {
             Fixture fixture = CreateFixture();
@@ -356,6 +475,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
         {
             return workOrder.Lines.Single(
                 line => line.ComponentKind == PcComponentKind.Motherboard);
+        }
+
+        private static CustomPcBuildKitReceipt CloneReceipt(
+            CustomPcBuildKitReceipt source,
+            CustomPcBuildOrderLineSnapshot line)
+        {
+            return new CustomPcBuildKitReceipt(
+                source.OperationId,
+                source.BuildOrder,
+                line,
+                source.SourceContainerId,
+                source.HandsContainerId,
+                source.BuildKitContainerId,
+                source.Stage,
+                source.InventoryAppliedRevision);
+        }
+
+        private static CustomPcBuildOrderLineSnapshot CloneLine(
+            CustomPcBuildOrderLineSnapshot source,
+            StableId<CustomPcBomLineIdScope> lineId,
+            StableId<ProductDefinitionIdScope> productId,
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ReservationIdScope> reservationId,
+            PcComponentKind componentKind)
+        {
+            return new CustomPcBuildOrderLineSnapshot(
+                new CustomPcQuoteLineSnapshot(
+                    lineId,
+                    productId,
+                    itemId,
+                    reservationId,
+                    componentKind,
+                    source.PowerCableType,
+                    source.UnitCost,
+                    source.UnitPrice));
         }
 
         private static void AssertInvariants(Fixture fixture)

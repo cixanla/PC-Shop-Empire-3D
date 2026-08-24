@@ -65,6 +65,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
             Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
             Assert.That(buildKit.HasPickupReceipt, Is.True);
+            Assert.That(session.CustomPcBuildKit.TryGetReceipt(
+                session.PrototypeCustomPcBuildKitOperationId,
+                out CustomPcBuildKitReceipt pickupReceipt), Is.True);
+            Assert.That(pickupReceipt.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MotherboardInHands));
             Assert.That(session.Inventory.Revision,
                 Is.EqualTo(inventoryRevisionBeforePickup + 1));
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
@@ -101,6 +106,15 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(motherboard.Ownership, Is.EqualTo(PhysicalItemOwnership.World));
             Assert.That(motherboard.IsStablePlacement, Is.True);
             Assert.That(buildKit.MatchesCommittedPlacement(motherboard), Is.True);
+            Assert.That(Quaternion.Angle(
+                motherboard.transform.rotation,
+                buildKit.ResolveSnapPose(1).rotation), Is.LessThanOrEqualTo(0.25f));
+            Assert.That(session.CustomPcBuildKit.TryGetReceipt(
+                session.PrototypeCustomPcBuildKitOperationId,
+                out CustomPcBuildKitReceipt placementReceipt), Is.True);
+            Assert.That(placementReceipt.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MotherboardStaged));
+            Assert.That(placementReceipt, Is.Not.SameAs(pickupReceipt));
             Assert.That(session.Inventory.TryGetSerializedItem(
                 motherboardLine.ItemId,
                 out InventoryItemRecord stagedItem), Is.True);
@@ -120,16 +134,106 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 .IsSuccess, Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
 
-            long committedInventoryRevision = session.Inventory.Revision;
-            long committedBuildKitRevision = session.CustomPcBuildKit.Revision;
             ReleaseKeyboard(marker, keyboard);
-            PressKeyboard(marker, keyboard, Key.G);
-            Assert.That(session.Inventory.Revision,
-                Is.EqualTo(committedInventoryRevision));
-            Assert.That(session.CustomPcBuildKit.Revision,
-                Is.EqualTo(committedBuildKitRevision));
             Assert.That(buildKit.StagedComponentCount, Is.EqualTo(1));
             Assert.That(motherboard.GetInstanceID(), Is.EqualTo(physicalIdentity));
+        }
+
+        [UnityTest]
+        public IEnumerator GamepadSouthPickupAndPauseCoEdgeRequireReleaseRepress()
+        {
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>();
+            GaragePrototypeMarker marker = null;
+            yield return LoadGarage(value => marker = value);
+            Assert.That(marker, Is.Not.Null);
+
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            yield return PrepareQuote(marker, keyboard);
+            yield return IssuePhysicalWorkTicket(marker, keyboard);
+
+            PhysicalItemProjection motherboard = marker.MotherboardBinding.PhysicalItem;
+            MotherboardBuildKitProjection buildKit = marker.MotherboardBuildKit;
+            int physicalIdentity = motherboard.GetInstanceID();
+            AimPlayerAtItem(marker, motherboard, -Vector3.forward);
+            marker.PlayerCarry.ProcessInputFrame();
+
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.South });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
+            Assert.That(marker.PlayerInput.InteractBindingPrompt, Is.EqualTo("A"));
+            Assert.That(marker.PlayerInput.DropBindingPrompt, Is.EqualTo("B"));
+            Assert.That(marker.PlayerInput.PrimaryBindingPrompt, Is.EqualTo("RT"));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToBuildKit(marker, buildKit);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { rightTrigger = 1f });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.IsMotherboardBuildKitMode, Is.True);
+            Assert.That(marker.PlayerCarry.CurrentMotherboardBuildKitStatus,
+                Is.EqualTo(MotherboardBuildKitStatus.Valid),
+                marker.PlayerCarry.LastFailureCode);
+
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = session.CustomPcBuildKit.Revision;
+            marker.PlayerMotor.SetPaused(true);
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    buttons = (1u << (int)GamepadButton.Start) |
+                              (1u << (int)GamepadButton.East)
+                });
+            yield return null;
+            yield return null;
+
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(marker.MotherboardBinding.IsAuthorityInHands, Is.True);
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.Zero);
+
+            yield return null;
+            Assert.That(marker.PlayerCarry.HeldItem, Is.SameAs(motherboard));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            MovePlayerToBuildKit(marker, buildKit);
+            marker.PlayerCarry.ProcessInputFrame();
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState { buttons = 1u << (int)GamepadButton.East });
+            InputSystem.Update();
+            marker.PlayerCarry.ProcessInputFrame();
+
+            Assert.That(marker.PlayerCarry.HeldItem, Is.Null);
+            Assert.That(marker.MotherboardBinding.IsAuthorityInBuildKit, Is.True);
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(1));
+            Assert.That(motherboard.GetInstanceID(), Is.EqualTo(physicalIdentity));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision + 1));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision + 1));
+            Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant()
+                .IsSuccess, Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
         }
 
         [UnityTest]
@@ -229,7 +333,51 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 assemblyReceiptCount,
                 heldLocalPosition,
                 heldLocalRotation);
+            ReleaseKeyboard(marker, keyboard);
             Object.DestroyImmediate(blocker);
+            Physics.SyncTransforms();
+
+            GameObject obstruction = CreateBuildKitObstruction(buildKit);
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardBuildKitStatus,
+                Is.EqualTo(MotherboardBuildKitStatus.Obstructed),
+                marker.PlayerCarry.LastFailureCode);
+            PressKeyboard(marker, keyboard, Key.G);
+            AssertHeldBuildKitStateUnchanged(
+                marker,
+                session,
+                motherboard,
+                inventoryRevision,
+                buildKitRevision,
+                assemblyRevision,
+                assemblyReceiptCount,
+                heldLocalPosition,
+                heldLocalRotation);
+            ReleaseKeyboard(marker, keyboard);
+            Object.DestroyImmediate(obstruction);
+            Physics.SyncTransforms();
+
+            Vector3 authoredSnapPosition = buildKit.SnapAnchor.position;
+            buildKit.SnapAnchor.position += buildKit.SnapAnchor.right * 0.50f;
+            Physics.SyncTransforms();
+            marker.PlayerCarry.ProcessInputFrame();
+            Assert.That(marker.PlayerCarry.CurrentMotherboardBuildKitStatus,
+                Is.EqualTo(MotherboardBuildKitStatus.OutsideSurface),
+                marker.PlayerCarry.LastFailureCode);
+            PressKeyboard(marker, keyboard, Key.G);
+            AssertHeldBuildKitStateUnchanged(
+                marker,
+                session,
+                motherboard,
+                inventoryRevision,
+                buildKitRevision,
+                assemblyRevision,
+                assemblyReceiptCount,
+                heldLocalPosition,
+                heldLocalRotation);
+            ReleaseKeyboard(marker, keyboard);
+            buildKit.SnapAnchor.position = authoredSnapPosition;
+            Physics.SyncTransforms();
 
             Assert.That(marker.MotherboardBinding.ValidateProjectionInvariant()
                 .IsSuccess, Is.True);
@@ -455,6 +603,23 @@ namespace PCShopEmpire3D.Tests.PlayMode
             blocker.transform.localScale = new Vector3(0.42f, 0.42f, 0.12f);
             Physics.SyncTransforms();
             return blocker;
+        }
+
+        private static GameObject CreateBuildKitObstruction(
+            MotherboardBuildKitProjection buildKit)
+        {
+            Pose pose = buildKit.ResolveSnapPose(0);
+            Collider support = buildKit.SupportCollider;
+            GameObject obstruction = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obstruction.name = "MotherboardBuildKitFootprintObstruction";
+            obstruction.layer = 0;
+            obstruction.transform.position = new Vector3(
+                pose.position.x + 0.09f,
+                support.bounds.max.y + 0.043f,
+                pose.position.z);
+            obstruction.transform.localScale = new Vector3(0.04f, 0.06f, 0.04f);
+            Physics.SyncTransforms();
+            return obstruction;
         }
 
         private static void AssertHeldBuildKitStateUnchanged(
