@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-custom-pc-work-ticket-r34-v1";
+        public const string Version = "garage-motherboard-build-kit-r35-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -37,6 +37,7 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
         [SerializeField] private CheckoutStationProjection checkoutStation;
         [SerializeField] private CustomPcWorkTicketStationProjection customPcWorkTicketStation;
+        [SerializeField] private MotherboardBuildKitProjection motherboardBuildKit;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -77,6 +78,9 @@ namespace PCShopEmpire3D.Presentation
 
         public CustomPcWorkTicketStationProjection CustomPcWorkTicketStation =>
             customPcWorkTicketStation;
+
+        public MotherboardBuildKitProjection MotherboardBuildKit =>
+            motherboardBuildKit;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -182,6 +186,18 @@ namespace PCShopEmpire3D.Presentation
             CountCanonicalPowerSupplyProjections(
                 GarageStockFlowSession.PowerSupplyItemInstanceIdValue) == 1;
 
+        public bool HasMotherboardBuildKitR35Runtime =>
+            motherboardBuildKit != null &&
+            motherboardBuildKit.IsCanonical &&
+            motherboardBinding != null &&
+            motherboardBinding.MatchesBuildKitConfiguration(motherboardBuildKit) &&
+            playerCarry != null &&
+            playerCarry.MatchesMotherboardBuildKitConfiguration(
+                motherboardBuildKit,
+                motherboardBinding) &&
+            FindObjectsByType<MotherboardBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -225,7 +241,8 @@ namespace PCShopEmpire3D.Presentation
             PcieGpuPowerCableRouteProjection physicalPcieGpuPowerCableRoute = null,
             PcieGpuPowerCableAssemblyItemBinding physicalPcieGpuPowerCableBinding = null,
             PhysicalItemProjection physicalPcieGpuPowerCable = null,
-            PcieGpuPowerCableRuntimeGeometry physicalPcieGpuPowerCableGeometry = null)
+            PcieGpuPowerCableRuntimeGeometry physicalPcieGpuPowerCableGeometry = null,
+            MotherboardBuildKitProjection physicalMotherboardBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -235,6 +252,7 @@ namespace PCShopEmpire3D.Presentation
             customerFlow = garageCustomerFlow;
             checkoutStation = physicalCheckoutStation;
             customPcWorkTicketStation = physicalCustomPcWorkTicketStation;
+            motherboardBuildKit = physicalMotherboardBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -981,6 +999,7 @@ namespace PCShopEmpire3D.Presentation
                 $"custom-pc-reservation-set={(hasCustomPcQuoteAuthority ? "ready" : "missing")} " +
                 $"custom-pc-work-order={(hasCustomPcWorkOrderAuthority ? "ready" : "missing")} " +
                 $"custom-pc-work-ticket={(hasPhysicalCustomPcWorkTicketStation ? "ready" : "missing")} " +
+                $"motherboard-build-kit={(HasMotherboardBuildKitR35Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1044,6 +1063,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-custom-pc-quote-smoke");
             bool runCustomPcWorkTicketSmoke =
                 HasCommandLineArgument("-pse-custom-pc-work-ticket-smoke");
+            bool runMotherboardBuildKitSmoke =
+                HasCommandLineArgument("-pse-motherboard-build-kit-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1060,7 +1081,8 @@ namespace PCShopEmpire3D.Presentation
                              (runEps12vPowerCableSmoke ? 1 : 0) +
                              (runPcieGpuPowerCableSmoke ? 1 : 0) +
                              (runCustomPcQuoteSmoke ? 1 : 0) +
-                             (runCustomPcWorkTicketSmoke ? 1 : 0);
+                             (runCustomPcWorkTicketSmoke ? 1 : 0) +
+                             (runMotherboardBuildKitSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1069,12 +1091,23 @@ namespace PCShopEmpire3D.Presentation
 
             if (requireWindowsD3D11)
             {
-                if (!runCustomPcWorkTicketSmoke ||
+                if ((!runCustomPcWorkTicketSmoke &&
+                     !runMotherboardBuildKitSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    LogCustomPcWorkTicketSmokeFailure("smoke.graphics-api-mismatch");
+                    if (runMotherboardBuildKitSmoke)
+                    {
+                        LogMotherboardBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else
+                    {
+                        LogCustomPcWorkTicketSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+
                     return;
                 }
 
@@ -1185,6 +1218,15 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runMotherboardBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_MOTHERBOARD_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.motherboard-build-kit-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1272,6 +1314,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunCustomPcWorkTicketSmoke());
+            }
+
+            if (runMotherboardBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunMotherboardBuildKitSmoke());
             }
         }
 

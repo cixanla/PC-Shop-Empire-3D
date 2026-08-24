@@ -508,6 +508,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     brushedSteel,
                     accent,
                     labelPaper);
+            MotherboardBuildKitBuildResult motherboardBuildKitBuild =
+                BuildMotherboardBuildKit(
+                    environment,
+                    metal,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -551,12 +559,18 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 deliveryAccepted,
                 deliveryShelved,
                 seedAssemblyPrototype: true);
+            motherboardBuildKitBuild.Projection.Configure(
+                stockFlow,
+                motherboardBuildKitBuild.Surface,
+                motherboardBuildKitBuild.SnapAnchor,
+                motherboardBuildKitBuild.ProgressText);
             assemblyBuild.Binding.Configure(
                 stockFlow,
                 assemblyBuild.Motherboard,
                 assemblyBuild.Seat,
                 assemblyBuild.Fastener,
-                GarageStockFlowSession.MotherboardItemInstanceIdValue);
+                GarageStockFlowSession.MotherboardItemInstanceIdValue,
+                motherboardBuildKitBuild.Projection);
             assemblyBuild.ProcessorBinding.Configure(
                 stockFlow,
                 assemblyBuild.Processor,
@@ -608,6 +622,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
+                assemblyBuild.Binding);
+            carry.ConfigureMotherboardBuildKit(
+                motherboardBuildKitBuild.Projection,
                 assemblyBuild.Binding);
             carry.ConfigureProcessorSocket(
                 assemblyBuild.ProcessorSocket,
@@ -712,7 +729,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.PcieGpuPowerCableRoute,
                 assemblyBuild.PcieGpuPowerCableBinding,
                 assemblyBuild.PcieGpuPowerCable,
-                assemblyBuild.PcieGpuPowerCableGeometry);
+                assemblyBuild.PcieGpuPowerCableGeometry,
+                motherboardBuildKitBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,

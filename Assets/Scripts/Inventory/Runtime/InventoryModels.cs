@@ -128,7 +128,8 @@ namespace PCShopEmpire3D.Inventory
         Workbench = 6,
         CustomerBasket = 7,
         Quarantine = 8,
-        WorldFloor = 9
+        WorldFloor = 9,
+        BuildKit = 10
     }
 
     public enum InventoryReservationTargetKind
@@ -410,7 +411,8 @@ namespace PCShopEmpire3D.Inventory
                    kind == InventoryContainerKind.Workbench ||
                    kind == InventoryContainerKind.CustomerBasket ||
                    kind == InventoryContainerKind.Quarantine ||
-                   kind == InventoryContainerKind.WorldFloor;
+                   kind == InventoryContainerKind.WorldFloor ||
+                   kind == InventoryContainerKind.BuildKit;
         }
     }
 
@@ -513,6 +515,27 @@ namespace PCShopEmpire3D.Inventory
             Failure.FromCode("inventory.serialized-reservation-work-order.conflict");
         public static readonly Failure SerializedReservationWorkOrderReceiptInvalid =
             Failure.FromCode("inventory.serialized-reservation-work-order.receipt-invalid");
+        public static readonly Failure InvalidSerializedReservationWorkOrderBuildKitOperationId =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.operation-id.invalid");
+        public static readonly Failure InvalidSerializedReservationWorkOrderLineId =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.line-id.invalid");
+        public static readonly Failure SerializedReservationWorkOrderBuildKitContainerInvalid =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.container.invalid");
+        public static readonly Failure SerializedReservationWorkOrderBuildKitLineInvalid =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.line.invalid");
+        public static readonly Failure SerializedReservationWorkOrderBuildKitConflict =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.conflict");
+        public static readonly Failure SerializedReservationWorkOrderBuildKitStageInvalid =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.stage.invalid");
+        public static readonly Failure SerializedReservationWorkOrderBuildKitReceiptInvalid =
+            Failure.FromCode(
+                "inventory.serialized-reservation-work-order-build-kit.receipt.invalid");
         public static readonly Failure CheckoutConsumptionPlanInvalid =
             Failure.FromCode("inventory.checkout-consumption-plan-invalid");
         public static readonly Failure CheckoutConsumptionPlanStale =

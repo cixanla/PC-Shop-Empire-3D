@@ -21,6 +21,16 @@ namespace PCShopEmpire3D.Orders
         PostedAtWorkbenchStation = 1
     }
 
+    /// <summary>
+    /// Append-only physical custody progress for the reserved custom-PC component kit.
+    /// These states do not mean that a component has been installed in the chassis.
+    /// </summary>
+    public enum CustomPcBuildKitStage
+    {
+        MotherboardInHands = 1,
+        MotherboardStaged = 2
+    }
+
     public sealed class CustomPcBuildOrderLineSnapshot
     {
         internal CustomPcBuildOrderLineSnapshot(CustomPcQuoteLineSnapshot source)
@@ -166,6 +176,48 @@ namespace PCShopEmpire3D.Orders
         public CustomPcWorkTicketRecord WorkTicket { get; }
     }
 
+    public sealed class CustomPcBuildKitReceipt
+    {
+        internal CustomPcBuildKitReceipt(
+            StableId<CustomPcBuildKitOperationIdScope> operationId,
+            CustomPcBuildOrderRecord buildOrder,
+            CustomPcBuildOrderLineSnapshot line,
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> buildKitContainerId,
+            CustomPcBuildKitStage stage,
+            long inventoryAppliedRevision)
+        {
+            OperationId = operationId;
+            BuildOrder = buildOrder;
+            Line = line;
+            SourceContainerId = sourceContainerId;
+            HandsContainerId = handsContainerId;
+            BuildKitContainerId = buildKitContainerId;
+            Stage = stage;
+            InventoryAppliedRevision = inventoryAppliedRevision;
+        }
+
+        public StableId<CustomPcBuildKitOperationIdScope> OperationId { get; }
+
+        public CustomPcBuildOrderRecord BuildOrder { get; }
+
+        public CustomPcBuildOrderLineSnapshot Line { get; }
+
+        public StableId<ContainerIdScope> SourceContainerId { get; }
+
+        public StableId<ContainerIdScope> HandsContainerId { get; }
+
+        public StableId<ContainerIdScope> BuildKitContainerId { get; }
+
+        public CustomPcBuildKitStage Stage { get; }
+
+        public long InventoryAppliedRevision { get; }
+
+        public int StagedComponentCount =>
+            Stage == CustomPcBuildKitStage.MotherboardStaged ? 1 : 0;
+    }
+
     public static class CustomPcWorkOrderFailures
     {
         public static readonly Failure MissingAuthority =
@@ -192,5 +244,21 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-work-order.revision-overflow");
         public static readonly Failure InvariantViolation =
             Failure.FromCode("orders.custom-pc-work-order.invariant");
+        public static readonly Failure BuildKitAuthorityMissing =
+            Failure.FromCode("orders.custom-pc-build-kit.authority-missing");
+        public static readonly Failure BuildKitContainerInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.container-invalid");
+        public static readonly Failure BuildKitOperationInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.operation-invalid");
+        public static readonly Failure BuildKitWorkOrderInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.work-order-invalid");
+        public static readonly Failure BuildKitMotherboardLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.motherboard-line-invalid");
+        public static readonly Failure BuildKitIdentityConflict =
+            Failure.FromCode("orders.custom-pc-build-kit.identity-conflict");
+        public static readonly Failure BuildKitStageInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.stage-invalid");
+        public static readonly Failure BuildKitReceiptInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.receipt-invalid");
     }
 }

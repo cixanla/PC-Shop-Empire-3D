@@ -313,6 +313,26 @@ namespace PCShopEmpire3D.Orders
             return false;
         }
 
+        internal bool TryGetOwnedInventoryAllocation(
+            CustomPcBuildOrderRecord workOrder,
+            out InventorySerializedReservationWorkOrderAllocationReceipt allocation)
+        {
+            if (workOrder != null &&
+                _issuesByOrder.TryGetValue(
+                    workOrder.Id,
+                    out CustomPcWorkOrderIssueResult issue) &&
+                ReferenceEquals(issue.BuildOrder, workOrder) &&
+                OwnsIssue(issue) &&
+                _allocationsByOrder.TryGetValue(workOrder.Id, out allocation) &&
+                _inventory.OwnsSerializedReservationWorkOrderAllocation(allocation))
+            {
+                return true;
+            }
+
+            allocation = null;
+            return false;
+        }
+
         public bool TryGetWorkOrderForQuote(
             StableId<CustomPcQuoteIdScope> quoteId,
             out CustomPcBuildOrderRecord workOrder)

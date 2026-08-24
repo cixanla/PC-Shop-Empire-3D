@@ -668,6 +668,7 @@ MonoBehaviour:
   eps12vPowerCableBinding: {fileID: 0}
   graphicsCardSlot: {fileID: 0}
   graphicsCardBinding: {fileID: 0}
+  motherboardBuildKit: {fileID: 0}
   pcieGpuPowerCableRoute: {fileID: 0}
   pcieGpuPowerCableBinding: {fileID: 0}
   powerSupplyBay: {fileID: 0}
