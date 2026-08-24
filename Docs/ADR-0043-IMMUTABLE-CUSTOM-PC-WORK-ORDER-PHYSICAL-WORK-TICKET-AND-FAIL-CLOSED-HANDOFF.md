@@ -1,0 +1,39 @@
+# ADR-0043 — Immutable Custom-PC Work Order, Physical Work Ticket and Fail-Closed Handoff
+
+**Status:** Implemented and verified on macOS and Windows; physical USB closure pending<br>
+**Date:** 24 August 2026<br>
+**Scope:** Issue #66, child of Epic #10
+
+## Context
+
+Issue #64 froze one accepted custom-PC request, one compatible ten-line quote and one exact serialized reservation set. The game still lacked the next physical business boundary: converting that accepted commercial result into one owned build job and one visible work ticket at the authored garage workbench. The handoff had to remain deterministic and replay-safe without deleting, releasing, moving or consuming any reserved item and without claiming that physical assembly, electrical readiness, POST, OS, benchmark, packaging or delivery had begun.
+
+## Decision
+
+- Introduce stable typed `BuildOrderId`, `WorkTicketId` and handoff `OperationId`. One immutable build order and one immutable work ticket freeze the exact request, quote, customer, managed claim, target workbench and all ten quoted line/reservation/item identities.
+- Revalidate the complete managed reservation set immediately before commit. Missing, extra, duplicate, stale, foreign, forged, drifted or value-equal-but-not-owned identities fail closed before mutation.
+- Publish one terminal, operation-keyed Inventory allocation receipt exactly once. The ten reservations and ten serialized item records remain live and unchanged; generic checkout consume/release paths are not used and no item moves container.
+- Give one quote, claim and target workbench only one active build-order/work-ticket owner. Exact replay returns the same records and receipt without revision drift. A mismatched replay is a conflict.
+- Recover interrupted authority publication only from the exact stored allocation receipt. Recovery cannot create an orphan order, a second allocation or a different ticket.
+- Keep `CustomPcQuoteAuthority`, Inventory allocation authority and `AssemblyBuildAuthority` isolated. Handoff cannot change assembly revision, receipts, slots, retained parts or cable routes.
+- Author one physical `CustomPcWorkTicketStationProjection` at the canonical garage workbench. It shows the stable job identity, exact `10/10` reservation result and `MONTAJA HAZIR • HENÜZ BAŞLAMADI`. Decorative presentation is colliderless and non-authoritative; the dedicated interaction target owns focus and line-of-sight.
+- Require authored range, focus, line of sight, empty hands and one fresh Interact edge. Pause, held/co-edge input and competing carry/assembly targets resolve to one deterministic consumer and otherwise fail closed.
+- Preserve the complete first-person customer-to-workbench route for W/S/A/D, mouse-look, keyboard/mouse and real Input System gamepad. The dashboard cannot teleport the player, parts, kit or assembly state.
+- Pin the Windows validation player to x64 IL2CPP and Direct3D11, read back the applied settings, restore prior project settings in `finally`, and withhold the success marker until the original `ProjectSettings.asset` bytes are restored exactly.
+
+## Consequences
+
+GarageGraybox r34 now exposes the next visible custom-PC workflow boundary. The player can turn the accepted ten-part quote into one immutable build order, walk to the authored workbench and publish one physical work ticket. Inventory records that the exact reservation set belongs to that job while every serialized item stays where it was. The ticket says that assembly is ready but not started.
+
+Physical component transfer into a build kit, component attachment, electrical power-on, POST/BIOS, fictional OS and drivers, benchmark/QA, packaging, delivery, payment/final settlement, Save/Guardian authority and final art/audio/VFX/UI remain separate dependent packages.
+
+## Verification
+
+- Core feature `f9545605baff423f05615e7326902e24dc82aeeb`, tree `c0ed1add79162c334df4fc833eedf1dfaeb5cbc8`.
+- Current technical head `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`. It retains the byte-exact Windows builder restore/readback path and adds deterministic physical-ticket/carry/cart Interact arbitration plus complete no-teleport item-state assertions.
+- Full EditMode `661/661` and PlayMode `66/66`; failed and skipped `0`.
+- Universal macOS Development/StrictMode build `329,478,891` bytes; active Apple M1/Metal 1280×720 player emitted r34 readiness and the exact work-ticket success marker once with no failure/assertion/unhandled exception.
+- Exact clean Windows source produced a `1,328,828,053`-byte x64 IL2CPP player with only Direct3D11 and a byte-exact project-settings restore marker.
+- The active Windows console player ran on Intel Iris Xe / Direct3D 11.0 feature level 11.1. Windows host, r34 readiness and exact work-ticket success markers each appeared once; forbidden markers were `0`.
+- Current-source [Repository Guard 32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) passed. Draft [PR #67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) remains unmerged until documentation, physical USB and final metadata gates complete.
+- Detailed hashes, byte counts, marker receipts, the exact canonical nine-file allowlist and closure boundaries are recorded in `Docs/Evidence/IMMUTABLE-CUSTOM-PC-WORK-ORDER-PHYSICAL-WORK-TICKET-HANDOFF-CHECKPOINT-2026-08-24.md`; the canonical local evidence source is `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue66-f8afd62`.

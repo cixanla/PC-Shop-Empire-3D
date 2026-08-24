@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #64 Mac+Windows gameplay/domain/test/build/native teknik checkpoint'i tamamlandı; final docs/CI ve fiziksel USB kapanışı bekliyor<br>
+**Durum:** Issue #66 Mac+Windows gameplay/domain/test/build/native teknik checkpoint'i tamamlandı; source/docs, yerel staging ve fiziksel USB kapanışı bekliyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni teknik checkpoint — Issue #64 / Epic #10
+## En yeni teknik checkpoint — Issue #66 / Epic #10
+
+- Core feature `f9545605baff423f05615e7326902e24dc82aeeb`; current technical head `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`. Stable typed BuildOrderId/WorkTicketId/OperationId accepted exact quote/reservation setini tek immutable job ve ticket'a bağlar.
+- BuildOrder/WorkTicket exact customer, request, quote, managed claim, workbench ve on line/ProductId/ItemInstanceId/ReservationId identity'yi dondurur. Bir quote/claim/workbench yalnız bir active order/ticket sahibi olabilir.
+- Inventory reservation setini commit öncesi exact yeniden doğrular ve bir terminal operation-keyed allocation receipt'i exactly-once yayınlar. On reservation/item canlı ve yerinde kalır; move/delete/release/consume, second allocation, orphan publication, mismatched replay ve identity drift no-mutation fail-closed'dur.
+- Exact replay aynı records/receipt'i revision drift olmadan döndürür; interrupted publication yalnız exact stored allocation receipt'ten recover edilir. Quote ve Assembly authority/revision/receipt/slot/cable state izoledir.
+- GarageGraybox `garage-custom-pc-work-ticket-r34-v1`; canonical workbench'te job identity, exact `10/10` set ve `MONTAJA HAZIR • HENÜZ BAŞLAMADI` gösteren physical collider-safe ticket taşır. Range/focus/LOS/empty-hands/fresh Interact, pause/co-edge, competing-target ve gerçek keyboard/mouse/gamepad route testlidir.
+- Full EditMode `661/661`, PlayMode `66/66`; failed/skipped `0`. Universal Mac build `329478891` bayt ve Apple M1/Metal exact r34 smoke başarılıdır. Physical ticket/carry/cart same-frame Interact ownership ve complete no-teleport snapshot matrisi current source üzerinde yeniden geçti.
+- Clean exact Windows source Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 buildini `1328828053` report baytıyla tamamladı; settings restore/readback `project-settings=byte-exact` verdi. Aktif console player Intel Iris Xe/Direct3D 11.0 feature level 11.1 üzerinde host/r34/work-ticket markerlarını birer kez, forbidden markerı sıfır verdi.
+- Current-source [Guard 32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) başarılı; draft [PR #67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) açıktır. ADR-0043 ve tarihli Evidence teknik kayıt seti ve canonical `9/9` allowlist'idir; kaynak `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue66-f8afd62`dir.
+- USB kimliği ve önceki milestone zinciri fiziksel yazımdan hemen önce yeniden doğrulanır; yanlış volume'a yazılmaz. Source/docs commit, local immutable staging, doğru USB'de iki tam readback, final metadata/Guard, acceptance `18/18`, Issue/Roadmap kapanışı ve PR merge bekler.
+
+## Önceki teknik checkpoint — Issue #64 / Epic #10
 
 - Feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`; exact customer/visit/consultation provenance'ına bağlı accepted graphics-first request ve immutable on-satırlı quote/BOM ekledi.
 - BOM exact motherboard, CPU, DIMM, M.2 SSD, cooler, GPU, PSU, ATX24, EPS12V ve PCIe/GPU 6+2 rollerini stable line/reservation identity, integer price/currency, compatibility ve budget kapılarıyla bağlar.
@@ -185,17 +197,17 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `feature/issue64-custom-pc-request-quote-reservation`; exact remote HEAD `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`; draft PR #65 ve Guard `32698054990` başarılıdır. Issue #64 Mac+Windows teknik checkpoint'i tamamdır; final docs/CI ve fiziksel USB kapıları nedeniyle Issue/Roadmap açık/In Progress kalır.
+- Branch: `feature/issue66-custom-pc-work-ticket-handoff`; exact remote HEAD `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`; draft PR #67 ve Guard `32721069982` başarılıdır. Issue #66 Mac+Windows teknik checkpoint'i tamamdır; source/docs ve fiziksel USB/final metadata kapıları nedeniyle Issue/Roadmap açık/In Progress kalır.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-custom-pc-quote-reservation-r33-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-custom-pc-work-ticket-r34-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
-- PC assembly dilimi exact serialized anakart, fastener, CPU, DDR5 DIMM, M.2 NVMe, air cooler, PCIe GPU, ATX PS/2 PSU, ATX24, EPS12V ve PCIe/GPU 6+2 kablo authority'lerini tek managed Inventory gerçeği üzerinde korur. Attach/secure/seat/retention/route/detach/recovery lineage'ı ve stable world identity authoritative'dir. Issue #64 accepted request'ten immutable on-satırlı quote/BOM ve aynı exact serialized setin atomik reservation'ına uzanır.
+- PC assembly dilimi exact serialized anakart, fastener, CPU, DDR5 DIMM, M.2 NVMe, air cooler, PCIe GPU, ATX PS/2 PSU, ATX24, EPS12V ve PCIe/GPU 6+2 kablo authority'lerini tek managed Inventory gerçeği üzerinde korur. Attach/secure/seat/retention/route/detach/recovery lineage'ı ve stable world identity authoritative'dir. Issue #64 accepted request'ten immutable on-satırlı quote/BOM ve atomik reservation'a, Issue #66 aynı setin immutable BuildOrder/WorkTicket ve exactly-once allocation receipt devrine uzanır; physical component transfer/assembly henüz başlamaz.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
-- Gerçek Windows x64 IL2CPP toolchain ve Unity Editor lisansı hazırdır; exact r32 ve r33 Windows build/DirectX native smoke kapıları başarılıdır. Steam entegrasyonu, release depot/signing ve geniş uyumluluk QA'sı ayrıca yapılmamıştır.
+- Gerçek Windows x64 IL2CPP toolchain ve Unity Editor lisansı hazırdır; exact r32, r33 ve r34 Windows build/DirectX native smoke kapıları başarılıdır. Steam entegrasyonu, release depot/signing ve geniş uyumluluk QA'sı ayrıca yapılmamıştır.
 
 ## Önceki tamamlanmış feature checkpoint ve doğrulama kanıtı — Issue #52
 
@@ -256,10 +268,11 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Issue #64 yaşayan belge setini doğrula, docs checkpoint commitini feature branch'e push et ve Repository Guard/PR #65 durumunu yeniden doğrula.
-2. Issue #63 ve #64 için exact source-plus-evidence yerel staging paketlerini çakışmayan adlarla hazırla. Beklenen `/Volumes/cixanla/CIXANLA` görünürse yalnız doğrulanmış kökte `.incoming-*`, AppleDouble temizliği yalnız incoming hedefinde, iki tam manifest/Git/evidence readback ve atomik final adlandırma uygula; mount görünmüyorsa USB'ye yazma.
-3. Ana gameplay hattında accepted request → immutable quote/BOM → exact serialized reservation akışını, tek fiziksel build-order/work-ticket ve iş tezgâhı devrine bağlayan bounded dilimi başlat. Reservation authority'sini Assembly custody ile karıştırma; electrical power-on/POST/OS/benchmark daha sonraki bağımlı kapılar olarak kalsın.
+1. Issue #66 ADR-0043/Evidence/Project Bible setini source/docs checkpoint commitinde feature branch'e push et; draft PR #67 ve yeni Repository Guard'ı doğrula.
+2. `2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF` exact source-plus-nine-evidence yerel staging paketini çakışmayan adla hazırla ve tam manifest/Git/evidence readback ile doğrula.
+3. Beklenen `/Volumes/cixanla/CIXANLA` görünürse önce external physical disk, `90_BACKUPS/PCShopEmpire3D` ve önceki milestone zincirini salt-okunur doğrula. Yalnız collision-free `.incoming-*`, incoming içi AppleDouble temizliği, ilk tam readback, atomik final adlandırma ve ikinci tam readback sonrasında final metadata/Guard, acceptance `18/18`, Issue/Roadmap ve PR kapanışını tamamla; mount görünmüyorsa USB'ye yazma.
+4. Sonraki bounded gameplay hattında work order'a ayrılmış exact item setini fiziksel component transfer/build-kit completion sınırına taşı. Inventory allocation ile Assembly custody'yi karıştırma; montaj, electrical power-on/POST/OS/benchmark daha sonraki bağımlı kapılar olarak kalsın.
 
 ## Güvenli devam komutu
 
-Issue #64 feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`, Guard `32698054990`, EditMode `647/647`, PlayMode `59/59`, Universal Mac `329396456` bayt ve Windows x64 IL2CPP report `1326137709` bayt ile Apple M1/Metal ve Intel Iris Xe/Direct3D 11.0 exact r33 native smoke kapılarını geçti. Draft PR #65 açık; final docs/CI ve fiziksel USB kapanışı bekler. USB kablosu bildirilmiş olsa da beklenen mount görünmemiştir; yanlış volume'a yazma. Sonraki bounded gameplay işi exact reservation'dan fiziksel build-order/work-ticket ve iş tezgâhı devridir; electrical readiness ve completed benchmark iddiası yoktur.
+Issue #66 core feature `f9545605baff423f05615e7326902e24dc82aeeb`, current head `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`, Guard `32721069982`, EditMode `661/661`, PlayMode `66/66`, Universal Mac `329478891` bayt ve Windows x64 IL2CPP report `1328828053` bayt ile Apple M1/Metal ve Intel Iris Xe/Direct3D 11.0 exact r34 native smoke kapılarını geçti. Canonical `9/9` evidence kaynağı `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue66-f8afd62`dir. Draft PR #67 açık; source/docs, local staging ve fiziksel USB iki-readback kapanışı bekler. Exact USB kimliği ve önceki milestone zinciri doğrulanmıyorsa yazma. Sonraki bounded gameplay işi allocated exact item setinin fiziksel component transfer/build-kit completion sınırıdır; montaj, electrical readiness ve completed benchmark henüz iddia edilmez.

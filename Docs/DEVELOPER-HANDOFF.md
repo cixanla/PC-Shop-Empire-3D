@@ -14,7 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #64 Mac ve Windows teknik kapıları tamamlandı / final docs-CI ve USB kapanışı bekliyor
+### Güncel checkpoint — Issue #66 Mac ve Windows teknik kapıları tamamlandı / source-docs ve USB kapanışı bekliyor
+
+- Core feature `f9545605baff423f05615e7326902e24dc82aeeb`; current technical head `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`, tree `69ea366cc49e99b653f5d02d9c0f238b4906de69`. Stable BuildOrder/WorkTicket/Operation kimlikleri accepted exact quote/reservation setini tek immutable job ve workbench ticket'a bağlar.
+- Inventory exact ten-item managed seti commit öncesi yeniden doğrular ve tek terminal allocation receipt'i exactly-once yayınlar. Reservations/items yerinde ve canlı kalır; move/delete/release/consume, second allocation, orphan recovery ve mismatched replay fail-closed'dur.
+- GarageGraybox `garage-custom-pc-work-ticket-r34-v1`; canonical workbench physical ticket'ı job identity, `10/10` ve `MONTAJA HAZIR • HENÜZ BAŞLAMADI` gösterir. Range/focus/LOS/empty-hands/fresh Interact, pause/co-edge/competing-target ve gerçek keyboard/mouse/gamepad customer→workbench rotası testlidir. Assembly untouched kalır.
+- EditMode `661/661`, PlayMode `66/66`; Universal Mac `329478891` bayt ve Apple M1/Metal exact r34 smoke başarılıdır. Same-frame ticket/carry/cart Interact ownership ve kapsamlı player/item/Inventory/Assembly no-teleport snapshot'ları bu current source üzerinde yeniden doğrulandı.
+- Clean exact Windows head x64 IL2CPP + only-Direct3D11 buildi `1328828053` report baytı üretmiş, ProjectSettings restore/readback `byte-exact` geçmiştir. Interactive Intel Iris Xe/Direct3D 11.0 player host/r34/work-ticket markerlarını birer kez, forbidden markerını sıfır vermiştir.
+- Current-source [Guard 32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) başarılı; draft [PR #67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) açıktır. ADR-0043 ve tarihli Evidence exact receiptsi ve canonical `9/9` allowlist'i taşır; kaynak `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue66-f8afd62`dir.
+- USB kimliği ve önceki milestone zinciri yazımdan hemen önce yeniden doğrulanmalıdır; yanlış volume'a yazılmaz. Source/docs commit, local immutable staging, fiziksel USB iki tam readback, final metadata/Guard, acceptance `18/18`, Issue/Roadmap kapanışı ve PR merge bekler.
+
+### Önceki checkpoint — Issue #64 Mac ve Windows teknik kapıları tamamlandı / final docs-CI ve USB kapanışı bekliyor
 
 - Feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95`, tree `615c9c4398f6a0be16c3a693dd812aa3f5541291`; exact customer/visit/consultation provenance'ına bağlı accepted graphics-first custom-PC request ve immutable on-satırlı quote/BOM ekler.
 - BOM exact motherboard, CPU, DIMM, M.2 SSD, cooler, GPU, PSU, ATX24, EPS12V ve PCIe/GPU 6+2 item'larını stable line/reservation kimlikleri, integer price/currency, compatibility ve budget kapılarıyla bağlar.
@@ -143,8 +153,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `647/647` passed.
-- Play Mode `59/59` passed.
+- Edit Mode `661/661` passed.
+- Play Mode `66/66` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -217,7 +227,9 @@ Tamamlanan saf Core sözleşmeleri:
 - Görsel hedef `ADR-0013`teki okunaklı yarı gerçekçiliktir. Mevcut primitive garaj, kutu ve eller final sanat değil; mekanik kanıttır.
 - Tek-köşe benchmarkında bevel'lı tezgâh/raf, prosedürel PBR yüzeyler, görev ışığı, ACES/bloom ve reflection probe uygulanmıştır; runtime tanısı `lookdev=ok` verir.
 - Issue #64 exact customer/visit/consultation provenance'ından accepted graphics-first custom-PC request, immutable on-satırlı quote/BOM ve motherboard/CPU/DIMM/M.2/cooler/GPU/PSU/ATX24/EPS12V/PCIe 6+2 için exact serialized Inventory reservation ekledi. Atomik claim/operation/revision, exact replay ve interrupted-publication recovery fail-closed'dur.
-- GarageGraybox r33 aynı akışı gerçek keyboard/mouse ve gamepad ile görünür kılar; Mac ve Windows native build/runtime kapıları ile `647/647` EditMode ve `59/59` PlayMode regression başarılıdır. Sonraki bounded bağımlılık reservation'dan fiziksel build-order/work-ticket ve iş tezgâhı devrine gitmelidir; power-on/POST/OS/benchmark henüz iddia edilmez.
+- GarageGraybox r33 aynı akışı gerçek keyboard/mouse ve gamepad ile görünür kılar; Mac ve Windows native build/runtime kapıları ile `647/647` EditMode ve `59/59` PlayMode regression başarılıdır. Bu Issue #64 tarihsel sınırıdır.
+- Issue #66 exact quote/reservation setini immutable BuildOrder + WorkTicket'a ve exactly-once Inventory allocation receipt'e bağladı. On reservation/item canlı, yerinde ve unchanged kalır; Assembly authority untouched'dır.
+- GarageGraybox r34 canonical workbench physical ticket'ı job identity, `10/10` ve assembly-not-started statusuyla görünür kılar. Mac+Windows native r34 ve `661/661` EditMode + `66/66` PlayMode geçti. Sonraki bounded bağımlılık allocated exact item setinin fiziksel component transfer/build-kit completion sınırıdır; power-on/POST/OS/benchmark henüz iddia edilmez.
 - Issue #52 feature `92a0f7b814ad5e597d8d4ca033f2e533f618f719`, tree `4150bd36fa65d4043061e5979e08efb502338fc6` ve [Repository Guard 31892420515](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892420515) ile doğrulandı. EditMode `352/352`, PlayMode `24/24`, failed/skipped `0`; Universal macOS build `327864494` bayt ve Mach-O `x86_64 + arm64`tır.
 - Apple M4/Metal 1280×720 `garage-physical-checkout-station-r21-v1` stock r4 ve art arda üç customer r6/r7/r8 smoke; station access, shelf bypass, release/repress checkout+cash, receipt, Economy/ledger, authority isolation, stock projection ve safe customer exit kapılarını geçti. Scene ve final kanıt SHA-256 değerleri `Docs/ProjectBible/10_DEVAM_CHECKPOINT.md` içindedir.
 - Issue #52 source/docs `d6cd203c5b9837c8eecc63ee3974dd2e76351bdc`, tree `6d73d5ac6d675733c939f181d087da3aef90f496` ve [Repository Guard 31892875650](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/31892875650) ile kapandı. USB milestone 584/584 manifest, 576/576 exact Git source ve 7/7 evidence kapısını geçti; acceptance `17/17`, Issue kapalı/Done ve parent Epic #9 kapalı/Done'dır.
@@ -233,7 +245,7 @@ Henüz yapılmayanlar:
 - Save/Guardian runtime.
 - Steamworks entegrasyonu, release signing/depot matrisi ve geniş Windows donanım/uzun oturum QA'sı; temel native Windows x64 IL2CPP/DirectX teknik kapısı artık başarılıdır.
 
-Issue #64 feature `c7d3884`, Guard `32698054990`, EditMode `647/647`, PlayMode `59/59`, Universal Mac `329396456` bayt ve Windows x64 IL2CPP report `1326137709` bayt ile Mac Apple M1/Metal ve Windows Intel Iris Xe/D3D11 exact r33 native smoke kapılarını geçti. Draft PR #65 açıktır. Final belge/CI kimliği ile fiziksel USB iki-readback kapanışı bekler; ardından bounded iş exact reservation'dan fiziksel build-order/work-ticket ve iş tezgâhı devridir. Electrical power-on, tam benchmark, Save, Guardian ve final art ayrı kapılardır.
+Issue #66 core feature `f954560`, current head `f8afd62`, tree `69ea366`, Guard `32721069982`, EditMode `661/661`, PlayMode `66/66`, Universal Mac `329478891` bayt ve Windows x64 IL2CPP report `1328828053` bayt ile Mac Apple M1/Metal ve Windows Intel Iris Xe/D3D11 exact r34 native smoke kapılarını geçti. Canonical `9/9` evidence kaynağı `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue66-f8afd62`dir. Draft PR #67 açıktır. Source/docs, local immutable staging ve fiziksel USB iki-readback kapanışı bekler; ardından bounded iş allocated exact item setinin fiziksel component transfer/build-kit completion sınırıdır. Assembly completion, electrical power-on, tam benchmark, Save, Guardian ve final art ayrı kapılardır.
 
 ## 7. Çalışma akışı
 
