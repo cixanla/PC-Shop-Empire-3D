@@ -1,6 +1,6 @@
 # ADR-0044 — Canonical Motherboard Physical Build-Kit Handoff
 
-**Status:** Accepted technical design; verified on macOS and Windows; physical USB and Issue/Roadmap lifecycle remain separate closure gates<br>
+**Status:** Accepted technical design; verified on macOS and Windows; immutable local and physical USB checkpoint complete; final metadata/Guard and Issue/Roadmap lifecycle remain separate closure gates<br>
 **Date:** 24 August 2026<br>
 **Scope:** Issue #68, child of Epic #10
 
@@ -37,5 +37,7 @@ The other nine component transfers, `10/10` kit completion, motherboard seating/
 - Exact detached clean Windows source produced a `1,327,308,678`-byte x64 IL2CPP/Direct3D11 build report. The three native binaries were hash-read back from the binary manifest.
 - Logged-on interactive Windows player used Intel Iris Xe / Direct3D 11.0 feature level 11.1. Host, readiness, exact Issue #68 success and shutdown markers each appeared once; forbidden tokens `0`, player/task exit `0`, graceful shutdown true, task deleted and process residue `0`.
 - Technical-source [Repository Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996) passed for `480874191ee2c950e046ab2aee8be92d61d79fe4`; draft [PR #69](https://github.com/cixanla/PC-Shop-Empire-3D/pull/69) is the integration vehicle.
+- Exact source/docs commit `374094ceda9f8f65991e3906c62e1e4ba768b134`, tree `65418d089bc88c9f3dd435b93536c754fd4fef41` and [Repository Guard 32750065918](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32750065918) passed.
 - Exact hashes, byte counts, commands, Mac/Windows receipts, interactive-task cleanup, the 20-row acceptance map and the canonical `14/14` procedure-bound evidence contract are recorded in `Docs/Evidence/CANONICAL-MOTHERBOARD-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-24.md`. Canonical local evidence source: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue68-4808741`.
-- Local immutable staging, physical USB incoming/final double readback, final metadata/Guard, Issue closure and Roadmap Done are deliberately not claimed by this technical ADR until their independent gates pass.
+- Collision-free local immutable incoming/final and correct physical USB incoming/atomic-final targets passed four complete verifier readbacks with the same `929/929` payload, `914/914` exact Git source, `14/14` evidence, `18,882,211` bytes and manifest SHA-256 `6d59ddb9ce79cba9ce657f537e32d941467213b241b86a6da424c1c186f112a9`. AppleDouble and incoming residue were `0`; the USB was safely ejected after final readback.
+- Final physical metadata commit/Guard, acceptance `20/20`, Issue closure, Roadmap Done and PR merge are deliberately not claimed until their independent gates pass.

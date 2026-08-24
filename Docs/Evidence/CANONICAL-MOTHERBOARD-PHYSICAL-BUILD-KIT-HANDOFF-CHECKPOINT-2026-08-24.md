@@ -6,7 +6,7 @@
 **Feature chain:** `2a69436` + `b0d2a97`<br>
 **Technical head:** `480874191ee2c950e046ab2aee8be92d61d79fe4`<br>
 **Technical tree:** `e229788741df4c456840d356633e2a4bc1702516`<br>
-**Closure status:** domain/scene/input, exact-head regression, macOS and Windows native technical gates passed; source/docs commit, immutable local package, physical USB two-readback, final metadata/Guard and Issue/Roadmap lifecycle remain independent pending gates
+**Closure status:** domain/scene/input, exact-head regression, macOS and Windows native, source/docs, immutable local package and physical USB two-readback gates passed; final metadata/Guard and Issue/Roadmap lifecycle remain independent pending gates
 
 ## Delivered playable result
 
@@ -98,6 +98,17 @@ The canonical local evidence source is `/Users/cixanla/Developer/PCShopEmpire3D/
 
 `Tools/verify-checkpoint-package.sh ... issue68` requires this exact `14/14` name set in addition to manifest, path, size, SHA-256, exact Git-source, forbidden/cache/credential, secret-signature, symlink and AppleDouble gates. Omitting the Issue-specific mode intentionally uses generic canonical behavior and is not valid for Issue #68 closure.
 
+## Source/docs and physical checkpoint readback
+
+- Source/docs commit `374094ceda9f8f65991e3906c62e1e4ba768b134`, tree `65418d089bc88c9f3dd435b93536c754fd4fef41` and [Repository Guard 32750065918](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32750065918) passed. This identity remains the immutable package source; the later physical-metadata commit does not replace it.
+- Final package name: `2026-08-24_STAGE_B_CANONICAL_MOTHERBOARD_PHYSICAL_BUILD_KIT_HANDOFF`.
+- Collision-free local incoming and final targets both returned `CHECKPOINT_PACKAGE_OK`. The final local path is `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-24_STAGE_B_CANONICAL_MOTHERBOARD_PHYSICAL_BUILD_KIT_HANDOFF`.
+- The external physical device, `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D` root and prior Issue #66 milestone chain were verified read-only before any write. Only collision-free `.incoming-issue68-374094c` was written; it passed the complete verifier before same-filesystem atomic rename to the final package name.
+- USB incoming and USB final targets both returned `CHECKPOINT_PACKAGE_OK`. The historical final path is `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-24_STAGE_B_CANONICAL_MOTHERBOARD_PHYSICAL_BUILD_KIT_HANDOFF`.
+- All four readbacks — local incoming, local final, USB incoming and USB final — matched exactly: manifest `929/929`, exact Git source `914/914`, evidence `14/14`, payload `18,882,211` bytes, source/docs commit/tree above and manifest SHA-256 `6d59ddb9ce79cba9ce657f537e32d941467213b241b86a6da424c1c186f112a9`.
+- Internal AppleDouble, sibling AppleDouble and incoming residue counts were `0`. Filesystem writes were synchronized and `/dev/disk4` was safely ejected after the second physical readback.
+- This section proves the physical USB checkpoint only. The physical-metadata commit/Guard, acceptance `20/20`, Issue/Project lifecycle and PR merge remain pending below.
+
 ## Canonical Issue #68 acceptance matrix
 
 This is the repository-owned one-to-one rendering of the 20 acceptance bullets. `TECHNICAL PASS` means the exact technical source plus promoted test/Mac/Windows evidence proves the behavior. `PASS` on row 20 additionally requires source/docs push/CI, immutable local staging, physical USB incoming/final double readback and Issue/Project lifecycle closure.
@@ -123,17 +134,17 @@ This is the repository-owned one-to-one rendering of the 20 acceptance bullets. 
 | 17 | EditMode domain/invariant/replay/failure and real-input PlayMode pickup/carry/place/recovery matrices pass. | TECHNICAL PASS | Exact-head EditMode `675/675`, PlayMode `73/73`; failed/skipped/inconclusive `0`. |
 | 18 | Full regression, Repository Guard and diff hygiene pass. | TECHNICAL PASS | Exact detached clean-clone regression, local guard, `git diff --check`, [Guard 32744068996](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32744068996). |
 | 19 | Universal macOS and exact-head Windows x64 IL2CPP/D3D11 build/native smoke pass. | TECHNICAL PASS | Mac and Windows tables, receipts and exact marker/cleanup readbacks above. |
-| 20 | Living docs, private push/CI, correct USB incoming→two full readbacks→atomic final and Issue/Project lifecycle are separately proven. | IN PROGRESS | ADR/Evidence/tool docs are authored locally. Source/docs commit/Guard, immutable package, physical USB and lifecycle are not yet claimed. |
+| 20 | Living docs, private push/CI, correct USB incoming→two full readbacks→atomic final and Issue/Project lifecycle are separately proven. | IN PROGRESS | Source/docs `374094c` + Guard `32750065918`, immutable local package and physical USB incoming/final double readback passed exactly as recorded above. Final physical-metadata Guard and Issue/Project lifecycle remain pending. |
 
 ## Closure boundary
 
-Technical gameplay acceptance rows 1–19 are complete. Row 20 remains open until all of these independent gates pass in order:
+Technical gameplay acceptance rows 1–19 are complete. Closure steps 1–5 below are complete; row 20 remains open until step 6 passes:
 
-1. Commit/push this ADR, Evidence, Project Bible, handoff, changelog and verifier contract; run exact Repository Guard.
-2. Export exact source/docs commit into a collision-free local immutable milestone and verify it with `issue68` mode.
-3. Verify the external physical USB identity and prior milestone chain read-only.
-4. Copy only to a collision-free `.incoming-*` target, remove AppleDouble only inside that new target, and run a complete verifier readback.
-5. Rename atomically on the same filesystem, then run the complete verifier a second time on the final name.
+1. **COMPLETE** — Commit/push this ADR, Evidence, Project Bible, handoff, changelog and verifier contract; run exact Repository Guard.
+2. **COMPLETE** — Export exact source/docs commit into a collision-free local immutable milestone and verify it with `issue68` mode.
+3. **COMPLETE** — Verify the external physical USB identity and prior milestone chain read-only.
+4. **COMPLETE** — Copy only to a collision-free `.incoming-*` target and run a complete verifier readback with AppleDouble/residue `0`.
+5. **COMPLETE** — Rename atomically on the same filesystem, then run the complete verifier a second time on the final name and safely eject the USB.
 6. Commit/push physical metadata, pass final Guard, check all 20 Issue acceptance boxes, close Issue #68, move it to Roadmap Done, and keep parent Epic #10 open/In Progress.
 
-Until those gates pass, this document does not claim a physical USB milestone, Issue closure, Project Done or merged PR.
+The physical USB milestone is now proven. Until step 6 passes, this document does not claim final physical-metadata Guard, Issue closure, Project Done or merged PR.
