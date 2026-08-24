@@ -9,7 +9,7 @@
 **Technical tree:** `69ea366cc49e99b653f5d02d9c0f238b4906de69`<br>
 **Source/docs checkpoint:** `4e1ef4322d9ef049e3aac915c611474f6bee92fd`<br>
 **Source/docs tree:** `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`<br>
-**Closure status:** macOS/Windows technical evidence, exact source/docs checkpoint CI and local immutable staging verified; physical USB, final metadata/lifecycle closure pending
+**Closure status:** macOS/Windows technical evidence, exact source/docs checkpoint CI, local immutable staging and physical USB two-readback verified; final metadata/Guard and lifecycle closure pending
 
 ## Delivered playable result
 
@@ -84,7 +84,7 @@ GARAGE_CUSTOM_PC_WORK_TICKET_RUNTIME_SMOKE work-order=immutable ticket=visible r
 
 ## Canonical Issue #66 acceptance matrix
 
-This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance bullets. `TECHNICAL PASS` means the committed feature plus the promoted Mac/Windows artifacts prove that bullet. It does not imply local staging, physical USB, Issue/Project closure or PR merge. Issue #66 cannot claim final `18/18` while row 18 remains partial.
+This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance bullets. `TECHNICAL PASS` means the committed feature plus the promoted Mac/Windows artifacts prove that bullet. `PASS` on row 18 additionally requires both physical USB readbacks. Acceptance evidence can reach `18/18` independently of the still-separate final metadata/Guard, Issue/Project closure and PR merge lifecycle gates.
 
 | # | Acceptance contract | Current gate | Canonical evidence |
 |---:|---|---|---|
@@ -105,7 +105,7 @@ This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance
 | 15 | Dashboard cannot teleport player, items, kit or assembly state. | TECHNICAL PASS | Every customer/request/quote/ticket progression edge in both real-input routes snapshots and rejects automatic player pose, physical projection identity/parent/pose/active/ownership/carry/cart/stack/stable-placement/last-safe state, serialized item/container state and Assembly revision/receipt mutation; no Dashboard handoff path exists. |
 | 16 | EditMode and PlayMode prove atomicity, replay, recovery, targeting, input, visible state and invariant preservation. | TECHNICAL PASS | Current-source full EditMode `661/661` and PlayMode `66/66` passed on Mac and Windows after the input-owner/no-teleport strengthening. |
 | 17 | macOS Development/StrictMode and native Metal smoke pass. | TECHNICAL PASS | Universal Mac build and accepted Apple M1/Metal r34 receipt above. |
-| 18 | Windows x64 IL2CPP/D3D11 and physical USB readback are separate final gates before Done. | PARTIAL — WINDOWS + LOCAL STAGING PASS / USB PENDING | Exact Windows IL2CPP/D3D11 receipts above. The immutable local package passed incoming and final readback; physical USB two-readback and final metadata are still pending. |
+| 18 | Windows x64 IL2CPP/D3D11 and physical USB readback are separate final gates before Done. | PASS | Exact Windows IL2CPP/D3D11 receipts above. The immutable package passed local incoming/final verification plus physical USB incoming/final verification at the exact authorized volume; both physical readbacks proved `906/906`, `896/896`, `9/9`, `17,330,935` bytes and manifest `1514481a…4121`, with AppleDouble/incoming residue `0`. |
 
 ## Normative local and physical checkpoint package contract
 
@@ -148,12 +148,13 @@ All Issue #66 local/incoming/final readbacks invoke `Tools/verify-checkpoint-pac
 ## Repository and external checkpoint status
 
 - Technical-source Repository Guard [32721069982](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32721069982) passed for `f8afd62326c74aff23fa10bb33ef79ecb9a656b6`.
-- Exact source/docs checkpoint `4e1ef4322d9ef049e3aac915c611474f6bee92fd`, tree `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`, passed [Repository Guard 32723213686](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32723213686). Draft PR [#67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) points to that source/docs checkpoint.
+- Exact source/docs checkpoint `4e1ef4322d9ef049e3aac915c611474f6bee92fd`, tree `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`, passed [Repository Guard 32723213686](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32723213686). Local staging metadata `2dc67d2c83000287925dc34bf784b1287cffc916` and provenance-corrected pre-USB head `67529275f2c844a44511de5dc344cedbe1158624` passed Guards `32724354230` and [32724718603](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32724718603). Draft PR [#67](https://github.com/cixanla/PC-Shop-Empire-3D/pull/67) contains this chain.
 - Local immutable package `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF` passed the verifier before and after atomic final naming: manifest `906/906`, exact Git source `896/896`, evidence `9/9`, payload `17,330,935` bytes and manifest SHA-256 `1514481a5b8dc90aae89f6de1d0e49ac4c6e964ee280c8170e6e224206444121`.
-- Physical USB identity and the previous milestone chain must be revalidated immediately before any write; no alternate volume is used and no physical closure is claimed here.
-- The intended local/USB milestone name is `2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF`.
-- The final package must use a collision-free `.incoming-*` target, remove AppleDouble files only inside that new incoming target, pass complete hash+size+path plus exact Git-source/evidence readback, atomically rename and pass a second complete readback.
-- Issue #66 remains open and Roadmap `In Progress`; physical USB, final metadata/Guard, acceptance `18/18` and PR merge are not yet claimed.
+- Physical USB identity was revalidated as external physical `/dev/disk4`, mounted only at exact `/Volumes/cixanla/CIXANLA`; `90_BACKUPS/PCShopEmpire3D` and the prior Issue #62 milestone chain were present before write. No alternate volume was used.
+- Physical final milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF`.
+- Collision-free `.incoming-issue66-6752927` contained the package first. AppleDouble cleanup was restricted to that new incoming target; the complete issue66 verifier then passed before same-filesystem atomic rename. The final directory passed the same complete verifier a second time.
+- Incoming and final physical readbacks each proved manifest `906/906`, exact Git source `896/896`, evidence `9/9`, payload `17,330,935` bytes, source/docs commit `4e1ef4322d9ef049e3aac915c611474f6bee92fd`, tree `4df76fb1b50da53bdee7e65cb64acf0e73a5c018` and manifest SHA-256 `1514481a5b8dc90aae89f6de1d0e49ac4c6e964ee280c8170e6e224206444121`.
+- Independent final confirmation found manifest rows `906`, the same manifest SHA-256, internal AppleDouble `0`, sibling AppleDouble `0` and remaining `.incoming-issue66-6752927` absent. Acceptance evidence is `18/18`; Issue #66 remains open and Roadmap `In Progress` only until this final metadata/Guard and PR lifecycle complete.
 
 ## Bounded exclusions
 
