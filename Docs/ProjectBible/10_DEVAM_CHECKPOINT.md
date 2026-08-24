@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 24 Ağustos 2026<br>
-**Durum:** Issue #62 kaynak/test/build/native/CI ve fiziksel USB checkpoint/readback kapıları tamamlandı; Issue kapalı ve Roadmap Done<br>
+**Durum:** Issue #63 Mac gameplay/domain/görsel/test/build/native/CI teknik checkpoint'i tamamlandı; Windows Unity lisansı ve final USB kapanışı bekliyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, `main`
 
-## En yeni teknik checkpoint — Issue #62 / Epic #10
+## En yeni teknik checkpoint — Issue #63 / Epic #10
+
+- Feature `ea1e51f862d4094936c03bccf9fbfaee7bb7d12b`, tree `ecc32279a8e17e8179114a9b6cfcfe4737827601`; tek canonical serialized PCIe/GPU 8-pin 6+2 cable, iki distinct typed/keyed endpoint, üç stable ordered waypoint ve capacity-one `GpuPowerCableRoute` eklendi.
+- Mevcut dokuz managed container + `GpuPowerCableRoute` tek on-container all-or-none claim'dir. `Loose ↔ Routed`, exact Hands↔route custody, immutable route/unroute receipts, immediate/delayed replay, history fold, retained PSU + secured motherboard + retained GPU lineage ve ATX24/EPS12V isolation testlidir.
+- Route yalnız exact keyed orientation, range/focus/LOS ve obstruction-free authored yol üzerinde geçerlidir. Wrong key/endpoint, missing host, duplicate, stale/conflict/full-hands/saturation, generic placement/stack/cart/raw transfer ve routed durumdaki PSU/motherboard/GPU removal no-mutation fail-closed'dur.
+- GarageGraybox `garage-pcie-gpu-power-cable-routing-r32-v1`; aynı Unity component instance/stable ItemId ile pickup→preview→route→unroute→world drop/recovery akışını taşır. GPU anchor canonical moving GPU'ya bağlıdır; üç-waypoint preview/committed route jointsizdir.
+- Explicit visual fix `d655f1a5aab0c882cf40702472ec1b8ad44747ad`, tree `c3fff116317db7e3388e0faf04e38a7ffaa7ce77`; PSU ucunu monolitik 8-pin bırakır, GPU ucunu ayrı 6-pin + 2-pin housing, 6-pin keyed latch, 2-pin retention clip ve ayrı `6`/`2` etiketleriyle gösterir. Dekoratif child'lar collider/joint/raycast authority değildir; bağımsız salt-okunur yeniden denetim kalan P0/P1 bulmadı.
+- Final exact committed-scene kanıtı EditMode `626/626`, PlayMode `53/53`; failed/skipped/inconclusive `0`. Universal macOS Development/StrictMode build `329334656` bayt; aktif Apple M1/Metal 1280×720 canonical readiness ve exact `GARAGE_PCIE_GPU_POWER_CABLE_RUNTIME_SMOKE` başarılıdır.
+- Feature [Guard 32676069923](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676069923), Windows gate [Guard 32676154473](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32676154473) ve explicit 6+2 visual-fix [Guard 32677267023](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32677267023) başarılıdır.
+- Windows clone build denemesi anında clean/exact `cdfe9d6` idi; Unity 6000.3.21f1 Windows IL2CPP support, VS Build Tools, MSVC, MSBuild ve Windows SDK hazırdır. İlk StrictMode IL2CPP build kaynak derlemesinden önce `No valid Unity Editor license found` nedeniyle exit `198` ile durdu; Windows IL2CPP/DirectX/r32 smoke başarı iddiası yoktur.
+- Beklenen USB `/Volumes/cixanla/CIXANLA`, `90_BACKUPS/PCShopEmpire3D` ve önceki Issue #62 milestone zinciriyle güvenle doğrulandı. Windows native kanıtı ve final source/docs kimliği oluşmadan Issue #63 final package yazılmadı. Issue/Roadmap açık/In Progress; electrical power-on, wattage/headroom, POST/BIOS/OS, completed benchmark ve diğer kablo aileleri kapsam dışıdır.
+
+## Önceki checkpoint — Issue #62 / Epic #10
 
 - Feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, tree `c14524fecee561eff3a144bd15e67be5a48f8335`; tek canonical serialized EPS12V/CPU cable, iki typed/keyed 8-pin endpoint, üç stable ordered waypoint ve capacity-one `CpuPowerCableRoute` eklendi.
 - Dokuz managed container tek all-or-none Assembly claim'inde kalır. `Loose ↔ Routed`, exact Hands↔CpuPowerCableRoute custody, immutable route/unroute receipts, immediate/delayed replay, history fold ve ATX24 isolation testlidir.
@@ -160,17 +172,17 @@
 ## Son sağlam teknik durum
 
 - Unity proje kökü: `/Users/cixanla/Developer/PCShopEmpire3D/Game`; Unity `6000.3.21f1`, URP `17.3.0`, C#.
-- Branch: `main`; Issue #56 feature `7482fc9aabe6a3a27ba41730db12c60e18aac515`, source/docs `01c2b5a49f11b27b52af9e299d4d2e48cef3c962` ve USB metadata `17af550856e8bca288ed5c17924bc82586c76c27` private remote'a ulaştı, üç Guard başarılıdır; ayrı USB milestone 668/668 doğrulandı, acceptance `21/21`, Issue kapalı/Roadmap `Done`dur.
+- Branch: `main`; Issue #63 feature `ea1e51f8`, Windows gate `cdfe9d6a` ve explicit GPU-side 6+2 fix `d655f1a5` private remote'a ulaştı; üç Repository Guard başarılıdır. Mac teknik checkpoint tamamdır, Issue/Roadmap Windows + final USB kapıları nedeniyle açık/In Progress kalır.
 - Core stable ID/result/time, sürümlü PCG32, SHA-256 stream derivation ve deterministic event dispatcher tamamdır.
 - Catalog/Inventory/Orders/Retail zinciri; authoritative teslim alma, maliyet provenance'ı, parcel açma, shelf offer, basket reservation, checkout snapshot, prepared completion ve consultation-gated stale-safe Buy/Leave action katmanlarını içerir.
 - Downstream `PSE.Economy`; exact-cash settlement receipt'i, immutable ledger transaction/entry kayıtlarını, Cash/SalesRevenue/COGS/InventoryAsset hesaplarını, balance ve gross-margin sorgularını içerir. Retail/Inventory/Orders Economy'ye ters referans taşımaz.
 - Actors sınırı; kararlı müşteri intent/visit modeli, monotonik lifecycle, bounded route retry/fallback, `OfferDeclined`, command receipt ledger ve visit-owned immutable consultation authority'sini içerir. `AwaitingCheckout` sonrası fulfillment/çıkış canonical Economy settlement receipt'ine bağlıdır.
-- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-dimm-dual-latch-r25-v1`.
+- İlk oynanabilir sahne: `Assets/Scenes/Prototypes/GarageGraybox.unity`; runtime marker `garage-pcie-gpu-power-cable-routing-r32-v1`.
 - Fiziksel checkout station range/focus/LOS/pause ve exact visit/provenance gate'lerini taşır; shelf/uzak ödeme bypass'ı yoktur. Versioned primary press tek tüketicilidir ve release/repress settlement sözleşmesi gerçek Input System testleriyle kilitlidir.
-- PC assembly dilimi exact serialized `MicroAtx` anakartı managed Workbench'e oturtur; Assembly-owned fastener ile `SeatedUnsecured ↔ SeatedSecured`, exact CPU ile capacity-1 socket'te `EmptyOpen ↔ ProcessorSeatedOpen ↔ ProcessorRetained` ve exact DDR5 UDIMM ile A2 slotunda `EmptyOpen ↔ MemoryModuleSeatedOpen ↔ MemoryModuleRetained` döngülerini korur. Attach/secure/seat/retention/detach/recovery lineage'ı ve stable world identity authoritative'dir.
+- PC assembly dilimi exact serialized anakart, fastener, CPU, DDR5 DIMM, M.2 NVMe, air cooler, PCIe GPU, ATX PS/2 PSU, ATX24, EPS12V ve PCIe/GPU 6+2 kablo authority'lerini tek managed Inventory gerçeği üzerinde korur. Attach/secure/seat/retention/route/detach/recovery lineage'ı ve stable world identity authoritative'dir.
 - Küçük kutu placement/rotation/stacking, büyük kutu carry, yüklü platform arabası, stable item ID, domain-first rollback ve recovery invariantları korunur.
 - Görsel hedef okunaklı yarı gerçekçiliktir; mevcut primitive garaj, kutular, eller ve müşteri final sanat değildir.
-- Gerçek Windows x64 runtime/DirectX/Steam/IL2CPP testi dış platform kapısıdır.
+- Gerçek Windows x64 IL2CPP toolchain hazırdır; Unity Editor lisansı olmadığı için native build/DirectX r32 smoke henüz dış platform kapısıdır. Steam entegrasyonu ayrıca yapılmamıştır.
 
 ## Önceki tamamlanmış feature checkpoint ve doğrulama kanıtı — Issue #52
 
@@ -207,10 +219,10 @@
 
 ## USB güvenli checkpoint durumu
 
-- En yeni doğrulanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_ATX24_SPLIT_PSU_CABLE_ROUTING`.
-- Source/docs `52795b66fee1eb933d0d9c4ff8cbd7eca512d718`; 796 tracked `SOURCE`, 4 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt`; 801 manifest payload satırı, toplam 803 dosya ve 15.237.662 payload baytı.
-- `MANIFEST.tsv` SHA-256: `f2145ecb3b4384ed097852e79ec3454de468df9473c656f7ecbd288ce2261365`.
-- `.incoming-*` kopyası ve atomik final adlandırmadan sonra iki tam geri okuma da 801/801 hash+boyut+yol, 796/796 exact Git source ve 4/4 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır.
+- En yeni doğrulanmış milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-23_STAGE_B_DETERMINISTIC_SINGLE_EPS12V_CPU_POWER_CABLE_ROUTING`.
+- Source/docs `cff75f8876f893888ca3a98fe5f149dab0f74a1b`; 826 tracked `SOURCE`, 5 final `EVIDENCE` ve bir `SOURCE_COMMIT.txt`; 832 manifest payload satırı, toplam 834 dosya ve 15.757.786 payload baytı.
+- `MANIFEST.tsv` SHA-256: `afa89feb0252ce5862e7b971949af27b0e2abdd65aafc7ae9a416c1b7adb6a73`.
+- `.incoming-*` kopyası ve atomik final adlandırmadan sonra iki tam geri okuma da 832/832 hash+boyut+yol, 826/826 exact Git source ve 5/5 evidence eşliğiyle geçti. Path-set, forbidden/cache/credential, internal AppleDouble ve sibling sidecar mismatch sayıları `0`dır. Issue #63 için USB kökü güvenle görünür fakat Windows native kapısı geçmeden final package yazılmamıştır.
 - Önceki Issue #50 milestone'u tarihsel olarak korunur: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-15_STAGE_B_ATOMIC_CASH_CHECKOUT_AND_INITIAL_ECONOMY_SETTLEMENT`.
 - Source/docs `aea6e2bd01642f4f72f1a9ee70f07e3dd0e5072b`; 566 tracked `SOURCE`, 5 final `EVIDENCE`, bir `SOURCE_COMMIT.txt`; 572 manifest payload satırı, toplam 574 dosya ve 10.227.122 payload baytı.
 - `MANIFEST.tsv` SHA-256: `b31681628aa2da3e2dc1899f5f728bc28bf8425838d2178579a45d7b15ccecf8`.
@@ -230,10 +242,10 @@
 
 ## Sıradaki immediate geliştirme işi
 
-1. Planlanan sıradaki bounded aileyi PCIe/GPU power cable routing olarak ayrı Issue ve küçük oynanabilir vertical slice kapsamında hazırlamak; uygulama henüz başlamadı.
-2. SATA/Molex/fan/front-panel/data/RGB cabling ile electrical power-on ve completed benchmarkı bu child'a gizlice eklememek.
-3. Electrical power-on, tam benchmark, Inventory revision-max hardening, final art ve Windows/Steam kapılarını ayrı tutmak.
+1. Windows makinede Unity Personal Editor lisansını etkinleştir; clone'u final Issue #63 source/docs head'ine fast-forward et, StrictMode IL2CPP x64 build ve DirectX r32 native smoke'u çalıştır. Lisans engelini Mono veya Mac sonucu ile ikame etme.
+2. Windows gate geçince exact final source-plus-evidence staging üret; doğrulanmış USB kökünde çakışmayan `.incoming-*`, AppleDouble temizliği yalnız incoming hedefinde, iki tam manifest/Git/evidence readback ve atomik final adlandırma ile Issue #63'ü kapat.
+3. #63 kapandıktan sonra yeni kablo ailesine atlamadan tek gerçek özel-PC işi için accepted request → immutable quote/BOM → exact serialized Inventory reservation bounded dilimini başlat; power-on/POST/OS/benchmark daha sonraki bağımlı kapılar olarak kalsın.
 
 ## Güvenli devam komutu
 
-Issue #62 feature `15d83aeba0d71238a31bf7b7db5fab3dbd9b5951`, source/docs `cff75f8876f893888ca3a98fe5f149dab0f74a1b`, USB metadata `2db7cf984974fd561873d3c06c815b7f47f41d07`, Guard `32642211422` + `32642638437` + `32672086464`, EditMode `610/610`, PlayMode `51/51`, Universal Mac `329206153` bayt, aktif Apple M1/Metal exact r31 EPS12V smoke ve iki tam 832/832 fiziksel USB readback ile kapandı. Acceptance `21/21`, Issue `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #10 açık/In Progress durumundadır. Sıradaki planlı bounded aile henüz başlamamış PCIe/GPU power cable routing'dir; electrical power-on ve completed benchmark ayrı kalmalıdır.
+Issue #63 feature `ea1e51f8`, Windows IL2CPP gate `cdfe9d6a` ve explicit GPU-side 6+2 fix `d655f1a5`; Guard `32676069923` + `32676154473` + `32677267023`, EditMode `626/626`, PlayMode `53/53`, Universal Mac `329334656` bayt ve aktif Apple M1/Metal exact r32 PCIe/GPU smoke ile Mac teknik checkpoint'e ulaştı. Windows toolchain hazır fakat Unity Editor lisansı yokluğu build'i kaynak derlemesinden önce exit `198` ile durdurdu. Doğru USB kökü ve Issue #62 zinciri görünürdür; Windows native kanıtı ve final source/docs kimliği oluşmadan Issue #63 final package yazılmadı. Issue/Roadmap açık/In Progress; electrical readiness ve completed benchmark iddiası yoktur.
