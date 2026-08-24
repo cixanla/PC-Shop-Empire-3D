@@ -9,7 +9,7 @@
 **Technical tree:** `69ea366cc49e99b653f5d02d9c0f238b4906de69`<br>
 **Source/docs checkpoint:** `4e1ef4322d9ef049e3aac915c611474f6bee92fd`<br>
 **Source/docs tree:** `4df76fb1b50da53bdee7e65cb64acf0e73a5c018`<br>
-**Closure status:** macOS/Windows technical evidence, exact source/docs checkpoint CI, local immutable staging and physical USB two-readback verified; final metadata/Guard and lifecycle closure pending
+**Closure status:** macOS/Windows technical evidence, exact source/docs checkpoint CI, local immutable staging, physical USB two-readback, final metadata/Guard and Issue/Roadmap lifecycle verified; acceptance 18/18
 
 ## Delivered playable result
 
@@ -84,7 +84,7 @@ GARAGE_CUSTOM_PC_WORK_TICKET_RUNTIME_SMOKE work-order=immutable ticket=visible r
 
 ## Canonical Issue #66 acceptance matrix
 
-This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance bullets. `TECHNICAL PASS` means the committed feature plus the promoted Mac/Windows artifacts prove that bullet. `PASS` on row 18 additionally requires both physical USB readbacks. Acceptance evidence can reach `18/18` independently of the still-separate final metadata/Guard, Issue/Project closure and PR merge lifecycle gates.
+This is the repository-owned one-to-one rendering of the 18 Issue #66 acceptance bullets. `TECHNICAL PASS` means the committed feature plus the promoted Mac/Windows artifacts prove that bullet. `PASS` on row 18 additionally requires both physical USB readbacks. All 18 acceptance rows, final metadata/Guard and Issue/Project lifecycle gates are complete; PR integration remains a separate repository operation.
 
 | # | Acceptance contract | Current gate | Canonical evidence |
 |---:|---|---|---|
@@ -154,7 +154,7 @@ All Issue #66 local/incoming/final readbacks invoke `Tools/verify-checkpoint-pac
 - Physical final milestone: `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-24_STAGE_B_IMMUTABLE_CUSTOM_PC_WORK_ORDER_PHYSICAL_WORK_TICKET_HANDOFF`.
 - Collision-free `.incoming-issue66-6752927` contained the package first. AppleDouble cleanup was restricted to that new incoming target; the complete issue66 verifier then passed before same-filesystem atomic rename. The final directory passed the same complete verifier a second time.
 - Incoming and final physical readbacks each proved manifest `906/906`, exact Git source `896/896`, evidence `9/9`, payload `17,330,935` bytes, source/docs commit `4e1ef4322d9ef049e3aac915c611474f6bee92fd`, tree `4df76fb1b50da53bdee7e65cb64acf0e73a5c018` and manifest SHA-256 `1514481a5b8dc90aae89f6de1d0e49ac4c6e964ee280c8170e6e224206444121`.
-- Independent final confirmation found manifest rows `906`, the same manifest SHA-256, internal AppleDouble `0`, sibling AppleDouble `0` and remaining `.incoming-issue66-6752927` absent. Acceptance evidence is `18/18`; Issue #66 remains open and Roadmap `In Progress` only until this final metadata/Guard and PR lifecycle complete.
+- Independent final confirmation found manifest rows `906`, the same manifest SHA-256, internal AppleDouble `0`, sibling AppleDouble `0` and remaining `.incoming-issue66-6752927` absent. Physical metadata `a80e325b1534f4f45fc171a36d73fdfe4ccfc95b` passed [Repository Guard 32726202296](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32726202296). Acceptance is `18/18`; Issue #66 is `CLOSED/COMPLETED`, Roadmap is `Done`, and parent Epic #10 remains open/In Progress.
 
 ## Bounded exclusions
 
