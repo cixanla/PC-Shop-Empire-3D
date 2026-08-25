@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve lifecycle kapıları tamamlandı<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `Done`, Issue #73 kapalı
+**Durum:** Issue #75 fiziksel M.2 NVMe Storage BuildKit source/domain/scene/input/full-regression ve exact-head Mac+Windows native kapıları tamamlandı; source/docs CI, immutable local+physical-USB ve lifecycle kapıları açık<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue75-m2-build-kit-handoff`, technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; Roadmap `In Progress`, Issue #75 açık
 
-## En yeni teknik checkpoint — Issue #73 / Epic #10
+## En yeni teknik checkpoint — Issue #75 / Epic #10
+
+- Canonical M.2 NVMe accepted work order'da yalnız exact `ComponentKind == StorageDevice` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
+- NVMe, staged canonical motherboard+CPU+DDR5 prerequisites sonrasında ayrı stable operation ve managed capacity-one Storage BuildKit container üzerinden source → ActorHands → Storage BuildKit custody'sine taşınır. İlk üç slotun operation/receipt/replay/revision/staged state'i aynen korunur.
+- GarageGraybox `garage-storage-build-kit-r38-v1`; ayrı tray/support/snap anchor, range/focus/LOS/full-support/obstruction kapıları, 180° keyed preview ve görünür `3/10 → 4/10` ilerleme sunar. Aynı Unity instance ve stable ItemId domain-first pickup, carry, place, failure recovery ve replay boyunca korunur.
+- Active Storage BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #57 M.2 slot/seat/secure akışı aynı-frame input'u çalamaz. Receipt yokken normal M.2 Assembly yolu geriye uyumludur; insertion/captive-screw state/revision/receipts untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
+- Technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; Unity 6000.3.21f1 full EditMode `683/683`, PlayMode `90/90`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
+- Universal Mac Development/StrictMode report `329735698` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r38 readiness + Storage BuildKit smoke başarılıdır. ADR-0047 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
+- Exact bundle `6944340` bayt ve `1f6692df…c5d35e` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue75-hardened-v2` x64 IL2CPP/Direct3D11 report `1332182927` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
+- Exact 13 test/build/runtime/procedure artifact'ı Mac'e döndü. Exact dokuz dosyalık source/docs commit/Guard sonrasında final source receipt üretilecek; ardından canonical evidence `14/14`, local package, doğru fiziksel USB double-readback ve acceptance `23/23` tamamlanacaktır. Issue #75 açık/In Progress ve parent Epic #10 açık kalır.
+
+## Önceki teknik checkpoint — Issue #73 / Epic #10
 
 - Canonical DDR5 DIMM accepted work order'da yalnız exact `ComponentKind == MemoryModule` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
 - DIMM, staged canonical motherboard+CPU prerequisites sonrasında ayrı stable operation ve managed capacity-one memory BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. İlk iki slotun operation/receipt/replay/revision/staged state'i aynen korunur.

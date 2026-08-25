@@ -9,7 +9,16 @@
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 25 Ağustos 2026 üstün gelen güncel durum — Issue #73 DDR5 DIMM BuildKit
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #75 M.2 NVMe Storage BuildKit
+
+- Exact reserved M.2 NVMe `StorageDevice`, staged motherboard+CPU+DDR5 prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → Storage BuildKit custody'sine taşınır; visible work-ticket `3/10 → 4/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r38 gerçek keyboard/mouse + gamepad, 180° keyed preview ve tek-consumer BuildKit/M.2-seat input arbitration taşır. Issue #57 M.2 guided insertion/captive-screw Assembly state/revision/receipts değişmez.
+- Technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; EditMode `683/683`, PlayMode `90/90`; Universal Mac report `329735698` bayt ve Apple M1/Metal exact r38 smoke başarılıdır.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1332182927` bayt, `issue75-hardened-v2` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. ADR-0047, tarihli Evidence ve `issue75` verifier sözleşmesi hazırdır. Source/docs Guard, final provenance, local/physical USB double-readback ve Issue/Project closure henüz bekleyen lifecycle kapılarıdır; fiziksel tamamlanma iddiası yoktur.
+
+### Önceki üstün gelen durum — Issue #73 DDR5 DIMM BuildKit
 
 - Exact reserved DDR5 `MemoryModule`, staged motherboard+CPU prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → memory-module BuildKit custody'sine taşınır; visible work-ticket `2/10 → 3/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
