@@ -100,6 +100,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .SelectMany(root => root.GetComponentsInChildren<
                         MemoryModuleBuildKitProjection>(true))
                     .ToArray();
+                StorageBuildKitProjection[] storageBuildKits = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        StorageBuildKitProjection>(true))
+                    .ToArray();
                 PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
@@ -755,6 +760,41 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.PlayerCarry.MatchesMemoryModuleBuildKitConfiguration(
                     memoryModuleBuildKit,
                     marker.DimmBinding), Is.True);
+                Assert.That(storageBuildKits.Length, Is.EqualTo(1));
+                StorageBuildKitProjection storageBuildKit = storageBuildKits[0];
+                Assert.That(marker.StorageBuildKit, Is.SameAs(storageBuildKit));
+                Assert.That(marker.HasStorageBuildKitR38Runtime, Is.True);
+                Assert.That(storageBuildKit.IsCanonical, Is.True);
+                Assert.That(storageBuildKit.IsConfigured, Is.True);
+                Assert.That(storageBuildKit.ProjectionIdValue,
+                    Is.EqualTo(StorageBuildKitProjection.PrototypeProjectionIdValue));
+                Assert.That(storageBuildKit.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(storageBuildKit.Surface.SurfaceId,
+                    Is.EqualTo(StorageBuildKitProjection.PrototypeSurfaceIdValue));
+                Assert.That(storageBuildKit.Surface.GridSize,
+                    Is.EqualTo(0.01f).Within(0.001f));
+                Assert.That(storageBuildKit.Surface.YawStepDegrees,
+                    Is.EqualTo(180f).Within(0.001f));
+                Assert.That(storageBuildKit.SupportCollider.isTrigger, Is.False);
+                Assert.That(storageBuildKit.SupportCollider.gameObject.layer,
+                    Is.EqualTo(0));
+                Assert.That(storageBuildKit.SupportCollider.bounds.min.y,
+                    Is.EqualTo(workbenchTop.bounds.max.y).Within(0.001f));
+                Assert.That(storageBuildKit.ProgressText.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(storageBuildKit.GetComponentsInChildren<Collider>(true)
+                    .Length, Is.EqualTo(1));
+                Assert.That(storageBuildKit.SnapAnchor.position.x,
+                    Is.EqualTo(2.18f).Within(0.001f));
+                Assert.That(storageBuildKit.SnapAnchor.position.y,
+                    Is.EqualTo(1.032f).Within(0.001f));
+                Assert.That(storageBuildKit.SnapAnchor.position.z,
+                    Is.EqualTo(4.14f).Within(0.001f));
+                Assert.That(marker.StorageBinding.BuildKit,
+                    Is.SameAs(storageBuildKit));
+                Assert.That(marker.PlayerCarry.MatchesStorageBuildKitConfiguration(
+                    storageBuildKit,
+                    marker.StorageBinding), Is.True);
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -776,7 +816,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(
                     cart.GetComponentsInChildren<Collider>(true).Length,
                     Is.GreaterThanOrEqualTo(3));
-                Assert.That(placementSurfaces.Length, Is.EqualTo(5));
+                Assert.That(placementSurfaces.Length, Is.EqualTo(6));
                 PlacementSurface floorSurface = placementSurfaces.Single(
                     surface => surface.SurfaceId == "prototype.stock-floor-small-box-a");
                 PlacementSurface shelfSurface = placementSurfaces.Single(
@@ -790,6 +830,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PlacementSurface memoryModuleBuildKitSurface = placementSurfaces.Single(
                     surface => surface.SurfaceId ==
                                MemoryModuleBuildKitProjection.PrototypeSurfaceIdValue);
+                PlacementSurface storageBuildKitSurface = placementSurfaces.Single(
+                    surface => surface.SurfaceId ==
+                               StorageBuildKitProjection.PrototypeSurfaceIdValue);
                 Assert.That(floorSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
                 Assert.That(floorSurface.YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
                 Assert.That(shelfSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
@@ -799,6 +842,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.SameAs(processorBuildKit.Surface));
                 Assert.That(memoryModuleBuildKitSurface,
                     Is.SameAs(memoryModuleBuildKit.Surface));
+                Assert.That(storageBuildKitSurface,
+                    Is.SameAs(storageBuildKit.Surface));
                 InventoryPlacementZone shelfZone = shelfSurface.GetComponent<InventoryPlacementZone>();
                 Assert.That(shelfZone, Is.Not.Null);
                 Assert.That(shelfZone.ContainerId.Value,
@@ -932,7 +977,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
+                    Is.EqualTo("garage-storage-build-kit-r38-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -1078,7 +1123,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
+                    Is.EqualTo("garage-storage-build-kit-r38-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1234,7 +1279,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
+                    Is.EqualTo("garage-storage-build-kit-r38-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1395,7 +1440,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
+                    Is.EqualTo("garage-storage-build-kit-r38-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -1595,7 +1640,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
+                    Is.EqualTo("garage-storage-build-kit-r38-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

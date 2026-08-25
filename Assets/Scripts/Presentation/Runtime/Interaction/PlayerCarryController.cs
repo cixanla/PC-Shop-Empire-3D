@@ -99,6 +99,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardBuildKitMode ||
             IsProcessorBuildKitMode ||
             IsMemoryModuleBuildKitMode ||
+            IsStorageBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -252,6 +253,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (storageBinding != null)
                     {
+                        if (IsStorageBuildKitMode ||
+                            (storageBuildKit != null &&
+                             storageBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldStorageBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldM2StoragePrompt(
                             storageBinding,
                             placement,
@@ -2708,6 +2719,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             motherboardBuildKit?.ResetFeedback();
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
+            ResetStorageBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3354,6 +3366,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetMotherboardBuildKitState();
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
+            ResetStorageBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

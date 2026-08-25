@@ -192,12 +192,35 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            StorageBuildKitEvaluation buildKitEvaluation =
+                EvaluateStorageBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsStorageBuildKitMode ||
+                (storageBuildKit != null && storageBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetM2StorageSeatMode(!IsM2StorageSeatMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetStorageBuildKitMode(!IsStorageBuildKitMode);
+                }
+                else
+                {
+                    TrySetM2StorageSeatMode(!IsM2StorageSeatMode);
+                }
+
+                return true;
+            }
+
+            if (IsStorageBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotateStorageBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -210,27 +233,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsM2StorageSeatMode)
+            if (IsStorageBuildKitMode)
+            {
+                ApplyStorageBuildKitEvaluation(buildKitEvaluation);
+            }
+            else
             {
                 UpdateM2StorageSeatPreview(binding);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
             }
 
-            M2StorageSlotEvaluation evaluation = EvaluateM2StorageSeat(binding);
-            ApplyM2StorageSeatEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
-                input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmM2StorageSeat(binding, evaluation);
+                if (IsStorageBuildKitMode)
+                {
+                    TryConfirmStorageBuildKit();
+                }
+                else if (IsM2StorageSeatMode)
+                {
+                    M2StorageSlotEvaluation evaluation =
+                        EvaluateM2StorageSeat(binding);
+                    ApplyM2StorageSeatEvaluation(evaluation);
+                    TryConfirmM2StorageSeat(binding, evaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -238,6 +267,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetM2StorageSeatMode(bool enabled)
         {
+            ResetStorageBuildKitState();
             IsM2StorageSeatMode = enabled &&
                                   HeldItem != null &&
                                   GetM2StorageBinding(HeldItem) != null;

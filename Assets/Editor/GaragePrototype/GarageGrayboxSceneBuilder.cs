@@ -530,6 +530,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     accent,
                     rubber,
                     labelPaper);
+            StorageBuildKitBuildResult storageBuildKitBuild =
+                BuildStorageBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -588,6 +595,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 memoryModuleBuildKitBuild.Surface,
                 memoryModuleBuildKitBuild.SnapAnchor,
                 memoryModuleBuildKitBuild.ProgressText);
+            storageBuildKitBuild.Projection.Configure(
+                stockFlow,
+                storageBuildKitBuild.Surface,
+                storageBuildKitBuild.SnapAnchor,
+                storageBuildKitBuild.ProgressText);
             assemblyBuild.Binding.Configure(
                 stockFlow,
                 assemblyBuild.Motherboard,
@@ -611,7 +623,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 assemblyBuild.StorageDevice,
                 assemblyBuild.StorageSlot,
-                GarageStockFlowSession.StorageItemInstanceIdValue);
+                GarageStockFlowSession.StorageItemInstanceIdValue,
+                storageBuildKitBuild.Projection);
             assemblyBuild.ProcessorCoolerBinding.Configure(
                 stockFlow,
                 assemblyBuild.ProcessorCooler,
@@ -666,6 +679,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.DimmBinding);
             carry.ConfigureM2StorageSlot(
                 assemblyBuild.StorageSlot,
+                assemblyBuild.StorageBinding);
+            carry.ConfigureStorageBuildKit(
+                storageBuildKitBuild.Projection,
                 assemblyBuild.StorageBinding);
             carry.ConfigureProcessorCoolerSlot(
                 assemblyBuild.ProcessorCoolerSlot,
@@ -764,7 +780,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.PcieGpuPowerCableGeometry,
                 motherboardBuildKitBuild.Projection,
                 processorBuildKitBuild.Projection,
-                memoryModuleBuildKitBuild.Projection);
+                memoryModuleBuildKitBuild.Projection,
+                storageBuildKitBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,

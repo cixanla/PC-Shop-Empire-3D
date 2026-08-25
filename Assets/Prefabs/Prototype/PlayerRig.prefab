@@ -679,6 +679,7 @@ MonoBehaviour:
   processorCoolerBinding: {fileID: 0}
   m2StorageSlot: {fileID: 0}
   m2StorageAssemblyBinding: {fileID: 0}
+  storageBuildKit: {fileID: 0}
   input: {fileID: 6989539455285473086}
   motor: {fileID: 6726278083238686745}
   resolver: {fileID: 1169140054239428907}

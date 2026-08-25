@@ -824,6 +824,155 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void StorageBuildKitRequiresFirstThreeComponentsThenPreservesIdentity()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildOrderLineSnapshot storage = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.StorageDevice);
+            long initialInventoryRevision = session.Inventory.Revision;
+            long initialBuildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            StorageSlotState storageSlotState = session.AssemblyBuild.StorageSlotState;
+
+            OperationResult<CustomPcBuildKitReceipt> beforePrerequisites =
+                buildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(beforePrerequisites.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(initialInventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(initialBuildKitRevision));
+
+            StageMotherboardProcessorAndMemory(session, workOrder);
+
+            CustomPcBuildKitReceipt storagePickup =
+                buildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder).Value;
+
+            Assert.That(storagePickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.StorageInHands));
+            Assert.That(storagePickup.Line, Is.SameAs(storage));
+            Assert.That(storagePickup.Line.LineId, Is.EqualTo(storage.LineId));
+            Assert.That(storagePickup.Line.ProductId, Is.EqualTo(storage.ProductId));
+            Assert.That(storagePickup.Line.ItemId, Is.EqualTo(storage.ItemId));
+            Assert.That(storagePickup.Line.ReservationId,
+                Is.EqualTo(storage.ReservationId));
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord heldStorage),
+                Is.True);
+            Assert.That(heldStorage.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt storagePlacement =
+                buildKit.PlaceCanonicalStorage(storagePickup).Value;
+
+            Assert.That(storagePlacement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.StorageStaged));
+            Assert.That(storagePlacement.Line, Is.SameAs(storage));
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord stagedStorage),
+                Is.True);
+            Assert.That(stagedStorage.Id, Is.EqualTo(storage.ItemId));
+            Assert.That(stagedStorage.ProductId, Is.EqualTo(storage.ProductId));
+            Assert.That(stagedStorage.ContainerId,
+                Is.EqualTo(session.StorageBuildKitContainerId));
+            Assert.That(buildKit.StorageBuildKitContainerId,
+                Is.EqualTo(session.StorageBuildKitContainerId));
+            Assert.That(buildKit.ActiveKitCount, Is.EqualTo(4));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(4));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(storageSlotState));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void StoragePlacementRejectsStaleRevisionAndReplayIsNoMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            StageMotherboardProcessorAndMemory(session, workOrder);
+            CustomPcBuildKitReceipt pickup = buildKit.PickupCanonicalStorage(
+                session.PrototypeStorageBuildKitOperationId,
+                workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> stale =
+                buildKit.PlaceCanonicalStorage(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+
+            Assert.That(stale.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalStorage(pickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalStorage(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(4));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SessionStoragePickupUsesBuildKitCustodyAndGenericDropCannotBypassIt()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageMotherboardProcessorAndMemory(session, workOrder);
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult pickup = session.PickupLooseStorageToHands();
+
+            Assert.That(pickup.IsSuccess, Is.True);
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.DropHeldStorageToWorld().IsFailure, Is.True);
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord stillHeld), Is.True);
+            Assert.That(stillHeld.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            OperationResult<CustomPcBuildKitReceipt> placed =
+                session.PlaceHeldStorageInCustomPcBuildKit();
+
+            Assert.That(placed.IsSuccess, Is.True);
+            Assert.That(placed.Value.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.StorageStaged));
+            Assert.That(session.TryGetStorageItem(out InventoryItemRecord staged), Is.True);
+            Assert.That(staged.ContainerId,
+                Is.EqualTo(session.StorageBuildKitContainerId));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.StorageSlotState,
+                Is.EqualTo(StorageSlotState.EmptyOpen));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(
@@ -892,6 +1041,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     workOrder).Value;
             Assert.That(buildKit.PlaceCanonicalProcessor(processorPickup).IsSuccess,
                 Is.True);
+        }
+
+        private static void StageMotherboardProcessorAndMemory(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            StageMotherboardAndProcessor(session, workOrder);
+            CustomPcBuildKitReceipt memoryPickup =
+                session.CustomPcBuildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(session.CustomPcBuildKit
+                .PlaceCanonicalMemoryModule(memoryPickup).IsSuccess, Is.True);
         }
 
         private static CustomPcBuildOrderLineSnapshot CanonicalMotherboard(
