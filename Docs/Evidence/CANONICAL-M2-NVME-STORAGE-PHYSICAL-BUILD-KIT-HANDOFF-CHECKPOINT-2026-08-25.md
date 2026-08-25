@@ -4,7 +4,7 @@
 **Issue:** [#75](https://github.com/cixanla/PC-Shop-Empire-3D/issues/75)<br>
 **Technical head:** `646e66cfa269a217ecb1f6942f9accb77f9e463c`<br>
 **Technical tree:** `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`<br>
-**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI and immutable local/physical-USB double-readback gates passed; final physical-metadata CI and Issue/Project administrative closure pending
+**Closure status:** lifecycle complete — all source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI, immutable local/physical-USB double-readback and Issue/Project gates passed
 
 ## Delivered playable result
 
@@ -90,7 +90,7 @@ The Issue #75 mode in `Tools/verify-checkpoint-package.sh` fixes the 14-name evi
 
 ## Canonical Issue #75 acceptance matrix — current technical state
 
-`TECHNICAL PASS` marks source/tests/native proof. `FINAL METADATA PENDING` means the immutable package and physical readback passed while this metadata commit/Guard and administrative transition remain.
+`TECHNICAL PASS` marks source/tests/native proof; `LIFECYCLE PASS` additionally marks committed CI, immutable physical readback and administrative closure proof.
 
 | # | Acceptance contract | Current gate | Evidence |
 |---:|---|---|---|
@@ -116,12 +116,13 @@ The Issue #75 mode in `Tools/verify-checkpoint-package.sh` fixes the 14-name evi
 | 20 | WASD/mouse-look and keyboard/gamepad carry flow work in human-shaped scenarios. | TECHNICAL PASS | Existing locomotion regression plus real Input System BuildKit matrix and native input route. |
 | 21 | Domain/scene/input matrices and full regressions pass. | TECHNICAL PASS | EditMode `683/683`, PlayMode `90/90`. |
 | 22 | Diff/Guard/Mac/Windows native gates pass. | TECHNICAL PASS | Diff, source/docs Guard `32849988087`, exact-head Mac and detached-clean Windows IL2CPP/D3D11 gates pass. |
-| 23 | Docs, private push/CI and physical USB lifecycle complete. | FINAL METADATA PENDING | Source/docs Guard, final receipt, local package and two physical USB readbacks pass; this metadata commit/Guard and administrative closure remain. |
+| 23 | Docs, private push/CI and physical USB lifecycle complete. | LIFECYCLE PASS | Physical proof commit `b113c86f5c2b375b0bc31081a5764fe264c2af9d`, tree `9b7e7a7689ceb6fc8955d4de7a2cbdaa713722bd` and Guard `32851553662` pass; Issue closed and Roadmap `Done`. |
 
-## Pending lifecycle sequence
+## Closed lifecycle
 
-1. Commit and push this physical lifecycle metadata and require Repository Guard/CI success.
-2. Mark all `23/23` acceptance boxes, close Issue #75 and set its Roadmap item to `Done`; make PR #76 ready for integration.
-3. Record the exact physical-metadata commit/Guard and closed lifecycle state in the final project handoff without starting the next gameplay slice.
+- Acceptance checkboxes: `23/23`; unchecked `0`.
+- Physical lifecycle metadata: commit `b113c86f5c2b375b0bc31081a5764fe264c2af9d`, tree `9b7e7a7689ceb6fc8955d4de7a2cbdaa713722bd`, [Repository Guard 32851553662](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32851553662) successful.
+- Issue #75: `CLOSED`; Roadmap: `Done`.
+- PR #76 is the integration vehicle; parent Epic #10 remains open/In Progress. The remaining six component handoffs and later assembly/electrical/POST/OS/QA stages are separate issues and are not implied by this closure.
 
 Parent Epic #10 remains open for the remaining six component handoffs and later assembly/electrical/POST/OS/QA stages.

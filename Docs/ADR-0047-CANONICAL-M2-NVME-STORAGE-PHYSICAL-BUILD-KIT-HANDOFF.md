@@ -1,6 +1,6 @@
 # ADR-0047 — Canonical M.2 NVMe Storage Physical Build-Kit Handoff
 
-**Status:** Accepted for technical/native and immutable physical-package gates; final physical-metadata CI and administrative closure pending<br>
+**Status:** Accepted and lifecycle-complete<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #75, child of Epic #10
 
@@ -38,4 +38,4 @@ The remaining six BuildKit component transfers, `10/10` completion, job-specific
 - `Tools/verify-checkpoint-package.sh ... issue75` fail-closes on the exact technical commit/tree, exact nine-file closure delta, `683/683` and `90/90`, `issue75-hardened-v2`, the exact r38 storage marker, 13 promoted artifacts, three procedures, task deletion and residue `0`.
 - The immutable local package and the correct Windows-attached physical USB both passed incoming and atomically named final readbacks with identical `966/966` payload, `951/951` exact Git source, `14/14` evidence, `19,598,907` bytes and manifest `958ba6bcb0f4891a168f73da46b20552b8a059467c7e0e6d55a5d7a51f0f9d2b`. Incoming residue, internal AppleDouble and final sidecar counts are `0`.
 
-The physical-metadata commit/Guard and GitHub Issue/Project administrative transition remain the only pending lifecycle records at this ADR state.
+Physical lifecycle metadata commit `b113c86f5c2b375b0bc31081a5764fe264c2af9d`, tree `9b7e7a7689ceb6fc8955d4de7a2cbdaa713722bd` and Repository Guard `32851553662` passed. Acceptance is `23/23`; Issue #75 is closed and its Roadmap item is `Done`. PR #76 is the integration vehicle, while parent Epic #10 remains open for the next dependent component handoff.
