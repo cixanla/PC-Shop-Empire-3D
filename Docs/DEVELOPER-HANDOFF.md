@@ -14,7 +14,18 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #81 r41 teknik/native, immutable local/physical-USB ve metadata CI kapıları tamamlandı; exact-build insan oturumu/idari kapanış sürüyor
+### Güncel checkpoint — Issue #83 r42 teknik ve exact-head Mac/Windows native kapıları tamamlandı; source/docs, USB, insan ve idari kapanış sürüyor
+
+- Technical head `a36d713120283bd106aeca76509756d6dbb1dd30`, tree `2619dd8e1db812c9e3249657a2031a6268492b5a`. Canonical reserved ATX24 yalnız exact `PowerCable` + `ModularAtx24SplitPsuToMotherboard` role ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- ATX24, staged canonical motherboard+CPU+DDR5+M.2+processor-cooler+graphics-card+power-supply sonrasında ayrı stable operation ve ATX24-specific managed capacity-one BuildKit üzerinden WorldFloor → ActorHands → ATX24 BuildKit custody'sine taşınır. Octuple container claim all-or-none'dur; ilk yedi slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r42 ayrı tray/support/snap anchor, keyed `0° ↔ 180°` preview ve görünür `7/10 → 8/10` aggregate ekler. Active receipt primary/rotate/interact/drop input'unun tek sahibidir; Issue #61 ATX24 installed route, #62/#63 cable routes, #60 PSU bay ve diğer Assembly yolları aynı frame'i çalamaz.
+- Full EditMode `701/701`, PlayMode `110/110`; failed/skipped/inconclusive `0`. Universal Mac report `329963160` bayt, valid deep/strict universal executable ve Apple M1/Metal exact r42 readiness + ATX24 markerı başarılıdır.
+- Complete bundle `7317338` bayt / `140d44d…5daa`; detached-clean Windows exact head Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1337139191` bayt, `issue83-hardened-v1` fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve player/Unity/task residue `0` ile geçti.
+- ADR-0051 ve tarihli Evidence exact source/tests/Mac/Windows/binary/procedure kanıtını bağlar. Marker açıkça `prerequisite-positioning=teleport-assisted` der; otomatik smoke exact-r42 gerçek insan oturumu yerine geçirilmez.
+- Source/docs Repository Guard, canonical `14/14` receipt, immutable local/physical-USB çift readback, fiziksel metadata ve Issue #83 acceptance `25/25` henüz tamamlanmamıştır. Mevcut kesin durum `22/25` pass; insan kapısı ve iki lifecycle kapısı bekler. Issue #83 açık/In Progress, parent Epic #10 açık/In Progress kalır.
+- Ana ürün kapsamı ayrıca küçükten büyüğe mağaza, personel/müşteri yönetimi, işlevsel mahalle, kişisel ev, araç/kargo/lojistik, dünya NPC ekolojisi, gerçekçi ses/zaman/hava, kaliteye bağlı içerik boyutu ve Guardian'dan ayrılmış güvenli/isteğe bağlı yerel danışman AI sınırlarıyla güncellendi. Retail çekirdek OpenAI/ChatGPT/Codex/internet/model indirme bağı olmadan çalışacaktır.
+
+### Önceki checkpoint — Issue #81 r41 teknik/native, immutable local/physical-USB ve metadata CI kapıları tamamlandı; exact-build insan oturumu/idari kapanış sürüyor
 
 - Technical head `f3d80629e09c05afde97fa778c4b220ca456c5f0`, tree `851954879c1ff1e2ef98bc9a7a8469750304d992`. Canonical reserved PSU yalnız exact `ComponentKind == PowerSupply` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - PSU, staged canonical motherboard, processor, DDR5, M.2, processor cooler ve graphics card prerequisites sonrasında ayrı stable operation ve power-supply-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Power Supply BuildKit custody'sine taşınır. Mevcut altı slot/receipt/replay/revision/staged state korunur.

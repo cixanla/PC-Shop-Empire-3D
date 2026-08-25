@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -224,7 +224,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
       "$evidence_contract" == "issue79" ||
-      "$evidence_contract" == "issue81" ]]; then
+      "$evidence_contract" == "issue81" ||
+      "$evidence_contract" == "issue83" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -249,7 +250,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue75" ||
           "$evidence_contract" == "issue77" ||
           "$evidence_contract" == "issue79" ||
-          "$evidence_contract" == "issue81" ]]; then
+          "$evidence_contract" == "issue81" ||
+          "$evidence_contract" == "issue83" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -288,7 +290,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
       "$evidence_contract" == "issue79" ||
-      "$evidence_contract" == "issue81" ]]; then
+      "$evidence_contract" == "issue81" ||
+      "$evidence_contract" == "issue83" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -305,7 +308,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
       "$evidence_contract" == "issue79" ||
-      "$evidence_contract" == "issue81" ]]; then
+      "$evidence_contract" == "issue81" ||
+      "$evidence_contract" == "issue83" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -358,7 +362,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-GRAPHICS-CARD-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='graphics-card BuildKit'
     runtime_success_marker='GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler-staged graphics-card-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=180 placement=ok progress=6/10 reservation=alive custody=graphics-card-build-kit receipts=ok revisions=ok assembly=untouched graphics-card-slot=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue81" ]]; then
     technical_commit=f3d80629e09c05afde97fa778c4b220ca456c5f0
     technical_tree=851954879c1ff1e2ef98bc9a7a8469750304d992
     build_forbidden_policy=issue81-hardened-v1
@@ -368,6 +372,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-POWER-SUPPLY-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='power-supply BuildKit'
     runtime_success_marker='GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card-staged power-supply-pickup=exact physical-identity=stable carry=ok prerequisite-positioning=teleport-assisted post-prerequisite-input=keyboard+mouse post-prerequisite-return=authored-spawn post-prerequisite-route=authored-spawn>power-supply>power-supply-build-kit movement=character-controller look=mouse-delta route-horizontal-step-envelope=bounded player-parent=stable post-prerequisite-route-no-transform-snap=ok route-collision=ok custody-guards=ok rotation=180 placement=ok progress=7/10 reservation=alive custody=power-supply-build-kit receipts=ok revisions=ok assembly=untouched power-supply-bay=untouched atx24-route=untouched eps12v-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=a36d713120283bd106aeca76509756d6dbb1dd30
+    technical_tree=2619dd8e1db812c9e3249657a2031a6268492b5a
+    build_forbidden_policy=issue83-hardened-v1
+    editmode_total=701
+    playmode_total=110
+    contract_adr=Docs/ADR-0051-CANONICAL-ATX24-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-ATX24-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
+    runtime_success_label='ATX24 power-cable BuildKit'
+    runtime_success_marker='GARAGE_ATX24_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply-staged atx24-pickup=exact cable-family=modular-atx24-split physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=8/10 reservation=alive custody=atx24-build-kit receipts=ok revisions=ok assembly=untouched atx24-route=untouched eps12v-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"
@@ -408,11 +422,16 @@ if [[ "$evidence_contract" == "issue71" ||
         PROJECT_BIBLE.md \
         Tools/README.md \
         Tools/verify-checkpoint-package.sh
+      if [[ "$evidence_contract" == "issue83" ]]; then
+        printf 'M\t%s\n' \
+          Docs/ProjectBible/04_TEKNIK_MIMARI_ARACLAR_VE_GUARDIAN.md \
+          Docs/ProjectBible/05_GELISTIRME_YOL_HARITASI.md
+      fi
     } | LC_ALL=C sort
   )
   actual_source_docs_delta=$(git -C "$repository" diff --name-status --no-renames "$technical_commit" "$source_commit" | LC_ALL=C sort)
   [[ "$actual_source_docs_delta" == "$expected_source_docs_delta" ]] || {
-    echo "ERROR Issue #$contract_issue technical-to-source/docs delta is not the exact nine-file closure allowlist" >&2
+    echo "ERROR Issue #$contract_issue technical-to-source/docs delta is not the exact closure allowlist" >&2
     diff -u \
       <(printf '%s\n' "$expected_source_docs_delta") \
       <(printf '%s\n' "$actual_source_docs_delta") >&2 || true

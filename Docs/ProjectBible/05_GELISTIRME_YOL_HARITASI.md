@@ -458,6 +458,9 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 - Yakın NPC tam sunum, uzakta simulation LOD.
 - Tekrar eden müşteri hafızası ve sadakat.
 - Randevu, servis kapasitesi ve müşteri kabul sınırı.
+- Mahalle ekolojisi: yalnız müşteri olmayan sakin, yaya, kurye, sürücü, bakım görevlisi ve ziyaretçiler; her rolün zaman çizelgesi, hedefi, erişebildiği bilgi, hafızası ve ayrılmış fiziksel kaynağı vardır.
+- Seed'li ve yeniden oynatılabilir dünya olayları: teslimat gecikmesi, yol/park yoğunluğu, hava etkisi, mahalle etkinliği ve tedarik hareketi; hiçbir olay stok veya para authority'sini atlamaz.
+- Yaya, müşteri, çalışan, kurye ve araç rotaları aynı kapı/koridor/park/yükleme alanını rezervasyon ve timeout ile paylaşır; sıkışma ürünü yok etmez ve işi sessizce tamamlamaz.
 
 ### Riskler
 
@@ -475,6 +478,8 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 - Self-checkout rutini azaltır; ödeme/istisna hatasını gizlemez ve kasa transaction'ıyla aynı ledger kurallarını kullanır.
 - Çalışan eklemek yalnız gelir değil, yeni kapasite/strateji getirir.
 - Atölye randevusu sırasında mağaza kapsaması oyuncunun kontrolündedir.
+- Aynı seed ve başlangıç durumunda yakın tam simülasyon ile uzak simulation LOD ekonomik sonucu değiştirmez; yalnız sunum ayrıntısı ve hesaplama sıklığı değişir.
+- Mahalle NPC soak testinde rota kilidi, kalıcı kuyruk, aynı kaynağa çift sahiplik, kayıp ürün ve açıklamasız müşteri davranışı yoktur.
 
 ## 12. Faz 8 — Ekonomi, ilerleme, lokasyon ve gelir kanalları
 
@@ -503,6 +508,22 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 - Uzmanlık itibarı: fiyat, teknik kalite, hız, garanti ve güven.
 - Büyük fiziksel upgrade, taşınma ve renovasyonda satın alma sonrası işletme sermayesi/ödeme riski önizlemesi.
 - Bölüm hedefi ve kariyer kilometre taşları; nitelikli başarımların sistem olaylarına bağlanması.
+
+### İşlevsel mahalle, kişisel ev ve araç/logistik katmanı
+
+- Garaj ve mağazaların çevresinde yürüyerek gezilebilen kompakt bir mahalle bulunur. Binalar, dükkânlar, yollar, kaldırımlar, park/yükleme alanları ve dış dünya NPC'leri yalnız dekor değildir; mağaza trafiği, teslimat, işe gidiş, kira ve hizmet kapasitesine bağlanır.
+- Her binanın içi açılmaz. Oyuncu kararına veya çekirdek döngüye hizmet eden ev, aktif mağaza/servis, tedarik/teslim noktası ve seçilmiş komşu işletmeler işlevsel girilebilir alanlardır; geri kalan kabuklar tutarlı dünya ve performans sınırıdır.
+- Kişisel ev/garaj; dinlenme ve gün geçişi, manuel save erişimi, kişisel terminal, sınırlı depolama, eve teslim, araç parkı ve ilerlemeyle açılan işlevsel yükseltmeler sunar. Ev masrafları ve işe ulaşım ekonomiyle bağlantılıdır; ücretsiz ikinci depo veya teleport menüsü değildir.
+- Oyuncu araçları; sürüş, park, anahtar/sahiplik, bagaj/kargo kapasitesi, yakıt/enerji, bakım/hasar, teslim alma-bırakma ve save/load kimliği taşır. Kurye/tedarik araçları aynı yükleme ve teslimat authority sözleşmesine uyar.
+- Trafik ve yaya sistemi hız/çarpışma/erişim kurallarıyla okunabilir kalır. Araç veya NPC sıkışması ürün, sipariş veya para kaybettirmez; güvenli timeout/recovery ve açık neden kaydı üretir.
+- Dış dünya kapsamı çekirdek mağaza ve atölye döngüsünü destekleyecek kadar genişler; boş kilometre, yalnız dosya boyutu büyüten dekor veya ana oyundan kopuk ayrı sürüş oyunu hedeflenmez.
+
+### Mahalle ve araç doğrulaması
+
+- Garaj → ev → mağaza → tedarik/teslim noktası rotaları editör teleportu olmadan yaya ve uygun araçla tamamlanır.
+- Araç bagajı, teslimat alanı, oyuncu eli ve mağaza stok konteyneri arasında stable item kimliği korunur; kayıp/çift ürün yoktur.
+- Park, yükleme ve bina girişleri yaya/araç erişilebilirlik fixture'larını geçer; save/reload sonrası araç, kargo, ev, mağaza ve görev durumu aynıdır.
+- Düşük/orta/yüksek dünya yoğunluğu ayarları aynı economy/authority sonucunu verir; yalnız sunum yoğunluğu ve performans maliyeti değişir.
 
 ### Gelir kanalları
 
@@ -560,6 +581,9 @@ Yeni kanal ayrı bir mini oyun olmadan stok, fiyat, iş emri, teslim ve garanti 
 - Raf, kutu, palet, araç ve dekor varyantları.
 - Stilize ama inandırıcı müşteri/çalışan seti.
 - LOD, collider, materyal ve performans geçişi.
+- Mahalle ambiyansı, iç/dış mekân geçişi, trafik, yaya, mağaza, atölye ve araç seslerini kapsayan katmanlı spatial audio; ses olayları kaynak/mesafe/engel ve zaman durumuna göre okunabilir kalır.
+- Gün/gece, hava ve mahalle yoğunluğu görsel/işitsel durum üretir; kritik etkileşim, rota, ürün rengi ve erişilebilirlik bilgisini gizlemez.
+- Nihai kurulumun yaklaşık `15–20 GB` veya ölçülmüş ihtiyaçla daha büyük olması kabul edilebilir; bu bir hedef kota değil kalite tavanıdır. Her büyük asset ailede LOD, sıkıştırma, streaming/addressable sınırı, platform bütçesi ve lisans/provenans kaydı zorunludur; yapay dolgu yasaktır.
 
 ### Hikâye ve görev
 
@@ -846,7 +870,8 @@ En uzun ve birbirine bağımlı iş zinciri:
 7. Servis ve ikinci el çekirdeğinin aynı stok/iş kurallarıyla çalışması.
 8. Çalışanların aynı görevleri güvenle devralması.
 9. Katalog, ekonomi, ilerleme ve içerik genişletme.
-10. Windows/Steam release QA.
+10. İşlevsel mahalle, kişisel ev ve araç/logistik katmanının aynı stok/save/ekonomi authority'sine bağlanması.
+11. Windows/Steam release QA.
 
 Şube, dekor, rakip veya yüzlerce ürün bu kritik yolu hızlandırmaz. Çekirdek tamamlanmadan başlatılırsa bitişi geciktirir.
 
@@ -902,8 +927,10 @@ En uzun ve birbirine bağımlı iş zinciri:
 ### Bir işin “tamam” olması
 
 - Kod/asset yalnız çalışmıyor; kabul ölçütünü geçiyor.
-- Otomatik test ve insan oynanış kontrolü var.
-- Windows etkisi sınandı veya açık risk olarak kaydedildi.
+- Dilime özel otomatik test, full EditMode + PlayMode regression, scene contract ve ilgili native smoke geçiyor.
+- Gerçek oyuncu senaryosu WASD'nin dört yönü, mouse-look, keyboard/mouse ve gamepad kenar/pause/repress akışlarını editör hilesi olmadan kapsıyor; otomatik insan-şekilli rota gerçek insan oturumu diye yeniden adlandırılmıyor.
+- Windows etkisi exact-head temiz klonda x64 IL2CPP/Direct3D11 build/runtime ile sınandı veya açık risk olarak kaydedildi.
+- Mantık/gerçekçilik denetimi authority, fiziksel sahiplik, erişilebilir rota, zaman/ekonomi nedeni, başarısızlık/recovery ve save/load sonucunu gerçek oynanış ihtimalleriyle tek tek zorluyor.
 - Save/migration etkisi test edildi.
 - Yeni hata veya tasarım borcu kayda geçti.
 - Belgeler ve kaynak/lisans kayıtları güncellendi.
@@ -930,7 +957,7 @@ Codex kod üretebilir ve testleri çalıştırabilir; kullanıcı milestone hiss
 - Unity Personal, Blender, ücretsiz ses/2D araçları.
 - Graybox ve özgün basit varlıklar.
 - Ücretsiz sürüm kontrol kotası.
-- Mevcut Mac; gerçek Windows x64 test PC erişimi ayrıca sağlanacak dış bağımlılık ve bütçe/risk kalemidir.
+- Mac authoritative yazma/Git/GitHub hattıdır. Lenovo ThinkPad T14s Gen 3 ayrı temiz worker olarak exact-head Windows x64 IL2CPP/Direct3D11 build, Intel Iris Xe runtime/input/performance, paketleme ve kanıt üretiminde kullanılır; aynı checkout'a iki yazma hattı açılmaz.
 
 ### Kapı B — Vertical slice yüksek etki harcaması
 

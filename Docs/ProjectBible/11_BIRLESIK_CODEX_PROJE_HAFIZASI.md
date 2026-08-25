@@ -5,11 +5,21 @@
 **Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `feature/issue81-power-supply-build-kit-handoff`
+**Branch:** `feature/issue83-atx24-power-cable-build-kit-handoff`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 25 Ağustos 2026 üstün gelen güncel durum — Issue #81 Power Supply BuildKit
+### 26 Ağustos 2026 üstün gelen güncel durum — Issue #83 ATX24 Power-Cable BuildKit
+
+- Exact reserved `PowerCable` yalnız `ModularAtx24SplitPsuToMotherboard` family ve tam line/product/item/reservation lineage ile seçilir; staged motherboard+CPU+DDR5+M.2+processor-cooler+graphics-card+power-supply sonrasında ayrı stable operation/capacity-one ATX24 slotuyla WorldFloor → ActorHands → ATX24 BuildKit custody'sine taşınır ve visible ticket `7/10 → 8/10` olur.
+- Inventory Octuple all-or-none claim, domain-first world projection, same Unity instance/stable ItemId, live reservation/allocation, exact replay/revision ve stable recovery korunur. Generic transfer/drop/box/stack/cart, installed route ve Assembly bypass'ları fail-closed'dur.
+- GarageGraybox r42 keyboard/mouse + gamepad, keyed `0° ↔ 180°` preview ve single-consumer BuildKit/installed-route/Assembly arbitration taşır. Issue #61 ATX24, #62 EPS12V, #63 PCIe/GPU, #60 PSU bay ve diğer Assembly state/revision/receipts unchanged kalır.
+- Technical commit `a36d713120283bd106aeca76509756d6dbb1dd30`, tree `2619dd8e1db812c9e3249657a2031a6268492b5a`; full EditMode `701/701`, PlayMode `110/110`; Universal Mac report `329963160` bayt ve Apple M1/Metal exact r42 smoke başarılıdır.
+- Complete bundle ile detached-clean Windows x64 IL2CPP/only-D3D11 report `1337139191` bayt, `issue83-hardened-v1` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 exact runtime, graceful exit, task deletion ve residue `0` ile geçti.
+- ADR-0051/tarihli Evidence ve `issue83` verifier contract'ı teknik kanıtı bağlar. `prerequisite-positioning=teleport-assisted` nedeniyle otomatik smoke gerçek insan kabulü değildir. Source/docs Guard, canonical `14/14`, immutable local/physical USB, metadata/Guard ve exact-r42 insan oturumu bekler; strict acceptance `22/25`, Issue #83 açık/In Progress kalır.
+- Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #81 Power Supply BuildKit
 
 - Exact reserved `PowerSupply`, staged motherboard+CPU+DDR5+M.2+processor-cooler+graphics-card prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → power-supply BuildKit custody'sine taşınır; visible work-ticket `6/10 → 7/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
@@ -218,7 +228,7 @@ Tamamlanan oynanabilir sistemler:
 
 Issue #52 kaynak/test/build/runtime/CI/USB ve Issue metadata zinciri tamamlandı; acceptance `17/17`, kapalı/Done. Parent Epic #9 geniş kabulü de kapalı/Done'dır. Bu paragraf Epic #10 başlangıcındaki tarihsel sırayı korur.
 
-25 Ağustos 2026 itibarıyla üstün gelen güncel durum: Epic #10 altında motherboard/CPU/DIMM/M.2/cooler/GPU/PSU/ATX24/EPS12V/PCIe-GPU 6+2 fiziksel authority dilimleri ile Issue #64 accepted request→immutable ten-line quote/BOM→exact reservation ve Issue #66 BuildOrder/WorkTicket→exact allocation sınırları korunur. Issue #68, #71, #73, #75, #77, #79 ve güncel Issue #81 sırasıyla canonical motherboard, CPU, DDR5, M.2, processor cooler, GPU ve PSU'yu gerçek pickup/carry/placement ile ayrı capacity-one BuildKit slotlarına taşımış; work-ticket fiziksel ilerlemesi `0/10 → 7/10` olmuştur. Issue #81 technical source `f3d80629e09c05afde97fa778c4b220ca456c5f0` üzerinde fresh `697/697` EditMode, `105/105` PlayMode, Universal Mac/Apple M1 Metal r41 ve Windows `issue81-hardened-v1` IL2CPP/Intel Iris Xe D3D11 r41 native kapılarını geçmiştir. Source/docs `dc118bf0d26a11f3937cb114ef12f85666facc48` / Guard `32896033674`, final provenance `14/14`, immutable local+fiziksel USB çift readback `1002/987/14` ve physical metadata `ff935452` / Guard `32897672990` tamamlandı. Exact r41 insan oturumu kaydedilmediği için acceptance `23/24`; Issue/Project idari kapanışı açıktır. Sonraki bounded oyuncu-görünür bağımlılık exact ATX24 BuildKit transferiyle `7/10 → 8/10` ilerlemektir. Assembly completion, electrical power-on/POST/OS/benchmark, Save/Guardian ve final art ayrı kalır.
+26 Ağustos 2026 itibarıyla üstün gelen güncel durum: Epic #10 altında motherboard/CPU/DIMM/M.2/cooler/GPU/PSU/ATX24/EPS12V/PCIe-GPU 6+2 fiziksel authority dilimleri ile Issue #64 accepted request→immutable ten-line quote/BOM→exact reservation ve Issue #66 BuildOrder/WorkTicket→exact allocation sınırları korunur. Issue #68, #71, #73, #75, #77, #79, #81 ve güncel #83 sırasıyla canonical motherboard, CPU, DDR5, M.2, processor cooler, GPU, PSU ve ATX24 cable'ı gerçek pickup/carry/placement ile ayrı capacity-one BuildKit slotlarına taşımış; work-ticket fiziksel ilerlemesi `0/10 → 8/10` olmuştur. Issue #83 technical source `a36d713120283bd106aeca76509756d6dbb1dd30` üzerinde fresh `701/701` EditMode, `110/110` PlayMode, Universal Mac/Apple M1 Metal r42 ve Windows `issue83-hardened-v1` IL2CPP/Intel Iris Xe D3D11 r42 native kapılarını geçmiştir. Source/docs Guard, final provenance `14/14`, immutable local+fiziksel USB ve exact-r42 insan kabulü henüz bekler; strict acceptance `22/25`, Issue #83 açık/In Progress durumundadır. Sonraki teknik bounded bağımlılıklar EPS12V BuildKit `8/10 → 9/10` ve PCIe/GPU BuildKit `9/10 → 10/10` adımlarıdır. Assembly completion, cable routing, electrical power-on/POST/OS/benchmark, Save/Guardian, işlevsel mahalle/ev/araç katmanı ve final art ayrı kalır.
 
 Sonraki ana geliştirme sırası:
 
