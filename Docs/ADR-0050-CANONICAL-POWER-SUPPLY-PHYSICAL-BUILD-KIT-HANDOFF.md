@@ -1,6 +1,6 @@
 # ADR-0050 — Canonical Power Supply Physical Build-Kit Handoff
 
-**Status:** Accepted technically; lifecycle closure pending<br>
+**Status:** Accepted for technical/native and immutable physical-package gates; final physical-metadata CI and administrative closure pending<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #81, child of Epic #10
 
@@ -40,4 +40,8 @@ The three remaining BuildKit transfers—ATX24, EPS12V and PCIe/GPU cable—adva
 - The complete Git bundle is `7,212,319` bytes with SHA-256 `7074973b9864154efe1114053140bc60f70513176b7e3042cbbcbe9e53c2b99e`. It produced a collision-free detached-clean Windows checkout at the exact technical commit/tree.
 - Windows x64 IL2CPP/Direct3D11 build report is `1,335,888,266` bytes. Hardened build fatal-token count is `0`; the three required binaries are hash-bound.
 - Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime at 1280×720 emitted exact host, r41 readiness and PSU success markers once. It exited `0`, shut down gracefully, deleted task `PSE-Issue81-f3d80629-R1` and left task/player/Unity residue `0`.
-- Canonical technical evidence has 13 immutable artifacts. `source-receipt.json`, exact Issue #81 verifier, source/docs Repository Guard, immutable local package, physical USB double-readback and Issue/Project closure remain explicit lifecycle gates and must not be inferred from technical success.
+- Procedure-bound canonical evidence is exact `14/14`; `source-receipt.json` binds technical source, full tests, Mac/Windows native proof, procedures, source/docs commit `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` and successful Repository Guard `32896033674`.
+- `Tools/verify-checkpoint-package.sh ... issue81` fail-closes on the exact technical/source-docs identities, nine-file closure allowlist, full tests, Mac/Windows native proof, procedure/binary receipts, exact r41 marker, cleanup semantics and exact `14/14` evidence set.
+- The immutable local package and correct Windows-attached physical USB both passed incoming and atomically named final readbacks with identical `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, `19,368,668` bytes and manifest `69cc892b816820918b5612944266dc2cb077cd01ed41f78a3d6523c7409206ab`. Incoming residue, internal AppleDouble, final sidecar and Windows process residue are `0`.
+
+The physical-metadata commit/Guard and GitHub Issue/Project administrative transition remain the only pending lifecycle records at this ADR state.

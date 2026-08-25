@@ -4,7 +4,7 @@
 **Issue:** [#81](https://github.com/cixanla/PC-Shop-Empire-3D/issues/81)<br>
 **Technical head:** `f3d80629e09c05afde97fa778c4b220ca456c5f0`<br>
 **Technical tree:** `851954879c1ff1e2ef98bc9a7a8469750304d992`<br>
-**Closure status:** technical pass — source/domain/scene/input/full-regression and exact-head macOS/Windows native gates passed; source/docs Guard, final provenance, immutable local/physical-USB double-readback and Issue/Project closure remain separate lifecycle gates
+**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI and immutable local/physical-USB double-readback gates passed; final physical-metadata CI and Issue/Project administrative closure pending
 
 ## Delivered playable result
 
@@ -76,9 +76,9 @@ Procedure source is hash-bound:
 | `runtime-procedure.ps1` | 14,937 | `5832b63da6c0c5133d0c2317aa434326ccf6f452aaf10581bc5eb1feaca0bed5` |
 | `procedure-manifest.json` | 997 | `7cc84026456e311efbdc7b44c36edc6a975c984155a41041f62dfe074e7eaa8e` |
 
-## Canonical evidence and remaining lifecycle gates
+## Canonical evidence and immutable physical package
 
-The 13 immutable technical artifacts above are staged at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue81-f3d80629e09c/canonical-evidence`. Final `source-receipt.json` must bind those exact artifacts to the source/docs commit/tree and successful Repository Guard before canonical evidence becomes `14/14`.
+The thirteen immutable test/build/runtime/binary/procedure artifacts returned to the Mac with exact size/hash readback. Clean source/docs commit `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` and [Repository Guard 32896033674](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32896033674) then authorized final `source-receipt.json` (`5,046` bytes, SHA-256 `ef6f720ab762872815224fdc169d8fadd80b4c627651cc5353411f3f4e19c238`). Promoted-artifact path/size/hash equality is `13/13`; canonical evidence is exact `14/14` at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue81-f3d80629e09c/canonical-evidence`.
 
 `Tools/verify-checkpoint-package.sh ... issue81` is fail-closed on:
 
@@ -89,7 +89,14 @@ The 13 immutable technical artifacts above are staged at `/Users/cixanla/Develop
 - Three procedure hashes, three native binary hashes, promoted-artifact equality, interactive task deletion, graceful exit and residue `0`.
 - Exact `14/14` evidence names, Git-source equality, full manifest readback, no symlink/cache/secret/AppleDouble and no final-side incoming residue.
 
-No local or physical USB package is claimed in this technical record yet. The immutable local incoming/final pair, correct Windows-attached physical USB identity and previous-chain read-only check, physical incoming full readback, same-filesystem atomic final rename, second full readback, final metadata Guard and Issue/Project closure remain mandatory.
+- Local final: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-25_STAGE_B_CANONICAL_POWER_SUPPLY_BUILDKIT_HARDENED_V1`.
+- Physical final: `D:\CIXANLA\90_BACKUPS\PCShopEmpire3D\2026-08-25_STAGE_B_CANONICAL_POWER_SUPPLY_BUILDKIT_HARDENED_V1` on `Intenso Alu Line`, disk `1`, serial `900B00076010`, USB/exFAT volume label `cixanla`, volume serial `B2CC-F8C9`.
+- Previous-chain proof: the existing Issue #79 milestone remained read-only and its manifest stayed `d2d399fa71ee37ed972b2e709987d0a375fe62fd8da3e5cfda5eb0ec571bb324` before the new write.
+- Read-only `chkdsk D:` found no filesystem problem, no further action requirement and `0` bad sectors; no repair operation was performed.
+- Local incoming and same-filesystem atomically named local final both returned `CHECKPOINT_PACKAGE_OK` in exact Issue #81 mode.
+- Physical `.incoming-issue81-dc118bf` passed a full hash/size/path readback, was atomically renamed without collision, and the final path passed the same full Windows readback plus an independent Mac pullback verification.
+- Every full readback is identical: `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, source/docs commit `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8`, `19,368,668` payload bytes and manifest SHA-256 `69cc892b816820918b5612944266dc2cb077cd01ed41f78a3d6523c7409206ab`.
+- Physical incoming directory/sidecar residue, internal AppleDouble, exact final sidecar and Windows issue-specific process residue counts are all `0`; older milestones and unrelated user data were not modified.
 
 ## Issue #81 acceptance matrix — current technical state
 
@@ -117,5 +124,13 @@ No local or physical USB package is claimed in this technical record yet. The im
 | 20 | PSU Assembly, three cable routes, quote/reservations/items remain untouched. | TECHNICAL PASS | Isolation snapshots and regression suite. |
 | 21 | WASD/mouse/gamepad human scenarios work. | TECHNICAL PASS | CharacterController + mouse-delta native route and PlayMode matrix. |
 | 22 | Focused and full EditMode/PlayMode regression pass. | TECHNICAL PASS | `697/697`, `105/105`, zero non-pass. |
-| 23 | Diff, Guard, Mac and Windows native gates pass. | PARTIAL | Diff/Mac/Windows pass; source/docs Repository Guard pending. |
-| 24 | Docs, private push/CI and physical USB lifecycle complete. | PENDING | This document/verifier are prepared; commit/Guard/package/USB/Issue closure pending. |
+| 23 | Diff, Guard, Mac and Windows native gates pass. | TECHNICAL PASS | Diff, source/docs Guard `32896033674`, exact-head Mac and detached-clean Windows IL2CPP/D3D11 gates pass. |
+| 24 | Docs, private push/CI and physical USB lifecycle complete. | FINAL METADATA PENDING | Source/docs Guard, final receipt, local package and two physical USB readbacks pass; this metadata commit/Guard and administrative closure remain. |
+
+## Pending lifecycle sequence
+
+1. Commit and push this physical lifecycle metadata and require Repository Guard/CI success.
+2. Mark all `24/24` acceptance boxes, close Issue #81 and set its Roadmap item to `Done`; make PR #82 ready for integration.
+3. Record the exact physical-metadata commit/Guard and closed lifecycle state in the final project handoff before starting the next gameplay slice.
+
+Parent Epic #10 remains open for the three cable BuildKit handoffs and later assembly/electrical/POST/OS/QA stages. Issue #77 remains independently open/In Progress until its own physical lifecycle closes.
