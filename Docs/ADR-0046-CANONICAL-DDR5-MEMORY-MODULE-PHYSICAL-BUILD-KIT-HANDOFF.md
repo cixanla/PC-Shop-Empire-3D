@@ -1,6 +1,6 @@
 # ADR-0046 — Canonical DDR5 Memory-Module Physical Build-Kit Handoff
 
-**Status:** Accepted for technical source and macOS native gates; Windows/CI/USB lifecycle closure pending<br>
+**Status:** Accepted for technical source plus macOS and Windows native gates; final provenance/CI/USB lifecycle closure pending<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #73, child of Epic #10
 
@@ -33,4 +33,5 @@ The remaining seven BuildKit component transfers, `10/10` completion, job-specif
 - Technical source commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`.
 - Unity 6000.3.21f1 full regression: EditMode `680/680`, PlayMode `86/86`; failed, skipped and inconclusive `0`. Targeted BuildKit, gamepad, scene-contract and runtime-smoke compile gates also passed. Generated ProBuilder/scene-template editor preferences were removed before the commit and `git diff --check` passed.
 - Universal macOS Development/StrictMode build report `329,681,642` bytes. The ad-hoc signed executable is a valid deep/strict universal `x86_64 + arm64` bundle. Apple M1/Metal r37 readiness and the exact memory-module BuildKit success marker each appeared once; forbidden markers and player residue were `0`.
-- Exact-source Windows x64 IL2CPP/Direct3D11 build/runtime, source/docs CI, immutable local/USB package and Issue/Project acceptance are separate pending lifecycle gates. They are not implied by the successful Mac technical evidence.
+- A complete verified Git bundle produced collision-free detached-clean Windows source at the same technical commit/tree. Unity 6000.3.21f1 completed an x64 IL2CPP build with Direct3D11 only; report size was `1,330,930,513` bytes and the hardened-v2 Burst/native-link fatal-token count was `0`. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime emitted the exact host, r37 readiness and success markers once, exited `0`, shut down gracefully, deleted its scheduled task and left process residue `0`.
+- Procedure-bound canonical evidence, final source/docs CI, immutable local/physical-USB package and Issue/Project acceptance remain separate lifecycle gates. Native Windows success does not imply those remaining gates.

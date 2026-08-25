@@ -14,8 +14,9 @@ Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje aç�
 - Exact reserved DDR5 `MemoryModule`, staged motherboard+CPU prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → memory-module BuildKit custody'sine taşınır; visible work-ticket `2/10 → 3/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
 - GarageGraybox r37 gerçek keyboard/mouse + gamepad, 180° keyed preview ve tek-consumer BuildKit/A2 input arbitration taşır. Issue #56 A2/dual-latch Assembly state/revision/receipts/latch state değişmez.
-- Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; EditMode `680/680`, PlayMode `86/86`; Universal Mac report `329681642` bayt ve Apple M1/Metal exact r37 smoke başarılıdır.
-- Exact-head Windows x64 IL2CPP/D3D11, final docs/Guard/CI, immutable package, fiziksel USB double-readback ve acceptance `23/23` halen ayrı açık lifecycle kapılarıdır. Güncel ayrıntı ADR-0046, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+- Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; EditMode `680/680`, PlayMode `86/86`; Universal Mac report `329681642` bayt ve Apple M1/Metal exact r37 smoke başarılıdır. Initial Guard `32839956810` geçti.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1330930513` bayt, hardened-v2 fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Final clean source/docs+Guard receipt'i, canonical `14/14`, immutable package, fiziksel USB double-readback ve acceptance `23/23` halen ayrı açık lifecycle kapılarıdır. Güncel ayrıntı ADR-0046, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
 
 ## 1. Konsolidasyon kararı ve görev sınırı
 

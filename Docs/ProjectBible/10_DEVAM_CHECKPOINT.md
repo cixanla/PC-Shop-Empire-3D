@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression ve Mac native kapıları tamamlandı; exact-head Windows, final docs/CI, immutable package, fiziksel USB ve acceptance kapanışı sürüyor<br>
+**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression ile exact-head Mac ve Windows native kapıları tamamlandı; final provenance/docs/CI, immutable package, fiziksel USB ve acceptance kapanışı sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `In Progress`, Issue #73 açık
 
 ## En yeni teknik checkpoint — Issue #73 / Epic #10
@@ -12,7 +12,8 @@
 - Active memory BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #56 A2/dual-latch aynı-frame input'u çalamaz. Receipt yokken normal DIMM Assembly yolu geriye uyumludur; A2 state/revision/receipts/latch state untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
 - Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Unity 6000.3.21f1 full EditMode `680/680`, PlayMode `86/86`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
 - Universal Mac Development/StrictMode report `329681642` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r37 readiness + memory-module smoke başarılıdır. ADR-0046 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
-- Technical branch private GitHub'a push edildi. Exact bundle `6839312` bayt ve `262ef681…d40eac` SHA-256 ile doğrulandı; collision-free Windows detached-clean hardened-v2 x64 IL2CPP/Direct3D11 build/runtime devam ediyor. Final Guard/CI, procedure-bound Windows evidence, immutable local/USB double-readback ve acceptance `23/23` tamamlanmadan Issue/Roadmap açık/In Progress kalır.
+- Technical branch private GitHub'a push edildi ve initial [Repository Guard 32839956810](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32839956810) başarılıdır. Exact bundle `6839312` bayt ve `262ef681…d40eac` SHA-256 ile doğrulandı; collision-free Windows detached-clean hardened-v2 x64 IL2CPP/Direct3D11 report `1330930513` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
+- Exact 13 test/build/runtime/procedure artifact'ı Mac incoming evidence kökünde hash+boyut readback'ini geçti. Clean source/docs head ile başarılı Guard sonrasında üretilecek `source-receipt.json`, canonical `14/14` promotion, immutable local/USB double-readback ve acceptance `23/23` tamamlanmadan Issue/Roadmap açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #71 / Epic #10
 

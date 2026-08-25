@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71) ;;
+  canonical|issue66|issue68|issue71|issue73) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -219,7 +219,8 @@ cmp -s "$evidence_paths" "$canonical_evidence_paths" || { echo "ERROR EVIDENCE a
 
 if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue68" ||
-      "$evidence_contract" == "issue71" ]]; then
+      "$evidence_contract" == "issue71" ||
+      "$evidence_contract" == "issue73" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -239,7 +240,8 @@ if [[ "$evidence_contract" == "issue66" ||
       runtime-summary.json \
       source-receipt.json
     if [[ "$evidence_contract" == "issue68" ||
-          "$evidence_contract" == "issue71" ]]; then
+          "$evidence_contract" == "issue71" ||
+          "$evidence_contract" == "issue73" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -273,7 +275,8 @@ done < "$evidence_paths"
 }
 if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue68" ||
-      "$evidence_contract" == "issue71" ]]; then
+      "$evidence_contract" == "issue71" ||
+      "$evidence_contract" == "issue73" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -285,10 +288,31 @@ if [[ "$evidence_contract" == "issue66" ||
   fi
 fi
 
-if [[ "$evidence_contract" == "issue71" ]]; then
+if [[ "$evidence_contract" == "issue71" ||
+      "$evidence_contract" == "issue73" ]]; then
   evidence_root="$package/EVIDENCE"
-  technical_commit=11683c8b567ad6edcd6777610875aeebd0e509ef
-  technical_tree=6890157f3f3625661314b34700259e0933ff2677
+  contract_issue=${evidence_contract#issue}
+  if [[ "$evidence_contract" == "issue71" ]]; then
+    technical_commit=11683c8b567ad6edcd6777610875aeebd0e509ef
+    technical_tree=6890157f3f3625661314b34700259e0933ff2677
+    build_forbidden_policy=issue71-hardened-v2
+    editmode_total=677
+    playmode_total=81
+    contract_adr=Docs/ADR-0045-CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
+    runtime_success_label='CPU BuildKit'
+    runtime_success_marker='GARAGE_PROCESSOR_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisite=motherboard-staged processor-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=ok placement=ok progress=2/10 reservation=alive custody=processor-build-kit receipts=ok revisions=ok assembly=untouched processor-socket=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=a2df663d6fa0e9d2004697bfb038a65a5e6c3d81
+    technical_tree=e32a8e143049c4059e402bafbfcd39b9760cd025
+    build_forbidden_policy=issue73-hardened-v2
+    editmode_total=680
+    playmode_total=86
+    contract_adr=Docs/ADR-0046-CANONICAL-DDR5-MEMORY-MODULE-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-DDR5-MEMORY-MODULE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
+    runtime_success_label='DDR5 memory-module BuildKit'
+    runtime_success_marker='GARAGE_MEMORY_MODULE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor-staged memory-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=180 placement=ok progress=3/10 reservation=alive custody=memory-module-build-kit receipts=ok revisions=ok assembly=untouched dimm-a2=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"
   runtime_summary="$evidence_root/runtime-summary.json"
@@ -302,33 +326,37 @@ if [[ "$evidence_contract" == "issue71" ]]; then
     "$task_receipt" \
     "$source_receipt"; do
     jq -e . "$json_receipt" >/dev/null || {
-      echo "ERROR Issue #71 evidence receipt is not valid JSON: ${json_receipt##*/}" >&2
+      echo "ERROR Issue #$contract_issue evidence receipt is not valid JSON: ${json_receipt##*/}" >&2
       exit 1
     }
   done
 
   git -C "$repository" cat-file -e "$technical_commit^{commit}"
   [[ "$(git -C "$repository" rev-parse "$technical_commit^{tree}")" == "$technical_tree" ]] || {
-    echo "ERROR Issue #71 technical commit/tree contract does not resolve" >&2
+    echo "ERROR Issue #$contract_issue technical commit/tree contract does not resolve" >&2
     exit 1
   }
   git -C "$repository" merge-base --is-ancestor "$technical_commit" "$source_commit" || {
-    echo "ERROR packaged source/docs commit does not descend from the Issue #71 technical source" >&2
+    echo "ERROR packaged source/docs commit does not descend from the Issue #$contract_issue technical source" >&2
     exit 1
   }
-  expected_source_docs_delta=$(printf '%s\n' \
-    $'A\tDocs/ADR-0045-CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF.md' \
-    $'A\tDocs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md' \
-    $'M\tCHANGELOG.md' \
-    $'M\tDocs/DEVELOPER-HANDOFF.md' \
-    $'M\tDocs/ProjectBible/10_DEVAM_CHECKPOINT.md' \
-    $'M\tDocs/ProjectBible/11_BIRLESIK_CODEX_PROJE_HAFIZASI.md' \
-    $'M\tPROJECT_BIBLE.md' \
-    $'M\tTools/README.md' \
-    $'M\tTools/verify-checkpoint-package.sh' | LC_ALL=C sort)
+  expected_source_docs_delta=$(
+    {
+      printf 'A\t%s\n' "$contract_adr"
+      printf 'A\t%s\n' "$contract_evidence"
+      printf 'M\t%s\n' \
+        CHANGELOG.md \
+        Docs/DEVELOPER-HANDOFF.md \
+        Docs/ProjectBible/10_DEVAM_CHECKPOINT.md \
+        Docs/ProjectBible/11_BIRLESIK_CODEX_PROJE_HAFIZASI.md \
+        PROJECT_BIBLE.md \
+        Tools/README.md \
+        Tools/verify-checkpoint-package.sh
+    } | LC_ALL=C sort
+  )
   actual_source_docs_delta=$(git -C "$repository" diff --name-status --no-renames "$technical_commit" "$source_commit" | LC_ALL=C sort)
   [[ "$actual_source_docs_delta" == "$expected_source_docs_delta" ]] || {
-    echo "ERROR Issue #71 technical-to-source/docs delta is not the exact nine-file closure allowlist" >&2
+    echo "ERROR Issue #$contract_issue technical-to-source/docs delta is not the exact nine-file closure allowlist" >&2
     diff -u \
       <(printf '%s\n' "$expected_source_docs_delta") \
       <(printf '%s\n' "$actual_source_docs_delta") >&2 || true
@@ -337,7 +365,8 @@ if [[ "$evidence_contract" == "issue71" ]]; then
 
   jq -e \
     --arg commit "$technical_commit" \
-    --arg tree "$technical_tree" '
+    --arg tree "$technical_tree" \
+    --arg policy "$build_forbidden_policy" '
       .sourceCommit == $commit and
       .sourceTree == $tree and
       .target == "StandaloneWindows64" and
@@ -349,13 +378,13 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .buildReportBytes > 0 and
       .buildMarkerCount == 1 and
       .buildForbiddenTokenCount == 0 and
-      .buildForbiddenPolicy == "issue71-hardened-v2" and
+      .buildForbiddenPolicy == $policy and
       (.binaries | length) == 3 and
       ([.binaries[].path] | sort) ==
         (["GameAssembly.dll", "PC Shop Empire 3D.exe", "UnityPlayer.dll"] | sort) and
       all(.binaries[]; .bytes > 0 and (.sha256 | test("^[0-9a-f]{64}$")))
     ' "$binary_manifest" >/dev/null || {
-    echo "ERROR Issue #71 binary manifest does not satisfy the hardened Windows build contract" >&2
+    echo "ERROR Issue #$contract_issue binary manifest does not satisfy the hardened Windows build contract" >&2
     exit 1
   }
 
@@ -370,7 +399,7 @@ if [[ "$evidence_contract" == "issue71" ]]; then
         (["build-procedure.ps1", "launch-procedure.ps1", "runtime-procedure.ps1"] | sort) and
       all(.procedures[]; .bytes > 0 and (.sha256 | test("^[0-9a-f]{64}$")))
     ' "$procedure_manifest" >/dev/null || {
-    echo "ERROR Issue #71 procedure manifest does not satisfy the exact three-procedure contract" >&2
+    echo "ERROR Issue #$contract_issue procedure manifest does not satisfy the exact three-procedure contract" >&2
     exit 1
   }
 
@@ -398,7 +427,7 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .shutdownMarkerCount == 1 and
       .accepted == true
     ' "$runtime_summary" >/dev/null || {
-    echo "ERROR Issue #71 runtime summary does not satisfy the accepted D3D11 contract" >&2
+    echo "ERROR Issue #$contract_issue runtime summary does not satisfy the accepted D3D11 contract" >&2
     exit 1
   }
 
@@ -417,27 +446,31 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .playerResidueAfterCleanup == 0 and
       .cleanAfterRuntime == true
     ' "$task_receipt" >/dev/null || {
-    echo "ERROR Issue #71 task receipt does not satisfy the interactive cleanup contract" >&2
+    echo "ERROR Issue #$contract_issue task receipt does not satisfy the interactive cleanup contract" >&2
     exit 1
   }
 
   jq -e \
     --arg commit "$technical_commit" \
-    --arg tree "$technical_tree" '
+    --arg tree "$technical_tree" \
+    --arg policy "$build_forbidden_policy" \
+    --argjson issue "$contract_issue" \
+    --argjson editmode_total "$editmode_total" \
+    --argjson playmode_total "$playmode_total" '
       .schemaVersion == 1 and
-      .issue == 71 and
+      .issue == $issue and
       .sourceCommit == $commit and
       .sourceTree == $tree and
       .repositoryCleanAfterAllLocalGates == true and
       .gitDiffCheck == true and
       .technicalGuard.conclusion == "success" and
-      .tests.editMode.total == 677 and
-      .tests.editMode.passed == 677 and
+      .tests.editMode.total == $editmode_total and
+      .tests.editMode.passed == $editmode_total and
       .tests.editMode.failed == 0 and
       .tests.editMode.skipped == 0 and
       .tests.editMode.inconclusive == 0 and
-      .tests.playMode.total == 81 and
-      .tests.playMode.passed == 81 and
+      .tests.playMode.total == $playmode_total and
+      .tests.playMode.passed == $playmode_total and
       .tests.playMode.failed == 0 and
       .tests.playMode.skipped == 0 and
       .tests.playMode.inconclusive == 0 and
@@ -449,7 +482,7 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .windows.architecture == "x64" and
       .windows.scriptingBackend == "IL2CPP" and
       .windows.graphicsApi == "Direct3D11" and
-      .windows.buildForbiddenPolicy == "issue71-hardened-v2" and
+      .windows.buildForbiddenPolicy == $policy and
       .windows.projectSettingsByteExact == true and
       .windows.playerExitCode == 0 and
       .windows.gracefulShutdown == true and
@@ -462,12 +495,12 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .windows.cleanAfterRuntime == true and
       (.promotedArtifacts | length) == 13
     ' "$source_receipt" >/dev/null || {
-    echo "ERROR Issue #71 source receipt does not satisfy the promoted technical evidence contract" >&2
+    echo "ERROR Issue #$contract_issue source receipt does not satisfy the promoted technical evidence contract" >&2
     exit 1
   }
 
-  actual_promoted="$temp_dir/issue71-actual-promoted.tsv"
-  receipt_promoted="$temp_dir/issue71-receipt-promoted.tsv"
+  actual_promoted="$temp_dir/issue${contract_issue}-actual-promoted.tsv"
+  receipt_promoted="$temp_dir/issue${contract_issue}-receipt-promoted.tsv"
   (
     cd "$evidence_root"
     for artifact in *; do
@@ -485,12 +518,12 @@ if [[ "$evidence_contract" == "issue71" ]]; then
     @tsv
   ' "$source_receipt" > "$receipt_promoted"
   cmp -s "$actual_promoted" "$receipt_promoted" || {
-    echo "ERROR Issue #71 promoted artifact receipt does not equal the other 13 evidence files" >&2
+    echo "ERROR Issue #$contract_issue promoted artifact receipt does not equal the other 13 evidence files" >&2
     exit 1
   }
 
-  actual_procedures="$temp_dir/issue71-actual-procedures.tsv"
-  receipt_procedures="$temp_dir/issue71-receipt-procedures.tsv"
+  actual_procedures="$temp_dir/issue${contract_issue}-actual-procedures.tsv"
+  receipt_procedures="$temp_dir/issue${contract_issue}-receipt-procedures.tsv"
   (
     cd "$evidence_root"
     for procedure in build-procedure.ps1 launch-procedure.ps1 runtime-procedure.ps1; do
@@ -507,7 +540,7 @@ if [[ "$evidence_contract" == "issue71" ]]; then
     @tsv
   ' "$procedure_manifest" > "$receipt_procedures"
   cmp -s "$actual_procedures" "$receipt_procedures" || {
-    echo "ERROR Issue #71 procedure manifest does not equal the three evidence procedures" >&2
+    echo "ERROR Issue #$contract_issue procedure manifest does not equal the three evidence procedures" >&2
     exit 1
   }
 
@@ -529,7 +562,7 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .binaryReadback == $binaries[0].binaries and
       .procedureReadback == $procedures[0].procedures
     ' "$runtime_summary" >/dev/null || {
-    echo "ERROR Issue #71 runtime summary manifest/readback bindings do not match evidence" >&2
+    echo "ERROR Issue #$contract_issue runtime summary manifest/readback bindings do not match evidence" >&2
     exit 1
   }
   jq -e \
@@ -540,30 +573,29 @@ if [[ "$evidence_contract" == "issue71" ]]; then
       .procedureManifestSha256 == $procedure_sha and
       .procedureReadback == $procedures[0].procedures
     ' "$task_receipt" >/dev/null || {
-    echo "ERROR Issue #71 task receipt manifest/readback bindings do not match evidence" >&2
+    echo "ERROR Issue #$contract_issue task receipt manifest/readback bindings do not match evidence" >&2
     exit 1
   }
 
   build_success_count=$(tr '\r' '\n' < "$evidence_root/build-il2cpp-d3d11.log" | grep -Ec '^STAGE_A_BUILD_OK target=StandaloneWindows64 .* scripting-backend=IL2CPP graphics-api=Direct3D11 settings-restored=ok project-settings=byte-exact$' || true)
   [[ "$build_success_count" == "1" ]] || {
-    echo "ERROR Issue #71 build log must contain exactly one accepted IL2CPP/D3D11 marker" >&2
+    echo "ERROR Issue #$contract_issue build log must contain exactly one accepted IL2CPP/D3D11 marker" >&2
     exit 1
   }
   build_fatal_count=$(grep -Eic 'error CS[0-9]{4}|BuildFailedException|Scripts have compiler errors|Compilation failed|Burst internal compiler error|Burst\.Compiler\.IL\.Aot\.AotLinkerException|The native link step failed|Win32 IO returned 232|Error while executing command:.*burst-lld|Aborting batchmode due to failure|Build completed with a result of .Failed.|Windows IL2CPP/D3D11 build and settings restore both failed|errors=[1-9][0-9]*' "$evidence_root/build-il2cpp-d3d11.log" || true)
   [[ "$build_fatal_count" == "0" ]] || {
-    echo "ERROR Issue #71 hardened build log contains fatal tokens: $build_fatal_count" >&2
+    echo "ERROR Issue #$contract_issue hardened build log contains fatal tokens: $build_fatal_count" >&2
     exit 1
   }
 
-  processor_success_marker='GARAGE_PROCESSOR_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisite=motherboard-staged processor-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=ok placement=ok progress=2/10 reservation=alive custody=processor-build-kit receipts=ok revisions=ok assembly=untouched processor-socket=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  runtime_success_count=$(tr '\r' '\n' < "$evidence_root/runtime-d3d11.log" | grep -Fxc "$processor_success_marker" || true)
+  runtime_success_count=$(tr '\r' '\n' < "$evidence_root/runtime-d3d11.log" | grep -Fxc "$runtime_success_marker" || true)
   [[ "$runtime_success_count" == "1" ]] || {
-    echo "ERROR Issue #71 runtime log must contain the exact CPU BuildKit success marker once" >&2
+    echo "ERROR Issue #$contract_issue runtime log must contain the exact $runtime_success_label success marker once" >&2
     exit 1
   }
-  runtime_fatal_count=$(grep -Eic 'GARAGE_PROCESSOR_BUILD_KIT_RUNTIME_SMOKE build-kit-flow=failed|code=smoke\.|Assertion failed|AssertionException|NullReferenceException|MissingReferenceException|Unhandled Exception|ArgumentException|InvalidOperationException|StackOverflowException|AccessViolationException|Crash!!!|PlayerLoop called recursively|JobTempAlloc has allocations|A Native Collection has not been disposed' "$evidence_root/runtime-d3d11.log" || true)
+  runtime_fatal_count=$(grep -Eic 'build-kit-flow=failed|code=smoke\.|Assertion failed|AssertionException|NullReferenceException|MissingReferenceException|Unhandled Exception|ArgumentException|InvalidOperationException|StackOverflowException|AccessViolationException|Crash!!!|PlayerLoop called recursively|JobTempAlloc has allocations|A Native Collection has not been disposed' "$evidence_root/runtime-d3d11.log" || true)
   [[ "$runtime_fatal_count" == "0" ]] || {
-    echo "ERROR Issue #71 runtime log contains forbidden tokens: $runtime_fatal_count" >&2
+    echo "ERROR Issue #$contract_issue runtime log contains forbidden tokens: $runtime_fatal_count" >&2
     exit 1
   }
 fi
