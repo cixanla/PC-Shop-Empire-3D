@@ -1,6 +1,6 @@
 # ADR-0046 — Canonical DDR5 Memory-Module Physical Build-Kit Handoff
 
-**Status:** Accepted for technical/native and immutable physical-package gates; final physical-metadata CI and administrative closure pending<br>
+**Status:** Accepted and lifecycle-complete<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #73, child of Epic #10
 
@@ -35,4 +35,4 @@ The remaining seven BuildKit component transfers, `10/10` completion, job-specif
 - Universal macOS Development/StrictMode build report `329,681,642` bytes. The ad-hoc signed executable is a valid deep/strict universal `x86_64 + arm64` bundle. Apple M1/Metal r37 readiness and the exact memory-module BuildKit success marker each appeared once; forbidden markers and player residue were `0`.
 - A complete verified Git bundle produced collision-free detached-clean Windows source at the same technical commit/tree. Unity 6000.3.21f1 completed an x64 IL2CPP build with Direct3D11 only; report size was `1,330,930,513` bytes and the hardened-v2 Burst/native-link fatal-token count was `0`. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime emitted the exact host, r37 readiness and success markers once, exited `0`, shut down gracefully, deleted its scheduled task and left process residue `0`.
 - Procedure-bound canonical evidence is exact `14/14`; `source-receipt.json` binds technical source, full tests, Mac/Windows native proof, procedures and the successful source/docs Guard. The immutable local package and the correct Windows-attached physical USB both passed incoming and atomically named final readbacks with identical `954/954` payload, `939/939` exact Git source, `14/14` evidence, `19,379,146` bytes and manifest `912e35ff4a2d81c4a010a84185c5ea88f5c2782d2caf4cfe3aadd40ed2ee9cc8`. Incoming residue and AppleDouble counts are `0`.
-- The physical-metadata commit/Guard and GitHub Issue/Project administrative transition remain the only pending lifecycle records at this ADR state.
+- Physical lifecycle metadata commit `28df8283b7fa5187fa1a0dd6ec72acebd6d539d4`, tree `2b31cb1cb79eaca78c08feb6a6943c610cf3ee25` and Repository Guard `32842669488` passed. Acceptance is `23/23`; Issue #73 is closed and its Roadmap item is `Done`. Parent Epic #10 remains open for the next dependent component handoff.

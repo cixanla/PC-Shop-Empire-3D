@@ -1,8 +1,8 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance ve immutable local+physical-USB kapıları tamamlandı; final metadata CI ve idari kapanış sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `In Progress`, Issue #73 açık
+**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve lifecycle kapıları tamamlandı<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `Done`, Issue #73 kapalı
 
 ## En yeni teknik checkpoint — Issue #73 / Epic #10
 
@@ -14,7 +14,7 @@
 - Universal Mac Development/StrictMode report `329681642` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r37 readiness + memory-module smoke başarılıdır. ADR-0046 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
 - Technical branch private GitHub'a push edildi ve initial [Repository Guard 32839956810](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32839956810) başarılıdır. Exact bundle `6839312` bayt ve `262ef681…d40eac` SHA-256 ile doğrulandı; collision-free Windows detached-clean hardened-v2 x64 IL2CPP/Direct3D11 report `1330930513` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
 - Exact 13 test/build/runtime/procedure artifact'ı ile source/docs `e45f6e1b463cbe9686a9c349d0c6912a9657a28e` / tree `16f014a807a7733210bc9197981b4a8608c3d687` / Guard `32841321015` sonrası üretilen source receipt canonical `14/14` kanıta atomik olarak bağlandı.
-- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `954/954` payload, `939/939` exact Git source, `14/14` evidence, `19379146` bayt ve `912e35ff4a2d81c4a010a84185c5ea88f5c2782d2caf4cfe3aadd40ed2ee9cc8` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar `0`dır. Bu fiziksel metadata commit/Guard ve acceptance `23/23` + Roadmap `Done` idari geçişi tamamlanmadan Issue açık/In Progress kalır.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `954/954` payload, `939/939` exact Git source, `14/14` evidence, `19379146` bayt ve `912e35ff4a2d81c4a010a84185c5ea88f5c2782d2caf4cfe3aadd40ed2ee9cc8` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar `0`dır. Fiziksel metadata `28df8283b7fa5187fa1a0dd6ec72acebd6d539d4`, tree `2b31cb1cb79eaca78c08feb6a6943c610cf3ee25`, Guard `32842669488`; acceptance `23/23`, Issue `CLOSED`, Roadmap `Done`, PR #74 integration aracıdır. Parent Epic #10 açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #71 / Epic #10
 
