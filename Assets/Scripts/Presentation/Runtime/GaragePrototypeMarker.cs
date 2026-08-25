@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-processor-cooler-build-kit-r39-v1";
+        public const string Version = "garage-graphics-card-build-kit-r40-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -43,6 +43,8 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private StorageBuildKitProjection storageBuildKit;
         [SerializeField]
         private ProcessorCoolerBuildKitProjection processorCoolerBuildKit;
+        [SerializeField]
+        private GraphicsCardBuildKitProjection graphicsCardBuildKit;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -97,6 +99,9 @@ namespace PCShopEmpire3D.Presentation
 
         public ProcessorCoolerBuildKitProjection ProcessorCoolerBuildKit =>
             processorCoolerBuildKit;
+
+        public GraphicsCardBuildKitProjection GraphicsCardBuildKit =>
+            graphicsCardBuildKit;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -283,6 +288,24 @@ namespace PCShopEmpire3D.Presentation
             FindObjectsByType<ProcessorCoolerBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
+        public bool HasGraphicsCardBuildKitR40Runtime =>
+            graphicsCardBuildKit != null &&
+            graphicsCardBuildKit.IsCanonical &&
+            graphicsCardBuildKit.Runtime == stockFlow &&
+            graphicsCardBinding != null &&
+            graphicsCardBinding.PhysicalItem == graphicsCard &&
+            graphicsCardBinding.Slot == graphicsCardSlot &&
+            graphicsCardBinding.MatchesBuildKitConfiguration(
+                graphicsCardBuildKit) &&
+            graphicsCard != null &&
+            graphicsCardSlot != null &&
+            playerCarry != null &&
+            playerCarry.MatchesGraphicsCardBuildKitConfiguration(
+                graphicsCardBuildKit,
+                graphicsCardBinding) &&
+            FindObjectsByType<GraphicsCardBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -331,7 +354,8 @@ namespace PCShopEmpire3D.Presentation
             ProcessorBuildKitProjection physicalProcessorBuildKit = null,
             MemoryModuleBuildKitProjection physicalMemoryModuleBuildKit = null,
             StorageBuildKitProjection physicalStorageBuildKit = null,
-            ProcessorCoolerBuildKitProjection physicalProcessorCoolerBuildKit = null)
+            ProcessorCoolerBuildKitProjection physicalProcessorCoolerBuildKit = null,
+            GraphicsCardBuildKitProjection physicalGraphicsCardBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -346,6 +370,7 @@ namespace PCShopEmpire3D.Presentation
             memoryModuleBuildKit = physicalMemoryModuleBuildKit;
             storageBuildKit = physicalStorageBuildKit;
             processorCoolerBuildKit = physicalProcessorCoolerBuildKit;
+            graphicsCardBuildKit = physicalGraphicsCardBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1097,6 +1122,7 @@ namespace PCShopEmpire3D.Presentation
                 $"memory-module-build-kit={(HasMemoryModuleBuildKitR37Runtime ? "ready" : "missing")} " +
                 $"storage-build-kit={(HasStorageBuildKitR38Runtime ? "ready" : "missing")} " +
                 $"processor-cooler-build-kit={(HasProcessorCoolerBuildKitR39Runtime ? "ready" : "missing")} " +
+                $"graphics-card-build-kit={(HasGraphicsCardBuildKitR40Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1171,6 +1197,9 @@ namespace PCShopEmpire3D.Presentation
             bool runProcessorCoolerBuildKitSmoke =
                 HasCommandLineArgument(
                     "-pse-processor-cooler-build-kit-smoke");
+            bool runGraphicsCardBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-graphics-card-build-kit-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1192,7 +1221,8 @@ namespace PCShopEmpire3D.Presentation
                              (runProcessorBuildKitSmoke ? 1 : 0) +
                              (runMemoryModuleBuildKitSmoke ? 1 : 0) +
                              (runStorageBuildKitSmoke ? 1 : 0) +
-                             (runProcessorCoolerBuildKitSmoke ? 1 : 0);
+                             (runProcessorCoolerBuildKitSmoke ? 1 : 0) +
+                             (runGraphicsCardBuildKitSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1206,12 +1236,18 @@ namespace PCShopEmpire3D.Presentation
                      !runProcessorBuildKitSmoke &&
                      !runMemoryModuleBuildKitSmoke &&
                      !runStorageBuildKitSmoke &&
-                     !runProcessorCoolerBuildKitSmoke) ||
+                     !runProcessorCoolerBuildKitSmoke &&
+                     !runGraphicsCardBuildKitSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runProcessorCoolerBuildKitSmoke)
+                    if (runGraphicsCardBuildKitSmoke)
+                    {
+                        LogGraphicsCardBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runProcessorCoolerBuildKitSmoke)
                     {
                         LogProcessorCoolerBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1397,6 +1433,15 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runGraphicsCardBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.graphics-card-build-kit-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1514,6 +1559,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunProcessorCoolerBuildKitSmoke());
+            }
+
+            if (runGraphicsCardBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunGraphicsCardBuildKitSmoke());
             }
         }
 

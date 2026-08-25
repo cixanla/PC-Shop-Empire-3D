@@ -101,6 +101,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMemoryModuleBuildKitMode ||
             IsStorageBuildKitMode ||
             IsProcessorCoolerBuildKitMode ||
+            IsGraphicsCardBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -241,6 +242,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (graphicsCardAssemblyBinding != null)
                     {
+                        if (IsGraphicsCardBuildKitMode ||
+                            (graphicsCardBuildKit != null &&
+                             graphicsCardBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldGraphicsCardBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldGraphicsCardPrompt(
                             graphicsCardAssemblyBinding,
                             placement,
@@ -2732,6 +2743,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
             ResetProcessorCoolerBuildKitState();
+            ResetGraphicsCardBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3380,6 +3392,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
             ResetProcessorCoolerBuildKitState();
+            ResetGraphicsCardBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

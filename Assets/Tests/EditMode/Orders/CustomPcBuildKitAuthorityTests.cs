@@ -1356,6 +1356,359 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void GraphicsCardBuildKitRequiresFirstFiveComponentsAndPreservesAssemblyAndPcieState()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildOrderLineSnapshot graphicsCard = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.GraphicsCard);
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            GraphicsCardSlotState graphicsCardSlotState =
+                session.AssemblyBuild.GraphicsCardSlotState;
+            StableId<AssemblyOperationIdScope> seatedByOperationId =
+                session.AssemblyBuild.GraphicsCardSeatedByOperationId;
+            StableId<AssemblyOperationIdScope> retainedByOperationId =
+                session.AssemblyBuild.GraphicsCardRetainedByOperationId;
+            StableId<ItemInstanceIdScope> assemblyGraphicsCardItemId =
+                session.AssemblyBuild.GraphicsCardItemId;
+            StableId<ProductDefinitionIdScope> assemblyGraphicsCardProductId =
+                session.AssemblyBuild.GraphicsCardProductId;
+            PcieGpuPowerCableState pcieState =
+                session.AssemblyBuild.PcieGpuPowerCableState;
+            StableId<AssemblyOperationIdScope> pcieRoutedByOperationId =
+                session.AssemblyBuild.PcieGpuPowerCableRoutedByOperationId;
+            int pcieReceiptCount = session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
+
+            AssertGraphicsCardPrerequisiteFailure(session, workOrder);
+
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMotherboard(motherboardPickup).IsSuccess,
+                Is.True);
+            AssertGraphicsCardPrerequisiteFailure(session, workOrder);
+
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalProcessor(processorPickup).IsSuccess,
+                Is.True);
+            AssertGraphicsCardPrerequisiteFailure(session, workOrder);
+
+            CustomPcBuildKitReceipt memoryPickup =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMemoryModule(memoryPickup).IsSuccess,
+                Is.True);
+            AssertGraphicsCardPrerequisiteFailure(session, workOrder);
+
+            CustomPcBuildKitReceipt storagePickup =
+                buildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalStorage(storagePickup).IsSuccess,
+                Is.True);
+            AssertGraphicsCardPrerequisiteFailure(session, workOrder);
+
+            CustomPcBuildKitReceipt coolerPickup =
+                buildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalProcessorCooler(coolerPickup).IsSuccess,
+                Is.True);
+
+            CustomPcBuildKitReceipt pickup =
+                buildKit.PickupCanonicalGraphicsCard(
+                    session.PrototypeGraphicsCardBuildKitOperationId,
+                    workOrder).Value;
+
+            Assert.That(pickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.GraphicsCardInHands));
+            Assert.That(pickup.Line, Is.SameAs(graphicsCard));
+            Assert.That(pickup.Line.LineId, Is.EqualTo(graphicsCard.LineId));
+            Assert.That(pickup.Line.ProductId, Is.EqualTo(graphicsCard.ProductId));
+            Assert.That(pickup.Line.ItemId, Is.EqualTo(graphicsCard.ItemId));
+            Assert.That(pickup.Line.ReservationId,
+                Is.EqualTo(graphicsCard.ReservationId));
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord heldGraphicsCard), Is.True);
+            Assert.That(heldGraphicsCard.ContainerId,
+                Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.Inventory.TryGetReservation(
+                graphicsCard.ReservationId,
+                out InventoryReservation pickupReservation), Is.True);
+            Assert.That(pickupReservation.ItemId, Is.EqualTo(graphicsCard.ItemId));
+            Assert.That(pickupReservation.ClaimId,
+                Is.EqualTo(workOrder.InventoryClaimId));
+
+            CustomPcBuildKitReceipt placement =
+                buildKit.PlaceCanonicalGraphicsCard(pickup).Value;
+
+            Assert.That(placement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.GraphicsCardStaged));
+            Assert.That(placement.Line, Is.SameAs(graphicsCard));
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord stagedGraphicsCard), Is.True);
+            Assert.That(stagedGraphicsCard.Id, Is.EqualTo(graphicsCard.ItemId));
+            Assert.That(stagedGraphicsCard.ProductId,
+                Is.EqualTo(graphicsCard.ProductId));
+            Assert.That(stagedGraphicsCard.ContainerId,
+                Is.EqualTo(session.GraphicsCardBuildKitContainerId));
+            Assert.That(buildKit.GraphicsCardBuildKitContainerId,
+                Is.EqualTo(session.GraphicsCardBuildKitContainerId));
+            Assert.That(buildKit.ActiveKitCount, Is.EqualTo(6));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(6));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.GraphicsCardSlotState,
+                Is.EqualTo(graphicsCardSlotState));
+            Assert.That(session.AssemblyBuild.GraphicsCardSeatedByOperationId,
+                Is.EqualTo(seatedByOperationId));
+            Assert.That(session.AssemblyBuild.GraphicsCardRetainedByOperationId,
+                Is.EqualTo(retainedByOperationId));
+            Assert.That(session.AssemblyBuild.GraphicsCardItemId,
+                Is.EqualTo(assemblyGraphicsCardItemId));
+            Assert.That(session.AssemblyBuild.GraphicsCardProductId,
+                Is.EqualTo(assemblyGraphicsCardProductId));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                Is.EqualTo(pcieState));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRoutedByOperationId,
+                Is.EqualTo(pcieRoutedByOperationId));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
+                Is.EqualTo(pcieReceiptCount));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void GraphicsCardPlacementRejectsForgeryAndStaleRevisionThenReplaysWithoutMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageFirstFiveBuildKitComponents(session, workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildKitReceipt pickup =
+                buildKit.PickupCanonicalGraphicsCard(
+                    session.PrototypeGraphicsCardBuildKitOperationId,
+                    workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            PcieGpuPowerCableState pcieState =
+                session.AssemblyBuild.PcieGpuPowerCableState;
+            int pcieReceiptCount = session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
+            GarageStockFlowSession foreignSession = CreateIssuedSession(
+                out CustomPcBuildOrderRecord foreignWorkOrder);
+            StageFirstFiveBuildKitComponents(foreignSession, foreignWorkOrder);
+            CustomPcBuildKitReceipt foreignPickup =
+                foreignSession.CustomPcBuildKit.PickupCanonicalGraphicsCard(
+                    foreignSession.PrototypeGraphicsCardBuildKitOperationId,
+                    foreignWorkOrder).Value;
+
+            CustomPcBuildKitReceipt[] forgeries =
+            {
+                CloneReceipt(pickup, pickup.Line),
+                new CustomPcBuildKitReceipt(
+                    pickup.OperationId,
+                    pickup.BuildOrder,
+                    pickup.Line,
+                    pickup.SourceContainerId,
+                    pickup.HandsContainerId,
+                    pickup.BuildKitContainerId,
+                    CustomPcBuildKitStage.GraphicsCardStaged,
+                    pickup.InventoryAppliedRevision),
+                new CustomPcBuildKitReceipt(
+                    pickup.OperationId,
+                    pickup.BuildOrder,
+                    pickup.Line,
+                    pickup.SourceContainerId,
+                    pickup.HandsContainerId,
+                    session.ProcessorCoolerBuildKitContainerId,
+                    pickup.Stage,
+                    pickup.InventoryAppliedRevision),
+                foreignPickup
+            };
+
+            foreach (CustomPcBuildKitReceipt forgery in forgeries)
+            {
+                OperationResult<CustomPcBuildKitReceipt> result =
+                    buildKit.PlaceCanonicalGraphicsCard(forgery);
+                Assert.That(result.Error,
+                    Is.EqualTo(CustomPcWorkOrderFailures.BuildKitReceiptInvalid));
+                Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+                Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+                Assert.That(session.AssemblyBuild.Revision,
+                    Is.EqualTo(assemblyRevision));
+                Assert.That(session.AssemblyBuild.ReceiptCount,
+                    Is.EqualTo(assemblyReceiptCount));
+                Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                    Is.EqualTo(pcieState));
+                Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
+                    Is.EqualTo(pcieReceiptCount));
+                Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                    out InventoryItemRecord stillHeld), Is.True);
+                Assert.That(stillHeld.ContainerId,
+                    Is.EqualTo(session.HandsContainerId));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> stale =
+                buildKit.PlaceCanonicalGraphicsCard(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+            Assert.That(stale.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalGraphicsCard(pickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalGraphicsCard(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalGraphicsCard(
+                    session.PrototypeGraphicsCardBuildKitOperationId,
+                    workOrder);
+            OperationResult<CustomPcBuildKitReceipt> secondOperation =
+                buildKit.PickupCanonicalGraphicsCard(
+                    StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                        "orders.custom-pc-build-kit-operation.second-graphics-card"),
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(secondOperation.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitIdentityConflict));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(6));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                Is.EqualTo(pcieState));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
+                Is.EqualTo(pcieReceiptCount));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(foreignSession.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SessionGraphicsCardPickupUsesBuildKitCustodyAndGenericDropCannotBypassIt()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageFirstFiveBuildKitComponents(session, workOrder);
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            GraphicsCardSlotState slotState =
+                session.AssemblyBuild.GraphicsCardSlotState;
+            System.Reflection.FieldInfo slotStateField =
+                typeof(AssemblyBuildAuthority).GetField(
+                    "_graphicsCardSlotState",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic);
+            Assert.That(slotStateField, Is.Not.Null);
+            slotStateField.SetValue(
+                session.AssemblyBuild,
+                GraphicsCardSlotState.Unsupported);
+
+            OperationResult pickup = session.PickupLooseGraphicsCardToHands();
+
+            slotStateField.SetValue(session.AssemblyBuild, slotState);
+            Assert.That(pickup.IsSuccess, Is.True);
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.DropHeldGraphicsCardToWorld().IsFailure, Is.True);
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord stillHeld), Is.True);
+            Assert.That(stillHeld.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            OperationResult<CustomPcBuildKitReceipt> placed =
+                session.PlaceHeldGraphicsCardInCustomPcBuildKit();
+
+            Assert.That(placed.IsSuccess, Is.True);
+            Assert.That(placed.Value.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.GraphicsCardStaged));
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord staged), Is.True);
+            Assert.That(staged.ContainerId,
+                Is.EqualTo(session.GraphicsCardBuildKitContainerId));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.GraphicsCardSlotState,
+                Is.EqualTo(slotState));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void GraphicsCardSextupleContainerClaimIsAllOrNone()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out _);
+            StableId<ContainerIdScope>[] containerIds = Enumerable.Range(1, 6)
+                .Select(index => StableId<ContainerIdScope>.Parse(
+                    $"inventory.container.graphics-card-build-kit-claim-{index}"))
+                .ToArray();
+            foreach (StableId<ContainerIdScope> containerId in containerIds)
+            {
+                RegisterBuildKitContainer(session, containerId);
+            }
+            long inventoryRevision = session.Inventory.Revision;
+
+            OperationResult<CustomPcBuildKitAuthority> collision =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    containerIds[0],
+                    containerIds[1],
+                    containerIds[2],
+                    containerIds[3],
+                    containerIds[4],
+                    containerIds[4]);
+
+            Assert.That(collision.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitContainerInvalid));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+
+            OperationResult<CustomPcBuildKitAuthority> valid =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    containerIds[0],
+                    containerIds[1],
+                    containerIds[2],
+                    containerIds[3],
+                    containerIds[4],
+                    containerIds[5]);
+
+            Assert.That(valid.IsSuccess, Is.True,
+                "A rejected sextuple topology must not partially claim containers.");
+            Assert.That(valid.Value.GraphicsCardBuildKitContainerId,
+                Is.EqualTo(containerIds[5]));
+            Assert.That(valid.Value.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(
@@ -1450,6 +1803,65 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     workOrder).Value;
             Assert.That(session.CustomPcBuildKit
                 .PlaceCanonicalStorage(storagePickup).IsSuccess, Is.True);
+        }
+
+        private static void StageFirstFiveBuildKitComponents(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            StageMotherboardProcessorMemoryAndStorage(session, workOrder);
+            CustomPcBuildKitReceipt coolerPickup =
+                session.CustomPcBuildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(session.CustomPcBuildKit
+                .PlaceCanonicalProcessorCooler(coolerPickup).IsSuccess, Is.True);
+        }
+
+        private static void AssertGraphicsCardPrerequisiteFailure(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = session.CustomPcBuildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            PcieGpuPowerCableState pcieState =
+                session.AssemblyBuild.PcieGpuPowerCableState;
+            int pcieReceiptCount = session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
+
+            OperationResult<CustomPcBuildKitReceipt> result =
+                session.CustomPcBuildKit.PickupCanonicalGraphicsCard(
+                    session.PrototypeGraphicsCardBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableState,
+                Is.EqualTo(pcieState));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
+                Is.EqualTo(pcieReceiptCount));
+            Assert.That(session.TryGetGraphicsCardAssemblyItem(
+                out InventoryItemRecord untouched), Is.True);
+            Assert.That(untouched.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+        }
+
+        private static void RegisterBuildKitContainer(
+            GarageStockFlowSession session,
+            StableId<ContainerIdScope> containerId)
+        {
+            Assert.That(session.Inventory.RegisterContainer(
+                InventoryContainerDefinition.Create(
+                    containerId,
+                    InventoryContainerKind.BuildKit,
+                    1).Value).IsSuccess, Is.True);
         }
 
         private static void AssertProcessorCoolerPrerequisiteFailure(

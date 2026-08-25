@@ -1,6 +1,7 @@
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 
 namespace PCShopEmpire3D.Presentation.Interaction
 {
@@ -46,6 +47,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult PickupLooseGraphicsCardToHands()
         {
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalGraphicsCard(
+                        PrototypeGraphicsCardBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             if (!AssemblyBuild.HasGraphicsCardSlot ||
                 AssemblyBuild.GraphicsCardSlotState != GraphicsCardSlotState.EmptyOpen ||
                 !TryGetGraphicsCardAssemblyItem(out InventoryItemRecord item) ||
@@ -60,8 +73,47 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HandsContainerId);
         }
 
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldGraphicsCardInCustomPcBuildKit()
+        {
+            return PlaceHeldGraphicsCardInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldGraphicsCardInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeGraphicsCardBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.GraphicsCardInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalGraphicsCard(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldGraphicsCardToWorld()
         {
+            if (CustomPcBuildKit != null &&
+                CustomPcBuildKit.TryGetReceipt(
+                    PrototypeGraphicsCardBuildKitOperationId,
+                    out CustomPcBuildKitReceipt buildKitReceipt) &&
+                buildKitReceipt.Stage == CustomPcBuildKitStage.GraphicsCardInHands)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
             if (!AssemblyBuild.HasGraphicsCardSlot ||
                 AssemblyBuild.GraphicsCardSlotState != GraphicsCardSlotState.EmptyOpen ||
                 !TryGetGraphicsCardAssemblyItem(out InventoryItemRecord item) ||

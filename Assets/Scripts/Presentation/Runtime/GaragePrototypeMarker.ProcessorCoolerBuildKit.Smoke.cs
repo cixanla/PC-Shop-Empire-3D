@@ -28,6 +28,8 @@ namespace PCShopEmpire3D.Presentation
 
         private bool _suppressStorageBuildKitSmokeSuccessMarker;
         private string _nestedStorageBuildKitSmokeFailureCode;
+        private bool _suppressProcessorCoolerBuildKitSmokeSuccessMarker;
+        private string _nestedProcessorCoolerBuildKitSmokeFailureCode;
 
         private IEnumerator RunProcessorCoolerBuildKitSmoke()
         {
@@ -334,7 +336,10 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(ProcessorCoolerBuildKitSmokeSuccessMarker);
+                if (!_suppressProcessorCoolerBuildKitSmokeSuccessMarker)
+                {
+                    Debug.Log(ProcessorCoolerBuildKitSmokeSuccessMarker);
+                }
                 yield return new WaitForEndOfFrame();
             }
             finally
@@ -382,8 +387,14 @@ namespace PCShopEmpire3D.Presentation
             SetMotherboardBuildKitSmokePlayerLook(playerPosition, target);
         }
 
-        private static void LogProcessorCoolerBuildKitSmokeFailure(string code)
+        private void LogProcessorCoolerBuildKitSmokeFailure(string code)
         {
+            if (_suppressProcessorCoolerBuildKitSmokeSuccessMarker)
+            {
+                _nestedProcessorCoolerBuildKitSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_PROCESSOR_COOLER_BUILD_KIT_RUNTIME_SMOKE " +
                 $"build-kit-flow=failed code={code}");

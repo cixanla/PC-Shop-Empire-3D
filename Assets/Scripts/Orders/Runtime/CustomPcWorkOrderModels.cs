@@ -36,7 +36,9 @@ namespace PCShopEmpire3D.Orders
         StorageInHands = 7,
         StorageStaged = 8,
         ProcessorCoolerInHands = 9,
-        ProcessorCoolerStaged = 10
+        ProcessorCoolerStaged = 10,
+        GraphicsCardInHands = 11,
+        GraphicsCardStaged = 12
     }
 
     public sealed class CustomPcBuildOrderLineSnapshot
@@ -227,7 +229,8 @@ namespace PCShopEmpire3D.Orders
             Stage == CustomPcBuildKitStage.ProcessorStaged ||
             Stage == CustomPcBuildKitStage.MemoryModuleStaged ||
             Stage == CustomPcBuildKitStage.StorageStaged ||
-            Stage == CustomPcBuildKitStage.ProcessorCoolerStaged
+            Stage == CustomPcBuildKitStage.ProcessorCoolerStaged ||
+            Stage == CustomPcBuildKitStage.GraphicsCardStaged
                 ? 1
                 : 0;
     }
@@ -276,6 +279,8 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.storage-line-invalid");
         public static readonly Failure BuildKitProcessorCoolerLineInvalid =
             Failure.FromCode("orders.custom-pc-build-kit.processor-cooler-line-invalid");
+        public static readonly Failure BuildKitGraphicsCardLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.graphics-card-line-invalid");
         public static readonly Failure BuildKitPrerequisiteMissing =
             Failure.FromCode("orders.custom-pc-build-kit.prerequisite-missing");
         public static readonly Failure BuildKitIdentityConflict =
