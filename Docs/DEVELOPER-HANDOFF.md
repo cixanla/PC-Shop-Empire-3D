@@ -14,7 +14,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #81 r41 teknik/native ve immutable local/physical-USB kapıları tamamlandı; final metadata/administrative kapanış sürüyor
+### Güncel checkpoint — Issue #81 r41 teknik/native, immutable local/physical-USB ve metadata CI kapıları tamamlandı; exact-build insan oturumu/idari kapanış sürüyor
 
 - Technical head `f3d80629e09c05afde97fa778c4b220ca456c5f0`, tree `851954879c1ff1e2ef98bc9a7a8469750304d992`. Canonical reserved PSU yalnız exact `ComponentKind == PowerSupply` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - PSU, staged canonical motherboard, processor, DDR5, M.2, processor cooler ve graphics card prerequisites sonrasında ayrı stable operation ve power-supply-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Power Supply BuildKit custody'sine taşınır. Mevcut altı slot/receipt/replay/revision/staged state korunur.
@@ -24,7 +24,8 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1335888266` bayt ve `issue81-hardened-v1` fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r41 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve player/Unity/task residue `0` ile geçti.
 - Teknik branch private GitHub'a push edildi; source/docs `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` ve [Repository Guard 32896033674](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32896033674) başarılıdır. ADR-0050 ve tarihli Evidence exact test/Mac/Windows/binary/procedure hashlerini bağlar; canonical evidence exact `14/14`dır.
 - Immutable local final ve doğru Windows-attached fiziksel USB incoming→atomik final→ikinci readback zinciri aynı `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, `19368668` bayt ve `69cc892b…06ab` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar ve Windows işlem artığı `0`dır.
-- Yalnız bu fiziksel metadata commit/Guard ve Issue #81 `24/24`/Roadmap `Done` idari geçişi kalır; parent Epic #10 açık/In Progress kalacaktır.
+- Fiziksel metadata `ff935452c68bc77e66eb0742e0c3e6c0eb2894c7`, tree `e4f03fc3c2d6dfd44da61eaae3a161af4f104eae` ve [Guard 32897672990](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32897672990) başarılıdır.
+- `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` uyarınca exact r41 build üzerinde gerçek insan oturumu henüz kaydedilmedi; otomatik native rota bunun yerine geçirilmez. Bu nedenle acceptance `23/24`, Issue #81 açık/In Progress ve PR #82 taslak kalır. İnsan oturumu geçince `24/24`, Roadmap `Done` ve idari kapanış yapılır; parent Epic #10 açık/In Progress kalacaktır.
 
 ### Önceki checkpoint — Issue #79 r40 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
 

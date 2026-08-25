@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #81 fiziksel Power Supply BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance ve immutable local+physical-USB kapıları tamamlandı; final metadata CI ve idari kapanış sürüyor<br>
+**Durum:** Issue #81 fiziksel Power Supply BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve metadata CI kapıları tamamlandı; exact-build insan oturumu ve idari kapanış sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue81-power-supply-build-kit-handoff`, technical commit `f3d80629e09c05afde97fa778c4b220ca456c5f0`, tree `851954879c1ff1e2ef98bc9a7a8469750304d992`; Roadmap `In Progress`, Issue #81 açık
 
 ## En yeni teknik checkpoint — Issue #81 / Epic #10
@@ -15,7 +15,7 @@
 - Universal Mac Development/StrictMode report `329907140` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r41 readiness + Power Supply BuildKit smoke başarılıdır. ADR-0050 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
 - Exact bundle `7212319` bayt ve `7074973b…993e` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue81-hardened-v1` x64 IL2CPP/Direct3D11 report `1335888266` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve player/Unity/task residue `0` ile geçti.
 - Exact 13 test/build/runtime/binary/procedure artifact'ı ile source/docs `dc118bf0d26a11f3937cb114ef12f85666facc48` / tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` / Guard `32896033674` sonrası üretilen source receipt canonical `14/14` kanıta bağlandı.
-- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, `19368668` bayt ve `69cc892b816820918b5612944266dc2cb077cd01ed41f78a3d6523c7409206ab` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar ve Windows işlem artığı `0`dır. Bu fiziksel metadata commit/Guard ve acceptance `24/24` + Roadmap `Done` idari geçişi tamamlanmadan Issue #81 açık/In Progress kalır; parent Epic #10 ayrıca açık/In Progress kalır.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, `19368668` bayt ve `69cc892b816820918b5612944266dc2cb077cd01ed41f78a3d6523c7409206ab` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar ve Windows işlem artığı `0`dır. Fiziksel metadata `ff935452c68bc77e66eb0742e0c3e6c0eb2894c7`, tree `e4f03fc3c2d6dfd44da61eaae3a161af4f104eae`, Guard `32897672990` başarılıdır. Exact r41 gerçek insan oturumu kaydedilmeden acceptance `23/24`, Issue #81 açık/In Progress ve PR #82 taslak kalır; sonrasında Roadmap `Done` idari geçişi yapılır. Parent Epic #10 ayrıca açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #79 / Epic #10
 

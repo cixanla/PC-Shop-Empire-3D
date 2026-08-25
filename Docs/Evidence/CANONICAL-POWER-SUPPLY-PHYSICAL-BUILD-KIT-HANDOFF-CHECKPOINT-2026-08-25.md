@@ -4,7 +4,7 @@
 **Issue:** [#81](https://github.com/cixanla/PC-Shop-Empire-3D/issues/81)<br>
 **Technical head:** `f3d80629e09c05afde97fa778c4b220ca456c5f0`<br>
 **Technical tree:** `851954879c1ff1e2ef98bc9a7a8469750304d992`<br>
-**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI and immutable local/physical-USB double-readback gates passed; final physical-metadata CI and Issue/Project administrative closure pending
+**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI, immutable local/physical-USB double-readback and physical-metadata CI gates passed; exact-r41 human-player session and Issue/Project administrative closure pending
 
 ## Delivered playable result
 
@@ -80,6 +80,8 @@ Procedure source is hash-bound:
 
 The thirteen immutable test/build/runtime/binary/procedure artifacts returned to the Mac with exact size/hash readback. Clean source/docs commit `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` and [Repository Guard 32896033674](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32896033674) then authorized final `source-receipt.json` (`5,046` bytes, SHA-256 `ef6f720ab762872815224fdc169d8fadd80b4c627651cc5353411f3f4e19c238`). Promoted-artifact path/size/hash equality is `13/13`; canonical evidence is exact `14/14` at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue81-f3d80629e09c/canonical-evidence`.
 
+GitHub reports Guard `32896033674` with exact `headSha == dc118bf0d26a11f3937cb114ef12f85666facc48`. That source/docs commit contains technical commit `f3d80629e09c05afde97fa778c4b220ca456c5f0` as an ancestor; the single later full-head Guard therefore intentionally proves both technical source and source/docs closure for this package.
+
 `Tools/verify-checkpoint-package.sh ... issue81` is fail-closed on:
 
 - Exact technical commit/tree and source/docs ancestry.
@@ -97,6 +99,7 @@ The thirteen immutable test/build/runtime/binary/procedure artifacts returned to
 - Physical `.incoming-issue81-dc118bf` passed a full hash/size/path readback, was atomically renamed without collision, and the final path passed the same full Windows readback plus an independent Mac pullback verification.
 - Every full readback is identical: `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, source/docs commit `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8`, `19,368,668` payload bytes and manifest SHA-256 `69cc892b816820918b5612944266dc2cb077cd01ed41f78a3d6523c7409206ab`.
 - Physical incoming directory/sidecar residue, internal AppleDouble, exact final sidecar and Windows issue-specific process residue counts are all `0`; older milestones and unrelated user data were not modified.
+- Physical lifecycle metadata commit `ff935452c68bc77e66eb0742e0c3e6c0eb2894c7`, tree `e4f03fc3c2d6dfd44da61eaae3a161af4f104eae` and [Repository Guard 32897672990](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32897672990) passed.
 
 ## Issue #81 acceptance matrix — current technical state
 
@@ -122,15 +125,15 @@ The thirteen immutable test/build/runtime/binary/procedure artifacts returned to
 | 18 | Unity instance, ItemId, collider/layer/ownership and authority container remain exact. | TECHNICAL PASS | World→Hands→BuildKit identity assertions. |
 | 19 | Progress derives from staged receipts and becomes `7/10`. | TECHNICAL PASS | Work-ticket aggregate and visible runtime marker. |
 | 20 | PSU Assembly, three cable routes, quote/reservations/items remain untouched. | TECHNICAL PASS | Isolation snapshots and regression suite. |
-| 21 | WASD/mouse/gamepad human scenarios work. | TECHNICAL PASS | CharacterController + mouse-delta native route and PlayMode matrix. |
+| 21 | WASD/mouse/gamepad human scenarios work. | HUMAN SESSION PENDING | CharacterController + mouse-delta native route and PlayMode matrix pass automatically; the exact-r41 human session required by `HUMAN-PLAY-ACCEPTANCE-GATE.md` is not yet recorded. |
 | 22 | Focused and full EditMode/PlayMode regression pass. | TECHNICAL PASS | `697/697`, `105/105`, zero non-pass. |
 | 23 | Diff, Guard, Mac and Windows native gates pass. | TECHNICAL PASS | Diff, source/docs Guard `32896033674`, exact-head Mac and detached-clean Windows IL2CPP/D3D11 gates pass. |
-| 24 | Docs, private push/CI and physical USB lifecycle complete. | FINAL METADATA PENDING | Source/docs Guard, final receipt, local package and two physical USB readbacks pass; this metadata commit/Guard and administrative closure remain. |
+| 24 | Docs, private push/CI and physical USB lifecycle complete. | LIFECYCLE PASS | Source/docs Guard, final receipt, local package, physical incoming/final readbacks and physical-metadata Guard `32897672990` pass. |
 
 ## Pending lifecycle sequence
 
-1. Commit and push this physical lifecycle metadata and require Repository Guard/CI success.
-2. Mark all `24/24` acceptance boxes, close Issue #81 and set its Roadmap item to `Done`; make PR #82 ready for integration.
-3. Record the exact physical-metadata commit/Guard and closed lifecycle state in the final project handoff before starting the next gameplay slice.
+1. Run and record one exact-r41 human-player session covering the movement/camera/window, physical interaction and 15-minute endurance matrix in `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md`; do not substitute automated native smoke for this evidence.
+2. If the human session passes, mark all `24/24` acceptance boxes, close Issue #81, set its Roadmap item to `Done` and make PR #82 ready for integration.
+3. Record the closed lifecycle state in the final project handoff before starting the next gameplay slice.
 
 Parent Epic #10 remains open for the three cable BuildKit handoffs and later assembly/electrical/POST/OS/QA stages. Issue #77 remains independently open/In Progress until its own physical lifecycle closes.
