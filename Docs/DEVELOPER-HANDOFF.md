@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #77 r39 teknik ve Mac/Windows native kapıları tamamlandı / source-docs, CI ve fiziksel lifecycle bekliyor
+### Güncel checkpoint — Issue #79 r40 teknik ve Mac/Windows native kapıları tamamlandı / source-docs, CI ve fiziksel lifecycle bekliyor
+
+- Technical head `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`. Canonical reserved graphics card yalnız exact `ComponentKind == GraphicsCard` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- GPU, staged canonical motherboard, processor, DDR5, M.2 ve processor-cooler prerequisites sonrasında ayrı stable operation ve graphics-card-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Graphics Card BuildKit custody'sine taşınır. Mevcut beş slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r40 ayrı GPU tray/support/snap anchor, keyed 180° half-turn preview ve görünür `5/10 → 6/10` aggregate ekler. Active GPU BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #59 GPU seat/retention ile Issue #63 PCIe route aynı-frame input'u çalamaz ve receipt'siz normal Assembly yolları değişmez.
+- Final EditMode `690/690`, PlayMode `100/100`; failed/skipped/inconclusive `0`. Universal Mac report `329839788` bayt, valid signed universal player ve Apple M1/Metal exact r40 readiness + Graphics Card BuildKit smoke başarılıdır.
+- Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1334256694` bayt ve `issue79-hardened-v3` fatal-token `0` verdi; `ProjectSettings.asset` restoration byte-exact'tir. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r40 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve residue `0` ile geçti.
+- Teknik branch private GitHub'a push edildi. ADR-0049 ve tarihli Evidence exact test/Mac/Windows/procedure hashlerini bağlar; diğer 13 immutable artifact Mac canonical evidence dizinindedir. Exact dokuz dosyalık source/docs commit, Repository Guard, final receipt, immutable local/physical USB double-readback ve acceptance `24/24` hâlâ kapanış kapılarıdır. Issue #79 açık/In Progress, Issue #77 kendi fiziksel lifecycle'ı için ayrıca açık/In Progress ve parent Epic #10 açık/In Progress kalır.
+
+### Önceki checkpoint — Issue #77 r39 teknik ve Mac/Windows native kapıları tamamlandı / source-docs, CI ve fiziksel lifecycle bekliyor
 
 - Technical head `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`. Canonical reserved processor cooler yalnız exact `ComponentKind == ProcessorCooler` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - Cooler, staged canonical motherboard, processor, DDR5 ve M.2 prerequisites sonrasında ayrı stable operation ve cooler-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Processor Cooler BuildKit custody'sine taşınır. Mevcut dört slot/receipt/replay/revision/staged state korunur.

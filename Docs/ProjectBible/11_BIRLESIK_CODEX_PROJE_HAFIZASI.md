@@ -9,7 +9,16 @@
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 25 Ağustos 2026 üstün gelen güncel durum — Issue #77 Processor Cooler BuildKit
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #79 Graphics Card BuildKit
+
+- Exact reserved `GraphicsCard`, staged motherboard+CPU+DDR5+M.2+processor-cooler prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → graphics-card BuildKit custody'sine taşınır; visible work-ticket `5/10 → 6/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r40 gerçek keyboard/mouse + gamepad, keyed 180° half-turn preview ve tek-consumer BuildKit/GPU-seat/PCIe-route input arbitration taşır. Issue #59 GPU seat/latch/rear-bracket ve Issue #63 PCIe route state/revision/receipts değişmez.
+- Technical commit `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`; EditMode `690/690`, PlayMode `100/100`; Universal Mac report `329839788` bayt ve Apple M1/Metal exact r40 smoke başarılıdır.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1334256694` bayt, `issue79-hardened-v3` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Exact dokuz dosyalık source/docs commit/Guard, final receipt `14/14`, immutable local+physical USB double-readback, final metadata/Guard ve acceptance `24/24` henüz bekliyor. Issue #79 açık/In Progress; Issue #77 kendi lifecycle kapısı için ayrıca açık/In Progress ve parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0049, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+
+### Önceki üstün gelen durum — Issue #77 Processor Cooler BuildKit
 
 - Exact reserved `ProcessorCooler`, staged motherboard+CPU+DDR5+M.2 prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → processor-cooler BuildKit custody'sine taşınır; visible work-ticket `4/10 → 5/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.

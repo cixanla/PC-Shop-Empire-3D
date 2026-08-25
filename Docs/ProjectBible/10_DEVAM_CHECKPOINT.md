@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #77 fiziksel Processor Cooler BuildKit source/domain/scene/input/full-regression ve exact-head Mac+Windows native kapıları tamamlandı; source/docs Guard, final provenance, immutable local+physical-USB ve lifecycle kapıları bekliyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue77-processor-cooler-build-kit-handoff`, technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; Roadmap `In Progress`, Issue #77 açık
+**Durum:** Issue #79 fiziksel Graphics Card BuildKit source/domain/scene/input/full-regression ve exact-head Mac+Windows native kapıları tamamlandı; source/docs Guard, final provenance, immutable local+physical-USB ve lifecycle kapıları bekliyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue79-graphics-card-build-kit-handoff`, technical commit `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`; Roadmap `In Progress`, Issue #79 açık
 
-## En yeni teknik checkpoint — Issue #77 / Epic #10
+## En yeni teknik checkpoint — Issue #79 / Epic #10
+
+- Canonical graphics card accepted work order'da yalnız exact `ComponentKind == GraphicsCard` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
+- GPU, staged canonical motherboard+CPU+DDR5+M.2+processor-cooler prerequisites sonrasında ayrı stable operation ve managed capacity-one graphics-card BuildKit container üzerinden source → ActorHands → Graphics Card BuildKit custody'sine taşınır. İlk beş slotun operation/receipt/replay/revision/staged state'i aynen korunur.
+- GarageGraybox `garage-graphics-card-build-kit-r40-v1`; ayrı tray/support/snap anchor, range/focus/LOS/full-support/obstruction kapıları, keyed 180° half-turn preview ve görünür `5/10 → 6/10` ilerleme sunar. Aynı Unity instance ve stable ItemId domain-first pickup, carry, place, failure recovery ve replay boyunca korunur.
+- Active Graphics Card BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #59 GPU seat/retention ve Issue #63 PCIe route aynı-frame input'u çalamaz. Receipt yokken normal Assembly yolları geriye uyumludur; GPU seat/latch/bracket ve PCIe route state/revision/receipts untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
+- Technical commit `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`; Unity 6000.3.21f1 full EditMode `690/690`, PlayMode `100/100`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
+- Universal Mac Development/StrictMode report `329839788` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r40 readiness + Graphics Card BuildKit smoke başarılıdır. ADR-0049 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
+- Exact bundle `7096172` bayt ve `7c9ca435…9636` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue79-hardened-v3` x64 IL2CPP/Direct3D11 report `1334256694` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
+- Exact 13 test/build/runtime/procedure artifact'ı canonical evidence dizinine geri döndü. Source/docs commit/Repository Guard sonrası final receipt ile exact `14/14` yapılacak; immutable local package, doğru fiziksel USB incoming/final çift readback, metadata/Guard ve acceptance `24/24` henüz tamamlanmadı. Issue #79 açık/In Progress; Issue #77 ayrı lifecycle kapısı için açık/In Progress ve parent Epic #10 açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #77 / Epic #10
 
 - Canonical processor cooler accepted work order'da yalnız exact `ComponentKind == ProcessorCooler` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
 - Cooler, staged canonical motherboard+CPU+DDR5+M.2 prerequisites sonrasında ayrı stable operation ve managed capacity-one processor-cooler BuildKit container üzerinden source → ActorHands → Cooler BuildKit custody'sine taşınır. İlk dört slotun operation/receipt/replay/revision/staged state'i aynen korunur.
