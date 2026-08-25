@@ -34,6 +34,9 @@ namespace PCShopEmpire3D.Presentation
             "atx24-route=untouched eps12v-route=untouched pcie-route=untouched " +
             "no-duplicate-loss=ok replay=ok invariants=ok";
 
+        private bool _suppressPowerSupplyBuildKitSmokeSuccessMarker;
+        private string _nestedPowerSupplyBuildKitSmokeFailureCode;
+
         private IEnumerator RunPowerSupplyBuildKitSmoke()
         {
             yield return null;
@@ -561,7 +564,10 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(PowerSupplyBuildKitSmokeSuccessMarker);
+                if (!_suppressPowerSupplyBuildKitSmokeSuccessMarker)
+                {
+                    Debug.Log(PowerSupplyBuildKitSmokeSuccessMarker);
+                }
                 yield return new WaitForEndOfFrame();
             }
             finally
@@ -1027,8 +1033,14 @@ namespace PCShopEmpire3D.Presentation
             return angle > 180f ? angle - 360f : angle;
         }
 
-        private static void LogPowerSupplyBuildKitSmokeFailure(string code)
+        private void LogPowerSupplyBuildKitSmokeFailure(string code)
         {
+            if (_suppressPowerSupplyBuildKitSmokeSuccessMarker)
+            {
+                _nestedPowerSupplyBuildKitSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE " +
                 $"build-kit-flow=failed code={code}");

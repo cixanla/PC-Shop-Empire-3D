@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-power-supply-build-kit-r41-v1";
+        public const string Version = "garage-atx24-power-cable-build-kit-r42-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -47,6 +47,8 @@ namespace PCShopEmpire3D.Presentation
         private GraphicsCardBuildKitProjection graphicsCardBuildKit;
         [SerializeField]
         private PowerSupplyBuildKitProjection powerSupplyBuildKit;
+        [SerializeField]
+        private Atx24PowerCableBuildKitProjection atx24PowerCableBuildKit;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -107,6 +109,9 @@ namespace PCShopEmpire3D.Presentation
 
         public PowerSupplyBuildKitProjection PowerSupplyBuildKit =>
             powerSupplyBuildKit;
+
+        public Atx24PowerCableBuildKitProjection Atx24PowerCableBuildKit =>
+            atx24PowerCableBuildKit;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -329,6 +334,24 @@ namespace PCShopEmpire3D.Presentation
             FindObjectsByType<PowerSupplyBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
+        public bool HasAtx24PowerCableBuildKitR42Runtime =>
+            atx24PowerCableBuildKit != null &&
+            atx24PowerCableBuildKit.IsCanonical &&
+            atx24PowerCableBuildKit.Runtime == stockFlow &&
+            atx24PowerCableBinding != null &&
+            atx24PowerCableBinding.PhysicalItem == atx24PowerCable &&
+            atx24PowerCableBinding.Route == atx24PowerCableRoute &&
+            atx24PowerCableBinding.MatchesBuildKitConfiguration(
+                atx24PowerCableBuildKit) &&
+            atx24PowerCable != null &&
+            atx24PowerCableRoute != null &&
+            playerCarry != null &&
+            playerCarry.MatchesAtx24PowerCableBuildKitConfiguration(
+                atx24PowerCableBuildKit,
+                atx24PowerCableBinding) &&
+            FindObjectsByType<Atx24PowerCableBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -379,7 +402,8 @@ namespace PCShopEmpire3D.Presentation
             StorageBuildKitProjection physicalStorageBuildKit = null,
             ProcessorCoolerBuildKitProjection physicalProcessorCoolerBuildKit = null,
             GraphicsCardBuildKitProjection physicalGraphicsCardBuildKit = null,
-            PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null)
+            PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null,
+            Atx24PowerCableBuildKitProjection physicalAtx24PowerCableBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -396,6 +420,7 @@ namespace PCShopEmpire3D.Presentation
             processorCoolerBuildKit = physicalProcessorCoolerBuildKit;
             graphicsCardBuildKit = physicalGraphicsCardBuildKit;
             powerSupplyBuildKit = physicalPowerSupplyBuildKit;
+            atx24PowerCableBuildKit = physicalAtx24PowerCableBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1149,6 +1174,7 @@ namespace PCShopEmpire3D.Presentation
                 $"processor-cooler-build-kit={(HasProcessorCoolerBuildKitR39Runtime ? "ready" : "missing")} " +
                 $"graphics-card-build-kit={(HasGraphicsCardBuildKitR40Runtime ? "ready" : "missing")} " +
                 $"power-supply-build-kit={(HasPowerSupplyBuildKitR41Runtime ? "ready" : "missing")} " +
+                $"atx24-power-cable-build-kit={(HasAtx24PowerCableBuildKitR42Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1229,6 +1255,9 @@ namespace PCShopEmpire3D.Presentation
             bool runPowerSupplyBuildKitSmoke =
                 HasCommandLineArgument(
                     "-pse-power-supply-build-kit-smoke");
+            bool runAtx24PowerCableBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-atx24-power-cable-build-kit-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1252,7 +1281,8 @@ namespace PCShopEmpire3D.Presentation
                              (runStorageBuildKitSmoke ? 1 : 0) +
                              (runProcessorCoolerBuildKitSmoke ? 1 : 0) +
                              (runGraphicsCardBuildKitSmoke ? 1 : 0) +
-                             (runPowerSupplyBuildKitSmoke ? 1 : 0);
+                             (runPowerSupplyBuildKitSmoke ? 1 : 0) +
+                             (runAtx24PowerCableBuildKitSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1268,12 +1298,18 @@ namespace PCShopEmpire3D.Presentation
                      !runStorageBuildKitSmoke &&
                      !runProcessorCoolerBuildKitSmoke &&
                      !runGraphicsCardBuildKitSmoke &&
-                     !runPowerSupplyBuildKitSmoke) ||
+                     !runPowerSupplyBuildKitSmoke &&
+                     !runAtx24PowerCableBuildKitSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runPowerSupplyBuildKitSmoke)
+                    if (runAtx24PowerCableBuildKitSmoke)
+                    {
+                        LogAtx24PowerCableBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPowerSupplyBuildKitSmoke)
                     {
                         LogPowerSupplyBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1487,6 +1523,15 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runAtx24PowerCableBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_ATX24_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.atx24-power-cable-build-kit-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1616,6 +1661,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPowerSupplyBuildKitSmoke());
+            }
+
+            if (runAtx24PowerCableBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunAtx24PowerCableBuildKitSmoke());
             }
         }
 

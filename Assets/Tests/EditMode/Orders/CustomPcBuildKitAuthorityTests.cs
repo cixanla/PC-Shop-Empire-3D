@@ -2310,6 +2310,409 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void Atx24PowerCableBuildKitRequiresFirstSevenAndSelectsExactFamily()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageFirstSixBuildKitComponents(session, workOrder);
+            CustomPcBuildOrderLineSnapshot atx24 =
+                CanonicalAtx24PowerCable(workOrder);
+            CustomPcBuildOrderLineSnapshot[] cableLines = workOrder.Lines
+                .Where(line => line.ComponentKind == PcComponentKind.PowerCable)
+                .ToArray();
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = session.CustomPcBuildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            long atx24Revision = session.AssemblyBuild.Atx24PowerCableRevision;
+            long eps12vRevision = session.AssemblyBuild.Eps12vPowerCableRevision;
+            long pcieRevision = session.AssemblyBuild.PcieGpuPowerCableRevision;
+
+            Assert.That(cableLines, Has.Length.EqualTo(3));
+            Assert.That(cableLines.Select(line => line.PowerCableType),
+                Is.EquivalentTo(new[]
+                {
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard,
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard,
+                    PowerCableType.ModularPcie8PinPsuToGraphicsCard
+                }));
+            Assert.That(session.CustomPcBuildKit.StagedComponentCount, Is.EqualTo(6));
+
+            OperationResult<CustomPcBuildKitReceipt> prerequisiteFailure =
+                session.CustomPcBuildKit.PickupCanonicalAtx24PowerCable(
+                    session.PrototypeAtx24PowerCableBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(prerequisiteFailure.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                atx24.ItemId,
+                out InventoryItemRecord untouchedAtx24), Is.True);
+            Assert.That(untouchedAtx24.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
+
+            CustomPcBuildKitReceipt powerSupplyPickup =
+                session.CustomPcBuildKit.PickupCanonicalPowerSupply(
+                    session.PrototypePowerSupplyBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(session.CustomPcBuildKit
+                .PlaceCanonicalPowerSupply(powerSupplyPickup).IsSuccess, Is.True);
+            Assert.That(session.CustomPcBuildKit.StagedComponentCount, Is.EqualTo(7));
+
+            CustomPcBuildKitReceipt pickup =
+                session.CustomPcBuildKit.PickupCanonicalAtx24PowerCable(
+                    session.PrototypeAtx24PowerCableBuildKitOperationId,
+                    workOrder).Value;
+
+            Assert.That(pickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.Atx24PowerCableInHands));
+            Assert.That(pickup.Line, Is.SameAs(atx24));
+            Assert.That(pickup.Line.LineId, Is.EqualTo(atx24.LineId));
+            Assert.That(pickup.Line.ProductId, Is.EqualTo(atx24.ProductId));
+            Assert.That(pickup.Line.ItemId, Is.EqualTo(atx24.ItemId));
+            Assert.That(pickup.Line.ReservationId, Is.EqualTo(atx24.ReservationId));
+            Assert.That(pickup.Line.PowerCableType,
+                Is.EqualTo(PowerCableType.ModularAtx24SplitPsuToMotherboard));
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                atx24.ItemId,
+                out InventoryItemRecord heldAtx24), Is.True);
+            Assert.That(heldAtx24.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt placement = session.CustomPcBuildKit
+                .PlaceCanonicalAtx24PowerCable(pickup).Value;
+
+            Assert.That(placement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.Atx24PowerCableStaged));
+            Assert.That(placement.Line, Is.SameAs(atx24));
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                atx24.ItemId,
+                out InventoryItemRecord stagedAtx24), Is.True);
+            Assert.That(stagedAtx24.ContainerId,
+                Is.EqualTo(session.Atx24PowerCableBuildKitContainerId));
+            Assert.That(session.CustomPcBuildKit.Atx24PowerCableBuildKitContainerId,
+                Is.EqualTo(session.Atx24PowerCableBuildKitContainerId));
+            Assert.That(session.CustomPcBuildKit.ActiveKitCount, Is.EqualTo(8));
+            Assert.That(session.CustomPcBuildKit.StagedComponentCount, Is.EqualTo(8));
+
+            foreach (CustomPcBuildOrderLineSnapshot otherCable in cableLines.Where(
+                         line => line.PowerCableType !=
+                             PowerCableType.ModularAtx24SplitPsuToMotherboard))
+            {
+                Assert.That(session.Inventory.TryGetSerializedItem(
+                    otherCable.ItemId,
+                    out InventoryItemRecord untouchedCable), Is.True);
+                Assert.That(untouchedCable.ContainerId,
+                    Is.EqualTo(session.WorldFloorContainerId));
+            }
+
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.Atx24PowerCableRevision,
+                Is.EqualTo(atx24Revision));
+            Assert.That(session.AssemblyBuild.Eps12vPowerCableRevision,
+                Is.EqualTo(eps12vRevision));
+            Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision,
+                Is.EqualTo(pcieRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Atx24PowerCableWrongFamilyForgeryAndExactReplayAreMutationFree()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageFirstSevenBuildKitComponents(session, workOrder);
+            CustomPcBuildOrderLineSnapshot atx24 =
+                CanonicalAtx24PowerCable(workOrder);
+            CustomPcBuildOrderLineSnapshot eps12v = workOrder.Lines.Single(
+                line => line.PowerCableType ==
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard);
+            CustomPcBuildOrderLineSnapshot pcie = workOrder.Lines.Single(
+                line => line.PowerCableType ==
+                    PowerCableType.ModularPcie8PinPsuToGraphicsCard);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildKitReceipt pickup =
+                buildKit.PickupCanonicalAtx24PowerCable(
+                    session.PrototypeAtx24PowerCableBuildKitOperationId,
+                    workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalAtx24PowerCable(
+                    session.PrototypeAtx24PowerCableBuildKitOperationId,
+                    workOrder);
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+
+            CustomPcBuildKitReceipt[] wrongFamilyReceipts =
+            {
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        atx24,
+                        atx24.LineId,
+                        atx24.ProductId,
+                        atx24.ItemId,
+                        atx24.ReservationId,
+                        atx24.ComponentKind,
+                        PowerCableType.ModularEps12v8PinPsuToMotherboard)),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        atx24,
+                        atx24.LineId,
+                        atx24.ProductId,
+                        atx24.ItemId,
+                        atx24.ReservationId,
+                        atx24.ComponentKind,
+                        PowerCableType.ModularPcie8PinPsuToGraphicsCard)),
+                CloneReceipt(pickup, eps12v),
+                CloneReceipt(pickup, pcie)
+            };
+
+            foreach (CustomPcBuildKitReceipt forgery in wrongFamilyReceipts)
+            {
+                OperationResult<CustomPcBuildKitReceipt> result =
+                    buildKit.PlaceCanonicalAtx24PowerCable(forgery);
+                Assert.That(result.Error,
+                    Is.EqualTo(CustomPcWorkOrderFailures.BuildKitReceiptInvalid));
+                Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+                Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+                Assert.That(session.Inventory.TryGetSerializedItem(
+                    atx24.ItemId,
+                    out InventoryItemRecord stillHeld), Is.True);
+                Assert.That(stillHeld.ContainerId,
+                    Is.EqualTo(session.HandsContainerId));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> staleBuildKit =
+                buildKit.PlaceCanonicalAtx24PowerCable(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+            OperationResult<CustomPcBuildKitReceipt> staleInventory =
+                buildKit.PlaceCanonicalAtx24PowerCable(
+                    pickup,
+                    buildKitRevision,
+                    inventoryRevision - 1);
+            Assert.That(staleBuildKit.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(staleInventory.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalAtx24PowerCable(pickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalAtx24PowerCable(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            pickupReplay = buildKit.PickupCanonicalAtx24PowerCable(
+                session.PrototypeAtx24PowerCableBuildKitOperationId,
+                workOrder);
+            OperationResult<CustomPcBuildKitReceipt> secondOperation =
+                buildKit.PickupCanonicalAtx24PowerCable(
+                    StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                        "orders.custom-pc-build-kit-operation.second-atx24"),
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(secondOperation.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitIdentityConflict));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SessionAtx24PowerCableBuildKitCustodyBlocksGenericTransferBypass()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageFirstSevenBuildKitComponents(session, workOrder);
+            CustomPcBuildOrderLineSnapshot atx24 =
+                CanonicalAtx24PowerCable(workOrder);
+
+            OperationResult pickup = session.PickupLooseAtx24PowerCableToHands();
+
+            Assert.That(pickup.IsSuccess, Is.True);
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                atx24.ItemId,
+                out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = session.CustomPcBuildKit.Revision;
+
+            OperationResult wrapperDrop = session.DropHeldAtx24PowerCableToWorld();
+            Assert.That(wrapperDrop.Error,
+                Is.EqualTo(
+                    InventoryFailures.SerializedReservationWorkOrderBuildKitConflict));
+
+            StableId<ContainerIdScope>[] bypassTargets =
+            {
+                session.ReceivingContainerId,
+                session.ShelfContainerId,
+                session.WorkbenchContainerId,
+                session.Atx24PowerCableRouteContainerId
+            };
+            foreach (StableId<ContainerIdScope> target in bypassTargets)
+            {
+                OperationResult result = session.Inventory.TransferSerializedItem(
+                    atx24.ItemId,
+                    target);
+                Assert.That(result.Error,
+                    Is.EqualTo(
+                        InventoryFailures.SerializedReservationWorkOrderBuildKitConflict));
+                Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+                Assert.That(session.CustomPcBuildKit.Revision,
+                    Is.EqualTo(buildKitRevision));
+                Assert.That(session.Inventory.TryGetSerializedItem(
+                    atx24.ItemId,
+                    out InventoryItemRecord stillHeld), Is.True);
+                Assert.That(stillHeld.ContainerId,
+                    Is.EqualTo(session.HandsContainerId));
+            }
+
+            Assert.That(session.Inventory.TryGetReservation(
+                atx24.ReservationId,
+                out InventoryReservation reservation), Is.True);
+            Assert.That(reservation.ItemId, Is.EqualTo(atx24.ItemId));
+            Assert.That(reservation.ClaimId, Is.EqualTo(workOrder.InventoryClaimId));
+
+            OperationResult<CustomPcBuildKitReceipt> placement =
+                session.PlaceHeldAtx24PowerCableInCustomPcBuildKit();
+            Assert.That(placement.IsSuccess, Is.True);
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = session.CustomPcBuildKit.Revision;
+
+            OperationResult stagedBypass = session.Inventory.TransferSerializedItem(
+                atx24.ItemId,
+                session.WorldFloorContainerId);
+            Assert.That(stagedBypass.Error,
+                Is.EqualTo(
+                    InventoryFailures.SerializedReservationWorkOrderBuildKitConflict));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(buildKitRevision));
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                atx24.ItemId,
+                out InventoryItemRecord staged), Is.True);
+            Assert.That(staged.ContainerId,
+                Is.EqualTo(session.Atx24PowerCableBuildKitContainerId));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void Atx24OctupleContainerClaimRejectsOccupiedEighthWithoutPartialClaim()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StableId<ContainerIdScope>[] containerIds = Enumerable.Range(1, 8)
+                .Select(index => StableId<ContainerIdScope>.Parse(
+                    $"inventory.container.atx24-build-kit-occupied-{index}"))
+                .ToArray();
+            foreach (StableId<ContainerIdScope> containerId in containerIds)
+            {
+                RegisterBuildKitContainer(session, containerId);
+            }
+
+            CustomPcBuildOrderLineSnapshot processor = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.Processor);
+            Assert.That(session.Inventory.TryGetSerializedItem(
+                processor.ItemId,
+                out InventoryItemRecord processorItem), Is.True);
+            StableId<ItemInstanceIdScope> foreignItemId =
+                StableId<ItemInstanceIdScope>.Parse(
+                    "inventory.item.atx24-build-kit-occupied-peer");
+            Assert.That(session.Inventory.ReceiveSerializedItem(
+                foreignItemId,
+                processor.ProductId,
+                containerIds[7],
+                InventoryCondition.New,
+                processorItem.UnitCost).IsSuccess, Is.True);
+            long inventoryRevision = session.Inventory.Revision;
+
+            OperationResult<CustomPcBuildKitAuthority> occupied =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    containerIds[0],
+                    containerIds[1],
+                    containerIds[2],
+                    containerIds[3],
+                    containerIds[4],
+                    containerIds[5],
+                    containerIds[6],
+                    containerIds[7]);
+
+            Assert.That(occupied.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitContainerInvalid));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(session.Inventory.TransferSerializedItem(
+                foreignItemId,
+                session.ShelfContainerId).IsSuccess, Is.True,
+                "A rejected octuple claim must leave every peer unclaimed.");
+            long beforeValidClaimRevision = session.Inventory.Revision;
+
+            OperationResult<CustomPcBuildKitAuthority> valid =
+                CustomPcBuildKitAuthority.Create(
+                    session.CustomPcWorkOrders,
+                    session.WorldFloorContainerId,
+                    session.HandsContainerId,
+                    containerIds[0],
+                    containerIds[1],
+                    containerIds[2],
+                    containerIds[3],
+                    containerIds[4],
+                    containerIds[5],
+                    containerIds[6],
+                    containerIds[7]);
+
+            Assert.That(valid.IsSuccess, Is.True);
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(beforeValidClaimRevision + 1));
+            Assert.That(valid.Value.BuildKitContainerId, Is.EqualTo(containerIds[0]));
+            Assert.That(valid.Value.ProcessorBuildKitContainerId,
+                Is.EqualTo(containerIds[1]));
+            Assert.That(valid.Value.MemoryModuleBuildKitContainerId,
+                Is.EqualTo(containerIds[2]));
+            Assert.That(valid.Value.StorageBuildKitContainerId,
+                Is.EqualTo(containerIds[3]));
+            Assert.That(valid.Value.ProcessorCoolerBuildKitContainerId,
+                Is.EqualTo(containerIds[4]));
+            Assert.That(valid.Value.GraphicsCardBuildKitContainerId,
+                Is.EqualTo(containerIds[5]));
+            Assert.That(valid.Value.PowerSupplyBuildKitContainerId,
+                Is.EqualTo(containerIds[6]));
+            Assert.That(valid.Value.Atx24PowerCableBuildKitContainerId,
+                Is.EqualTo(containerIds[7]));
+            Assert.That(valid.Value.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(
@@ -2430,6 +2833,19 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     workOrder).Value;
             Assert.That(session.CustomPcBuildKit
                 .PlaceCanonicalGraphicsCard(graphicsCardPickup).IsSuccess, Is.True);
+        }
+
+        private static void StageFirstSevenBuildKitComponents(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            StageFirstSixBuildKitComponents(session, workOrder);
+            CustomPcBuildKitReceipt powerSupplyPickup =
+                session.CustomPcBuildKit.PickupCanonicalPowerSupply(
+                    session.PrototypePowerSupplyBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(session.CustomPcBuildKit
+                .PlaceCanonicalPowerSupply(powerSupplyPickup).IsSuccess, Is.True);
         }
 
         private static void AssertPowerSupplyPrerequisiteFailure(
@@ -2557,6 +2973,15 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 line => line.ComponentKind == PcComponentKind.Motherboard);
         }
 
+        private static CustomPcBuildOrderLineSnapshot CanonicalAtx24PowerCable(
+            CustomPcBuildOrderRecord workOrder)
+        {
+            return workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.PowerCable &&
+                        line.PowerCableType ==
+                            PowerCableType.ModularAtx24SplitPsuToMotherboard);
+        }
+
         private static CustomPcBuildKitReceipt CloneReceipt(
             CustomPcBuildKitReceipt source,
             CustomPcBuildOrderLineSnapshot line)
@@ -2578,7 +3003,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             StableId<ProductDefinitionIdScope> productId,
             StableId<ItemInstanceIdScope> itemId,
             StableId<ReservationIdScope> reservationId,
-            PcComponentKind componentKind)
+            PcComponentKind componentKind,
+            PowerCableType? powerCableType = null)
         {
             return new CustomPcBuildOrderLineSnapshot(
                 new CustomPcQuoteLineSnapshot(
@@ -2587,7 +3013,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     itemId,
                     reservationId,
                     componentKind,
-                    source.PowerCableType,
+                    powerCableType ?? source.PowerCableType,
                     source.UnitCost,
                     source.UnitPrice));
         }

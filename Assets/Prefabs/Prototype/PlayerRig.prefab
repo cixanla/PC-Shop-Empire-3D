@@ -664,6 +664,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.PlayerCarryController
   atx24PowerCableRoute: {fileID: 0}
   atx24PowerCableBinding: {fileID: 0}
+  atx24PowerCableBuildKit: {fileID: 0}
   eps12vPowerCableRoute: {fileID: 0}
   eps12vPowerCableBinding: {fileID: 0}
   graphicsCardSlot: {fileID: 0}

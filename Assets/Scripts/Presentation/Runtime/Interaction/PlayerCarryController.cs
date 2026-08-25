@@ -95,6 +95,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasAssemblyPromptOwnership =>
             IsPcieGpuPowerCableRouteMode ||
             IsAtx24PowerCableRouteMode ||
+            IsAtx24PowerCableBuildKitMode ||
             IsEps12vPowerCableRouteMode ||
             IsMotherboardBuildKitMode ||
             IsProcessorBuildKitMode ||
@@ -227,6 +228,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (cableBinding != null)
                     {
+                        if (IsAtx24PowerCableBuildKitMode ||
+                            (atx24PowerCableBuildKit != null &&
+                             atx24PowerCableBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldAtx24PowerCableBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldAtx24PowerCablePrompt(
                             cableBinding,
                             placement,
@@ -3343,6 +3354,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             IsAtx24PowerCableRouteMode = false;
             atx24PowerCableRoute?.SetRouteModeActive(active: false);
+            ResetAtx24PowerCableBuildKitState();
             IsEps12vPowerCableRouteMode = false;
             eps12vPowerCableRoute?.SetRouteModeActive(active: false);
             IsMotherboardBuildKitMode = false;
@@ -3406,6 +3418,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetProcessorCoolerBuildKitState();
             ResetGraphicsCardBuildKitState();
             ResetPowerSupplyBuildKitState();
+            ResetAtx24PowerCableBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

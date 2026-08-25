@@ -558,6 +558,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     accent,
                     rubber,
                     labelPaper);
+            Atx24PowerCableBuildKitBuildResult atx24PowerCableBuildKitBuild =
+                BuildAtx24PowerCableBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -636,6 +643,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 powerSupplyBuildKitBuild.Surface,
                 powerSupplyBuildKitBuild.SnapAnchor,
                 powerSupplyBuildKitBuild.ProgressText);
+            atx24PowerCableBuildKitBuild.Projection.Configure(
+                stockFlow,
+                atx24PowerCableBuildKitBuild.Surface,
+                atx24PowerCableBuildKitBuild.SnapAnchor,
+                atx24PowerCableBuildKitBuild.ProgressText);
             assemblyBuild.Binding.Configure(
                 stockFlow,
                 assemblyBuild.Motherboard,
@@ -684,7 +696,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Atx24PowerCable,
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableGeometry,
-                GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue);
+                GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue,
+                atx24PowerCableBuildKitBuild.Projection);
             assemblyBuild.Eps12vPowerCableBinding.Configure(
                 stockFlow,
                 assemblyBuild.Eps12vPowerCable,
@@ -740,6 +753,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigurePowerSupplyBuildKit(
                 powerSupplyBuildKitBuild.Projection,
                 assemblyBuild.PowerSupplyBinding);
+            carry.ConfigureAtx24PowerCableBuildKit(
+                atx24PowerCableBuildKitBuild.Projection,
+                assemblyBuild.Atx24PowerCableBinding);
             carry.ConfigureAtx24PowerCableRoute(
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableBinding);
@@ -832,7 +848,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 storageBuildKitBuild.Projection,
                 processorCoolerBuildKitBuild.Projection,
                 graphicsCardBuildKitBuild.Projection,
-                powerSupplyBuildKitBuild.Projection);
+                powerSupplyBuildKitBuild.Projection,
+                atx24PowerCableBuildKitBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
