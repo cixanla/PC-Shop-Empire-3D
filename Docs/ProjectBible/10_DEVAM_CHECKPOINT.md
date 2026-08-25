@@ -13,7 +13,7 @@
 - Technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; Unity 6000.3.21f1 full EditMode `686/686`, PlayMode `96/96`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
 - Universal Mac Development/StrictMode report `329787583` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r39 readiness + Processor Cooler BuildKit smoke başarılıdır. ADR-0048 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
 - Exact bundle `7032180` bayt ve `743e0b24…b260fe` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue77-hardened-v2` x64 IL2CPP/Direct3D11 report `1333221634` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
-- Exact 13 test/build/runtime/procedure artifact'ı canonical evidence dizinine geri döndü. Source/docs commit/Repository Guard sonrası final receipt ile exact `14/14` yapılacak; immutable local package, doğru fiziksel USB incoming/final çift readback, metadata/Guard ve acceptance `23/23` henüz tamamlanmadı. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır.
+- Exact 13 test/build/runtime/procedure artifact'ı canonical evidence dizinine geri döndü. Source/docs commit/Repository Guard sonrası final receipt ile exact `14/14` yapılacak; immutable local package, doğru fiziksel USB incoming/final çift readback, metadata/Guard ve acceptance `24/24` henüz tamamlanmadı. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #75 / Epic #10
 

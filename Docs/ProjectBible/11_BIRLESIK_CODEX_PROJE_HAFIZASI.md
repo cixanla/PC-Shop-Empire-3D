@@ -16,7 +16,7 @@ Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje aç�
 - GarageGraybox r39 gerçek keyboard/mouse + gamepad, keyed 90° quarter-turn preview ve tek-consumer BuildKit/cooler-seat input arbitration taşır. Issue #58 four-point-retention/TIM Assembly state/revision/receipts değişmez.
 - Technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; EditMode `686/686`, PlayMode `96/96`; Universal Mac report `329787583` bayt ve Apple M1/Metal exact r39 smoke başarılıdır.
 - Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1333221634` bayt, `issue77-hardened-v2` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
-- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Exact dokuz dosyalık source/docs commit/Guard, final receipt `14/14`, immutable local+physical USB double-readback, final metadata/Guard ve acceptance `23/23` henüz bekliyor. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0048, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Exact dokuz dosyalık source/docs commit/Guard, final receipt `14/14`, immutable local+physical USB double-readback, final metadata/Guard ve acceptance `24/24` henüz bekliyor. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0048, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
 
 ### Önceki üstün gelen durum — Issue #75 M.2 NVMe Storage BuildKit
 

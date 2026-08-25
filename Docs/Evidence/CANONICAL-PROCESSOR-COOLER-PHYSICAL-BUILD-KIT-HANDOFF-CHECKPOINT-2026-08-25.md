@@ -98,26 +98,27 @@ No immutable local package or physical USB completion is claimed in this documen
 | 1 | Exact ProcessorCooler role and full line/product/item/reservation tuple. | TECHNICAL PASS | `CustomPcBuildKitAuthority`, allocation cross-check and exact-line tests. |
 | 2 | No ordinal/display-name/product-value/regenerated identity authority. | TECHNICAL PASS | Wrong-line, value-equal and regenerated-identity no-mutation tests. |
 | 3 | Separate stable operation and capacity-one processor-cooler BuildKit slot. | TECHNICAL PASS | Append-only IDs, fifth managed container and capacity tests. |
-| 4 | Motherboard/CPU/memory/storage slots, receipts, replay, revisions and staged state unchanged. | TECHNICAL PASS | Five-component aggregate preservation assertions. |
-| 5 | Immediate/delayed replay returns one canonical receipt. | TECHNICAL PASS | Pickup/place history and replay matrix. |
-| 6 | Foreign/value-equal/wrong-kind/line/product/item/reservation/order/operation fails closed. | TECHNICAL PASS | Expanded exact forgery matrix. |
-| 7 | Full hands, occupied slot, source drift and stale revisions are no-mutation. | TECHNICAL PASS | Conflict/capacity/stale tests. |
-| 8 | Custody is only source → hands → processor-cooler BuildKit; generic bypasses fail. | TECHNICAL PASS | Narrow Inventory bridge and bypass tests. |
-| 9 | Reservation and allocation remain exact/live. | TECHNICAL PASS | Receipt identity assertions and native marker. |
-| 10 | Motherboard+CPU+memory+storage prerequisites prevent skipping `4/10`. | TECHNICAL PASS | Prerequisite no-mutation tests and smoke setup. |
-| 11 | Real `E / Gamepad South` pickup preserves range/focus/LOS/empty hands. | TECHNICAL PASS | Keyboard/mouse and gamepad PlayMode paths. |
-| 12 | Separate cooler target, one support collider, exact anchor, gates and keyed 90° preview. | TECHNICAL PASS | Scene contract and four-pose projection tests. |
-| 13 | BuildKit contextual input is single-consumer; cooler mounting cannot steal the same frame. | TECHNICAL PASS | Receipt-owned arbiter and Issue #58 isolation tests. |
-| 14 | Co-edge, held, pause and release-repress are deterministic. | TECHNICAL PASS | Keyboard/gamepad pause/co-edge matrix. |
-| 15 | Domain failure leaves the same cooler in hands before world mutation. | TECHNICAL PASS | Preflight/domain-failure snapshots. |
-| 16 | Physical failure recovers the same instance at the exact kit pose. | TECHNICAL PASS | Forced placement recovery and no-clone invariant. |
-| 17 | Unity instance, ItemId, collider/layer/ownership and container stay exact. | TECHNICAL PASS | Binding/scene/runtime identity assertions. |
-| 18 | Visible progress derives from staged receipts as `4/10 → 5/10`. | TECHNICAL PASS | Aggregate authority, projection and runtime marker. |
-| 19 | Cooler Assembly/TIM, earlier Assembly, electrical, price and five reservations remain untouched. | TECHNICAL PASS | Revision/receipt/item snapshots and native isolation marker. |
-| 20 | WASD/mouse-look and keyboard/gamepad carry flow work in human-shaped scenarios. | TECHNICAL PASS | Existing locomotion regression plus real Input System BuildKit matrix and native route. |
-| 21 | Domain/scene/input matrices and full regressions pass. | TECHNICAL PASS | EditMode `686/686`, PlayMode `96/96`. |
-| 22 | Diff/Guard/Mac/Windows native gates pass. | PARTIAL | Diff and exact-head Mac/Windows native gates pass; Repository Guard is pending. |
-| 23 | Docs, private push/CI and physical USB lifecycle complete. | PENDING | Source/docs commit/Guard, final receipt, local package, physical double-readback and administrative closure remain. |
+| 4 | All five BuildKit containers are claimed atomically through Quintuple access; partial/ghost topology fails with zero mutation. | TECHNICAL PASS | Quintuple ownership, duplicate/foreign container and partial-topology tests. |
+| 5 | Motherboard/CPU/memory/storage slots, receipts, replay, revisions and staged state unchanged. | TECHNICAL PASS | Five-component aggregate preservation assertions. |
+| 6 | Immediate/delayed replay returns one canonical receipt. | TECHNICAL PASS | Pickup/place history and replay matrix. |
+| 7 | Foreign/value-equal/wrong-kind/line/product/item/reservation/order/operation fails closed. | TECHNICAL PASS | Expanded exact forgery matrix. |
+| 8 | Full hands, occupied slot, source drift and stale revisions are no-mutation. | TECHNICAL PASS | Conflict/capacity/stale tests. |
+| 9 | Custody is only source → hands → processor-cooler BuildKit; generic bypasses fail. | TECHNICAL PASS | Narrow Inventory bridge and bypass tests. |
+| 10 | Reservation and allocation remain exact/live. | TECHNICAL PASS | Receipt identity assertions and native marker. |
+| 11 | Motherboard+CPU+memory+storage prerequisites prevent skipping `4/10`. | TECHNICAL PASS | Prerequisite no-mutation tests and smoke setup. |
+| 12 | Real `E / Gamepad South` pickup preserves range/focus/LOS/empty hands. | TECHNICAL PASS | Keyboard/mouse and gamepad PlayMode paths. |
+| 13 | Separate cooler target, one support collider, exact anchor, gates and keyed 90° preview. | TECHNICAL PASS | Scene contract and four-pose projection tests. |
+| 14 | BuildKit contextual input is single-consumer; cooler mounting cannot steal the same frame. | TECHNICAL PASS | Receipt-owned arbiter and Issue #58 isolation tests. |
+| 15 | Co-edge, held, pause and release-repress are deterministic. | TECHNICAL PASS | Keyboard/gamepad pause/co-edge matrix. |
+| 16 | Domain failure leaves the same cooler in hands before world mutation. | TECHNICAL PASS | Preflight/domain-failure snapshots. |
+| 17 | Physical failure recovers the same instance at the exact kit pose. | TECHNICAL PASS | Forced placement recovery and no-clone invariant. |
+| 18 | Unity instance, ItemId, collider/layer/ownership and container stay exact. | TECHNICAL PASS | Binding/scene/runtime identity assertions. |
+| 19 | Visible progress derives from staged receipts as `4/10 → 5/10`. | TECHNICAL PASS | Aggregate authority, projection and runtime marker. |
+| 20 | Cooler Assembly/TIM, earlier Assembly, electrical, price and five reservations remain untouched. | TECHNICAL PASS | Revision/receipt/item snapshots and native isolation marker. |
+| 21 | WASD/mouse-look and keyboard/gamepad carry flow work in human-shaped scenarios. | TECHNICAL PASS | Existing locomotion regression plus real Input System BuildKit matrix and native route. |
+| 22 | Domain/scene/input matrices and full regressions pass. | TECHNICAL PASS | EditMode `686/686`, PlayMode `96/96`. |
+| 23 | Diff/Guard/Mac/Windows native gates pass. | PARTIAL | Diff and exact-head Mac/Windows native gates pass; current source/docs Repository Guard is pending. |
+| 24 | Docs, private push/CI and physical USB lifecycle complete. | PENDING | Current source/docs commit/Guard, final receipt, current local package, physical double-readback and administrative closure remain. |
 
 ## Pending lifecycle sequence
 
@@ -127,6 +128,6 @@ No immutable local package or physical USB completion is claimed in this documen
 4. Create a collision-free immutable local package and pass `Tools/verify-checkpoint-package.sh ... issue77` on incoming and atomically named final paths.
 5. Rediscover the external physical device and verify the correct volume, `90_BACKUPS/PCShopEmpire3D`, and the previous Issue #75 milestone chain before any write.
 6. Copy only to a collision-free `.incoming-*`, remove AppleDouble only inside that new target, perform full hash/size/path and exact Git-source readback, atomically rename, and perform the same full readback again.
-7. Commit physical lifecycle metadata, pass final Guard, check all `23/23`, close Issue #77 and set the Roadmap item `Done`.
+7. Commit physical lifecycle metadata, pass final Guard, check all `24/24`, close Issue #77 and set the Roadmap item `Done`.
 
 Parent Epic #10 remains open for the remaining five component handoffs and later assembly/electrical/POST/OS/QA stages.
