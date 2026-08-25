@@ -1,6 +1,6 @@
 # ADR-0049 — Canonical Graphics Card Physical Build-Kit Handoff
 
-**Status:** Accepted for technical/native and immutable physical-package gates; final physical-metadata CI and administrative closure pending<br>
+**Status:** Accepted and lifecycle-complete<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #79, child of Epic #10
 
@@ -38,4 +38,4 @@ The remaining four BuildKit transfers—PSU, ATX24 cable, EPS12V cable and PCIe/
 - `Tools/verify-checkpoint-package.sh ... issue79` fail-closes on the exact technical commit/tree, exact nine-file closure delta, `690/690` and `100/100`, `issue79-hardened-v3`, the exact r40 GPU marker, 13 promoted artifacts, three procedures, task deletion and residue `0`.
 - The immutable local package and the correct Windows-attached physical USB both passed incoming and atomically named final readbacks with identical `990/990` payload, `975/975` exact Git source, `14/14` evidence, `20,086,932` bytes and manifest `d2d399fa71ee37ed972b2e709987d0a375fe62fd8da3e5cfda5eb0ec571bb324`. Incoming residue, internal AppleDouble and final sidecar counts are `0`.
 
-The physical-metadata commit/Guard and GitHub Issue/Project administrative transition remain the only pending lifecycle records at this ADR state.
+Physical lifecycle metadata commit `880523fcb71208796cce96564556a2170363c92a`, tree `448052665c3b64b1c565d460de6c648c498b698d` and Repository Guard `32876194890` passed. Acceptance is `24/24`; Issue #79 is closed and its Roadmap item is `Done`. PR #80 is the integration vehicle, while Issue #77 and parent Epic #10 remain open for their separate lifecycle and the next dependent component handoff.
