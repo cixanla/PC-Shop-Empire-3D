@@ -93,6 +93,8 @@ namespace PCShopEmpire3D.Orders
         private readonly InventorySerializedTransferAccess _processorBuildKitAccess;
         private readonly StableId<ContainerIdScope> _memoryModuleBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _memoryModuleBuildKitAccess;
+        private readonly StableId<ContainerIdScope> _storageBuildKitContainerId;
+        private readonly InventorySerializedTransferAccess _storageBuildKitAccess;
         private readonly Dictionary<StableId<CustomPcBuildKitOperationIdScope>,
             CustomPcBuildKitRegistration> _registrationsByOperation =
                 new Dictionary<StableId<CustomPcBuildKitOperationIdScope>,
@@ -111,7 +113,9 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> processorBuildKitContainerId,
             InventorySerializedTransferAccess processorBuildKitAccess,
             StableId<ContainerIdScope> memoryModuleBuildKitContainerId,
-            InventorySerializedTransferAccess memoryModuleBuildKitAccess)
+            InventorySerializedTransferAccess memoryModuleBuildKitAccess,
+            StableId<ContainerIdScope> storageBuildKitContainerId,
+            InventorySerializedTransferAccess storageBuildKitAccess)
         {
             _workOrders = workOrders;
             _inventory = workOrders.Inventory;
@@ -123,6 +127,8 @@ namespace PCShopEmpire3D.Orders
             _processorBuildKitAccess = processorBuildKitAccess;
             _memoryModuleBuildKitContainerId = memoryModuleBuildKitContainerId;
             _memoryModuleBuildKitAccess = memoryModuleBuildKitAccess;
+            _storageBuildKitContainerId = storageBuildKitContainerId;
+            _storageBuildKitAccess = storageBuildKitAccess;
         }
 
         public long Revision { get; private set; }
@@ -159,6 +165,9 @@ namespace PCShopEmpire3D.Orders
 
         public StableId<ContainerIdScope> MemoryModuleBuildKitContainerId =>
             _memoryModuleBuildKitContainerId;
+
+        public StableId<ContainerIdScope> StorageBuildKitContainerId =>
+            _storageBuildKitContainerId;
 
         internal static OperationResult<CustomPcBuildKitAuthority> Create(
             CustomPcWorkOrderAuthority workOrders,
@@ -227,6 +236,8 @@ namespace PCShopEmpire3D.Orders
                     processorBuildKitContainerId,
                     access.Value.Second,
                     default,
+                    null,
+                    default,
                     null));
         }
 
@@ -294,7 +305,89 @@ namespace PCShopEmpire3D.Orders
                     processorBuildKitContainerId,
                     access.Value.Second,
                     memoryModuleBuildKitContainerId,
-                    access.Value.Third));
+                    access.Value.Third,
+                    default,
+                    null));
+        }
+
+        internal static OperationResult<CustomPcBuildKitAuthority> Create(
+            CustomPcWorkOrderAuthority workOrders,
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> motherboardBuildKitContainerId,
+            StableId<ContainerIdScope> processorBuildKitContainerId,
+            StableId<ContainerIdScope> memoryModuleBuildKitContainerId,
+            StableId<ContainerIdScope> storageBuildKitContainerId)
+        {
+            if (workOrders == null)
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAuthorityMissing);
+            }
+
+            InventoryAuthority inventory = workOrders.Inventory;
+            if (!HasValidContainerTopology(
+                    workOrders,
+                    inventory,
+                    sourceContainerId,
+                    handsContainerId,
+                    motherboardBuildKitContainerId) ||
+                !HasValidBuildKitContainer(
+                    workOrders,
+                    inventory,
+                    processorBuildKitContainerId,
+                    sourceContainerId,
+                    handsContainerId) ||
+                !HasValidBuildKitContainer(
+                    workOrders,
+                    inventory,
+                    memoryModuleBuildKitContainerId,
+                    sourceContainerId,
+                    handsContainerId) ||
+                !HasValidBuildKitContainer(
+                    workOrders,
+                    inventory,
+                    storageBuildKitContainerId,
+                    sourceContainerId,
+                    handsContainerId) ||
+                motherboardBuildKitContainerId == processorBuildKitContainerId ||
+                motherboardBuildKitContainerId == memoryModuleBuildKitContainerId ||
+                motherboardBuildKitContainerId == storageBuildKitContainerId ||
+                processorBuildKitContainerId == memoryModuleBuildKitContainerId ||
+                processorBuildKitContainerId == storageBuildKitContainerId ||
+                memoryModuleBuildKitContainerId == storageBuildKitContainerId)
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            OperationResult<InventorySerializedTransferAccessQuadruple> access =
+                inventory.ClaimManagedSerializedTransferContainers(
+                    motherboardBuildKitContainerId,
+                    processorBuildKitContainerId,
+                    memoryModuleBuildKitContainerId,
+                    storageBuildKitContainerId);
+            if (access.IsFailure)
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    access.Error == InventoryFailures.RevisionOverflow
+                        ? CustomPcWorkOrderFailures.RevisionOverflow
+                        : CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            return OperationResult<CustomPcBuildKitAuthority>.Success(
+                new CustomPcBuildKitAuthority(
+                    workOrders,
+                    sourceContainerId,
+                    handsContainerId,
+                    motherboardBuildKitContainerId,
+                    access.Value.First,
+                    processorBuildKitContainerId,
+                    access.Value.Second,
+                    memoryModuleBuildKitContainerId,
+                    access.Value.Third,
+                    storageBuildKitContainerId,
+                    access.Value.Fourth));
         }
 
         private static OperationResult<CustomPcBuildKitAuthority>
@@ -342,6 +435,8 @@ namespace PCShopEmpire3D.Orders
                     default,
                     null,
                     default,
+                    null,
+                    default,
                     null));
         }
 
@@ -358,7 +453,8 @@ namespace PCShopEmpire3D.Orders
                 CustomPcBuildKitStage.MotherboardInHands,
                 CustomPcWorkOrderFailures.BuildKitMotherboardLineInvalid,
                 requiresStagedMotherboard: false,
-                requiresStagedProcessor: false);
+                requiresStagedProcessor: false,
+                requiresStagedMemoryModule: false);
         }
 
         internal OperationResult<CustomPcBuildKitReceipt> PickupCanonicalProcessor(
@@ -381,7 +477,8 @@ namespace PCShopEmpire3D.Orders
                 CustomPcBuildKitStage.ProcessorInHands,
                 CustomPcWorkOrderFailures.BuildKitProcessorLineInvalid,
                 requiresStagedMotherboard: true,
-                requiresStagedProcessor: false);
+                requiresStagedProcessor: false,
+                requiresStagedMemoryModule: false);
         }
 
         internal OperationResult<CustomPcBuildKitReceipt> PickupCanonicalMemoryModule(
@@ -404,7 +501,32 @@ namespace PCShopEmpire3D.Orders
                 CustomPcBuildKitStage.MemoryModuleInHands,
                 CustomPcWorkOrderFailures.BuildKitMemoryModuleLineInvalid,
                 requiresStagedMotherboard: true,
-                requiresStagedProcessor: true);
+                requiresStagedProcessor: true,
+                requiresStagedMemoryModule: false);
+        }
+
+        internal OperationResult<CustomPcBuildKitReceipt> PickupCanonicalStorage(
+            StableId<CustomPcBuildKitOperationIdScope> operationId,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (_storageBuildKitContainerId.IsEmpty ||
+                _storageBuildKitAccess == null)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            return PickupCanonicalComponent(
+                operationId,
+                workOrder,
+                PcComponentKind.StorageDevice,
+                _storageBuildKitContainerId,
+                _storageBuildKitAccess,
+                CustomPcBuildKitStage.StorageInHands,
+                CustomPcWorkOrderFailures.BuildKitStorageLineInvalid,
+                requiresStagedMotherboard: true,
+                requiresStagedProcessor: true,
+                requiresStagedMemoryModule: true);
         }
 
         internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalMotherboard(
@@ -476,6 +598,29 @@ namespace PCShopEmpire3D.Orders
                 CustomPcBuildKitStage.MemoryModuleStaged);
         }
 
+        internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalStorage(
+            CustomPcBuildKitReceipt pickupReceipt)
+        {
+            return PlaceCanonicalStorage(
+                pickupReceipt,
+                Revision,
+                _inventory.Revision);
+        }
+
+        internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalStorage(
+            CustomPcBuildKitReceipt pickupReceipt,
+            long expectedBuildKitRevision,
+            long expectedInventoryRevision)
+        {
+            return PlaceCanonicalComponent(
+                pickupReceipt,
+                expectedBuildKitRevision,
+                expectedInventoryRevision,
+                PcComponentKind.StorageDevice,
+                CustomPcBuildKitStage.StorageInHands,
+                CustomPcBuildKitStage.StorageStaged);
+        }
+
         private OperationResult<CustomPcBuildKitReceipt> PickupCanonicalComponent(
             StableId<CustomPcBuildKitOperationIdScope> operationId,
             CustomPcBuildOrderRecord workOrder,
@@ -485,7 +630,8 @@ namespace PCShopEmpire3D.Orders
             CustomPcBuildKitStage pickupStage,
             Failure lineFailure,
             bool requiresStagedMotherboard,
-            bool requiresStagedProcessor)
+            bool requiresStagedProcessor,
+            bool requiresStagedMemoryModule)
         {
             if (operationId.IsEmpty)
             {
@@ -518,6 +664,13 @@ namespace PCShopEmpire3D.Orders
 
             if (requiresStagedProcessor &&
                 !HasStagedComponent(workOrder, PcComponentKind.Processor))
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
+            }
+
+            if (requiresStagedMemoryModule &&
+                !HasStagedComponent(workOrder, PcComponentKind.MemoryModule))
             {
                 return OperationResult<CustomPcBuildKitReceipt>.Fail(
                     CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
@@ -768,7 +921,17 @@ namespace PCShopEmpire3D.Orders
                       PcComponentKind.Motherboard) ||
                   !HasStagedComponent(
                       pickup.BuildOrder,
-                      PcComponentKind.Processor))))
+                      PcComponentKind.Processor))) ||
+                (pickup.Line.ComponentKind == PcComponentKind.StorageDevice &&
+                 (!HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.Motherboard) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.Processor) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.MemoryModule))))
             {
                 return false;
             }
@@ -845,9 +1008,12 @@ namespace PCShopEmpire3D.Orders
                 : componentKind == PcComponentKind.Processor
                     ? registration.PlacementReceipt.Stage ==
                       CustomPcBuildKitStage.ProcessorStaged
-                    : componentKind == PcComponentKind.MemoryModule &&
-                      registration.PlacementReceipt.Stage ==
-                      CustomPcBuildKitStage.MemoryModuleStaged;
+                    : componentKind == PcComponentKind.MemoryModule
+                        ? registration.PlacementReceipt.Stage ==
+                          CustomPcBuildKitStage.MemoryModuleStaged
+                        : componentKind == PcComponentKind.StorageDevice &&
+                          registration.PlacementReceipt.Stage ==
+                          CustomPcBuildKitStage.StorageStaged;
         }
 
         private bool TryGetComponentConfiguration(
@@ -884,6 +1050,15 @@ namespace PCShopEmpire3D.Orders
                 return !buildKitContainerId.IsEmpty && buildKitAccess != null;
             }
 
+            if (componentKind == PcComponentKind.StorageDevice)
+            {
+                buildKitContainerId = _storageBuildKitContainerId;
+                buildKitAccess = _storageBuildKitAccess;
+                pickupStage = CustomPcBuildKitStage.StorageInHands;
+                placementStage = CustomPcBuildKitStage.StorageStaged;
+                return !buildKitContainerId.IsEmpty && buildKitAccess != null;
+            }
+
             buildKitContainerId = default;
             buildKitAccess = null;
             pickupStage = default;
@@ -895,14 +1070,16 @@ namespace PCShopEmpire3D.Orders
         {
             return stage == CustomPcBuildKitStage.MotherboardInHands ||
                    stage == CustomPcBuildKitStage.ProcessorInHands ||
-                   stage == CustomPcBuildKitStage.MemoryModuleInHands;
+                   stage == CustomPcBuildKitStage.MemoryModuleInHands ||
+                   stage == CustomPcBuildKitStage.StorageInHands;
         }
 
         private static bool IsPlacementStage(CustomPcBuildKitStage stage)
         {
             return stage == CustomPcBuildKitStage.MotherboardStaged ||
                    stage == CustomPcBuildKitStage.ProcessorStaged ||
-                   stage == CustomPcBuildKitStage.MemoryModuleStaged;
+                   stage == CustomPcBuildKitStage.MemoryModuleStaged ||
+                   stage == CustomPcBuildKitStage.StorageStaged;
         }
 
         private static bool MatchesInventoryReceiptIdentity(

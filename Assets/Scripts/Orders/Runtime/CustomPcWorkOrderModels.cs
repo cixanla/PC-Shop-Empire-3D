@@ -32,7 +32,9 @@ namespace PCShopEmpire3D.Orders
         ProcessorInHands = 3,
         ProcessorStaged = 4,
         MemoryModuleInHands = 5,
-        MemoryModuleStaged = 6
+        MemoryModuleStaged = 6,
+        StorageInHands = 7,
+        StorageStaged = 8
     }
 
     public sealed class CustomPcBuildOrderLineSnapshot
@@ -221,7 +223,8 @@ namespace PCShopEmpire3D.Orders
         public int StagedComponentCount =>
             Stage == CustomPcBuildKitStage.MotherboardStaged ||
             Stage == CustomPcBuildKitStage.ProcessorStaged ||
-            Stage == CustomPcBuildKitStage.MemoryModuleStaged
+            Stage == CustomPcBuildKitStage.MemoryModuleStaged ||
+            Stage == CustomPcBuildKitStage.StorageStaged
                 ? 1
                 : 0;
     }
@@ -266,6 +269,8 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.processor-line-invalid");
         public static readonly Failure BuildKitMemoryModuleLineInvalid =
             Failure.FromCode("orders.custom-pc-build-kit.memory-module-line-invalid");
+        public static readonly Failure BuildKitStorageLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.storage-line-invalid");
         public static readonly Failure BuildKitPrerequisiteMissing =
             Failure.FromCode("orders.custom-pc-build-kit.prerequisite-missing");
         public static readonly Failure BuildKitIdentityConflict =

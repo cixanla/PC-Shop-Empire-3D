@@ -659,7 +659,8 @@ namespace PCShopEmpire3D.Inventory
         {
             return componentKind == PcComponentKind.Motherboard ||
                    componentKind == PcComponentKind.Processor ||
-                   componentKind == PcComponentKind.MemoryModule;
+                   componentKind == PcComponentKind.MemoryModule ||
+                   componentKind == PcComponentKind.StorageDevice;
         }
 
         private static InventoryItemRecord MoveSerializedItem(

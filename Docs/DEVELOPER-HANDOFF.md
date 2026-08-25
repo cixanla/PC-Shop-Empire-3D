@@ -14,7 +14,18 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #73 r37 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
+### Güncel checkpoint — Issue #75 r38 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
+
+- Technical head `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`. Canonical reserved M.2 NVMe yalnız exact `ComponentKind == StorageDevice` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- NVMe, staged canonical motherboard, processor ve DDR5 prerequisites sonrasında ayrı stable operation ve storage-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Storage BuildKit custody'sine taşınır. Mevcut üç slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r38 ayrı storage tray/support/snap anchor, 180° keyed preview ve görünür `3/10 → 4/10` aggregate ekler. Active Storage BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #57 M.2 seat/secure aynı-frame input'u çalamaz ve receipt'siz normal Assembly yolu değişmez.
+- Final EditMode `683/683`, PlayMode `90/90`; failed/skipped/inconclusive `0`. Universal Mac report `329735698` bayt, valid signed universal player ve Apple M1/Metal exact r38 readiness + Storage BuildKit smoke başarılıdır.
+- Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1332182927` bayt ve `issue75-hardened-v2` fatal-token `0` verdi; `ProjectSettings.asset` restoration byte-exact'tir. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r38 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve residue `0` ile geçti.
+- Teknik branch private GitHub'a push edildi; source/docs `af6578aa224b931fdcfdd6293dccfcfd77a29eac`, tree `39ec1c0573223899d2982f72fb877dbea58306ba` ve [Repository Guard 32849988087](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32849988087) başarılıdır. ADR-0047 ve tarihli Evidence exact test/Mac/Windows/procedure hashlerini bağlar; canonical evidence exact `14/14`dır.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming→atomik final→ikinci readback zinciri aynı `966/966` payload, `951/951` exact Git source, `14/14` evidence, `19598907` bayt ve `958ba6bc…f9d2b` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar `0`dır.
+- Fiziksel metadata `b113c86f5c2b375b0bc31081a5764fe264c2af9d`, tree `9b7e7a7689ceb6fc8955d4de7a2cbdaa713722bd` ve [Repository Guard 32851553662](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32851553662) başarılıdır. Acceptance `23/23`, Issue #75 `CLOSED`, Roadmap `Done`; PR #76 integration aracıdır ve parent Epic #10 açık/In Progress kalır.
+
+### Önceki checkpoint — Issue #73 r37 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
 
 - Technical head `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`. Canonical reserved DDR5 DIMM yalnız exact `ComponentKind == MemoryModule` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - DIMM, staged canonical motherboard ve processor prerequisites sonrasında ayrı stable operation ve memory-specific managed capacity-one BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. Mevcut iki slot/receipt/replay/revision/staged state korunur.

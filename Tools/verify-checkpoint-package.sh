@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -220,7 +220,8 @@ cmp -s "$evidence_paths" "$canonical_evidence_paths" || { echo "ERROR EVIDENCE a
 if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue68" ||
       "$evidence_contract" == "issue71" ||
-      "$evidence_contract" == "issue73" ]]; then
+      "$evidence_contract" == "issue73" ||
+      "$evidence_contract" == "issue75" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -241,7 +242,8 @@ if [[ "$evidence_contract" == "issue66" ||
       source-receipt.json
     if [[ "$evidence_contract" == "issue68" ||
           "$evidence_contract" == "issue71" ||
-          "$evidence_contract" == "issue73" ]]; then
+          "$evidence_contract" == "issue73" ||
+          "$evidence_contract" == "issue75" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -276,7 +278,8 @@ done < "$evidence_paths"
 if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue68" ||
       "$evidence_contract" == "issue71" ||
-      "$evidence_contract" == "issue73" ]]; then
+      "$evidence_contract" == "issue73" ||
+      "$evidence_contract" == "issue75" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -289,7 +292,8 @@ if [[ "$evidence_contract" == "issue66" ||
 fi
 
 if [[ "$evidence_contract" == "issue71" ||
-      "$evidence_contract" == "issue73" ]]; then
+      "$evidence_contract" == "issue73" ||
+      "$evidence_contract" == "issue75" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -302,7 +306,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='CPU BuildKit'
     runtime_success_marker='GARAGE_PROCESSOR_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisite=motherboard-staged processor-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=ok placement=ok progress=2/10 reservation=alive custody=processor-build-kit receipts=ok revisions=ok assembly=untouched processor-socket=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue73" ]]; then
     technical_commit=a2df663d6fa0e9d2004697bfb038a65a5e6c3d81
     technical_tree=e32a8e143049c4059e402bafbfcd39b9760cd025
     build_forbidden_policy=issue73-hardened-v2
@@ -312,6 +316,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-DDR5-MEMORY-MODULE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='DDR5 memory-module BuildKit'
     runtime_success_marker='GARAGE_MEMORY_MODULE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor-staged memory-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=180 placement=ok progress=3/10 reservation=alive custody=memory-module-build-kit receipts=ok revisions=ok assembly=untouched dimm-a2=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=646e66cfa269a217ecb1f6942f9accb77f9e463c
+    technical_tree=ee9b0b2c0bb5e1fb07de397da222d00a7480b23c
+    build_forbidden_policy=issue75-hardened-v2
+    editmode_total=683
+    playmode_total=90
+    contract_adr=Docs/ADR-0047-CANONICAL-M2-NVME-STORAGE-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-M2-NVME-STORAGE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
+    runtime_success_label='M.2 NVMe storage BuildKit'
+    runtime_success_marker='GARAGE_STORAGE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory-staged storage-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=180 placement=ok progress=4/10 reservation=alive custody=storage-build-kit receipts=ok revisions=ok assembly=untouched m2-slot=untouched no-duplicate-loss=ok replay=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"

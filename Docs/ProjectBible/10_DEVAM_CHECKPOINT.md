@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve lifecycle kapıları tamamlandı<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `Done`, Issue #73 kapalı
+**Durum:** Issue #75 fiziksel M.2 NVMe Storage BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve lifecycle kapıları tamamlandı<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue75-m2-build-kit-handoff`, technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; Roadmap `Done`, Issue #75 kapalı
 
-## En yeni teknik checkpoint — Issue #73 / Epic #10
+## En yeni teknik checkpoint — Issue #75 / Epic #10
+
+- Canonical M.2 NVMe accepted work order'da yalnız exact `ComponentKind == StorageDevice` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
+- NVMe, staged canonical motherboard+CPU+DDR5 prerequisites sonrasında ayrı stable operation ve managed capacity-one Storage BuildKit container üzerinden source → ActorHands → Storage BuildKit custody'sine taşınır. İlk üç slotun operation/receipt/replay/revision/staged state'i aynen korunur.
+- GarageGraybox `garage-storage-build-kit-r38-v1`; ayrı tray/support/snap anchor, range/focus/LOS/full-support/obstruction kapıları, 180° keyed preview ve görünür `3/10 → 4/10` ilerleme sunar. Aynı Unity instance ve stable ItemId domain-first pickup, carry, place, failure recovery ve replay boyunca korunur.
+- Active Storage BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #57 M.2 slot/seat/secure akışı aynı-frame input'u çalamaz. Receipt yokken normal M.2 Assembly yolu geriye uyumludur; insertion/captive-screw state/revision/receipts untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
+- Technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; Unity 6000.3.21f1 full EditMode `683/683`, PlayMode `90/90`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
+- Universal Mac Development/StrictMode report `329735698` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r38 readiness + Storage BuildKit smoke başarılıdır. ADR-0047 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
+- Exact bundle `6944340` bayt ve `1f6692df…c5d35e` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue75-hardened-v2` x64 IL2CPP/Direct3D11 report `1332182927` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
+- Exact 13 test/build/runtime/procedure artifact'ı ile source/docs `af6578aa224b931fdcfdd6293dccfcfd77a29eac` / tree `39ec1c0573223899d2982f72fb877dbea58306ba` / Guard `32849988087` sonrası üretilen source receipt canonical `14/14` kanıta bağlandı.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `966/966` payload, `951/951` exact Git source, `14/14` evidence, `19598907` bayt ve `958ba6bcb0f4891a168f73da46b20552b8a059467c7e0e6d55a5d7a51f0f9d2b` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar `0`dır. Fiziksel metadata `b113c86f5c2b375b0bc31081a5764fe264c2af9d`, tree `9b7e7a7689ceb6fc8955d4de7a2cbdaa713722bd`, Guard `32851553662`; acceptance `23/23`, Issue `CLOSED`, Roadmap `Done`, PR #76 integration aracıdır. Parent Epic #10 açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #73 / Epic #10
 
 - Canonical DDR5 DIMM accepted work order'da yalnız exact `ComponentKind == MemoryModule` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
 - DIMM, staged canonical motherboard+CPU prerequisites sonrasında ayrı stable operation ve managed capacity-one memory BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. İlk iki slotun operation/receipt/replay/revision/staged state'i aynen korunur.
