@@ -2,10 +2,10 @@
 
 **Date:** 25 August 2026<br>
 **Issue:** [#71](https://github.com/cixanla/PC-Shop-Empire-3D/issues/71)<br>
-**Draft PR:** [#72](https://github.com/cixanla/PC-Shop-Empire-3D/pull/72)<br>
+**PR:** [#72](https://github.com/cixanla/PC-Shop-Empire-3D/pull/72)<br>
 **Technical head:** `11683c8b567ad6edcd6777610875aeebd0e509ef`<br>
 **Technical tree:** `6890157f3f3625661314b34700259e0933ff2677`<br>
-**Closure status:** technical domain/scene/input, full regression and macOS/Windows native gates passed; source/docs, immutable package, physical USB and Issue/Project lifecycle gates remain pending
+**Closure status:** technical, source/docs/CI, immutable local package, physical USB double-readback and Issue/Project acceptance gates passed `22/22`
 
 ## Delivered playable result
 
@@ -88,9 +88,18 @@ Canonical evidence root: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/is
 
 `Tools/verify-checkpoint-package.sh ... issue71` requires the exact 14-name evidence set plus full manifest path/size/SHA, exact Git-source, forbidden/cache/credential, secret-signature, symlink and AppleDouble gates. Its Issue #71 semantic gate additionally parses source/binary/procedure/runtime/task receipts, binds the fixed technical commit/tree and all procedure/promoted-artifact hashes, requires the packaged source/docs commit to descend from that technical commit with an exact nine-file docs/verifier-only delta, requires the `issue71-hardened-v2` policy, rejects Burst/native-link tokens and requires one exact CPU runtime marker. On a final package it enforces remaining sibling `.incoming-*`, `._.incoming-*` and exact final-name AppleDouble residue `0` without touching unrelated historical milestone sidecars. Omitting `issue71` intentionally falls back to generic canonical behavior and is not valid for Issue #71 closure.
 
+## Immutable package and physical USB lifecycle
+
+- Source/docs/provenance head `7501fa74335ca977364033025eb51f4f4fc7bebf`, tree `0fcfd59000cc5cdca915d86d4854862c3879f435`; [Repository Guard 32833455406](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32833455406) passed.
+- Canonical local final: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-25_STAGE_B_CANONICAL_PROCESSOR_BUILDKIT_HARDENED_V2`.
+- Canonical physical Windows USB final: `D:\CIXANLA\90_BACKUPS\PCShopEmpire3D\2026-08-25_STAGE_B_CANONICAL_PROCESSOR_BUILDKIT_HARDENED_V2`.
+- The collision-free `.incoming-issue71-7501fa7-h2` target passed full path/size/SHA readback before a same-filesystem atomic rename. The final target then passed a second complete readback with the same `942/942` payload rows, `927/927` exact Git source files, `14/14` evidence files and `19,139,923` payload bytes.
+- `MANIFEST.tsv` SHA-256 is `f38ae282a13e5cb070c633386f4118811e2554d61ba84875b407e208dd3cb8ed`. Exact-target/internal AppleDouble and incoming residue counts are `0`. Unrelated historical sibling sidecars were intentionally left untouched.
+- The earlier local pre-hardening package and `2026-08-24_STAGE_B_ISSUE71_CPU_BUILDKIT_DOMAIN_FOUNDATION` USB milestone remain immutable historical checkpoints and are not canonical closure artifacts.
+
 ## Canonical Issue #71 acceptance matrix
 
-`TECHNICAL PASS` means exact technical source plus promoted test/Mac/Windows evidence proves the item. Row 22 remains pending until source/docs push/CI, immutable local package, physical USB incoming/final readbacks and Issue/Project lifecycle are separately complete.
+`TECHNICAL PASS` means exact technical source plus promoted test/Mac/Windows evidence proves the item. `LIFECYCLE PASS` additionally means source/docs push/CI, immutable local package, physical USB incoming/final readbacks and Issue/Project acceptance are complete.
 
 | # | Acceptance contract | Current gate | Canonical evidence |
 |---:|---|---|---|
@@ -115,12 +124,8 @@ Canonical evidence root: `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/is
 | 19 | ProcessorSocket/Assembly, motherboard Assembly, electrical, quote and other reservations remain untouched. | TECHNICAL PASS | Revision/receipt snapshots and native isolation marker. |
 | 20 | Domain/invariant/replay/forgery, scene and real Input System test matrices pass. | TECHNICAL PASS | EditMode `677/677`, PlayMode `81/81`. |
 | 21 | Full regressions, diff check, Guard, Mac and exact-head Windows native gates pass. | TECHNICAL PASS | Guard `32827174483`, exact test/Mac/Windows artifacts above. |
-| 22 | Living docs, private push/CI and physical USB incoming→readback→atomic final lifecycle pass. | PENDING | Source/docs, package, USB and Issue/Project closure have not yet been claimed. |
+| 22 | Living docs, private push/CI and physical USB incoming→readback→atomic final lifecycle pass. | LIFECYCLE PASS | Head `7501fa7`, Guard `32833455406`, `942/927/14`, `19,139,923` bytes, manifest `f38ae282…3cb8ed`, acceptance `22/22`, Roadmap `Done`. |
 
-## Remaining closure sequence
+## Closure outcome
 
-1. Commit and push ADR-0045, this Evidence record, Project Bible/CHANGELOG and `issue71` verifier mode.
-2. Require the source/docs Repository Guard to pass.
-3. Build a collision-free immutable local package from that exact source/docs commit and require full `issue71` verifier readback.
-4. Rediscover the correct external physical USB and prior milestone chain; use only a collision-free `.incoming-*` target, full readback, same-filesystem atomic rename and a second full readback.
-5. Record physical manifest/count/bytes/path metadata, pass final Guard, then mark all 22 Issue boxes, move the Roadmap item to Done and complete PR/Issue lifecycle while parent Epic #10 remains open.
+All 22 Issue acceptance boxes are checked and the Roadmap item is `Done`. PR #72 is the ready integration vehicle and closes Issue #71 while parent Epic #10 remains open/In Progress. Issues #63 and #64 remain independent and were not changed by this closure.

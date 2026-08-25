@@ -1,6 +1,6 @@
 # ADR-0045 — Canonical Processor Physical Build-Kit Handoff
 
-**Status:** Accepted technically on macOS and Windows; immutable package, physical USB and lifecycle closure pending<br>
+**Status:** Accepted; technical, immutable package, physical USB and lifecycle gates complete<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #71, child of Epic #10
 
@@ -35,4 +35,4 @@ The remaining eight BuildKit component transfers, `10/10` completion, job-specif
 - Universal macOS Development/StrictMode build report `329,627,927` bytes. The ad-hoc signed executable is a valid deep/strict universal `x86_64 + arm64` bundle. Apple M1/Metal r36 readiness and the exact CPU BuildKit success marker each appeared once; failure markers were `0`.
 - Exact detached-clean Windows `hardened-v2` source produced a `1,329,802,474`-byte x64 IL2CPP/Direct3D11 build report and restored `ProjectSettings.asset` byte-exactly. Its expanded fatal policy explicitly rejects Burst internal compiler, `AotLinkerException`, native-link, `Win32 IO returned 232` and `burst-lld` failures; accepted build fatal count is `0`. Native binary and procedure hashes passed complete readback. The earlier recovered-import evidence is retained separately as provisional history and is not canonical acceptance evidence.
 - The logged-on interactive Windows player used Intel Iris Xe / Direct3D11. Player exit was `0`, shutdown was graceful, readiness and exact success markers were each `1`, forbidden markers were `0`, the temporary scheduled task was deleted, cleanup was unnecessary and process residue was `0`.
-- Canonical technical evidence is the procedure-bound exact `14/14` set at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue71-11683c8b567a/canonical-evidence`. Detailed hashes, the 22-row acceptance mapping and the still-pending physical lifecycle are recorded in `Docs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md`.
+- Canonical technical evidence is the procedure-bound exact `14/14` set at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue71-11683c8b567a/canonical-evidence`. Source/docs/provenance head `7501fa74335ca977364033025eb51f4f4fc7bebf`, tree `0fcfd59000cc5cdca915d86d4854862c3879f435` and Repository Guard `32833455406` passed. The immutable local and physical Windows USB milestone passed incoming and final readbacks with `942/942` payload rows, `927/927` exact Git source files, `14/14` evidence files, `19,139,923` bytes and manifest SHA-256 `f38ae282a13e5cb070c633386f4118811e2554d61ba84875b407e208dd3cb8ed`; exact-target/internal AppleDouble and incoming residue were `0`. Detailed hashes and the accepted `22/22` mapping are recorded in `Docs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md`.
