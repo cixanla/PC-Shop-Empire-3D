@@ -2,6 +2,7 @@ using System;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private GarageStockFlowRuntime runtime;
         [SerializeField] private PhysicalItemProjection physicalItem;
         [SerializeField] private ProcessorSocketProjection socket;
+        [SerializeField] private ProcessorBuildKitProjection buildKit;
         [SerializeField] private string inventoryItemId =
             GarageStockFlowSession.ProcessorItemInstanceIdValue;
 
@@ -33,6 +35,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PhysicalItemProjection PhysicalItem => physicalItem;
 
         public ProcessorSocketProjection Socket => socket;
+
+        public ProcessorBuildKitProjection BuildKit => buildKit;
 
         public string InventoryItemIdValue => inventoryItemId;
 
@@ -75,6 +79,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool IsAuthorityLooseWorld => IsInContainer(
             Session?.WorldFloorContainerId ?? default);
 
+        public bool IsAuthorityInBuildKit => IsInContainer(
+            Session?.ProcessorBuildKitContainerId ?? default);
+
         private void Awake()
         {
             physicalItem ??= GetComponent<PhysicalItemProjection>();
@@ -85,7 +92,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             GarageStockFlowRuntime stockFlowRuntime,
             PhysicalItemProjection itemProjection,
             ProcessorSocketProjection socketProjection,
-            string stableInventoryItemId)
+            string stableInventoryItemId,
+            ProcessorBuildKitProjection buildKitProjection = null)
         {
             runtime = stockFlowRuntime != null
                 ? stockFlowRuntime
@@ -96,6 +104,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             socket = socketProjection != null
                 ? socketProjection
                 : throw new ArgumentNullException(nameof(socketProjection));
+            buildKit = buildKitProjection;
             inventoryItemId = StableId<ItemInstanceIdScope>.Parse(
                 stableInventoryItemId).Value;
             if (inventoryItemId != GarageStockFlowSession.ProcessorItemInstanceIdValue)
@@ -109,6 +118,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             SyncProjectionToAuthority();
         }
 
+        public bool MatchesBuildKitConfiguration(
+            ProcessorBuildKitProjection buildKitProjection)
+        {
+            return buildKitProjection != null &&
+                   buildKit == buildKitProjection &&
+                   buildKit.Runtime == runtime;
+        }
+
         public OperationResult TryCommitLoosePickup()
         {
             OperationResult context = ValidateContext();
@@ -117,7 +134,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || IsSeated || !IsAuthorityLooseWorld)
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityLooseWorld)
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-processor.pickup-authority-mismatch"));
@@ -216,6 +236,99 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _carryOrigin = CarryOrigin.None;
             socket.ResetFeedback();
             SyncProjectionToAuthority();
+            return OperationResult.Success();
+        }
+
+        internal OperationResult TryPlaceInBuildKit(
+            Transform interactionOrigin,
+            Transform playerRoot,
+            Transform carryAnchor,
+            LayerMask obstructionMask,
+            int clockwiseQuarterTurns,
+            bool paused)
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (buildKit == null || !buildKit.IsConfigured ||
+                buildKit.Runtime != runtime)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("custom-pc-processor-build-kit.context-missing"));
+            }
+
+            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsSeated ||
+                buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("custom-pc-processor-build-kit.authority-mismatch"));
+            }
+
+            if (carryAnchor == null || Session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        carryAnchor == null
+                            ? "custom-pc-processor-build-kit.carry-anchor-missing"
+                            : "custom-pc-processor-build-kit.context-missing"));
+            }
+
+            if (Session.CustomPcBuildKit.Revision == long.MaxValue ||
+                Session.Inventory.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            long expectedBuildKitRevision = Session.CustomPcBuildKit.Revision;
+            long expectedInventoryRevision = Session.Inventory.Revision;
+            ProcessorBuildKitEvaluation evaluation = buildKit.Evaluate(
+                interactionOrigin,
+                playerRoot,
+                physicalItem,
+                obstructionMask,
+                clockwiseQuarterTurns,
+                paused,
+                IsAuthorityInHands &&
+                !IsSeated &&
+                buildKit.HasPickupReceipt);
+            if (!evaluation.IsValid)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> domain =
+                Session.PlaceHeldProcessorInCustomPcBuildKit(
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            if (domain.IsFailure)
+            {
+                return OperationResult.Fail(domain.Error);
+            }
+
+            OperationResult physicalCommit = physicalItem.PlaceAt(evaluation.Pose);
+            if (physicalCommit.IsFailure)
+            {
+                OperationResult recovery =
+                    physicalItem.RecoverToStablePlacementAfterAuthority(
+                        evaluation.Pose);
+                if (recovery.IsFailure ||
+                    !physicalItem.IsStablePlacement ||
+                    physicalItem.Ownership != PhysicalItemOwnership.World)
+                {
+                    return OperationResult.Fail(
+                        Failure.FromCode(
+                            "custom-pc-processor-build-kit.projection-recovery-failed"));
+                }
+            }
+
+            _carryOrigin = CarryOrigin.None;
+            buildKit.ResetFeedback();
+            buildKit.RefreshPresentation();
             return OperationResult.Success();
         }
 
@@ -387,6 +500,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             socket.ApplyAuthoritativeState(
                 Session.AssemblyBuild.MotherboardSeatState,
                 Session.AssemblyBuild.ProcessorSocketState);
+            buildKit?.RefreshPresentation();
             return OperationResult.Success();
         }
 
@@ -434,8 +548,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                       socket.SnapPose)
                 : IsAuthorityInHands
                     ? physicalItem.IsCarried
-                    : IsAuthorityLooseWorld &&
-                      physicalItem.Ownership == PhysicalItemOwnership.World;
+                    : IsAuthorityInBuildKit
+                        ? buildKit != null &&
+                          buildKit.IsStaged &&
+                          buildKit.MatchesCommittedPlacement(physicalItem)
+                        : IsAuthorityLooseWorld &&
+                          physicalItem.Ownership == PhysicalItemOwnership.World;
             bool socketMatches = socket.SlotIdValue ==
                                  Session.ProcessorSlotId.Value &&
                                  socket.RetentionIdValue ==

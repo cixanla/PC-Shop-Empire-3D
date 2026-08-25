@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #68 r35 teknik, fiziksel USB ve lifecycle kapılarıyla tamamlandı
+### Güncel checkpoint — Issue #71 r36 teknik, fiziksel USB ve lifecycle kapıları tamamlandı
+
+- Technical head `11683c8b567ad6edcd6777610875aeebd0e509ef`, tree `6890157f3f3625661314b34700259e0933ff2677`. Canonical reserved Processor exact work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür; staged motherboard prerequisite'i korunur.
+- CPU ayrı stable operation ve capacity-one managed processor BuildKit üzerinden source → ActorHands → CPU BuildKit custody'sine taşınır. Domain commit world mutation'dan önce gelir; same-instance/stable ItemId, live reservation/allocation, exact replay ve stable recovery korunur.
+- GarageGraybox r36 ayrı CPU tray/support/snap anchor, 90° preview ve görünür `1/10 → 2/10` aggregate ekler. Active CPU BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; ProcessorSocket aynı-frame input'u çalamaz, receipt'siz normal socket assembly yolu değişmez.
+- Final EditMode `677/677`, PlayMode `81/81`; failed/skipped/inconclusive `0`. Universal Mac report `329627927` bayt, valid signed universal player ve Apple M1/Metal exact r36 smoke başarılıdır.
+- Collision-free exact detached-clean Windows `hardened-v2` x64 IL2CPP/only-D3D11 report `1329802474` bayt; expanded Burst/native-link fatal-token `0`, three-binary and three-procedure hash readback, byte-exact ProjectSettings restore, Intel Iris Xe interactive success `1`, runtime forbidden `0`, graceful shutdown, task deletion ve residue `0` başarılıdır. İlk recovered-import evidence provisional geçmiş olarak ayrılmıştır.
+- Technical [Guard 32827174483](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32827174483) geçti. ADR-0045, tarihli Evidence ve `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue71-11683c8b567a/canonical-evidence` exact procedure-bound `14/14` kaynağıdır. Source/docs/provenance `7501fa74335ca977364033025eb51f4f4fc7bebf`, tree `0fcfd59000cc5cdca915d86d4854862c3879f435`, Guard `32833455406`; canonical local + Windows USB incoming/final readback `942/942` payload, `927/927` exact Git source, `14/14` evidence, `19.139.923` bayt ve `f38ae282…3cb8ed` manifest ile geçti. Exact-target/internal AppleDouble ve incoming residue `0`; acceptance `22/22`, Roadmap `Done`, PR #72 hazırdır. Önceki domain-only USB checkpoint'i yalnız immutable tarihsel ara kayıttır.
+
+### Önceki checkpoint — Issue #68 r35 teknik, fiziksel USB ve lifecycle kapılarıyla tamamlandı
 
 - Feature chain `2a69436` + `b0d2a97`; current technical head `480874191ee2c950e046ab2aee8be92d61d79fe4`, tree `e229788741df4c456840d356633e2a4bc1702516`. Canonical reserved motherboard exact work-order/ticket/allocation line/product/item/reservation identity ile çözülür.
 - Stable build-kit operation ve immutable pickup/place receipts replay-safe'tir. Capacity-one managed BuildKit, Assembly Workbench/seat custody'sinden ayrıdır; narrow allocation bridge source → ActorHands → BuildKit hareketinde live reservation/allocation'ı korur ve generic transfer/world/stack/cart/Assembly bypass'larını fail-closed tutar.
@@ -164,8 +173,8 @@ Unity Hub içinde **Add/Open project from disk** ile clone edilen repo kökünü
 
 Unity Test Runner ile Edit Mode ve Play Mode testlerinin tamamını çalıştırın. Son sağlam baseline:
 
-- Edit Mode `661/661` passed.
-- Play Mode `66/66` passed.
+- Edit Mode `677/677` passed.
+- Play Mode `81/81` passed.
 - `0` failed.
 - `0` skipped.
 
@@ -310,7 +319,7 @@ Sorunu düzeltmek için `main` history'sini force-push/reset etmeyin. Yeni branc
 Yeni geliştirici şu beş şeyi gösterebildiğinde devir başarılıdır:
 
 1. Projeyi clone edip doğru Unity sürümünde açtı.
-2. Repo guard, güncel 647 Edit Mode ve 59 Play Mode testi geçti.
+2. Repo guard, güncel 677 Edit Mode ve 81 Play Mode testi geçti.
 3. Vizyon ile vertical slice sınırını kendi cümlesiyle açıklayabildi.
 4. GitHub Project'te sıradaki issue/acceptance kriterini buldu.
 5. Küçük bir docs/test PR'ını yaşayan belge kurallarına uygun açabildi.

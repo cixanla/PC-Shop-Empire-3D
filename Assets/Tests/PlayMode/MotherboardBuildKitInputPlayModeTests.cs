@@ -21,7 +21,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
     /// <summary>
     /// Real Input System coverage for the first physical custom-PC Build Kit handoff.
     /// </summary>
-    public sealed class MotherboardBuildKitInputPlayModeTests : InputTestFixture
+    public sealed partial class MotherboardBuildKitInputPlayModeTests : InputTestFixture
     {
         [UnityTest]
         public IEnumerator KeyboardMouseMovesExactReservedMotherboardIntoBuildKit()

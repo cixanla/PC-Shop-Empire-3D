@@ -28,7 +28,9 @@ namespace PCShopEmpire3D.Orders
     public enum CustomPcBuildKitStage
     {
         MotherboardInHands = 1,
-        MotherboardStaged = 2
+        MotherboardStaged = 2,
+        ProcessorInHands = 3,
+        ProcessorStaged = 4
     }
 
     public sealed class CustomPcBuildOrderLineSnapshot
@@ -215,7 +217,10 @@ namespace PCShopEmpire3D.Orders
         public long InventoryAppliedRevision { get; }
 
         public int StagedComponentCount =>
-            Stage == CustomPcBuildKitStage.MotherboardStaged ? 1 : 0;
+            Stage == CustomPcBuildKitStage.MotherboardStaged ||
+            Stage == CustomPcBuildKitStage.ProcessorStaged
+                ? 1
+                : 0;
     }
 
     public static class CustomPcWorkOrderFailures
@@ -254,6 +259,10 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.work-order-invalid");
         public static readonly Failure BuildKitMotherboardLineInvalid =
             Failure.FromCode("orders.custom-pc-build-kit.motherboard-line-invalid");
+        public static readonly Failure BuildKitProcessorLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.processor-line-invalid");
+        public static readonly Failure BuildKitPrerequisiteMissing =
+            Failure.FromCode("orders.custom-pc-build-kit.prerequisite-missing");
         public static readonly Failure BuildKitIdentityConflict =
             Failure.FromCode("orders.custom-pc-build-kit.identity-conflict");
         public static readonly Failure BuildKitStageInvalid =
