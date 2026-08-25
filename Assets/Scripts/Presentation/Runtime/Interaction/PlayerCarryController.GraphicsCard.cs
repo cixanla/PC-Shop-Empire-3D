@@ -274,6 +274,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private void SetGraphicsCardSeatMode(bool enabled)
         {
             ResetGraphicsCardBuildKitState();
+            ResetPowerSupplyBuildKitState();
             IsGraphicsCardSeatMode = enabled &&
                                         HeldItem != null &&
                                         GetGraphicsCardBinding(HeldItem) != null;

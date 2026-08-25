@@ -2,6 +2,7 @@ using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 
 namespace PCShopEmpire3D.Presentation.Interaction
 {
@@ -70,6 +71,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult PickupLoosePowerSupplyToHands()
         {
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalPowerSupply(
+                        PrototypePowerSupplyBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             if (!AssemblyBuild.HasPowerSupplyBay ||
                 AssemblyBuild.PowerSupplyBayState != PowerSupplyBayState.EmptyOpen ||
                 !TryGetPowerSupplyItem(out InventoryItemRecord item) ||
@@ -84,8 +97,47 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HandsContainerId);
         }
 
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldPowerSupplyInCustomPcBuildKit()
+        {
+            return PlaceHeldPowerSupplyInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldPowerSupplyInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypePowerSupplyBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.PowerSupplyInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalPowerSupply(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldPowerSupplyToWorld()
         {
+            if (CustomPcBuildKit != null &&
+                CustomPcBuildKit.TryGetReceipt(
+                    PrototypePowerSupplyBuildKitOperationId,
+                    out CustomPcBuildKitReceipt buildKitReceipt) &&
+                buildKitReceipt.Stage == CustomPcBuildKitStage.PowerSupplyInHands)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
             if (!AssemblyBuild.HasPowerSupplyBay ||
                 AssemblyBuild.PowerSupplyBayState != PowerSupplyBayState.EmptyOpen ||
                 !TryGetPowerSupplyItem(out InventoryItemRecord item) ||

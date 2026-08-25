@@ -15,40 +15,38 @@ namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker
     {
-        public const string GraphicsCardBuildKitSmokeSuccessMarker =
-            "GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE " +
+        public const string PowerSupplyBuildKitSmokeSuccessMarker =
+            "GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE " +
             "work-ticket=ok " +
-            "prerequisites=motherboard+processor+memory+storage+processor-cooler-staged " +
-            "graphics-card-pickup=exact physical-identity=stable " +
+            "prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card-staged " +
+            "power-supply-pickup=exact physical-identity=stable " +
             "carry=ok input=keyboard+mouse custody-guards=ok rotation=180 " +
-            "placement=ok progress=6/10 reservation=alive " +
-            "custody=graphics-card-build-kit receipts=ok revisions=ok " +
-            "assembly=untouched graphics-card-slot=untouched " +
-            "pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok";
+            "placement=ok progress=7/10 reservation=alive " +
+            "custody=power-supply-build-kit receipts=ok revisions=ok " +
+            "assembly=untouched power-supply-bay=untouched " +
+            "atx24-route=untouched eps12v-route=untouched pcie-route=untouched " +
+            "no-duplicate-loss=ok replay=ok invariants=ok";
 
-        private bool _suppressGraphicsCardBuildKitSmokeSuccessMarker;
-        private string _nestedGraphicsCardBuildKitSmokeFailureCode;
-
-        private IEnumerator RunGraphicsCardBuildKitSmoke()
+        private IEnumerator RunPowerSupplyBuildKitSmoke()
         {
             yield return null;
             playerMotor?.SetPaused(false);
             yield return new WaitForFixedUpdate();
 
-            _nestedProcessorCoolerBuildKitSmokeFailureCode = null;
-            _suppressProcessorCoolerBuildKitSmokeSuccessMarker = true;
+            _nestedGraphicsCardBuildKitSmokeFailureCode = null;
+            _suppressGraphicsCardBuildKitSmokeSuccessMarker = true;
             try
             {
-                yield return RunProcessorCoolerBuildKitSmoke();
+                yield return RunGraphicsCardBuildKitSmoke();
             }
             finally
             {
-                _suppressProcessorCoolerBuildKitSmokeSuccessMarker = false;
+                _suppressGraphicsCardBuildKitSmokeSuccessMarker = false;
             }
 
             string prerequisiteFailure =
-                _nestedProcessorCoolerBuildKitSmokeFailureCode;
-            _nestedProcessorCoolerBuildKitSmokeFailureCode = null;
+                _nestedGraphicsCardBuildKitSmokeFailureCode;
+            _nestedGraphicsCardBuildKitSmokeFailureCode = null;
             if (!string.IsNullOrEmpty(prerequisiteFailure))
             {
                 const string SmokePrefix = "smoke.";
@@ -57,41 +55,43 @@ namespace PCShopEmpire3D.Presentation
                     System.StringComparison.Ordinal)
                         ? prerequisiteFailure.Substring(SmokePrefix.Length)
                         : prerequisiteFailure;
-                LogGraphicsCardBuildKitSmokeFailure(
-                    $"smoke.processor-cooler-prerequisite-{suffix}");
+                LogPowerSupplyBuildKitSmokeFailure(
+                    $"smoke.graphics-card-prerequisite-{suffix}");
                 yield break;
             }
 
             GarageStockFlowSession session = stockFlow != null
                 ? stockFlow.EnsureInitialized()
                 : null;
-            PhysicalItemProjection physicalGraphicsCard =
-                graphicsCardBinding != null
-                    ? graphicsCardBinding.PhysicalItem
+            PhysicalItemProjection physicalPowerSupply =
+                powerSupplyBinding != null
+                    ? powerSupplyBinding.PhysicalItem
                     : null;
             if (session == null ||
                 playerMotor == null ||
                 playerInput == null ||
                 playerCarry == null ||
-                graphicsCardBinding == null ||
-                physicalGraphicsCard == null ||
-                graphicsCardBuildKit == null ||
-                graphicsCardSlot == null ||
-                !HasGraphicsCardBuildKitR40Runtime ||
+                powerSupplyBinding == null ||
+                physicalPowerSupply == null ||
+                powerSupplyBuildKit == null ||
+                powerSupplyBay == null ||
+                !HasPowerSupplyBuildKitR41Runtime ||
                 !motherboardBuildKit.IsStaged ||
                 !processorBuildKit.IsStaged ||
                 !memoryModuleBuildKit.IsStaged ||
                 !storageBuildKit.IsStaged ||
                 !processorCoolerBuildKit.IsStaged ||
-                processorCoolerBuildKit.StagedComponentCount != 5 ||
-                !graphicsCardBuildKit.HasMotherboardPrerequisite ||
-                !graphicsCardBuildKit.HasProcessorPrerequisite ||
-                !graphicsCardBuildKit.HasMemoryModulePrerequisite ||
-                !graphicsCardBuildKit.HasStoragePrerequisite ||
-                !graphicsCardBuildKit.HasProcessorCoolerPrerequisite ||
-                graphicsCardBuildKit.StagedComponentCount != 5)
+                !graphicsCardBuildKit.IsStaged ||
+                graphicsCardBuildKit.StagedComponentCount != 6 ||
+                !powerSupplyBuildKit.HasMotherboardPrerequisite ||
+                !powerSupplyBuildKit.HasProcessorPrerequisite ||
+                !powerSupplyBuildKit.HasMemoryModulePrerequisite ||
+                !powerSupplyBuildKit.HasStoragePrerequisite ||
+                !powerSupplyBuildKit.HasProcessorCoolerPrerequisite ||
+                !powerSupplyBuildKit.HasGraphicsCardPrerequisite ||
+                powerSupplyBuildKit.StagedComponentCount != 6)
             {
-                LogGraphicsCardBuildKitSmokeFailure(
+                LogPowerSupplyBuildKitSmokeFailure(
                     "smoke.prerequisite-context-mismatch");
                 yield break;
             }
@@ -100,23 +100,23 @@ namespace PCShopEmpire3D.Presentation
                     out CustomPcBuildOrderRecord workOrder) ||
                 !session.TryGetPrototypeCustomPcWorkTicket(out _))
             {
-                LogGraphicsCardBuildKitSmokeFailure(
+                LogPowerSupplyBuildKitSmokeFailure(
                     "smoke.work-ticket-missing");
                 yield break;
             }
 
-            CustomPcBuildOrderLineSnapshot graphicsCardLine =
+            CustomPcBuildOrderLineSnapshot powerSupplyLine =
                 workOrder.Lines.SingleOrDefault(
-                    line => line.ComponentKind == PcComponentKind.GraphicsCard);
-            if (graphicsCardLine == null ||
-                graphicsCardLine.ItemId != session.GraphicsCardAssemblyItemId ||
+                    line => line.ComponentKind == PcComponentKind.PowerSupply);
+            if (powerSupplyLine == null ||
+                powerSupplyLine.ItemId != session.PowerSupplyItemId ||
                 !session.Inventory.TryGetReservation(
-                    graphicsCardLine.ReservationId,
+                    powerSupplyLine.ReservationId,
                     out InventoryReservation reservation) ||
-                reservation.ItemId != graphicsCardLine.ItemId ||
+                reservation.ItemId != powerSupplyLine.ItemId ||
                 reservation.ClaimId != workOrder.InventoryClaimId)
             {
-                LogGraphicsCardBuildKitSmokeFailure(
+                LogPowerSupplyBuildKitSmokeFailure(
                     "smoke.reservation-mismatch");
                 yield break;
             }
@@ -124,13 +124,25 @@ namespace PCShopEmpire3D.Presentation
             AssemblyBuildSnapshot assemblyBefore =
                 session.AssemblyBuild.GetSnapshot();
             int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            Atx24PowerCableState atx24State =
+                session.AssemblyBuild.Atx24PowerCableState;
+            long atx24Revision =
+                session.AssemblyBuild.Atx24PowerCableRevision;
+            int atx24ReceiptCount =
+                session.AssemblyBuild.Atx24PowerCableReceiptCount;
+            Eps12vPowerCableState eps12vState =
+                session.AssemblyBuild.Eps12vPowerCableState;
+            long eps12vRevision =
+                session.AssemblyBuild.Eps12vPowerCableRevision;
+            int eps12vReceiptCount =
+                session.AssemblyBuild.Eps12vPowerCableReceiptCount;
             PcieGpuPowerCableState pcieState =
                 session.AssemblyBuild.PcieGpuPowerCableState;
             long pcieRevision =
                 session.AssemblyBuild.PcieGpuPowerCableRevision;
             int pcieReceiptCount =
                 session.AssemblyBuild.PcieGpuPowerCableReceiptCount;
-            int physicalIdentity = physicalGraphicsCard.GetInstanceID();
+            int physicalIdentity = physicalPowerSupply.GetInstanceID();
             int serializedItemCount = session.Inventory.SerializedItemCount;
             long inventoryRevisionBeforePickup = session.Inventory.Revision;
             long buildKitRevisionBeforePickup =
@@ -149,50 +161,56 @@ namespace PCShopEmpire3D.Presentation
                 InputSystem.Update();
 
                 AimMotherboardBuildKitSmokeAtItem(
-                    physicalGraphicsCard,
+                    physicalPowerSupply,
                     -Vector3.forward);
                 playerCarry.ProcessInputFrame();
-                if (playerCarry.FocusedItem != physicalGraphicsCard)
+                if (playerCarry.FocusedItem != physicalPowerSupply)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
-                        "smoke.graphics-card-focus-mismatch");
+                    LogPowerSupplyBuildKitSmokeFailure(
+                        "smoke.power-supply-focus-mismatch");
                     yield break;
                 }
 
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.E);
                 CustomPcBuildKitReceipt pickupReceipt = null;
                 bool exactPickup =
-                    playerCarry.HeldItem == physicalGraphicsCard &&
-                    physicalGraphicsCard.GetInstanceID() == physicalIdentity &&
-                    graphicsCardBinding.IsAuthorityInHands &&
-                    graphicsCardBuildKit.HasPickupReceipt &&
+                    playerCarry.HeldItem == physicalPowerSupply &&
+                    physicalPowerSupply.GetInstanceID() == physicalIdentity &&
+                    powerSupplyBinding.IsAuthorityInHands &&
+                    powerSupplyBuildKit.HasPickupReceipt &&
                     session.CustomPcBuildKit.TryGetReceipt(
-                        session.PrototypeGraphicsCardBuildKitOperationId,
+                        session.PrototypePowerSupplyBuildKitOperationId,
                         out pickupReceipt) &&
                     pickupReceipt.Stage ==
-                        CustomPcBuildKitStage.GraphicsCardInHands &&
-                    ReferenceEquals(pickupReceipt.Line, graphicsCardLine) &&
-                    pickupReceipt.Line.LineId == graphicsCardLine.LineId &&
-                    pickupReceipt.Line.ProductId == graphicsCardLine.ProductId &&
-                    pickupReceipt.Line.ItemId == graphicsCardLine.ItemId &&
+                        CustomPcBuildKitStage.PowerSupplyInHands &&
+                    ReferenceEquals(pickupReceipt.Line, powerSupplyLine) &&
+                    pickupReceipt.Line.LineId == powerSupplyLine.LineId &&
+                    pickupReceipt.Line.ProductId == powerSupplyLine.ProductId &&
+                    pickupReceipt.Line.ItemId == powerSupplyLine.ItemId &&
                     pickupReceipt.Line.ReservationId ==
-                        graphicsCardLine.ReservationId &&
+                        powerSupplyLine.ReservationId &&
                     session.Inventory.Revision ==
                         inventoryRevisionBeforePickup + 1 &&
                     session.CustomPcBuildKit.Revision ==
                         buildKitRevisionBeforePickup + 1 &&
-                    GraphicsCardBuildKitSmokeAssemblyUnchanged(
+                    PowerSupplyBuildKitSmokeAssemblyUnchanged(
                         session,
                         assemblyBefore,
                         assemblyReceiptCount,
+                        atx24State,
+                        atx24Revision,
+                        atx24ReceiptCount,
+                        eps12vState,
+                        eps12vRevision,
+                        eps12vReceiptCount,
                         pcieState,
                         pcieRevision,
                         pcieReceiptCount);
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 if (!exactPickup)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
-                        "smoke.graphics-card-pickup-mismatch");
+                    LogPowerSupplyBuildKitSmokeFailure(
+                        "smoke.power-supply-pickup-mismatch");
                     yield break;
                 }
 
@@ -201,55 +219,61 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.Revision;
                 bool custodyGuard =
                     playerCarry.TryDrop().IsFailure &&
-                    playerCarry.HeldItem == physicalGraphicsCard &&
-                    physicalGraphicsCard.IsCarried &&
-                    graphicsCardBinding.IsAuthorityInHands &&
-                    graphicsCardBuildKit.StagedComponentCount == 5 &&
+                    playerCarry.HeldItem == physicalPowerSupply &&
+                    physicalPowerSupply.IsCarried &&
+                    powerSupplyBinding.IsAuthorityInHands &&
+                    powerSupplyBuildKit.StagedComponentCount == 6 &&
                     session.Inventory.Revision == inventoryRevisionInHands &&
                     session.CustomPcBuildKit.Revision == buildKitRevisionInHands &&
-                    GraphicsCardBuildKitSmokeAssemblyUnchanged(
+                    PowerSupplyBuildKitSmokeAssemblyUnchanged(
                         session,
                         assemblyBefore,
                         assemblyReceiptCount,
+                        atx24State,
+                        atx24Revision,
+                        atx24ReceiptCount,
+                        eps12vState,
+                        eps12vRevision,
+                        eps12vReceiptCount,
                         pcieState,
                         pcieRevision,
                         pcieReceiptCount);
                 if (!custodyGuard)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
-                        "smoke.graphics-card-custody-guard-mismatch");
+                    LogPowerSupplyBuildKitSmokeFailure(
+                        "smoke.power-supply-custody-guard-mismatch");
                     yield break;
                 }
 
-                MoveGraphicsCardBuildKitSmokePlayerToKit(
-                    graphicsCardBuildKit);
+                MovePowerSupplyBuildKitSmokePlayerToKit(
+                    powerSupplyBuildKit);
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
                 bool modeValid =
-                    playerCarry.IsGraphicsCardBuildKitMode &&
-                    !playerCarry.IsGraphicsCardSeatMode &&
-                    playerCarry.CurrentGraphicsCardBuildKitStatus ==
-                        GraphicsCardBuildKitStatus.Valid &&
+                    playerCarry.IsPowerSupplyBuildKitMode &&
+                    !playerCarry.IsPowerSupplySeatMode &&
+                    playerCarry.CurrentPowerSupplyBuildKitStatus ==
+                        PowerSupplyBuildKitStatus.Valid &&
                     playerCarry.PlacementValid &&
-                    playerCarry.PromptText.Contains("5/10 → 6/10");
+                    playerCarry.PromptText.Contains("6/10 → 7/10");
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
                 if (!modeValid)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
-                        "smoke.graphics-card-preflight-mismatch");
+                    LogPowerSupplyBuildKitSmokeFailure(
+                        "smoke.power-supply-preflight-mismatch");
                     yield break;
                 }
 
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.R);
                 bool rotationValid =
                     playerCarry.PlacementRotationQuarterTurns == 1 &&
-                    playerCarry.CurrentGraphicsCardBuildKitStatus ==
-                        GraphicsCardBuildKitStatus.Valid &&
+                    playerCarry.CurrentPowerSupplyBuildKitStatus ==
+                        PowerSupplyBuildKitStatus.Valid &&
                     playerCarry.PlacementValid;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 if (!rotationValid)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
+                    LogPowerSupplyBuildKitSmokeFailure(
                         "smoke.rotation-mismatch");
                     yield break;
                 }
@@ -258,36 +282,36 @@ namespace PCShopEmpire3D.Presentation
                 CustomPcBuildKitReceipt placementReceipt = null;
                 bool exactPlacement =
                     playerCarry.HeldItem == null &&
-                    graphicsCardBuildKit.IsStaged &&
-                    graphicsCardBuildKit.StagedComponentCount == 6 &&
-                    graphicsCardBuildKit.ProgressText.text.Contains("6/10") &&
-                    graphicsCardBuildKit.ProgressText.text.Contains("GPU HAZIR") &&
-                    graphicsCardBinding.IsAuthorityInBuildKit &&
-                    physicalGraphicsCard.GetInstanceID() == physicalIdentity &&
-                    physicalGraphicsCard.Ownership ==
+                    powerSupplyBuildKit.IsStaged &&
+                    powerSupplyBuildKit.StagedComponentCount == 7 &&
+                    powerSupplyBuildKit.ProgressText.text.Contains("7/10") &&
+                    powerSupplyBuildKit.ProgressText.text.Contains("PSU HAZIR") &&
+                    powerSupplyBinding.IsAuthorityInBuildKit &&
+                    physicalPowerSupply.GetInstanceID() == physicalIdentity &&
+                    physicalPowerSupply.Ownership ==
                         PhysicalItemOwnership.World &&
-                    physicalGraphicsCard.IsStablePlacement &&
-                    graphicsCardBuildKit.MatchesCommittedPlacement(
-                        physicalGraphicsCard) &&
+                    physicalPowerSupply.IsStablePlacement &&
+                    powerSupplyBuildKit.MatchesCommittedPlacement(
+                        physicalPowerSupply) &&
                     Quaternion.Angle(
-                        physicalGraphicsCard.transform.rotation,
-                        graphicsCardBuildKit.ResolveSnapPose(1).rotation) <=
+                        physicalPowerSupply.transform.rotation,
+                        powerSupplyBuildKit.ResolveSnapPose(1).rotation) <=
                             0.25f &&
                     session.CustomPcBuildKit.TryGetReceipt(
-                        session.PrototypeGraphicsCardBuildKitOperationId,
+                        session.PrototypePowerSupplyBuildKitOperationId,
                         out placementReceipt) &&
                     placementReceipt.Stage ==
-                        CustomPcBuildKitStage.GraphicsCardStaged &&
+                        CustomPcBuildKitStage.PowerSupplyStaged &&
                     !ReferenceEquals(placementReceipt, pickupReceipt) &&
-                    ReferenceEquals(placementReceipt.Line, graphicsCardLine) &&
-                    session.TryGetGraphicsCardAssemblyItem(
-                        out InventoryItemRecord stagedGraphicsCard) &&
-                    stagedGraphicsCard.ContainerId ==
-                        session.GraphicsCardBuildKitContainerId &&
+                    ReferenceEquals(placementReceipt.Line, powerSupplyLine) &&
+                    session.TryGetPowerSupplyItem(
+                        out InventoryItemRecord stagedPowerSupply) &&
+                    stagedPowerSupply.ContainerId ==
+                        session.PowerSupplyBuildKitContainerId &&
                     session.Inventory.TryGetReservation(
-                        graphicsCardLine.ReservationId,
+                        powerSupplyLine.ReservationId,
                         out InventoryReservation stagedReservation) &&
-                    stagedReservation.ItemId == stagedGraphicsCard.Id &&
+                    stagedReservation.ItemId == stagedPowerSupply.Id &&
                     stagedReservation.ClaimId == workOrder.InventoryClaimId &&
                     session.Inventory.Revision == inventoryRevisionInHands + 1 &&
                     session.CustomPcBuildKit.Revision ==
@@ -295,17 +319,24 @@ namespace PCShopEmpire3D.Presentation
                     session.Inventory.GetContainerQuantity(
                         session.HandsContainerId).Value == 0 &&
                     session.Inventory.GetContainerQuantity(
-                        session.GraphicsCardBuildKitContainerId).Value == 1 &&
+                        session.PowerSupplyBuildKitContainerId).Value == 1 &&
                     session.Inventory.SerializedItemCount == serializedItemCount &&
-                    CountCanonicalGraphicsCardProjections(
-                        session.GraphicsCardAssemblyItemId.Value) == 1 &&
-                    GraphicsCardBuildKitSmokeAssemblyUnchanged(
+                    CountCanonicalPowerSupplyProjections(
+                        session.PowerSupplyItemId.Value) == 1 &&
+                    PowerSupplyBuildKitSmokeAssemblyUnchanged(
                         session,
                         assemblyBefore,
                         assemblyReceiptCount,
+                        atx24State,
+                        atx24Revision,
+                        atx24ReceiptCount,
+                        eps12vState,
+                        eps12vRevision,
+                        eps12vReceiptCount,
                         pcieState,
                         pcieRevision,
                         pcieReceiptCount) &&
+                    powerSupplyBinding.ValidateProjectionInvariant().IsSuccess &&
                     graphicsCardBinding.ValidateProjectionInvariant().IsSuccess &&
                     processorCoolerBinding.ValidateProjectionInvariant().IsSuccess &&
                     storageBinding.ValidateProjectionInvariant().IsSuccess &&
@@ -315,8 +346,8 @@ namespace PCShopEmpire3D.Presentation
                     session.ValidateInvariants().IsSuccess;
                 if (!exactPlacement)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
-                        "smoke.graphics-card-placement-mismatch");
+                    LogPowerSupplyBuildKitSmokeFailure(
+                        "smoke.power-supply-placement-mismatch");
                     yield break;
                 }
 
@@ -325,7 +356,7 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.Revision;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 OperationResult<CustomPcBuildKitReceipt> replay =
-                    session.CustomPcBuildKit.PlaceCanonicalGraphicsCard(
+                    session.CustomPcBuildKit.PlaceCanonicalPowerSupply(
                         pickupReceipt);
                 bool replaySafe =
                     replay.IsSuccess &&
@@ -333,32 +364,35 @@ namespace PCShopEmpire3D.Presentation
                     session.Inventory.Revision == committedInventoryRevision &&
                     session.CustomPcBuildKit.Revision ==
                         committedBuildKitRevision &&
-                    graphicsCardBuildKit.StagedComponentCount == 6 &&
-                    physicalGraphicsCard.GetInstanceID() == physicalIdentity &&
+                    powerSupplyBuildKit.StagedComponentCount == 7 &&
+                    physicalPowerSupply.GetInstanceID() == physicalIdentity &&
                     session.Inventory.SerializedItemCount == serializedItemCount &&
                     session.Inventory.GetContainerQuantity(
                         session.HandsContainerId).Value == 0 &&
                     session.Inventory.GetContainerQuantity(
-                        session.GraphicsCardBuildKitContainerId).Value == 1 &&
-                    GraphicsCardBuildKitSmokeAssemblyUnchanged(
+                        session.PowerSupplyBuildKitContainerId).Value == 1 &&
+                    PowerSupplyBuildKitSmokeAssemblyUnchanged(
                         session,
                         assemblyBefore,
                         assemblyReceiptCount,
+                        atx24State,
+                        atx24Revision,
+                        atx24ReceiptCount,
+                        eps12vState,
+                        eps12vRevision,
+                        eps12vReceiptCount,
                         pcieState,
                         pcieRevision,
                         pcieReceiptCount) &&
                     session.ValidateInvariants().IsSuccess;
                 if (!replaySafe)
                 {
-                    LogGraphicsCardBuildKitSmokeFailure(
+                    LogPowerSupplyBuildKitSmokeFailure(
                         "smoke.replay-mismatch");
                     yield break;
                 }
 
-                if (!_suppressGraphicsCardBuildKitSmokeSuccessMarker)
-                {
-                    Debug.Log(GraphicsCardBuildKitSmokeSuccessMarker);
-                }
+                Debug.Log(PowerSupplyBuildKitSmokeSuccessMarker);
                 yield return new WaitForEndOfFrame();
             }
             finally
@@ -369,10 +403,16 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static bool GraphicsCardBuildKitSmokeAssemblyUnchanged(
+        private static bool PowerSupplyBuildKitSmokeAssemblyUnchanged(
             GarageStockFlowSession session,
             AssemblyBuildSnapshot expected,
             int expectedAssemblyReceiptCount,
+            Atx24PowerCableState expectedAtx24State,
+            long expectedAtx24Revision,
+            int expectedAtx24ReceiptCount,
+            Eps12vPowerCableState expectedEps12vState,
+            long expectedEps12vRevision,
+            int expectedEps12vReceiptCount,
             PcieGpuPowerCableState expectedPcieState,
             long expectedPcieRevision,
             int expectedPcieReceiptCount)
@@ -381,17 +421,29 @@ namespace PCShopEmpire3D.Presentation
             return actual.Revision == expected.Revision &&
                    session.AssemblyBuild.ReceiptCount ==
                        expectedAssemblyReceiptCount &&
-                   actual.GraphicsCardSlotState ==
-                       expected.GraphicsCardSlotState &&
-                   actual.GraphicsCardItemId == expected.GraphicsCardItemId &&
-                   actual.GraphicsCardProductId ==
-                       expected.GraphicsCardProductId &&
-                   actual.GraphicsCardMountOrientation ==
-                       expected.GraphicsCardMountOrientation &&
-                   actual.GraphicsCardSeatedByOperationId ==
-                       expected.GraphicsCardSeatedByOperationId &&
-                   actual.GraphicsCardRetainedByOperationId ==
-                       expected.GraphicsCardRetainedByOperationId &&
+                   actual.PowerSupplyBayState ==
+                       expected.PowerSupplyBayState &&
+                   actual.PowerSupplyItemId == expected.PowerSupplyItemId &&
+                   actual.PowerSupplyProductId ==
+                       expected.PowerSupplyProductId &&
+                   actual.PowerSupplyMountOrientation ==
+                       expected.PowerSupplyMountOrientation &&
+                   actual.PowerSupplySeatedByOperationId ==
+                       expected.PowerSupplySeatedByOperationId &&
+                   actual.PowerSupplyRetainedByOperationId ==
+                       expected.PowerSupplyRetainedByOperationId &&
+                   session.AssemblyBuild.Atx24PowerCableState ==
+                       expectedAtx24State &&
+                   session.AssemblyBuild.Atx24PowerCableRevision ==
+                       expectedAtx24Revision &&
+                   session.AssemblyBuild.Atx24PowerCableReceiptCount ==
+                       expectedAtx24ReceiptCount &&
+                   session.AssemblyBuild.Eps12vPowerCableState ==
+                       expectedEps12vState &&
+                   session.AssemblyBuild.Eps12vPowerCableRevision ==
+                       expectedEps12vRevision &&
+                   session.AssemblyBuild.Eps12vPowerCableReceiptCount ==
+                       expectedEps12vReceiptCount &&
                    session.AssemblyBuild.PcieGpuPowerCableState ==
                        expectedPcieState &&
                    session.AssemblyBuild.PcieGpuPowerCableRevision ==
@@ -400,8 +452,8 @@ namespace PCShopEmpire3D.Presentation
                        expectedPcieReceiptCount;
         }
 
-        private void MoveGraphicsCardBuildKitSmokePlayerToKit(
-            GraphicsCardBuildKitProjection buildKit)
+        private void MovePowerSupplyBuildKitSmokePlayerToKit(
+            PowerSupplyBuildKitProjection buildKit)
         {
             Collider support = buildKit.SupportCollider;
             Vector3 target = new Vector3(
@@ -413,16 +465,10 @@ namespace PCShopEmpire3D.Presentation
             SetMotherboardBuildKitSmokePlayerLook(playerPosition, target);
         }
 
-        private void LogGraphicsCardBuildKitSmokeFailure(string code)
+        private static void LogPowerSupplyBuildKitSmokeFailure(string code)
         {
-            if (_suppressGraphicsCardBuildKitSmokeSuccessMarker)
-            {
-                _nestedGraphicsCardBuildKitSmokeFailureCode = code;
-                return;
-            }
-
             Debug.LogError(
-                "GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE " +
+                "GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE " +
                 $"build-kit-flow=failed code={code}");
         }
     }

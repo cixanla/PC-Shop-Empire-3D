@@ -75,6 +75,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.container.custom-pc-build-kit.processor-cooler";
         public const string GraphicsCardBuildKitContainerIdValue =
             "inventory.container.custom-pc-build-kit.graphics-card";
+        public const string PowerSupplyBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.power-supply";
         public const string PrototypeCustomPcBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-motherboard";
         public const string PrototypeProcessorBuildKitOperationIdValue =
@@ -87,6 +89,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-operation.prototype-processor-cooler";
         public const string PrototypeGraphicsCardBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-graphics-card";
+        public const string PrototypePowerSupplyBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-power-supply";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -258,6 +262,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ContainerIdScope> GraphicsCardBuildKitContainerId =>
             StableId<ContainerIdScope>.Parse(GraphicsCardBuildKitContainerIdValue);
 
+        public StableId<ContainerIdScope> PowerSupplyBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(PowerSupplyBuildKitContainerIdValue);
+
         public StableId<CustomPcBuildKitOperationIdScope>
             PrototypeCustomPcBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
@@ -287,6 +294,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeGraphicsCardBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
                     PrototypeGraphicsCardBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypePowerSupplyBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypePowerSupplyBuildKitOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -726,6 +738,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     GraphicsCardBuildKitContainerIdValue,
                     InventoryContainerKind.BuildKit,
                     1);
+                RegisterContainer(
+                    inventory,
+                    PowerSupplyBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
@@ -926,7 +943,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             ProcessorCoolerBuildKitContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            GraphicsCardBuildKitContainerIdValue)).Value
+                            GraphicsCardBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            PowerSupplyBuildKitContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
