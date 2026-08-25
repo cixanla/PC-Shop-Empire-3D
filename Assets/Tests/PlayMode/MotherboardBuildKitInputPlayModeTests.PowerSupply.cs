@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
@@ -17,6 +18,33 @@ namespace PCShopEmpire3D.Tests.PlayMode
 {
     public sealed partial class MotherboardBuildKitInputPlayModeTests
     {
+        [UnityTest]
+        public IEnumerator StorageSmokeRunsPhysicalWorkTicketFrameLifecycle()
+        {
+            GaragePrototypeMarker marker = null;
+            yield return LoadGarage(value => marker = value);
+            Assert.That(marker, Is.Not.Null);
+
+            MethodInfo smokeMethod = typeof(GaragePrototypeMarker).GetMethod(
+                "RunStorageBuildKitSmoke",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(smokeMethod, Is.Not.Null);
+            IEnumerator smoke = smokeMethod.Invoke(marker, null) as IEnumerator;
+            Assert.That(smoke, Is.Not.Null);
+
+            LogAssert.Expect(
+                LogType.Log,
+                GaragePrototypeMarker.StorageBuildKitSmokeSuccessMarker);
+            yield return marker.StartCoroutine(smoke);
+
+            GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+            Assert.That(session.TryGetPrototypeCustomPcWorkTicket(out _), Is.True);
+            Assert.That(marker.StorageBuildKit.IsStaged, Is.True);
+            Assert.That(marker.StorageBuildKit.StagedComponentCount,
+                Is.EqualTo(4));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         [UnityTest]
         public IEnumerator KeyboardMouseWalksAndMovesExactReservedPowerSupplyFromSixToSeven()
         {

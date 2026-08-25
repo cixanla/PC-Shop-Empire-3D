@@ -147,25 +147,20 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                MovePlayerToCustomPcWorkTicketStation(1.35f);
-                customPcWorkTicketStation.RefreshPresentation();
-                InputSystem.QueueStateEvent(
+                string workTicketInputFailure = null;
+                yield return RunBuildKitWorkTicketPhysicalInput(
                     smokeKeyboard,
-                    new KeyboardState(Key.E));
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
-                InputSystem.QueueStateEvent(
-                    smokeKeyboard,
-                    new KeyboardState());
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
+                    session,
+                    code => workTicketInputFailure = code);
 
                 if (!session.TryGetPrototypeCustomPcBuildOrder(
                         out CustomPcBuildOrderRecord workOrder) ||
                     !session.TryGetPrototypeCustomPcWorkTicket(out _))
                 {
                     LogProcessorBuildKitSmokeFailure(
-                        "smoke.work-ticket-missing");
+                        string.IsNullOrEmpty(workTicketInputFailure)
+                            ? "smoke.work-ticket-missing"
+                            : workTicketInputFailure);
                     yield break;
                 }
 
