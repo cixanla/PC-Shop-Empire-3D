@@ -973,6 +973,389 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void ProcessorCoolerBuildKitRequiresFirstFourComponentsAndPreservesExactIdentity()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildOrderLineSnapshot cooler = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.ProcessorCooler);
+            long initialInventoryRevision = session.Inventory.Revision;
+            long initialBuildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            ProcessorCoolerSlotState coolerSlotState =
+                session.AssemblyBuild.ProcessorCoolerSlotState;
+            ProcessorCoolerTimState coolerTimState =
+                session.AssemblyBuild.ProcessorCoolerTimState;
+            StableId<AssemblyOperationIdScope> seatedByOperationId =
+                session.AssemblyBuild.ProcessorCoolerSeatedByOperationId;
+            StableId<AssemblyOperationIdScope> retainedByOperationId =
+                session.AssemblyBuild.ProcessorCoolerRetainedByOperationId;
+            StableId<ItemInstanceIdScope> assemblyCoolerItemId =
+                session.AssemblyBuild.ProcessorCoolerItemId;
+            StableId<ProductDefinitionIdScope> assemblyCoolerProductId =
+                session.AssemblyBuild.ProcessorCoolerProductId;
+
+            AssertProcessorCoolerPrerequisiteFailure(
+                session,
+                workOrder,
+                initialInventoryRevision,
+                initialBuildKitRevision,
+                assemblyRevision,
+                assemblyReceiptCount);
+
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMotherboard(motherboardPickup).IsSuccess,
+                Is.True);
+            AssertProcessorCoolerPrerequisiteFailure(
+                session,
+                workOrder,
+                session.Inventory.Revision,
+                buildKit.Revision,
+                assemblyRevision,
+                assemblyReceiptCount);
+
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalProcessor(processorPickup).IsSuccess,
+                Is.True);
+            AssertProcessorCoolerPrerequisiteFailure(
+                session,
+                workOrder,
+                session.Inventory.Revision,
+                buildKit.Revision,
+                assemblyRevision,
+                assemblyReceiptCount);
+
+            CustomPcBuildKitReceipt memoryPickup =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMemoryModule(memoryPickup).IsSuccess,
+                Is.True);
+            AssertProcessorCoolerPrerequisiteFailure(
+                session,
+                workOrder,
+                session.Inventory.Revision,
+                buildKit.Revision,
+                assemblyRevision,
+                assemblyReceiptCount);
+
+            CustomPcBuildKitReceipt storagePickup =
+                buildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalStorage(storagePickup).IsSuccess,
+                Is.True);
+
+            CustomPcBuildKitReceipt pickup =
+                buildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder).Value;
+
+            Assert.That(pickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.ProcessorCoolerInHands));
+            Assert.That(pickup.Line, Is.SameAs(cooler));
+            Assert.That(pickup.Line.LineId, Is.EqualTo(cooler.LineId));
+            Assert.That(pickup.Line.ProductId, Is.EqualTo(cooler.ProductId));
+            Assert.That(pickup.Line.ItemId, Is.EqualTo(cooler.ItemId));
+            Assert.That(pickup.Line.ReservationId, Is.EqualTo(cooler.ReservationId));
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord heldCooler), Is.True);
+            Assert.That(heldCooler.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.Inventory.TryGetReservation(
+                cooler.ReservationId,
+                out InventoryReservation pickupReservation), Is.True);
+            Assert.That(pickupReservation.ItemId, Is.EqualTo(cooler.ItemId));
+            Assert.That(pickupReservation.ClaimId,
+                Is.EqualTo(workOrder.InventoryClaimId));
+
+            CustomPcBuildKitReceipt placement =
+                buildKit.PlaceCanonicalProcessorCooler(pickup).Value;
+
+            Assert.That(placement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.ProcessorCoolerStaged));
+            Assert.That(placement.Line, Is.SameAs(cooler));
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord stagedCooler), Is.True);
+            Assert.That(stagedCooler.Id, Is.EqualTo(cooler.ItemId));
+            Assert.That(stagedCooler.ProductId, Is.EqualTo(cooler.ProductId));
+            Assert.That(stagedCooler.ContainerId,
+                Is.EqualTo(session.ProcessorCoolerBuildKitContainerId));
+            Assert.That(session.Inventory.TryGetReservation(
+                cooler.ReservationId,
+                out InventoryReservation placementReservation), Is.True);
+            Assert.That(placementReservation.ItemId, Is.EqualTo(cooler.ItemId));
+            Assert.That(placementReservation.ClaimId,
+                Is.EqualTo(workOrder.InventoryClaimId));
+            Assert.That(buildKit.ProcessorCoolerBuildKitContainerId,
+                Is.EqualTo(session.ProcessorCoolerBuildKitContainerId));
+            Assert.That(buildKit.ActiveKitCount, Is.EqualTo(5));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(5));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerSlotState,
+                Is.EqualTo(coolerSlotState));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                Is.EqualTo(coolerTimState));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerSeatedByOperationId,
+                Is.EqualTo(seatedByOperationId));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerRetainedByOperationId,
+                Is.EqualTo(retainedByOperationId));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerItemId,
+                Is.EqualTo(assemblyCoolerItemId));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerProductId,
+                Is.EqualTo(assemblyCoolerProductId));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void ProcessorCoolerPlacementRejectsForgeryAndStaleRevisionThenReplaysWithoutMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            StageMotherboardProcessorMemoryAndStorage(session, workOrder);
+            CustomPcBuildKitReceipt pickup =
+                buildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            ProcessorCoolerSlotState coolerSlotState =
+                session.AssemblyBuild.ProcessorCoolerSlotState;
+            ProcessorCoolerTimState coolerTimState =
+                session.AssemblyBuild.ProcessorCoolerTimState;
+            StableId<AssemblyOperationIdScope> seatedByOperationId =
+                session.AssemblyBuild.ProcessorCoolerSeatedByOperationId;
+            StableId<AssemblyOperationIdScope> retainedByOperationId =
+                session.AssemblyBuild.ProcessorCoolerRetainedByOperationId;
+            CustomPcBuildOrderLineSnapshot processor = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.Processor);
+            GarageStockFlowSession foreignSession = CreateIssuedSession(
+                out CustomPcBuildOrderRecord foreignWorkOrder);
+            StageMotherboardProcessorMemoryAndStorage(foreignSession, foreignWorkOrder);
+            CustomPcBuildKitReceipt foreignPickup =
+                foreignSession.CustomPcBuildKit.PickupCanonicalProcessorCooler(
+                    foreignSession.PrototypeProcessorCoolerBuildKitOperationId,
+                    foreignWorkOrder).Value;
+
+            CustomPcBuildKitReceipt[] forgeries =
+            {
+                CloneReceipt(pickup, pickup.Line),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        pickup.Line,
+                        StableId<CustomPcBomLineIdScope>.Parse(
+                            pickup.Line.LineId.Value + ".wrong"),
+                        pickup.Line.ProductId,
+                        pickup.Line.ItemId,
+                        pickup.Line.ReservationId,
+                        pickup.Line.ComponentKind)),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        pickup.Line,
+                        pickup.Line.LineId,
+                        processor.ProductId,
+                        pickup.Line.ItemId,
+                        pickup.Line.ReservationId,
+                        pickup.Line.ComponentKind)),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        pickup.Line,
+                        pickup.Line.LineId,
+                        pickup.Line.ProductId,
+                        processor.ItemId,
+                        pickup.Line.ReservationId,
+                        pickup.Line.ComponentKind)),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        pickup.Line,
+                        pickup.Line.LineId,
+                        pickup.Line.ProductId,
+                        pickup.Line.ItemId,
+                        processor.ReservationId,
+                        pickup.Line.ComponentKind)),
+                CloneReceipt(
+                    pickup,
+                    CloneLine(
+                        pickup.Line,
+                        pickup.Line.LineId,
+                        pickup.Line.ProductId,
+                        pickup.Line.ItemId,
+                        pickup.Line.ReservationId,
+                        PcComponentKind.StorageDevice)),
+                new CustomPcBuildKitReceipt(
+                    pickup.OperationId,
+                    pickup.BuildOrder,
+                    pickup.Line,
+                    pickup.SourceContainerId,
+                    pickup.HandsContainerId,
+                    pickup.BuildKitContainerId,
+                    CustomPcBuildKitStage.ProcessorCoolerStaged,
+                    pickup.InventoryAppliedRevision),
+                new CustomPcBuildKitReceipt(
+                    pickup.OperationId,
+                    pickup.BuildOrder,
+                    pickup.Line,
+                    pickup.SourceContainerId,
+                    pickup.HandsContainerId,
+                    session.StorageBuildKitContainerId,
+                    pickup.Stage,
+                    pickup.InventoryAppliedRevision),
+                foreignPickup
+            };
+
+            foreach (CustomPcBuildKitReceipt forgery in forgeries)
+            {
+                OperationResult<CustomPcBuildKitReceipt> result =
+                    buildKit.PlaceCanonicalProcessorCooler(forgery);
+                Assert.That(result.Error,
+                    Is.EqualTo(CustomPcWorkOrderFailures.BuildKitReceiptInvalid));
+                Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+                Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+                Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+                Assert.That(session.AssemblyBuild.ReceiptCount,
+                    Is.EqualTo(assemblyReceiptCount));
+                Assert.That(session.AssemblyBuild.ProcessorCoolerSlotState,
+                    Is.EqualTo(coolerSlotState));
+                Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                    Is.EqualTo(coolerTimState));
+                Assert.That(session.AssemblyBuild.ProcessorCoolerSeatedByOperationId,
+                    Is.EqualTo(seatedByOperationId));
+                Assert.That(session.AssemblyBuild.ProcessorCoolerRetainedByOperationId,
+                    Is.EqualTo(retainedByOperationId));
+                Assert.That(session.TryGetProcessorCoolerItem(
+                    out InventoryItemRecord forgedHeld), Is.True);
+                Assert.That(forgedHeld.ContainerId,
+                    Is.EqualTo(session.HandsContainerId));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> stale =
+                buildKit.PlaceCanonicalProcessorCooler(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+
+            Assert.That(stale.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(session.TryGetProcessorCoolerItem(out InventoryItemRecord held),
+                Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalProcessorCooler(pickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalProcessorCooler(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder);
+            OperationResult<CustomPcBuildKitReceipt> secondOperation =
+                buildKit.PickupCanonicalProcessorCooler(
+                    StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                        "orders.custom-pc-build-kit-operation.second-cooler"),
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(secondOperation.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitIdentityConflict));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(5));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+            Assert.That(foreignSession.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SessionProcessorCoolerPickupUsesBuildKitCustodyAndGenericDropCannotBypassIt()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            StageMotherboardProcessorMemoryAndStorage(session, workOrder);
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            int assemblyReceiptCount = session.AssemblyBuild.ReceiptCount;
+            ProcessorCoolerSlotState coolerSlotState =
+                session.AssemblyBuild.ProcessorCoolerSlotState;
+            ProcessorCoolerTimState coolerTimState =
+                session.AssemblyBuild.ProcessorCoolerTimState;
+            System.Reflection.FieldInfo coolerSlotStateField =
+                typeof(AssemblyBuildAuthority).GetField(
+                    "_processorCoolerSlotState",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic);
+            Assert.That(coolerSlotStateField, Is.Not.Null);
+            coolerSlotStateField.SetValue(
+                session.AssemblyBuild,
+                ProcessorCoolerSlotState.Unsupported);
+            Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                Is.EqualTo(coolerTimState),
+                "Changing only the legacy assembly slot gate must not alter TIM state.");
+
+            OperationResult pickup = session.PickupLooseProcessorCoolerToHands();
+            Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                Is.EqualTo(coolerTimState),
+                "BuildKit pickup must not alter legacy assembly TIM state.");
+            coolerSlotStateField.SetValue(session.AssemblyBuild, coolerSlotState);
+            Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                Is.EqualTo(coolerTimState),
+                "Restoring the legacy slot gate must preserve TIM state.");
+
+            Assert.That(pickup.IsSuccess, Is.True);
+            Assert.That(session.TryGetProcessorCoolerItem(out InventoryItemRecord held),
+                Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.DropHeldProcessorCoolerToWorld().IsFailure, Is.True);
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord stillHeld), Is.True);
+            Assert.That(stillHeld.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            OperationResult<CustomPcBuildKitReceipt> placed =
+                session.PlaceHeldProcessorCoolerInCustomPcBuildKit();
+
+            Assert.That(placed.IsSuccess, Is.True);
+            Assert.That(placed.Value.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.ProcessorCoolerStaged));
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord staged), Is.True);
+            Assert.That(staged.ContainerId,
+                Is.EqualTo(session.ProcessorCoolerBuildKitContainerId));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(assemblyReceiptCount));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerSlotState,
+                Is.EqualTo(coolerSlotState));
+            Assert.That(session.AssemblyBuild.ProcessorCoolerTimState,
+                Is.EqualTo(coolerTimState));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(
@@ -1054,6 +1437,48 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                     workOrder).Value;
             Assert.That(session.CustomPcBuildKit
                 .PlaceCanonicalMemoryModule(memoryPickup).IsSuccess, Is.True);
+        }
+
+        private static void StageMotherboardProcessorMemoryAndStorage(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            StageMotherboardProcessorAndMemory(session, workOrder);
+            CustomPcBuildKitReceipt storagePickup =
+                session.CustomPcBuildKit.PickupCanonicalStorage(
+                    session.PrototypeStorageBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(session.CustomPcBuildKit
+                .PlaceCanonicalStorage(storagePickup).IsSuccess, Is.True);
+        }
+
+        private static void AssertProcessorCoolerPrerequisiteFailure(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder,
+            long expectedInventoryRevision,
+            long expectedBuildKitRevision,
+            long expectedAssemblyRevision,
+            int expectedAssemblyReceiptCount)
+        {
+            OperationResult<CustomPcBuildKitReceipt> result =
+                session.CustomPcBuildKit.PickupCanonicalProcessorCooler(
+                    session.PrototypeProcessorCoolerBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(result.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(expectedInventoryRevision));
+            Assert.That(session.CustomPcBuildKit.Revision,
+                Is.EqualTo(expectedBuildKitRevision));
+            Assert.That(session.AssemblyBuild.Revision,
+                Is.EqualTo(expectedAssemblyRevision));
+            Assert.That(session.AssemblyBuild.ReceiptCount,
+                Is.EqualTo(expectedAssemblyReceiptCount));
+            Assert.That(session.TryGetProcessorCoolerItem(
+                out InventoryItemRecord untouched), Is.True);
+            Assert.That(untouched.ContainerId,
+                Is.EqualTo(session.WorldFloorContainerId));
         }
 
         private static CustomPcBuildOrderLineSnapshot CanonicalMotherboard(

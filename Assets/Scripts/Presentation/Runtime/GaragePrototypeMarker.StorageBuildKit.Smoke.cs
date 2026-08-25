@@ -488,7 +488,10 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(StorageBuildKitSmokeSuccessMarker);
+                if (!_suppressStorageBuildKitSmokeSuccessMarker)
+                {
+                    Debug.Log(StorageBuildKitSmokeSuccessMarker);
+                }
                 yield return new WaitForEndOfFrame();
             }
             finally
@@ -572,8 +575,14 @@ namespace PCShopEmpire3D.Presentation
             SetMotherboardBuildKitSmokePlayerLook(playerPosition, target);
         }
 
-        private static void LogStorageBuildKitSmokeFailure(string code)
+        private void LogStorageBuildKitSmokeFailure(string code)
         {
+            if (_suppressStorageBuildKitSmokeSuccessMarker)
+            {
+                _nestedStorageBuildKitSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_STORAGE_BUILD_KIT_RUNTIME_SMOKE " +
                 $"build-kit-flow=failed code={code}");

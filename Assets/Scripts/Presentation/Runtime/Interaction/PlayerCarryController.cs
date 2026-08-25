@@ -100,6 +100,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsProcessorBuildKitMode ||
             IsMemoryModuleBuildKitMode ||
             IsStorageBuildKitMode ||
+            IsProcessorCoolerBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -248,6 +249,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (coolerBinding != null)
                     {
+                        if (IsProcessorCoolerBuildKitMode ||
+                            (processorCoolerBuildKit != null &&
+                             processorCoolerBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldProcessorCoolerBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldProcessorCoolerPrompt(
                             coolerBinding, placement, drop, rotate);
                     }
@@ -2720,6 +2731,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
+            ResetProcessorCoolerBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3367,6 +3379,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
+            ResetProcessorCoolerBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

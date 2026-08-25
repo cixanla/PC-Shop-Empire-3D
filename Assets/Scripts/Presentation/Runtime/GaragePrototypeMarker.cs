@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-storage-build-kit-r38-v1";
+        public const string Version = "garage-processor-cooler-build-kit-r39-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -41,6 +41,8 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private ProcessorBuildKitProjection processorBuildKit;
         [SerializeField] private MemoryModuleBuildKitProjection memoryModuleBuildKit;
         [SerializeField] private StorageBuildKitProjection storageBuildKit;
+        [SerializeField]
+        private ProcessorCoolerBuildKitProjection processorCoolerBuildKit;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -92,6 +94,9 @@ namespace PCShopEmpire3D.Presentation
             memoryModuleBuildKit;
 
         public StorageBuildKitProjection StorageBuildKit => storageBuildKit;
+
+        public ProcessorCoolerBuildKitProjection ProcessorCoolerBuildKit =>
+            processorCoolerBuildKit;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -260,6 +265,24 @@ namespace PCShopEmpire3D.Presentation
             FindObjectsByType<StorageBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
+        public bool HasProcessorCoolerBuildKitR39Runtime =>
+            processorCoolerBuildKit != null &&
+            processorCoolerBuildKit.IsCanonical &&
+            processorCoolerBuildKit.Runtime == stockFlow &&
+            processorCoolerBinding != null &&
+            processorCoolerBinding.PhysicalItem == processorCooler &&
+            processorCoolerBinding.Slot == processorCoolerSlot &&
+            processorCoolerBinding.MatchesBuildKitConfiguration(
+                processorCoolerBuildKit) &&
+            processorCooler != null &&
+            processorCoolerSlot != null &&
+            playerCarry != null &&
+            playerCarry.MatchesProcessorCoolerBuildKitConfiguration(
+                processorCoolerBuildKit,
+                processorCoolerBinding) &&
+            FindObjectsByType<ProcessorCoolerBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -307,7 +330,8 @@ namespace PCShopEmpire3D.Presentation
             MotherboardBuildKitProjection physicalMotherboardBuildKit = null,
             ProcessorBuildKitProjection physicalProcessorBuildKit = null,
             MemoryModuleBuildKitProjection physicalMemoryModuleBuildKit = null,
-            StorageBuildKitProjection physicalStorageBuildKit = null)
+            StorageBuildKitProjection physicalStorageBuildKit = null,
+            ProcessorCoolerBuildKitProjection physicalProcessorCoolerBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -321,6 +345,7 @@ namespace PCShopEmpire3D.Presentation
             processorBuildKit = physicalProcessorBuildKit;
             memoryModuleBuildKit = physicalMemoryModuleBuildKit;
             storageBuildKit = physicalStorageBuildKit;
+            processorCoolerBuildKit = physicalProcessorCoolerBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1071,6 +1096,7 @@ namespace PCShopEmpire3D.Presentation
                 $"processor-build-kit={(HasProcessorBuildKitR36Runtime ? "ready" : "missing")} " +
                 $"memory-module-build-kit={(HasMemoryModuleBuildKitR37Runtime ? "ready" : "missing")} " +
                 $"storage-build-kit={(HasStorageBuildKitR38Runtime ? "ready" : "missing")} " +
+                $"processor-cooler-build-kit={(HasProcessorCoolerBuildKitR39Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1142,6 +1168,9 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-memory-module-build-kit-smoke");
             bool runStorageBuildKitSmoke =
                 HasCommandLineArgument("-pse-storage-build-kit-smoke");
+            bool runProcessorCoolerBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-processor-cooler-build-kit-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1162,7 +1191,8 @@ namespace PCShopEmpire3D.Presentation
                              (runMotherboardBuildKitSmoke ? 1 : 0) +
                              (runProcessorBuildKitSmoke ? 1 : 0) +
                              (runMemoryModuleBuildKitSmoke ? 1 : 0) +
-                             (runStorageBuildKitSmoke ? 1 : 0);
+                             (runStorageBuildKitSmoke ? 1 : 0) +
+                             (runProcessorCoolerBuildKitSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1175,12 +1205,18 @@ namespace PCShopEmpire3D.Presentation
                      !runMotherboardBuildKitSmoke &&
                      !runProcessorBuildKitSmoke &&
                      !runMemoryModuleBuildKitSmoke &&
-                     !runStorageBuildKitSmoke) ||
+                     !runStorageBuildKitSmoke &&
+                     !runProcessorCoolerBuildKitSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runStorageBuildKitSmoke)
+                    if (runProcessorCoolerBuildKitSmoke)
+                    {
+                        LogProcessorCoolerBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runStorageBuildKitSmoke)
                     {
                         LogStorageBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1352,6 +1388,15 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runProcessorCoolerBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_PROCESSOR_COOLER_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.processor-cooler-build-kit-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1463,6 +1508,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunStorageBuildKitSmoke());
+            }
+
+            if (runProcessorCoolerBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorCoolerBuildKitSmoke());
             }
         }
 

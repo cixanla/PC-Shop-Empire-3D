@@ -2,6 +2,7 @@ using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 
 namespace PCShopEmpire3D.Presentation.Interaction
 {
@@ -54,6 +55,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult PickupLooseProcessorCoolerToHands()
         {
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalProcessorCooler(
+                        PrototypeProcessorCoolerBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             if (!AssemblyBuild.HasProcessorCoolerSlot ||
                 AssemblyBuild.ProcessorCoolerSlotState !=
                     ProcessorCoolerSlotState.EmptyOpen ||
@@ -67,6 +80,35 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Inventory.TransferSerializedItem(
                 ProcessorCoolerItemId,
                 HandsContainerId);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldProcessorCoolerInCustomPcBuildKit()
+        {
+            return PlaceHeldProcessorCoolerInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldProcessorCoolerInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeProcessorCoolerBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.ProcessorCoolerInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalProcessorCooler(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
         }
 
         public OperationResult DropHeldProcessorCoolerToWorld()

@@ -677,6 +677,7 @@ MonoBehaviour:
   processorBuildKit: {fileID: 0}
   processorCoolerSlot: {fileID: 0}
   processorCoolerBinding: {fileID: 0}
+  processorCoolerBuildKit: {fileID: 0}
   m2StorageSlot: {fileID: 0}
   m2StorageAssemblyBinding: {fileID: 0}
   storageBuildKit: {fileID: 0}
