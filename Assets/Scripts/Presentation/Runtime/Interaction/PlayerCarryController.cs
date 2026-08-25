@@ -98,6 +98,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsEps12vPowerCableRouteMode ||
             IsMotherboardBuildKitMode ||
             IsProcessorBuildKitMode ||
+            IsMemoryModuleBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -260,6 +261,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                     if (dimmBinding != null)
                     {
+                        if (IsMemoryModuleBuildKitMode ||
+                            (memoryModuleBuildKit != null &&
+                             memoryModuleBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldMemoryModuleBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         if (!IsDimmSeatMode)
                         {
                             return $"{placement}: A2 bellek slotuna hizala • " +
@@ -1778,50 +1789,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return;
                 }
 
-                DimmAssemblyItemBinding dimmBinding = GetDimmBinding(HeldItem);
-                if (dimmBinding != null)
+                if (ProcessHeldMemoryModuleInput())
                 {
-                    if (input.TryConsumePrimaryActionPressThisFrame())
-                    {
-                        input.TryConsumeRotatePlacementPressThisFrame();
-                        input.TryConsumeInteractPressThisFrame();
-                        input.TryConsumeDropPressThisFrame();
-                        TrySetDimmSeatMode(!IsDimmSeatMode);
-                        return;
-                    }
-
-                    if (IsDimmSeatMode &&
-                        input.TryConsumeRotatePlacementPressThisFrame())
-                    {
-                        input.TryConsumeInteractPressThisFrame();
-                        input.TryConsumeDropPressThisFrame();
-                        TryRotateDimmSeatPreviewClockwise();
-                        return;
-                    }
-
-                    if (!IsDimmSeatMode)
-                    {
-                        UpdateDimmSeatPreview(dimmBinding);
-                        if (input.TryConsumeDropPressThisFrame())
-                        {
-                            input.TryConsumePrimaryActionPressThisFrame();
-                            input.TryConsumeRotatePlacementPressThisFrame();
-                            input.TryConsumeInteractPressThisFrame();
-                            TryDrop();
-                        }
-
-                        return;
-                    }
-
-                    DimmSlotEvaluation dimmSeatEvaluation = EvaluateDimmSeat(dimmBinding);
-                    ApplyDimmSeatEvaluation(dimmSeatEvaluation);
-                    if (input.TryConsumeDropPressThisFrame())
-                    {
-                        input.TryConsumePrimaryActionPressThisFrame();
-                        input.TryConsumeInteractPressThisFrame();
-                        TryConfirmDimmSeat(dimmBinding, dimmSeatEvaluation);
-                    }
-
                     return;
                 }
 
@@ -2738,6 +2707,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardBuildKitMode = false;
             motherboardBuildKit?.ResetFeedback();
             ResetProcessorBuildKitState();
+            ResetMemoryModuleBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -2765,6 +2735,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             ResetProcessorBuildKitState();
+            ResetMemoryModuleBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -2791,6 +2762,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
+            ResetMemoryModuleBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3328,6 +3300,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardBuildKitMode = false;
             motherboardBuildKit?.ResetFeedback();
             ResetProcessorBuildKitState();
+            ResetMemoryModuleBuildKitState();
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsPowerSupplySeatMode = false;
@@ -3380,6 +3353,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = false;
             ResetMotherboardBuildKitState();
             ResetProcessorBuildKitState();
+            ResetMemoryModuleBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();

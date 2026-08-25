@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Core.Time;
@@ -652,6 +653,177 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 
+        [Test]
+        public void MemoryModuleBuildKitRequiresMotherboardAndProcessorThenPreservesIdentity()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildOrderLineSnapshot memory = workOrder.Lines.Single(
+                line => line.ComponentKind == PcComponentKind.MemoryModule);
+            long initialInventoryRevision = session.Inventory.Revision;
+            long initialBuildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+            MemorySlotState memorySlotState = session.AssemblyBuild.MemorySlotState;
+
+            OperationResult<CustomPcBuildKitReceipt> beforeMotherboard =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(beforeMotherboard.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(initialInventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(initialBuildKitRevision));
+
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMotherboard(motherboardPickup).IsSuccess,
+                Is.True);
+            long afterMotherboardInventoryRevision = session.Inventory.Revision;
+            long afterMotherboardBuildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> beforeProcessor =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(beforeProcessor.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing));
+            Assert.That(session.Inventory.Revision,
+                Is.EqualTo(afterMotherboardInventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(afterMotherboardBuildKitRevision));
+
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalProcessor(processorPickup).IsSuccess,
+                Is.True);
+
+            CustomPcBuildKitReceipt memoryPickup =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder).Value;
+
+            Assert.That(memoryPickup.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MemoryModuleInHands));
+            Assert.That(memoryPickup.Line, Is.SameAs(memory));
+            Assert.That(memoryPickup.Line.LineId, Is.EqualTo(memory.LineId));
+            Assert.That(memoryPickup.Line.ProductId, Is.EqualTo(memory.ProductId));
+            Assert.That(memoryPickup.Line.ItemId, Is.EqualTo(memory.ItemId));
+            Assert.That(memoryPickup.Line.ReservationId, Is.EqualTo(memory.ReservationId));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord heldMemory),
+                Is.True);
+            Assert.That(heldMemory.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt memoryPlacement =
+                buildKit.PlaceCanonicalMemoryModule(memoryPickup).Value;
+
+            Assert.That(memoryPlacement.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MemoryModuleStaged));
+            Assert.That(memoryPlacement.Line, Is.SameAs(memory));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord stagedMemory),
+                Is.True);
+            Assert.That(stagedMemory.Id, Is.EqualTo(memory.ItemId));
+            Assert.That(stagedMemory.ProductId, Is.EqualTo(memory.ProductId));
+            Assert.That(stagedMemory.ContainerId,
+                Is.EqualTo(session.MemoryModuleBuildKitContainerId));
+            Assert.That(buildKit.MemoryModuleBuildKitContainerId,
+                Is.EqualTo(session.MemoryModuleBuildKitContainerId));
+            Assert.That(buildKit.ActiveKitCount, Is.EqualTo(3));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(3));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.MemorySlotState, Is.EqualTo(memorySlotState));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void MemoryModulePlacementRejectsStaleRevisionAndReplayIsNoMutation()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(
+                out CustomPcBuildOrderRecord workOrder);
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            StageMotherboardAndProcessor(session, workOrder);
+            CustomPcBuildKitReceipt pickup = buildKit.PickupCanonicalMemoryModule(
+                session.PrototypeMemoryModuleBuildKitOperationId,
+                workOrder).Value;
+            long inventoryRevision = session.Inventory.Revision;
+            long buildKitRevision = buildKit.Revision;
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> stale =
+                buildKit.PlaceCanonicalMemoryModule(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision);
+
+            Assert.That(stale.Error,
+                Is.EqualTo(CustomPcWorkOrderFailures.BuildKitRevisionStale));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            CustomPcBuildKitReceipt placed =
+                buildKit.PlaceCanonicalMemoryModule(pickup).Value;
+            inventoryRevision = session.Inventory.Revision;
+            buildKitRevision = buildKit.Revision;
+
+            OperationResult<CustomPcBuildKitReceipt> placementReplay =
+                buildKit.PlaceCanonicalMemoryModule(
+                    pickup,
+                    buildKitRevision - 1,
+                    inventoryRevision - 1);
+            OperationResult<CustomPcBuildKitReceipt> pickupReplay =
+                buildKit.PickupCanonicalMemoryModule(
+                    session.PrototypeMemoryModuleBuildKitOperationId,
+                    workOrder);
+
+            Assert.That(placementReplay.IsSuccess, Is.True);
+            Assert.That(placementReplay.Value, Is.SameAs(placed));
+            Assert.That(pickupReplay.IsSuccess, Is.True);
+            Assert.That(pickupReplay.Value, Is.SameAs(pickup));
+            Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(buildKit.Revision, Is.EqualTo(buildKitRevision));
+            Assert.That(buildKit.StagedComponentCount, Is.EqualTo(3));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
+        public void SessionMemoryPickupUsesBuildKitCustodyAndGenericDropCannotBypassIt()
+        {
+            GarageStockFlowSession session = CreateIssuedSession(out CustomPcBuildOrderRecord workOrder);
+            StageMotherboardAndProcessor(session, workOrder);
+            long assemblyRevision = session.AssemblyBuild.Revision;
+
+            OperationResult pickup = session.PickupLooseMemoryToHands();
+
+            Assert.That(pickup.IsSuccess, Is.True);
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord held), Is.True);
+            Assert.That(held.ContainerId, Is.EqualTo(session.HandsContainerId));
+            Assert.That(session.DropHeldMemoryToWorld().IsFailure, Is.True);
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord stillHeld), Is.True);
+            Assert.That(stillHeld.ContainerId, Is.EqualTo(session.HandsContainerId));
+
+            OperationResult<CustomPcBuildKitReceipt> placed =
+                session.PlaceHeldMemoryModuleInCustomPcBuildKit();
+
+            Assert.That(placed.IsSuccess, Is.True);
+            Assert.That(placed.Value.Stage,
+                Is.EqualTo(CustomPcBuildKitStage.MemoryModuleStaged));
+            Assert.That(session.TryGetMemoryItem(out InventoryItemRecord staged), Is.True);
+            Assert.That(staged.ContainerId,
+                Is.EqualTo(session.MemoryModuleBuildKitContainerId));
+            Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(session.AssemblyBuild.MemorySlotState,
+                Is.EqualTo(MemorySlotState.EmptyOpen));
+            Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+        }
+
         private static Fixture CreateFixture()
         {
             GarageStockFlowSession session = CreateIssuedSession(
@@ -701,6 +873,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(issued.IsSuccess, Is.True);
             workOrder = issued.Value.BuildOrder;
             return session;
+        }
+
+        private static void StageMotherboardAndProcessor(
+            GarageStockFlowSession session,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            CustomPcBuildKitAuthority buildKit = session.CustomPcBuildKit;
+            CustomPcBuildKitReceipt motherboardPickup =
+                buildKit.PickupCanonicalMotherboard(
+                    session.PrototypeCustomPcBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalMotherboard(motherboardPickup).IsSuccess,
+                Is.True);
+            CustomPcBuildKitReceipt processorPickup =
+                buildKit.PickupCanonicalProcessor(
+                    session.PrototypeProcessorBuildKitOperationId,
+                    workOrder).Value;
+            Assert.That(buildKit.PlaceCanonicalProcessor(processorPickup).IsSuccess,
+                Is.True);
         }
 
         private static CustomPcBuildOrderLineSnapshot CanonicalMotherboard(

@@ -334,6 +334,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
             ResetMotherboardBuildKitState();
+            ResetMemoryModuleBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;

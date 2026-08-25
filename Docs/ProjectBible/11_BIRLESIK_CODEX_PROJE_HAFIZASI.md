@@ -9,6 +9,16 @@
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #73 DDR5 DIMM BuildKit
+
+- Exact reserved DDR5 `MemoryModule`, staged motherboard+CPU prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → memory-module BuildKit custody'sine taşınır; visible work-ticket `2/10 → 3/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r37 gerçek keyboard/mouse + gamepad, 180° keyed preview ve tek-consumer BuildKit/A2 input arbitration taşır. Issue #56 A2/dual-latch Assembly state/revision/receipts/latch state değişmez.
+- Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; EditMode `680/680`, PlayMode `86/86`; Universal Mac report `329681642` bayt ve Apple M1/Metal exact r37 smoke başarılıdır. Initial Guard `32839956810` geçti.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1330930513` bayt, hardened-v2 fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Clean source/docs `e45f6e1b463cbe9686a9c349d0c6912a9657a28e`, tree `16f014a807a7733210bc9197981b4a8608c3d687` ve Guard `32841321015` sonrasında source receipt üretildi; canonical evidence atomik exact `14/14` oldu.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `954/954` payload, `939/939` exact Git source, `14/14` evidence, `19379146` bayt ve `912e35ff…e9cc8` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar `0`dır. Fiziksel metadata `28df8283b7fa5187fa1a0dd6ec72acebd6d539d4` ve Guard `32842669488` başarılıdır; acceptance `23/23`, Issue #73 `CLOSED`, Roadmap `Done`, parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0046, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+
 ## 1. Konsolidasyon kararı ve görev sınırı
 
 Kullanıcı şu kararları açıkça onayladı:

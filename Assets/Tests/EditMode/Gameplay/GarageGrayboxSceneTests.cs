@@ -95,6 +95,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .SelectMany(root => root.GetComponentsInChildren<
                         ProcessorBuildKitProjection>(true))
                     .ToArray();
+                MemoryModuleBuildKitProjection[] memoryModuleBuildKits = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        MemoryModuleBuildKitProjection>(true))
+                    .ToArray();
                 PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
@@ -704,6 +709,52 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.PlayerCarry.MatchesProcessorBuildKitConfiguration(
                     processorBuildKit,
                     marker.ProcessorBinding), Is.True);
+                Assert.That(memoryModuleBuildKits.Length, Is.EqualTo(1));
+                MemoryModuleBuildKitProjection memoryModuleBuildKit =
+                    memoryModuleBuildKits[0];
+                Assert.That(marker.MemoryModuleBuildKit,
+                    Is.SameAs(memoryModuleBuildKit));
+                Assert.That(marker.HasMemoryModuleBuildKitR37Runtime, Is.True);
+                Assert.That(memoryModuleBuildKit.IsCanonical, Is.True);
+                Assert.That(memoryModuleBuildKit.IsConfigured, Is.True);
+                Assert.That(memoryModuleBuildKit.ProjectionIdValue,
+                    Is.EqualTo(
+                        MemoryModuleBuildKitProjection.PrototypeProjectionIdValue));
+                Assert.That(memoryModuleBuildKit.Runtime,
+                    Is.SameAs(marker.StockFlow));
+                Assert.That(memoryModuleBuildKit.Surface.SurfaceId,
+                    Is.EqualTo(
+                        MemoryModuleBuildKitProjection.PrototypeSurfaceIdValue));
+                Assert.That(memoryModuleBuildKit.Surface.GridSize,
+                    Is.EqualTo(0.01f).Within(0.001f));
+                Assert.That(memoryModuleBuildKit.Surface.YawStepDegrees,
+                    Is.EqualTo(180f).Within(0.001f));
+                Assert.That(memoryModuleBuildKit.SupportCollider.isTrigger,
+                    Is.False);
+                Assert.That(memoryModuleBuildKit.SupportCollider.gameObject.layer,
+                    Is.EqualTo(0));
+                Assert.That(memoryModuleBuildKit.SupportCollider.bounds.min.y,
+                    Is.EqualTo(workbenchTop.bounds.max.y).Within(0.001f),
+                    "DDR5 Build Kit support must sit on, not overlap, the workbench top.");
+                Assert.That(memoryModuleBuildKit.ProgressText.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(memoryModuleBuildKit.ProgressText.text,
+                    Does.Contain("BUILD KIT"));
+                Assert.That(memoryModuleBuildKit.StagedComponentCount,
+                    Is.EqualTo(0));
+                Assert.That(memoryModuleBuildKit.GetComponentsInChildren<Collider>(true)
+                    .Length, Is.EqualTo(1));
+                Assert.That(memoryModuleBuildKit.SnapAnchor.position.x,
+                    Is.EqualTo(1.90f).Within(0.001f));
+                Assert.That(memoryModuleBuildKit.SnapAnchor.position.y,
+                    Is.EqualTo(1.032f).Within(0.001f));
+                Assert.That(memoryModuleBuildKit.SnapAnchor.position.z,
+                    Is.EqualTo(4.14f).Within(0.001f));
+                Assert.That(marker.DimmBinding.BuildKit,
+                    Is.SameAs(memoryModuleBuildKit));
+                Assert.That(marker.PlayerCarry.MatchesMemoryModuleBuildKitConfiguration(
+                    memoryModuleBuildKit,
+                    marker.DimmBinding), Is.True);
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -725,7 +776,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(
                     cart.GetComponentsInChildren<Collider>(true).Length,
                     Is.GreaterThanOrEqualTo(3));
-                Assert.That(placementSurfaces.Length, Is.EqualTo(4));
+                Assert.That(placementSurfaces.Length, Is.EqualTo(5));
                 PlacementSurface floorSurface = placementSurfaces.Single(
                     surface => surface.SurfaceId == "prototype.stock-floor-small-box-a");
                 PlacementSurface shelfSurface = placementSurfaces.Single(
@@ -736,6 +787,9 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PlacementSurface processorBuildKitSurface = placementSurfaces.Single(
                     surface => surface.SurfaceId ==
                                ProcessorBuildKitProjection.PrototypeSurfaceIdValue);
+                PlacementSurface memoryModuleBuildKitSurface = placementSurfaces.Single(
+                    surface => surface.SurfaceId ==
+                               MemoryModuleBuildKitProjection.PrototypeSurfaceIdValue);
                 Assert.That(floorSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
                 Assert.That(floorSurface.YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
                 Assert.That(shelfSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
@@ -743,6 +797,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.SameAs(motherboardBuildKit.Surface));
                 Assert.That(processorBuildKitSurface,
                     Is.SameAs(processorBuildKit.Surface));
+                Assert.That(memoryModuleBuildKitSurface,
+                    Is.SameAs(memoryModuleBuildKit.Surface));
                 InventoryPlacementZone shelfZone = shelfSurface.GetComponent<InventoryPlacementZone>();
                 Assert.That(shelfZone, Is.Not.Null);
                 Assert.That(shelfZone.ContainerId.Value,
@@ -876,7 +932,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-build-kit-r36-v1"));
+                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -1022,7 +1078,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-build-kit-r36-v1"));
+                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1178,7 +1234,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-build-kit-r36-v1"));
+                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1339,7 +1395,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-build-kit-r36-v1"));
+                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -1539,7 +1595,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-processor-build-kit-r36-v1"));
+                    Is.EqualTo("garage-memory-module-build-kit-r37-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
