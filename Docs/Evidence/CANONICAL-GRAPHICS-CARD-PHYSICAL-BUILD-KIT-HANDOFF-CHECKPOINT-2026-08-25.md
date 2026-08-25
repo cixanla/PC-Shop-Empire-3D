@@ -4,7 +4,7 @@
 **Issue:** [#79](https://github.com/cixanla/PC-Shop-Empire-3D/issues/79)<br>
 **Technical head:** `f40ef21058caf1a2aca3054218abfc1dd7305c01`<br>
 **Technical tree:** `c7500e7300f75f5d9b089bf23657750dccc5ffed`<br>
-**Closure status:** technical source/domain/scene/input/full-regression and exact-head macOS/Windows native gates passed; source/docs Guard, final provenance, immutable local/physical-USB double-readback and Issue/Project lifecycle gates remain pending
+**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI and immutable local/physical-USB double-readback gates passed; final physical-metadata CI and Issue/Project administrative closure pending
 
 ## Delivered playable result
 
@@ -74,24 +74,23 @@ Procedure source is itself hash-bound:
 | `runtime-procedure.ps1` | 14,378 | `f6f6298bcebe3c6f1b0131778990161fe28f7348bdcd19b48f1670dada85ef34` |
 | `procedure-manifest.json` | 670 | `603dbc82e56ee616df125920e595bc42c814bb8aa295fe558cf7ca72a995a11a` |
 
-## Canonical evidence provenance state
+## Canonical evidence and immutable physical package
 
-The thirteen immutable test/build/runtime/procedure artifacts returned to the Mac with exact size/hash readback and are staged at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue79-f40ef21058ca/canonical-evidence`. The temporary Windows build receipt currently named `source-receipt.json` is not accepted as final checkpoint provenance. It will be atomically replaced only after the exact nine-file source/docs commit and Repository Guard succeed.
+The thirteen immutable test/build/runtime/procedure artifacts returned to the Mac with exact size/hash readback. Clean source/docs commit `dd607d0af346bd1f0e28449f606761bc97e1495c`, tree `010b3a460c3241ed69d315bfb44047c1be82cb10` and [Repository Guard 32874685021](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32874685021) then authorized final `source-receipt.json` (`4,996` bytes, SHA-256 `b924699c5f99b597d889e9c7d6eadeaf37f5a6747c801f6d763560f7e7303e38`). Promoted-artifact path/size/hash equality is `13/13`; canonical evidence is exact `14/14` at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue79-f40ef21058ca/canonical-evidence`.
 
-The final receipt must bind:
+The Issue #79 mode in `Tools/verify-checkpoint-package.sh` fixes the 14-name evidence contract, technical commit/tree, test counts, exact nine-file technical→source/docs allowlist, procedure and promoted-artifact receipts, `issue79-hardened-v3` build policy, expanded native-link fatal-token count `0`, exact r40 Graphics Card BuildKit marker count `1`, task cleanup and residue `0`. Generic canonical mode is not accepted for this closure.
 
-- technical commit/tree and clean local gates;
-- exact source/docs commit/tree and successful Guard URL/run ID;
-- EditMode `690/690`, PlayMode `100/100`;
-- Universal Mac and detached-clean Windows native proof;
-- `issue79-hardened-v3`;
-- all other 13 promoted artifacts by exact path/size/SHA-256.
-
-No immutable local package or physical USB completion is claimed in this document revision.
+- Local final: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-25_STAGE_B_CANONICAL_GRAPHICS_CARD_BUILDKIT_HARDENED_V3`.
+- Physical final: `D:\CIXANLA\90_BACKUPS\PCShopEmpire3D\2026-08-25_STAGE_B_CANONICAL_GRAPHICS_CARD_BUILDKIT_HARDENED_V3` on healthy `Intenso Alu Line` serial `900B00076010`, USB, exFAT volume label `cixanla`.
+- Previous-chain proof: the existing Issue #71, #73 and #75 milestones were read-only verified; the latest prior Issue #75 manifest remained `958ba6bcb0f4891a168f73da46b20552b8a059467c7e0e6d55a5d7a51f0f9d2b` before any new write.
+- Local incoming and local atomically named final both returned `CHECKPOINT_PACKAGE_OK` in exact Issue #79 mode.
+- The collision-free physical `.incoming-2026-08-25_STAGE_B_CANONICAL_GRAPHICS_CARD_BUILDKIT_HARDENED_V3-dd607d0` copy passed a full hash/size/path readback; after same-filesystem atomic rename, the final path passed the same full readback again.
+- Every full readback is identical: `990/990` payload, `975/975` exact Git source, `14/14` evidence, source/docs commit `dd607d0af346bd1f0e28449f606761bc97e1495c`, tree `010b3a460c3241ed69d315bfb44047c1be82cb10`, `20,086,932` payload bytes and manifest SHA-256 `d2d399fa71ee37ed972b2e709987d0a375fe62fd8da3e5cfda5eb0ec571bb324`.
+- Physical incoming directory/sidecar residue, internal AppleDouble and exact final sidecar counts are all `0`; older milestones and unrelated user data were not modified.
 
 ## Canonical Issue #79 acceptance matrix — current technical state
 
-`TECHNICAL PASS` marks source/tests/native proof. `PARTIAL` means the implemented portion passed while a named lifecycle gate remains. `PENDING` is not a success claim.
+`TECHNICAL PASS` marks source/tests/native proof. `FINAL METADATA PENDING` means the immutable package and physical readback passed while this metadata commit/Guard and administrative transition remain.
 
 | # | Acceptance contract | Current gate | Evidence |
 |---:|---|---|---|
@@ -117,17 +116,13 @@ No immutable local package or physical USB completion is claimed in this documen
 | 20 | #59 GPU Assembly, #63 PCIe route, other Assembly/electrical/price/reservations remain untouched. | TECHNICAL PASS | Revision/receipt/item snapshots and native isolation marker. |
 | 21 | WASD/mouse-look and keyboard/gamepad carry flow work in human-shaped scenarios. | TECHNICAL PASS | Existing locomotion regression plus real Input System BuildKit matrix and native route. |
 | 22 | Domain/scene/input matrices and full regressions pass. | TECHNICAL PASS | EditMode `690/690`, PlayMode `100/100`. |
-| 23 | Diff/Guard/Mac/Windows native gates pass. | PARTIAL | Diff and exact-head Mac/Windows native gates pass; current source/docs Repository Guard is pending. |
-| 24 | Docs, private push/CI and physical USB lifecycle complete. | PENDING | Current source/docs commit/Guard, final receipt, current local package, physical double-readback and administrative closure remain. |
+| 23 | Diff/Guard/Mac/Windows native gates pass. | TECHNICAL PASS | Diff, source/docs Guard `32874685021`, exact-head Mac and detached-clean Windows IL2CPP/D3D11 gates pass. |
+| 24 | Docs, private push/CI and physical USB lifecycle complete. | FINAL METADATA PENDING | Source/docs Guard, final receipt, local package and two physical USB readbacks pass; this metadata commit/Guard and administrative closure remain. |
 
 ## Pending lifecycle sequence
 
-1. Commit and push the exact nine-file source/docs closure delta.
-2. Open the integration pull request, require successful Repository Guard and bind its exact run ID/URL in the final source receipt.
-3. Replace only the temporary source receipt and prove exact canonical evidence `14/14`.
-4. Create a collision-free immutable local package and pass `Tools/verify-checkpoint-package.sh ... issue79` on incoming and atomically named final paths.
-5. Rediscover the external physical device and verify the correct volume, `90_BACKUPS/PCShopEmpire3D`, and the previous milestone chain before any write.
-6. Copy only to a collision-free `.incoming-*`, remove AppleDouble only inside that new target, perform full hash/size/path and exact Git-source readback, atomically rename, and perform the same full readback again.
-7. Commit physical lifecycle metadata, pass final Guard, check all `24/24`, close Issue #79 and set the Roadmap item `Done`.
+1. Commit and push this physical lifecycle metadata and require Repository Guard/CI success.
+2. Mark all `24/24` acceptance boxes, close Issue #79 and set its Roadmap item to `Done`; make PR #80 ready for integration.
+3. Record the exact physical-metadata commit/Guard and closed lifecycle state in the final project handoff without starting the next gameplay slice.
 
 Parent Epic #10 remains open for the remaining four component handoffs and later assembly/electrical/POST/OS/QA stages. Issue #77 remains independently open/In Progress until its own physical lifecycle closes.

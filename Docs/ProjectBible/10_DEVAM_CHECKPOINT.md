@@ -1,7 +1,7 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #79 fiziksel Graphics Card BuildKit source/domain/scene/input/full-regression ve exact-head Mac+Windows native kapıları tamamlandı; source/docs Guard, final provenance, immutable local+physical-USB ve lifecycle kapıları bekliyor<br>
+**Durum:** Issue #79 fiziksel Graphics Card BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance ve immutable local+physical-USB kapıları tamamlandı; final metadata CI ve idari kapanış sürüyor<br>
 **Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue79-graphics-card-build-kit-handoff`, technical commit `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`; Roadmap `In Progress`, Issue #79 açık
 
 ## En yeni teknik checkpoint — Issue #79 / Epic #10
@@ -13,7 +13,8 @@
 - Technical commit `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`; Unity 6000.3.21f1 full EditMode `690/690`, PlayMode `100/100`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
 - Universal Mac Development/StrictMode report `329839788` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r40 readiness + Graphics Card BuildKit smoke başarılıdır. ADR-0049 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
 - Exact bundle `7096172` bayt ve `7c9ca435…9636` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue79-hardened-v3` x64 IL2CPP/Direct3D11 report `1334256694` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
-- Exact 13 test/build/runtime/procedure artifact'ı canonical evidence dizinine geri döndü. Source/docs commit/Repository Guard sonrası final receipt ile exact `14/14` yapılacak; immutable local package, doğru fiziksel USB incoming/final çift readback, metadata/Guard ve acceptance `24/24` henüz tamamlanmadı. Issue #79 açık/In Progress; Issue #77 ayrı lifecycle kapısı için açık/In Progress ve parent Epic #10 açık/In Progress kalır.
+- Exact 13 test/build/runtime/procedure artifact'ı ile source/docs `dd607d0af346bd1f0e28449f606761bc97e1495c` / tree `010b3a460c3241ed69d315bfb44047c1be82cb10` / Guard `32874685021` sonrası üretilen source receipt canonical `14/14` kanıta bağlandı.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `990/990` payload, `975/975` exact Git source, `14/14` evidence, `20086932` bayt ve `d2d399fa71ee37ed972b2e709987d0a375fe62fd8da3e5cfda5eb0ec571bb324` manifest sonucunu verdi; incoming/AppleDouble/final-sidecar `0`dır. Bu fiziksel metadata commit/Guard ve acceptance `24/24` + Roadmap `Done` idari geçişi tamamlanmadan Issue #79 açık/In Progress kalır; Issue #77 ve parent Epic #10 ayrıca açık/In Progress kalır.
 
 ## Önceki teknik checkpoint — Issue #77 / Epic #10
 
