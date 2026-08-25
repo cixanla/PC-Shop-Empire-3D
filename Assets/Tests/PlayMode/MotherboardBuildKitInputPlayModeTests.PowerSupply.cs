@@ -18,13 +18,45 @@ namespace PCShopEmpire3D.Tests.PlayMode
     public sealed partial class MotherboardBuildKitInputPlayModeTests
     {
         [UnityTest]
-        public IEnumerator KeyboardMouseMovesExactReservedPowerSupplyFromSixToSeven()
+        public IEnumerator KeyboardMouseWalksAndMovesExactReservedPowerSupplyFromSixToSeven()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             Mouse mouse = InputSystem.AddDevice<Mouse>();
             GaragePrototypeMarker marker = null;
             yield return LoadGarage(value => marker = value);
             Assert.That(marker, Is.Not.Null);
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Contain("prerequisite-positioning=teleport-assisted"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Contain("post-prerequisite-input=keyboard+mouse"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Contain("post-prerequisite-return=authored-spawn"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Contain(
+                    "post-prerequisite-route=authored-spawn>power-supply>power-supply-build-kit"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Contain("route-horizontal-step-envelope=bounded"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Not.Contain("human-route=ok"));
+            Assert.That(
+                GaragePrototypeMarker.PowerSupplyBuildKitSmokeSuccessMarker,
+                Does.Not.Contain("no-teleport=ok"));
+
+            Transform player = marker.PlayerMotor.transform;
+            Transform authoredPlayerParent = player.parent;
+            Vector3 authoredPlayerSpawn = player.position;
+            Assert.That(
+                Vector3.ProjectOnPlane(
+                    authoredPlayerSpawn - new Vector3(0f, 0.05f, -2.5f),
+                    Vector3.up).magnitude,
+                Is.LessThanOrEqualTo(0.10f),
+                "The power-supply route must capture the authored PlayerSpawn.");
 
             GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
             yield return PrepareQuote(marker, keyboard);
@@ -88,7 +120,110 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(buildKit.StagedComponentCount, Is.EqualTo(6));
             Assert.That(buildKit.ProgressText.text, Does.Contain("6/10"));
 
-            AimPlayerAtItem(marker, powerSupply, -Vector3.forward);
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(2.0f, 0.05f, 2.15f),
+                90,
+                authoredPlayerParent,
+                "return-from-graphics-kit");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(2.0f, 0.05f, -0.25f),
+                90,
+                authoredPlayerParent,
+                "return-through-east-aisle");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(2.0f, 0.05f, -2.5f),
+                90,
+                authoredPlayerParent,
+                "return-to-south-aisle");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                authoredPlayerSpawn,
+                65,
+                authoredPlayerParent,
+                "return-to-authored-spawn");
+            Assert.That(
+                Vector3.ProjectOnPlane(
+                    player.position - authoredPlayerSpawn,
+                    Vector3.up).magnitude,
+                Is.LessThanOrEqualTo(0.18f),
+                "The staged prerequisites must return through real input, not a transform snap.");
+            RunPowerSupplyCardinalCalibration(
+                marker,
+                keyboard,
+                mouse,
+                authoredPlayerParent);
+
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(2.0f, 0.05f, -2.5f),
+                65,
+                authoredPlayerParent,
+                "spawn-to-east-aisle");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(2.0f, 0.05f, -0.25f),
+                90,
+                authoredPlayerParent,
+                "east-aisle-northbound");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(1.15f, 0.05f, -0.25f),
+                45,
+                authoredPlayerParent,
+                "east-aisle-crossing");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(1.15f, 0.05f, 2.15f),
+                90,
+                authoredPlayerParent,
+                "workbench-front-approach");
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                new Vector3(-0.17f, 0.05f, 2.15f),
+                55,
+                authoredPlayerParent,
+                "power-supply-front-crossing");
+
+            Vector3 powerSupplyFocus = powerSupply.InteractionCenter;
+            Vector3 powerSupplyApproach =
+                powerSupplyFocus - (Vector3.forward * 1.60f);
+            powerSupplyApproach.y = marker.PlayerMotor.transform.position.y;
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                powerSupplyApproach,
+                90,
+                authoredPlayerParent,
+                "power-supply-pickup-approach");
+            AimPowerSupplyRouteAt(
+                marker,
+                keyboard,
+                mouse,
+                powerSupplyFocus,
+                authoredPlayerParent,
+                "power-supply-pickup-look");
             marker.PlayerCarry.ProcessInputFrame();
             Assert.That(marker.PlayerCarry.FocusedItem,
                 Is.SameAs(powerSupply));
@@ -121,7 +256,29 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.CustomPcBuildKit.Revision,
                 Is.EqualTo(buildKitRevisionInHands));
 
-            MovePlayerToBuildKit(marker, buildKit);
+            Collider support = buildKit.SupportCollider;
+            Vector3 buildKitFocus = new Vector3(
+                support.bounds.center.x,
+                support.bounds.max.y,
+                support.bounds.center.z);
+            Vector3 buildKitApproach =
+                buildKitFocus + (Vector3.back * 0.95f);
+            buildKitApproach.y = marker.PlayerMotor.transform.position.y;
+            DrivePowerSupplyRoutePoint(
+                marker,
+                keyboard,
+                mouse,
+                buildKitApproach,
+                125,
+                authoredPlayerParent,
+                "power-supply-build-kit-approach");
+            AimPowerSupplyRouteAt(
+                marker,
+                keyboard,
+                mouse,
+                buildKitFocus,
+                authoredPlayerParent,
+                "power-supply-build-kit-look");
             marker.PlayerCarry.ProcessInputFrame();
             PressMouse(marker, mouse);
             Assert.That(marker.PlayerCarry.IsPowerSupplyBuildKitMode, Is.True);
@@ -494,6 +651,356 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Vector3 playerPosition = target + (Vector3.back * 0.95f);
             playerPosition.y = 0.05f;
             SetPlayerLook(marker, playerPosition, target);
+        }
+
+        private static void RunPowerSupplyCardinalCalibration(
+            GaragePrototypeMarker marker,
+            Keyboard keyboard,
+            Mouse mouse,
+            Transform expectedParent)
+        {
+            const int FramesPerDirection = 3;
+            Transform player = marker.PlayerMotor.transform;
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(controller, Is.Not.Null, "cardinal-calibration");
+            Assert.That(controller.enabled, Is.True, "cardinal-calibration");
+            Vector3 forward = player.forward;
+            Vector3 right = player.right;
+
+            Vector3 start = player.position;
+            StepPowerSupplyRouteMovement(
+                marker,
+                keyboard,
+                mouse,
+                Vector2.up,
+                FramesPerDirection,
+                expectedParent,
+                "W-cardinal-calibration");
+            Assert.That(
+                Vector3.Dot(player.position - start, forward),
+                Is.GreaterThan(0.05f),
+                "W must move the CharacterController forward.");
+
+            start = player.position;
+            StepPowerSupplyRouteMovement(
+                marker,
+                keyboard,
+                mouse,
+                Vector2.down,
+                FramesPerDirection,
+                expectedParent,
+                "S-cardinal-calibration");
+            Assert.That(
+                Vector3.Dot(player.position - start, forward),
+                Is.LessThan(-0.05f),
+                "S must move the CharacterController backward.");
+
+            start = player.position;
+            StepPowerSupplyRouteMovement(
+                marker,
+                keyboard,
+                mouse,
+                Vector2.left,
+                FramesPerDirection,
+                expectedParent,
+                "A-cardinal-calibration");
+            Assert.That(
+                Vector3.Dot(player.position - start, right),
+                Is.LessThan(-0.05f),
+                "A must move the CharacterController left.");
+
+            start = player.position;
+            StepPowerSupplyRouteMovement(
+                marker,
+                keyboard,
+                mouse,
+                Vector2.right,
+                FramesPerDirection,
+                expectedParent,
+                "D-cardinal-calibration");
+            Assert.That(
+                Vector3.Dot(player.position - start, right),
+                Is.GreaterThan(0.05f),
+                "D must move the CharacterController right.");
+
+            ReleasePowerSupplyRouteInput(keyboard, mouse);
+        }
+
+        private static void StepPowerSupplyRouteMovement(
+            GaragePrototypeMarker marker,
+            Keyboard keyboard,
+            Mouse mouse,
+            Vector2 movement,
+            int frameCount,
+            Transform expectedParent,
+            string label)
+        {
+            for (int frame = 0; frame < frameCount; frame++)
+            {
+                StepPowerSupplyRouteFrame(
+                    marker,
+                    keyboard,
+                    mouse,
+                    movement,
+                    Vector2.zero,
+                    expectedParent,
+                    label,
+                    frame);
+            }
+        }
+
+        private static void DrivePowerSupplyRoutePoint(
+            GaragePrototypeMarker marker,
+            Keyboard keyboard,
+            Mouse mouse,
+            Vector3 worldTarget,
+            int maximumFrames,
+            Transform expectedParent,
+            string routeLabel)
+        {
+            const float ArrivalTolerance = 0.18f;
+            const float MinimumProgress = 0.003f;
+            const int MaximumStagnantFrames = 30;
+            Transform player = marker.PlayerMotor.transform;
+            Transform cameraPivot = player.Find("CameraPivot");
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(cameraPivot, Is.Not.Null, routeLabel);
+            Assert.That(controller, Is.Not.Null, routeLabel);
+            Assert.That(controller.enabled, Is.True, routeLabel);
+            marker.PlayerMotor.SetPaused(false);
+
+            int stagnantFrames = 0;
+            float previousDistance = PowerSupplyPlanarDistance(
+                player.position,
+                worldTarget);
+            for (int frame = 0; frame < maximumFrames; frame++)
+            {
+                float distance = PowerSupplyPlanarDistance(
+                    player.position,
+                    worldTarget);
+                if (distance <= ArrivalTolerance)
+                {
+                    ReleasePowerSupplyRouteInput(keyboard, mouse);
+                    return;
+                }
+
+                Vector3 direction = Vector3.ProjectOnPlane(
+                    worldTarget - player.position,
+                    Vector3.up).normalized;
+                float desiredYaw = Mathf.Atan2(
+                    direction.x,
+                    direction.z) * Mathf.Rad2Deg;
+                float yawError = Mathf.DeltaAngle(
+                    player.eulerAngles.y,
+                    desiredYaw);
+                float pitchError = -NormalizePowerSupplyAngle(
+                    cameraPivot.localEulerAngles.x);
+                bool aligned = Mathf.Abs(yawError) <= 2f &&
+                               Mathf.Abs(pitchError) <= 2f;
+                StepPowerSupplyRouteFrame(
+                    marker,
+                    keyboard,
+                    mouse,
+                    aligned ? Vector2.up : Vector2.zero,
+                    ResolvePowerSupplyRouteLook(
+                        marker,
+                        yawError,
+                        pitchError),
+                    expectedParent,
+                    routeLabel,
+                    frame);
+
+                float currentDistance = PowerSupplyPlanarDistance(
+                    player.position,
+                    worldTarget);
+                stagnantFrames = aligned &&
+                                 previousDistance - currentDistance <
+                                 MinimumProgress
+                    ? stagnantFrames + 1
+                    : 0;
+                Assert.That(
+                    stagnantFrames,
+                    Is.LessThan(MaximumStagnantFrames),
+                    $"{routeLabel} became blocked while approaching {worldTarget}.");
+                previousDistance = currentDistance;
+            }
+
+            ReleasePowerSupplyRouteInput(keyboard, mouse);
+            Assert.Fail(
+                $"{routeLabel} did not reach {worldTarget}; remaining " +
+                $"{PowerSupplyPlanarDistance(player.position, worldTarget):0.000} m " +
+                $"after {maximumFrames} frames.");
+        }
+
+        private static void AimPowerSupplyRouteAt(
+            GaragePrototypeMarker marker,
+            Keyboard keyboard,
+            Mouse mouse,
+            Vector3 worldTarget,
+            Transform expectedParent,
+            string routeLabel)
+        {
+            const int MaximumFrames = 90;
+            Transform player = marker.PlayerMotor.transform;
+            Transform cameraPivot = player.Find("CameraPivot");
+            Camera camera = marker.PlayerMotor.GetComponentInChildren<Camera>();
+            Assert.That(cameraPivot, Is.Not.Null, routeLabel);
+            Assert.That(camera, Is.Not.Null, routeLabel);
+
+            for (int frame = 0; frame < MaximumFrames; frame++)
+            {
+                Vector3 direction =
+                    (worldTarget - camera.transform.position).normalized;
+                Vector3 planarDirection = Vector3.ProjectOnPlane(
+                    direction,
+                    Vector3.up);
+                float desiredYaw = Mathf.Atan2(
+                    planarDirection.x,
+                    planarDirection.z) * Mathf.Rad2Deg;
+                float desiredPitch = -Mathf.Asin(direction.y) * Mathf.Rad2Deg;
+                float yawError = Mathf.DeltaAngle(
+                    player.eulerAngles.y,
+                    desiredYaw);
+                float pitchError = Mathf.DeltaAngle(
+                    NormalizePowerSupplyAngle(cameraPivot.localEulerAngles.x),
+                    desiredPitch);
+                if (Mathf.Abs(yawError) <= 0.75f &&
+                    Mathf.Abs(pitchError) <= 0.75f)
+                {
+                    ReleasePowerSupplyRouteInput(keyboard, mouse);
+                    Vector3 expectedDirection =
+                        (worldTarget - camera.transform.position).normalized;
+                    Assert.That(
+                        Vector3.Dot(camera.transform.forward, expectedDirection),
+                        Is.GreaterThan(0.999f),
+                        $"{routeLabel} did not acquire {worldTarget}.");
+                    return;
+                }
+
+                StepPowerSupplyRouteFrame(
+                    marker,
+                    keyboard,
+                    mouse,
+                    Vector2.zero,
+                    ResolvePowerSupplyRouteLook(
+                        marker,
+                        yawError,
+                        pitchError),
+                    expectedParent,
+                    routeLabel,
+                    frame);
+            }
+
+            ReleasePowerSupplyRouteInput(keyboard, mouse);
+            Assert.Fail($"{routeLabel} did not acquire {worldTarget}.");
+        }
+
+        private static Vector2 ResolvePowerSupplyRouteLook(
+            GaragePrototypeMarker marker,
+            float yawError,
+            float pitchError)
+        {
+            float sensitivity = marker.PlayerMotor.ViewSettings.MouseSensitivity;
+            float vertical = marker.PlayerMotor.ViewSettings.InvertY
+                ? pitchError / sensitivity
+                : -pitchError / sensitivity;
+            return new Vector2(
+                Mathf.Clamp(yawError / sensitivity, -80f, 80f),
+                Mathf.Clamp(vertical, -80f, 80f));
+        }
+
+        private static void StepPowerSupplyRouteFrame(
+            GaragePrototypeMarker marker,
+            Keyboard keyboard,
+            Mouse mouse,
+            Vector2 movement,
+            Vector2 look,
+            Transform expectedParent,
+            string routeLabel,
+            int frame)
+        {
+            const float SimulatedFrameDeltaTime = 1f / 60f;
+            Transform player = marker.PlayerMotor.transform;
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(controller, Is.Not.Null, routeLabel);
+            Assert.That(controller.enabled, Is.True, routeLabel);
+            Assert.That(player.parent, Is.SameAs(expectedParent), routeLabel);
+
+            InputSystem.QueueStateEvent(
+                keyboard,
+                PowerSupplyKeyboardStateForMove(movement));
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = look });
+            InputSystem.Update();
+
+            Vector3 before = player.position;
+            float maximumHorizontalStep =
+                marker.PlayerMotor.ResolveHorizontalSpeed(false) *
+                SimulatedFrameDeltaTime + 0.02f;
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Physics.SyncTransforms();
+
+            float horizontalStep = Vector3.ProjectOnPlane(
+                player.position - before,
+                Vector3.up).magnitude;
+            Assert.That(
+                horizontalStep,
+                Is.LessThanOrEqualTo(maximumHorizontalStep),
+                $"{routeLabel} exceeded the physical movement envelope on frame {frame}.");
+            Assert.That(controller.enabled, Is.True, routeLabel);
+            Assert.That(player.parent, Is.SameAs(expectedParent), routeLabel);
+        }
+
+        private static KeyboardState PowerSupplyKeyboardStateForMove(
+            Vector2 movement)
+        {
+            if (movement.y > 0.5f)
+            {
+                return new KeyboardState(Key.W);
+            }
+
+            if (movement.y < -0.5f)
+            {
+                return new KeyboardState(Key.S);
+            }
+
+            if (movement.x < -0.5f)
+            {
+                return new KeyboardState(Key.A);
+            }
+
+            return movement.x > 0.5f
+                ? new KeyboardState(Key.D)
+                : new KeyboardState();
+        }
+
+        private static void ReleasePowerSupplyRouteInput(
+            Keyboard keyboard,
+            Mouse mouse)
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+        }
+
+        private static float PowerSupplyPlanarDistance(
+            Vector3 first,
+            Vector3 second)
+        {
+            return Vector3.ProjectOnPlane(
+                first - second,
+                Vector3.up).magnitude;
+        }
+
+        private static float NormalizePowerSupplyAngle(float angle)
+        {
+            return angle > 180f ? angle - 360f : angle;
         }
 
         private static void AssertPowerSupplyAndCablesUnchanged(
