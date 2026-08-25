@@ -529,6 +529,73 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
+        /// <summary>
+        /// Drives the shared BuildKit prerequisite through the same dynamic-frame input
+        /// lifecycle as a native player. Queuing and immediately forcing an Input System
+        /// update inside a running player can leave WasPressedThisFrame unavailable to the
+        /// station's normal Update pass. A neutral settle frame, one pressed frame, and one
+        /// released frame preserve the real single-consumer ordering.
+        /// </summary>
+        private IEnumerator RunBuildKitWorkTicketPhysicalInput(
+            Keyboard keyboard,
+            GarageStockFlowSession session,
+            System.Action<string> captureFailure)
+        {
+            MovePlayerToCustomPcWorkTicketStation(1.35f);
+            customPcWorkTicketStation.RefreshPresentation();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+
+            customPcWorkTicketStation.RefreshPresentation();
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.E));
+            yield return null;
+
+            captureFailure?.Invoke(
+                ResolveBuildKitWorkTicketPhysicalInputFailure(session));
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+            customPcWorkTicketStation.RefreshPresentation();
+        }
+
+        private string ResolveBuildKitWorkTicketPhysicalInputFailure(
+            GarageStockFlowSession session)
+        {
+            if (session != null &&
+                session.TryGetPrototypeCustomPcBuildOrder(out _) &&
+                session.TryGetPrototypeCustomPcWorkTicket(out _))
+            {
+                return string.Empty;
+            }
+
+            if (customPcWorkTicketStation == null)
+            {
+                return "smoke.work-ticket-station-missing";
+            }
+
+            OperationResult gate =
+                customPcWorkTicketStation.InspectInteractionGateForTests();
+            if (gate.IsFailure)
+            {
+                return "smoke.work-ticket-input-" + gate.Error.Code;
+            }
+
+            if (playerInput != null &&
+                playerInput.InteractPressedThisFrame)
+            {
+                return "smoke.work-ticket-input-unconsumed";
+            }
+
+            return !string.IsNullOrEmpty(
+                    customPcWorkTicketStation.LastFailureCode)
+                ? "smoke.work-ticket-input-" +
+                  customPcWorkTicketStation.LastFailureCode
+                : "smoke.work-ticket-missing";
+        }
+
         private void MovePlayerToCustomPcWorkTicketStation(float distance)
         {
             Collider targetCollider = customPcWorkTicketStation.InteractionCollider;

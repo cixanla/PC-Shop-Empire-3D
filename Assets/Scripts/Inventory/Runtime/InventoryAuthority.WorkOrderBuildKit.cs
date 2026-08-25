@@ -662,7 +662,8 @@ namespace PCShopEmpire3D.Inventory
                    componentKind == PcComponentKind.MemoryModule ||
                    componentKind == PcComponentKind.StorageDevice ||
                    componentKind == PcComponentKind.ProcessorCooler ||
-                   componentKind == PcComponentKind.GraphicsCard;
+                   componentKind == PcComponentKind.GraphicsCard ||
+                   componentKind == PcComponentKind.PowerSupply;
         }
 
         private static InventoryItemRecord MoveSerializedItem(

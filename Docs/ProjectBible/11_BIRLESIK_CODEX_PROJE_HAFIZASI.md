@@ -5,11 +5,22 @@
 **Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `main`
+**Branch:** `feature/issue81-power-supply-build-kit-handoff`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 25 Ağustos 2026 üstün gelen güncel durum — Issue #79 Graphics Card BuildKit
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #81 Power Supply BuildKit
+
+- Exact reserved `PowerSupply`, staged motherboard+CPU+DDR5+M.2+processor-cooler+graphics-card prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → power-supply BuildKit custody'sine taşınır; visible work-ticket `6/10 → 7/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r41 gerçek keyboard/mouse + gamepad, keyed `0° ↔ 180°` preview ve tek-consumer BuildKit/PSU-bay/cable-route input arbitration taşır. Issue #60 PSU bay/retention ile Issue #61–#63 ATX24/EPS12V/PCIe route state/revision/receipts değişmez.
+- Native prerequisite harness production Update order'ını atlayan forced `InputSystem.Update()` + doğrudan station işleme kısayolundan arındırıldı; neutral → pressed → released gerçek player frame'leri ve release öncesi pressed-frame diagnostics kullanılır.
+- Technical commit `f3d80629e09c05afde97fa778c4b220ca456c5f0`, tree `851954879c1ff1e2ef98bc9a7a8469750304d992`; EditMode `697/697`, PlayMode `105/105`; Universal Mac report `329907140` bayt ve Apple M1/Metal exact r41 smoke başarılıdır.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1335888266` bayt, `issue81-hardened-v1` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve player/Unity/task residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Clean source/docs `dc118bf0d26a11f3937cb114ef12f85666facc48`, tree `ac9fcb5d38855ed37f2ee36449100b5094287cb8` ve Guard `32896033674` sonrasında source receipt üretildi; canonical evidence exact `14/14` oldu.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `1002/1002` payload, `987/987` exact Git source, `14/14` evidence, `19368668` bayt ve `69cc892b…06ab` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar ve Windows işlem artığı `0`dır. Fiziksel metadata `ff935452c68bc77e66eb0742e0c3e6c0eb2894c7`, tree `e4f03fc3c2d6dfd44da61eaae3a161af4f104eae`, Guard `32897672990` başarılıdır. Exact r41 insan oturumu kaydedilmediği için acceptance `23/24`, Issue #81 açık/In Progress ve PR #82 taslak kalır; parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0050, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+
+### Önceki üstün gelen durum — Issue #79 Graphics Card BuildKit
 
 - Exact reserved `GraphicsCard`, staged motherboard+CPU+DDR5+M.2+processor-cooler prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → graphics-card BuildKit custody'sine taşınır; visible work-ticket `5/10 → 6/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
@@ -207,7 +218,7 @@ Tamamlanan oynanabilir sistemler:
 
 Issue #52 kaynak/test/build/runtime/CI/USB ve Issue metadata zinciri tamamlandı; acceptance `17/17`, kapalı/Done. Parent Epic #9 geniş kabulü de kapalı/Done'dır. Bu paragraf Epic #10 başlangıcındaki tarihsel sırayı korur.
 
-25 Ağustos 2026 itibarıyla üstün gelen güncel durum: Epic #10 altında motherboard/CPU/DIMM/M.2/cooler/GPU/PSU/ATX24/EPS12V/PCIe-GPU 6+2 fiziksel authority dilimleri ile Issue #64 accepted request→immutable ten-line quote/BOM→exact reservation ve Issue #66 BuildOrder/WorkTicket→exact allocation sınırları korunur. Issue #68 canonical motherboard'ı ve Issue #71 technical source `11683c8` canonical CPU'yu gerçek pickup/carry/placement ile kendi capacity-one BuildKit slotlarına taşımış; work-ticket fiziksel ilerlemesi `0/10 → 1/10 → 2/10` olmuştur. Issue #71 fresh `677/677` EditMode, `81/81` PlayMode, Universal Mac/Apple M1 Metal r36 ve Windows `hardened-v2` IL2CPP/Intel Iris Xe D3D11 r36 native kapılarını geçmiştir. Source/docs/provenance `7501fa7` ve Guard `32833455406`; immutable local + fiziksel USB incoming/final readback `942/927/14`, `19.139.923` bayt ve `f38ae282…3cb8ed` manifest ile tamamlandı. Acceptance `22/22`, Roadmap `Done`, PR #72 hazırdır; sıradaki bounded bağımlılık sonraki exact component transferidir. Assembly completion, electrical power-on/POST/OS/benchmark, Save/Guardian ve final art ayrı kalır.
+25 Ağustos 2026 itibarıyla üstün gelen güncel durum: Epic #10 altında motherboard/CPU/DIMM/M.2/cooler/GPU/PSU/ATX24/EPS12V/PCIe-GPU 6+2 fiziksel authority dilimleri ile Issue #64 accepted request→immutable ten-line quote/BOM→exact reservation ve Issue #66 BuildOrder/WorkTicket→exact allocation sınırları korunur. Issue #68, #71, #73, #75, #77, #79 ve güncel Issue #81 sırasıyla canonical motherboard, CPU, DDR5, M.2, processor cooler, GPU ve PSU'yu gerçek pickup/carry/placement ile ayrı capacity-one BuildKit slotlarına taşımış; work-ticket fiziksel ilerlemesi `0/10 → 7/10` olmuştur. Issue #81 technical source `f3d80629e09c05afde97fa778c4b220ca456c5f0` üzerinde fresh `697/697` EditMode, `105/105` PlayMode, Universal Mac/Apple M1 Metal r41 ve Windows `issue81-hardened-v1` IL2CPP/Intel Iris Xe D3D11 r41 native kapılarını geçmiştir. Source/docs `dc118bf0d26a11f3937cb114ef12f85666facc48` / Guard `32896033674`, final provenance `14/14`, immutable local+fiziksel USB çift readback `1002/987/14` ve physical metadata `ff935452` / Guard `32897672990` tamamlandı. Exact r41 insan oturumu kaydedilmediği için acceptance `23/24`; Issue/Project idari kapanışı açıktır. Sonraki bounded oyuncu-görünür bağımlılık exact ATX24 BuildKit transferiyle `7/10 → 8/10` ilerlemektir. Assembly completion, electrical power-on/POST/OS/benchmark, Save/Guardian ve final art ayrı kalır.
 
 Sonraki ana geliştirme sırası:
 

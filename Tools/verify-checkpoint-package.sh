@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -155,7 +155,7 @@ cmp -s "$manifest_paths" "$payload_paths" || { echo "ERROR manifest path set doe
 file_size() {
   if stat -f '%z' "$1" >/dev/null 2>&1; then
     stat -f '%z' "$1"
-  else
+  elif [[ "$evidence_contract" == "issue79" ]]; then
     stat -c '%s' "$1"
   fi
 }
@@ -223,7 +223,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue73" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
-      "$evidence_contract" == "issue79" ]]; then
+      "$evidence_contract" == "issue79" ||
+      "$evidence_contract" == "issue81" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -247,7 +248,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue73" ||
           "$evidence_contract" == "issue75" ||
           "$evidence_contract" == "issue77" ||
-          "$evidence_contract" == "issue79" ]]; then
+          "$evidence_contract" == "issue79" ||
+          "$evidence_contract" == "issue81" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -285,7 +287,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue73" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
-      "$evidence_contract" == "issue79" ]]; then
+      "$evidence_contract" == "issue79" ||
+      "$evidence_contract" == "issue81" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -301,7 +304,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue73" ||
       "$evidence_contract" == "issue75" ||
       "$evidence_contract" == "issue77" ||
-      "$evidence_contract" == "issue79" ]]; then
+      "$evidence_contract" == "issue79" ||
+      "$evidence_contract" == "issue81" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -344,7 +348,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-PROCESSOR-COOLER-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='processor-cooler BuildKit'
     runtime_success_marker='GARAGE_PROCESSOR_COOLER_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage-staged processor-cooler-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=90 placement=ok progress=5/10 reservation=alive custody=processor-cooler-build-kit receipts=ok revisions=ok assembly=untouched processor-cooler-slot=untouched tim=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue79" ]]; then
     technical_commit=f40ef21058caf1a2aca3054218abfc1dd7305c01
     technical_tree=c7500e7300f75f5d9b089bf23657750dccc5ffed
     build_forbidden_policy=issue79-hardened-v3
@@ -354,6 +358,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-GRAPHICS-CARD-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
     runtime_success_label='graphics-card BuildKit'
     runtime_success_marker='GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler-staged graphics-card-pickup=exact physical-identity=stable carry=ok input=keyboard+mouse custody-guards=ok rotation=180 placement=ok progress=6/10 reservation=alive custody=graphics-card-build-kit receipts=ok revisions=ok assembly=untouched graphics-card-slot=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=f3d80629e09c05afde97fa778c4b220ca456c5f0
+    technical_tree=851954879c1ff1e2ef98bc9a7a8469750304d992
+    build_forbidden_policy=issue81-hardened-v1
+    editmode_total=697
+    playmode_total=105
+    contract_adr=Docs/ADR-0050-CANONICAL-POWER-SUPPLY-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-POWER-SUPPLY-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md
+    runtime_success_label='power-supply BuildKit'
+    runtime_success_marker='GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card-staged power-supply-pickup=exact physical-identity=stable carry=ok prerequisite-positioning=teleport-assisted post-prerequisite-input=keyboard+mouse post-prerequisite-return=authored-spawn post-prerequisite-route=authored-spawn>power-supply>power-supply-build-kit movement=character-controller look=mouse-delta route-horizontal-step-envelope=bounded player-parent=stable post-prerequisite-route-no-transform-snap=ok route-collision=ok custody-guards=ok rotation=180 placement=ok progress=7/10 reservation=alive custody=power-supply-build-kit receipts=ok revisions=ok assembly=untouched power-supply-bay=untouched atx24-route=untouched eps12v-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"

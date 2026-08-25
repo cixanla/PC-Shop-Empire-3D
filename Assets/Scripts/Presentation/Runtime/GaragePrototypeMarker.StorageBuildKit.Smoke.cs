@@ -163,25 +163,20 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                MovePlayerToCustomPcWorkTicketStation(1.35f);
-                customPcWorkTicketStation.RefreshPresentation();
-                InputSystem.QueueStateEvent(
+                string workTicketInputFailure = null;
+                yield return RunBuildKitWorkTicketPhysicalInput(
                     smokeKeyboard,
-                    new KeyboardState(Key.E));
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
-                InputSystem.QueueStateEvent(
-                    smokeKeyboard,
-                    new KeyboardState());
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
+                    session,
+                    code => workTicketInputFailure = code);
 
                 if (!session.TryGetPrototypeCustomPcBuildOrder(
                         out CustomPcBuildOrderRecord workOrder) ||
                     !session.TryGetPrototypeCustomPcWorkTicket(out _))
                 {
                     LogStorageBuildKitSmokeFailure(
-                        "smoke.work-ticket-missing");
+                        string.IsNullOrEmpty(workTicketInputFailure)
+                            ? "smoke.work-ticket-missing"
+                            : workTicketInputFailure);
                     yield break;
                 }
 
@@ -492,7 +487,10 @@ namespace PCShopEmpire3D.Presentation
                 {
                     Debug.Log(StorageBuildKitSmokeSuccessMarker);
                 }
-                yield return new WaitForEndOfFrame();
+                // WaitForEndOfFrame never resumes in a -nographics batch run.
+                // A normal player frame still lets the success marker and final
+                // presentation state settle while keeping headless CI finite.
+                yield return null;
             }
             finally
             {

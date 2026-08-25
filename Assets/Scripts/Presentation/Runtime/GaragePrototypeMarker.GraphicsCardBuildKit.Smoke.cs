@@ -26,6 +26,9 @@ namespace PCShopEmpire3D.Presentation
             "assembly=untouched graphics-card-slot=untouched " +
             "pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok";
 
+        private bool _suppressGraphicsCardBuildKitSmokeSuccessMarker;
+        private string _nestedGraphicsCardBuildKitSmokeFailureCode;
+
         private IEnumerator RunGraphicsCardBuildKitSmoke()
         {
             yield return null;
@@ -352,7 +355,10 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(GraphicsCardBuildKitSmokeSuccessMarker);
+                if (!_suppressGraphicsCardBuildKitSmokeSuccessMarker)
+                {
+                    Debug.Log(GraphicsCardBuildKitSmokeSuccessMarker);
+                }
                 yield return new WaitForEndOfFrame();
             }
             finally
@@ -407,8 +413,14 @@ namespace PCShopEmpire3D.Presentation
             SetMotherboardBuildKitSmokePlayerLook(playerPosition, target);
         }
 
-        private static void LogGraphicsCardBuildKitSmokeFailure(string code)
+        private void LogGraphicsCardBuildKitSmokeFailure(string code)
         {
+            if (_suppressGraphicsCardBuildKitSmokeSuccessMarker)
+            {
+                _nestedGraphicsCardBuildKitSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE " +
                 $"build-kit-flow=failed code={code}");
