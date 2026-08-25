@@ -9,7 +9,16 @@
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 25 Ağustos 2026 üstün gelen güncel durum — Issue #75 M.2 NVMe Storage BuildKit
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #77 Processor Cooler BuildKit
+
+- Exact reserved `ProcessorCooler`, staged motherboard+CPU+DDR5+M.2 prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → processor-cooler BuildKit custody'sine taşınır; visible work-ticket `4/10 → 5/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r39 gerçek keyboard/mouse + gamepad, keyed 90° quarter-turn preview ve tek-consumer BuildKit/cooler-seat input arbitration taşır. Issue #58 four-point-retention/TIM Assembly state/revision/receipts değişmez.
+- Technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; EditMode `686/686`, PlayMode `96/96`; Universal Mac report `329787583` bayt ve Apple M1/Metal exact r39 smoke başarılıdır.
+- Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1333221634` bayt, `issue77-hardened-v2` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Exact dokuz dosyalık source/docs commit/Guard, final receipt `14/14`, immutable local+physical USB double-readback, final metadata/Guard ve acceptance `23/23` henüz bekliyor. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır. Güncel ayrıntı ADR-0048, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+
+### Önceki üstün gelen durum — Issue #75 M.2 NVMe Storage BuildKit
 
 - Exact reserved M.2 NVMe `StorageDevice`, staged motherboard+CPU+DDR5 prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → Storage BuildKit custody'sine taşınır; visible work-ticket `3/10 → 4/10` olur.
 - Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.

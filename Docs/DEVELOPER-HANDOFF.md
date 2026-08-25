@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #75 r38 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
+### Güncel checkpoint — Issue #77 r39 teknik ve Mac/Windows native kapıları tamamlandı / source-docs, CI ve fiziksel lifecycle bekliyor
+
+- Technical head `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`. Canonical reserved processor cooler yalnız exact `ComponentKind == ProcessorCooler` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- Cooler, staged canonical motherboard, processor, DDR5 ve M.2 prerequisites sonrasında ayrı stable operation ve cooler-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Processor Cooler BuildKit custody'sine taşınır. Mevcut dört slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r39 ayrı cooler tray/support/snap anchor, keyed 90° quarter-turn preview ve görünür `4/10 → 5/10` aggregate ekler. Active cooler BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #58 cooler-seat/four-point-retention/TIM aynı-frame input'u çalamaz ve receipt'siz normal Assembly yolu değişmez.
+- Final EditMode `686/686`, PlayMode `96/96`; failed/skipped/inconclusive `0`. Universal Mac report `329787583` bayt, valid signed universal player ve Apple M1/Metal exact r39 readiness + Processor Cooler BuildKit smoke başarılıdır.
+- Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1333221634` bayt ve `issue77-hardened-v2` fatal-token `0` verdi; `ProjectSettings.asset` restoration byte-exact'tir. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r39 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve residue `0` ile geçti.
+- Teknik branch private GitHub'a push edildi. ADR-0048 ve tarihli Evidence exact test/Mac/Windows/procedure hashlerini bağlar; diğer 13 immutable artifact Mac canonical evidence dizinindedir. Exact dokuz dosyalık source/docs commit, Repository Guard, final receipt, immutable local/physical USB double-readback ve acceptance `23/23` hâlâ kapanış kapılarıdır. Issue #77 açık/In Progress ve parent Epic #10 açık/In Progress kalır.
+
+### Önceki checkpoint — Issue #75 r38 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
 
 - Technical head `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`. Canonical reserved M.2 NVMe yalnız exact `ComponentKind == StorageDevice` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - NVMe, staged canonical motherboard, processor ve DDR5 prerequisites sonrasında ayrı stable operation ve storage-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Storage BuildKit custody'sine taşınır. Mevcut üç slot/receipt/replay/revision/staged state korunur.

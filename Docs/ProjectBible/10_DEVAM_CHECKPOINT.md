@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #75 fiziksel M.2 NVMe Storage BuildKit source/domain/scene/input/full-regression, exact-head Mac+Windows, canonical provenance, immutable local+physical-USB ve lifecycle kapıları tamamlandı<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue75-m2-build-kit-handoff`, technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; Roadmap `Done`, Issue #75 kapalı
+**Durum:** Issue #77 fiziksel Processor Cooler BuildKit source/domain/scene/input/full-regression ve exact-head Mac+Windows native kapıları tamamlandı; source/docs Guard, final provenance, immutable local+physical-USB ve lifecycle kapıları bekliyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue77-processor-cooler-build-kit-handoff`, technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; Roadmap `In Progress`, Issue #77 açık
 
-## En yeni teknik checkpoint — Issue #75 / Epic #10
+## En yeni teknik checkpoint — Issue #77 / Epic #10
+
+- Canonical processor cooler accepted work order'da yalnız exact `ComponentKind == ProcessorCooler` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
+- Cooler, staged canonical motherboard+CPU+DDR5+M.2 prerequisites sonrasında ayrı stable operation ve managed capacity-one processor-cooler BuildKit container üzerinden source → ActorHands → Cooler BuildKit custody'sine taşınır. İlk dört slotun operation/receipt/replay/revision/staged state'i aynen korunur.
+- GarageGraybox `garage-processor-cooler-build-kit-r39-v1`; ayrı tray/support/snap anchor, range/focus/LOS/full-support/obstruction kapıları, keyed 90° quarter-turn preview ve görünür `4/10 → 5/10` ilerleme sunar. Aynı Unity instance ve stable ItemId domain-first pickup, carry, place, failure recovery ve replay boyunca korunur.
+- Active Cooler BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #58 cooler seat/four-point retention/TIM aynı-frame input'u çalamaz. Receipt yokken normal cooler Assembly yolu geriye uyumludur; retention/TIM state/revision/receipts untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
+- Technical commit `197233688c4fe587097dbfc1cbee843cfc78603e`, tree `58458f400a7efaa68e452a0e85e35d6d7eb5a3ab`; Unity 6000.3.21f1 full EditMode `686/686`, PlayMode `96/96`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
+- Universal Mac Development/StrictMode report `329787583` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r39 readiness + Processor Cooler BuildKit smoke başarılıdır. ADR-0048 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
+- Exact bundle `7032180` bayt ve `743e0b24…b260fe` SHA-256 ile doğrulandı; collision-free Windows detached-clean `issue77-hardened-v2` x64 IL2CPP/Direct3D11 report `1333221634` bayt ve fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve residue `0` ile geçti.
+- Exact 13 test/build/runtime/procedure artifact'ı canonical evidence dizinine geri döndü. Source/docs commit/Repository Guard sonrası final receipt ile exact `14/14` yapılacak; immutable local package, doğru fiziksel USB incoming/final çift readback, metadata/Guard ve acceptance `23/23` henüz tamamlanmadı. Issue #77 açık/In Progress; parent Epic #10 açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #75 / Epic #10
 
 - Canonical M.2 NVMe accepted work order'da yalnız exact `ComponentKind == StorageDevice` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
 - NVMe, staged canonical motherboard+CPU+DDR5 prerequisites sonrasında ayrı stable operation ve managed capacity-one Storage BuildKit container üzerinden source → ActorHands → Storage BuildKit custody'sine taşınır. İlk üç slotun operation/receipt/replay/revision/staged state'i aynen korunur.
