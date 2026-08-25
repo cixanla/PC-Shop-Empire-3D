@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 25 Ağustos 2026<br>
-**Durum:** Issue #71 fiziksel CPU BuildKit teknik, source/docs/CI, immutable package, fiziksel USB ve acceptance kapıları `22/22` tamamlandı<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue71-cpu-build-kit-handoff`, technical commit `11683c8b567ad6edcd6777610875aeebd0e509ef`, package source `7501fa74335ca977364033025eb51f4f4fc7bebf`; Roadmap `Done`, PR #72 hazır
+**Durum:** Issue #73 fiziksel DDR5 DIMM BuildKit source/domain/scene/input/full-regression ve Mac native kapıları tamamlandı; exact-head Windows, final docs/CI, immutable package, fiziksel USB ve acceptance kapanışı sürüyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue73-ddr5-build-kit-handoff`, technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Roadmap `In Progress`, Issue #73 açık
 
-## En yeni teknik checkpoint — Issue #71 / Epic #10
+## En yeni teknik checkpoint — Issue #73 / Epic #10
+
+- Canonical DDR5 DIMM accepted work order'da yalnız exact `ComponentKind == MemoryModule` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
+- DIMM, staged canonical motherboard+CPU prerequisites sonrasında ayrı stable operation ve managed capacity-one memory BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. İlk iki slotun operation/receipt/replay/revision/staged state'i aynen korunur.
+- GarageGraybox `garage-memory-module-build-kit-r37-v1`; ayrı tray/support/snap anchor, range/focus/LOS/full-support/obstruction kapıları, 180° keyed preview ve görünür `2/10 → 3/10` ilerleme sunar. Aynı Unity instance ve stable ItemId domain-first pickup, carry, place, failure recovery ve replay boyunca korunur.
+- Active memory BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #56 A2/dual-latch aynı-frame input'u çalamaz. Receipt yokken normal DIMM Assembly yolu geriye uyumludur; A2 state/revision/receipts/latch state untouched kalır. Generic drop, transfer, box, stack, cart ve Assembly bypass'ları fail-closed'dur.
+- Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; Unity 6000.3.21f1 full EditMode `680/680`, PlayMode `86/86`, failed/skipped/inconclusive `0`; `git diff --check` geçti.
+- Universal Mac Development/StrictMode report `329681642` bayt, valid deep/strict `x86_64 + arm64` player ve Apple M1/Metal exact r37 readiness + memory-module smoke başarılıdır. ADR-0046 ve tarihli Evidence exact XML/log/executable hashlerini bağlar.
+- Technical branch private GitHub'a push edildi. Exact bundle `6839312` bayt ve `262ef681…d40eac` SHA-256 ile doğrulandı; collision-free Windows detached-clean hardened-v2 x64 IL2CPP/Direct3D11 build/runtime devam ediyor. Final Guard/CI, procedure-bound Windows evidence, immutable local/USB double-readback ve acceptance `23/23` tamamlanmadan Issue/Roadmap açık/In Progress kalır.
+
+## Önceki teknik checkpoint — Issue #71 / Epic #10
 
 - Canonical CPU accepted work order'da yalnız exact `ComponentKind == Processor` ve tam `LineId/ProductId/ItemId/ReservationId` lineage'iyle çözülür. Ordinal, display name, product-value equality ve regenerated identity authority değildir.
 - CPU, staged canonical motherboard prerequisite'inden sonra ayrı stable operation ve managed capacity-one processor BuildKit container üzerinden source → ActorHands → CPU BuildKit custody'sine taşınır. Motherboard slot/receipt/replay/revision/staged state'i aynen korunur.

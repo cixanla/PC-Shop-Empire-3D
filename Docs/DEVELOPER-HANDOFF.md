@@ -14,7 +14,15 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #71 r36 teknik, fiziksel USB ve lifecycle kapıları tamamlandı
+### Güncel checkpoint — Issue #73 r37 teknik kaynak ve Mac native kapıları tamamlandı; Windows/CI/USB kapanışı sürüyor
+
+- Technical head `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`. Canonical reserved DDR5 DIMM yalnız exact `ComponentKind == MemoryModule` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- DIMM, staged canonical motherboard ve processor prerequisites sonrasında ayrı stable operation ve memory-specific managed capacity-one BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. Mevcut iki slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r37 ayrı DIMM tray/support/snap anchor, 180° keyed preview ve görünür `2/10 → 3/10` aggregate ekler. Active memory BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; A2 dual-latch aynı-frame input'u çalamaz ve receipt'siz normal Assembly yolu değişmez.
+- Final EditMode `680/680`, PlayMode `86/86`; failed/skipped/inconclusive `0`. Universal Mac report `329681642` bayt, valid signed universal player ve Apple M1/Metal exact r37 readiness + DIMM BuildKit smoke başarılıdır.
+- Teknik branch private GitHub'a push edildi. ADR-0046 ve tarihli Evidence exact test/Mac kanıtlarını bağlar. Collision-free exact-head Windows x64 IL2CPP/only-D3D11 build/runtime, final source/docs/Guard/CI, immutable local+physical USB readback ve Issue/Project acceptance henüz açık kapılardır; tamamlanmış sayılmaz.
+
+### Önceki checkpoint — Issue #71 r36 teknik, fiziksel USB ve lifecycle kapıları tamamlandı
 
 - Technical head `11683c8b567ad6edcd6777610875aeebd0e509ef`, tree `6890157f3f3625661314b34700259e0933ff2677`. Canonical reserved Processor exact work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür; staged motherboard prerequisite'i korunur.
 - CPU ayrı stable operation ve capacity-one managed processor BuildKit üzerinden source → ActorHands → CPU BuildKit custody'sine taşınır. Domain commit world mutation'dan önce gelir; same-instance/stable ItemId, live reservation/allocation, exact replay ve stable recovery korunur.

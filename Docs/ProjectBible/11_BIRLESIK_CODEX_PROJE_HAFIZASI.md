@@ -9,6 +9,14 @@
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
+### 25 Ağustos 2026 üstün gelen güncel durum — Issue #73 DDR5 DIMM BuildKit
+
+- Exact reserved DDR5 `MemoryModule`, staged motherboard+CPU prerequisites sonrasında ayrı stable operation ve capacity-one managed BuildKit slotuyla source → ActorHands → memory-module BuildKit custody'sine taşınır; visible work-ticket `2/10 → 3/10` olur.
+- Domain commit world mutation'dan önce gelir. Aynı Unity instance/stable ItemId, canlı reservation/allocation, exact replay ve stable recovery korunur; generic transfer/drop/box/stack/cart/Assembly bypass'ları kapalıdır.
+- GarageGraybox r37 gerçek keyboard/mouse + gamepad, 180° keyed preview ve tek-consumer BuildKit/A2 input arbitration taşır. Issue #56 A2/dual-latch Assembly state/revision/receipts/latch state değişmez.
+- Technical commit `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`; EditMode `680/680`, PlayMode `86/86`; Universal Mac report `329681642` bayt ve Apple M1/Metal exact r37 smoke başarılıdır.
+- Exact-head Windows x64 IL2CPP/D3D11, final docs/Guard/CI, immutable package, fiziksel USB double-readback ve acceptance `23/23` halen ayrı açık lifecycle kapılarıdır. Güncel ayrıntı ADR-0046, tarihli Evidence ve `10_DEVAM_CHECKPOINT.md` içindedir.
+
 ## 1. Konsolidasyon kararı ve görev sınırı
 
 Kullanıcı şu kararları açıkça onayladı:
