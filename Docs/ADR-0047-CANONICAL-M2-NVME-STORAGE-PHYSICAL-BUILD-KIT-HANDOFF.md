@@ -1,6 +1,6 @@
 # ADR-0047 — Canonical M.2 NVMe Storage Physical Build-Kit Handoff
 
-**Status:** Accepted; physical lifecycle pending<br>
+**Status:** Accepted for technical/native and immutable physical-package gates; final physical-metadata CI and administrative closure pending<br>
 **Date:** 25 August 2026<br>
 **Scope:** Issue #75, child of Epic #10
 
@@ -34,7 +34,8 @@ The remaining six BuildKit component transfers, `10/10` completion, job-specific
 - Unity 6000.3.21f1 full regression: EditMode `683/683`, PlayMode `90/90`; failed, skipped and inconclusive `0`. Focused storage BuildKit, gamepad, scene-contract and runtime-smoke gates also passed. Five new Unity GUIDs are unique and `git diff --check` passed.
 - Universal macOS Development/StrictMode build report `329,735,698` bytes. The ad-hoc signed executable is a valid deep/strict universal `x86_64 + arm64` bundle. Apple M1/Metal r38 readiness and the exact storage BuildKit success marker each appeared once; forbidden markers and player residue were `0`.
 - A complete verified Git bundle produced collision-free detached-clean Windows source at the same technical commit/tree. Unity 6000.3.21f1 completed an x64 IL2CPP build with Direct3D11 only; report size was `1,332,182,927` bytes and the hardened-v2 Burst/native-link fatal-token count was `0`. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive runtime emitted the exact host, r38 readiness and success markers once, exited `0`, shut down gracefully, deleted its scheduled task and left process residue `0`.
-- Thirteen immutable test/build/runtime/procedure artifacts returned to the Mac with exact size/hash readback. The current Windows build receipt is not final checkpoint provenance; final `source-receipt.json` is created only after the exact nine-file source/docs commit and its Repository Guard succeed.
+- Procedure-bound canonical evidence is exact `14/14`; `source-receipt.json` binds technical source, full tests, Mac/Windows native proof, procedures, source/docs commit `af6578aa224b931fdcfdd6293dccfcfd77a29eac`, tree `39ec1c0573223899d2982f72fb877dbea58306ba` and successful Repository Guard `32849988087`.
 - `Tools/verify-checkpoint-package.sh ... issue75` fail-closes on the exact technical commit/tree, exact nine-file closure delta, `683/683` and `90/90`, `issue75-hardened-v2`, the exact r38 storage marker, 13 promoted artifacts, three procedures, task deletion and residue `0`.
+- The immutable local package and the correct Windows-attached physical USB both passed incoming and atomically named final readbacks with identical `966/966` payload, `951/951` exact Git source, `14/14` evidence, `19,598,907` bytes and manifest `958ba6bcb0f4891a168f73da46b20552b8a059467c7e0e6d55a5d7a51f0f9d2b`. Incoming residue, internal AppleDouble and final sidecar counts are `0`.
 
-Repository Guard, final source receipt, immutable local package, correct physical USB incoming/final double readback, lifecycle metadata, acceptance `23/23`, Issue closure and Roadmap `Done` remain pending and must be recorded separately. No physical-completion claim is made by this ADR revision.
+The physical-metadata commit/Guard and GitHub Issue/Project administrative transition remain the only pending lifecycle records at this ADR state.

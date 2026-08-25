@@ -16,7 +16,8 @@ Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje aç�
 - GarageGraybox r38 gerçek keyboard/mouse + gamepad, 180° keyed preview ve tek-consumer BuildKit/M.2-seat input arbitration taşır. Issue #57 M.2 guided insertion/captive-screw Assembly state/revision/receipts değişmez.
 - Technical commit `646e66cfa269a217ecb1f6942f9accb77f9e463c`, tree `ee9b0b2c0bb5e1fb07de397da222d00a7480b23c`; EditMode `683/683`, PlayMode `90/90`; Universal Mac report `329735698` bayt ve Apple M1/Metal exact r38 smoke başarılıdır.
 - Collision-free detached-clean exact-head Windows x64 IL2CPP/only-D3D11 report `1332182927` bayt, `issue75-hardened-v2` fatal-token `0`; Intel Iris Xe/Direct3D 11.0 feature level 11.1 runtime exact host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deleted ve residue `0` ile geçti.
-- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. ADR-0047, tarihli Evidence ve `issue75` verifier sözleşmesi hazırdır. Source/docs Guard, final provenance, local/physical USB double-readback ve Issue/Project closure henüz bekleyen lifecycle kapılarıdır; fiziksel tamamlanma iddiası yoktur.
+- On üç immutable evidence artifact'ı Mac'e exact readback ile döndü. Clean source/docs `af6578aa224b931fdcfdd6293dccfcfd77a29eac`, tree `39ec1c0573223899d2982f72fb877dbea58306ba` ve Guard `32849988087` sonrasında source receipt üretildi; canonical evidence exact `14/14` oldu.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming/final hedefleri aynı `966/966` payload, `951/951` exact Git source, `14/14` evidence, `19598907` bayt ve `958ba6bc…f9d2b` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar `0`dır. Yalnız fiziksel metadata Guard ve acceptance `23/23` + Roadmap `Done` idari geçişi açıktır.
 
 ### Önceki üstün gelen durum — Issue #73 DDR5 DIMM BuildKit
 
