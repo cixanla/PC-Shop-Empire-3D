@@ -57,9 +57,9 @@ if [[ "$package_name" != .incoming-* ]]; then
     echo "ERROR incoming residue remains beside final package: $incoming_residue_count" >&2
     exit 1
   }
-  sibling_appledouble_count=$(find "$package_parent" -maxdepth 1 -mindepth 1 -name '._*' -print | wc -l | tr -d ' ')
-  [[ "$sibling_appledouble_count" == "0" ]] || {
-    echo "ERROR sibling AppleDouble residue remains beside final package: $sibling_appledouble_count" >&2
+  incoming_appledouble_residue_count=$(find "$package_parent" -maxdepth 1 -mindepth 1 -name '._.incoming-*' -print | wc -l | tr -d ' ')
+  [[ "$incoming_appledouble_residue_count" == "0" ]] || {
+    echo "ERROR incoming AppleDouble residue remains beside final package: $incoming_appledouble_residue_count" >&2
     exit 1
   }
 fi
@@ -314,6 +314,24 @@ if [[ "$evidence_contract" == "issue71" ]]; then
   }
   git -C "$repository" merge-base --is-ancestor "$technical_commit" "$source_commit" || {
     echo "ERROR packaged source/docs commit does not descend from the Issue #71 technical source" >&2
+    exit 1
+  }
+  expected_source_docs_delta=$(printf '%s\n' \
+    $'A\tDocs/ADR-0045-CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF.md' \
+    $'A\tDocs/Evidence/CANONICAL-PROCESSOR-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-25.md' \
+    $'M\tCHANGELOG.md' \
+    $'M\tDocs/DEVELOPER-HANDOFF.md' \
+    $'M\tDocs/ProjectBible/10_DEVAM_CHECKPOINT.md' \
+    $'M\tDocs/ProjectBible/11_BIRLESIK_CODEX_PROJE_HAFIZASI.md' \
+    $'M\tPROJECT_BIBLE.md' \
+    $'M\tTools/README.md' \
+    $'M\tTools/verify-checkpoint-package.sh' | LC_ALL=C sort)
+  actual_source_docs_delta=$(git -C "$repository" diff --name-status --no-renames "$technical_commit" "$source_commit" | LC_ALL=C sort)
+  [[ "$actual_source_docs_delta" == "$expected_source_docs_delta" ]] || {
+    echo "ERROR Issue #71 technical-to-source/docs delta is not the exact nine-file closure allowlist" >&2
+    diff -u \
+      <(printf '%s\n' "$expected_source_docs_delta") \
+      <(printf '%s\n' "$actual_source_docs_delta") >&2 || true
     exit 1
   }
 
