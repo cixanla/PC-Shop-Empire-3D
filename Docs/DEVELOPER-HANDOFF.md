@@ -14,7 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #79 r40 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
+### Güncel checkpoint — Issue #81 r41 teknik ve Mac/Windows native kapıları tamamlandı / source-docs, CI ve fiziksel lifecycle bekliyor
+
+- Technical head `f3d80629e09c05afde97fa778c4b220ca456c5f0`, tree `851954879c1ff1e2ef98bc9a7a8469750304d992`. Canonical reserved PSU yalnız exact `ComponentKind == PowerSupply` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
+- PSU, staged canonical motherboard, processor, DDR5, M.2, processor cooler ve graphics card prerequisites sonrasında ayrı stable operation ve power-supply-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Power Supply BuildKit custody'sine taşınır. Mevcut altı slot/receipt/replay/revision/staged state korunur.
+- GarageGraybox r41 ayrı PSU tray/support/snap anchor, keyed `0° ↔ 180°` preview ve görünür `6/10 → 7/10` aggregate ekler. Active PSU BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; Issue #60 PSU-bay Assembly ve Issue #61–#63 cable routes aynı-frame input'u çalamaz, receipt'siz normal yollar değişmez.
+- Native prerequisite harness'ı production Update order'ını atlayan same-frame zorlanmış `InputSystem.Update()` + doğrudan work-ticket station çağrısından arındırıldı. Neutral → pressed → released gerçek player frame'leri kullanılır; pressed-frame failure diagnostics release öncesinde yakalanır.
+- Final EditMode `697/697`, PlayMode `105/105`; failed/skipped/inconclusive `0`. Universal Mac report `329907140` bayt, valid deep/strict signed universal player ve Apple M1/Metal exact r41 readiness + Power Supply BuildKit smoke başarılıdır.
+- Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1335888266` bayt ve `issue81-hardened-v1` fatal-token `0` verdi. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r41 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve player/Unity/task residue `0` ile geçti.
+- Teknik branch private GitHub'a push edildi. ADR-0050 ve tarihli Evidence exact test/Mac/Windows/binary/procedure hashlerini bağlar; diğer 13 immutable artifact Mac canonical evidence dizinindedir. Exact dokuz dosyalık source/docs commit, Repository Guard, final receipt, immutable local/physical USB double-readback, final metadata/Guard ve acceptance `24/24` hâlâ kapanış kapılarıdır. Issue #81 açık/In Progress ve parent Epic #10 açık/In Progress kalır.
+
+### Önceki checkpoint — Issue #79 r40 teknik, fiziksel USB ve lifecycle kapıları tamamlandı / kapalı ve Done
 
 - Technical head `f40ef21058caf1a2aca3054218abfc1dd7305c01`, tree `c7500e7300f75f5d9b089bf23657750dccc5ffed`. Canonical reserved graphics card yalnız exact `ComponentKind == GraphicsCard` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - GPU, staged canonical motherboard, processor, DDR5, M.2 ve processor-cooler prerequisites sonrasında ayrı stable operation ve graphics-card-specific managed capacity-one BuildKit container üzerinden source → ActorHands → Graphics Card BuildKit custody'sine taşınır. Mevcut beş slot/receipt/replay/revision/staged state korunur.
