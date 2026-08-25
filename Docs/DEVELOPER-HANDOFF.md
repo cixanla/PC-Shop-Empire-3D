@@ -14,14 +14,15 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #73 r37 teknik kaynak ile Mac ve Windows native kapıları tamamlandı; provenance/CI/USB kapanışı sürüyor
+### Güncel checkpoint — Issue #73 r37 teknik/native ve immutable local/physical-USB kapıları tamamlandı; final metadata/administrative kapanış sürüyor
 
 - Technical head `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`, tree `e32a8e143049c4059e402bafbfcd39b9760cd025`. Canonical reserved DDR5 DIMM yalnız exact `ComponentKind == MemoryModule` ve tam work-order/ticket/allocation line/product/item/reservation tuple'ıyla çözülür.
 - DIMM, staged canonical motherboard ve processor prerequisites sonrasında ayrı stable operation ve memory-specific managed capacity-one BuildKit container üzerinden source → ActorHands → DIMM BuildKit custody'sine taşınır. Mevcut iki slot/receipt/replay/revision/staged state korunur.
 - GarageGraybox r37 ayrı DIMM tray/support/snap anchor, 180° keyed preview ve görünür `2/10 → 3/10` aggregate ekler. Active memory BuildKit receipt'i primary/rotate/interact/drop input'unun tek sahibidir; A2 dual-latch aynı-frame input'u çalamaz ve receipt'siz normal Assembly yolu değişmez.
 - Final EditMode `680/680`, PlayMode `86/86`; failed/skipped/inconclusive `0`. Universal Mac report `329681642` bayt, valid signed universal player ve Apple M1/Metal exact r37 readiness + DIMM BuildKit smoke başarılıdır.
 - Complete bundle'dan collision-free detached-clean Windows exact head üretildi. Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 report `1330930513` bayt ve hardened-v2 fatal-token `0` verdi; `ProjectSettings.asset` restoration byte-exact'tir. Intel Iris Xe/Direct3D 11.0 feature level 11.1 interactive player exact host/r37 readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, deleted task ve residue `0` ile geçti.
-- Teknik branch private GitHub'a push edildi ve initial [Repository Guard 32839956810](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32839956810) başarılıdır. ADR-0046 ve tarihli Evidence exact test/Mac/Windows/procedure hashlerini bağlar. On üç immutable artifact Mac'e exact readback ile döndü; clean source/docs head+Guard sonrasında üretilecek `source-receipt.json`, canonical `14/14` promotion, immutable local+physical USB readback ve Issue/Project acceptance henüz açık kapılardır; tamamlanmış sayılmaz.
+- Teknik branch private GitHub'a push edildi; source/docs `e45f6e1b463cbe9686a9c349d0c6912a9657a28e`, tree `16f014a807a7733210bc9197981b4a8608c3d687` ve [Repository Guard 32841321015](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32841321015) başarılıdır. ADR-0046 ve tarihli Evidence exact test/Mac/Windows/procedure hashlerini bağlar; canonical evidence exact `14/14`dır.
+- Immutable local final ve doğru Windows-attached fiziksel USB incoming→atomik final→ikinci readback zinciri aynı `954/954` payload, `939/939` exact Git source, `14/14` evidence, `19379146` bayt ve `912e35ff…e9cc8` manifest sonucunu verdi. Incoming/AppleDouble/final-sidecar `0`dır. Yalnız bu fiziksel metadata commit/Guard ve Issue #73 `23/23`/Roadmap `Done` idari geçişi kalır.
 
 ### Önceki checkpoint — Issue #71 r36 teknik, fiziksel USB ve lifecycle kapıları tamamlandı
 

@@ -4,7 +4,7 @@
 **Issue:** [#73](https://github.com/cixanla/PC-Shop-Empire-3D/issues/73)<br>
 **Technical head:** `a2df663d6fa0e9d2004697bfb038a65a5e6c3d81`<br>
 **Technical tree:** `e32a8e143049c4059e402bafbfcd39b9760cd025`<br>
-**Closure status:** source/domain/scene/input/full-regression plus exact-head macOS and Windows native gates passed; final procedure-bound provenance/CI, immutable package, physical USB double-readback and Issue/Project lifecycle gates pending
+**Closure status:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, procedure-bound provenance, source/docs CI and immutable local/physical-USB double-readback gates passed; final physical-metadata CI and Issue/Project administrative closure pending
 
 ## Delivered playable result
 
@@ -73,7 +73,19 @@ Procedure source is itself hash-bound:
 | `runtime-procedure.ps1` | 13,965 | `59dc9e8bdbddea50d668a0ffe1c2b56b05f00f9c754b3aeba75ccacff803b03d` |
 | `procedure-manifest.json` | 670 | `fb322e4d8da56008e5cee4e026867dd203fe12b92e46fd1d72ef10d7c5ea851f` |
 
-The thirteen immutable test/build/runtime/procedure artifacts have returned to the Mac under an incoming evidence root with exact size/hash readback. The fourteenth `source-receipt.json` is deliberately generated only after the final source/docs commit is clean and its Repository Guard succeeds; therefore canonical promotion and full lifecycle closure remain pending at this document state.
+The thirteen immutable test/build/runtime/procedure artifacts returned to the Mac with exact size/hash readback. Clean source/docs commit `e45f6e1b463cbe9686a9c349d0c6912a9657a28e`, tree `16f014a807a7733210bc9197981b4a8608c3d687` and [Repository Guard 32841321015](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32841321015) then authorized the fourteenth `source-receipt.json` (`4,780` bytes, SHA-256 `51f48f9a2b3d136e3f379a80536ffe693d3d59eb76068bd5092a710af6f6954e`). Promoted-artifact path/size/hash equality is `13/13`; canonical evidence is atomically promoted and exact `14/14` at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue73-a2df663d6fa0/canonical-evidence`.
+
+## Immutable local and physical USB package
+
+The Issue #73 mode in `Tools/verify-checkpoint-package.sh` fixes the 14-name evidence contract, technical commit/tree, test counts, exact nine-file technical→source/docs allowlist, procedure and promoted-artifact receipts, `issue73-hardened-v2` build policy, expanded native-link fatal-token count `0`, exact r37 DDR5 marker count `1`, task cleanup and residue `0`. Generic canonical mode is not accepted for this closure.
+
+- Local final: `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-25_STAGE_B_CANONICAL_DDR5_MEMORY_MODULE_BUILDKIT_HARDENED_V2`.
+- Physical final: `D:\CIXANLA\90_BACKUPS\PCShopEmpire3D\2026-08-25_STAGE_B_CANONICAL_DDR5_MEMORY_MODULE_BUILDKIT_HARDENED_V2` on the healthy `Intenso Alu Line` USB device, exFAT volume label `cixanla`.
+- Previous-chain proof: the existing Issue #71 milestone was present and its `942`-line manifest still hashed to `f38ae282a13e5cb070c633386f4118811e2554d61ba84875b407e208dd3cb8ed` before any new write.
+- Local incoming and local atomically named final both returned `CHECKPOINT_PACKAGE_OK`.
+- The collision-free physical `.incoming-issue73-e45f6e1` copy was read back over SSH to an independent Mac temporary root and returned `CHECKPOINT_PACKAGE_OK`; after same-filesystem atomic rename, a second independent physical readback returned the same result.
+- Every full readback is identical: `954/954` payload, `939/939` exact Git source, `14/14` evidence, source/docs commit `e45f6e1b463cbe9686a9c349d0c6912a9657a28e`, tree `16f014a807a7733210bc9197981b4a8608c3d687`, `19,379,146` payload bytes and manifest SHA-256 `912e35ff4a2d81c4a010a84185c5ea88f5c2782d2caf4cfe3aadd40ed2ee9cc8`.
+- Physical incoming residue, internal AppleDouble and exact final sidecar counts are all `0`; older milestones and unrelated user data were not modified.
 
 ## Canonical Issue #73 acceptance matrix — current technical state
 
@@ -103,12 +115,10 @@ The thirteen immutable test/build/runtime/procedure artifacts have returned to t
 | 20 | WASD/mouse-look and keyboard/gamepad carry flow work in human-shaped scenarios. | TECHNICAL PASS | Existing locomotion regression plus real Input System BuildKit matrix and native input route. |
 | 21 | Domain/scene/input matrices and full regressions pass. | TECHNICAL PASS | EditMode `680/680`, PlayMode `86/86`. |
 | 22 | Diff/Guard/Mac/Windows native gates pass. | TECHNICAL PASS | Diff, initial Guard, exact-head Mac and detached-clean Windows IL2CPP/D3D11 gates pass; final lifecycle Guard remains acceptance item 23. |
-| 23 | Docs, private push/CI and physical USB lifecycle complete. | LIFECYCLE PENDING | Technical branch pushed; final CI/package/USB/Issue metadata remains open. |
+| 23 | Docs, private push/CI and physical USB lifecycle complete. | FINAL METADATA PENDING | Source/docs Guard, local package and two physical USB readbacks pass; this physical proof commit/Guard and Issue/Project administrative transition remain. |
 
 ## Remaining closure sequence
 
-1. Commit/push the Windows-bound source/docs and hardened Issue #73 package verifier, then require Repository Guard/CI success.
-2. Generate the fourteenth source receipt from the clean source/docs head and successful Guard; promote the exact `14/14` evidence set atomically.
-3. Build and fully verify the immutable local checkpoint package against exact Git source, procedure/source semantics and the 14-name evidence contract.
-4. Rediscover the correct external physical USB identity and previous milestone chain. Copy only to a collision-free `.incoming-*` target, remove AppleDouble only inside that new target, perform full path/size/SHA readback, atomically rename, and repeat the full readback.
-5. Commit/push final physical metadata and require the final Guard. Only then mark all `23/23` acceptance boxes, close Issue #73 and set its Roadmap item to `Done`.
+1. Commit/push this physical lifecycle metadata and require Repository Guard/CI success.
+2. Mark all `23/23` acceptance boxes, close Issue #73 and set its Roadmap item to `Done`; make PR #74 ready for integration.
+3. Record the exact physical-metadata commit/Guard and closed lifecycle state in the final project handoff without starting the next gameplay slice.
