@@ -673,6 +673,7 @@ MonoBehaviour:
   pcieGpuPowerCableBinding: {fileID: 0}
   powerSupplyBay: {fileID: 0}
   powerSupplyBinding: {fileID: 0}
+  processorBuildKit: {fileID: 0}
   processorCoolerSlot: {fileID: 0}
   processorCoolerBinding: {fileID: 0}
   m2StorageSlot: {fileID: 0}

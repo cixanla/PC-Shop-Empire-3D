@@ -97,6 +97,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsAtx24PowerCableRouteMode ||
             IsEps12vPowerCableRouteMode ||
             IsMotherboardBuildKitMode ||
+            IsProcessorBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -274,6 +275,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                     if (processorBinding != null)
                     {
+                        if (IsProcessorBuildKitMode ||
+                            (processorBuildKit != null &&
+                             processorBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldProcessorBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         if (!IsProcessorSeatMode)
                         {
                             return $"{placement}: işlemci soketine hizala • " +
@@ -1694,6 +1705,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
                 motherboardBuildKit?.ResetFeedback();
+                processorBuildKit?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
                 ResetPcieGpuPowerCableState();
@@ -1713,6 +1725,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 placementPreview?.Hide();
                 motherboardSeat?.ResetFeedback();
                 motherboardBuildKit?.ResetFeedback();
+                processorBuildKit?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
                 ResetPcieGpuPowerCableState();
@@ -1812,54 +1825,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return;
                 }
 
-                ProcessorAssemblyItemBinding processorBinding =
-                    GetProcessorBinding(HeldItem);
-                if (processorBinding != null)
+                if (ProcessHeldProcessorInput())
                 {
-                    if (input.TryConsumePrimaryActionPressThisFrame())
-                    {
-                        input.TryConsumeRotatePlacementPressThisFrame();
-                        input.TryConsumeInteractPressThisFrame();
-                        input.TryConsumeDropPressThisFrame();
-                        TrySetProcessorSeatMode(!IsProcessorSeatMode);
-                        return;
-                    }
-
-                    if (IsProcessorSeatMode &&
-                        input.TryConsumeRotatePlacementPressThisFrame())
-                    {
-                        input.TryConsumeInteractPressThisFrame();
-                        input.TryConsumeDropPressThisFrame();
-                        TryRotateProcessorSeatPreviewClockwise();
-                        return;
-                    }
-
-                    if (!IsProcessorSeatMode)
-                    {
-                        UpdateProcessorSeatPreview(processorBinding);
-                        if (input.TryConsumeDropPressThisFrame())
-                        {
-                            input.TryConsumePrimaryActionPressThisFrame();
-                            input.TryConsumeRotatePlacementPressThisFrame();
-                            input.TryConsumeInteractPressThisFrame();
-                            TryDrop();
-                        }
-
-                        return;
-                    }
-
-                    ProcessorSocketEvaluation processorSeatEvaluation =
-                        EvaluateProcessorSeat(processorBinding);
-                    ApplyProcessorSeatEvaluation(processorSeatEvaluation);
-                    if (input.TryConsumeDropPressThisFrame())
-                    {
-                        input.TryConsumePrimaryActionPressThisFrame();
-                        input.TryConsumeInteractPressThisFrame();
-                        TryConfirmProcessorSeat(
-                            processorBinding,
-                            processorSeatEvaluation);
-                    }
-
                     return;
                 }
 
@@ -2634,27 +2601,67 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ProcessorRetained));
             }
 
-            bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            if (binding.IsAuthorityInBuildKit)
             {
-                return Remember(physicalPickup);
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode("custom-pc-processor-build-kit.already-staged")));
             }
 
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
+            bool wasSeated = binding.IsSeated;
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"PROCESSOR_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"PROCESSOR_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-processor-build-kit.pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
             }
 
             HeldItem = item;
@@ -2730,6 +2737,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsM2StorageSeatMode = false;
             IsMotherboardBuildKitMode = false;
             motherboardBuildKit?.ResetFeedback();
+            ResetProcessorBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -2756,6 +2764,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             IsM2StorageSeatMode = false;
+            ResetProcessorBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3318,6 +3327,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             eps12vPowerCableRoute?.SetRouteModeActive(active: false);
             IsMotherboardBuildKitMode = false;
             motherboardBuildKit?.ResetFeedback();
+            ResetProcessorBuildKitState();
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;
             IsPowerSupplySeatMode = false;
@@ -3369,6 +3379,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             IsPlacementMode = false;
             ResetMotherboardBuildKitState();
+            ResetProcessorBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
             ResetPcieGpuPowerCableState();
