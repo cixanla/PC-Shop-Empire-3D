@@ -321,6 +321,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             ResetProcessorBuildKitState();
+            ResetMemoryModuleBuildKitState();
             IsDimmSeatMode = false;
             IsPowerSupplySeatMode = false;
             IsGraphicsCardSeatMode = false;
