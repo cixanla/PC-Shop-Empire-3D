@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -134,7 +135,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || IsSeated || !IsAuthorityLooseWorld)
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityLooseWorld)
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-memory.pickup-authority-mismatch"));
@@ -147,6 +151,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-memory-module-assembly.pickup-authority-mismatch"));
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedMemoryModuleForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -198,6 +235,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-memory.attach-authority-mismatch"));
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit &&
+                Session.AssemblyBuild.ProcessorSocketState !=
+                    ProcessorSocketState.ProcessorRetained)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
             }
 
             if (!ApproximatelySamePose(exactSeatPose, slot.SnapPose))
@@ -466,6 +511,47 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         }
 
                         _carryOrigin = CarryOrigin.None;
+                        SyncProjectionToAuthority();
+                        return OperationResult.Success();
+                    }
+                }
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                AssemblyBuildSnapshot snapshot = Session.AssemblyBuild.GetSnapshot();
+                if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedSecured &&
+                    snapshot.ProcessorSocketState == ProcessorSocketState.ProcessorRetained &&
+                    snapshot.MemorySlotState == MemorySlotState.EmptyOpen)
+                {
+                    OperationResult<AssemblyOperationReceipt> seat =
+                        Session.SeatMemoryModule(
+                            CreateOperationId("recovery-build-kit-seat"),
+                            DimmKeyOrientation.NotchAligned,
+                            snapshot.InstalledByOperationId,
+                            snapshot.SecuredByOperationId,
+                            snapshot.Revision);
+                    if (seat.IsSuccess)
+                    {
+                        OperationResult physicalRecovery =
+                            physicalItem.PlaceAt(slot.SnapPose);
+                        if (physicalRecovery.IsFailure)
+                        {
+                            OperationResult<AssemblyOperationReceipt> compensation =
+                                Session.RemoveMemoryModule(
+                                    CreateOperationId(
+                                        "recovery-build-kit-compensation"),
+                                    seat.Value.OperationId,
+                                    Session.AssemblyBuild.Revision);
+                            return compensation.IsFailure
+                                ? OperationResult.Fail(Failure.FromCode(
+                                    "assembly-memory.recovery-build-kit-" +
+                                    "compensation-failed"))
+                                : physicalRecovery;
+                        }
+
+                        _carryOrigin = CarryOrigin.None;
+                        slot.ResetFeedback();
                         SyncProjectionToAuthority();
                         return OperationResult.Success();
                     }

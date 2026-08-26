@@ -666,6 +666,34 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedDimm.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedDimm.BuildKit?.StagedComponentCount ?? 3;
+                        GarageStockFlowSession focusedSession = focusedDimm.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        if (stagedComponentCount <
+                            MemoryModuleBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{MemoryModuleBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained
+                            ? $"{interact}: DDR5'İ A2 MONTAJINA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              $"{MemoryModuleBuildKitProjection.PrototypeTotalComponentCount}"
+                            : processorRetained
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT";
+                    }
+
                     return focusedDimm.IsRetained
                         ? "ÇİFT MANDAL KAPALI • slotu hedefleyip aç"
                         : focusedDimm.IsSeated
@@ -2764,26 +2792,63 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"DIMM_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"DIMM_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-memory-module-build-kit." +
+                                "pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
             }
 
             HeldItem = item;

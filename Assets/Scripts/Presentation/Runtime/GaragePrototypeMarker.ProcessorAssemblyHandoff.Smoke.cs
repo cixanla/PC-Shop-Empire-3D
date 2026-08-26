@@ -26,6 +26,9 @@ namespace PCShopEmpire3D.Presentation
             "history=10/10-preserved other-eight=untouched " +
             "receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok";
 
+        private bool _suppressProcessorAssemblyHandoffSmokeSuccessMarker;
+        private string _nestedProcessorAssemblyHandoffSmokeFailureCode;
+
         public bool HasProcessorAssemblyHandoffR46Runtime =>
             HasMotherboardAssemblyHandoffR45Runtime &&
             processorBinding != null &&
@@ -444,9 +447,14 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(ProcessorAssemblyHandoffSmokeSuccessMarker);
+                if (!_suppressProcessorAssemblyHandoffSmokeSuccessMarker)
+                {
+                    Debug.Log(ProcessorAssemblyHandoffSmokeSuccessMarker);
+                }
+
                 yield return new WaitForEndOfFrame();
-                if (!Application.isEditor)
+                if (!Application.isEditor &&
+                    !_suppressProcessorAssemblyHandoffSmokeSuccessMarker)
                 {
                     Application.Quit(0);
                 }
@@ -487,8 +495,14 @@ namespace PCShopEmpire3D.Presentation
             return containers.Count == 8;
         }
 
-        private static void LogProcessorAssemblyHandoffSmokeFailure(string code)
+        private void LogProcessorAssemblyHandoffSmokeFailure(string code)
         {
+            if (_suppressProcessorAssemblyHandoffSmokeSuccessMarker)
+            {
+                _nestedProcessorAssemblyHandoffSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_PROCESSOR_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
                 $"assembly-handoff-flow=failed code={code}");
