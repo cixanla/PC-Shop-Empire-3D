@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -226,7 +226,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue79" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
-      "$evidence_contract" == "issue85" ]]; then
+      "$evidence_contract" == "issue85" ||
+      "$evidence_contract" == "issue87" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -253,7 +254,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue79" ||
           "$evidence_contract" == "issue81" ||
           "$evidence_contract" == "issue83" ||
-          "$evidence_contract" == "issue85" ]]; then
+          "$evidence_contract" == "issue85" ||
+          "$evidence_contract" == "issue87" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -294,7 +296,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue79" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
-      "$evidence_contract" == "issue85" ]]; then
+      "$evidence_contract" == "issue85" ||
+      "$evidence_contract" == "issue87" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -313,7 +316,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue79" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
-      "$evidence_contract" == "issue85" ]]; then
+      "$evidence_contract" == "issue85" ||
+      "$evidence_contract" == "issue87" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -386,7 +390,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-ATX24-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='ATX24 power-cable BuildKit'
     runtime_success_marker='GARAGE_ATX24_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply-staged atx24-pickup=exact cable-family=modular-atx24-split physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=8/10 reservation=alive custody=atx24-build-kit receipts=ok revisions=ok assembly=untouched atx24-route=untouched eps12v-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue85" ]]; then
     technical_commit=b6a74e932f4744b17388df7c7eb4d88f26d195f4
     technical_tree=bd763ea0c8c6d2f5d256e467c4fca8b762ca4d84
     build_forbidden_policy=issue85-hardened-v1
@@ -396,6 +400,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-EPS12V-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='EPS12V power-cable BuildKit'
     runtime_success_marker='GARAGE_EPS12V_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply+atx24-staged eps12v-pickup=exact cable-family=modular-eps12v-8pin physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=9/10 reservation=alive custody=eps12v-build-kit receipts=ok revisions=ok assembly=untouched eps12v-route=untouched atx24-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=25dc39ab02de93a416800acd17f53aacf83dca09
+    technical_tree=a736a764d0a52e950a4139002d6febc629df5987
+    build_forbidden_policy=issue87-hardened-v1
+    editmode_total=709
+    playmode_total=116
+    contract_adr=Docs/ADR-0053-CANONICAL-PCIE-GPU-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-PCIE-GPU-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
+    runtime_success_label='PCIe/GPU power-cable BuildKit'
+    runtime_success_marker='GARAGE_PCIE_GPU_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply+atx24+eps12v-staged pcie-gpu-pickup=exact cable-family=modular-pcie-8pin physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=10/10 reservation=alive custody=pcie-gpu-build-kit receipts=ok revisions=ok assembly=untouched pcie-gpu-route=untouched atx24-route=untouched eps12v-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"
