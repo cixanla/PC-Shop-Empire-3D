@@ -144,7 +144,7 @@ Issue #93'ün canonical DDR5 BuildKit→Assembly A2/dual-latch kapanışı exact
   issue93
 ```
 
-Issue #95'in canonical M.2 BuildKit→Assembly primary-slot/captive-screw kapanışı exact teknik commit/tree, `722/722` + `130/130`, `issue95-hardened-v1`, `storage-assembly-handoff=ready` taşıyan r48 readiness, exact pickup→18° guided-seat→captive-screw-tighten→blocked-remove→loosen→detach→reseat markerı, üç procedure ve Windows task/residue sözleşmesini kilitler:
+Issue #95'in canonical M.2 BuildKit→Assembly primary-slot/captive-screw kapanışı exact teknik commit `42c1ae4dff2421b38879c0bfc82b4bf52522be1e` / tree `16304340da0ae7e42d8e7dd1ea6aef66ffe27efc`, `722/722` + `130/130`, pause/focus resume-neutral karşıt-control regresyonu, `issue95-hardened-v1`, `storage-assembly-handoff=ready` taşıyan r48 readiness, exact pickup→18° guided-seat→captive-screw-tighten→blocked-remove→loosen→detach→reseat markerı, üç procedure ve Windows task/residue sözleşmesini kilitler:
 
 ```bash
 ./Tools/verify-checkpoint-package.sh \

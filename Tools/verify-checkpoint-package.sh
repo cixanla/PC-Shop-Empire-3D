@@ -457,8 +457,8 @@ if [[ "$evidence_contract" == "issue71" ||
     runtime_success_label='DDR5 memory-module assembly handoff'
     runtime_success_marker='GARAGE_MEMORY_MODULE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained pickup=exact custody=build-kit-to-hands-to-a2 reservation=alive physical-identity=stable input=keyboard+mouse notch=aligned seat=ok dual-latch=closed retained-block=ok open=ok detach=ok reseat=ok history=10/10-preserved other-seven=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
   else
-    technical_commit=be04e66184abebff7c2d4ac3d0af8c63249a7f2e
-    technical_tree=4a6826cc1ecca1e97fd7df252cec10f1f39e1d3f
+    technical_commit=42c1ae4dff2421b38879c0bfc82b4bf52522be1e
+    technical_tree=16304340da0ae7e42d8e7dd1ea6aef66ffe27efc
     build_forbidden_policy=issue95-hardened-v1
     editmode_total=722
     playmode_total=130

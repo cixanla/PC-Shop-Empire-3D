@@ -34,11 +34,13 @@ GarageGraybox r48 lets the player approach the completed `10/10` BuildKit after 
 
 The PC is not complete or electrically ready. Cooler/TIM, GPU, PSU and cable installation, electrical validation, power-on, POST/BIOS/OS/drivers, benchmark/QA, packaging, delivery, settlement, Save/Guardian, staff/customer/world expansion and final art remain separate dependent work.
 
+Pause and focus-regain are also fail-safe continuous-input boundaries. Held keyboard/gamepad movement and gamepad look must return fully neutral before they can drive a resumed frame; neutral detection inspects each resolved Move control rather than the aggregate vector, so opposing key pairs cannot cancel and release the latch early. Fresh pointer delta remains responsive after resume.
+
 ## Current verification
 
-- Technical source commit `be04e66184abebff7c2d4ac3d0af8c63249a7f2e`, tree `4a6826cc1ecca1e97fd7df252cec10f1f39e1d3f`.
+- Technical source commit `42c1ae4dff2421b38879c0bfc82b4bf52522be1e`, tree `16304340da0ae7e42d8e7dd1ea6aef66ffe27efc`.
 - Unity 6000.3.21f1 full EditMode `722/722` and full PlayMode `130/130`; failed, skipped and inconclusive `0`.
-- macOS Development build report `330,194,031` bytes. The deep/strict-valid universal `x86_64 + arm64` executable emits one r48 readiness marker and one exact M.2 Assembly handoff success marker, reaches Input System shutdown, exits `0` and leaves no player residue.
-- Detached-clean Windows exact-head Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 build report `1,343,566,575` bytes. Intel Iris Xe Direct3D 11.0 feature level 11.1 runtime has exact host/readiness/success counts `1/1/1`, forbidden count `0`, exit `0`, graceful shutdown, deleted scheduled task and residue `0`.
-- Exact-head technical Repository Guard [32955610423](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32955610423) passed.
+- macOS Development build report `330,195,891` bytes. The deep/strict-valid universal `x86_64 + arm64` executable emits one r48 readiness marker and one exact M.2 Assembly handoff success marker, reaches Input System shutdown, exits `0` and leaves no player residue.
+- Detached-clean Windows exact-head Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 build report `1,343,654,204` bytes. Intel Iris Xe Direct3D 11.0 feature level 11.1 runtime has exact host/readiness/success counts `1/1/1`, forbidden count `0`, exit `0`, graceful shutdown, deleted scheduled task and residue `0`.
+- Exact-head technical Repository Guard [32962078481](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32962078481) passed.
 - Source/docs Repository Guard, final source receipt and canonical `14/14`, immutable local package, healthy physical-USB lifecycle, exact-r48 real-human session and Issue/Project administrative closure remain pending. Automated smoke is not relabelled as human evidence. Windows D: reports `Warning / Full Repair Needed` and remains read-only.

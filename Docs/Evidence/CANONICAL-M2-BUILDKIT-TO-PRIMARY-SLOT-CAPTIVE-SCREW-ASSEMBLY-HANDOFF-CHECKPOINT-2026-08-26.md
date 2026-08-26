@@ -3,8 +3,8 @@
 **Date:** 26 August 2026
 **Issue:** [#95](https://github.com/cixanla/PC-Shop-Empire-3D/issues/95)
 **Draft PR:** [#96](https://github.com/cixanla/PC-Shop-Empire-3D/pull/96)
-**Technical head:** `be04e66184abebff7c2d4ac3d0af8c63249a7f2e`
-**Technical tree:** `4a6826cc1ecca1e97fd7df252cec10f1f39e1d3f`
+**Technical head:** `42c1ae4dff2421b38879c0bfc82b4bf52522be1e`
+**Technical tree:** `16304340da0ae7e42d8e7dd1ea6aef66ffe27efc`
 **Current closure:** source/domain/scene/input/full-regression, exact-head macOS/Windows native and technical-CI gates passed; source/docs, final canonical/local package, healthy physical USB, real-human session and administrative gates pending
 
 ## Delivered playable result
@@ -25,50 +25,52 @@ GARAGE_STORAGE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10
 
 Automated native smoke proves the production handoff and invariants; it is not a real-human keyboard/mouse or gamepad acceptance session.
 
+The exact technical head also includes the human-playability follow-up found by the bounded input audits: pause/focus resume suppresses held keyboard/gamepad Move and held gamepad Look until every resolved continuous control is neutral. Opposing `W+S` / `A+D` pairs cannot release the latch through aggregate-vector cancellation, while fresh mouse delta after resume remains responsive. The regression is exercised inside the existing full PlayMode suite.
+
 ## Exact source and tests
 
 | Gate | Result | Canonical artifact | Bytes | SHA-256 |
 |---|---:|---|---:|---|
-| Full EditMode | 722/722 | `editmode.xml` | 600,683 | `77e2efc38c7906f3a5bf436aa32965a141b213a8897826833247ac2611156b0f` |
-| Full PlayMode | 130/130 | `playmode.xml` | 393,260 | `bdd2951459ecad0f2c68eb222a020eb7fe7d4f34179f4045e80991f435d3cefc` |
+| Full EditMode | 722/722 | `editmode.xml` | 600,642 | `038561270629ab626df5441c96b036aa5e30463f5fd148557bb2a087f75e02b2` |
+| Full PlayMode | 130/130 | `playmode.xml` | 393,262 | `4b91a2d6b98e27ba8041e9a4f98811916cfb0d8df8278038273821b766ab7115` |
 
-Both suites have failed, skipped and inconclusive `0`. EditMode duration is `13.2452568` seconds; PlayMode duration is `331.6218253` seconds. The technical tree passes `git diff --check`. Exact-head GitHub Repository Guard [32955610423](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32955610423) passed at `be04e66184abebff7c2d4ac3d0af8c63249a7f2e`.
+Both suites have failed, skipped and inconclusive `0`. EditMode duration is `13.4635925` seconds; PlayMode duration is `367.4320988` seconds. The technical tree passes `git diff --check`. Exact-head GitHub Repository Guard [32962078481](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32962078481) passed at `42c1ae4dff2421b38879c0bfc82b4bf52522be1e`.
 
 ## macOS exact-head native gate
 
 | Gate | Result | Artifact | Bytes | SHA-256 |
 |---|---:|---|---:|---|
-| Development build | Success | `macos-build.log` | 603,389 | `3f072f9221e9a9e727ef71a95c0bbff653f52ce873fba6ecc27fc90b2a7880b6` |
-| Apple M1/Metal runtime | Success | `macos-runtime.log` | 8,654 | `0b6987e845a9aac80c4c987fb329aae3b45d1d214f6efb4175f868448e46d9c1` |
-| App executable | Universal and deep/strict-valid | `PC Shop Empire 3D` | 117,179 | `3ac4f852013e74d17252745247747c4413f730c8ba346545892113cc56fab869` |
+| Development build | Success | `macos-build.log` | 590,146 | `179f16696b2b4da6e74ebc629ca4b42c9166df7be93ca6e8a0185764fad6c1f4` |
+| Apple M1/Metal runtime | Success | `macos-runtime.log` | 8,893 | `05e20e7f943fc5b8644b1bd642214557c73899d5d2c53afd80e6133e4a7aa657` |
+| App executable | Universal and deep/strict-valid | `PC Shop Empire 3D` | 117,179 | `4c557beecb847916c7e30f00e0ce82d3050c9d2de7a75d7f9917d4275757a9de` |
 
-The build report is `330,194,031` bytes and the application contains `302` files with the same total file bytes. `file` confirms `x86_64 + arm64`; `codesign --verify --deep --strict` passes. The player emits one exact r48 readiness marker including `storage-assembly-handoff=ready`, one exact success marker, reaches Input System `Shutdown`, exits `0` and leaves no player process.
+The build report is `330,195,891` bytes and the application contains `302` files with the same total file bytes. `file` confirms `x86_64 + arm64`; `codesign --verify --deep --strict` passes. The player emits one exact r48 readiness marker including `storage-assembly-handoff=ready`, one exact success marker, reaches Input System `Shutdown`, exits `0` and leaves no player process.
 
 ## Windows detached-clean IL2CPP and D3D11 gate
 
-The complete technical bundle is `7,601,437` bytes with SHA-256 `61ee0ea46fc9122cf291bdfc37d7f070e83bee146a7b8e6d07a2b12dc4044d5a`. Its exact technical head was restored into the collision-free detached-clean checkout:
+The complete technical bundle is `7,626,490` bytes with SHA-256 `f11c846bd025342d6b64743a1d1b872664a7f21853754e492d1baad0350b3748`. Its exact technical head was restored into the collision-free detached-clean checkout:
 
-`C:\Users\mertk\Developer\PCShopEmpire3D\Validation\issue95-be04e66-hardened-v1`
+`C:\Users\mertk\Developer\PCShopEmpire3D\Validation\issue95-42c1ae4-opposing-neutral-v3`
 
-Unity 6000.3.21f1 built a strict x64 IL2CPP development player with only Direct3D11. The build report is `1,343,566,575` bytes; build log `build-il2cpp-d3d11.log` is `1,583,201` bytes with SHA-256 `fb25cca2666670a4db488a3bc7475ccbb62cc5d1b5208df69f690514364bd41c`. The expanded native-link/build fatal-token count is `0`, build marker count is `1`, ProjectSettings before/after SHA-256 is byte-exact `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244`, the detached checkout remains at the exact technical head/tree and `git status` remains empty.
+Unity 6000.3.21f1 built a strict x64 IL2CPP development player with only Direct3D11. The build report is `1,343,654,204` bytes; build log `build-il2cpp-d3d11.log` is `1,583,576` bytes with SHA-256 `798c69316d0d24718efe825c079da60cad355ce672d86741ec2f634d3318afaa`. The expanded native-link/build fatal-token count is `0`, build marker count is `1`, ProjectSettings before/after SHA-256 is byte-exact `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244`, the detached checkout remains at the exact technical head/tree and `git status` remains empty.
 
 | Native binary | Bytes | SHA-256 |
 |---|---:|---|
 | `PC Shop Empire 3D.exe` | 667,136 | `9688ae089d590352dbe0cba8722328926cd4d9b7722f68ec9942243925c1282a` |
-| `GameAssembly.dll` | 45,601,792 | `9d560d170338953b9008c00e7916ca80ac84c8dfba53c97e38e144e17830103f` |
+| `GameAssembly.dll` | 45,604,864 | `3cb40b4b01a82449d32623fc3891b4eda91e65d3053911f622772c442aa6620c` |
 | `UnityPlayer.dll` | 84,237,744 | `cc018c912f461b0f7bdcaeadd5c1d8d9361d92fe5a1c3aeac27a0ac1186a4a59` |
 
-The interactive scheduled-task player used `Intel(R) Iris(R) Xe Graphics`, forced Direct3D 11.0 feature level 11.1 and emitted exact host/readiness/success counts `1/1/1`, including `storage-assembly-handoff=ready`; forbidden count is `0`. It exited `0` after Input System shutdown, graceful close succeeded, scheduled task `PCShop-Issue95-r48-be04e66` was deleted, cleanup was not required, and player/Unity/task residue is `0`. `runtime-d3d11.log` is `5,802` bytes with SHA-256 `add9261be8bb49830cef1fdc4a938c6c034076e43bb9798a4b64d6e6ecbbcc94`. The checkout remains detached-clean at the exact technical head/tree.
+The interactive scheduled-task player used `Intel(R) Iris(R) Xe Graphics`, forced Direct3D 11.0 feature level 11.1 and emitted exact host/readiness/success counts `1/1/1`, including `storage-assembly-handoff=ready`; forbidden count is `0`. It exited `0` after Input System shutdown, graceful close succeeded, scheduled task `PCShop-Issue95-r48-42c1ae4` was deleted, cleanup was not required, and player/Unity/task residue is `0`. `runtime-d3d11.log` is `5,805` bytes with SHA-256 `2b9907be58c3d4f732cf000814c80c598f0d6d30eeeafb426e25f1daa091914d`. The checkout remains detached-clean at the exact technical head/tree.
 
 The three exact procedures are hash-bound by `procedure-manifest.json`:
 
 | Procedure | Bytes | SHA-256 |
 |---|---:|---|
-| `build-procedure.ps1` | 10,088 | `e5cfa567d46b1f763142b96779e3c852ebe5f04b4597b002e390c9f1b79a3b30` |
-| `launch-procedure.ps1` | 8,063 | `50aec42ab7f5eb6a37fc8519ad2bc96d3d583b69056bb1aff6fe114b120ebb78` |
-| `runtime-procedure.ps1` | 15,370 | `bd2fe7b4a85d89f7f8a963607b8d31391dea830b45ecffa53dcb647617089f25` |
+| `build-procedure.ps1` | 10,104 | `e22c67b8e99d150d5d5d78d3ce8cc525b552d7edecd94223d0ef1ee2d7a7ebde` |
+| `launch-procedure.ps1` | 8,079 | `13cdf7013e16125f65ac9eff3035f6dd18b102d3fd861566cb8e13cef60a7301` |
+| `runtime-procedure.ps1` | 15,378 | `55588b0c98d18ec2142c59fdb05205af71098a987931e67bdc364d208184f144` |
 
-The first thirteen immutable canonical artifacts now exist at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue95-be04e66184a/canonical-evidence`; only the final source/docs provenance receipt remains for `14/14`.
+The first thirteen immutable canonical artifacts now exist at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue95-42c1ae4dff24/canonical-evidence`; only the final source/docs provenance receipt remains for `14/14`.
 
 ## Issue #95 acceptance matrix — current state
 
@@ -98,7 +100,7 @@ The first thirteen immutable canonical artifacts now exist at `/Users/cixanla/De
 | 22 | Motherboard/storage/CPU/DIMM interlocks remain fail closed. | TECHNICAL PASS |
 | 23 | Retail/Economy/customer/other components/cable routes remain untouched. | TECHNICAL PASS |
 | 24 | Targeted and full EditMode/PlayMode regressions have zero fail/skip/inconclusive. | TECHNICAL PASS |
-| 25 | Diff, Repository Guard and universal Mac native gates. | PASS — GUARD 32955610423 |
+| 25 | Diff, Repository Guard and universal Mac native gates. | PASS — GUARD 32962078481 |
 | 26 | Exact-head clean Windows IL2CPP/only-D3D11 runtime and zero residue. | PASS |
 | 27 | Bible/ADR/Evidence/CHANGELOG, canonical/local package, real-human and healthy USB lifecycle. | PENDING |
 
