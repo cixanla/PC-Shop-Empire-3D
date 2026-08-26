@@ -9,6 +9,8 @@ namespace PCShopEmpire3D.Presentation.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class FirstPersonMotor : MonoBehaviour
     {
+        private const float ContinuousInputNeutralThresholdSquared = 0.0001f;
+
         [Header("References")]
         [SerializeField] private CharacterController characterController;
         [SerializeField] private PlayerInputAdapter input;
@@ -29,6 +31,8 @@ namespace PCShopEmpire3D.Presentation.Player
         private PhysicalCarryProfileDefinition _carryProfileDefinition =
             PhysicalCarryProfileRules.Resolve(PhysicalCarryProfile.SmallBox);
         private float _transportCartMovementSpeedMultiplier = 1f;
+        private bool _moveRequiresNeutralAfterResume;
+        private bool _gamepadLookRequiresNeutralAfterResume;
 
         public bool IsPaused { get; private set; }
 
@@ -141,7 +145,21 @@ namespace PCShopEmpire3D.Presentation.Player
 
         public void SetPaused(bool paused)
         {
+            bool wasPaused = IsPaused;
             IsPaused = paused;
+            if (paused)
+            {
+                _moveRequiresNeutralAfterResume = false;
+                _gamepadLookRequiresNeutralAfterResume = false;
+            }
+            else if (wasPaused && input != null)
+            {
+                _moveRequiresNeutralAfterResume =
+                    input.Move.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
+                _gamepadLookRequiresNeutralAfterResume =
+                    input.GamepadLook.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
+            }
+
             Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = paused;
         }
@@ -191,14 +209,51 @@ namespace PCShopEmpire3D.Presentation.Player
             }
 
             UpdateFieldOfView(Mathf.Max(0f, unscaledDeltaTime));
-            UpdateLook(Mathf.Max(0f, unscaledDeltaTime));
-            UpdateMovement(Mathf.Max(0f, deltaTime));
+            UpdateLook(
+                ReadLookAfterResume(),
+                Mathf.Max(0f, unscaledDeltaTime));
+            UpdateMovement(
+                ReadMoveAfterResume(),
+                Mathf.Max(0f, deltaTime));
         }
 
-        private void UpdateLook(float unscaledDeltaTime)
+        private Vector2 ReadMoveAfterResume()
+        {
+            Vector2 move = input.Move;
+            if (!_moveRequiresNeutralAfterResume)
+            {
+                return move;
+            }
+
+            if (move.sqrMagnitude <= ContinuousInputNeutralThresholdSquared)
+            {
+                _moveRequiresNeutralAfterResume = false;
+            }
+
+            return Vector2.zero;
+        }
+
+        private Vector2 ReadLookAfterResume()
+        {
+            Vector2 look = input.Look;
+            if (!_gamepadLookRequiresNeutralAfterResume)
+            {
+                return look;
+            }
+
+            if (input.GamepadLook.sqrMagnitude <= ContinuousInputNeutralThresholdSquared)
+            {
+                _gamepadLookRequiresNeutralAfterResume = false;
+                return look;
+            }
+
+            return input.IsPointerLook ? look : Vector2.zero;
+        }
+
+        private void UpdateLook(Vector2 lookInput, float unscaledDeltaTime)
         {
             Vector2 lookDegrees = FirstPersonMath.CalculateLookDegrees(
-                input.Look,
+                lookInput,
                 input.IsPointerLook,
                 unscaledDeltaTime,
                 viewSettings);
@@ -207,9 +262,9 @@ namespace PCShopEmpire3D.Presentation.Player
             cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
 
-        private void UpdateMovement(float deltaTime)
+        private void UpdateMovement(Vector2 moveInput, float deltaTime)
         {
-            Vector2 inputVector = FirstPersonMath.ClampMoveInput(input.Move);
+            Vector2 inputVector = FirstPersonMath.ClampMoveInput(moveInput);
             Vector3 horizontal = (transform.right * inputVector.x) + (transform.forward * inputVector.y);
             float speed = ResolveHorizontalSpeed(input.SprintHeld);
 

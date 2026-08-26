@@ -476,7 +476,43 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     pitch,
                     cameraPivot.localEulerAngles.x)),
                 Is.LessThan(0.001f));
+
+            start = player.position;
+            yaw = player.eulerAngles.y;
+            pitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "Movement held through resume must remain blocked until a neutral frame.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+
+            yaw = player.eulerAngles.y;
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(24f, 0f) });
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.GreaterThan(0.001f),
+                "Fresh pointer delta after resume must remain responsive.");
             InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.Update();
 
@@ -547,6 +583,58 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     pitch,
                     cameraPivot.localEulerAngles.x)),
                 Is.LessThan(0.001f));
+
+            start = player.position;
+            yaw = player.eulerAngles.y;
+            pitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    leftStick = Vector2.up,
+                    rightStick = new Vector2(0.75f, -0.65f)
+                });
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "Gamepad movement held through resume must await neutral.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.LessThan(0.001f),
+                "Gamepad look held through resume must await neutral.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+
+            start = player.position;
+            Vector3 gamepadForward = player.forward;
+            yaw = player.eulerAngles.y;
+            InputSystem.QueueStateEvent(
+                gamepad,
+                new GamepadState
+                {
+                    leftStick = Vector2.up,
+                    rightStick = new Vector2(0.75f, -0.65f)
+                });
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.Dot(player.position - start, gamepadForward),
+                Is.GreaterThan(0.001f),
+                "Fresh gamepad movement after neutral must be accepted.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
+                Is.GreaterThan(0.001f),
+                "Fresh gamepad look after neutral must be accepted.");
         }
 
         [UnityTest]
