@@ -160,6 +160,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeMotherboardAssemblyHandoffOperationId,
+                           out _);
+            }
+        }
+
         public bool IsConfigured => runtime != null &&
                                     surface != null &&
                                     surface.SurfaceCollider != null &&
@@ -368,9 +380,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nANAKART HAZIR"
-                : $"BUILD KIT • 0/{PrototypeTotalComponentCount}\nANAKART BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nANAKART MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nANAKART HAZIR"
+                    : $"BUILD KIT • 0/{PrototypeTotalComponentCount}\nANAKART BEKLİYOR";
         }
 
         public void ResetFeedback()

@@ -692,8 +692,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : "E / A";
                     if (focusedMotherboard.IsAuthorityInBuildKit)
                     {
-                        return "BUILD KIT • 1/10 • ANAKART HAZIR • " +
-                               "MONTAJ HATTI DEVİR TESLİMİNİ BEKLİYOR";
+                        int stagedComponentCount =
+                            focusedMotherboard.BuildKit?.StagedComponentCount ?? 1;
+                        return stagedComponentCount >=
+                               MotherboardBuildKitProjection.PrototypeTotalComponentCount
+                            ? $"{interact}: ANAKARTI MONTAJA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              MotherboardBuildKitProjection.PrototypeTotalComponentCount
+                            : $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{MotherboardBuildKitProjection.PrototypeTotalComponentCount} • " +
+                              "KALAN PARÇALARI TAMAMLA";
                     }
 
                     return focusedMotherboard.IsSecured
@@ -2539,12 +2547,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ComponentSecured));
             }
 
-            if (binding.IsAuthorityInBuildKit)
-            {
-                return Remember(OperationResult.Fail(
-                    Failure.FromCode("custom-pc-build-kit.already-staged")));
-            }
-
             if (binding.Session != null &&
                 binding.Session.AssemblyBuild.HasProcessorSocket &&
                 binding.Session.AssemblyBuild.ProcessorSocketState !=
@@ -2600,7 +2602,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return Remember(physicalPreflight);
                 }
 
-                authority = binding.TryCommitLoosePickup();
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
                 if (authority.IsFailure)
                 {
                     return Remember(authority);

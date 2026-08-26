@@ -247,6 +247,50 @@ namespace PCShopEmpire3D.Orders
                 : 0;
     }
 
+    /// <summary>
+    /// Immutable proof that the canonical, fully staged motherboard was released from the
+    /// reserved BuildKit into the existing chassis-assembly flow. The original ten staging
+    /// receipts remain append-only history and the work-order reservation stays live.
+    /// </summary>
+    public sealed class CustomPcBuildKitAssemblyHandoffReceipt
+    {
+        internal CustomPcBuildKitAssemblyHandoffReceipt(
+            StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+            CustomPcBuildOrderRecord buildOrder,
+            CustomPcBuildOrderLineSnapshot line,
+            CustomPcBuildKitReceipt stagingReceipt,
+            StableId<ContainerIdScope> buildKitContainerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> workbenchContainerId,
+            long inventoryAppliedRevision)
+        {
+            OperationId = operationId;
+            BuildOrder = buildOrder;
+            Line = line;
+            StagingReceipt = stagingReceipt;
+            BuildKitContainerId = buildKitContainerId;
+            HandsContainerId = handsContainerId;
+            WorkbenchContainerId = workbenchContainerId;
+            InventoryAppliedRevision = inventoryAppliedRevision;
+        }
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope> OperationId { get; }
+
+        public CustomPcBuildOrderRecord BuildOrder { get; }
+
+        public CustomPcBuildOrderLineSnapshot Line { get; }
+
+        public CustomPcBuildKitReceipt StagingReceipt { get; }
+
+        public StableId<ContainerIdScope> BuildKitContainerId { get; }
+
+        public StableId<ContainerIdScope> HandsContainerId { get; }
+
+        public StableId<ContainerIdScope> WorkbenchContainerId { get; }
+
+        public long InventoryAppliedRevision { get; }
+    }
+
     public static class CustomPcWorkOrderFailures
     {
         public static readonly Failure MissingAuthority =
@@ -311,5 +355,13 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.receipt-invalid");
         public static readonly Failure BuildKitRevisionStale =
             Failure.FromCode("orders.custom-pc-build-kit.revision-stale");
+        public static readonly Failure BuildKitAssemblyOperationInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.operation-invalid");
+        public static readonly Failure BuildKitAssemblyIdentityConflict =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.identity-conflict");
+        public static readonly Failure BuildKitAssemblyStageInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.stage-invalid");
+        public static readonly Failure BuildKitAssemblyWorkbenchInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.workbench-invalid");
     }
 }

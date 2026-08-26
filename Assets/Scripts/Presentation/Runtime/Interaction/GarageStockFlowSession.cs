@@ -103,6 +103,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-operation.prototype-eps12v-power-cable";
         public const string PrototypePcieGpuPowerCableBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-pcie-gpu-power-cable";
+        public const string PrototypeMotherboardAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-motherboard";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -335,6 +337,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypePcieGpuPowerCableBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
                     PrototypePcieGpuPowerCableBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeMotherboardAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeMotherboardAssemblyHandoffOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -1243,6 +1250,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             return CustomPcBuildKit.PlaceCanonicalMotherboard(
                 pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMotherboardForAssembly()
+        {
+            return PickupStagedMotherboardForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMotherboardForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalMotherboardForAssembly(
+                PrototypeMotherboardAssemblyHandoffOperationId,
+                workOrder,
+                WorkbenchContainerId,
                 expectedBuildKitRevision,
                 expectedInventoryRevision);
         }
