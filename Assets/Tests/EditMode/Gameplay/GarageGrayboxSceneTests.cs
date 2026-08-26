@@ -125,6 +125,11 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .SelectMany(root => root.GetComponentsInChildren<
                         Atx24PowerCableBuildKitProjection>(true))
                     .ToArray();
+                Eps12vPowerCableBuildKitProjection[] eps12vPowerCableBuildKits = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        Eps12vPowerCableBuildKitProjection>(true))
+                    .ToArray();
                 PlacementPreview placementPreview = motor.GetComponentInChildren<PlacementPreview>(true);
 
                 Assert.That(controller.height, Is.EqualTo(1.75f).Within(0.001f));
@@ -1023,6 +1028,61 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                             atx24PowerCableBuildKit,
                             marker.Atx24PowerCableBinding),
                     Is.True);
+                Assert.That(eps12vPowerCableBuildKits.Length, Is.EqualTo(1));
+                Eps12vPowerCableBuildKitProjection eps12vPowerCableBuildKit =
+                    eps12vPowerCableBuildKits[0];
+                Assert.That(marker.Eps12vPowerCableBuildKit,
+                    Is.SameAs(eps12vPowerCableBuildKit));
+                Assert.That(marker.HasEps12vPowerCableBuildKitR43Runtime, Is.True);
+                Assert.That(eps12vPowerCableBuildKit.IsCanonical, Is.True);
+                Assert.That(eps12vPowerCableBuildKit.IsConfigured, Is.True);
+                Assert.That(eps12vPowerCableBuildKit.ProjectionIdValue,
+                    Is.EqualTo(
+                        Eps12vPowerCableBuildKitProjection.PrototypeProjectionIdValue));
+                Assert.That(eps12vPowerCableBuildKit.Runtime,
+                    Is.SameAs(marker.StockFlow));
+                Assert.That(eps12vPowerCableBuildKit.Surface.SurfaceId,
+                    Is.EqualTo(
+                        Eps12vPowerCableBuildKitProjection.PrototypeSurfaceIdValue));
+                Assert.That(eps12vPowerCableBuildKit.Surface.GridSize,
+                    Is.EqualTo(0.01f).Within(0.001f));
+                Assert.That(eps12vPowerCableBuildKit.Surface.YawStepDegrees,
+                    Is.EqualTo(180f).Within(0.001f));
+                Assert.That(eps12vPowerCableBuildKit.SupportCollider.isTrigger,
+                    Is.False);
+                Assert.That(
+                    eps12vPowerCableBuildKit.SupportCollider.gameObject.layer,
+                    Is.EqualTo(0));
+                Assert.That(eps12vPowerCableBuildKit.SupportCollider.bounds.min.y,
+                    Is.EqualTo(workbenchTop.bounds.max.y).Within(0.001f));
+                Assert.That(eps12vPowerCableBuildKit.ProgressText.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
+                Assert.That(eps12vPowerCableBuildKit.ProgressText.text,
+                    Does.Contain("BUILD KIT"));
+                Assert.That(eps12vPowerCableBuildKit.StagedComponentCount,
+                    Is.EqualTo(0));
+                Assert.That(
+                    eps12vPowerCableBuildKit.GetComponentsInChildren<Collider>(true)
+                        .Length,
+                    Is.EqualTo(1));
+                Assert.That(eps12vPowerCableBuildKit.SnapAnchor.position.x,
+                    Is.EqualTo(3.69f).Within(0.001f));
+                Assert.That(eps12vPowerCableBuildKit.SnapAnchor.position.y,
+                    Is.EqualTo(1.032f).Within(0.001f));
+                Assert.That(eps12vPowerCableBuildKit.SnapAnchor.position.z,
+                    Is.EqualTo(4.14f).Within(0.001f));
+                Assert.That(
+                    eps12vPowerCableBuildKit.SupportCollider.bounds.Intersects(
+                        atx24PowerCableBuildKit.SupportCollider.bounds),
+                    Is.False);
+                Assert.That(marker.Eps12vPowerCableBinding.BuildKit,
+                    Is.SameAs(eps12vPowerCableBuildKit));
+                Assert.That(
+                    marker.PlayerCarry
+                        .MatchesEps12vPowerCableBuildKitConfiguration(
+                            eps12vPowerCableBuildKit,
+                            marker.Eps12vPowerCableBinding),
+                    Is.True);
                 Assert.That(marker.StockFlow.ShelfOfferText, Is.Not.Null);
                 Assert.That(marker.StockFlow.ShelfOfferText.text,
                     Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
@@ -1044,7 +1104,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(
                     cart.GetComponentsInChildren<Collider>(true).Length,
                     Is.GreaterThanOrEqualTo(3));
-                Assert.That(placementSurfaces.Length, Is.EqualTo(10));
+                Assert.That(placementSurfaces.Length, Is.EqualTo(11));
                 PlacementSurface floorSurface = placementSurfaces.Single(
                     surface => surface.SurfaceId == "prototype.stock-floor-small-box-a");
                 PlacementSurface shelfSurface = placementSurfaces.Single(
@@ -1077,6 +1137,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     placementSurfaces.Single(
                         surface => surface.SurfaceId ==
                             Atx24PowerCableBuildKitProjection.PrototypeSurfaceIdValue);
+                PlacementSurface eps12vPowerCableBuildKitSurface =
+                    placementSurfaces.Single(
+                        surface => surface.SurfaceId ==
+                            Eps12vPowerCableBuildKitProjection.PrototypeSurfaceIdValue);
                 Assert.That(floorSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
                 Assert.That(floorSurface.YawStepDegrees, Is.EqualTo(90f).Within(0.001f));
                 Assert.That(shelfSurface.GridSize, Is.EqualTo(0.25f).Within(0.001f));
@@ -1096,6 +1160,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.SameAs(powerSupplyBuildKit.Surface));
                 Assert.That(atx24PowerCableBuildKitSurface,
                     Is.SameAs(atx24PowerCableBuildKit.Surface));
+                Assert.That(eps12vPowerCableBuildKitSurface,
+                    Is.SameAs(eps12vPowerCableBuildKit.Surface));
                 InventoryPlacementZone shelfZone = shelfSurface.GetComponent<InventoryPlacementZone>();
                 Assert.That(shelfZone, Is.Not.Null);
                 Assert.That(shelfZone.ContainerId.Value,
@@ -1229,7 +1295,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-build-kit-r42-v1"));
+                    Is.EqualTo("garage-eps12v-power-cable-build-kit-r43-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -1375,7 +1441,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-build-kit-r42-v1"));
+                    Is.EqualTo("garage-eps12v-power-cable-build-kit-r43-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1531,7 +1597,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-build-kit-r42-v1"));
+                    Is.EqualTo("garage-eps12v-power-cable-build-kit-r43-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1692,7 +1758,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-build-kit-r42-v1"));
+                    Is.EqualTo("garage-eps12v-power-cable-build-kit-r43-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -1892,7 +1958,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-atx24-power-cable-build-kit-r42-v1"));
+                    Is.EqualTo("garage-eps12v-power-cable-build-kit-r43-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

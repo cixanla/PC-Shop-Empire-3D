@@ -13,6 +13,8 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private Eps12vPowerCableAssemblyItemBinding eps12vPowerCableBinding;
         [SerializeField] private PhysicalItemProjection eps12vPowerCable;
         [SerializeField] private Eps12vPowerCableRuntimeGeometry eps12vPowerCableGeometry;
+        [SerializeField]
+        private Eps12vPowerCableBuildKitProjection eps12vPowerCableBuildKit;
 
         public Eps12vPowerCableRouteProjection Eps12vPowerCableRoute =>
             eps12vPowerCableRoute;
@@ -24,6 +26,9 @@ namespace PCShopEmpire3D.Presentation
 
         public Eps12vPowerCableRuntimeGeometry Eps12vPowerCableGeometry =>
             eps12vPowerCableGeometry;
+
+        public Eps12vPowerCableBuildKitProjection Eps12vPowerCableBuildKit =>
+            eps12vPowerCableBuildKit;
 
         public bool HasEps12vPowerCableR31Runtime =>
             eps12vPowerCableGeometry != null &&
@@ -42,6 +47,24 @@ namespace PCShopEmpire3D.Presentation
             CountCanonicalEps12vPowerCableProjections(
                 GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue) == 1 &&
             FindObjectsByType<Eps12vPowerCableRuntimeGeometry>(
+                FindObjectsSortMode.None).Length == 1;
+
+        public bool HasEps12vPowerCableBuildKitR43Runtime =>
+            eps12vPowerCableBuildKit != null &&
+            eps12vPowerCableBuildKit.IsCanonical &&
+            eps12vPowerCableBuildKit.Runtime == stockFlow &&
+            eps12vPowerCableBinding != null &&
+            eps12vPowerCableBinding.PhysicalItem == eps12vPowerCable &&
+            eps12vPowerCableBinding.Route == eps12vPowerCableRoute &&
+            eps12vPowerCableBinding.MatchesBuildKitConfiguration(
+                eps12vPowerCableBuildKit) &&
+            eps12vPowerCable != null &&
+            eps12vPowerCableRoute != null &&
+            playerCarry != null &&
+            playerCarry.MatchesEps12vPowerCableBuildKitConfiguration(
+                eps12vPowerCableBuildKit,
+                eps12vPowerCableBinding) &&
+            FindObjectsByType<Eps12vPowerCableBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
         private void ConfigureEps12vPowerCable(

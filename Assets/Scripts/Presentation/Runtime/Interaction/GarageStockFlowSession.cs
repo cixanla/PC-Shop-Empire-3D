@@ -79,6 +79,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.container.custom-pc-build-kit.power-supply";
         public const string Atx24PowerCableBuildKitContainerIdValue =
             "inventory.container.custom-pc-build-kit.atx24-power-cable";
+        public const string Eps12vPowerCableBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.eps12v-power-cable";
         public const string PrototypeCustomPcBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-motherboard";
         public const string PrototypeProcessorBuildKitOperationIdValue =
@@ -95,6 +97,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-operation.prototype-power-supply";
         public const string PrototypeAtx24PowerCableBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-atx24-power-cable";
+        public const string PrototypeEps12vPowerCableBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-eps12v-power-cable";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -272,6 +276,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ContainerIdScope> Atx24PowerCableBuildKitContainerId =>
             StableId<ContainerIdScope>.Parse(Atx24PowerCableBuildKitContainerIdValue);
 
+        public StableId<ContainerIdScope> Eps12vPowerCableBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(Eps12vPowerCableBuildKitContainerIdValue);
+
         public StableId<CustomPcBuildKitOperationIdScope>
             PrototypeCustomPcBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
@@ -311,6 +318,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeAtx24PowerCableBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
                     PrototypeAtx24PowerCableBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeEps12vPowerCableBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeEps12vPowerCableBuildKitOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -760,6 +772,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Atx24PowerCableBuildKitContainerIdValue,
                     InventoryContainerKind.BuildKit,
                     1);
+                RegisterContainer(
+                    inventory,
+                    Eps12vPowerCableBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
@@ -964,7 +981,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             PowerSupplyBuildKitContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            Atx24PowerCableBuildKitContainerIdValue)).Value
+                            Atx24PowerCableBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            Eps12vPowerCableBuildKitContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(

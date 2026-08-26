@@ -2,6 +2,7 @@ using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 
 namespace PCShopEmpire3D.Presentation.Interaction
 {
@@ -86,9 +87,50 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-eps12v-cable.loose-pickup-invalid"));
             }
 
+            if (CustomPcBuildKit != null &&
+                TryGetPrototypeCustomPcBuildOrder(out CustomPcBuildOrderRecord workOrder))
+            {
+                OperationResult<CustomPcBuildKitReceipt> pickup =
+                    CustomPcBuildKit.PickupCanonicalEps12vPowerCable(
+                        PrototypeEps12vPowerCableBuildKitOperationId,
+                        workOrder);
+                return pickup.IsSuccess
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(pickup.Error);
+            }
+
             return Inventory.TransferSerializedItem(
                 Eps12vPowerCableItemId,
                 HandsContainerId);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldEps12vPowerCableInCustomPcBuildKit()
+        {
+            return PlaceHeldEps12vPowerCableInCustomPcBuildKit(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitReceipt>
+            PlaceHeldEps12vPowerCableInCustomPcBuildKit(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeEps12vPowerCableBuildKitOperationId,
+                    out CustomPcBuildKitReceipt pickup) ||
+                pickup.Stage != CustomPcBuildKitStage.Eps12vPowerCableInHands)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitStageInvalid);
+            }
+
+            return CustomPcBuildKit.PlaceCanonicalEps12vPowerCable(
+                pickup,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
         }
 
         public OperationResult DropHeldEps12vPowerCableToWorld()

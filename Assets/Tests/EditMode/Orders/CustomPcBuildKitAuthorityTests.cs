@@ -11,7 +11,7 @@ using PCShopEmpire3D.Retail;
 
 namespace PCShopEmpire3D.Tests.EditMode.Orders
 {
-    public sealed class CustomPcBuildKitAuthorityTests
+    public sealed partial class CustomPcBuildKitAuthorityTests
     {
         private const string BuildKitContainerIdValue =
             "inventory.container.custom-pc-build-kit-test";

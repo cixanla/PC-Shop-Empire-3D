@@ -72,6 +72,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-eps12v-cable.paused")));
             }
 
+            if (enabled && eps12vPowerCableBuildKit != null &&
+                eps12vPowerCableBuildKit.HasPickupReceipt)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-eps12v-power-cable-build-kit.authority-blocked")));
+            }
+
             SetEps12vPowerCableRouteMode(enabled);
             if (enabled)
             {
@@ -163,13 +171,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            Eps12vPowerCableBuildKitEvaluation buildKitEvaluation =
+                EvaluateEps12vPowerCableBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsEps12vPowerCableBuildKitMode ||
+                (eps12vPowerCableBuildKit != null &&
+                 eps12vPowerCableBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetEps12vPowerCableRouteMode(
-                    !IsEps12vPowerCableRouteMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetEps12vPowerCableBuildKitMode(
+                        !IsEps12vPowerCableBuildKitMode);
+                }
+                else
+                {
+                    TrySetEps12vPowerCableRouteMode(
+                        !IsEps12vPowerCableRouteMode);
+                }
+                return true;
+            }
+
+            if (IsEps12vPowerCableBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotateEps12vPowerCableBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -182,28 +214,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsEps12vPowerCableRouteMode)
+            Eps12vPowerCableRouteEvaluation evaluation = default;
+            if (IsEps12vPowerCableBuildKitMode)
+            {
+                ApplyEps12vPowerCableBuildKitEvaluation(buildKitEvaluation);
+            }
+            else if (!IsEps12vPowerCableRouteMode)
             {
                 eps12vPowerCableRoute?.SetRouteModeActive(active: false);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
+            }
+            else
+            {
+                evaluation = EvaluateEps12vPowerCableRoute(binding);
+                ApplyEps12vPowerCableRouteEvaluation(evaluation);
             }
 
-            Eps12vPowerCableRouteEvaluation evaluation =
-                EvaluateEps12vPowerCableRoute(binding);
-            ApplyEps12vPowerCableRouteEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmEps12vPowerCableRoute(binding, evaluation);
+                if (IsEps12vPowerCableBuildKitMode)
+                {
+                    TryConfirmEps12vPowerCableBuildKit();
+                }
+                else if (IsEps12vPowerCableRouteMode)
+                {
+                    TryConfirmEps12vPowerCableRoute(binding, evaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -211,6 +253,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetEps12vPowerCableRouteMode(bool enabled)
         {
+            ResetEps12vPowerCableBuildKitState();
             IsEps12vPowerCableRouteMode = enabled &&
                                          HeldItem != null &&
                                          GetEps12vPowerCableBinding(HeldItem) != null;

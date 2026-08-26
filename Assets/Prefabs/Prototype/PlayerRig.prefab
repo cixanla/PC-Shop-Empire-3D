@@ -667,6 +667,7 @@ MonoBehaviour:
   atx24PowerCableBuildKit: {fileID: 0}
   eps12vPowerCableRoute: {fileID: 0}
   eps12vPowerCableBinding: {fileID: 0}
+  eps12vPowerCableBuildKit: {fileID: 0}
   graphicsCardSlot: {fileID: 0}
   graphicsCardBinding: {fileID: 0}
   graphicsCardBuildKit: {fileID: 0}

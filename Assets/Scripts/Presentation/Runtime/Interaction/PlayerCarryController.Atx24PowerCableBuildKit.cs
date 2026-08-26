@@ -277,6 +277,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsGraphicsCardSeatMode = false;
             IsProcessorCoolerSeatMode = false;
             ResetEps12vPowerCableState();
+            ResetEps12vPowerCableBuildKitState();
             ResetPcieGpuPowerCableState();
             ResetMotherboardBuildKitState();
             ResetProcessorBuildKitState();

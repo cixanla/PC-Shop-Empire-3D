@@ -565,6 +565,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     accent,
                     rubber,
                     labelPaper);
+            Eps12vPowerCableBuildKitBuildResult eps12vPowerCableBuildKitBuild =
+                BuildEps12vPowerCableBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -648,6 +655,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 atx24PowerCableBuildKitBuild.Surface,
                 atx24PowerCableBuildKitBuild.SnapAnchor,
                 atx24PowerCableBuildKitBuild.ProgressText);
+            eps12vPowerCableBuildKitBuild.Projection.Configure(
+                stockFlow,
+                eps12vPowerCableBuildKitBuild.Surface,
+                eps12vPowerCableBuildKitBuild.SnapAnchor,
+                eps12vPowerCableBuildKitBuild.ProgressText);
             assemblyBuild.Binding.Configure(
                 stockFlow,
                 assemblyBuild.Motherboard,
@@ -703,7 +715,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.Eps12vPowerCable,
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableGeometry,
-                GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue);
+                GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue,
+                eps12vPowerCableBuildKitBuild.Projection);
             assemblyBuild.PcieGpuPowerCableBinding.Configure(
                 stockFlow,
                 assemblyBuild.PcieGpuPowerCable,
@@ -759,6 +772,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureAtx24PowerCableRoute(
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableBinding);
+            carry.ConfigureEps12vPowerCableBuildKit(
+                eps12vPowerCableBuildKitBuild.Projection,
+                assemblyBuild.Eps12vPowerCableBinding);
             carry.ConfigureEps12vPowerCableRoute(
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableBinding);
@@ -849,7 +865,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 processorCoolerBuildKitBuild.Projection,
                 graphicsCardBuildKitBuild.Projection,
                 powerSupplyBuildKitBuild.Projection,
-                atx24PowerCableBuildKitBuild.Projection);
+                atx24PowerCableBuildKitBuild.Projection,
+                eps12vPowerCableBuildKitBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
