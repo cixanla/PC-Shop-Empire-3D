@@ -480,24 +480,39 @@ namespace PCShopEmpire3D.Tests.PlayMode
             start = player.position;
             yaw = player.eulerAngles.y;
             pitch = cameraPivot.localEulerAngles.x;
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.S));
             InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.Update();
+            Assert.That(marker.PlayerInput.Move.sqrMagnitude, Is.LessThan(0.0001f));
+            Assert.That(marker.PlayerInput.HasActuatedMoveControl, Is.True);
             marker.PlayerMotor.ProcessInputFrame(
                 SimulatedFrameDeltaTime,
                 SimulatedFrameDeltaTime);
             Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
                 Is.LessThan(0.001f),
-                "Movement held through resume must remain blocked until a neutral frame.");
+                "Opposing movement controls held through resume must not count as neutral.");
             Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
                 Is.LessThan(0.001f));
             Assert.That(Mathf.Abs(Mathf.DeltaAngle(
                     pitch,
                     cameraPivot.localEulerAngles.x)),
                 Is.LessThan(0.001f));
+
+            start = player.position;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.HasActuatedMoveControl, Is.True);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "Releasing only one opposing control must not bypass the resume-neutral latch.");
+
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.Update();
+            Assert.That(marker.PlayerInput.HasActuatedMoveControl, Is.False);
             marker.PlayerMotor.ProcessInputFrame(
                 SimulatedFrameDeltaTime,
                 SimulatedFrameDeltaTime);

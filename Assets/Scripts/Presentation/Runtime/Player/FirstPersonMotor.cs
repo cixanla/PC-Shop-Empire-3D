@@ -154,8 +154,7 @@ namespace PCShopEmpire3D.Presentation.Player
             }
             else if (wasPaused && input != null)
             {
-                _moveRequiresNeutralAfterResume =
-                    input.Move.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
+                _moveRequiresNeutralAfterResume = input.HasActuatedMoveControl;
                 _gamepadLookRequiresNeutralAfterResume =
                     input.GamepadLook.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
             }
@@ -219,13 +218,12 @@ namespace PCShopEmpire3D.Presentation.Player
 
         private Vector2 ReadMoveAfterResume()
         {
-            Vector2 move = input.Move;
             if (!_moveRequiresNeutralAfterResume)
             {
-                return move;
+                return input.Move;
             }
 
-            if (move.sqrMagnitude <= ContinuousInputNeutralThresholdSquared)
+            if (!input.HasActuatedMoveControl)
             {
                 _moveRequiresNeutralAfterResume = false;
             }

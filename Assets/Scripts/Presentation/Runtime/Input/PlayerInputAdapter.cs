@@ -10,6 +10,8 @@ namespace PCShopEmpire3D.Presentation.Input
     /// </summary>
     public sealed class PlayerInputAdapter : MonoBehaviour
     {
+        private const float ContinuousControlActuationThreshold = 0.01f;
+
         [SerializeField] private InputActionAsset actions;
 
         private InputActionMap _playerMap;
@@ -40,6 +42,27 @@ namespace PCShopEmpire3D.Presentation.Input
         public InputActionAsset Actions => actions;
 
         public Vector2 Move => _move?.ReadValue<Vector2>() ?? Vector2.zero;
+
+        public bool HasActuatedMoveControl
+        {
+            get
+            {
+                if (_move == null)
+                {
+                    return false;
+                }
+
+                foreach (InputControl control in _move.controls)
+                {
+                    if (control.IsActuated(ContinuousControlActuationThreshold))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
 
         public Vector2 Look => _look?.ReadValue<Vector2>() ?? Vector2.zero;
 
