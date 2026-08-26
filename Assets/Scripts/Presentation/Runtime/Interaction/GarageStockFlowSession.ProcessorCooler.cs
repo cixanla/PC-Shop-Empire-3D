@@ -111,6 +111,82 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 expectedInventoryRevision);
         }
 
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedProcessorCoolerForAssembly()
+        {
+            return PickupStagedProcessorCoolerForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedProcessorCoolerForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision)
+        {
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            if (CustomPcBuildKit == null ||
+                snapshot.Revision != expectedAssemblyRevision ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.MemoryModuleRetained ||
+                snapshot.StorageSlotState != StorageSlotState.StorageDeviceSecured ||
+                snapshot.ProcessorCoolerSlotState != ProcessorCoolerSlotState.EmptyOpen ||
+                snapshot.ProcessorCoolerTimState != ProcessorCoolerTimState.Unsupported ||
+                snapshot.MotherboardItemId != MotherboardItemId ||
+                snapshot.ProcessorItemId != ProcessorItemId ||
+                snapshot.MemoryItemId != MemoryItemId ||
+                snapshot.StorageItemId != StorageItemId ||
+                snapshot.InstalledByOperationId.IsEmpty ||
+                snapshot.SecuredByOperationId.IsEmpty ||
+                snapshot.ProcessorSeatedByOperationId.IsEmpty ||
+                snapshot.ProcessorRetainedByOperationId.IsEmpty ||
+                snapshot.MemorySeatedByOperationId.IsEmpty ||
+                snapshot.MemoryRetainedByOperationId.IsEmpty ||
+                snapshot.StorageSeatedByOperationId.IsEmpty ||
+                snapshot.StorageSecuredByOperationId.IsEmpty ||
+                !TryGetMotherboardItem(out InventoryItemRecord motherboard) ||
+                motherboard.ContainerId != WorkbenchContainerId ||
+                !TryGetProcessorItem(out InventoryItemRecord processor) ||
+                processor.ContainerId != ProcessorSocketContainerId ||
+                !TryGetMemoryItem(out InventoryItemRecord memoryModule) ||
+                memoryModule.ContainerId != MemorySlotContainerId ||
+                !TryGetStorageItem(out InventoryItemRecord storage) ||
+                storage.ContainerId != StorageSlotContainerId ||
+                !TryGetProcessorCoolerItem(out InventoryItemRecord processorCooler) ||
+                processorCooler.Id != ProcessorCoolerItemId ||
+                (processorCooler.StateFlags &
+                 InventorySerializedItemStateFlags.PreAppliedConsumableConsumed) != 0 ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedMemoryModuleAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveSecuredStorageAssemblyPrerequisite(snapshot, workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalProcessorCoolerForAssembly(
+                PrototypeProcessorCoolerAssemblyHandoffOperationId,
+                workOrder,
+                ProcessorCoolerSlotContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldProcessorCoolerToWorld()
         {
             if (!AssemblyBuild.HasProcessorCoolerSlot ||
@@ -190,6 +266,69 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ProcessorCoolerSlotId,
                 sourceProcessorCoolerSeatOperationId,
                 expectedAssemblyRevision);
+        }
+
+        private bool HasLiveSecuredStorageAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.StorageSeatedByOperationId,
+                    out AssemblyOperationReceipt seat) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.StorageSecuredByOperationId,
+                    out AssemblyOperationReceipt secure))
+            {
+                return false;
+            }
+
+            CustomPcBuildOrderLineSnapshot canonicalStorage = null;
+            foreach (CustomPcBuildOrderLineSnapshot line in workOrder.Lines)
+            {
+                if (line.ComponentKind == PcComponentKind.StorageDevice)
+                {
+                    if (canonicalStorage != null)
+                    {
+                        return false;
+                    }
+
+                    canonicalStorage = line;
+                }
+            }
+
+            return canonicalStorage != null &&
+                   canonicalStorage.ItemId == snapshot.StorageItemId &&
+                   canonicalStorage.ProductId == snapshot.StorageProductId &&
+                   seat.OperationId == snapshot.StorageSeatedByOperationId &&
+                   seat.OperationKind == AssemblyOperationKind.SeatStorageDevice &&
+                   seat.BuildId == snapshot.BuildId &&
+                   seat.ChassisId == snapshot.ChassisId &&
+                   seat.SlotId == snapshot.StorageSlotId &&
+                   seat.ItemId == snapshot.StorageItemId &&
+                   seat.ProductId == snapshot.StorageProductId &&
+                   seat.SourceContainerId == HandsContainerId &&
+                   seat.TargetContainerId == StorageSlotContainerId &&
+                   seat.SourceAttachOperationId == snapshot.InstalledByOperationId &&
+                   seat.SourceSecureOperationId == snapshot.SecuredByOperationId &&
+                   seat.PreviousStorageSlotState == StorageSlotState.EmptyOpen &&
+                   seat.ResultingStorageSlotState ==
+                       StorageSlotState.StorageDeviceSeatedUnsecured &&
+                   secure.OperationId == snapshot.StorageSecuredByOperationId &&
+                   secure.OperationKind == AssemblyOperationKind.SecureStorageDevice &&
+                   secure.BuildId == snapshot.BuildId &&
+                   secure.ChassisId == snapshot.ChassisId &&
+                   secure.SlotId == snapshot.StorageSlotId &&
+                   secure.ItemId == snapshot.StorageItemId &&
+                   secure.ProductId == snapshot.StorageProductId &&
+                   secure.RetentionId == AssemblyBuild.StorageCaptiveScrewId &&
+                   secure.SourceStorageSeatOperationId == seat.OperationId &&
+                   secure.PreviousStorageSlotState ==
+                       StorageSlotState.StorageDeviceSeatedUnsecured &&
+                   secure.ResultingStorageSlotState ==
+                       StorageSlotState.StorageDeviceSecured &&
+                   secure.AssemblyRevision == snapshot.Revision;
         }
     }
 }

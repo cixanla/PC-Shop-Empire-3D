@@ -27,6 +27,9 @@ namespace PCShopEmpire3D.Presentation
             "history=10/10-preserved other-six=untouched receipts=ok " +
             "revisions=ok no-duplicate-loss=ok invariants=ok";
 
+        private bool _suppressStorageAssemblyHandoffSmokeSuccessMarker;
+        private string _nestedStorageAssemblyHandoffSmokeFailureCode;
+
         public bool HasStorageAssemblyHandoffR48Runtime =>
             HasMemoryModuleAssemblyHandoffR47Runtime &&
             storageDevice != null &&
@@ -405,9 +408,14 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                Debug.Log(StorageAssemblyHandoffSmokeSuccessMarker);
+                if (!_suppressStorageAssemblyHandoffSmokeSuccessMarker)
+                {
+                    Debug.Log(StorageAssemblyHandoffSmokeSuccessMarker);
+                }
+
                 yield return new WaitForEndOfFrame();
-                if (!Application.isEditor)
+                if (!Application.isEditor &&
+                    !_suppressStorageAssemblyHandoffSmokeSuccessMarker)
                 {
                     Application.Quit(0);
                 }
@@ -452,6 +460,12 @@ namespace PCShopEmpire3D.Presentation
 
         private void LogStorageAssemblyHandoffSmokeFailure(string code)
         {
+            if (_suppressStorageAssemblyHandoffSmokeSuccessMarker)
+            {
+                _nestedStorageAssemblyHandoffSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_STORAGE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
                 $"assembly-handoff-flow=failed code={code}");

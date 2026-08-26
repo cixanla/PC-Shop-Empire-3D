@@ -618,6 +618,30 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged processor cooler from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed cooler slot already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedProcessorCoolerForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> processorCoolerSlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.ProcessorCooler,
+                operationId,
+                processorCoolerSlotContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(
@@ -1021,7 +1045,8 @@ namespace PCShopEmpire3D.Inventory
             if ((pickup.ComponentKind != PcComponentKind.Motherboard &&
                  pickup.ComponentKind != PcComponentKind.Processor &&
                  pickup.ComponentKind != PcComponentKind.MemoryModule &&
-                 pickup.ComponentKind != PcComponentKind.StorageDevice) ||
+                 pickup.ComponentKind != PcComponentKind.StorageDevice &&
+                 pickup.ComponentKind != PcComponentKind.ProcessorCooler) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||

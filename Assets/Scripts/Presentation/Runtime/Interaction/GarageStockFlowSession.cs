@@ -111,6 +111,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-assembly-operation.prototype-memory-module";
         public const string PrototypeStorageAssemblyHandoffOperationIdValue =
             "orders.custom-pc-build-kit-assembly-operation.prototype-storage";
+        public const string PrototypeProcessorCoolerAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-processor-cooler";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -363,6 +365,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeStorageAssemblyHandoffOperationId =>
                 StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
                     PrototypeStorageAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeProcessorCoolerAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeProcessorCoolerAssemblyHandoffOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -1036,7 +1043,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             MemorySlotContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            StorageSlotContainerIdValue)).Value
+                            StorageSlotContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorCoolerSlotContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
@@ -1599,7 +1608,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool HasLiveRetainedMemoryModuleAssemblyPrerequisite(
             AssemblyBuildSnapshot snapshot,
-            CustomPcBuildOrderRecord workOrder)
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
         {
             if (workOrder == null ||
                 snapshot.BuildId != AssemblyBuild.BuildId ||
@@ -1657,7 +1667,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        MemorySlotState.MemoryModuleSeatedOpen &&
                    retain.ResultingMemorySlotState ==
                        MemorySlotState.MemoryModuleRetained &&
-                   retain.AssemblyRevision == snapshot.Revision;
+                   (requireCurrentRevision
+                       ? retain.AssemblyRevision == snapshot.Revision
+                       : retain.AssemblyRevision > 0 &&
+                         retain.AssemblyRevision < snapshot.Revision);
         }
 
         public OperationResult DropHeldMotherboardToWorld()

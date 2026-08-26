@@ -831,6 +831,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker.ProcessorCoolerBuildKit,
                     Is.SameAs(processorCoolerBuildKit));
                 Assert.That(marker.HasProcessorCoolerBuildKitR39Runtime, Is.True);
+                Assert.That(marker.HasProcessorCoolerAssemblyHandoffR49Runtime,
+                    Is.True);
                 Assert.That(processorCoolerBuildKit.IsCanonical, Is.True);
                 Assert.That(processorCoolerBuildKit.IsConfigured, Is.True);
                 Assert.That(processorCoolerBuildKit.ProjectionIdValue,
@@ -1363,7 +1365,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-storage-assembly-handoff-r48-v1"));
+                    Is.EqualTo("garage-processor-cooler-assembly-handoff-r49-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
@@ -1509,7 +1511,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-storage-assembly-handoff-r48-v1"));
+                    Is.EqualTo("garage-processor-cooler-assembly-handoff-r49-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1665,7 +1667,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-storage-assembly-handoff-r48-v1"));
+                    Is.EqualTo("garage-processor-cooler-assembly-handoff-r49-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1826,7 +1828,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-storage-assembly-handoff-r48-v1"));
+                    Is.EqualTo("garage-processor-cooler-assembly-handoff-r49-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2026,7 +2028,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-storage-assembly-handoff-r48-v1"));
+                    Is.EqualTo("garage-processor-cooler-assembly-handoff-r49-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -2364,6 +2366,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(coolerSlot.RetentionPoints.Distinct().Count(), Is.EqualTo(4));
                 Assert.That(coolerSlot.ClearanceBlockers,
                     Is.EqualTo(new[] { memoryRoot.GetComponent<BoxCollider>() }));
+                Assert.That(storageSlot.transform.localPosition.y,
+                    Is.EqualTo(0.100f).Within(0.0001f));
                 Assert.That(Vector3.Distance(
                     coolerSnapAnchor.localPosition,
                     new Vector3(0f, 0f, 0.011f)), Is.LessThan(0.0001f));

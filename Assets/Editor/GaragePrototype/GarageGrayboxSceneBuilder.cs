@@ -1826,7 +1826,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform storageSlotRoot = new GameObject(
                 "MotherboardM2SlotPrimary").transform;
             storageSlotRoot.SetParent(motherboardRoot.transform, false);
-            storageSlotRoot.localPosition = new Vector3(0.020f, 0.085f, 0.012f);
+            storageSlotRoot.localPosition = new Vector3(0.020f, 0.100f, 0.012f);
             GameObject storageConnector = CreateBeveledCube(
                 "M2MKeyConnector",
                 storageSlotRoot,

@@ -643,11 +643,53 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
                 if (focusedCooler != null)
                 {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (focusedCooler.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedCooler.BuildKit?.StagedComponentCount ?? 5;
+                        GarageStockFlowSession focusedSession = focusedCooler.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        bool storageSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.StorageSlotState ==
+                                StorageSlotState.StorageDeviceSecured;
+                        if (stagedComponentCount <
+                            ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained &&
+                               memoryRetained && storageSecured
+                            ? $"{interact}: SOĞUTUCUYU 4 NOKTALI MONTAJA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : !memoryRetained
+                                        ? "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT"
+                                        : "ÖNCE EXACT M.2 NVMe'Yİ PRIMARY SLOTTA VİDAYLA SABİTLE";
+                    }
+
                     return focusedCooler.IsRetained
                         ? "SOĞUTUCU BRAKETİ KİLİTLİ • sökme kilitli"
                         : focusedCooler.IsSeated
-                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: soğutucuyu çıkar • 4 NOKTA GEVŞEK"
-                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • TOP-DOWN AIR";
+                            ? $"{interact}: soğutucuyu çıkar • 4 NOKTA GEVŞEK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • TOP-DOWN AIR";
                 }
                 if (focusedStorage != null)
                 {
