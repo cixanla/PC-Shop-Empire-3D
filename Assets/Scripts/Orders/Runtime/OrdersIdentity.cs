@@ -29,4 +29,8 @@ namespace PCShopEmpire3D.Orders
     public sealed class CustomPcBuildKitOperationIdScope : IStableIdScope
     {
     }
+
+    public sealed class CustomPcBuildKitAssemblyOperationIdScope : IStableIdScope
+    {
+    }
 }

@@ -66,6 +66,15 @@ namespace PCShopEmpire3D.Orders
         internal InventorySerializedReservationWorkOrderBuildKitReceipt
             InventoryPlacementReceipt { get; private set; }
 
+        internal CustomPcBuildKitAssemblyHandoffReceipt AssemblyHandoffReceipt
+        {
+            get;
+            private set;
+        }
+
+        internal InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+            InventoryAssemblyHandoffReceipt { get; private set; }
+
         internal bool TryPublishPlacement(
             CustomPcBuildKitReceipt placementReceipt,
             InventorySerializedReservationWorkOrderBuildKitReceipt inventoryPlacementReceipt)
@@ -80,6 +89,30 @@ namespace PCShopEmpire3D.Orders
 
             PlacementReceipt = placementReceipt;
             InventoryPlacementReceipt = inventoryPlacementReceipt;
+            return true;
+        }
+
+        internal bool TryPublishAssemblyHandoff(
+            CustomPcBuildKitAssemblyHandoffReceipt handoffReceipt,
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+                inventoryHandoffReceipt)
+        {
+            if (PlacementReceipt == null ||
+                InventoryPlacementReceipt == null ||
+                AssemblyHandoffReceipt != null ||
+                InventoryAssemblyHandoffReceipt != null ||
+                handoffReceipt == null ||
+                inventoryHandoffReceipt == null ||
+                !ReferenceEquals(handoffReceipt.StagingReceipt, PlacementReceipt) ||
+                !ReferenceEquals(
+                    inventoryHandoffReceipt.PlacementReceipt,
+                    InventoryPlacementReceipt))
+            {
+                return false;
+            }
+
+            AssemblyHandoffReceipt = handoffReceipt;
+            InventoryAssemblyHandoffReceipt = inventoryHandoffReceipt;
             return true;
         }
     }
@@ -122,6 +155,10 @@ namespace PCShopEmpire3D.Orders
         private readonly Dictionary<CustomPcBuildKitOrderComponentKey,
             CustomPcBuildKitRegistration> _registrationsByOrderAndComponent =
                 new Dictionary<CustomPcBuildKitOrderComponentKey,
+                    CustomPcBuildKitRegistration>();
+        private readonly Dictionary<StableId<CustomPcBuildKitAssemblyOperationIdScope>,
+            CustomPcBuildKitRegistration> _assemblyHandoffsByOperation =
+                new Dictionary<StableId<CustomPcBuildKitAssemblyOperationIdScope>,
                     CustomPcBuildKitRegistration>();
 
         private CustomPcBuildKitAuthority(
@@ -178,6 +215,8 @@ namespace PCShopEmpire3D.Orders
         public long Revision { get; private set; }
 
         public int ActiveKitCount => _registrationsByOperation.Count;
+
+        public int AssemblyHandoffCount => _assemblyHandoffsByOperation.Count;
 
         public int StagedComponentCount
         {
@@ -1946,6 +1985,180 @@ namespace PCShopEmpire3D.Orders
             return OperationResult<CustomPcBuildKitReceipt>.Success(placementReceipt);
         }
 
+        internal OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            ReleaseCanonicalMotherboardForAssembly(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> workbenchContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyOperationInvalid);
+            }
+
+            if (_assemblyHandoffsByOperation.TryGetValue(
+                    operationId,
+                    out CustomPcBuildKitRegistration replay))
+            {
+                return MatchesAssemblyHandoff(
+                           replay,
+                           operationId,
+                           workOrder,
+                           workbenchContainerId) &&
+                       OwnsRegistration(replay)
+                    ? OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Success(
+                        replay.AssemblyHandoffReceipt)
+                    : OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                        CustomPcWorkOrderFailures.BuildKitAssemblyIdentityConflict);
+            }
+
+            OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+                inventoryHandoff =
+                    PrepareInventoryMotherboardAssemblyHandoffForRecovery(
+                    operationId,
+                    workOrder,
+                    workbenchContainerId,
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            if (inventoryHandoff.IsFailure)
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    inventoryHandoff.Error == InventoryFailures.SerializedTransferPlanStale
+                        ? CustomPcWorkOrderFailures.BuildKitRevisionStale
+                        : inventoryHandoff.Error);
+            }
+
+            CustomPcBuildKitRegistration registration =
+                _registrationsByOrderAndComponent[
+                    new CustomPcBuildKitOrderComponentKey(
+                        workOrder.Id,
+                        PcComponentKind.Motherboard)];
+
+            var receipt = new CustomPcBuildKitAssemblyHandoffReceipt(
+                operationId,
+                workOrder,
+                registration.PlacementReceipt.Line,
+                registration.PlacementReceipt,
+                registration.PlacementReceipt.BuildKitContainerId,
+                _handsContainerId,
+                workbenchContainerId,
+                inventoryHandoff.Value.AppliedRevision);
+            if (!registration.TryPublishAssemblyHandoff(receipt, inventoryHandoff.Value))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyIdentityConflict);
+            }
+
+            _assemblyHandoffsByOperation.Add(operationId, registration);
+            Revision++;
+            return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Success(receipt);
+        }
+
+        /// <summary>
+        /// Recovery seam for the only cross-authority mutation in the motherboard handoff.
+        /// A caller may complete the Inventory leg and retry the outer operation with the
+        /// original revisions; Inventory's operation-keyed exact replay then returns the same
+        /// receipt while this authority publishes its projection exactly once.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            PrepareInventoryMotherboardAssemblyHandoffForRecovery(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> workbenchContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyOperationInvalid);
+            }
+
+            if (!_workOrders.TryGetOwnedInventoryAllocation(workOrder, out _))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitWorkOrderInvalid);
+            }
+
+            if (workbenchContainerId.IsEmpty ||
+                workbenchContainerId != workOrder.WorkbenchContainerId ||
+                workbenchContainerId != _workOrders.WorkbenchContainerId)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyWorkbenchInvalid);
+            }
+
+            if (Revision != expectedBuildKitRevision)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitRevisionStale);
+            }
+
+            if (!HasCompleteCanonicalKit(workOrder))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
+            }
+
+            if (!_registrationsByOrderAndComponent.TryGetValue(
+                    new CustomPcBuildKitOrderComponentKey(
+                        workOrder.Id,
+                        PcComponentKind.Motherboard),
+                    out CustomPcBuildKitRegistration registration) ||
+                !OwnsRegistration(registration) ||
+                registration.PlacementReceipt == null ||
+                registration.PlacementReceipt.Stage !=
+                    CustomPcBuildKitStage.MotherboardStaged ||
+                registration.AssemblyHandoffReceipt != null)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    registration?.AssemblyHandoffReceipt != null
+                        ? CustomPcWorkOrderFailures.BuildKitAssemblyIdentityConflict
+                        : CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            return _inventory.ReleaseReservedMotherboardForAssembly(
+                registration.InventoryPlacementReceipt,
+                ToInventoryAssemblyOperationId(operationId),
+                workbenchContainerId,
+                expectedInventoryRevision);
+        }
+
+        public bool TryGetAssemblyHandoff(
+            StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+            out CustomPcBuildKitAssemblyHandoffReceipt receipt)
+        {
+            if (_assemblyHandoffsByOperation.TryGetValue(
+                    operationId,
+                    out CustomPcBuildKitRegistration registration) &&
+                OwnsRegistration(registration))
+            {
+                receipt = registration.AssemblyHandoffReceipt;
+                return receipt != null;
+            }
+
+            receipt = null;
+            return false;
+        }
+
         public bool TryGetReceipt(
             StableId<CustomPcBuildKitOperationIdScope> operationId,
             out CustomPcBuildKitReceipt receipt)
@@ -1975,6 +2188,7 @@ namespace PCShopEmpire3D.Orders
                     CustomPcWorkOrderFailures.InvariantViolation);
             }
 
+            int assemblyHandoffCount = 0;
             foreach (CustomPcBuildKitRegistration registration in
                      _registrationsByOperation.Values)
             {
@@ -1983,9 +2197,16 @@ namespace PCShopEmpire3D.Orders
                     return OperationResult.Fail(
                         CustomPcWorkOrderFailures.InvariantViolation);
                 }
+
+                if (registration.AssemblyHandoffReceipt != null)
+                {
+                    assemblyHandoffCount++;
+                }
             }
 
-            return OperationResult.Success();
+            return assemblyHandoffCount == _assemblyHandoffsByOperation.Count
+                ? OperationResult.Success()
+                : OperationResult.Fail(CustomPcWorkOrderFailures.InvariantViolation);
         }
 
         private bool OwnsReceipt(CustomPcBuildKitReceipt receipt)
@@ -2210,18 +2431,55 @@ namespace PCShopEmpire3D.Orders
                 return registration.InventoryPlacementReceipt == null;
             }
 
-            return registration.InventoryPlacementReceipt != null &&
-                   placement.Stage == expectedPlacementStage &&
-                   placement.InventoryAppliedRevision ==
-                       registration.InventoryPlacementReceipt.AppliedRevision &&
-                   MatchesReceiptIdentity(pickup, placement) &&
-                   MatchesInventoryReceiptIdentity(
-                       registration.InventoryPlacementReceipt,
-                       allocation,
-                       expectedBuildKitAccess,
-                       placement) &&
-                   _inventory.OwnsWorkOrderBuildKitReceipt(
-                       registration.InventoryPlacementReceipt);
+            bool placementIsOwned =
+                registration.InventoryPlacementReceipt != null &&
+                placement.Stage == expectedPlacementStage &&
+                placement.InventoryAppliedRevision ==
+                    registration.InventoryPlacementReceipt.AppliedRevision &&
+                MatchesReceiptIdentity(pickup, placement) &&
+                MatchesInventoryReceiptIdentity(
+                    registration.InventoryPlacementReceipt,
+                    allocation,
+                    expectedBuildKitAccess,
+                    placement) &&
+                _inventory.OwnsWorkOrderBuildKitReceipt(
+                    registration.InventoryPlacementReceipt);
+            if (!placementIsOwned)
+            {
+                return false;
+            }
+
+            CustomPcBuildKitAssemblyHandoffReceipt handoff =
+                registration.AssemblyHandoffReceipt;
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+                inventoryHandoff = registration.InventoryAssemblyHandoffReceipt;
+            if (handoff == null)
+            {
+                return inventoryHandoff == null;
+            }
+
+            return inventoryHandoff != null &&
+                   pickup.Line.ComponentKind == PcComponentKind.Motherboard &&
+                   handoff.OperationId.IsEmpty == false &&
+                   ReferenceEquals(handoff.BuildOrder, pickup.BuildOrder) &&
+                   ReferenceEquals(handoff.Line, pickup.Line) &&
+                   ReferenceEquals(handoff.StagingReceipt, placement) &&
+                   handoff.BuildKitContainerId == pickup.BuildKitContainerId &&
+                   handoff.HandsContainerId == pickup.HandsContainerId &&
+                   handoff.WorkbenchContainerId == pickup.BuildOrder.WorkbenchContainerId &&
+                   handoff.InventoryAppliedRevision == inventoryHandoff.AppliedRevision &&
+                   ReferenceEquals(
+                       inventoryHandoff.PlacementReceipt,
+                       registration.InventoryPlacementReceipt) &&
+                   inventoryHandoff.OperationId ==
+                       ToInventoryAssemblyOperationId(handoff.OperationId) &&
+                   inventoryHandoff.WorkbenchContainerId == handoff.WorkbenchContainerId &&
+                   _assemblyHandoffsByOperation.TryGetValue(
+                       handoff.OperationId,
+                       out CustomPcBuildKitRegistration byAssemblyOperation) &&
+                   ReferenceEquals(registration, byAssemblyOperation) &&
+                   _inventory.OwnsWorkOrderBuildKitAssemblyHandoffReceipt(
+                       inventoryHandoff);
         }
 
         private static bool TryGetCanonicalLine(
@@ -2529,6 +2787,29 @@ namespace PCShopEmpire3D.Orders
                    buildKitContainerId != workOrders.WorkbenchContainerId;
         }
 
+        private bool HasCompleteCanonicalKit(CustomPcBuildOrderRecord workOrder)
+        {
+            return HasStagedComponent(workOrder, PcComponentKind.Motherboard) &&
+                   HasStagedComponent(workOrder, PcComponentKind.Processor) &&
+                   HasStagedComponent(workOrder, PcComponentKind.MemoryModule) &&
+                   HasStagedComponent(workOrder, PcComponentKind.StorageDevice) &&
+                   HasStagedComponent(workOrder, PcComponentKind.ProcessorCooler) &&
+                   HasStagedComponent(workOrder, PcComponentKind.GraphicsCard) &&
+                   HasStagedComponent(workOrder, PcComponentKind.PowerSupply) &&
+                   HasStagedComponent(
+                       workOrder,
+                       PcComponentKind.PowerCable,
+                       PowerCableType.ModularAtx24SplitPsuToMotherboard) &&
+                   HasStagedComponent(
+                       workOrder,
+                       PcComponentKind.PowerCable,
+                       PowerCableType.ModularEps12v8PinPsuToMotherboard) &&
+                   HasStagedComponent(
+                       workOrder,
+                       PcComponentKind.PowerCable,
+                       PowerCableType.ModularPcie8PinPsuToGraphicsCard);
+        }
+
         private static bool MatchesRegistration(
             CustomPcBuildKitRegistration registration,
             StableId<CustomPcBuildKitOperationIdScope> operationId,
@@ -2540,6 +2821,20 @@ namespace PCShopEmpire3D.Orders
                    pickup.OperationId == operationId &&
                    ReferenceEquals(pickup.BuildOrder, workOrder) &&
                    ReferenceEquals(pickup.Line, canonicalLine);
+        }
+
+        private static bool MatchesAssemblyHandoff(
+            CustomPcBuildKitRegistration registration,
+            StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+            CustomPcBuildOrderRecord workOrder,
+            StableId<ContainerIdScope> workbenchContainerId)
+        {
+            CustomPcBuildKitAssemblyHandoffReceipt handoff =
+                registration?.AssemblyHandoffReceipt;
+            return handoff != null &&
+                   handoff.OperationId == operationId &&
+                   ReferenceEquals(handoff.BuildOrder, workOrder) &&
+                   handoff.WorkbenchContainerId == workbenchContainerId;
         }
 
         private static bool MatchesReceiptIdentity(
@@ -2563,6 +2858,16 @@ namespace PCShopEmpire3D.Orders
         {
             return StableId<
                 InventorySerializedReservationWorkOrderBuildKitOperationIdScope>.Parse(
+                operationId.Value);
+        }
+
+        private static StableId<
+            InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+            ToInventoryAssemblyOperationId(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId)
+        {
+            return StableId<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>.Parse(
                 operationId.Value);
         }
 

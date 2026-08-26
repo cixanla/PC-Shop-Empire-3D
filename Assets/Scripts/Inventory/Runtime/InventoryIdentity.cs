@@ -43,6 +43,11 @@ namespace PCShopEmpire3D.Inventory
     {
     }
 
+    public sealed class InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope :
+        IStableIdScope
+    {
+    }
+
     public sealed class InventorySerializedReservationWorkOrderLineIdScope : IStableIdScope
     {
     }

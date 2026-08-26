@@ -1800,7 +1800,14 @@ namespace PCShopEmpire3D.Inventory
                     InventoryFailures.SerializedItemStateConflict);
             }
 
-            if (_serializedReservationWorkOrderBuildKitsByItem.ContainsKey(itemId))
+            bool authorizedBuildKitAssemblyTransfer =
+                TryGetAuthorizedWorkOrderBuildKitAssemblyTransfer(
+                    itemId,
+                    targetContainerId,
+                    access,
+                    out _);
+            if (_serializedReservationWorkOrderBuildKitsByItem.ContainsKey(itemId) &&
+                !authorizedBuildKitAssemblyTransfer)
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
                     InventoryFailures.SerializedReservationWorkOrderBuildKitConflict);
@@ -1815,7 +1822,9 @@ namespace PCShopEmpire3D.Inventory
                 return OperationResult<InventorySerializedTransferPlan>.Fail(accessFailure);
             }
 
-            if (access != null && IsSerializedItemReserved(itemId))
+            if (access != null &&
+                IsSerializedItemReserved(itemId) &&
+                !authorizedBuildKitAssemblyTransfer)
             {
                 return OperationResult<InventorySerializedTransferPlan>.Fail(
                     InventoryFailures.ReservedQuantity);
@@ -1891,6 +1900,37 @@ namespace PCShopEmpire3D.Inventory
             if (current.Value.SourceContainerId != plan.SourceContainerId)
             {
                 return OperationResult.Fail(InventoryFailures.SerializedTransferPlanStale);
+            }
+
+            InventorySerializedReservationWorkOrderBuildKitRegistration
+                assemblyRegistration = null;
+            TryGetAuthorizedWorkOrderBuildKitAssemblyTransfer(
+                plan.ItemId,
+                plan.TargetContainerId,
+                plan.Access,
+                out assemblyRegistration);
+
+            if (assemblyRegistration != null)
+            {
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff =
+                    assemblyRegistration.AssemblyHandoffReceipt;
+                InventorySerializedReservationWorkOrderBuildKitStage stage =
+                    plan.TargetContainerId == handoff.WorkbenchContainerId
+                        ? InventorySerializedReservationWorkOrderBuildKitStage.AssemblyWorkbench
+                        : InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands;
+                var transferReceipt =
+                    new InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt(
+                        this,
+                        handoff,
+                        plan.SourceContainerId,
+                        plan.TargetContainerId,
+                        stage,
+                        Revision + 1);
+                if (!assemblyRegistration.TryPublishAssemblyTransfer(transferReceipt))
+                {
+                    return OperationResult.Fail(
+                        InventoryFailures.SerializedTransferPlanStale);
+                }
             }
 
             InventoryItemRecord item = _items[plan.ItemId];

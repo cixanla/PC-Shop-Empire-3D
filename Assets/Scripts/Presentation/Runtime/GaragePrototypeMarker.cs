@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-pcie-gpu-power-cable-build-kit-r44-v1";
+        public const string Version = "garage-motherboard-assembly-handoff-r45-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1181,6 +1181,7 @@ namespace PCShopEmpire3D.Presentation
                 $"atx24-power-cable-build-kit={(HasAtx24PowerCableBuildKitR42Runtime ? "ready" : "missing")} " +
                 $"eps12v-power-cable-build-kit={(HasEps12vPowerCableBuildKitR43Runtime ? "ready" : "missing")} " +
                 $"pcie-gpu-power-cable-build-kit={(HasPcieGpuPowerCableBuildKitR44Runtime ? "ready" : "missing")} " +
+                $"motherboard-assembly-handoff={(HasMotherboardAssemblyHandoffR45Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1270,6 +1271,9 @@ namespace PCShopEmpire3D.Presentation
             bool runPcieGpuPowerCableBuildKitSmoke =
                 HasCommandLineArgument(
                     "-pse-pcie-gpu-power-cable-build-kit-smoke");
+            bool runMotherboardAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-motherboard-assembly-handoff-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1296,7 +1300,8 @@ namespace PCShopEmpire3D.Presentation
                              (runPowerSupplyBuildKitSmoke ? 1 : 0) +
                              (runAtx24PowerCableBuildKitSmoke ? 1 : 0) +
                              (runEps12vPowerCableBuildKitSmoke ? 1 : 0) +
-                             (runPcieGpuPowerCableBuildKitSmoke ? 1 : 0);
+                             (runPcieGpuPowerCableBuildKitSmoke ? 1 : 0) +
+                             (runMotherboardAssemblyHandoffSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1315,12 +1320,18 @@ namespace PCShopEmpire3D.Presentation
                      !runPowerSupplyBuildKitSmoke &&
                      !runAtx24PowerCableBuildKitSmoke &&
                      !runEps12vPowerCableBuildKitSmoke &&
-                     !runPcieGpuPowerCableBuildKitSmoke) ||
+                     !runPcieGpuPowerCableBuildKitSmoke &&
+                     !runMotherboardAssemblyHandoffSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runPcieGpuPowerCableBuildKitSmoke)
+                    if (runMotherboardAssemblyHandoffSmoke)
+                    {
+                        LogMotherboardAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPcieGpuPowerCableBuildKitSmoke)
                     {
                         LogPcieGpuPowerCableBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1576,6 +1587,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runMotherboardAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogMotherboardAssemblyHandoffSmokeFailure(
+                    "smoke.motherboard-assembly-handoff-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1723,6 +1741,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableBuildKitSmoke());
+            }
+
+            if (runMotherboardAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunMotherboardAssemblyHandoffSmoke());
             }
         }
 
