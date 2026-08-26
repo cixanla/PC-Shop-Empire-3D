@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -227,7 +227,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
       "$evidence_contract" == "issue85" ||
-      "$evidence_contract" == "issue87" ]]; then
+      "$evidence_contract" == "issue87" ||
+      "$evidence_contract" == "issue89" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -255,7 +256,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue81" ||
           "$evidence_contract" == "issue83" ||
           "$evidence_contract" == "issue85" ||
-          "$evidence_contract" == "issue87" ]]; then
+          "$evidence_contract" == "issue87" ||
+          "$evidence_contract" == "issue89" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -297,7 +299,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
       "$evidence_contract" == "issue85" ||
-      "$evidence_contract" == "issue87" ]]; then
+      "$evidence_contract" == "issue87" ||
+      "$evidence_contract" == "issue89" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -317,7 +320,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue81" ||
       "$evidence_contract" == "issue83" ||
       "$evidence_contract" == "issue85" ||
-      "$evidence_contract" == "issue87" ]]; then
+      "$evidence_contract" == "issue87" ||
+      "$evidence_contract" == "issue89" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -400,7 +404,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-EPS12V-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='EPS12V power-cable BuildKit'
     runtime_success_marker='GARAGE_EPS12V_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply+atx24-staged eps12v-pickup=exact cable-family=modular-eps12v-8pin physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=9/10 reservation=alive custody=eps12v-build-kit receipts=ok revisions=ok assembly=untouched eps12v-route=untouched atx24-route=untouched pcie-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue87" ]]; then
     technical_commit=25dc39ab02de93a416800acd17f53aacf83dca09
     technical_tree=a736a764d0a52e950a4139002d6febc629df5987
     build_forbidden_policy=issue87-hardened-v1
@@ -410,6 +414,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-PCIE-GPU-POWER-CABLE-PHYSICAL-BUILD-KIT-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='PCIe/GPU power-cable BuildKit'
     runtime_success_marker='GARAGE_PCIE_GPU_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE work-ticket=ok prerequisites=motherboard+processor+memory+storage+processor-cooler+graphics-card+power-supply+atx24+eps12v-staged pcie-gpu-pickup=exact cable-family=modular-pcie-8pin physical-identity=stable carry=ok input=keyboard+mouse prerequisite-positioning=teleport-assisted custody-guards=ok route-consumer=blocked rotation=180 placement=ok progress=10/10 reservation=alive custody=pcie-gpu-build-kit receipts=ok revisions=ok assembly=untouched pcie-gpu-route=untouched atx24-route=untouched eps12v-route=untouched no-duplicate-loss=ok replay=ok invariants=ok'
+  else
+    technical_commit=2fdf371206bc58c32e1c20d471f4abe7c0bfba01
+    technical_tree=c5e6de5942993a98735984caca4a04fd396105f6
+    build_forbidden_policy=issue89-hardened-v1
+    editmode_total=712
+    playmode_total=119
+    contract_adr=Docs/ADR-0054-CANONICAL-MOTHERBOARD-BUILDKIT-TO-CHASSIS-ASSEMBLY-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-MOTHERBOARD-BUILDKIT-TO-CHASSIS-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
+    runtime_success_label='motherboard assembly handoff'
+    runtime_success_marker='GARAGE_MOTHERBOARD_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 pickup=exact custody=build-kit-to-hands-to-workbench reservation=alive physical-identity=stable input=keyboard+mouse guided-seat=ok secure=ok unsecure=ok detach=ok reseat=ok history=10/10-preserved other-nine=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"
@@ -696,7 +710,7 @@ if [[ "$evidence_contract" == "issue71" ||
     echo "ERROR Issue #$contract_issue runtime log must contain the exact $runtime_success_label success marker once" >&2
     exit 1
   }
-  runtime_fatal_count=$(grep -Eic 'build-kit-flow=failed|code=smoke\.|Assertion failed|AssertionException|NullReferenceException|MissingReferenceException|Unhandled Exception|ArgumentException|InvalidOperationException|StackOverflowException|AccessViolationException|Crash!!!|PlayerLoop called recursively|JobTempAlloc has allocations|A Native Collection has not been disposed' "$evidence_root/runtime-d3d11.log" || true)
+  runtime_fatal_count=$(grep -Eic 'build-kit-flow=failed|assembly-handoff-flow=failed|code=smoke\.|Assertion failed|AssertionException|NullReferenceException|MissingReferenceException|Unhandled Exception|ArgumentException|InvalidOperationException|StackOverflowException|AccessViolationException|Crash!!!|PlayerLoop called recursively|JobTempAlloc has allocations|A Native Collection has not been disposed' "$evidence_root/runtime-d3d11.log" || true)
   [[ "$runtime_fatal_count" == "0" ]] || {
     echo "ERROR Issue #$contract_issue runtime log contains forbidden tokens: $runtime_fatal_count" >&2
     exit 1
