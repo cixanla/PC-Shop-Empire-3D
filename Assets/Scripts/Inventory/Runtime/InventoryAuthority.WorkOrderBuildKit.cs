@@ -538,6 +538,49 @@ namespace PCShopEmpire3D.Inventory
                 StableId<ContainerIdScope> workbenchContainerId,
                 long expectedInventoryRevision)
         {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.Motherboard,
+                operationId,
+                workbenchContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged processor from BuildKit to ActorHands and binds all
+        /// subsequent reserved custody to the capacity-one managed processor socket already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedProcessorForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> processorSocketContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.Processor,
+                operationId,
+                processorSocketContainerId,
+                expectedInventoryRevision);
+        }
+
+        private OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedComponentForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                PcComponentKind expectedComponentKind,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> workbenchContainerId,
+                long expectedInventoryRevision)
+        {
             if (operationId.IsEmpty)
             {
                 return OperationResult<
@@ -578,7 +621,7 @@ namespace PCShopEmpire3D.Inventory
             if (!OwnsWorkOrderBuildKitReceipt(placementReceipt) ||
                 placementReceipt.Stage !=
                     InventorySerializedReservationWorkOrderBuildKitStage.BuildKit ||
-                placementReceipt.ComponentKind != PcComponentKind.Motherboard ||
+                placementReceipt.ComponentKind != expectedComponentKind ||
                 !_serializedReservationWorkOrderBuildKitsByOperation.TryGetValue(
                     placementReceipt.OperationId,
                     out InventorySerializedReservationWorkOrderBuildKitRegistration registration) ||
@@ -926,7 +969,8 @@ namespace PCShopEmpire3D.Inventory
                        registration.AssemblyTransferReceipts.Count == 0;
             }
 
-            if (pickup.ComponentKind != PcComponentKind.Motherboard ||
+            if ((pickup.ComponentKind != PcComponentKind.Motherboard &&
+                 pickup.ComponentKind != PcComponentKind.Processor) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||

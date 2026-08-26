@@ -990,6 +990,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             marker.PlayerMotor.transform.SetPositionAndRotation(
                 playerPosition,
                 Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Camera playerCamera =
+                marker.PlayerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.localRotation = Quaternion.identity;
+            }
+
             Transform cameraPivot = marker.PlayerMotor.transform.Find("CameraPivot");
             cameraPivot.rotation = Quaternion.LookRotation(
                 target - cameraPivot.position,
