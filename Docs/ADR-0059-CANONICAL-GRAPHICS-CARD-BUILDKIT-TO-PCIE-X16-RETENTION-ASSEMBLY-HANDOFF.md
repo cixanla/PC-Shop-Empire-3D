@@ -1,6 +1,6 @@
 # ADR-0059 — Canonical Graphics-Card BuildKit-to-PCIe x16 Retention Assembly Handoff
 
-**Status:** Accepted through source/domain/scene/input/full-regression, exact-head macOS/Windows native, technical/source-docs CI, final canonical evidence and large local/healthy-USB lifecycle; real-human session and administrative closure pending<br>
+**Status:** Accepted through exact `034f862` source/domain/scene/input/full-regression, macOS/Windows native and agent-operated foreground Windows OS-input gates; source/docs Guard and administrative integration follow this record<br>
 **Date:** 26 August 2026<br>
 **Scope:** Issue #99, child of Epic #10
 
@@ -42,4 +42,6 @@ The automated r50 smoke explicitly records `prerequisite-setup=assisted`; it is 
 - Exact-head technical Repository Guard [32990791761](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32990791761) and [32990807874](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32990807874) passed.
 - Source/docs commit `0f259605da017e874863da2646eef6a90898816f`, tree `c0f5a07ac65baf959d4279d7a782a9827b369336` and Repository Guard [32995195634](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32995195634) passed. Final source receipt promotes canonical evidence to exact `14/14`.
 - The user-requested large immutable local checkpoint and healthy `Alu Line` ExFAT physical-USB incoming/readback/atomic-final/second-readback lifecycle passed with identical `1090/1090` manifest rows, `1075/1075` exact Git source, `14/14` evidence, `20,899,041` payload bytes and manifest SHA-256 `0c2a26b5ef33cdcb79a2e06f5c97eea323be3520adac5886013dc7d7c0b15223`. Pre/post-write filesystem checks exit `0`; incoming and exact-target sidecar residue is `0`.
-- The exact-r50 real-human session and Issue/Project administrative closure remain pending. Automated smoke is not relabelled as human evidence.
+- Exact focus/input hardening commit `034f862cfdc85b93e44cc0c9dded26aafdffbee6`, tree `191e9e1bfd85ef20c000fc171523c1861f3ecb21`, passes fresh Mac critical PlayMode `8/8`, full EditMode `733/733` and isolated full PlayMode `140/140`; Windows passes the same critical `8/8`, full EditMode `733/733` and full PlayMode `140/140` sets.
+- Exact `034f862` Universal Mac/Metal runtime and clean Windows x64 IL2CPP/Direct3D11/Intel Iris Xe runtime pass with zero final process/task residue. Foreground Session-2 Win32 scan-code input proves separate S/D movement, relative mouse-look and W+D held while mouse deltas continue. The claim remains `human=false`; physical keyboard/gamepad and 15-minute human endurance are not claimed.
+- The v2 policy in `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` permits this bounded issue to close on the exact agent-operated OS-input chain while preserving real-human and physical-device certification for Steam 1.0. Full hashes, the retained `137/140` transient-import negative run, the accepted isolated `140/140` rerun and claim limits are bound by the 27 August closure addendum.

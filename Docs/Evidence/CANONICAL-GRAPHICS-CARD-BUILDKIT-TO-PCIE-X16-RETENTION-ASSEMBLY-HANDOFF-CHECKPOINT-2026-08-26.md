@@ -5,7 +5,11 @@
 **PR:** [#100](https://github.com/cixanla/PC-Shop-Empire-3D/pull/100)<br>
 **Technical head:** `d5532bb921b94715dbb1ed2006092a9542b139a4`<br>
 **Technical tree:** `6f00d7fb23a305e1e9eb4241dd3cba57a5e076dd`<br>
-**Current closure:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, technical/source-docs CI, final canonical evidence and large local/healthy physical-USB lifecycle passed; real-human session and administrative gates pending
+**Historical checkpoint state:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, technical/source-docs CI, final canonical evidence and large local/healthy physical-USB lifecycle passed; real-human session and administrative gates were pending at this 26 August snapshot<br>
+**Superseding closure record:** [`CANONICAL-GRAPHICS-CARD-BUILDKIT-TO-PCIE-X16-RETENTION-ASSEMBLY-HANDOFF-CLOSURE-ADDENDUM-2026-08-27.md`](CANONICAL-GRAPHICS-CARD-BUILDKIT-TO-PCIE-X16-RETENTION-ASSEMBLY-HANDOFF-CLOSURE-ADDENDUM-2026-08-27.md) binds exact `034f862` focus/input hardening, fresh Mac/Windows tests, foreground Windows OS-input acceptance and the v2 closure policy.
+
+> The `30/31`, `HUMAN PENDING` and pending list below are preserved as historical facts for the
+> earlier `d5532bb`/`0f25960` checkpoint. They are not the current Issue #99 closure verdict.
 
 ## Delivered playable result
 

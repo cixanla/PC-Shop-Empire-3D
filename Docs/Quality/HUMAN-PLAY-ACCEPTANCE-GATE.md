@@ -5,6 +5,29 @@ gerçek bir oyuncunun yaşayabileceği akışlar üzerinden doğrulanmasını zo
 sonsuz ihtimal iddiasında bulunmak değil; yüksek olasılıklı, yüksek etkili ve sınır durumlu
 senaryoları sistematik biçimde kapsayarak sahte güveni önlemektir.
 
+**Sürüm:** v2 — 27 Ağustos 2026
+
+## İki ayrı kabul sınıfı
+
+Bu belge artık issue/dilim kapanışı ile nihai Steam 1.0 yayın sertifikasyonunu açıkça ayırır:
+
+1. **Teknik oynanabilir dilim kapanışı:** Exact source üzerinde domain, scene/input ve tam
+   regresyon; Mac ve Windows native runtime; gerçek foreground pencereye işletim sistemi
+   seviyesinde sürülen keyboard/mouse girdisi ve sıfır süreç kalıntısı birlikte geçtiğinde,
+   kullanıcı oturumu bulunmadan bounded issue kapanabilir. Bu yol yalnız otomasyonun gerçek
+   oyuncu rotasını yeterince temsil ettiği, gözlenen ürün sonucu hash-bound kanıtlandığı ve
+   kapsam sınırları açıkça yazıldığı durumda kullanılabilir.
+2. **Nihai Steam 1.0 yayın sertifikasyonu:** Aşağıdaki tam insan risk matrisi, desteklenen
+   fiziksel cihazlar ve dayanıklılık turu gerçek insan tarafından ayrıca tamamlanır. Teknik
+   issue kapanışları bu yayın kapısını düşürmez veya silmez.
+
+Agent-operated OS-input kanıtı hiçbir zaman `human=true`, `physical keyboard tested` veya
+`physical gamepad tested` diye adlandırılamaz. Kayıtta en az exact commit/tree, oturum ve
+foreground window kimliği, gönderilen scan code/mouse sayıları, ayrı ve eşzamanlı gözlenen
+sonuçlar, artifact hashleri, task/exit sonucu ve player/Unity/PowerShell/task residue bulunur.
+Fiziksel gamepad yoksa Input System gamepad otomasyonu yazılabilir; bu yalnız otomasyon PASS'idir
+ve fiziksel gamepad sertifikasyonu Steam 1.0 yayın kapısında açık kalır.
+
 ## Değişmez kaynak ve sürüm kimliği
 
 - Tek yazma kaynağı Mac üzerindeki güncel Git çalışma ağacıdır.
@@ -25,7 +48,8 @@ senaryoları sistematik biçimde kapsayarak sahte güveni önlemektir.
 3. Tam regresyon: bütün EditMode ve PlayMode paketleri; eski mekanikler de yeşil kalmalıdır.
 4. Native runtime: Mac Metal ve Windows IL2CPP/DirectX build'i, exact başarı işareti ve hata
    taraması.
-5. İnsan oturumu: aşağıdaki risk matrisiyle başlangıçtan hedef akışın sonuna kadar oynama.
+5. Kabul oturumu: bounded teknik issue için yukarıdaki sıkı agent-operated OS-input yolu veya
+   aşağıdaki gerçek insan risk matrisi; nihai Steam 1.0 için daima gerçek insan matrisi.
 
 ## İnsan oturumu risk matrisi
 
