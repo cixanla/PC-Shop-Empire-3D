@@ -9,6 +9,8 @@ namespace PCShopEmpire3D.Presentation.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class FirstPersonMotor : MonoBehaviour
     {
+        private const float ContinuousInputNeutralThresholdSquared = 0.0001f;
+
         [Header("References")]
         [SerializeField] private CharacterController characterController;
         [SerializeField] private PlayerInputAdapter input;
@@ -29,8 +31,16 @@ namespace PCShopEmpire3D.Presentation.Player
         private PhysicalCarryProfileDefinition _carryProfileDefinition =
             PhysicalCarryProfileRules.Resolve(PhysicalCarryProfile.SmallBox);
         private float _transportCartMovementSpeedMultiplier = 1f;
+        private bool _moveRequiresNeutralAfterResume;
+        private bool _gamepadLookRequiresNeutralAfterResume;
+        private bool _pausedByFocusLoss;
 
         public bool IsPaused { get; private set; }
+
+        internal CursorLockMode RequestedCursorLockState { get; private set; } =
+            CursorLockMode.None;
+
+        internal bool RequestedCursorVisible { get; private set; } = true;
 
         public FirstPersonViewSettings ViewSettings => viewSettings;
 
@@ -141,9 +151,36 @@ namespace PCShopEmpire3D.Presentation.Player
 
         public void SetPaused(bool paused)
         {
+            if (paused != IsPaused)
+            {
+                _pausedByFocusLoss = false;
+            }
+
+            ApplyPaused(paused);
+        }
+
+        private void ApplyPaused(bool paused)
+        {
+            bool wasPaused = IsPaused;
             IsPaused = paused;
-            Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
-            Cursor.visible = paused;
+            if (paused)
+            {
+                _moveRequiresNeutralAfterResume = false;
+                _gamepadLookRequiresNeutralAfterResume = false;
+            }
+            else if (wasPaused && input != null)
+            {
+                _moveRequiresNeutralAfterResume = input.HasActuatedMoveControl;
+                _gamepadLookRequiresNeutralAfterResume =
+                    input.GamepadLook.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
+            }
+
+            RequestedCursorLockState = paused
+                ? CursorLockMode.None
+                : CursorLockMode.Locked;
+            RequestedCursorVisible = paused;
+            Cursor.lockState = RequestedCursorLockState;
+            Cursor.visible = RequestedCursorVisible;
         }
 
         private void Awake()
@@ -191,14 +228,50 @@ namespace PCShopEmpire3D.Presentation.Player
             }
 
             UpdateFieldOfView(Mathf.Max(0f, unscaledDeltaTime));
-            UpdateLook(Mathf.Max(0f, unscaledDeltaTime));
-            UpdateMovement(Mathf.Max(0f, deltaTime));
+            UpdateLook(
+                ReadLookAfterResume(),
+                Mathf.Max(0f, unscaledDeltaTime));
+            UpdateMovement(
+                ReadMoveAfterResume(),
+                Mathf.Max(0f, deltaTime));
         }
 
-        private void UpdateLook(float unscaledDeltaTime)
+        private Vector2 ReadMoveAfterResume()
+        {
+            if (!_moveRequiresNeutralAfterResume)
+            {
+                return input.Move;
+            }
+
+            if (!input.HasActuatedMoveControl)
+            {
+                _moveRequiresNeutralAfterResume = false;
+            }
+
+            return Vector2.zero;
+        }
+
+        private Vector2 ReadLookAfterResume()
+        {
+            Vector2 look = input.Look;
+            if (!_gamepadLookRequiresNeutralAfterResume)
+            {
+                return look;
+            }
+
+            if (input.GamepadLook.sqrMagnitude <= ContinuousInputNeutralThresholdSquared)
+            {
+                _gamepadLookRequiresNeutralAfterResume = false;
+                return look;
+            }
+
+            return input.IsPointerLook ? look : Vector2.zero;
+        }
+
+        private void UpdateLook(Vector2 lookInput, float unscaledDeltaTime)
         {
             Vector2 lookDegrees = FirstPersonMath.CalculateLookDegrees(
-                input.Look,
+                lookInput,
                 input.IsPointerLook,
                 unscaledDeltaTime,
                 viewSettings);
@@ -207,9 +280,9 @@ namespace PCShopEmpire3D.Presentation.Player
             cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
 
-        private void UpdateMovement(float deltaTime)
+        private void UpdateMovement(Vector2 moveInput, float deltaTime)
         {
-            Vector2 inputVector = FirstPersonMath.ClampMoveInput(input.Move);
+            Vector2 inputVector = FirstPersonMath.ClampMoveInput(moveInput);
             Vector3 horizontal = (transform.right * inputVector.x) + (transform.forward * inputVector.y);
             float speed = ResolveHorizontalSpeed(input.SprintHeld);
 
@@ -241,18 +314,38 @@ namespace PCShopEmpire3D.Presentation.Player
 
         private void OnApplicationFocus(bool hasFocus)
         {
-            if (!hasFocus && Application.isPlaying)
+            if (!Application.isPlaying)
             {
-                SetPaused(true);
+                return;
+            }
+
+            if (!hasFocus)
+            {
+                if (!_pausedByFocusLoss && !IsPaused)
+                {
+                    _pausedByFocusLoss = true;
+                    ApplyPaused(true);
+                }
+
+                return;
+            }
+
+            if (_pausedByFocusLoss)
+            {
+                _pausedByFocusLoss = false;
+                ApplyPaused(false);
             }
         }
 
         private void OnDisable()
         {
+            _pausedByFocusLoss = false;
             if (Application.isPlaying)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                RequestedCursorLockState = CursorLockMode.None;
+                RequestedCursorVisible = true;
+                Cursor.lockState = RequestedCursorLockState;
+                Cursor.visible = RequestedCursorVisible;
             }
 
             if (playerCamera != null)

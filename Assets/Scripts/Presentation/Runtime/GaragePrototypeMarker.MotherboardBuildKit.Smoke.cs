@@ -137,25 +137,20 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                MovePlayerToCustomPcWorkTicketStation(1.35f);
-                customPcWorkTicketStation.RefreshPresentation();
-                InputSystem.QueueStateEvent(
+                string workTicketInputFailure = null;
+                yield return RunBuildKitWorkTicketPhysicalInput(
                     smokeKeyboard,
-                    new KeyboardState(Key.E));
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
-                InputSystem.QueueStateEvent(
-                    smokeKeyboard,
-                    new KeyboardState());
-                InputSystem.Update();
-                customPcWorkTicketStation.ProcessInputFrame();
+                    session,
+                    code => workTicketInputFailure = code);
 
                 if (!session.TryGetPrototypeCustomPcBuildOrder(
                         out CustomPcBuildOrderRecord workOrder) ||
                     !session.TryGetPrototypeCustomPcWorkTicket(out _))
                 {
                     LogMotherboardBuildKitSmokeFailure(
-                        "smoke.work-ticket-missing");
+                        string.IsNullOrEmpty(workTicketInputFailure)
+                            ? "smoke.work-ticket-missing"
+                            : workTicketInputFailure);
                     yield break;
                 }
 
@@ -475,6 +470,13 @@ namespace PCShopEmpire3D.Presentation
             playerMotor.transform.SetPositionAndRotation(
                 playerPosition,
                 Quaternion.LookRotation(horizontalLook.normalized, Vector3.up));
+            Camera playerCamera =
+                playerMotor.GetComponentInChildren<Camera>(true);
+            if (playerCamera != null)
+            {
+                playerCamera.transform.localRotation = Quaternion.identity;
+            }
+
             Transform cameraPivot = playerMotor.transform.Find("CameraPivot");
             cameraPivot.rotation = Quaternion.LookRotation(
                 target - cameraPivot.position,

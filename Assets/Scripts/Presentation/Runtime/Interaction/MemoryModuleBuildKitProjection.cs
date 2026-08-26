@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -190,6 +191,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            session.PrototypeMemoryModuleBuildKitOperationId,
                            out CustomPcBuildKitReceipt receipt) &&
                        receipt.Stage == CustomPcBuildKitStage.MemoryModuleInHands;
+            }
+        }
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeMemoryModuleAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.Line.ComponentKind == PcComponentKind.MemoryModule;
             }
         }
 
@@ -415,9 +429,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nBELLEK HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nBELLEK BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nDDR5 MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nBELLEK HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nBELLEK BEKLİYOR";
         }
 
         public void ResetFeedback()

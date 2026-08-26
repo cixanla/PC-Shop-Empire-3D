@@ -537,6 +537,48 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     accent,
                     rubber,
                     labelPaper);
+            ProcessorCoolerBuildKitBuildResult processorCoolerBuildKitBuild =
+                BuildProcessorCoolerBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
+            GraphicsCardBuildKitBuildResult graphicsCardBuildKitBuild =
+                BuildGraphicsCardBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
+            PowerSupplyBuildKitBuildResult powerSupplyBuildKitBuild =
+                BuildPowerSupplyBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
+            Atx24PowerCableBuildKitBuildResult atx24PowerCableBuildKitBuild =
+                BuildAtx24PowerCableBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
+            Eps12vPowerCableBuildKitBuildResult eps12vPowerCableBuildKitBuild =
+                BuildEps12vPowerCableBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
+            PcieGpuPowerCableBuildKitBuildResult pcieGpuPowerCableBuildKitBuild =
+                BuildPcieGpuPowerCableBuildKit(
+                    environment,
+                    brushedSteel,
+                    accent,
+                    rubber,
+                    labelPaper);
             TransportCartProjection transportCart = BuildTransportCart(
                 environment,
                 metal,
@@ -600,6 +642,36 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 storageBuildKitBuild.Surface,
                 storageBuildKitBuild.SnapAnchor,
                 storageBuildKitBuild.ProgressText);
+            processorCoolerBuildKitBuild.Projection.Configure(
+                stockFlow,
+                processorCoolerBuildKitBuild.Surface,
+                processorCoolerBuildKitBuild.SnapAnchor,
+                processorCoolerBuildKitBuild.ProgressText);
+            graphicsCardBuildKitBuild.Projection.Configure(
+                stockFlow,
+                graphicsCardBuildKitBuild.Surface,
+                graphicsCardBuildKitBuild.SnapAnchor,
+                graphicsCardBuildKitBuild.ProgressText);
+            powerSupplyBuildKitBuild.Projection.Configure(
+                stockFlow,
+                powerSupplyBuildKitBuild.Surface,
+                powerSupplyBuildKitBuild.SnapAnchor,
+                powerSupplyBuildKitBuild.ProgressText);
+            atx24PowerCableBuildKitBuild.Projection.Configure(
+                stockFlow,
+                atx24PowerCableBuildKitBuild.Surface,
+                atx24PowerCableBuildKitBuild.SnapAnchor,
+                atx24PowerCableBuildKitBuild.ProgressText);
+            eps12vPowerCableBuildKitBuild.Projection.Configure(
+                stockFlow,
+                eps12vPowerCableBuildKitBuild.Surface,
+                eps12vPowerCableBuildKitBuild.SnapAnchor,
+                eps12vPowerCableBuildKitBuild.ProgressText);
+            pcieGpuPowerCableBuildKitBuild.Projection.Configure(
+                stockFlow,
+                pcieGpuPowerCableBuildKitBuild.Surface,
+                pcieGpuPowerCableBuildKitBuild.SnapAnchor,
+                pcieGpuPowerCableBuildKitBuild.ProgressText);
             assemblyBuild.Binding.Configure(
                 stockFlow,
                 assemblyBuild.Motherboard,
@@ -629,35 +701,41 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 assemblyBuild.ProcessorCooler,
                 assemblyBuild.ProcessorCoolerSlot,
-                GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue);
+                GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue,
+                processorCoolerBuildKitBuild.Projection);
             assemblyBuild.GraphicsCardBinding.Configure(
                 stockFlow,
                 assemblyBuild.GraphicsCard,
                 assemblyBuild.GraphicsCardSlot,
-                GarageStockFlowSession.GraphicsCardAssemblyItemInstanceIdValue);
+                GarageStockFlowSession.GraphicsCardAssemblyItemInstanceIdValue,
+                graphicsCardBuildKitBuild.Projection);
             assemblyBuild.PowerSupplyBinding.Configure(
                 stockFlow,
                 assemblyBuild.PowerSupply,
                 assemblyBuild.PowerSupplyBay,
-                GarageStockFlowSession.PowerSupplyItemInstanceIdValue);
+                GarageStockFlowSession.PowerSupplyItemInstanceIdValue,
+                powerSupplyBuildKitBuild.Projection);
             assemblyBuild.Atx24PowerCableBinding.Configure(
                 stockFlow,
                 assemblyBuild.Atx24PowerCable,
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableGeometry,
-                GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue);
+                GarageStockFlowSession.Atx24PowerCableItemInstanceIdValue,
+                atx24PowerCableBuildKitBuild.Projection);
             assemblyBuild.Eps12vPowerCableBinding.Configure(
                 stockFlow,
                 assemblyBuild.Eps12vPowerCable,
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableGeometry,
-                GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue);
+                GarageStockFlowSession.Eps12vPowerCableItemInstanceIdValue,
+                eps12vPowerCableBuildKitBuild.Projection);
             assemblyBuild.PcieGpuPowerCableBinding.Configure(
                 stockFlow,
                 assemblyBuild.PcieGpuPowerCable,
                 assemblyBuild.PcieGpuPowerCableRoute,
                 assemblyBuild.PcieGpuPowerCableGeometry,
-                GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue);
+                GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue,
+                pcieGpuPowerCableBuildKitBuild.Projection);
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -686,18 +764,36 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             carry.ConfigureProcessorCoolerSlot(
                 assemblyBuild.ProcessorCoolerSlot,
                 assemblyBuild.ProcessorCoolerBinding);
+            carry.ConfigureProcessorCoolerBuildKit(
+                processorCoolerBuildKitBuild.Projection,
+                assemblyBuild.ProcessorCoolerBinding);
             carry.ConfigureGraphicsCardSlot(
                 assemblyBuild.GraphicsCardSlot,
+                assemblyBuild.GraphicsCardBinding);
+            carry.ConfigureGraphicsCardBuildKit(
+                graphicsCardBuildKitBuild.Projection,
                 assemblyBuild.GraphicsCardBinding);
             carry.ConfigurePowerSupplyBay(
                 assemblyBuild.PowerSupplyBay,
                 assemblyBuild.PowerSupplyBinding);
+            carry.ConfigurePowerSupplyBuildKit(
+                powerSupplyBuildKitBuild.Projection,
+                assemblyBuild.PowerSupplyBinding);
+            carry.ConfigureAtx24PowerCableBuildKit(
+                atx24PowerCableBuildKitBuild.Projection,
+                assemblyBuild.Atx24PowerCableBinding);
             carry.ConfigureAtx24PowerCableRoute(
                 assemblyBuild.Atx24PowerCableRoute,
                 assemblyBuild.Atx24PowerCableBinding);
+            carry.ConfigureEps12vPowerCableBuildKit(
+                eps12vPowerCableBuildKitBuild.Projection,
+                assemblyBuild.Eps12vPowerCableBinding);
             carry.ConfigureEps12vPowerCableRoute(
                 assemblyBuild.Eps12vPowerCableRoute,
                 assemblyBuild.Eps12vPowerCableBinding);
+            carry.ConfigurePcieGpuPowerCableBuildKit(
+                pcieGpuPowerCableBuildKitBuild.Projection,
+                assemblyBuild.PcieGpuPowerCableBinding);
             carry.ConfigurePcieGpuPowerCableRoute(
                 assemblyBuild.PcieGpuPowerCableRoute,
                 assemblyBuild.PcieGpuPowerCableBinding);
@@ -781,7 +877,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 motherboardBuildKitBuild.Projection,
                 processorBuildKitBuild.Projection,
                 memoryModuleBuildKitBuild.Projection,
-                storageBuildKitBuild.Projection);
+                storageBuildKitBuild.Projection,
+                processorCoolerBuildKitBuild.Projection,
+                graphicsCardBuildKitBuild.Projection,
+                powerSupplyBuildKitBuild.Projection,
+                atx24PowerCableBuildKitBuild.Projection,
+                eps12vPowerCableBuildKitBuild.Projection,
+                pcieGpuPowerCableBuildKitBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -1724,7 +1826,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Transform storageSlotRoot = new GameObject(
                 "MotherboardM2SlotPrimary").transform;
             storageSlotRoot.SetParent(motherboardRoot.transform, false);
-            storageSlotRoot.localPosition = new Vector3(0.020f, 0.085f, 0.012f);
+            storageSlotRoot.localPosition = new Vector3(0.020f, 0.100f, 0.012f);
             GameObject storageConnector = CreateBeveledCube(
                 "M2MKeyConnector",
                 storageSlotRoot,

@@ -72,6 +72,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-power-cable.paused")));
             }
 
+            if (enabled && atx24PowerCableBuildKit != null &&
+                atx24PowerCableBuildKit.HasPickupReceipt)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-atx24-power-cable-build-kit.authority-blocked")));
+            }
+
             SetAtx24PowerCableRouteMode(enabled);
             if (enabled)
             {
@@ -163,13 +171,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            Atx24PowerCableBuildKitEvaluation buildKitEvaluation =
+                EvaluateAtx24PowerCableBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsAtx24PowerCableBuildKitMode ||
+                (atx24PowerCableBuildKit != null &&
+                 atx24PowerCableBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetAtx24PowerCableRouteMode(
-                    !IsAtx24PowerCableRouteMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetAtx24PowerCableBuildKitMode(
+                        !IsAtx24PowerCableBuildKitMode);
+                }
+                else
+                {
+                    TrySetAtx24PowerCableRouteMode(
+                        !IsAtx24PowerCableRouteMode);
+                }
+
+                return true;
+            }
+
+            if (IsAtx24PowerCableBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotateAtx24PowerCableBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -182,28 +215,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsAtx24PowerCableRouteMode)
+            Atx24PowerCableRouteEvaluation routeEvaluation = default;
+            if (IsAtx24PowerCableBuildKitMode)
+            {
+                ApplyAtx24PowerCableBuildKitEvaluation(buildKitEvaluation);
+            }
+            else if (IsAtx24PowerCableRouteMode)
+            {
+                routeEvaluation = EvaluateAtx24PowerCableRoute(binding);
+                ApplyAtx24PowerCableRouteEvaluation(routeEvaluation);
+            }
+            else
             {
                 atx24PowerCableRoute?.SetRouteModeActive(active: false);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
             }
 
-            Atx24PowerCableRouteEvaluation evaluation =
-                EvaluateAtx24PowerCableRoute(binding);
-            ApplyAtx24PowerCableRouteEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmAtx24PowerCableRoute(binding, evaluation);
+                if (IsAtx24PowerCableBuildKitMode)
+                {
+                    TryConfirmAtx24PowerCableBuildKit();
+                }
+                else if (IsAtx24PowerCableRouteMode)
+                {
+                    TryConfirmAtx24PowerCableRoute(binding, routeEvaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -211,6 +254,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetAtx24PowerCableRouteMode(bool enabled)
         {
+            ResetAtx24PowerCableBuildKitState();
             IsAtx24PowerCableRouteMode = enabled &&
                                          HeldItem != null &&
                                          GetAtx24PowerCableBinding(HeldItem) != null;
@@ -285,7 +329,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HeldItem,
                 obstructionMask,
                 motor == null || motor.IsPaused,
-                binding.IsAuthorityInHands && !binding.IsRouted,
+                binding.IsAuthorityInHands &&
+                    !binding.IsRouted &&
+                    (atx24PowerCableBuildKit == null ||
+                     !atx24PowerCableBuildKit.HasPickupReceipt),
                 session.AssemblyBuild.MotherboardSeatState ==
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
@@ -367,6 +414,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode("assembly-power-cable.paused")));
+            }
+
+            if (binding.IsAuthorityInBuildKit)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-atx24-power-cable-build-kit.already-staged")));
             }
 
             bool wasRouted = binding.IsRouted;

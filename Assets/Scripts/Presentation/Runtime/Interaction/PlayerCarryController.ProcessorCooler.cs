@@ -196,12 +196,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            ProcessorCoolerBuildKitEvaluation buildKitEvaluation =
+                EvaluateProcessorCoolerBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsProcessorCoolerBuildKitMode ||
+                (processorCoolerBuildKit != null &&
+                 processorCoolerBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetProcessorCoolerSeatMode(!IsProcessorCoolerSeatMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetProcessorCoolerBuildKitMode(
+                        !IsProcessorCoolerBuildKitMode);
+                }
+                else
+                {
+                    TrySetProcessorCoolerSeatMode(!IsProcessorCoolerSeatMode);
+                }
+
+                return true;
+            }
+
+            if (IsProcessorCoolerBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotateProcessorCoolerBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -214,28 +239,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsProcessorCoolerSeatMode)
+            if (IsProcessorCoolerBuildKitMode)
+            {
+                ApplyProcessorCoolerBuildKitEvaluation(buildKitEvaluation);
+            }
+            else
             {
                 UpdateProcessorCoolerSeatPreview(binding);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
             }
 
-            ProcessorCoolerSlotEvaluation evaluation =
-                EvaluateProcessorCoolerSeat(binding);
-            ApplyProcessorCoolerSeatEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
-                input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmProcessorCoolerSeat(binding, evaluation);
+                if (IsProcessorCoolerBuildKitMode)
+                {
+                    TryConfirmProcessorCoolerBuildKit();
+                }
+                else if (IsProcessorCoolerSeatMode)
+                {
+                    ProcessorCoolerSlotEvaluation evaluation =
+                        EvaluateProcessorCoolerSeat(binding);
+                    ApplyProcessorCoolerSeatEvaluation(evaluation);
+                    TryConfirmProcessorCoolerSeat(binding, evaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -243,6 +273,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetProcessorCoolerSeatMode(bool enabled)
         {
+            ResetProcessorCoolerBuildKitState();
             IsProcessorCoolerSeatMode = enabled &&
                                         HeldItem != null &&
                                         GetProcessorCoolerBinding(HeldItem) != null;
@@ -504,7 +535,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             OperationResult authority = wasSeated
                 ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
+                : binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
             if (authority.IsFailure)
             {
                 OperationResult rollback = item.RecoverToLastSafePose();

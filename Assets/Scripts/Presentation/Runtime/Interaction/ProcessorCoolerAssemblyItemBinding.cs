@@ -2,6 +2,7 @@ using System;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -15,12 +16,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
         [SerializeField] private PhysicalItemProjection physicalItem;
         [SerializeField] private ProcessorCoolerSlotProjection slot;
+        [SerializeField] private ProcessorCoolerBuildKitProjection buildKit;
         [SerializeField] private string inventoryItemId =
             GarageStockFlowSession.ProcessorCoolerItemInstanceIdValue;
 
@@ -33,6 +36,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PhysicalItemProjection PhysicalItem => physicalItem;
 
         public ProcessorCoolerSlotProjection Slot => slot;
+
+        public ProcessorCoolerBuildKitProjection BuildKit => buildKit;
 
         public string InventoryItemIdValue => inventoryItemId;
 
@@ -91,6 +96,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool IsAuthorityLooseWorld => IsInContainer(
             Session?.WorldFloorContainerId ?? default);
 
+        public bool IsAuthorityInBuildKit => IsInContainer(
+            Session?.ProcessorCoolerBuildKitContainerId ?? default);
+
         private void Awake()
         {
             physicalItem ??= GetComponent<PhysicalItemProjection>();
@@ -101,7 +109,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             GarageStockFlowRuntime stockFlowRuntime,
             PhysicalItemProjection itemProjection,
             ProcessorCoolerSlotProjection slotProjection,
-            string stableInventoryItemId)
+            string stableInventoryItemId,
+            ProcessorCoolerBuildKitProjection buildKitProjection = null)
         {
             runtime = stockFlowRuntime != null
                 ? stockFlowRuntime
@@ -112,6 +121,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             slot = slotProjection != null
                 ? slotProjection
                 : throw new ArgumentNullException(nameof(slotProjection));
+            buildKit = buildKitProjection;
             inventoryItemId = StableId<ItemInstanceIdScope>.Parse(
                 stableInventoryItemId).Value;
             if (inventoryItemId !=
@@ -124,6 +134,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             CaptureInitialLoosePose();
             SyncProjectionToAuthority();
+        }
+
+        public bool MatchesBuildKitConfiguration(
+            ProcessorCoolerBuildKitProjection buildKitProjection)
+        {
+            return buildKitProjection != null &&
+                   buildKit == buildKitProjection &&
+                   buildKit.Runtime == runtime;
         }
 
         public OperationResult TryCommitLoosePickup()
@@ -147,6 +165,46 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.PlayerHands ||
+                !physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-processor-cooler-assembly." +
+                        "pickup-authority-mismatch"));
+            }
+
+            OperationResult headroom = ValidateBuildKitAssemblyPickupHeadroom();
+            if (headroom.IsFailure)
+            {
+                return headroom;
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedProcessorCoolerForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -316,6 +374,99 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return OperationResult.Success();
         }
 
+        internal OperationResult TryPlaceInBuildKit(
+            Transform interactionOrigin,
+            Transform playerRoot,
+            Transform carryAnchor,
+            LayerMask obstructionMask,
+            int clockwiseQuarterTurns,
+            bool paused)
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (buildKit == null || !buildKit.IsConfigured ||
+                buildKit.Runtime != runtime)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-processor-cooler-build-kit.context-missing"));
+            }
+
+            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsSeated ||
+                buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-processor-cooler-build-kit.authority-mismatch"));
+            }
+
+            if (carryAnchor == null || Session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        carryAnchor == null
+                            ? "custom-pc-processor-cooler-build-kit.carry-anchor-missing"
+                            : "custom-pc-processor-cooler-build-kit.context-missing"));
+            }
+
+            if (Session.CustomPcBuildKit.Revision == long.MaxValue ||
+                Session.Inventory.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            long expectedBuildKitRevision = Session.CustomPcBuildKit.Revision;
+            long expectedInventoryRevision = Session.Inventory.Revision;
+            ProcessorCoolerBuildKitEvaluation evaluation = buildKit.Evaluate(
+                interactionOrigin,
+                playerRoot,
+                physicalItem,
+                obstructionMask,
+                clockwiseQuarterTurns,
+                paused,
+                IsAuthorityInHands && !IsSeated && buildKit.HasPickupReceipt);
+            if (!evaluation.IsValid)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> domain =
+                Session.PlaceHeldProcessorCoolerInCustomPcBuildKit(
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            if (domain.IsFailure)
+            {
+                return OperationResult.Fail(domain.Error);
+            }
+
+            OperationResult physicalCommit = physicalItem.PlaceAt(evaluation.Pose);
+            if (physicalCommit.IsFailure)
+            {
+                OperationResult recovery =
+                    physicalItem.RecoverToStablePlacementAfterAuthority(
+                        evaluation.Pose);
+                if (recovery.IsFailure ||
+                    !physicalItem.IsStablePlacement ||
+                    physicalItem.Ownership != PhysicalItemOwnership.World)
+                {
+                    return OperationResult.Fail(
+                        Failure.FromCode(
+                            "custom-pc-processor-cooler-build-kit.projection-recovery-failed"));
+                }
+            }
+
+            _carryOrigin = CarryOrigin.None;
+            buildKit.ResetFeedback();
+            buildKit.RefreshPresentation();
+            return OperationResult.Success();
+        }
+
         public OperationResult TryDropToWorld(Pose worldPose)
         {
             OperationResult context = ValidateContext();
@@ -393,6 +544,78 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-cooler.recovery-authority-mismatch"));
             }
 
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                AssemblyBuildSnapshot snapshot = Session.AssemblyBuild.GetSnapshot();
+                if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedSecured &&
+                    snapshot.ProcessorSocketState ==
+                        ProcessorSocketState.ProcessorRetained &&
+                    snapshot.MemorySlotState == MemorySlotState.MemoryModuleRetained &&
+                    snapshot.StorageSlotState == StorageSlotState.StorageDeviceSecured &&
+                    snapshot.ProcessorCoolerSlotState ==
+                        ProcessorCoolerSlotState.EmptyOpen &&
+                    snapshot.ProcessorCoolerTimState ==
+                        ProcessorCoolerTimState.Unsupported &&
+                    Session.TryGetProcessorCoolerItem(
+                        out InventoryItemRecord processorCooler) &&
+                    (processorCooler.StateFlags &
+                     InventorySerializedItemStateFlags
+                         .PreAppliedConsumableConsumed) == 0)
+                {
+                    OperationResult headroom = ValidateCompensationHeadroom();
+                    if (headroom.IsFailure)
+                    {
+                        return headroom;
+                    }
+
+                    OperationResult<Pose> seatPose = slot.ResolveSeatPose(
+                        ProcessorCoolerMountOrientation.Primary);
+                    if (seatPose.IsFailure)
+                    {
+                        return OperationResult.Fail(seatPose.Error);
+                    }
+
+                    var previousSafePose = new Pose(
+                        physicalItem.LastSafePosition,
+                        physicalItem.LastSafeRotation);
+                    OperationResult physicalSeat = physicalItem.PlaceAt(seatPose.Value);
+                    if (physicalSeat.IsFailure)
+                    {
+                        return physicalSeat;
+                    }
+
+                    OperationResult<AssemblyOperationReceipt> seat =
+                        Session.SeatProcessorCooler(
+                            CreateOperationId("recovery-build-kit-seat"),
+                            ProcessorCoolerMountOrientation.Primary,
+                            snapshot.InstalledByOperationId,
+                            snapshot.SecuredByOperationId,
+                            snapshot.ProcessorSeatedByOperationId,
+                            snapshot.ProcessorRetainedByOperationId,
+                            snapshot.Revision);
+                    if (seat.IsSuccess)
+                    {
+                        _carryOrigin = CarryOrigin.None;
+                        slot.ResetFeedback();
+                        SyncProjectionToAuthority();
+                        return OperationResult.Success();
+                    }
+
+                    OperationResult safePoseRestore =
+                        physicalItem.RestoreLastSafePoseSnapshot(previousSafePose);
+                    OperationResult carryRestore = safePoseRestore.IsSuccess
+                        ? physicalItem.BeginCarry(carryAnchor, heldLayer)
+                        : OperationResult.Fail(
+                            Failure.FromCode(
+                                "assembly-cooler.recovery-safe-pose-restore-failed"));
+                    return safePoseRestore.IsFailure || carryRestore.IsFailure
+                        ? OperationResult.Fail(
+                            Failure.FromCode(
+                                "assembly-cooler.recovery-build-kit-rollback-failed"))
+                        : OperationResult.Fail(seat.Error);
+                }
+            }
+
             OperationResult physicalRecovery = physicalItem.RecoverToLastSafePose();
             if (physicalRecovery.IsFailure)
             {
@@ -442,6 +665,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 snapshot.MotherboardSeatState,
                 snapshot.ProcessorSocketState,
                 snapshot.ProcessorCoolerSlotState);
+            buildKit?.RefreshPresentation();
             return OperationResult.Success();
         }
 
@@ -479,8 +703,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
                       authoritativeSeatPose.Value)
                 : IsAuthorityInHands
                     ? physicalItem.IsCarried
-                    : IsAuthorityLooseWorld &&
-                      physicalItem.Ownership == PhysicalItemOwnership.World;
+                    : IsAuthorityInBuildKit
+                        ? buildKit != null &&
+                          buildKit.IsStaged &&
+                          buildKit.MatchesCommittedPlacement(physicalItem)
+                        : IsAuthorityLooseWorld &&
+                          physicalItem.Ownership == PhysicalItemOwnership.World;
             bool slotMatches =
                 slot.SlotIdValue == Session.ProcessorCoolerSlotId.Value &&
                 slot.BracketIdValue == Session.ProcessorCoolerBracketId.Value &&
@@ -557,6 +785,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return session.Inventory.Revision > long.MaxValue - 2L
+                ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
+                : OperationResult.Success();
+        }
+
+        private OperationResult ValidateBuildKitAssemblyPickupHeadroom()
+        {
+            GarageStockFlowSession session = Session;
+            if (session == null || session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-cooler.context-missing"));
+            }
+
+            if (session.CustomPcBuildKit.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            if (session.AssemblyBuild.Revision > long.MaxValue - 2L)
+            {
+                return OperationResult.Fail(AssemblyFailures.RevisionOverflow);
+            }
+
+            return session.Inventory.Revision > long.MaxValue - 3L
                 ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
                 : OperationResult.Success();
         }

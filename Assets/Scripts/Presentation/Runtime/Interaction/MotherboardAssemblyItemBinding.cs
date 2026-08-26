@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -146,6 +147,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-build-kit-assembly.pickup-authority-mismatch"));
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedMotherboardForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -432,6 +465,35 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 _carryOrigin = CarryOrigin.None;
+                fastener.ApplyAuthoritativeState(AssemblySeatState.SeatedUnsecured);
+                return OperationResult.Success();
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                OperationResult<AssemblyOperationReceipt> attach =
+                    Session.AttachMotherboard(
+                        CreateOperationId("recovery-build-kit-attach"));
+                if (attach.IsFailure)
+                {
+                    return OperationResult.Fail(attach.Error);
+                }
+
+                OperationResult physicalRecovery = physicalItem.PlaceAt(seat.SnapPose);
+                if (physicalRecovery.IsFailure)
+                {
+                    OperationResult<AssemblyOperationReceipt> compensation =
+                        Session.DetachMotherboard(
+                            CreateOperationId("recovery-build-kit-compensation"));
+                    return compensation.IsFailure
+                        ? OperationResult.Fail(
+                            Failure.FromCode(
+                                "assembly-seat.recovery-build-kit-compensation-failed"))
+                        : physicalRecovery;
+                }
+
+                _carryOrigin = CarryOrigin.None;
+                seat.ResetFeedback();
                 fastener.ApplyAuthoritativeState(AssemblySeatState.SeatedUnsecured);
                 return OperationResult.Success();
             }

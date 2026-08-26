@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace PCShopEmpire3D.Presentation.Input
 {
@@ -9,6 +10,8 @@ namespace PCShopEmpire3D.Presentation.Input
     /// </summary>
     public sealed class PlayerInputAdapter : MonoBehaviour
     {
+        private const float ContinuousControlActuationThreshold = 0.01f;
+
         [SerializeField] private InputActionAsset actions;
 
         private InputActionMap _playerMap;
@@ -40,7 +43,56 @@ namespace PCShopEmpire3D.Presentation.Input
 
         public Vector2 Move => _move?.ReadValue<Vector2>() ?? Vector2.zero;
 
+        public bool HasActuatedMoveControl
+        {
+            get
+            {
+                if (_move == null)
+                {
+                    return false;
+                }
+
+                foreach (InputControl control in _move.controls)
+                {
+                    if (control.IsActuated(ContinuousControlActuationThreshold))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public Vector2 Look => _look?.ReadValue<Vector2>() ?? Vector2.zero;
+
+        public Vector2 GamepadLook
+        {
+            get
+            {
+                if (_look == null)
+                {
+                    return Vector2.zero;
+                }
+
+                Vector2 strongest = Vector2.zero;
+                foreach (InputControl control in _look.controls)
+                {
+                    if (control.device is not Gamepad || control is not StickControl stick)
+                    {
+                        continue;
+                    }
+
+                    Vector2 value = stick.ReadValue();
+                    if (value.sqrMagnitude > strongest.sqrMagnitude)
+                    {
+                        strongest = value;
+                    }
+                }
+
+                return strongest;
+            }
+        }
 
         public bool SprintHeld => _sprint?.IsPressed() ?? false;
 

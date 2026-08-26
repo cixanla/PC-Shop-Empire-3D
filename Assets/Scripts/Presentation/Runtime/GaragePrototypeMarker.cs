@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-storage-build-kit-r38-v1";
+        public const string Version = "garage-graphics-card-assembly-handoff-r50-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -41,6 +41,14 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private ProcessorBuildKitProjection processorBuildKit;
         [SerializeField] private MemoryModuleBuildKitProjection memoryModuleBuildKit;
         [SerializeField] private StorageBuildKitProjection storageBuildKit;
+        [SerializeField]
+        private ProcessorCoolerBuildKitProjection processorCoolerBuildKit;
+        [SerializeField]
+        private GraphicsCardBuildKitProjection graphicsCardBuildKit;
+        [SerializeField]
+        private PowerSupplyBuildKitProjection powerSupplyBuildKit;
+        [SerializeField]
+        private Atx24PowerCableBuildKitProjection atx24PowerCableBuildKit;
         [SerializeField] private MotherboardSeatProjection motherboardSeat;
         [SerializeField] private MotherboardFastenerProjection motherboardFastener;
         [SerializeField] private MotherboardAssemblyItemBinding motherboardBinding;
@@ -92,6 +100,18 @@ namespace PCShopEmpire3D.Presentation
             memoryModuleBuildKit;
 
         public StorageBuildKitProjection StorageBuildKit => storageBuildKit;
+
+        public ProcessorCoolerBuildKitProjection ProcessorCoolerBuildKit =>
+            processorCoolerBuildKit;
+
+        public GraphicsCardBuildKitProjection GraphicsCardBuildKit =>
+            graphicsCardBuildKit;
+
+        public PowerSupplyBuildKitProjection PowerSupplyBuildKit =>
+            powerSupplyBuildKit;
+
+        public Atx24PowerCableBuildKitProjection Atx24PowerCableBuildKit =>
+            atx24PowerCableBuildKit;
 
         public MotherboardSeatProjection MotherboardSeat => motherboardSeat;
 
@@ -260,6 +280,78 @@ namespace PCShopEmpire3D.Presentation
             FindObjectsByType<StorageBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
+        public bool HasProcessorCoolerBuildKitR39Runtime =>
+            processorCoolerBuildKit != null &&
+            processorCoolerBuildKit.IsCanonical &&
+            processorCoolerBuildKit.Runtime == stockFlow &&
+            processorCoolerBinding != null &&
+            processorCoolerBinding.PhysicalItem == processorCooler &&
+            processorCoolerBinding.Slot == processorCoolerSlot &&
+            processorCoolerBinding.MatchesBuildKitConfiguration(
+                processorCoolerBuildKit) &&
+            processorCooler != null &&
+            processorCoolerSlot != null &&
+            playerCarry != null &&
+            playerCarry.MatchesProcessorCoolerBuildKitConfiguration(
+                processorCoolerBuildKit,
+                processorCoolerBinding) &&
+            FindObjectsByType<ProcessorCoolerBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
+        public bool HasGraphicsCardBuildKitR40Runtime =>
+            graphicsCardBuildKit != null &&
+            graphicsCardBuildKit.IsCanonical &&
+            graphicsCardBuildKit.Runtime == stockFlow &&
+            graphicsCardBinding != null &&
+            graphicsCardBinding.PhysicalItem == graphicsCard &&
+            graphicsCardBinding.Slot == graphicsCardSlot &&
+            graphicsCardBinding.MatchesBuildKitConfiguration(
+                graphicsCardBuildKit) &&
+            graphicsCard != null &&
+            graphicsCardSlot != null &&
+            playerCarry != null &&
+            playerCarry.MatchesGraphicsCardBuildKitConfiguration(
+                graphicsCardBuildKit,
+                graphicsCardBinding) &&
+            FindObjectsByType<GraphicsCardBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
+        public bool HasPowerSupplyBuildKitR41Runtime =>
+            powerSupplyBuildKit != null &&
+            powerSupplyBuildKit.IsCanonical &&
+            powerSupplyBuildKit.Runtime == stockFlow &&
+            powerSupplyBinding != null &&
+            powerSupplyBinding.PhysicalItem == powerSupply &&
+            powerSupplyBinding.Slot == powerSupplyBay &&
+            powerSupplyBinding.MatchesBuildKitConfiguration(
+                powerSupplyBuildKit) &&
+            powerSupply != null &&
+            powerSupplyBay != null &&
+            playerCarry != null &&
+            playerCarry.MatchesPowerSupplyBuildKitConfiguration(
+                powerSupplyBuildKit,
+                powerSupplyBinding) &&
+            FindObjectsByType<PowerSupplyBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
+        public bool HasAtx24PowerCableBuildKitR42Runtime =>
+            atx24PowerCableBuildKit != null &&
+            atx24PowerCableBuildKit.IsCanonical &&
+            atx24PowerCableBuildKit.Runtime == stockFlow &&
+            atx24PowerCableBinding != null &&
+            atx24PowerCableBinding.PhysicalItem == atx24PowerCable &&
+            atx24PowerCableBinding.Route == atx24PowerCableRoute &&
+            atx24PowerCableBinding.MatchesBuildKitConfiguration(
+                atx24PowerCableBuildKit) &&
+            atx24PowerCable != null &&
+            atx24PowerCableRoute != null &&
+            playerCarry != null &&
+            playerCarry.MatchesAtx24PowerCableBuildKitConfiguration(
+                atx24PowerCableBuildKit,
+                atx24PowerCableBinding) &&
+            FindObjectsByType<Atx24PowerCableBuildKitProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         public void Configure(
             FirstPersonMotor motor,
             PlayerInputAdapter input,
@@ -307,7 +399,13 @@ namespace PCShopEmpire3D.Presentation
             MotherboardBuildKitProjection physicalMotherboardBuildKit = null,
             ProcessorBuildKitProjection physicalProcessorBuildKit = null,
             MemoryModuleBuildKitProjection physicalMemoryModuleBuildKit = null,
-            StorageBuildKitProjection physicalStorageBuildKit = null)
+            StorageBuildKitProjection physicalStorageBuildKit = null,
+            ProcessorCoolerBuildKitProjection physicalProcessorCoolerBuildKit = null,
+            GraphicsCardBuildKitProjection physicalGraphicsCardBuildKit = null,
+            PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null,
+            Atx24PowerCableBuildKitProjection physicalAtx24PowerCableBuildKit = null,
+            Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null,
+            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -321,6 +419,12 @@ namespace PCShopEmpire3D.Presentation
             processorBuildKit = physicalProcessorBuildKit;
             memoryModuleBuildKit = physicalMemoryModuleBuildKit;
             storageBuildKit = physicalStorageBuildKit;
+            processorCoolerBuildKit = physicalProcessorCoolerBuildKit;
+            graphicsCardBuildKit = physicalGraphicsCardBuildKit;
+            powerSupplyBuildKit = physicalPowerSupplyBuildKit;
+            atx24PowerCableBuildKit = physicalAtx24PowerCableBuildKit;
+            eps12vPowerCableBuildKit = physicalEps12vPowerCableBuildKit;
+            pcieGpuPowerCableBuildKit = physicalPcieGpuPowerCableBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1071,6 +1175,18 @@ namespace PCShopEmpire3D.Presentation
                 $"processor-build-kit={(HasProcessorBuildKitR36Runtime ? "ready" : "missing")} " +
                 $"memory-module-build-kit={(HasMemoryModuleBuildKitR37Runtime ? "ready" : "missing")} " +
                 $"storage-build-kit={(HasStorageBuildKitR38Runtime ? "ready" : "missing")} " +
+                $"processor-cooler-build-kit={(HasProcessorCoolerBuildKitR39Runtime ? "ready" : "missing")} " +
+                $"graphics-card-build-kit={(HasGraphicsCardBuildKitR40Runtime ? "ready" : "missing")} " +
+                $"power-supply-build-kit={(HasPowerSupplyBuildKitR41Runtime ? "ready" : "missing")} " +
+                $"atx24-power-cable-build-kit={(HasAtx24PowerCableBuildKitR42Runtime ? "ready" : "missing")} " +
+                $"eps12v-power-cable-build-kit={(HasEps12vPowerCableBuildKitR43Runtime ? "ready" : "missing")} " +
+                $"pcie-gpu-power-cable-build-kit={(HasPcieGpuPowerCableBuildKitR44Runtime ? "ready" : "missing")} " +
+                $"motherboard-assembly-handoff={(HasMotherboardAssemblyHandoffR45Runtime ? "ready" : "missing")} " +
+                $"processor-assembly-handoff={(HasProcessorAssemblyHandoffR46Runtime ? "ready" : "missing")} " +
+                $"memory-module-assembly-handoff={(HasMemoryModuleAssemblyHandoffR47Runtime ? "ready" : "missing")} " +
+                $"storage-assembly-handoff={(HasStorageAssemblyHandoffR48Runtime ? "ready" : "missing")} " +
+                $"processor-cooler-assembly-handoff={(HasProcessorCoolerAssemblyHandoffR49Runtime ? "ready" : "missing")} " +
+                $"graphics-card-assembly-handoff={(HasGraphicsCardAssemblyHandoffR50Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1142,6 +1258,42 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-memory-module-build-kit-smoke");
             bool runStorageBuildKitSmoke =
                 HasCommandLineArgument("-pse-storage-build-kit-smoke");
+            bool runProcessorCoolerBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-processor-cooler-build-kit-smoke");
+            bool runGraphicsCardBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-graphics-card-build-kit-smoke");
+            bool runPowerSupplyBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-power-supply-build-kit-smoke");
+            bool runAtx24PowerCableBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-atx24-power-cable-build-kit-smoke");
+            bool runEps12vPowerCableBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-eps12v-power-cable-build-kit-smoke");
+            bool runPcieGpuPowerCableBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-pcie-gpu-power-cable-build-kit-smoke");
+            bool runMotherboardAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-motherboard-assembly-handoff-smoke");
+            bool runProcessorAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-processor-assembly-handoff-smoke");
+            bool runMemoryModuleAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-memory-module-assembly-handoff-smoke");
+            bool runStorageAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-storage-assembly-handoff-smoke");
+            bool runProcessorCoolerAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-processor-cooler-assembly-handoff-smoke");
+            bool runGraphicsCardAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-graphics-card-assembly-handoff-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1162,7 +1314,19 @@ namespace PCShopEmpire3D.Presentation
                              (runMotherboardBuildKitSmoke ? 1 : 0) +
                              (runProcessorBuildKitSmoke ? 1 : 0) +
                              (runMemoryModuleBuildKitSmoke ? 1 : 0) +
-                             (runStorageBuildKitSmoke ? 1 : 0);
+                             (runStorageBuildKitSmoke ? 1 : 0) +
+                             (runProcessorCoolerBuildKitSmoke ? 1 : 0) +
+                             (runGraphicsCardBuildKitSmoke ? 1 : 0) +
+                             (runPowerSupplyBuildKitSmoke ? 1 : 0) +
+                             (runAtx24PowerCableBuildKitSmoke ? 1 : 0) +
+                             (runEps12vPowerCableBuildKitSmoke ? 1 : 0) +
+                             (runPcieGpuPowerCableBuildKitSmoke ? 1 : 0) +
+                             (runMotherboardAssemblyHandoffSmoke ? 1 : 0) +
+                             (runProcessorAssemblyHandoffSmoke ? 1 : 0) +
+                             (runMemoryModuleAssemblyHandoffSmoke ? 1 : 0) +
+                             (runStorageAssemblyHandoffSmoke ? 1 : 0) +
+                             (runProcessorCoolerAssemblyHandoffSmoke ? 1 : 0) +
+                             (runGraphicsCardAssemblyHandoffSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1175,12 +1339,84 @@ namespace PCShopEmpire3D.Presentation
                      !runMotherboardBuildKitSmoke &&
                      !runProcessorBuildKitSmoke &&
                      !runMemoryModuleBuildKitSmoke &&
-                     !runStorageBuildKitSmoke) ||
+                     !runStorageBuildKitSmoke &&
+                     !runProcessorCoolerBuildKitSmoke &&
+                     !runGraphicsCardBuildKitSmoke &&
+                     !runPowerSupplyBuildKitSmoke &&
+                     !runAtx24PowerCableBuildKitSmoke &&
+                     !runEps12vPowerCableBuildKitSmoke &&
+                     !runPcieGpuPowerCableBuildKitSmoke &&
+                     !runMotherboardAssemblyHandoffSmoke &&
+                     !runProcessorAssemblyHandoffSmoke &&
+                     !runMemoryModuleAssemblyHandoffSmoke &&
+                     !runStorageAssemblyHandoffSmoke &&
+                     !runProcessorCoolerAssemblyHandoffSmoke &&
+                     !runGraphicsCardAssemblyHandoffSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runStorageBuildKitSmoke)
+                    if (runGraphicsCardAssemblyHandoffSmoke)
+                    {
+                        LogGraphicsCardAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runProcessorCoolerAssemblyHandoffSmoke)
+                    {
+                        LogProcessorCoolerAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runStorageAssemblyHandoffSmoke)
+                    {
+                        LogStorageAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runMemoryModuleAssemblyHandoffSmoke)
+                    {
+                        LogMemoryModuleAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runProcessorAssemblyHandoffSmoke)
+                    {
+                        LogProcessorAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runMotherboardAssemblyHandoffSmoke)
+                    {
+                        LogMotherboardAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPcieGpuPowerCableBuildKitSmoke)
+                    {
+                        LogPcieGpuPowerCableBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runEps12vPowerCableBuildKitSmoke)
+                    {
+                        LogEps12vPowerCableBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runAtx24PowerCableBuildKitSmoke)
+                    {
+                        LogAtx24PowerCableBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPowerSupplyBuildKitSmoke)
+                    {
+                        LogPowerSupplyBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runGraphicsCardBuildKitSmoke)
+                    {
+                        LogGraphicsCardBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runProcessorCoolerBuildKitSmoke)
+                    {
+                        LogProcessorCoolerBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runStorageBuildKitSmoke)
                     {
                         LogStorageBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1352,6 +1588,102 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runProcessorCoolerBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_PROCESSOR_COOLER_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.processor-cooler-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runGraphicsCardBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_GRAPHICS_CARD_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.graphics-card-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runPowerSupplyBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_POWER_SUPPLY_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.power-supply-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runAtx24PowerCableBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_ATX24_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.atx24-power-cable-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runEps12vPowerCableBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_EPS12V_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.eps12v-power-cable-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runPcieGpuPowerCableBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_PCIE_GPU_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.pcie-gpu-power-cable-build-kit-requires-development-build");
+                return;
+            }
+
+            if (runMotherboardAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogMotherboardAssemblyHandoffSmokeFailure(
+                    "smoke.motherboard-assembly-handoff-requires-development-build");
+                return;
+            }
+
+            if (runProcessorAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogProcessorAssemblyHandoffSmokeFailure(
+                    "smoke.processor-assembly-handoff-requires-development-build");
+                return;
+            }
+
+            if (runMemoryModuleAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogMemoryModuleAssemblyHandoffSmokeFailure(
+                    "smoke.memory-module-assembly-handoff-requires-development-build");
+                return;
+            }
+
+            if (runStorageAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogStorageAssemblyHandoffSmokeFailure(
+                    "smoke.storage-assembly-handoff-requires-development-build");
+                return;
+            }
+
+            if (runProcessorCoolerAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogProcessorCoolerAssemblyHandoffSmokeFailure(
+                    "smoke.processor-cooler-assembly-handoff-requires-development-build");
+                return;
+            }
+
+            if (runGraphicsCardAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogGraphicsCardAssemblyHandoffSmokeFailure(
+                    "smoke.graphics-card-assembly-handoff-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1463,6 +1795,78 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunStorageBuildKitSmoke());
+            }
+
+            if (runProcessorCoolerBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorCoolerBuildKitSmoke());
+            }
+
+            if (runGraphicsCardBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunGraphicsCardBuildKitSmoke());
+            }
+
+            if (runPowerSupplyBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPowerSupplyBuildKitSmoke());
+            }
+
+            if (runAtx24PowerCableBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunAtx24PowerCableBuildKitSmoke());
+            }
+
+            if (runEps12vPowerCableBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunEps12vPowerCableBuildKitSmoke());
+            }
+
+            if (runPcieGpuPowerCableBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPcieGpuPowerCableBuildKitSmoke());
+            }
+
+            if (runMotherboardAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunMotherboardAssemblyHandoffSmoke());
+            }
+
+            if (runProcessorAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorAssemblyHandoffSmoke());
+            }
+
+            if (runMemoryModuleAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunMemoryModuleAssemblyHandoffSmoke());
+            }
+
+            if (runStorageAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunStorageAssemblyHandoffSmoke());
+            }
+
+            if (runProcessorCoolerAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorCoolerAssemblyHandoffSmoke());
+            }
+
+            if (runGraphicsCardAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunGraphicsCardAssemblyHandoffSmoke());
             }
         }
 

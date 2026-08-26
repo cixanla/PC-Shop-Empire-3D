@@ -13,6 +13,8 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private PcieGpuPowerCableAssemblyItemBinding pcieGpuPowerCableBinding;
         [SerializeField] private PhysicalItemProjection pcieGpuPowerCable;
         [SerializeField] private PcieGpuPowerCableRuntimeGeometry pcieGpuPowerCableGeometry;
+        [SerializeField]
+        private PcieGpuPowerCableBuildKitProjection pcieGpuPowerCableBuildKit;
 
         public PcieGpuPowerCableRouteProjection PcieGpuPowerCableRoute =>
             pcieGpuPowerCableRoute;
@@ -24,6 +26,9 @@ namespace PCShopEmpire3D.Presentation
 
         public PcieGpuPowerCableRuntimeGeometry PcieGpuPowerCableGeometry =>
             pcieGpuPowerCableGeometry;
+
+        public PcieGpuPowerCableBuildKitProjection PcieGpuPowerCableBuildKit =>
+            pcieGpuPowerCableBuildKit;
 
         public bool HasPcieGpuPowerCableR32Runtime =>
             pcieGpuPowerCableGeometry != null &&
@@ -42,6 +47,24 @@ namespace PCShopEmpire3D.Presentation
             CountCanonicalPcieGpuPowerCableProjections(
                 GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue) == 1 &&
             FindObjectsByType<PcieGpuPowerCableRuntimeGeometry>(
+                FindObjectsSortMode.None).Length == 1;
+
+        public bool HasPcieGpuPowerCableBuildKitR44Runtime =>
+            pcieGpuPowerCableBuildKit != null &&
+            pcieGpuPowerCableBuildKit.IsCanonical &&
+            pcieGpuPowerCableBuildKit.Runtime == stockFlow &&
+            pcieGpuPowerCableBinding != null &&
+            pcieGpuPowerCableBinding.PhysicalItem == pcieGpuPowerCable &&
+            pcieGpuPowerCableBinding.Route == pcieGpuPowerCableRoute &&
+            pcieGpuPowerCableBinding.MatchesBuildKitConfiguration(
+                pcieGpuPowerCableBuildKit) &&
+            pcieGpuPowerCable != null &&
+            pcieGpuPowerCableRoute != null &&
+            playerCarry != null &&
+            playerCarry.MatchesPcieGpuPowerCableBuildKitConfiguration(
+                pcieGpuPowerCableBuildKit,
+                pcieGpuPowerCableBinding) &&
+            FindObjectsByType<PcieGpuPowerCableBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
         private void ConfigurePcieGpuPowerCable(

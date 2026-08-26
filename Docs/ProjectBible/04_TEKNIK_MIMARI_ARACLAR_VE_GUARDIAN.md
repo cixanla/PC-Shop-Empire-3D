@@ -505,6 +505,24 @@ Native crash dump/handler gerekiyorsa ayrı ürün kararıdır: lisans, binary b
 
 Bu belge hukuki görüş değildir. Steam şartları ve mevzuat yayıma yakın tarihte yeniden doğrulanır.
 
+### 10.11 İsteğe bağlı yerel karar/danışman katmanı
+
+Kullanıcının oyun içine yerel yapay zekâ ekleme isteği Guardian'dan ayrı bir ürün katmanı olarak ele alınır. Guardian deterministik bütünlük denetçisi kalır; isteğe bağlı **PSE Local Advisor Runtime** ise yalnız önceden tanımlanmış ve tiplenmiş girdilerden sınırlı öneri üretebilir. Örnek kullanım alanları; mağaza yerleşimi önerisi, çalışan vardiyası taslağı, müşteri talep özeti, servis teşhis adayları ve oyuncuya açıklanabilir öğretici ipuçlarıdır.
+
+Retail build için zorunlu sınırlar:
+
+- Ana oynanış, kayıt yükleme, ekonomi, müşteri/çalışan AI'sı, montaj ve Guardian; yerel model olmadan tamamen deterministik fallback ile çalışır.
+- Oyun; OpenAI, ChatGPT, Codex, kullanıcı hesabı, internet bağlantısı veya sonradan model indirme zorunluluğu taşımaz.
+- Model çıktısı doğrudan save, authoritative state, para, stok, kaynak kodu, build veya dosya sistemi yazamaz.
+- Model shell/terminal çalıştıramaz, plugin/paket kuramaz, süreç başlatamaz ve kendini ya da oyunu yeniden kodlayamaz.
+- Çıktı serbest biçimli komut olarak yürütülmez. Yalnız allowlist içindeki sürümlenmiş `Proposal`/`Intent` şemalarına çevrilir; alan servisi normal oyuncu komutu gibi yetki, maliyet, kapasite, uyumluluk, revision ve replay kontrollerinden geçirir.
+- Geçersiz, belirsiz, zaman aşımına uğramış veya güven eşiğinin altındaki öneri fail-closed reddedilir; deterministik davranış sürer.
+- Aynı seed, snapshot ve onaylanmış intent için ekonomik sonuç platformdan bağımsız kalır; model metni oyun kuralının sahibi değildir.
+- Model, ağırlık ve veri seti lisansı; kaynak/provenance, redistribution hakkı, boyut, RAM/CPU bütçesi ve Steam'in güncel AI içerik beyanı release kapısında doğrulanır.
+- Yerel model devre dışı bırakılabilir ve kaldırılabilir bir modül olur; save formatı modele bağımlı olmaz.
+
+Geliştirme ortamında ayrı bir **Repair Assistant** test raporlarından patch önerisi hazırlayabilir; ancak otomatik merge, commit, build, release, USB checkpoint veya kullanıcı bilgisayarında kendiliğinden değişiklik yapamaz. İnsan/Codex incelemesi ve tüm normal test kapıları zorunludur. Bu araç retail oyuncu build'ine dahil edilmez. Böylece oyun zamanla gözlem ve öneri kalitesini geliştirebilir; fakat kontrolsüz kendi kendini değiştiren yazılıma dönüşmez.
+
 ## 11. Dashboard teknik sınırı
 
 Dashboard, ayrı bir simülasyon oyunu olmayacak. Fiziksel ofis bilgisayarı/tabletinden açılan view model katmanıdır.
@@ -548,6 +566,19 @@ Bu, yayımlanmış sistem gereksinimi değil, test hipotezidir.
 - Fiziksel aktif kutu ve elde taşınan nesne sayısına sahne bütçesi konur.
 - Uzak şubeler fiziksel simülasyon kullanmaz.
 - GC allocation, save spike, nav yeniden hesaplama ve UI listeleri profiler testlerine dahildir.
+
+### Kurulum boyutu ve içerik kalitesi bütçesi
+
+15–20 GB veya daha büyük bir kurulum, yalnız oyuncunun görebildiği/duyabildiği ölçülmüş kalite ve kapsam bunu gerektiriyorsa kabul edilir; hedefe ulaşmak için yapay dosya şişirme yapılmaz. Bütçe platform ve içerik sınıfına göre izlenir:
+
+- Tekstürlerde önem derecesine göre çözünürlük, mip-map, platform sıkıştırması ve tekrar kullanım.
+- Modüler bina/mağaza/mahalle kitlerinde LOD, occlusion, GPU instancing ve stream edilebilir addressable paketler.
+- Araç, NPC ve ürün varyantlarında ortak rig/malzeme; yalnız karar veya görünür kalite yaratan varyantlar.
+- Seslerde alan, dil ve kullanım sıklığına göre codec/streaming; ortam katmanlarında gereksiz kopya yok.
+- Ev, mahalle ve şubeler için hücre/zone tabanlı yükleme; görünmeyen dünyanın tam fizik ve yüksek ayrıntıda bellekte tutulmaması.
+- Her milestone'da build boyutu, diskten ilk açılış, sahne geçişi, RAM/VRAM zirvesi ve düşük alanlı disk davranışı raporlanır.
+
+Her büyük varlık paketi; lisans/provenance, kaynak boyutu, import boyutu, Windows build katkısı ve runtime bellek maliyetiyle envantere girer. Kalite artışı ekran görüntüsü, profiler veya oynanış kabulüyle gösterilemiyorsa paket ana dağıtıma alınmaz.
 
 ### Ölçülmeden optimizasyon yok, ölçülmeden kapsam artışı da yok
 

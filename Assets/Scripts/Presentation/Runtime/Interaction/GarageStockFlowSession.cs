@@ -71,6 +71,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "inventory.container.custom-pc-build-kit.memory-module";
         public const string StorageBuildKitContainerIdValue =
             "inventory.container.custom-pc-build-kit.storage";
+        public const string ProcessorCoolerBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.processor-cooler";
+        public const string GraphicsCardBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.graphics-card";
+        public const string PowerSupplyBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.power-supply";
+        public const string Atx24PowerCableBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.atx24-power-cable";
+        public const string Eps12vPowerCableBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.eps12v-power-cable";
+        public const string PcieGpuPowerCableBuildKitContainerIdValue =
+            "inventory.container.custom-pc-build-kit.pcie-gpu-power-cable";
         public const string PrototypeCustomPcBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-motherboard";
         public const string PrototypeProcessorBuildKitOperationIdValue =
@@ -79,6 +91,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-operation.prototype-memory-module";
         public const string PrototypeStorageBuildKitOperationIdValue =
             "orders.custom-pc-build-kit-operation.prototype-storage";
+        public const string PrototypeProcessorCoolerBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-processor-cooler";
+        public const string PrototypeGraphicsCardBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-graphics-card";
+        public const string PrototypePowerSupplyBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-power-supply";
+        public const string PrototypeAtx24PowerCableBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-atx24-power-cable";
+        public const string PrototypeEps12vPowerCableBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-eps12v-power-cable";
+        public const string PrototypePcieGpuPowerCableBuildKitOperationIdValue =
+            "orders.custom-pc-build-kit-operation.prototype-pcie-gpu-power-cable";
+        public const string PrototypeMotherboardAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-motherboard";
+        public const string PrototypeProcessorAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-processor";
+        public const string PrototypeMemoryModuleAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-memory-module";
+        public const string PrototypeStorageAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-storage";
+        public const string PrototypeProcessorCoolerAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-processor-cooler";
+        public const string PrototypeGraphicsCardAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-graphics-card";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -244,6 +280,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public StableId<ContainerIdScope> StorageBuildKitContainerId =>
             StableId<ContainerIdScope>.Parse(StorageBuildKitContainerIdValue);
 
+        public StableId<ContainerIdScope> ProcessorCoolerBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(ProcessorCoolerBuildKitContainerIdValue);
+
+        public StableId<ContainerIdScope> GraphicsCardBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(GraphicsCardBuildKitContainerIdValue);
+
+        public StableId<ContainerIdScope> PowerSupplyBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(PowerSupplyBuildKitContainerIdValue);
+
+        public StableId<ContainerIdScope> Atx24PowerCableBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(Atx24PowerCableBuildKitContainerIdValue);
+
+        public StableId<ContainerIdScope> Eps12vPowerCableBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(Eps12vPowerCableBuildKitContainerIdValue);
+
+        public StableId<ContainerIdScope> PcieGpuPowerCableBuildKitContainerId =>
+            StableId<ContainerIdScope>.Parse(PcieGpuPowerCableBuildKitContainerIdValue);
+
         public StableId<CustomPcBuildKitOperationIdScope>
             PrototypeCustomPcBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
@@ -263,6 +317,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeStorageBuildKitOperationId =>
                 StableId<CustomPcBuildKitOperationIdScope>.Parse(
                     PrototypeStorageBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeProcessorCoolerBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeProcessorCoolerBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeGraphicsCardBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeGraphicsCardBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypePowerSupplyBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypePowerSupplyBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeAtx24PowerCableBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeAtx24PowerCableBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypeEps12vPowerCableBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypeEps12vPowerCableBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitOperationIdScope>
+            PrototypePcieGpuPowerCableBuildKitOperationId =>
+                StableId<CustomPcBuildKitOperationIdScope>.Parse(
+                    PrototypePcieGpuPowerCableBuildKitOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeMotherboardAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeMotherboardAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeProcessorAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeProcessorAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeMemoryModuleAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeMemoryModuleAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeStorageAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeStorageAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeProcessorCoolerAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeProcessorCoolerAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeGraphicsCardAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeGraphicsCardAssemblyHandoffOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -692,6 +806,36 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StorageBuildKitContainerIdValue,
                     InventoryContainerKind.BuildKit,
                     1);
+                RegisterContainer(
+                    inventory,
+                    ProcessorCoolerBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    GraphicsCardBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    PowerSupplyBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    Atx24PowerCableBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    Eps12vPowerCableBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
+                RegisterContainer(
+                    inventory,
+                    PcieGpuPowerCableBuildKitContainerIdValue,
+                    InventoryContainerKind.BuildKit,
+                    1);
             }
 
             AssemblyBuildAuthority assemblyBuild = includeAssemblyPrototype
@@ -888,7 +1032,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             MemoryModuleBuildKitContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            StorageBuildKitContainerIdValue)).Value
+                            StorageBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorCoolerBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            GraphicsCardBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            PowerSupplyBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            Atx24PowerCableBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            Eps12vPowerCableBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            PcieGpuPowerCableBuildKitContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorSocketContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            MemorySlotContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            StorageSlotContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            ProcessorCoolerSlotContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            GraphicsCardSlotContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(
@@ -1131,6 +1297,389 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 pickup,
                 expectedBuildKitRevision,
                 expectedInventoryRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMotherboardForAssembly()
+        {
+            return PickupStagedMotherboardForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMotherboardForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                AssemblyBuild.MotherboardSeatState != AssemblySeatState.Empty ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalMotherboardForAssembly(
+                PrototypeMotherboardAssemblyHandoffOperationId,
+                workOrder,
+                WorkbenchContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedProcessorForAssembly()
+        {
+            return PickupStagedProcessorForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedProcessorForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision)
+        {
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            if (CustomPcBuildKit == null ||
+                snapshot.Revision != expectedAssemblyRevision ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.EmptyOpen ||
+                snapshot.MotherboardItemId != MotherboardItemId ||
+                snapshot.InstalledByOperationId.IsEmpty ||
+                snapshot.SecuredByOperationId.IsEmpty ||
+                !TryGetMotherboardItem(out InventoryItemRecord motherboard) ||
+                motherboard.ContainerId != WorkbenchContainerId ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalProcessorForAssembly(
+                PrototypeProcessorAssemblyHandoffOperationId,
+                workOrder,
+                ProcessorSocketContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMemoryModuleForAssembly()
+        {
+            return PickupStagedMemoryModuleForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedMemoryModuleForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision)
+        {
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            if (CustomPcBuildKit == null ||
+                snapshot.Revision != expectedAssemblyRevision ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.EmptyOpen ||
+                snapshot.MotherboardItemId != MotherboardItemId ||
+                snapshot.ProcessorItemId != ProcessorItemId ||
+                snapshot.InstalledByOperationId.IsEmpty ||
+                snapshot.SecuredByOperationId.IsEmpty ||
+                snapshot.ProcessorSeatedByOperationId.IsEmpty ||
+                snapshot.ProcessorRetainedByOperationId.IsEmpty ||
+                !TryGetMotherboardItem(out InventoryItemRecord motherboard) ||
+                motherboard.ContainerId != WorkbenchContainerId ||
+                !TryGetProcessorItem(out InventoryItemRecord processor) ||
+                processor.ContainerId != ProcessorSocketContainerId ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(snapshot, workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalMemoryModuleForAssembly(
+                PrototypeMemoryModuleAssemblyHandoffOperationId,
+                workOrder,
+                MemorySlotContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedStorageForAssembly()
+        {
+            return PickupStagedStorageForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedStorageForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision)
+        {
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            if (CustomPcBuildKit == null ||
+                snapshot.Revision != expectedAssemblyRevision ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.MemoryModuleRetained ||
+                snapshot.StorageSlotState != StorageSlotState.EmptyOpen ||
+                snapshot.MotherboardItemId != MotherboardItemId ||
+                snapshot.ProcessorItemId != ProcessorItemId ||
+                snapshot.MemoryItemId != MemoryItemId ||
+                snapshot.InstalledByOperationId.IsEmpty ||
+                snapshot.SecuredByOperationId.IsEmpty ||
+                snapshot.ProcessorSeatedByOperationId.IsEmpty ||
+                snapshot.ProcessorRetainedByOperationId.IsEmpty ||
+                snapshot.MemorySeatedByOperationId.IsEmpty ||
+                snapshot.MemoryRetainedByOperationId.IsEmpty ||
+                !TryGetMotherboardItem(out InventoryItemRecord motherboard) ||
+                motherboard.ContainerId != WorkbenchContainerId ||
+                !TryGetProcessorItem(out InventoryItemRecord processor) ||
+                processor.ContainerId != ProcessorSocketContainerId ||
+                !TryGetMemoryItem(out InventoryItemRecord memoryModule) ||
+                memoryModule.ContainerId != MemorySlotContainerId ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedMemoryModuleAssemblyPrerequisite(snapshot, workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalStorageForAssembly(
+                PrototypeStorageAssemblyHandoffOperationId,
+                workOrder,
+                StorageSlotContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
+        private bool HasLiveSecuredMotherboardAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.InstalledByOperationId,
+                    out AssemblyOperationReceipt attach) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.SecuredByOperationId,
+                    out AssemblyOperationReceipt secure))
+            {
+                return false;
+            }
+
+            CustomPcBuildOrderLineSnapshot canonicalMotherboard = null;
+            foreach (CustomPcBuildOrderLineSnapshot line in workOrder.Lines)
+            {
+                if (line.ComponentKind == PcComponentKind.Motherboard)
+                {
+                    if (canonicalMotherboard != null)
+                    {
+                        return false;
+                    }
+
+                    canonicalMotherboard = line;
+                }
+            }
+
+            return canonicalMotherboard != null &&
+                   canonicalMotherboard.ItemId == snapshot.MotherboardItemId &&
+                   canonicalMotherboard.ProductId == snapshot.MotherboardProductId &&
+                   attach.OperationId == snapshot.InstalledByOperationId &&
+                   attach.OperationKind == AssemblyOperationKind.AttachMotherboard &&
+                   attach.BuildId == snapshot.BuildId &&
+                   attach.ChassisId == snapshot.ChassisId &&
+                   attach.SlotId == snapshot.MotherboardSlotId &&
+                   attach.ItemId == snapshot.MotherboardItemId &&
+                   attach.ProductId == snapshot.MotherboardProductId &&
+                   attach.SourceContainerId == HandsContainerId &&
+                   attach.TargetContainerId == WorkbenchContainerId &&
+                   attach.PreviousSeatState == AssemblySeatState.Empty &&
+                   attach.ResultingSeatState == AssemblySeatState.SeatedUnsecured &&
+                   secure.OperationId == snapshot.SecuredByOperationId &&
+                   secure.OperationKind ==
+                       AssemblyOperationKind.SecureMotherboardFastener &&
+                   secure.BuildId == snapshot.BuildId &&
+                   secure.ChassisId == snapshot.ChassisId &&
+                   secure.SlotId == snapshot.MotherboardSlotId &&
+                   secure.ItemId == snapshot.MotherboardItemId &&
+                   secure.ProductId == snapshot.MotherboardProductId &&
+                   secure.SourceAttachOperationId == attach.OperationId &&
+                   secure.FastenerId == AssemblyBuild.MotherboardFastenerId &&
+                   secure.ExpectedAssemblyRevision == attach.AssemblyRevision &&
+                   secure.PreviousSeatState == AssemblySeatState.SeatedUnsecured &&
+                   secure.ResultingSeatState == AssemblySeatState.SeatedSecured &&
+                   (requireCurrentRevision
+                       ? secure.AssemblyRevision == snapshot.Revision
+                       : secure.AssemblyRevision > 0 &&
+                         secure.AssemblyRevision < snapshot.Revision);
+        }
+
+        private bool HasLiveRetainedProcessorAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.ProcessorSeatedByOperationId,
+                    out AssemblyOperationReceipt seat) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.ProcessorRetainedByOperationId,
+                    out AssemblyOperationReceipt retain))
+            {
+                return false;
+            }
+
+            CustomPcBuildOrderLineSnapshot canonicalProcessor = null;
+            foreach (CustomPcBuildOrderLineSnapshot line in workOrder.Lines)
+            {
+                if (line.ComponentKind == PcComponentKind.Processor)
+                {
+                    if (canonicalProcessor != null)
+                    {
+                        return false;
+                    }
+
+                    canonicalProcessor = line;
+                }
+            }
+
+            return canonicalProcessor != null &&
+                   canonicalProcessor.ItemId == snapshot.ProcessorItemId &&
+                   canonicalProcessor.ProductId == snapshot.ProcessorProductId &&
+                   seat.OperationId == snapshot.ProcessorSeatedByOperationId &&
+                   seat.OperationKind == AssemblyOperationKind.SeatProcessor &&
+                   seat.BuildId == snapshot.BuildId &&
+                   seat.ChassisId == snapshot.ChassisId &&
+                   seat.SlotId == snapshot.ProcessorSlotId &&
+                   seat.ItemId == snapshot.ProcessorItemId &&
+                   seat.ProductId == snapshot.ProcessorProductId &&
+                   seat.SourceContainerId == HandsContainerId &&
+                   seat.TargetContainerId == ProcessorSocketContainerId &&
+                   seat.SourceAttachOperationId == snapshot.InstalledByOperationId &&
+                   seat.SourceSecureOperationId == snapshot.SecuredByOperationId &&
+                   seat.PreviousProcessorSocketState == ProcessorSocketState.EmptyOpen &&
+                   seat.ResultingProcessorSocketState ==
+                       ProcessorSocketState.ProcessorSeatedOpen &&
+                   retain.OperationId == snapshot.ProcessorRetainedByOperationId &&
+                   retain.OperationKind == AssemblyOperationKind.CloseProcessorRetention &&
+                   retain.BuildId == snapshot.BuildId &&
+                   retain.ChassisId == snapshot.ChassisId &&
+                   retain.SlotId == snapshot.ProcessorSlotId &&
+                   retain.ItemId == snapshot.ProcessorItemId &&
+                   retain.ProductId == snapshot.ProcessorProductId &&
+                   retain.RetentionId == AssemblyBuild.ProcessorRetentionId &&
+                   retain.SourceProcessorSeatOperationId == seat.OperationId &&
+                   retain.PreviousProcessorSocketState ==
+                       ProcessorSocketState.ProcessorSeatedOpen &&
+                   retain.ResultingProcessorSocketState ==
+                       ProcessorSocketState.ProcessorRetained &&
+                   (requireCurrentRevision
+                       ? retain.AssemblyRevision == snapshot.Revision
+                       : retain.AssemblyRevision > 0 &&
+                         retain.AssemblyRevision < snapshot.Revision);
+        }
+
+        private bool HasLiveRetainedMemoryModuleAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.MemorySeatedByOperationId,
+                    out AssemblyOperationReceipt seat) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.MemoryRetainedByOperationId,
+                    out AssemblyOperationReceipt retain))
+            {
+                return false;
+            }
+
+            CustomPcBuildOrderLineSnapshot canonicalMemoryModule = null;
+            foreach (CustomPcBuildOrderLineSnapshot line in workOrder.Lines)
+            {
+                if (line.ComponentKind == PcComponentKind.MemoryModule)
+                {
+                    if (canonicalMemoryModule != null)
+                    {
+                        return false;
+                    }
+
+                    canonicalMemoryModule = line;
+                }
+            }
+
+            return canonicalMemoryModule != null &&
+                   canonicalMemoryModule.ItemId == snapshot.MemoryItemId &&
+                   canonicalMemoryModule.ProductId == snapshot.MemoryProductId &&
+                   seat.OperationId == snapshot.MemorySeatedByOperationId &&
+                   seat.OperationKind == AssemblyOperationKind.SeatMemoryModule &&
+                   seat.BuildId == snapshot.BuildId &&
+                   seat.ChassisId == snapshot.ChassisId &&
+                   seat.SlotId == snapshot.MemorySlotId &&
+                   seat.ItemId == snapshot.MemoryItemId &&
+                   seat.ProductId == snapshot.MemoryProductId &&
+                   seat.SourceContainerId == HandsContainerId &&
+                   seat.TargetContainerId == MemorySlotContainerId &&
+                   seat.SourceAttachOperationId == snapshot.InstalledByOperationId &&
+                   seat.SourceSecureOperationId == snapshot.SecuredByOperationId &&
+                   seat.PreviousMemorySlotState == MemorySlotState.EmptyOpen &&
+                   seat.ResultingMemorySlotState ==
+                       MemorySlotState.MemoryModuleSeatedOpen &&
+                   retain.OperationId == snapshot.MemoryRetainedByOperationId &&
+                   retain.OperationKind == AssemblyOperationKind.CloseMemoryRetention &&
+                   retain.BuildId == snapshot.BuildId &&
+                   retain.ChassisId == snapshot.ChassisId &&
+                   retain.SlotId == snapshot.MemorySlotId &&
+                   retain.ItemId == snapshot.MemoryItemId &&
+                   retain.ProductId == snapshot.MemoryProductId &&
+                   retain.RetentionId == AssemblyBuild.MemoryRetentionId &&
+                   retain.SourceMemorySeatOperationId == seat.OperationId &&
+                   retain.PreviousMemorySlotState ==
+                       MemorySlotState.MemoryModuleSeatedOpen &&
+                   retain.ResultingMemorySlotState ==
+                       MemorySlotState.MemoryModuleRetained &&
+                   (requireCurrentRevision
+                       ? retain.AssemblyRevision == snapshot.Revision
+                       : retain.AssemblyRevision > 0 &&
+                         retain.AssemblyRevision < snapshot.Revision);
         }
 
         public OperationResult DropHeldMotherboardToWorld()

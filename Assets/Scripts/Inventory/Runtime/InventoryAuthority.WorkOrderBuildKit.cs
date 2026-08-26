@@ -7,7 +7,9 @@ namespace PCShopEmpire3D.Inventory
     internal enum InventorySerializedReservationWorkOrderBuildKitStage
     {
         ActorHands = 1,
-        BuildKit = 2
+        BuildKit = 2,
+        AssemblyHands = 3,
+        AssemblyWorkbench = 4
     }
 
     /// <summary>
@@ -79,8 +81,94 @@ namespace PCShopEmpire3D.Inventory
         internal long AppliedRevision { get; }
     }
 
+    /// <summary>
+    /// Immutable authorization proof for releasing the fully staged canonical motherboard
+    /// into one exact managed Assembly workbench while its reservation remains live.
+    /// </summary>
+    internal sealed class
+        InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+    {
+        internal InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt(
+            InventoryAuthority owner,
+            InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+            InventorySerializedTransferAccess assemblyAccess,
+            StableId<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                operationId,
+            StableId<ContainerIdScope> workbenchContainerId,
+            long appliedRevision)
+        {
+            Owner = owner;
+            PlacementReceipt = placementReceipt;
+            AssemblyAccess = assemblyAccess;
+            OperationId = operationId;
+            WorkbenchContainerId = workbenchContainerId;
+            AppliedRevision = appliedRevision;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal InventorySerializedReservationWorkOrderBuildKitReceipt PlacementReceipt
+        {
+            get;
+        }
+
+        internal InventorySerializedTransferAccess AssemblyAccess { get; }
+
+        internal StableId<
+            InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+            OperationId { get; }
+
+        internal StableId<ContainerIdScope> WorkbenchContainerId { get; }
+
+        internal long AppliedRevision { get; }
+    }
+
+    /// <summary>
+    /// Append-only custody evidence for each exact Assembly hands/workbench transition after
+    /// the BuildKit release. Assembly owns installation state; Inventory still owns custody.
+    /// </summary>
+    internal sealed class
+        InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt
+    {
+        internal InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt(
+            InventoryAuthority owner,
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff,
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedReservationWorkOrderBuildKitStage stage,
+            long appliedRevision)
+        {
+            Owner = owner;
+            Handoff = handoff;
+            SourceContainerId = sourceContainerId;
+            TargetContainerId = targetContainerId;
+            Stage = stage;
+            AppliedRevision = appliedRevision;
+        }
+
+        internal InventoryAuthority Owner { get; }
+
+        internal InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+            Handoff { get; }
+
+        internal StableId<ContainerIdScope> SourceContainerId { get; }
+
+        internal StableId<ContainerIdScope> TargetContainerId { get; }
+
+        internal InventorySerializedReservationWorkOrderBuildKitStage Stage { get; }
+
+        internal long AppliedRevision { get; }
+    }
+
     internal sealed class InventorySerializedReservationWorkOrderBuildKitRegistration
     {
+        private readonly List<
+            InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt>
+            _assemblyTransferReceipts =
+                new List<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt>();
+
         internal InventorySerializedReservationWorkOrderBuildKitRegistration(
             InventorySerializedReservationWorkOrderBuildKitReceipt pickupReceipt)
         {
@@ -95,10 +183,21 @@ namespace PCShopEmpire3D.Inventory
             private set;
         }
 
+        internal InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt
+            AssemblyHandoffReceipt { get; private set; }
+
+        internal IReadOnlyList<
+            InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt>
+            AssemblyTransferReceipts => _assemblyTransferReceipts;
+
         internal InventorySerializedReservationWorkOrderBuildKitStage CurrentStage =>
             PlacementReceipt == null
                 ? InventorySerializedReservationWorkOrderBuildKitStage.ActorHands
-                : InventorySerializedReservationWorkOrderBuildKitStage.BuildKit;
+                : AssemblyHandoffReceipt == null
+                    ? InventorySerializedReservationWorkOrderBuildKitStage.BuildKit
+                    : _assemblyTransferReceipts.Count == 0
+                        ? InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands
+                        : _assemblyTransferReceipts[_assemblyTransferReceipts.Count - 1].Stage;
 
         internal bool TryPublishPlacement(
             InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt)
@@ -112,6 +211,53 @@ namespace PCShopEmpire3D.Inventory
             }
 
             PlacementReceipt = placementReceipt;
+            return true;
+        }
+
+        internal bool TryPublishAssemblyHandoff(
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff)
+        {
+            if (PlacementReceipt == null ||
+                AssemblyHandoffReceipt != null ||
+                handoff == null ||
+                !ReferenceEquals(handoff.PlacementReceipt, PlacementReceipt))
+            {
+                return false;
+            }
+
+            AssemblyHandoffReceipt = handoff;
+            return true;
+        }
+
+        internal bool TryPublishAssemblyTransfer(
+            InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt receipt)
+        {
+            if (AssemblyHandoffReceipt == null ||
+                receipt == null ||
+                !ReferenceEquals(receipt.Handoff, AssemblyHandoffReceipt))
+            {
+                return false;
+            }
+
+            bool fromHands = CurrentStage ==
+                             InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands;
+            StableId<ContainerIdScope> expectedSource = fromHands
+                ? PlacementReceipt.HandsContainerId
+                : AssemblyHandoffReceipt.WorkbenchContainerId;
+            StableId<ContainerIdScope> expectedTarget = fromHands
+                ? AssemblyHandoffReceipt.WorkbenchContainerId
+                : PlacementReceipt.HandsContainerId;
+            InventorySerializedReservationWorkOrderBuildKitStage expectedStage = fromHands
+                ? InventorySerializedReservationWorkOrderBuildKitStage.AssemblyWorkbench
+                : InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands;
+            if (receipt.SourceContainerId != expectedSource ||
+                receipt.TargetContainerId != expectedTarget ||
+                receipt.Stage != expectedStage)
+            {
+                return false;
+            }
+
+            _assemblyTransferReceipts.Add(receipt);
             return true;
         }
     }
@@ -135,9 +281,21 @@ namespace PCShopEmpire3D.Inventory
             _serializedReservationWorkOrderBuildKitsByContainer =
                 new Dictionary<StableId<ContainerIdScope>,
                     InventorySerializedReservationWorkOrderBuildKitRegistration>();
+        private readonly Dictionary<
+            StableId<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>,
+            InventorySerializedReservationWorkOrderBuildKitRegistration>
+            _serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation =
+                new Dictionary<
+                    StableId<
+                        InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>,
+                    InventorySerializedReservationWorkOrderBuildKitRegistration>();
 
         internal int SerializedReservationWorkOrderBuildKitCount =>
             _serializedReservationWorkOrderBuildKitsByOperation.Count;
+
+        internal int SerializedReservationWorkOrderBuildKitAssemblyHandoffCount =>
+            _serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.Count;
 
         /// <summary>
         /// Moves one exact supported reserved PC component from its current un-managed stock/world
@@ -365,6 +523,299 @@ namespace PCShopEmpire3D.Inventory
                 placementReceipt);
         }
 
+        /// <summary>
+        /// Releases the exact staged motherboard from BuildKit to ActorHands and binds all
+        /// subsequent reserved custody to the one managed workbench already owned by Assembly.
+        /// Exact replay returns the original proof without advancing Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedMotherboardForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> workbenchContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.Motherboard,
+                operationId,
+                workbenchContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged processor from BuildKit to ActorHands and binds all
+        /// subsequent reserved custody to the capacity-one managed processor socket already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedProcessorForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> processorSocketContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.Processor,
+                operationId,
+                processorSocketContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged DDR memory module from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed memory slot already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedMemoryModuleForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> memorySlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.MemoryModule,
+                operationId,
+                memorySlotContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged M.2 storage device from BuildKit to ActorHands and
+        /// binds all subsequent reserved custody to the capacity-one managed primary M.2
+        /// slot already owned by Assembly. Exact replay returns the original proof without
+        /// advancing Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedStorageForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> storageSlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.StorageDevice,
+                operationId,
+                storageSlotContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged processor cooler from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed cooler slot already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedProcessorCoolerForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> processorCoolerSlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.ProcessorCooler,
+                operationId,
+                processorCoolerSlotContainerId,
+                expectedInventoryRevision);
+        }
+
+        /// <summary>
+        /// Releases the exact staged graphics card from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed PCIe x16 slot
+        /// already owned by Assembly. Exact replay returns the original proof without
+        /// advancing Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedGraphicsCardForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> graphicsCardSlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.GraphicsCard,
+                operationId,
+                graphicsCardSlotContainerId,
+                expectedInventoryRevision);
+        }
+
+        private OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedComponentForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                PcComponentKind expectedComponentKind,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> workbenchContainerId,
+                long expectedInventoryRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .InvalidSerializedReservationWorkOrderBuildKitAssemblyOperationId);
+            }
+
+            if (_serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.TryGetValue(
+                    operationId,
+                    out InventorySerializedReservationWorkOrderBuildKitRegistration replay))
+            {
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt receipt =
+                    replay.AssemblyHandoffReceipt;
+                return MatchesWorkOrderBuildKitAssemblyHandoff(
+                           replay,
+                           placementReceipt,
+                           expectedComponentKind,
+                           operationId,
+                           workbenchContainerId) &&
+                       OwnsWorkOrderBuildKitRegistration(replay)
+                    ? OperationResult<
+                        InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+                        .Success(receipt)
+                    : OperationResult<
+                        InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+                        .Fail(
+                            InventoryFailures
+                                .SerializedReservationWorkOrderBuildKitAssemblyConflict);
+            }
+
+            if (expectedInventoryRevision != Revision)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures.SerializedTransferPlanStale);
+            }
+
+            if (!OwnsWorkOrderBuildKitReceipt(placementReceipt) ||
+                placementReceipt.Stage !=
+                    InventorySerializedReservationWorkOrderBuildKitStage.BuildKit ||
+                placementReceipt.ComponentKind != expectedComponentKind ||
+                !_serializedReservationWorkOrderBuildKitsByOperation.TryGetValue(
+                    placementReceipt.OperationId,
+                    out InventorySerializedReservationWorkOrderBuildKitRegistration registration) ||
+                !ReferenceEquals(registration.PlacementReceipt, placementReceipt))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .SerializedReservationWorkOrderBuildKitAssemblyStageInvalid);
+            }
+
+            if (registration.AssemblyHandoffReceipt != null)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .SerializedReservationWorkOrderBuildKitAssemblyConflict);
+            }
+
+            if (workbenchContainerId.IsEmpty ||
+                workbenchContainerId == placementReceipt.HandsContainerId ||
+                workbenchContainerId == placementReceipt.BuildKitContainerId ||
+                !_containers.TryGetValue(
+                    workbenchContainerId,
+                    out InventoryContainerDefinition workbench) ||
+                workbench.Kind != InventoryContainerKind.Workbench ||
+                !_managedSerializedTransferContainers.TryGetValue(
+                    workbenchContainerId,
+                    out InventorySerializedTransferAccess assemblyAccess) ||
+                !ValidateSerializedTransferAccess(
+                        placementReceipt.HandsContainerId,
+                        workbenchContainerId,
+                        assemblyAccess).IsNone)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .SerializedReservationWorkOrderBuildKitAssemblyWorkbenchInvalid);
+            }
+
+            if (registration.CurrentStage !=
+                    InventorySerializedReservationWorkOrderBuildKitStage.BuildKit ||
+                !_items.TryGetValue(
+                    placementReceipt.ItemId,
+                    out InventoryItemRecord item) ||
+                item.ContainerId != placementReceipt.BuildKitContainerId ||
+                GetContainerLoadUnsafe(placementReceipt.BuildKitContainerId) != 1)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .SerializedReservationWorkOrderBuildKitAssemblyStageInvalid);
+            }
+
+            Failure handsCapacityFailure = ValidateCapacity(
+                placementReceipt.HandsContainerId,
+                1);
+            if (!handsCapacityFailure.IsNone)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    handsCapacityFailure);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures.RevisionOverflow);
+            }
+
+            var handoff =
+                new InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt(
+                    this,
+                    placementReceipt,
+                    assemblyAccess,
+                    operationId,
+                    workbenchContainerId,
+                    Revision + 1);
+            if (!registration.TryPublishAssemblyHandoff(handoff))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    InventoryFailures
+                        .SerializedReservationWorkOrderBuildKitAssemblyConflict);
+            }
+
+            _serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.Add(
+                operationId,
+                registration);
+            _items[item.Id] = MoveSerializedItem(item, placementReceipt.HandsContainerId);
+            Revision++;
+            return OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Success(
+                handoff);
+        }
+
         internal bool OwnsWorkOrderBuildKitReceipt(
             InventorySerializedReservationWorkOrderBuildKitReceipt receipt)
         {
@@ -387,6 +838,21 @@ namespace PCShopEmpire3D.Inventory
                     : receipt.Stage ==
                           InventorySerializedReservationWorkOrderBuildKitStage.BuildKit &&
                       ReferenceEquals(receipt, registration.PlacementReceipt);
+        }
+
+        internal bool OwnsWorkOrderBuildKitAssemblyHandoffReceipt(
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt receipt)
+        {
+            return receipt != null &&
+                   ReferenceEquals(receipt.Owner, this) &&
+                   receipt.AppliedRevision > 0 &&
+                   receipt.AppliedRevision <= Revision &&
+                   _serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.TryGetValue(
+                       receipt.OperationId,
+                       out InventorySerializedReservationWorkOrderBuildKitRegistration
+                           registration) &&
+                   ReferenceEquals(receipt, registration.AssemblyHandoffReceipt) &&
+                   OwnsWorkOrderBuildKitRegistration(registration);
         }
 
         internal bool TryGetWorkOrderBuildKitReceipt(
@@ -580,15 +1046,100 @@ namespace PCShopEmpire3D.Inventory
                        GetContainerLoadUnsafe(pickup.BuildKitContainerId) == 0;
             }
 
-            return placement.Stage ==
-                       InventorySerializedReservationWorkOrderBuildKitStage.BuildKit &&
-                   placement.AppliedRevision > pickup.AppliedRevision &&
-                   placement.AppliedRevision <= Revision &&
-                   MatchesWorkOrderBuildKitReceiptIdentity(pickup, placement) &&
-                   registration.CurrentStage ==
-                       InventorySerializedReservationWorkOrderBuildKitStage.BuildKit &&
-                   item.ContainerId == pickup.BuildKitContainerId &&
-                   GetContainerLoadUnsafe(pickup.BuildKitContainerId) == 1;
+            if (placement.Stage !=
+                    InventorySerializedReservationWorkOrderBuildKitStage.BuildKit ||
+                placement.AppliedRevision <= pickup.AppliedRevision ||
+                placement.AppliedRevision > Revision ||
+                !MatchesWorkOrderBuildKitReceiptIdentity(pickup, placement))
+            {
+                return false;
+            }
+
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff =
+                registration.AssemblyHandoffReceipt;
+            if (handoff == null)
+            {
+                return registration.CurrentStage ==
+                           InventorySerializedReservationWorkOrderBuildKitStage.BuildKit &&
+                       item.ContainerId == pickup.BuildKitContainerId &&
+                       GetContainerLoadUnsafe(pickup.BuildKitContainerId) == 1 &&
+                       registration.AssemblyTransferReceipts.Count == 0;
+            }
+
+            if ((pickup.ComponentKind != PcComponentKind.Motherboard &&
+                 pickup.ComponentKind != PcComponentKind.Processor &&
+                 pickup.ComponentKind != PcComponentKind.MemoryModule &&
+                 pickup.ComponentKind != PcComponentKind.StorageDevice &&
+                 pickup.ComponentKind != PcComponentKind.ProcessorCooler &&
+                 pickup.ComponentKind != PcComponentKind.GraphicsCard) ||
+                !ReferenceEquals(handoff.Owner, this) ||
+                !ReferenceEquals(handoff.PlacementReceipt, placement) ||
+                handoff.OperationId.IsEmpty ||
+                handoff.WorkbenchContainerId.IsEmpty ||
+                handoff.WorkbenchContainerId == pickup.HandsContainerId ||
+                handoff.WorkbenchContainerId == pickup.BuildKitContainerId ||
+                handoff.AppliedRevision <= placement.AppliedRevision ||
+                handoff.AppliedRevision > Revision ||
+                !_containers.TryGetValue(
+                    handoff.WorkbenchContainerId,
+                    out InventoryContainerDefinition workbench) ||
+                workbench.Kind != InventoryContainerKind.Workbench ||
+                !_managedSerializedTransferContainers.TryGetValue(
+                    handoff.WorkbenchContainerId,
+                    out InventorySerializedTransferAccess workbenchAccess) ||
+                !ReferenceEquals(workbenchAccess, handoff.AssemblyAccess) ||
+                !ValidateSerializedTransferAccess(
+                        pickup.HandsContainerId,
+                        handoff.WorkbenchContainerId,
+                        handoff.AssemblyAccess).IsNone ||
+                !_serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.TryGetValue(
+                    handoff.OperationId,
+                    out InventorySerializedReservationWorkOrderBuildKitRegistration
+                        byAssemblyOperation) ||
+                !ReferenceEquals(registration, byAssemblyOperation) ||
+                GetContainerLoadUnsafe(pickup.BuildKitContainerId) != 0)
+            {
+                return false;
+            }
+
+            StableId<ContainerIdScope> expectedContainerId = pickup.HandsContainerId;
+            long priorAppliedRevision = handoff.AppliedRevision;
+            IReadOnlyList<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt>
+                transitions = registration.AssemblyTransferReceipts;
+            for (int index = 0; index < transitions.Count; index++)
+            {
+                InventorySerializedReservationWorkOrderBuildKitAssemblyTransferReceipt
+                    transition = transitions[index];
+                bool fromHands = expectedContainerId == pickup.HandsContainerId;
+                StableId<ContainerIdScope> expectedTargetId = fromHands
+                    ? handoff.WorkbenchContainerId
+                    : pickup.HandsContainerId;
+                InventorySerializedReservationWorkOrderBuildKitStage expectedStage = fromHands
+                    ? InventorySerializedReservationWorkOrderBuildKitStage.AssemblyWorkbench
+                    : InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands;
+                if (transition == null ||
+                    !ReferenceEquals(transition.Owner, this) ||
+                    !ReferenceEquals(transition.Handoff, handoff) ||
+                    transition.SourceContainerId != expectedContainerId ||
+                    transition.TargetContainerId != expectedTargetId ||
+                    transition.Stage != expectedStage ||
+                    transition.AppliedRevision <= priorAppliedRevision ||
+                    transition.AppliedRevision > Revision)
+                {
+                    return false;
+                }
+
+                expectedContainerId = transition.TargetContainerId;
+                priorAppliedRevision = transition.AppliedRevision;
+            }
+
+            InventorySerializedReservationWorkOrderBuildKitStage expectedCurrentStage =
+                expectedContainerId == pickup.HandsContainerId
+                    ? InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands
+                    : InventorySerializedReservationWorkOrderBuildKitStage.AssemblyWorkbench;
+            return registration.CurrentStage == expectedCurrentStage &&
+                   item.ContainerId == expectedContainerId;
         }
 
         private bool HasValidSerializedReservationWorkOrderBuildKits()
@@ -600,6 +1151,8 @@ namespace PCShopEmpire3D.Inventory
                 return false;
             }
 
+            int assemblyHandoffCount = 0;
+
             foreach (InventorySerializedReservationWorkOrderBuildKitRegistration registration in
                      _serializedReservationWorkOrderBuildKitsByOperation.Values)
             {
@@ -607,9 +1160,15 @@ namespace PCShopEmpire3D.Inventory
                 {
                     return false;
                 }
+
+                if (registration.AssemblyHandoffReceipt != null)
+                {
+                    assemblyHandoffCount++;
+                }
             }
 
-            return true;
+            return assemblyHandoffCount ==
+                   _serializedReservationWorkOrderBuildKitAssemblyHandoffsByOperation.Count;
         }
 
         private bool IsValidReservedSerializedWorkOrderBuildKitCustody(
@@ -624,8 +1183,56 @@ namespace PCShopEmpire3D.Inventory
                            registration) &&
                    registration.PlacementReceipt != null &&
                    registration.PlacementReceipt.ReservationId == reservation.Id &&
-                   registration.PlacementReceipt.BuildKitContainerId == item.ContainerId &&
+                   (registration.AssemblyHandoffReceipt == null
+                       ? registration.PlacementReceipt.BuildKitContainerId == item.ContainerId
+                       : (registration.CurrentStage ==
+                              InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands &&
+                          registration.PlacementReceipt.HandsContainerId == item.ContainerId) ||
+                         (registration.CurrentStage ==
+                              InventorySerializedReservationWorkOrderBuildKitStage
+                                  .AssemblyWorkbench &&
+                          registration.AssemblyHandoffReceipt.WorkbenchContainerId ==
+                              item.ContainerId)) &&
                    OwnsWorkOrderBuildKitRegistration(registration);
+        }
+
+        private bool TryGetAuthorizedWorkOrderBuildKitAssemblyTransfer(
+            StableId<ItemInstanceIdScope> itemId,
+            StableId<ContainerIdScope> targetContainerId,
+            InventorySerializedTransferAccess access,
+            out InventorySerializedReservationWorkOrderBuildKitRegistration registration)
+        {
+            registration = null;
+            if (!_serializedReservationWorkOrderBuildKitsByItem.TryGetValue(
+                    itemId,
+                    out InventorySerializedReservationWorkOrderBuildKitRegistration candidate) ||
+                candidate.AssemblyHandoffReceipt == null ||
+                !OwnsWorkOrderBuildKitRegistration(candidate) ||
+                !_items.TryGetValue(itemId, out InventoryItemRecord item))
+            {
+                return false;
+            }
+
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff =
+                candidate.AssemblyHandoffReceipt;
+            bool handsToWorkbench =
+                candidate.CurrentStage ==
+                    InventorySerializedReservationWorkOrderBuildKitStage.AssemblyHands &&
+                item.ContainerId == candidate.PlacementReceipt.HandsContainerId &&
+                targetContainerId == handoff.WorkbenchContainerId;
+            bool workbenchToHands =
+                candidate.CurrentStage ==
+                    InventorySerializedReservationWorkOrderBuildKitStage.AssemblyWorkbench &&
+                item.ContainerId == handoff.WorkbenchContainerId &&
+                targetContainerId == candidate.PlacementReceipt.HandsContainerId;
+            if ((!handsToWorkbench && !workbenchToHands) ||
+                !ReferenceEquals(access, handoff.AssemblyAccess))
+            {
+                return false;
+            }
+
+            registration = candidate;
+            return true;
         }
 
         private static bool ContainsExactWorkOrderAllocationRequest(
@@ -660,7 +1267,11 @@ namespace PCShopEmpire3D.Inventory
             return componentKind == PcComponentKind.Motherboard ||
                    componentKind == PcComponentKind.Processor ||
                    componentKind == PcComponentKind.MemoryModule ||
-                   componentKind == PcComponentKind.StorageDevice;
+                   componentKind == PcComponentKind.StorageDevice ||
+                   componentKind == PcComponentKind.ProcessorCooler ||
+                   componentKind == PcComponentKind.GraphicsCard ||
+                   componentKind == PcComponentKind.PowerSupply ||
+                   componentKind == PcComponentKind.PowerCable;
         }
 
         private static InventoryItemRecord MoveSerializedItem(
@@ -725,6 +1336,24 @@ namespace PCShopEmpire3D.Inventory
                    expected.SourceContainerId == actual.SourceContainerId &&
                    expected.HandsContainerId == actual.HandsContainerId &&
                    expected.BuildKitContainerId == actual.BuildKitContainerId;
+        }
+
+        private static bool MatchesWorkOrderBuildKitAssemblyHandoff(
+            InventorySerializedReservationWorkOrderBuildKitRegistration registration,
+            InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+            PcComponentKind expectedComponentKind,
+            StableId<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                operationId,
+            StableId<ContainerIdScope> workbenchContainerId)
+        {
+            InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff =
+                registration?.AssemblyHandoffReceipt;
+            return handoff != null &&
+                   handoff.PlacementReceipt.ComponentKind == expectedComponentKind &&
+                   ReferenceEquals(handoff.PlacementReceipt, placementReceipt) &&
+                   handoff.OperationId == operationId &&
+                   handoff.WorkbenchContainerId == workbenchContainerId;
         }
     }
 }

@@ -242,6 +242,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return LastEvaluation;
         }
 
+        public GraphicsCardSlotEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection graphicsCard,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            GraphicsCardPcieInterface graphicsCardInterface,
+            bool chassisClearanceAvailable,
+            bool coolerClearanceAvailable)
+        {
+            LastEvaluation = GraphicsCardSlotSolver.EvaluateRecoverySeat(
+                graphicsCard,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                assemblyRoot,
+                obstructionMask,
+                halfTurns,
+                authorityAvailable,
+                graphicsCardInterface,
+                slotInterface,
+                chassisClearanceAvailable,
+                coolerClearanceAvailable,
+                chassisClearanceBlockers,
+                coolerClearanceBlockers);
+            return LastEvaluation;
+        }
+
         public GraphicsCardSlotEvaluation EvaluateInteraction(
             bool interactionModeEnabled,
             Transform interactionOrigin,

@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -134,7 +135,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || IsSeated || !IsAuthorityLooseWorld)
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityLooseWorld)
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-storage.pickup-authority-mismatch"));
@@ -147,6 +151,45 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.PlayerHands ||
+                !physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-storage-assembly.pickup-authority-mismatch"));
+            }
+
+            OperationResult headroom = ValidateBuildKitAssemblyPickupHeadroom();
+            if (headroom.IsFailure)
+            {
+                return headroom;
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedStorageForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -198,6 +241,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-storage.attach-authority-mismatch"));
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit &&
+                (Session.AssemblyBuild.ProcessorSocketState !=
+                     ProcessorSocketState.ProcessorRetained ||
+                 Session.AssemblyBuild.MemorySlotState !=
+                     MemorySlotState.MemoryModuleRetained))
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
             }
 
             if (!slot.LastEvaluation.CanSeat ||
@@ -473,6 +526,55 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
             }
 
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                AssemblyBuildSnapshot snapshot = Session.AssemblyBuild.GetSnapshot();
+                if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedSecured &&
+                    snapshot.ProcessorSocketState == ProcessorSocketState.ProcessorRetained &&
+                    snapshot.MemorySlotState == MemorySlotState.MemoryModuleRetained &&
+                    snapshot.StorageSlotState == StorageSlotState.EmptyOpen)
+                {
+                    OperationResult headroom = ValidateCompensationHeadroom(
+                        requiresAssemblyRevision: true);
+                    if (headroom.IsFailure)
+                    {
+                        return headroom;
+                    }
+
+                    OperationResult<AssemblyOperationReceipt> seat =
+                        Session.SeatStorageDevice(
+                            CreateOperationId("recovery-build-kit-seat"),
+                            M2KeyOrientation.KeyAligned,
+                            snapshot.InstalledByOperationId,
+                            snapshot.SecuredByOperationId,
+                            snapshot.Revision);
+                    if (seat.IsSuccess)
+                    {
+                        OperationResult physicalRecovery =
+                            physicalItem.PlaceAt(slot.SeatedPose);
+                        if (physicalRecovery.IsFailure)
+                        {
+                            OperationResult<AssemblyOperationReceipt> compensation =
+                                Session.RemoveStorageDevice(
+                                    CreateOperationId(
+                                        "recovery-build-kit-compensation"),
+                                    seat.Value.OperationId,
+                                    Session.AssemblyBuild.Revision);
+                            return compensation.IsFailure
+                                ? OperationResult.Fail(Failure.FromCode(
+                                    "assembly-storage.recovery-build-kit-" +
+                                    "compensation-failed"))
+                                : physicalRecovery;
+                        }
+
+                        _carryOrigin = CarryOrigin.None;
+                        slot.ResetFeedback();
+                        SyncProjectionToAuthority();
+                        return OperationResult.Success();
+                    }
+                }
+            }
+
             OperationResult looseRecovery = physicalItem.RecoverToLastSafePose();
             if (looseRecovery.IsFailure)
             {
@@ -634,6 +736,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return session.Inventory.Revision > long.MaxValue - 2L
+                ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
+                : OperationResult.Success();
+        }
+
+        private OperationResult ValidateBuildKitAssemblyPickupHeadroom()
+        {
+            GarageStockFlowSession session = Session;
+            if (session == null || session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-storage.context-missing"));
+            }
+
+            if (session.CustomPcBuildKit.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            if (session.AssemblyBuild.Revision > long.MaxValue - 2L)
+            {
+                return OperationResult.Fail(AssemblyFailures.RevisionOverflow);
+            }
+
+            return session.Inventory.Revision > long.MaxValue - 3L
                 ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
                 : OperationResult.Success();
         }

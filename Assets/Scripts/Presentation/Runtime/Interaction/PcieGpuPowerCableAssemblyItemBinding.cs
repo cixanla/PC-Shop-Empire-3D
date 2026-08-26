@@ -2,6 +2,7 @@ using System;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Inventory;
+using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private PhysicalItemProjection physicalItem;
         [SerializeField] private PcieGpuPowerCableRouteProjection route;
         [SerializeField] private PcieGpuPowerCableRuntimeGeometry geometry;
+        [SerializeField] private PcieGpuPowerCableBuildKitProjection buildKit;
         [SerializeField] private string inventoryItemId =
             GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue;
 
@@ -37,6 +39,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public PcieGpuPowerCableRouteProjection Route => route;
 
         public PcieGpuPowerCableRuntimeGeometry Geometry => geometry;
+
+        public PcieGpuPowerCableBuildKitProjection BuildKit => buildKit;
 
         public string InventoryItemIdValue => inventoryItemId;
 
@@ -62,6 +66,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool IsAuthorityLooseWorld => IsInContainer(
             Session?.WorldFloorContainerId ?? default);
 
+        public bool IsAuthorityInBuildKit => IsInContainer(
+            Session?.PcieGpuPowerCableBuildKitContainerId ?? default);
+
         private void Awake()
         {
             physicalItem ??= GetComponent<PhysicalItemProjection>();
@@ -74,7 +81,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PhysicalItemProjection itemProjection,
             PcieGpuPowerCableRouteProjection routeProjection,
             PcieGpuPowerCableRuntimeGeometry runtimeGeometry,
-            string stableInventoryItemId)
+            string stableInventoryItemId,
+            PcieGpuPowerCableBuildKitProjection buildKitProjection = null)
         {
             runtime = stockFlowRuntime != null
                 ? stockFlowRuntime
@@ -88,6 +96,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             geometry = runtimeGeometry != null
                 ? runtimeGeometry
                 : throw new ArgumentNullException(nameof(runtimeGeometry));
+            buildKit = buildKitProjection;
             inventoryItemId = StableId<ItemInstanceIdScope>.Parse(
                 stableInventoryItemId).Value;
             if (inventoryItemId !=
@@ -100,6 +109,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             CaptureInitialLoosePose();
             SyncProjectionToAuthority();
+        }
+
+        public bool MatchesBuildKitConfiguration(
+            PcieGpuPowerCableBuildKitProjection buildKitProjection)
+        {
+            return buildKitProjection != null &&
+                   buildKit == buildKitProjection &&
+                   buildKit.Runtime == runtime;
         }
 
         public OperationResult TryCommitLoosePickup()
@@ -170,7 +187,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted)
+            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted ||
+                (buildKit != null && buildKit.HasPickupReceipt))
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-pcie-gpu-cable.route-authority-mismatch"));
@@ -244,6 +262,99 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return OperationResult.Success();
         }
 
+        internal OperationResult TryPlaceInBuildKit(
+            Transform interactionOrigin,
+            Transform playerRoot,
+            Transform carryAnchor,
+            LayerMask obstructionMask,
+            int clockwiseHalfTurns,
+            bool paused)
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (buildKit == null || !buildKit.IsConfigured ||
+                buildKit.Runtime != runtime)
+            {
+                return OperationResult.Fail(Failure.FromCode(
+                    "custom-pc-pcie-gpu-power-cable-build-kit.context-missing"));
+            }
+
+            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted ||
+                buildKit.IsStaged)
+            {
+                return OperationResult.Fail(Failure.FromCode(
+                    "custom-pc-pcie-gpu-power-cable-build-kit.authority-mismatch"));
+            }
+
+            if (carryAnchor == null || Session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(Failure.FromCode(
+                    carryAnchor == null
+                        ? "custom-pc-pcie-gpu-power-cable-build-kit.carry-anchor-missing"
+                        : "custom-pc-pcie-gpu-power-cable-build-kit.context-missing"));
+            }
+
+            if (Session.CustomPcBuildKit.Revision == long.MaxValue ||
+                Session.Inventory.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            long expectedBuildKitRevision = Session.CustomPcBuildKit.Revision;
+            long expectedInventoryRevision = Session.Inventory.Revision;
+            PcieGpuPowerCableBuildKitEvaluation evaluation = buildKit.Evaluate(
+                interactionOrigin,
+                playerRoot,
+                physicalItem,
+                obstructionMask,
+                clockwiseHalfTurns,
+                paused,
+                IsAuthorityInHands && !IsRouted && buildKit.HasPickupReceipt);
+            if (!evaluation.IsValid)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(evaluation.FailureCode));
+            }
+
+            OperationResult<CustomPcBuildKitReceipt> domain =
+                Session.PlaceHeldPcieGpuPowerCableInCustomPcBuildKit(
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            if (domain.IsFailure)
+            {
+                return OperationResult.Fail(domain.Error);
+            }
+
+            OperationResult physicalCommit = physicalItem.PlaceAt(evaluation.Pose);
+            if (physicalCommit.IsFailure)
+            {
+                OperationResult recovery =
+                    physicalItem.RecoverToStablePlacementAfterAuthority(
+                        evaluation.Pose);
+                if (recovery.IsFailure ||
+                    !physicalItem.IsStablePlacement ||
+                    physicalItem.Ownership != PhysicalItemOwnership.World)
+                {
+                    return OperationResult.Fail(Failure.FromCode(
+                        "custom-pc-pcie-gpu-power-cable-build-kit." +
+                        "projection-recovery-failed"));
+                }
+            }
+
+            _carryOrigin = CarryOrigin.None;
+            route.SetRouteModeActive(active: false);
+            route.ApplyAuthoritativeState(routed: false);
+            geometry.SetRouted(routed: false);
+            buildKit.ResetFeedback();
+            buildKit.RefreshPresentation();
+            return OperationResult.Success();
+        }
+
         public OperationResult TryDropToWorld(Pose worldPose)
         {
             OperationResult context = ValidateContext();
@@ -252,7 +363,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted)
+            if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted ||
+                (buildKit != null && buildKit.HasPickupReceipt))
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-pcie-gpu-cable.drop-authority-mismatch"));
@@ -368,7 +480,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
             bool routed = IsRouted;
             route.ApplyAuthoritativeState(routed);
             geometry.SetRouted(routed);
-            if (routed &&
+            buildKit?.RefreshPresentation();
+            if (IsAuthorityInBuildKit &&
+                buildKit != null &&
+                physicalItem != null &&
+                physicalItem.Ownership == PhysicalItemOwnership.World &&
+                physicalItem.IsStablePlacement &&
+                !buildKit.MatchesCommittedPlacement(physicalItem))
+            {
+                OperationResult synchronized =
+                    physicalItem.SynchronizeStableWorldPose(
+                        buildKit.ResolveSnapPose(0));
+                if (synchronized.IsFailure)
+                {
+                    return synchronized;
+                }
+            }
+            else if (routed &&
                 physicalItem != null &&
                 physicalItem.Ownership == PhysicalItemOwnership.World &&
                 physicalItem.IsStablePlacement)
@@ -408,7 +536,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 !geometry.IsCanonical ||
                 !route.IsConfigured ||
                 geometry.IsRouted != IsRouted ||
-                route.IsAuthoritativeRouted != IsRouted)
+                route.IsAuthoritativeRouted != IsRouted ||
+                (IsAuthorityInBuildKit &&
+                 (buildKit == null || !buildKit.IsCanonical)))
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-pcie-gpu-cable.identity-mismatch"));
@@ -432,8 +562,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 physicalMatches = IsAuthorityInHands
                     ? physicalItem.IsCarried
-                    : IsAuthorityLooseWorld &&
-                      physicalItem.Ownership == PhysicalItemOwnership.World;
+                    : IsAuthorityInBuildKit
+                        ? buildKit != null &&
+                          buildKit.IsStaged &&
+                          buildKit.MatchesCommittedPlacement(physicalItem) &&
+                          !IsRouted
+                        : IsAuthorityLooseWorld &&
+                          physicalItem.Ownership == PhysicalItemOwnership.World;
             }
 
             return physicalMatches

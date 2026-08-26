@@ -34,7 +34,19 @@ namespace PCShopEmpire3D.Orders
         MemoryModuleInHands = 5,
         MemoryModuleStaged = 6,
         StorageInHands = 7,
-        StorageStaged = 8
+        StorageStaged = 8,
+        ProcessorCoolerInHands = 9,
+        ProcessorCoolerStaged = 10,
+        GraphicsCardInHands = 11,
+        GraphicsCardStaged = 12,
+        PowerSupplyInHands = 13,
+        PowerSupplyStaged = 14,
+        Atx24PowerCableInHands = 15,
+        Atx24PowerCableStaged = 16,
+        Eps12vPowerCableInHands = 17,
+        Eps12vPowerCableStaged = 18,
+        PcieGpuPowerCableInHands = 19,
+        PcieGpuPowerCableStaged = 20
     }
 
     public sealed class CustomPcBuildOrderLineSnapshot
@@ -224,9 +236,61 @@ namespace PCShopEmpire3D.Orders
             Stage == CustomPcBuildKitStage.MotherboardStaged ||
             Stage == CustomPcBuildKitStage.ProcessorStaged ||
             Stage == CustomPcBuildKitStage.MemoryModuleStaged ||
-            Stage == CustomPcBuildKitStage.StorageStaged
+            Stage == CustomPcBuildKitStage.StorageStaged ||
+            Stage == CustomPcBuildKitStage.ProcessorCoolerStaged ||
+            Stage == CustomPcBuildKitStage.GraphicsCardStaged ||
+            Stage == CustomPcBuildKitStage.PowerSupplyStaged ||
+            Stage == CustomPcBuildKitStage.Atx24PowerCableStaged ||
+            Stage == CustomPcBuildKitStage.Eps12vPowerCableStaged ||
+            Stage == CustomPcBuildKitStage.PcieGpuPowerCableStaged
                 ? 1
                 : 0;
+    }
+
+    /// <summary>
+    /// Immutable proof that one canonical, fully staged component was released from the
+    /// reserved BuildKit into its exact existing Assembly-owned target. The original ten
+    /// staging receipts remain append-only history and the work-order reservation stays live.
+    /// </summary>
+    public sealed class CustomPcBuildKitAssemblyHandoffReceipt
+    {
+        internal CustomPcBuildKitAssemblyHandoffReceipt(
+            StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+            CustomPcBuildOrderRecord buildOrder,
+            CustomPcBuildOrderLineSnapshot line,
+            CustomPcBuildKitReceipt stagingReceipt,
+            StableId<ContainerIdScope> buildKitContainerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> workbenchContainerId,
+            long inventoryAppliedRevision)
+        {
+            OperationId = operationId;
+            BuildOrder = buildOrder;
+            Line = line;
+            StagingReceipt = stagingReceipt;
+            BuildKitContainerId = buildKitContainerId;
+            HandsContainerId = handsContainerId;
+            WorkbenchContainerId = workbenchContainerId;
+            InventoryAppliedRevision = inventoryAppliedRevision;
+        }
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope> OperationId { get; }
+
+        public CustomPcBuildOrderRecord BuildOrder { get; }
+
+        public CustomPcBuildOrderLineSnapshot Line { get; }
+
+        public PcComponentKind ComponentKind => Line?.ComponentKind ?? default;
+
+        public CustomPcBuildKitReceipt StagingReceipt { get; }
+
+        public StableId<ContainerIdScope> BuildKitContainerId { get; }
+
+        public StableId<ContainerIdScope> HandsContainerId { get; }
+
+        public StableId<ContainerIdScope> WorkbenchContainerId { get; }
+
+        public long InventoryAppliedRevision { get; }
     }
 
     public static class CustomPcWorkOrderFailures
@@ -271,6 +335,18 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.memory-module-line-invalid");
         public static readonly Failure BuildKitStorageLineInvalid =
             Failure.FromCode("orders.custom-pc-build-kit.storage-line-invalid");
+        public static readonly Failure BuildKitProcessorCoolerLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.processor-cooler-line-invalid");
+        public static readonly Failure BuildKitGraphicsCardLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.graphics-card-line-invalid");
+        public static readonly Failure BuildKitPowerSupplyLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.power-supply-line-invalid");
+        public static readonly Failure BuildKitAtx24PowerCableLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.atx24-power-cable-line-invalid");
+        public static readonly Failure BuildKitEps12vPowerCableLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.eps12v-power-cable-line-invalid");
+        public static readonly Failure BuildKitPcieGpuPowerCableLineInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit.pcie-gpu-power-cable-line-invalid");
         public static readonly Failure BuildKitPrerequisiteMissing =
             Failure.FromCode("orders.custom-pc-build-kit.prerequisite-missing");
         public static readonly Failure BuildKitIdentityConflict =
@@ -281,5 +357,13 @@ namespace PCShopEmpire3D.Orders
             Failure.FromCode("orders.custom-pc-build-kit.receipt-invalid");
         public static readonly Failure BuildKitRevisionStale =
             Failure.FromCode("orders.custom-pc-build-kit.revision-stale");
+        public static readonly Failure BuildKitAssemblyOperationInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.operation-invalid");
+        public static readonly Failure BuildKitAssemblyIdentityConflict =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.identity-conflict");
+        public static readonly Failure BuildKitAssemblyStageInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.stage-invalid");
+        public static readonly Failure BuildKitAssemblyWorkbenchInvalid =
+            Failure.FromCode("orders.custom-pc-build-kit-assembly.workbench-invalid");
     }
 }

@@ -196,12 +196,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            GraphicsCardBuildKitEvaluation buildKitEvaluation =
+                EvaluateGraphicsCardBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsGraphicsCardBuildKitMode ||
+                (graphicsCardBuildKit != null &&
+                 graphicsCardBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetGraphicsCardSeatMode(!IsGraphicsCardSeatMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetGraphicsCardBuildKitMode(
+                        !IsGraphicsCardBuildKitMode);
+                }
+                else
+                {
+                    TrySetGraphicsCardSeatMode(!IsGraphicsCardSeatMode);
+                }
+
+                return true;
+            }
+
+            if (IsGraphicsCardBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotateGraphicsCardBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -214,28 +239,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsGraphicsCardSeatMode)
+            if (IsGraphicsCardBuildKitMode)
+            {
+                ApplyGraphicsCardBuildKitEvaluation(buildKitEvaluation);
+            }
+            else
             {
                 UpdateGraphicsCardSeatPreview(binding);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
             }
 
-            GraphicsCardSlotEvaluation evaluation =
-                EvaluateGraphicsCardSeat(binding);
-            ApplyGraphicsCardSeatEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
-                input.TryConsumePrimaryActionPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmGraphicsCardSeat(binding, evaluation);
+                if (IsGraphicsCardBuildKitMode)
+                {
+                    TryConfirmGraphicsCardBuildKit();
+                }
+                else if (IsGraphicsCardSeatMode)
+                {
+                    GraphicsCardSlotEvaluation evaluation =
+                        EvaluateGraphicsCardSeat(binding);
+                    ApplyGraphicsCardSeatEvaluation(evaluation);
+                    TryConfirmGraphicsCardSeat(binding, evaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -243,6 +273,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetGraphicsCardSeatMode(bool enabled)
         {
+            ResetGraphicsCardBuildKitState();
+            ResetPowerSupplyBuildKitState();
             IsGraphicsCardSeatMode = enabled &&
                                         HeldItem != null &&
                                         GetGraphicsCardBinding(HeldItem) != null;
@@ -512,7 +544,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             OperationResult authority = wasSeated
                 ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
+                : binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
             if (authority.IsFailure)
             {
                 OperationResult rollback = item.RecoverToLastSafePose();

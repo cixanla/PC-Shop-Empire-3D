@@ -94,12 +94,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool HasAssemblyPromptOwnership =>
             IsPcieGpuPowerCableRouteMode ||
+            IsPcieGpuPowerCableBuildKitMode ||
             IsAtx24PowerCableRouteMode ||
+            IsAtx24PowerCableBuildKitMode ||
             IsEps12vPowerCableRouteMode ||
+            IsEps12vPowerCableBuildKitMode ||
             IsMotherboardBuildKitMode ||
             IsProcessorBuildKitMode ||
             IsMemoryModuleBuildKitMode ||
             IsStorageBuildKitMode ||
+            IsProcessorCoolerBuildKitMode ||
+            IsGraphicsCardBuildKitMode ||
+            IsPowerSupplyBuildKitMode ||
             IsMotherboardSeatMode ||
             HasMotherboardFastenerContext ||
             IsProcessorSeatMode ||
@@ -208,6 +214,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         GetPcieGpuPowerCableBinding(HeldItem);
                     if (pcieGpuCableBinding != null)
                     {
+                        if (IsPcieGpuPowerCableBuildKitMode ||
+                            (pcieGpuPowerCableBuildKit != null &&
+                             pcieGpuPowerCableBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldPcieGpuPowerCableBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldPcieGpuPowerCablePrompt(
                             pcieGpuCableBinding,
                             placement,
@@ -216,6 +232,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (eps12vCableBinding != null)
                     {
+                        if (IsEps12vPowerCableBuildKitMode ||
+                            (eps12vPowerCableBuildKit != null &&
+                             eps12vPowerCableBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldEps12vPowerCableBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldEps12vPowerCablePrompt(
                             eps12vCableBinding,
                             placement,
@@ -224,6 +250,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (cableBinding != null)
                     {
+                        if (IsAtx24PowerCableBuildKitMode ||
+                            (atx24PowerCableBuildKit != null &&
+                             atx24PowerCableBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldAtx24PowerCableBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldAtx24PowerCablePrompt(
                             cableBinding,
                             placement,
@@ -232,6 +268,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (powerSupplyAssemblyBinding != null)
                     {
+                        if (IsPowerSupplyBuildKitMode ||
+                            (powerSupplyBuildKit != null &&
+                             powerSupplyBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldPowerSupplyBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldPowerSupplyPrompt(
                             powerSupplyAssemblyBinding,
                             placement,
@@ -240,6 +286,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (graphicsCardAssemblyBinding != null)
                     {
+                        if (IsGraphicsCardBuildKitMode ||
+                            (graphicsCardBuildKit != null &&
+                             graphicsCardBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldGraphicsCardBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldGraphicsCardPrompt(
                             graphicsCardAssemblyBinding,
                             placement,
@@ -248,6 +304,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     }
                     if (coolerBinding != null)
                     {
+                        if (IsProcessorCoolerBuildKitMode ||
+                            (processorCoolerBuildKit != null &&
+                             processorCoolerBuildKit.HasPickupReceipt))
+                        {
+                            return GetHeldProcessorCoolerBuildKitPrompt(
+                                placement,
+                                drop,
+                                rotate);
+                        }
+
                         return GetHeldProcessorCoolerPrompt(
                             coolerBinding, placement, drop, rotate);
                     }
@@ -569,25 +635,148 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
                 if (focusedGraphicsCard != null)
                 {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (focusedGraphicsCard.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedGraphicsCard.BuildKit?.StagedComponentCount ?? 6;
+                        GarageStockFlowSession focusedSession =
+                            focusedGraphicsCard.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        bool storageSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.StorageSlotState ==
+                                StorageSlotState.StorageDeviceSecured;
+                        bool coolerRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorCoolerSlotState ==
+                                ProcessorCoolerSlotState.CoolerRetained;
+                        if (stagedComponentCount <
+                            GraphicsCardBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{GraphicsCardBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained &&
+                               memoryRetained && storageSecured && coolerRetained
+                            ? $"{interact}: GPU'YU PCIe x16 MONTAJINA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{GraphicsCardBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : !memoryRetained
+                                        ? "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT"
+                                        : !storageSecured
+                                            ? "ÖNCE EXACT M.2 NVMe'Yİ PRIMARY SLOTTA VİDAYLA SABİTLE"
+                                            : "ÖNCE EXACT SOĞUTUCUYU 4 NOKTADA KİLİTLE";
+                    }
+
                     return focusedGraphicsCard.IsRetained
                         ? "PCIe MANDALI + ARKA BRAKET KİLİTLİ • sökme kilitli"
                         : focusedGraphicsCard.IsSeated
-                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: ekran kartını çıkar • BRAKET GEVŞEK"
-                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • PCIe x16";
+                            ? $"{interact}: ekran kartını çıkar • BRAKET GEVŞEK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • PCIe x16";
                 }
                 if (focusedCooler != null)
                 {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (focusedCooler.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedCooler.BuildKit?.StagedComponentCount ?? 5;
+                        GarageStockFlowSession focusedSession = focusedCooler.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        bool storageSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.StorageSlotState ==
+                                StorageSlotState.StorageDeviceSecured;
+                        if (stagedComponentCount <
+                            ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained &&
+                               memoryRetained && storageSecured
+                            ? $"{interact}: SOĞUTUCUYU 4 NOKTALI MONTAJA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{ProcessorCoolerBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : !memoryRetained
+                                        ? "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT"
+                                        : "ÖNCE EXACT M.2 NVMe'Yİ PRIMARY SLOTTA VİDAYLA SABİTLE";
+                    }
+
                     return focusedCooler.IsRetained
                         ? "SOĞUTUCU BRAKETİ KİLİTLİ • sökme kilitli"
                         : focusedCooler.IsSeated
-                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: soğutucuyu çıkar • 4 NOKTA GEVŞEK"
-                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • TOP-DOWN AIR";
+                            ? $"{interact}: soğutucuyu çıkar • 4 NOKTA GEVŞEK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • TOP-DOWN AIR";
                 }
                 if (focusedStorage != null)
                 {
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedStorage.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedStorage.BuildKit?.StagedComponentCount ?? 4;
+                        GarageStockFlowSession focusedSession = focusedStorage.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        if (stagedComponentCount <
+                            StorageBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{StorageBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained && memoryRetained
+                            ? $"{interact}: M.2 NVMe'Yİ PRIMARY SLOT MONTAJINA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{StorageBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT";
+                    }
+
                     return focusedStorage.IsSecured
                         ? "M.2 VİDASI SIKILI • yuvayı hedefleyip gevşet"
                         : focusedStorage.IsSeated
@@ -600,6 +789,34 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedDimm.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedDimm.BuildKit?.StagedComponentCount ?? 3;
+                        GarageStockFlowSession focusedSession = focusedDimm.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        if (stagedComponentCount <
+                            MemoryModuleBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{MemoryModuleBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained
+                            ? $"{interact}: DDR5'İ A2 MONTAJINA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              $"{MemoryModuleBuildKitProjection.PrototypeTotalComponentCount}"
+                            : processorRetained
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT";
+                    }
+
                     return focusedDimm.IsRetained
                         ? "ÇİFT MANDAL KAPALI • slotu hedefleyip aç"
                         : focusedDimm.IsSeated
@@ -612,6 +829,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedProcessor.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedProcessor.BuildKit?.StagedComponentCount ?? 2;
+                        GarageStockFlowSession focusedSession = focusedProcessor.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        if (stagedComponentCount <
+                            ProcessorBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{ProcessorBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured
+                            ? $"{interact}: CPU'YU SOKET MONTAJINA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              $"{ProcessorBuildKitProjection.PrototypeTotalComponentCount}"
+                            : "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK";
+                    }
+
                     return focusedProcessor.IsRetained
                         ? "RETENTION KAPALI • kolu hedefleyip aç"
                         : focusedProcessor.IsSeated
@@ -626,8 +866,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : "E / A";
                     if (focusedMotherboard.IsAuthorityInBuildKit)
                     {
-                        return "BUILD KIT • 1/10 • ANAKART HAZIR • " +
-                               "MONTAJ HATTI DEVİR TESLİMİNİ BEKLİYOR";
+                        int stagedComponentCount =
+                            focusedMotherboard.BuildKit?.StagedComponentCount ?? 1;
+                        return stagedComponentCount >=
+                               MotherboardBuildKitProjection.PrototypeTotalComponentCount
+                            ? $"{interact}: ANAKARTI MONTAJA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              MotherboardBuildKitProjection.PrototypeTotalComponentCount
+                            : $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{MotherboardBuildKitProjection.PrototypeTotalComponentCount} • " +
+                              "KALAN PARÇALARI TAMAMLA";
                     }
 
                     return focusedMotherboard.IsSecured
@@ -1730,7 +1978,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 processorBuildKit?.ResetFeedback();
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
+                ResetEps12vPowerCableBuildKitState();
                 ResetPcieGpuPowerCableState();
+                ResetPcieGpuPowerCableBuildKitState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -1860,7 +2110,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 ResetAtx24PowerCableState();
                 ResetEps12vPowerCableState();
+                ResetEps12vPowerCableBuildKitState();
                 ResetPcieGpuPowerCableState();
+                ResetPcieGpuPowerCableBuildKitState();
                 ResetPowerSupplyBayFocus();
                 ResetGraphicsCardSlotFocus();
                 ResetProcessorCoolerSlotFocus();
@@ -2285,7 +2537,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 OperationResult recovery =
                     graphicsCardAssemblyBinding.TryRecoverHeld(
                         carryAnchor,
-                        heldItemLayer);
+                        heldItemLayer,
+                        obstructionMask);
                 if (recovery.IsFailure)
                 {
                     return Remember(recovery);
@@ -2469,12 +2722,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ComponentSecured));
             }
 
-            if (binding.IsAuthorityInBuildKit)
-            {
-                return Remember(OperationResult.Fail(
-                    Failure.FromCode("custom-pc-build-kit.already-staged")));
-            }
-
             if (binding.Session != null &&
                 binding.Session.AssemblyBuild.HasProcessorSocket &&
                 binding.Session.AssemblyBuild.ProcessorSocketState !=
@@ -2530,7 +2777,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return Remember(physicalPreflight);
                 }
 
-                authority = binding.TryCommitLoosePickup();
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
                 if (authority.IsFailure)
                 {
                     return Remember(authority);
@@ -2581,12 +2830,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ProcessorRetained));
             }
 
-            if (binding.IsAuthorityInBuildKit)
-            {
-                return Remember(OperationResult.Fail(
-                    Failure.FromCode("custom-pc-processor-build-kit.already-staged")));
-            }
-
             bool wasSeated = binding.IsSeated;
             OperationResult physicalPickup;
             OperationResult authority;
@@ -2621,7 +2864,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return Remember(physicalPreflight);
                 }
 
-                authority = binding.TryCommitLoosePickup();
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
                 if (authority.IsFailure)
                 {
                     return Remember(authority);
@@ -2671,26 +2916,63 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"DIMM_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"DIMM_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-memory-module-build-kit." +
+                                "pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
             }
 
             HeldItem = item;
@@ -2720,6 +3002,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
+            ResetProcessorCoolerBuildKitState();
+            ResetGraphicsCardBuildKitState();
+            ResetPowerSupplyBuildKitState();
             IsPlacementMode = false;
             PlacementValid = false;
             CurrentStackSupport = null;
@@ -3291,6 +3576,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetPlacementState();
             atx24PowerCableBinding?.SyncProjectionToAuthority();
             eps12vPowerCableBinding?.SyncProjectionToAuthority();
+            pcieGpuPowerCableBinding?.SyncProjectionToAuthority();
             processorAssemblyBinding?.SyncProjectionToAuthority();
             dimmAssemblyBinding?.SyncProjectionToAuthority();
             powerSupplyBinding?.SyncProjectionToAuthority();
@@ -3307,8 +3593,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IsPlacementMode = enabled && HeldItem != null && HeldItem.SupportsPlacement;
             IsAtx24PowerCableRouteMode = false;
             atx24PowerCableRoute?.SetRouteModeActive(active: false);
+            ResetAtx24PowerCableBuildKitState();
             IsEps12vPowerCableRouteMode = false;
             eps12vPowerCableRoute?.SetRouteModeActive(active: false);
+            ResetEps12vPowerCableBuildKitState();
+            IsPcieGpuPowerCableRouteMode = false;
+            pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
+            ResetPcieGpuPowerCableBuildKitState();
             IsMotherboardBuildKitMode = false;
             motherboardBuildKit?.ResetFeedback();
             ResetProcessorBuildKitState();
@@ -3367,9 +3658,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetProcessorBuildKitState();
             ResetMemoryModuleBuildKitState();
             ResetStorageBuildKitState();
+            ResetProcessorCoolerBuildKitState();
+            ResetGraphicsCardBuildKitState();
+            ResetPowerSupplyBuildKitState();
+            ResetAtx24PowerCableBuildKitState();
             ResetAtx24PowerCableState();
             ResetEps12vPowerCableState();
+            ResetEps12vPowerCableBuildKitState();
             ResetPcieGpuPowerCableState();
+            ResetPcieGpuPowerCableBuildKitState();
             IsMotherboardSeatMode = false;
             IsProcessorSeatMode = false;
             IsDimmSeatMode = false;

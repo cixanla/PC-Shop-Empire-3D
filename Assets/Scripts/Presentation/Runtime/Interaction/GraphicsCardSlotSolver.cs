@@ -235,6 +235,102 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 UnityGraphicsCardSlotPhysics.Instance);
         }
 
+        public static GraphicsCardSlotEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection graphicsCard,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            GraphicsCardPcieInterface graphicsCardInterface,
+            GraphicsCardPcieInterface slotInterface,
+            bool chassisClearanceAvailable,
+            bool coolerClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers = null,
+            IReadOnlyList<Collider> coolerClearanceBlockers = null)
+        {
+            return EvaluateRecoverySeat(
+                graphicsCard,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                assemblyRoot,
+                obstructionMask,
+                halfTurns,
+                authorityAvailable,
+                graphicsCardInterface,
+                slotInterface,
+                chassisClearanceAvailable,
+                coolerClearanceAvailable,
+                chassisClearanceBlockers,
+                coolerClearanceBlockers,
+                UnityGraphicsCardSlotPhysics.Instance);
+        }
+
+        internal static GraphicsCardSlotEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection graphicsCard,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            GraphicsCardPcieInterface graphicsCardInterface,
+            GraphicsCardPcieInterface slotInterface,
+            bool chassisClearanceAvailable,
+            bool coolerClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers,
+            IReadOnlyList<Collider> coolerClearanceBlockers,
+            IGraphicsCardSlotPhysics physics)
+        {
+            if (graphicsCard == null ||
+                snapAnchor == null ||
+                focusCollider == null ||
+                supportCollider == null ||
+                assemblyRoot == null ||
+                physics == null ||
+                !focusCollider.enabled ||
+                !focusCollider.gameObject.activeInHierarchy)
+            {
+                return Invalid(GraphicsCardSlotStatus.ContextMissing);
+            }
+
+            int normalizedHalfTurns = NormalizeHalfTurns(halfTurns);
+            GraphicsCardSeatOrientation orientation = normalizedHalfTurns == 0
+                ? GraphicsCardSeatOrientation.Primary
+                : GraphicsCardSeatOrientation.Rotated180;
+            Pose candidatePose = ResolveSeatPose(snapAnchor, normalizedHalfTurns);
+            if (!authorityAvailable)
+            {
+                return Invalid(
+                    GraphicsCardSlotStatus.AuthorityBlocked,
+                    candidatePose,
+                    orientation);
+            }
+
+            return EvaluateSeatGeometry(
+                graphicsCard,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                null,
+                assemblyRoot,
+                obstructionMask,
+                normalizedHalfTurns,
+                candidatePose,
+                orientation,
+                graphicsCardInterface,
+                slotInterface,
+                chassisClearanceAvailable,
+                coolerClearanceAvailable,
+                chassisClearanceBlockers,
+                coolerClearanceBlockers,
+                physics);
+        }
+
         internal static GraphicsCardSlotEvaluation EvaluateSeat(
             bool placementModeEnabled,
             Transform interactionOrigin,
@@ -315,6 +411,45 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Invalid(focusStatus, candidatePose, orientation);
             }
 
+            return EvaluateSeatGeometry(
+                graphicsCard,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                playerRoot,
+                assemblyRoot,
+                obstructionMask,
+                normalizedHalfTurns,
+                candidatePose,
+                orientation,
+                graphicsCardInterface,
+                slotInterface,
+                chassisClearanceAvailable,
+                coolerClearanceAvailable,
+                chassisClearanceBlockers,
+                coolerClearanceBlockers,
+                physics);
+        }
+
+        private static GraphicsCardSlotEvaluation EvaluateSeatGeometry(
+            PhysicalItemProjection graphicsCard,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform playerRoot,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int normalizedHalfTurns,
+            Pose candidatePose,
+            GraphicsCardSeatOrientation orientation,
+            GraphicsCardPcieInterface graphicsCardInterface,
+            GraphicsCardPcieInterface slotInterface,
+            bool chassisClearanceAvailable,
+            bool coolerClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers,
+            IReadOnlyList<Collider> coolerClearanceBlockers,
+            IGraphicsCardSlotPhysics physics)
+        {
             if (graphicsCardInterface != GraphicsCardPcieInterface.PcieX16 ||
                 slotInterface != GraphicsCardPcieInterface.PcieX16)
             {
@@ -324,7 +459,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     orientation);
             }
 
-            if (orientation != GraphicsCardSeatOrientation.Primary)
+            if (normalizedHalfTurns != 0 ||
+                orientation != GraphicsCardSeatOrientation.Primary)
             {
                 return Invalid(
                     GraphicsCardSlotStatus.OrientationInvalid,
