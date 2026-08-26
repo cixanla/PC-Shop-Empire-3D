@@ -5,7 +5,7 @@
 **PR:** [#100](https://github.com/cixanla/PC-Shop-Empire-3D/pull/100)<br>
 **Technical head:** `d5532bb921b94715dbb1ed2006092a9542b139a4`<br>
 **Technical tree:** `6f00d7fb23a305e1e9eb4241dd3cba57a5e076dd`<br>
-**Current closure:** source/domain/scene/input/full-regression, exact-head macOS/Windows native and technical-CI gates passed; source/docs, final canonical/large local checkpoint, healthy physical USB, real-human session and administrative gates pending
+**Current closure:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, technical/source-docs CI, final canonical evidence and large local/healthy physical-USB lifecycle passed; real-human session and administrative gates pending
 
 ## Delivered playable result
 
@@ -79,7 +79,13 @@ The three exact procedures are hash-bound by `procedure-manifest.json`:
 | `launch-procedure.ps1` | 3,520 | `a7a5e99c87a92cb39761aa98b017c0323e6cba070ff92af32843d54ed0c4ad6a` |
 | `runtime-procedure.ps1` | 2,431 | `6d2ec577ca8246fd24c633310f44f0bfb7cbd2ff3463c53161a2c3dde3487a3d` |
 
-The first thirteen immutable canonical artifacts exist at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue99-d5532bb921b-r1/canonical-evidence`. The final source/docs provenance receipt will become artifact `14/14` only after the exact nine-file docs/verifier commit is pushed and its Repository Guard succeeds.
+The first thirteen immutable canonical artifacts returned to the Mac with exact size/hash readback. Exact nine-file source/docs commit `0f259605da017e874863da2646eef6a90898816f`, tree `c0f5a07ac65baf959d4279d7a782a9827b369336` and [Repository Guard 32995195634](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32995195634) then authorized final `source-receipt.json` (`5,120` bytes, SHA-256 `e1d3e205b79892abcb02d78ed4fc96fdc5452737d27a66fc2ea91a6312cacc6d`). Promoted-artifact path/size/hash equality is `13/13`; canonical evidence is exact `14/14` at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue99-d5532bb921b-r1/canonical-evidence`.
+
+The user-requested large immutable local final is `/Users/cixanla/Developer/PCShopEmpire3D/CheckpointStaging/2026-08-26_STAGE_B_CANONICAL_GRAPHICS_CARD_BUILDKIT_TO_PCIE_X16_RETENTION_ASSEMBLY_HANDOFF_HARDENED_V1_LARGE`. Its unique local `.incoming-*` target passed the exact Issue #99 verifier before same-filesystem atomic rename; the final path passed a second full readback. Neither target overwrote a previous checkpoint.
+
+Physical final is `/Volumes/cixanla/CIXANLA/90_BACKUPS/PCShopEmpire3D/2026-08-26_STAGE_B_CANONICAL_GRAPHICS_CARD_BUILDKIT_TO_PCIE_X16_RETENTION_ASSEMBLY_HANDOFF_HARDENED_V1_LARGE` on external physical USB `Alu Line`, `/dev/disk4s1`, ExFAT label `cixanla`, UUID `CB0AC8C9-4E97-3BE4-94AD-6406A057C00B`. SMART is unsupported by the bridge; both pre-write and post-write read-only `fsck_exfat -n` checks report the volume appears OK with exit code `0`. The unique physical `.incoming-*` target passed a complete readback, was atomically renamed without collision and the final path passed the same complete second readback.
+
+All four local/physical incoming/final results are identical: manifest `1090/1090`, exact Git source `1075/1075`, evidence `14/14`, source/docs commit/tree exact, `20,899,041` payload bytes and manifest SHA-256 `0c2a26b5ef33cdcb79a2e06f5c97eea323be3520adac5886013dc7d7c0b15223`. Package file count is `1,092` including both manifest files. Local/physical incoming residue, internal AppleDouble, incoming sidecar and exact final sidecar counts are `0`; older milestones and unrelated USB data were not modified.
 
 ## Issue #99 acceptance matrix — current state
 
@@ -115,14 +121,12 @@ The first thirteen immutable canonical artifacts exist at `/Users/cixanla/Develo
 | 28 | Targeted and full EditMode/PlayMode regressions have zero fail/skip/inconclusive. | TECHNICAL PASS |
 | 29 | Diff, Repository Guard and universal Mac native gates. | PASS — GUARD 32990791761/32990807874 |
 | 30 | Exact-head clean Windows IL2CPP/only-D3D11 runtime and zero residue. | PASS |
-| 31 | Bible/ADR/Evidence/CHANGELOG, canonical/large local checkpoint, real-human and healthy USB lifecycle. | PENDING |
+| 31 | Bible/ADR/Evidence/CHANGELOG, canonical/large local checkpoint, real-human and healthy USB lifecycle. | PARTIAL — DOCS/CANONICAL/LOCAL/USB PASS; HUMAN PENDING |
 
-The current strict count is `30/31` fully passed. Automated human-shaped tests and native smoke are never substituted for the real-human/healthy-USB portions of item 31.
+The current strict count remains `30/31` fully passed because item 31 is composite and the real-human portion is still open. Automated human-shaped tests and native smoke are never substituted for that session.
 
 ## Pending bounded closure
 
-1. Commit and push the exact nine-file source/docs/verifier closure; update PR #100 and require Repository Guard at that exact source/docs head.
-2. Create the final source receipt, validate canonical exact `14/14` evidence and build the user-requested large, collision-free immutable local checkpoint without overwriting any previous checkpoint.
-3. Run one exact-r50 real-human acceptance session from `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` for keyboard/mouse and gamepad.
-4. Use physical USB only after live disk/volume identity and health are clean; copy through a unique `.incoming-*` name, verify complete manifest/Git/evidence equality, atomically rename and perform a second full readback.
-5. Only after item 31 is complete may Issue #99 close, Roadmap move to `Done` and PR #100 become merge-ready. Parent Epic #10 remains open for PSU/cable installation, electrical/POST/OS/QA and later product work.
+1. Commit and push this physical-lifecycle metadata and require Repository Guard at that exact metadata head.
+2. Run one exact-r50 real-human acceptance session from `Docs/Quality/HUMAN-PLAY-ACCEPTANCE-GATE.md` for keyboard/mouse and gamepad, including movement/camera/window, physical edge cases and the 15-minute endurance pass.
+3. Only after item 31 is complete may Issue #99 close, Roadmap move to `Done` and PR #100 become merge-ready. Parent Epic #10 remains open for PSU/cable installation, electrical/POST/OS/QA and later product work.

@@ -1,6 +1,6 @@
 # ADR-0059 — Canonical Graphics-Card BuildKit-to-PCIe x16 Retention Assembly Handoff
 
-**Status:** Accepted for source/domain/scene/input/full-regression, exact-head macOS/Windows native and technical-CI gates; source/docs CI, final canonical/large local checkpoint, real-human session, healthy physical USB and administrative closure pending<br>
+**Status:** Accepted through source/domain/scene/input/full-regression, exact-head macOS/Windows native, technical/source-docs CI, final canonical evidence and large local/healthy-USB lifecycle; real-human session and administrative closure pending<br>
 **Date:** 26 August 2026<br>
 **Scope:** Issue #99, child of Epic #10
 
@@ -40,4 +40,6 @@ The automated r50 smoke explicitly records `prerequisite-setup=assisted`; it is 
 - macOS Development build report `330,251,472` bytes. The deep/strict-valid universal `x86_64 + arm64` executable emits one r50 readiness marker and one exact GPU Assembly handoff success marker, reaches Input System shutdown, exits `0` and leaves no player residue.
 - Detached-clean Windows exact-head Unity 6000.3.21f1 x64 IL2CPP/only-D3D11 build report `1,350,250,674` bytes. Intel Iris Xe Direct3D 11 interactive runtime has exact host/readiness/success counts `1/1/1`, forbidden count `0`, exit `0`, graceful shutdown, deleted scheduled task and validation-owned residue `0`.
 - Exact-head technical Repository Guard [32990791761](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32990791761) and [32990807874](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32990807874) passed.
-- Source/docs Repository Guard, final source receipt and canonical `14/14`, user-requested large immutable local checkpoint, healthy physical-USB lifecycle, exact-r50 real-human session and Issue/Project administrative closure remain pending. Automated smoke is not relabelled as human evidence.
+- Source/docs commit `0f259605da017e874863da2646eef6a90898816f`, tree `c0f5a07ac65baf959d4279d7a782a9827b369336` and Repository Guard [32995195634](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/32995195634) passed. Final source receipt promotes canonical evidence to exact `14/14`.
+- The user-requested large immutable local checkpoint and healthy `Alu Line` ExFAT physical-USB incoming/readback/atomic-final/second-readback lifecycle passed with identical `1090/1090` manifest rows, `1075/1075` exact Git source, `14/14` evidence, `20,899,041` payload bytes and manifest SHA-256 `0c2a26b5ef33cdcb79a2e06f5c97eea323be3520adac5886013dc7d7c0b15223`. Pre/post-write filesystem checks exit `0`; incoming and exact-target sidecar residue is `0`.
+- The exact-r50 real-human session and Issue/Project administrative closure remain pending. Automated smoke is not relabelled as human evidence.
