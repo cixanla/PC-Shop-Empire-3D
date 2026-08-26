@@ -1,6 +1,6 @@
 # ADR-0059 — Canonical Graphics-Card BuildKit-to-PCIe x16 Retention Assembly Handoff
 
-**Status:** Accepted through exact `034f862` source/domain/scene/input/full-regression, macOS/Windows native and agent-operated foreground Windows OS-input gates; source/docs Guard and administrative integration follow this record<br>
+**Status:** Accepted and integrated through exact `034f862` source/domain/scene/input/full-regression, macOS/Windows native and agent-operated foreground Windows OS-input gates; closure docs `ba07775`, PR #100 merge `9b3d2f2`, PR/main Guards `33021624279`/`33021671295`<br>
 **Date:** 26 August 2026<br>
 **Scope:** Issue #99, child of Epic #10
 

@@ -1,8 +1,8 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 27 Ağustos 2026<br>
-**Durum:** Issue #99 canonical Graphics Card BuildKit→PCIe x16 latch/rear-bracket Assembly exact source/domain/scene/input/full-regression, Mac/Windows native ve foreground Windows OS-input kapıları tamamlandı; source/docs CI ve idari entegrasyon sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue99-graphics-card-buildkit-to-pcie-retention`, exact hardening commit `034f862cfdc85b93e44cc0c9dded26aafdffbee6`, tree `191e9e1bfd85ef20c000fc171523c1861f3ecb21`; PR #100, Roadmap `In Progress`, Issue #99 açık
+**Durum:** Issue #99 canonical Graphics Card BuildKit→PCIe x16 latch/rear-bracket Assembly exact source/domain/scene/input/full-regression, Mac/Windows native ve foreground Windows OS-input kapıları kabul edildi; PR #100 ile `main`e entegre edildi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, accepted source `034f862cfdc85b93e44cc0c9dded26aafdffbee6`, tree `191e9e1bfd85ef20c000fc171523c1861f3ecb21`; closure docs `ba07775fa1ee7dadd0a7485533b80fa7f6eaf125`; PR #100 merge `9b3d2f22b20bc04159236f2571bfe2c6b6471886`; PR Guard `33021624279`, `main` Guard `33021671295`; bounded Issue/Roadmap kapanışı bu kaydın ardından, parent Epic #10 açık kalır
 
 ## En yeni teknik checkpoint — Issue #99 / Epic #10
 
