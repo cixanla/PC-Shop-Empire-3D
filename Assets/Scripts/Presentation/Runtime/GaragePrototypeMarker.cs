@@ -1177,6 +1177,7 @@ namespace PCShopEmpire3D.Presentation
                 $"graphics-card-build-kit={(HasGraphicsCardBuildKitR40Runtime ? "ready" : "missing")} " +
                 $"power-supply-build-kit={(HasPowerSupplyBuildKitR41Runtime ? "ready" : "missing")} " +
                 $"atx24-power-cable-build-kit={(HasAtx24PowerCableBuildKitR42Runtime ? "ready" : "missing")} " +
+                $"eps12v-power-cable-build-kit={(HasEps12vPowerCableBuildKitR43Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
