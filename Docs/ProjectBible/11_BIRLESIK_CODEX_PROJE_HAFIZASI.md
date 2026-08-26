@@ -5,11 +5,22 @@
 **Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `feature/issue95-m2-buildkit-to-captive-screw-retention`
+**Branch:** `feature/issue97-processor-cooler-buildkit-to-four-point-retention`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 26 Ağustos 2026 üstün gelen güncel durum — Issue #95 M.2 BuildKit→Primary Slot/Captive Screw Assembly
+### 26 Ağustos 2026 üstün gelen güncel durum — Issue #97 Processor Cooler BuildKit→Four-Point Retention Assembly
+
+- Exact reserved processor cooler yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live Issue #89 secured motherboard, #91 retained CPU, #93 retained A2 DDR5 ve #95 secured primary M.2 receipts sonrasında ayrı stable operation exact ProcessorCooler BuildKit → ActorHands → existing ProcessorCoolerSlot custody'sini açar.
+- Inventory yalnız kayıtlı cooler BuildKit release ve exact ProcessorCoolerSlot↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history ve exact replay/revision korunur; installed prerequisites ve other-five untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.
+- GarageGraybox r49 keyboard/mouse + gamepad pickup, existing two-orientation guided seat, pre-applied TIM consume-once, `1→3→2→4` retain, retained-remove block, `4→2→3→1` unretain ve detach akışını single-consumer input ile taşır. Consumed-TIM reseat atomik reddedilir ve aynı cooler ellerde kalır.
+- Bounded geometri görevi gerçek M.2/cooler collider kesişmesini buldu. M.2 authored plane düzeltildi, geçici collision exemption kaldırıldı ve iki 180° orientation actual collider separation ile doğrulandı. Bounded invariant görevi operation/receipt/replay/revision/custody ayrımında P0/P1 bulmadı.
+- Technical commit `b45806f5a584d219de74be33ed97a580af59fd68`, tree `6f62c8653ad2c8505e2927ecc80ac6987399e232`; full EditMode `726/726`, PlayMode `133/133`; Universal Mac report `330220810` bayt, Apple M1/Metal exact r49 smoke ve technical Guard `32973861692` başarılıdır.
+- Complete bundle `7630681` bayt / `2751e62e…3537` ile collision-free detached-clean Windows `issue97-b45806f5a584-r1` x64 IL2CPP/only-D3D11 report `1344385080` bayt ve fatal-token `0` verdi. Intel Iris Xe/D3D11 exact r49 runtime host/readiness/success `1/1/1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve exact residue `0` ile geçti.
+- ADR-0058/tarihli Evidence ve `issue97` verifier contract'ı Mac+Windows teknik kanıtını bağlar. Canonical evidence `13/14`; source/docs Guard, final receipt `14/14`, immutable local/healthy physical USB ve exact-r49 insan oturumu bekler. Strict acceptance `29/30`; Issue #97 ve draft PR #98 açık/In Progress kalır.
+- Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #95 M.2 BuildKit→Primary Slot/Captive Screw Assembly
 
 - Exact reserved M.2 2280 NVMe yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live Issue #89 secured-motherboard, Issue #91 retained-CPU ve Issue #93 retained-A2-DDR5 receipts sonrasında ayrı stable operation exact Storage BuildKit → ActorHands → existing primary M.2 Slot custody'sini açar.
 - Inventory yalnız kayıtlı Storage BuildKit release ve exact M.2 Slot↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history ve exact replay/revision korunur; motherboard/CPU/DDR5 ve other-six untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.

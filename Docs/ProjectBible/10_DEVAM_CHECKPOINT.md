@@ -1,10 +1,23 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 26 Ağustos 2026<br>
-**Durum:** Issue #95 canonical M.2 BuildKit→primary-slot/captive-screw Assembly source/domain/scene/input/full-regression, exact-head Mac/Windows native ve technical CI kapıları tamamlandı; source/docs, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue95-m2-buildkit-to-captive-screw-retention`, technical commit `42c1ae4dff2421b38879c0bfc82b4bf52522be1e`, tree `16304340da0ae7e42d8e7dd1ea6aef66ffe27efc`; draft PR #96, Roadmap `In Progress`, Issue #95 açık
+**Durum:** Issue #97 canonical Processor Cooler BuildKit→ProcessorCoolerSlot/four-point-retention Assembly source/domain/scene/input/full-regression, exact-head Mac/Windows native ve technical CI kapıları tamamlandı; source/docs, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue97-processor-cooler-buildkit-to-four-point-retention`, technical commit `b45806f5a584d219de74be33ed97a580af59fd68`, tree `6f62c8653ad2c8505e2927ecc80ac6987399e232`; draft PR #98, Roadmap `In Progress`, Issue #97 açık
 
-## En yeni teknik checkpoint — Issue #95 / Epic #10
+## En yeni teknik checkpoint — Issue #97 / Epic #10
+
+- Canonical processor cooler yalnız exact `ProcessorCooler` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 secured motherboard, #91 retained CPU, #93 retained A2 DDR5 ve #95 secured primary M.2 receipt zinciri olmadan release fail-closed'dur.
+- Ayrı stable operation exact ProcessorCooler BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned ProcessorCoolerSlot↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
+- GarageGraybox `garage-processor-cooler-assembly-handoff-r49-v1`; range/focus/LOS/pause/empty-hands pickup, existing LGA1700 compatibility, two-orientation guided seat, support/RAM/obstruction clearance, pre-applied TIM consume-once, `1→3→2→4` retain, retained-remove block, `4→2→3→1` unretain, detach ve consumed-TIM reseat rejection döngüsünü sunar. BuildKit slotu okunaklı `SOĞUTUCU MONTAJDA`, history `10/10` kalır.
+- Domain custody physical parent/pose/physics/visibility değişiminden önce commit edilir. Projection failure aynı Unity instance ve stable ItemId'yi authoritative hands/slot pose'una recover eder; installed motherboard/CPU/DDR5/M.2 ile diğer beş item/container/receipt/revision untouched, duplicate/ghost/loss `0` kalır. Generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass'ları fail-closed'dur.
+- Bounded fiziksel denetimin bulduğu M.2/cooler overlap authored primary M.2 plane düzeltilerek giderildi; geçici collision exemption kaldırıldı ve iki 180° cooler orientation'ı actual collider separation ile doğrulandı.
+- Technical commit `b45806f5a584d219de74be33ed97a580af59fd68`, tree `6f62c8653ad2c8505e2927ecc80ac6987399e232`; full EditMode `726/726`, full PlayMode `133/133`, failed/skipped/inconclusive `0`; `git diff --check` ve technical Repository Guard `32973861692` geçti.
+- Universal Mac Development report `330220810` bayt, valid deep/strict `x86_64 + arm64` executable ve Apple M1/Metal exact r49 readiness + cooler Assembly handoff smoke başarılıdır.
+- Complete bundle `7630681` bayt / `2751e62e…3537` ile detached-clean Windows `issue97-b45806f5a584-r1` exact technical commit/tree x64 IL2CPP/only-D3D11 report `1344385080` bayt ve fatal-token `0` verdi; Intel Iris Xe/D3D11 runtime host/readiness/success `1/1/1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve exact residue `0` ile geçti. Canonical teknik evidence `13/14`; source/docs commit+Guard, final receipt `14/14`, immutable local/sağlıklı fiziksel USB ve exact-r49 insan oturumu bekler. Strict acceptance `29/30`; Issue #97 ve draft PR #98 açık/In Progress kalır.
+- ADR-0058 ve tarihli Evidence exact test/Mac/Windows hashlerini ve ayrık kalan kapıları bağlar.
+- Ana hedef fiziksel mağaza/servis/montaj + Dashboard 3D parity, mağaza büyümesi/personel/müşteri, işlevsel mahalle/kişisel ev/araç-lojistik, NPC dünya ekolojisi ve offline güvenli Local Advisor/Guardian sınırlarıdır. Mac tek authoritative yazma hattı, Windows exact detached-clean IL2CPP/D3D11 worker'dır.
+
+## Önceki teknik checkpoint — Issue #95 / Epic #10
 
 - Canonical M.2 2280 NVMe yalnız exact `Storage` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 secured-motherboard, Issue #91 retained-CPU ve Issue #93 retained-A2-DDR5 receipt zinciri olmadan release fail-closed'dur.
 - Ayrı stable operation exact Storage BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned primary M.2 Slot↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
