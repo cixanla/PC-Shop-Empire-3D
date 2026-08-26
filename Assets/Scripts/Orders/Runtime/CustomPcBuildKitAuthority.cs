@@ -144,6 +144,7 @@ namespace PCShopEmpire3D.Orders
         private readonly StableId<ContainerIdScope> _processorCoolerAssemblyContainerId;
         private readonly StableId<ContainerIdScope> _graphicsCardBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _graphicsCardBuildKitAccess;
+        private readonly StableId<ContainerIdScope> _graphicsCardAssemblyContainerId;
         private readonly StableId<ContainerIdScope> _powerSupplyBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _powerSupplyBuildKitAccess;
         private readonly StableId<ContainerIdScope> _atx24PowerCableBuildKitContainerId;
@@ -192,7 +193,8 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> processorAssemblyContainerId = default,
             StableId<ContainerIdScope> memoryModuleAssemblyContainerId = default,
             StableId<ContainerIdScope> storageAssemblyContainerId = default,
-            StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default)
+            StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default,
+            StableId<ContainerIdScope> graphicsCardAssemblyContainerId = default)
         {
             _workOrders = workOrders;
             _inventory = workOrders.Inventory;
@@ -214,6 +216,7 @@ namespace PCShopEmpire3D.Orders
             _processorCoolerAssemblyContainerId = processorCoolerAssemblyContainerId;
             _graphicsCardBuildKitContainerId = graphicsCardBuildKitContainerId;
             _graphicsCardBuildKitAccess = graphicsCardBuildKitAccess;
+            _graphicsCardAssemblyContainerId = graphicsCardAssemblyContainerId;
             _powerSupplyBuildKitContainerId = powerSupplyBuildKitContainerId;
             _powerSupplyBuildKitAccess = powerSupplyBuildKitAccess;
             _atx24PowerCableBuildKitContainerId = atx24PowerCableBuildKitContainerId;
@@ -281,6 +284,9 @@ namespace PCShopEmpire3D.Orders
 
         public StableId<ContainerIdScope> GraphicsCardBuildKitContainerId =>
             _graphicsCardBuildKitContainerId;
+
+        public StableId<ContainerIdScope> GraphicsCardAssemblyContainerId =>
+            _graphicsCardAssemblyContainerId;
 
         public StableId<ContainerIdScope> PowerSupplyBuildKitContainerId =>
             _powerSupplyBuildKitContainerId;
@@ -1089,7 +1095,8 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> processorAssemblyContainerId = default,
             StableId<ContainerIdScope> memoryModuleAssemblyContainerId = default,
             StableId<ContainerIdScope> storageAssemblyContainerId = default,
-            StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default)
+            StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default,
+            StableId<ContainerIdScope> graphicsCardAssemblyContainerId = default)
         {
             if (workOrders == null)
             {
@@ -1211,6 +1218,24 @@ namespace PCShopEmpire3D.Orders
                     CustomPcWorkOrderFailures.BuildKitAssemblyWorkbenchInvalid);
             }
 
+            if (!graphicsCardAssemblyContainerId.IsEmpty &&
+                (!HasValidAssemblyTargetContainer(
+                    workOrders,
+                    inventory,
+                    graphicsCardAssemblyContainerId,
+                    sourceContainerId,
+                    handsContainerId,
+                    buildKitContainerIds,
+                    requireCapacityOne: true) ||
+                 graphicsCardAssemblyContainerId == processorAssemblyContainerId ||
+                 graphicsCardAssemblyContainerId == memoryModuleAssemblyContainerId ||
+                 graphicsCardAssemblyContainerId == storageAssemblyContainerId ||
+                 graphicsCardAssemblyContainerId == processorCoolerAssemblyContainerId))
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyWorkbenchInvalid);
+            }
+
             OperationResult<InventorySerializedTransferAccessDecuple> access =
                 inventory.ClaimManagedSerializedTransferContainers(
                     motherboardBuildKitContainerId,
@@ -1259,7 +1284,8 @@ namespace PCShopEmpire3D.Orders
                     processorAssemblyContainerId,
                     memoryModuleAssemblyContainerId,
                     storageAssemblyContainerId,
-                    processorCoolerAssemblyContainerId));
+                    processorCoolerAssemblyContainerId,
+                    graphicsCardAssemblyContainerId));
         }
 
         private static OperationResult<CustomPcBuildKitAuthority>
@@ -2164,6 +2190,23 @@ namespace PCShopEmpire3D.Orders
                 expectedInventoryRevision);
         }
 
+        internal OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            ReleaseCanonicalGraphicsCardForAssembly(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> graphicsCardSlotContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            return ReleaseCanonicalComponentForAssembly(
+                operationId,
+                workOrder,
+                PcComponentKind.GraphicsCard,
+                graphicsCardSlotContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
             ReleaseCanonicalComponentForAssembly(
                 StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
@@ -2336,6 +2379,24 @@ namespace PCShopEmpire3D.Orders
                 expectedInventoryRevision);
         }
 
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            PrepareInventoryGraphicsCardAssemblyHandoffForRecovery(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> graphicsCardSlotContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            return PrepareInventoryComponentAssemblyHandoffForRecovery(
+                operationId,
+                workOrder,
+                PcComponentKind.GraphicsCard,
+                graphicsCardSlotContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             PrepareInventoryComponentAssemblyHandoffForRecovery(
@@ -2422,6 +2483,18 @@ namespace PCShopEmpire3D.Orders
                     CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
             }
 
+            if (componentKind == PcComponentKind.GraphicsCard &&
+                (!HasMotherboardAssemblyWorkbenchPrerequisite(workOrder) ||
+                 !HasProcessorAssemblySocketPrerequisite(workOrder) ||
+                 !HasMemoryModuleAssemblySlotPrerequisite(workOrder) ||
+                 !HasStorageAssemblySlotPrerequisite(workOrder) ||
+                 !HasProcessorCoolerAssemblySlotPrerequisite(workOrder)))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
+            }
+
             CustomPcBuildKitStage expectedPlacementStage = componentKind switch
             {
                 PcComponentKind.Motherboard => CustomPcBuildKitStage.MotherboardStaged,
@@ -2430,6 +2503,8 @@ namespace PCShopEmpire3D.Orders
                 PcComponentKind.StorageDevice => CustomPcBuildKitStage.StorageStaged,
                 PcComponentKind.ProcessorCooler =>
                     CustomPcBuildKitStage.ProcessorCoolerStaged,
+                PcComponentKind.GraphicsCard =>
+                    CustomPcBuildKitStage.GraphicsCardStaged,
                 _ => default
             };
 
@@ -2483,6 +2558,12 @@ namespace PCShopEmpire3D.Orders
                             expectedInventoryRevision)
                     : componentKind == PcComponentKind.ProcessorCooler
                         ? _inventory.ReleaseReservedProcessorCoolerForAssembly(
+                            registration.InventoryPlacementReceipt,
+                            ToInventoryAssemblyOperationId(operationId),
+                            assemblyContainerId,
+                            expectedInventoryRevision)
+                    : componentKind == PcComponentKind.GraphicsCard
+                        ? _inventory.ReleaseReservedGraphicsCardForAssembly(
                             registration.InventoryPlacementReceipt,
                             ToInventoryAssemblyOperationId(operationId),
                             assemblyContainerId,
@@ -2819,7 +2900,8 @@ namespace PCShopEmpire3D.Orders
                     pickup.Line.ComponentKind == PcComponentKind.Processor ||
                     pickup.Line.ComponentKind == PcComponentKind.MemoryModule ||
                     pickup.Line.ComponentKind == PcComponentKind.StorageDevice ||
-                    pickup.Line.ComponentKind == PcComponentKind.ProcessorCooler) &&
+                    pickup.Line.ComponentKind == PcComponentKind.ProcessorCooler ||
+                    pickup.Line.ComponentKind == PcComponentKind.GraphicsCard) &&
                    handoff.OperationId.IsEmpty == false &&
                    ReferenceEquals(handoff.BuildOrder, pickup.BuildOrder) &&
                    ReferenceEquals(handoff.Line, pickup.Line) &&
@@ -3235,6 +3317,7 @@ namespace PCShopEmpire3D.Orders
                 PcComponentKind.StorageDevice => _storageAssemblyContainerId,
                 PcComponentKind.ProcessorCooler =>
                     _processorCoolerAssemblyContainerId,
+                PcComponentKind.GraphicsCard => _graphicsCardAssemblyContainerId,
                 _ => default
             };
         }
@@ -3344,6 +3427,33 @@ namespace PCShopEmpire3D.Orders
             }
 
             return item.ContainerId == _storageAssemblyContainerId;
+        }
+
+        private bool HasProcessorCoolerAssemblySlotPrerequisite(
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (workOrder == null ||
+                _processorCoolerAssemblyContainerId.IsEmpty ||
+                !_registrationsByOrderAndComponent.TryGetValue(
+                    new CustomPcBuildKitOrderComponentKey(
+                        workOrder.Id,
+                        PcComponentKind.ProcessorCooler),
+                    out CustomPcBuildKitRegistration processorCooler) ||
+                !OwnsRegistration(processorCooler) ||
+                processorCooler.AssemblyHandoffReceipt == null ||
+                !ReferenceEquals(
+                    processorCooler.AssemblyHandoffReceipt.BuildOrder,
+                    workOrder) ||
+                processorCooler.AssemblyHandoffReceipt.WorkbenchContainerId !=
+                    _processorCoolerAssemblyContainerId ||
+                !_inventory.TryGetSerializedItem(
+                    processorCooler.PickupReceipt.Line.ItemId,
+                    out InventoryItemRecord item))
+            {
+                return false;
+            }
+
+            return item.ContainerId == _processorCoolerAssemblyContainerId;
         }
 
         private static bool MatchesRegistration(

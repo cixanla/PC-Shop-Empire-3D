@@ -270,7 +270,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool HasLiveSecuredStorageAssemblyPrerequisite(
             AssemblyBuildSnapshot snapshot,
-            CustomPcBuildOrderRecord workOrder)
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
         {
             if (workOrder == null ||
                 snapshot.BuildId != AssemblyBuild.BuildId ||
@@ -328,7 +329,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        StorageSlotState.StorageDeviceSeatedUnsecured &&
                    secure.ResultingStorageSlotState ==
                        StorageSlotState.StorageDeviceSecured &&
-                   secure.AssemblyRevision == snapshot.Revision;
+                   (requireCurrentRevision
+                       ? secure.AssemblyRevision == snapshot.Revision
+                       : secure.AssemblyRevision > 0 &&
+                         secure.AssemblyRevision < snapshot.Revision);
         }
     }
 }

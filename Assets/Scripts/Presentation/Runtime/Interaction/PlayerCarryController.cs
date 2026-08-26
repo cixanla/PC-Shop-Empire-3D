@@ -635,11 +635,59 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
                 if (focusedGraphicsCard != null)
                 {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (focusedGraphicsCard.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedGraphicsCard.BuildKit?.StagedComponentCount ?? 6;
+                        GarageStockFlowSession focusedSession =
+                            focusedGraphicsCard.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        bool storageSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.StorageSlotState ==
+                                StorageSlotState.StorageDeviceSecured;
+                        bool coolerRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorCoolerSlotState ==
+                                ProcessorCoolerSlotState.CoolerRetained;
+                        if (stagedComponentCount <
+                            GraphicsCardBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{GraphicsCardBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained &&
+                               memoryRetained && storageSecured && coolerRetained
+                            ? $"{interact}: GPU'YU PCIe x16 MONTAJINA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{GraphicsCardBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : !memoryRetained
+                                        ? "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT"
+                                        : !storageSecured
+                                            ? "ÖNCE EXACT M.2 NVMe'Yİ PRIMARY SLOTTA VİDAYLA SABİTLE"
+                                            : "ÖNCE EXACT SOĞUTUCUYU 4 NOKTADA KİLİTLE";
+                    }
+
                     return focusedGraphicsCard.IsRetained
                         ? "PCIe MANDALI + ARKA BRAKET KİLİTLİ • sökme kilitli"
                         : focusedGraphicsCard.IsSeated
-                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: ekran kartını çıkar • BRAKET GEVŞEK"
-                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • PCIe x16";
+                            ? $"{interact}: ekran kartını çıkar • BRAKET GEVŞEK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • PCIe x16";
                 }
                 if (focusedCooler != null)
                 {
@@ -2489,7 +2537,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 OperationResult recovery =
                     graphicsCardAssemblyBinding.TryRecoverHeld(
                         carryAnchor,
-                        heldItemLayer);
+                        heldItemLayer,
+                        obstructionMask);
                 if (recovery.IsFailure)
                 {
                     return Remember(recovery);

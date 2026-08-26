@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -229,6 +230,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            session.PrototypeGraphicsCardBuildKitOperationId,
                            out CustomPcBuildKitReceipt receipt) &&
                        receipt.Stage == CustomPcBuildKitStage.GraphicsCardInHands;
+            }
+        }
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeGraphicsCardAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.Line.ComponentKind == PcComponentKind.GraphicsCard;
             }
         }
 
@@ -471,9 +485,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nGPU HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nGPU BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nGPU MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nGPU HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nGPU BEKLİYOR";
         }
 
         public void ResetFeedback()

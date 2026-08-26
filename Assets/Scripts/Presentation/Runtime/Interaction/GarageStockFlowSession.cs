@@ -113,6 +113,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-assembly-operation.prototype-storage";
         public const string PrototypeProcessorCoolerAssemblyHandoffOperationIdValue =
             "orders.custom-pc-build-kit-assembly-operation.prototype-processor-cooler";
+        public const string PrototypeGraphicsCardAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-graphics-card";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -370,6 +372,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeProcessorCoolerAssemblyHandoffOperationId =>
                 StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
                     PrototypeProcessorCoolerAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypeGraphicsCardAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypeGraphicsCardAssemblyHandoffOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -1045,7 +1052,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             StorageSlotContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            ProcessorCoolerSlotContainerIdValue)).Value
+                            ProcessorCoolerSlotContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            GraphicsCardSlotContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(

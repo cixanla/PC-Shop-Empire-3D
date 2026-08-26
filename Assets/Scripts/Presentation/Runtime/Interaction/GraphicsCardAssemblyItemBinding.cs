@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -169,6 +170,46 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.PlayerHands ||
+                !physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-graphics-card-assembly." +
+                        "pickup-authority-mismatch"));
+            }
+
+            OperationResult headroom = ValidateBuildKitAssemblyPickupHeadroom();
+            if (headroom.IsFailure)
+            {
+                return headroom;
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedGraphicsCardForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -471,7 +512,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return OperationResult.Success();
         }
 
-        public OperationResult TryRecoverHeld(Transform carryAnchor, int heldLayer)
+        public OperationResult TryRecoverHeld(
+            Transform carryAnchor,
+            int heldLayer,
+            LayerMask obstructionMask)
         {
             OperationResult context = ValidateContext();
             if (context.IsFailure)
@@ -504,6 +548,85 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-graphics-card.recovery-authority-mismatch"));
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                AssemblyBuildSnapshot snapshot = Session.AssemblyBuild.GetSnapshot();
+                if (snapshot.MotherboardSeatState ==
+                        AssemblySeatState.SeatedSecured &&
+                    snapshot.ProcessorSocketState ==
+                        ProcessorSocketState.ProcessorRetained &&
+                    snapshot.MemorySlotState ==
+                        MemorySlotState.MemoryModuleRetained &&
+                    snapshot.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
+                    snapshot.ProcessorCoolerSlotState ==
+                        ProcessorCoolerSlotState.CoolerRetained &&
+                    snapshot.GraphicsCardSlotState ==
+                        GraphicsCardSlotState.EmptyOpen)
+                {
+                    OperationResult headroom = ValidateCompensationHeadroom();
+                    if (headroom.IsFailure)
+                    {
+                        return headroom;
+                    }
+
+                    GraphicsCardSlotEvaluation recoverySeat =
+                        slot.EvaluateRecoverySeat(
+                            physicalItem,
+                            obstructionMask,
+                            0,
+                            IsAuthorityInHands,
+                            CardInterface,
+                            HasChassisClearance,
+                            HasCoolerClearance);
+                    if (!recoverySeat.CanSeat)
+                    {
+                        return OperationResult.Fail(
+                            Failure.FromCode(recoverySeat.FailureCode));
+                    }
+
+                    var previousSafePose = new Pose(
+                        physicalItem.LastSafePosition,
+                        physicalItem.LastSafeRotation);
+                    OperationResult physicalSeat =
+                        physicalItem.PlaceAt(recoverySeat.Pose);
+                    if (physicalSeat.IsFailure)
+                    {
+                        return physicalSeat;
+                    }
+
+                    OperationResult<AssemblyOperationReceipt> seat =
+                        Session.SeatGraphicsCard(
+                            CreateOperationId("recovery-build-kit-seat"),
+                            GraphicsCardMountOrientation.Primary,
+                            snapshot.InstalledByOperationId,
+                            snapshot.SecuredByOperationId,
+                            snapshot.Revision);
+                    if (seat.IsSuccess)
+                    {
+                        _carryOrigin = CarryOrigin.None;
+                        slot.ResetFeedback();
+                        SyncProjectionToAuthority();
+                        return OperationResult.Success();
+                    }
+
+                    OperationResult safePoseRestore =
+                        physicalItem.RestoreLastSafePoseSnapshot(previousSafePose);
+                    OperationResult carryRestore = safePoseRestore.IsSuccess
+                        ? physicalItem.BeginCarry(carryAnchor, heldLayer)
+                        : OperationResult.Fail(
+                            Failure.FromCode(
+                                "assembly-graphics-card." +
+                                "recovery-safe-pose-restore-failed"));
+                    return safePoseRestore.IsFailure || carryRestore.IsFailure
+                        ? OperationResult.Fail(
+                            Failure.FromCode(
+                                "assembly-graphics-card." +
+                                "recovery-build-kit-rollback-failed"))
+                        : OperationResult.Fail(seat.Error);
+                }
             }
 
             OperationResult physicalRecovery = physicalItem.RecoverToLastSafePose();
@@ -681,6 +804,31 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return session.Inventory.Revision > long.MaxValue - 2L
+                ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
+                : OperationResult.Success();
+        }
+
+        private OperationResult ValidateBuildKitAssemblyPickupHeadroom()
+        {
+            GarageStockFlowSession session = Session;
+            if (session == null || session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode("assembly-graphics-card.context-missing"));
+            }
+
+            if (session.CustomPcBuildKit.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            if (session.AssemblyBuild.Revision > long.MaxValue - 2L)
+            {
+                return OperationResult.Fail(AssemblyFailures.RevisionOverflow);
+            }
+
+            return session.Inventory.Revision > long.MaxValue - 3L
                 ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
                 : OperationResult.Success();
         }
