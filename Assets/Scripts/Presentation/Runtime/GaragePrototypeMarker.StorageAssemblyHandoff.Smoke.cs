@@ -17,55 +17,52 @@ namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker
     {
-        private bool _suppressMemoryModuleAssemblyHandoffSmokeSuccessMarker;
-        private string _nestedMemoryModuleAssemblyHandoffSmokeFailureCode;
-
-        public const string MemoryModuleAssemblyHandoffSmokeSuccessMarker =
-            "GARAGE_MEMORY_MODULE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
+        public const string StorageAssemblyHandoffSmokeSuccessMarker =
+            "GARAGE_STORAGE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
             "work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained " +
-            "pickup=exact custody=build-kit-to-hands-to-a2 " +
+            "memory=retained pickup=exact custody=build-kit-to-hands-to-primary-m2 " +
             "reservation=alive physical-identity=stable input=keyboard+mouse " +
-            "notch=aligned seat=ok dual-latch=closed retained-block=ok " +
-            "open=ok detach=ok reseat=ok history=10/10-preserved " +
-            "other-seven=untouched receipts=ok revisions=ok " +
-            "no-duplicate-loss=ok invariants=ok";
+            "m-key=aligned guided-angle=18 seat=ok captive-screw=tightened " +
+            "secured-remove-blocked=ok loosen=ok detach=ok reseat=ok " +
+            "history=10/10-preserved other-six=untouched receipts=ok " +
+            "revisions=ok no-duplicate-loss=ok invariants=ok";
 
-        public bool HasMemoryModuleAssemblyHandoffR47Runtime =>
-            HasProcessorAssemblyHandoffR46Runtime &&
-            memoryModule != null &&
-            dimmBinding != null &&
-            dimmSlot != null &&
-            memoryModuleBuildKit != null &&
-            dimmBinding.PhysicalItem == memoryModule &&
-            dimmBinding.BuildKit == memoryModuleBuildKit &&
-            dimmBinding.Slot == dimmSlot &&
+        public bool HasStorageAssemblyHandoffR48Runtime =>
+            HasMemoryModuleAssemblyHandoffR47Runtime &&
+            storageDevice != null &&
+            storageBinding != null &&
+            storageSlot != null &&
+            storageBuildKit != null &&
+            storageBinding.PhysicalItem == storageDevice &&
+            storageBinding.BuildKit == storageBuildKit &&
+            storageBinding.Slot == storageSlot &&
             stockFlow != null &&
             stockFlow.Session != null &&
-            stockFlow.Session.PrototypeMemoryModuleAssemblyHandoffOperationId.Value !=
-                stockFlow.Session.PrototypeMemoryModuleBuildKitOperationId.Value &&
-            stockFlow.Session.MemorySlotContainerId !=
-                stockFlow.Session.MemoryModuleBuildKitContainerId;
+            stockFlow.Session.PrototypeStorageAssemblyHandoffOperationId.Value !=
+                stockFlow.Session.PrototypeStorageBuildKitOperationId.Value &&
+            stockFlow.Session.StorageSlotContainerId !=
+                stockFlow.Session.StorageBuildKitContainerId;
 
-        private IEnumerator RunMemoryModuleAssemblyHandoffSmoke()
+        private IEnumerator RunStorageAssemblyHandoffSmoke()
         {
             yield return null;
             playerMotor?.SetPaused(false);
             yield return new WaitForFixedUpdate();
 
-            _nestedProcessorAssemblyHandoffSmokeFailureCode = null;
-            _suppressProcessorAssemblyHandoffSmokeSuccessMarker = true;
+            _nestedMemoryModuleAssemblyHandoffSmokeFailureCode = null;
+            _suppressMemoryModuleAssemblyHandoffSmokeSuccessMarker = true;
             try
             {
-                yield return RunProcessorAssemblyHandoffSmoke();
+                yield return RunMemoryModuleAssemblyHandoffSmoke();
             }
             finally
             {
-                _suppressProcessorAssemblyHandoffSmokeSuccessMarker = false;
+                _suppressMemoryModuleAssemblyHandoffSmokeSuccessMarker = false;
             }
 
             string prerequisiteFailure =
-                _nestedProcessorAssemblyHandoffSmokeFailureCode;
-            _nestedProcessorAssemblyHandoffSmokeFailureCode = null;
+                _nestedMemoryModuleAssemblyHandoffSmokeFailureCode;
+            _nestedMemoryModuleAssemblyHandoffSmokeFailureCode = null;
             if (!string.IsNullOrEmpty(prerequisiteFailure))
             {
                 const string SmokePrefix = "smoke.";
@@ -74,34 +71,36 @@ namespace PCShopEmpire3D.Presentation
                     StringComparison.Ordinal)
                         ? prerequisiteFailure.Substring(SmokePrefix.Length)
                         : prerequisiteFailure;
-                LogMemoryModuleAssemblyHandoffSmokeFailure(
-                    $"smoke.processor-prerequisite-{suffix}");
+                LogStorageAssemblyHandoffSmokeFailure(
+                    $"smoke.memory-prerequisite-{suffix}");
                 yield break;
             }
 
             GarageStockFlowSession session = stockFlow != null
                 ? stockFlow.EnsureInitialized()
                 : null;
-            PhysicalItemProjection memory = dimmBinding != null
-                ? dimmBinding.PhysicalItem
+            PhysicalItemProjection storage = storageBinding != null
+                ? storageBinding.PhysicalItem
                 : null;
             if (session == null ||
                 playerMotor == null ||
                 playerInput == null ||
                 playerCarry == null ||
-                memory == null ||
-                !HasMemoryModuleAssemblyHandoffR47Runtime ||
-                !memoryModuleBuildKit.IsStaged ||
-                !dimmBinding.IsAuthorityInBuildKit ||
+                storage == null ||
+                !HasStorageAssemblyHandoffR48Runtime ||
+                !storageBuildKit.IsStaged ||
+                !storageBinding.IsAuthorityInBuildKit ||
                 session.CustomPcBuildKit.StagedComponentCount != 10 ||
-                session.CustomPcBuildKit.AssemblyHandoffCount != 2 ||
+                session.CustomPcBuildKit.AssemblyHandoffCount != 3 ||
                 session.AssemblyBuild.MotherboardSeatState !=
                     AssemblySeatState.SeatedSecured ||
                 session.AssemblyBuild.ProcessorSocketState !=
                     ProcessorSocketState.ProcessorRetained ||
-                session.AssemblyBuild.MemorySlotState != MemorySlotState.EmptyOpen)
+                session.AssemblyBuild.MemorySlotState !=
+                    MemorySlotState.MemoryModuleRetained ||
+                session.AssemblyBuild.StorageSlotState != StorageSlotState.EmptyOpen)
             {
-                LogMemoryModuleAssemblyHandoffSmokeFailure(
+                LogStorageAssemblyHandoffSmokeFailure(
                     "smoke.prerequisite-context-mismatch");
                 yield break;
             }
@@ -110,7 +109,7 @@ namespace PCShopEmpire3D.Presentation
                     out CustomPcBuildOrderRecord workOrder) ||
                 !session.TryGetPrototypeCustomPcWorkTicket(out _))
             {
-                LogMemoryModuleAssemblyHandoffSmokeFailure(
+                LogStorageAssemblyHandoffSmokeFailure(
                     "smoke.work-ticket-missing");
                 yield break;
             }
@@ -124,13 +123,17 @@ namespace PCShopEmpire3D.Presentation
             CustomPcBuildOrderLineSnapshot memoryLine = workOrder.Lines
                 .SingleOrDefault(line =>
                     line.ComponentKind == PcComponentKind.MemoryModule);
+            CustomPcBuildOrderLineSnapshot storageLine = workOrder.Lines
+                .SingleOrDefault(line =>
+                    line.ComponentKind == PcComponentKind.StorageDevice);
             if (motherboardLine == null ||
                 processorLine == null ||
                 memoryLine == null ||
+                storageLine == null ||
                 !TryCaptureMotherboardAssemblyHandoffStagingReceipts(
                     session,
                     out CustomPcBuildKitReceipt[] historicalReceipts) ||
-                !TryCaptureMemoryModuleAssemblyHandoffOtherContainers(
+                !TryCaptureStorageAssemblyHandoffOtherContainers(
                     session,
                     workOrder,
                     out Dictionary<StableId<ItemInstanceIdScope>,
@@ -146,15 +149,19 @@ namespace PCShopEmpire3D.Presentation
                 !MotherboardAssemblyHandoffSmokeReservationIsLive(
                     session,
                     workOrder,
-                    memoryLine))
+                    memoryLine) ||
+                !MotherboardAssemblyHandoffSmokeReservationIsLive(
+                    session,
+                    workOrder,
+                    storageLine))
             {
-                LogMemoryModuleAssemblyHandoffSmokeFailure(
+                LogStorageAssemblyHandoffSmokeFailure(
                     "smoke.reservation-or-history-mismatch");
                 yield break;
             }
 
-            int memoryPhysicalIdentity = memory.GetInstanceID();
-            string memoryItemIdentity = memory.ItemIdValue;
+            int storagePhysicalIdentity = storage.GetInstanceID();
+            string storageItemIdentity = storage.ItemIdValue;
             long inventoryRevision = session.Inventory.Revision;
             long buildKitRevision = session.CustomPcBuildKit.Revision;
             long assemblyRevision = session.AssemblyBuild.Revision;
@@ -169,165 +176,178 @@ namespace PCShopEmpire3D.Presentation
                 InputSystem.QueueStateEvent(smokeMouse, new MouseState());
                 InputSystem.Update();
 
-                memoryModuleBuildKit.RefreshPresentation();
-                AimMotherboardBuildKitSmokeAtItem(memory, -Vector3.forward);
+                storageBuildKit.RefreshPresentation();
+                AimMotherboardBuildKitSmokeAtItem(storage, -Vector3.forward);
                 playerCarry.ProcessInputFrame();
-                if (playerCarry.FocusedItem != memory ||
+                if (playerCarry.FocusedItem != storage ||
                     !playerCarry.PromptText.Contains("10/10") ||
-                    !playerCarry.PromptText.Contains("DDR5'İ A2 MONTAJINA AL"))
+                    !playerCarry.PromptText.Contains("PRIMARY SLOT MONTAJINA AL"))
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-focus-or-prompt-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-focus-or-prompt-mismatch");
                     yield break;
                 }
 
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.E);
-                bool memoryPickedUp =
-                    playerCarry.HeldItem == memory &&
-                    dimmBinding.IsAuthorityInHands &&
-                    memoryModuleBuildKit.IsReleasedForAssembly &&
-                    memoryModuleBuildKit.ProgressText.text.Contains("DDR5 MONTAJDA") &&
+                bool pickedUp =
+                    playerCarry.HeldItem == storage &&
+                    storageBinding.IsAuthorityInHands &&
+                    storageBuildKit.IsReleasedForAssembly &&
+                    storageBuildKit.StagedComponentCount == 10 &&
+                    storageBuildKit.ProgressText.text.Contains("M.2 MONTAJDA") &&
                     session.CustomPcBuildKit.TryGetAssemblyHandoff(
-                        session.PrototypeMemoryModuleAssemblyHandoffOperationId,
-                        out CustomPcBuildKitAssemblyHandoffReceipt handoff) &&
-                    handoff.ComponentKind == PcComponentKind.MemoryModule &&
-                    ReferenceEquals(handoff.Line, memoryLine) &&
-                    ReferenceEquals(handoff.StagingReceipt, historicalReceipts[2]) &&
-                    memory.GetInstanceID() == memoryPhysicalIdentity &&
-                    memory.ItemIdValue == memoryItemIdentity;
+                        session.PrototypeStorageAssemblyHandoffOperationId,
+                        out CustomPcBuildKitAssemblyHandoffReceipt storageHandoff) &&
+                    storageHandoff.ComponentKind == PcComponentKind.StorageDevice &&
+                    ReferenceEquals(storageHandoff.Line, storageLine) &&
+                    ReferenceEquals(storageHandoff.StagingReceipt,
+                        historicalReceipts[3]);
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
-                if (!memoryPickedUp)
+                if (!pickedUp)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-pickup-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-build-kit-pickup-mismatch");
                     yield break;
                 }
 
-                MovePlayerToDimmSlot();
+                MovePlayerToM2StorageSlot();
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
                 bool seatReady =
-                    playerCarry.IsDimmSeatMode &&
-                    playerCarry.CurrentDimmSlotStatus == DimmSlotStatus.ValidSeat;
+                    playerCarry.IsM2StorageSeatMode &&
+                    playerCarry.CurrentM2StorageSlotStatus ==
+                        M2StorageSlotStatus.ValidSeat &&
+                    playerCarry.PromptText.Contains("18°");
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
                 if (!seatReady)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-seat-preflight-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-seat-preflight-mismatch");
                     yield break;
                 }
 
+                PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.R);
+                bool wrongOrientation =
+                    playerCarry.CurrentM2StorageSlotStatus ==
+                        M2StorageSlotStatus.OrientationInvalid;
+                ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
+                PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.G);
+                bool wrongSeatBlocked =
+                    playerCarry.HeldItem == storage &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.EmptyOpen &&
+                    playerCarry.LastFailureCode ==
+                        AssemblyFailures.M2OrientationMismatch.Code;
+                ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
+                if (!wrongOrientation || !wrongSeatBlocked)
+                {
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-key-orientation-gate-mismatch");
+                    yield break;
+                }
+
+                PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.R);
+                ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.G);
                 bool seated =
                     playerCarry.HeldItem == null &&
-                    session.AssemblyBuild.MemorySlotState ==
-                        MemorySlotState.MemoryModuleSeatedOpen &&
-                    dimmBinding.IsSeated;
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSeatedUnsecured &&
+                    storageBinding.IsSeated &&
+                    Vector3.Distance(
+                        storage.transform.position,
+                        storageSlot.SeatedPose.position) <= 0.0005f &&
+                    Quaternion.Angle(
+                        storage.transform.rotation,
+                        storageSlot.SeatedPose.rotation) <= 0.05f;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 if (!seated)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-seat-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-seat-mismatch");
                     yield break;
                 }
 
-                MovePlayerToDimmSlot();
+                MovePlayerToM2StorageSlot();
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
-                bool retained =
-                    session.AssemblyBuild.MemorySlotState ==
-                        MemorySlotState.MemoryModuleRetained &&
-                    dimmBinding.IsRetained;
+                bool secured =
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
+                    storageBinding.IsSecured;
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
-                if (!retained)
+                if (!secured)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-retain-mismatch");
-                    yield break;
-                }
-
-                yield return WaitForMemoryModuleAssemblyHandoffLatches();
-                if (dimmSlot.IsLatchAnimating)
-                {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-latch-close-timeout");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-captive-screw-mismatch");
                     yield break;
                 }
 
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.E);
-                bool retainedBlocked =
+                bool securedRemoveBlocked =
                     playerCarry.HeldItem == null &&
                     playerCarry.LastFailureCode ==
-                        AssemblyFailures.MemoryModuleRetained.Code &&
-                    session.AssemblyBuild.MemorySlotState ==
-                        MemorySlotState.MemoryModuleRetained;
+                        AssemblyFailures.StorageDeviceSecured.Code &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
-                if (!retainedBlocked)
+                if (!securedRemoveBlocked)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.retained-detach-not-blocked");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.secured-detach-not-blocked");
                     yield break;
                 }
 
-                MovePlayerToDimmSlot();
+                MovePlayerToM2StorageSlot();
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
-                bool opened =
-                    session.AssemblyBuild.MemorySlotState ==
-                        MemorySlotState.MemoryModuleSeatedOpen &&
-                    !dimmBinding.IsRetained;
+                bool loosened =
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSeatedUnsecured &&
+                    !storageBinding.IsSecured;
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
-                if (!opened)
+                if (!loosened)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-open-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-loosen-mismatch");
                     yield break;
                 }
 
-                yield return WaitForMemoryModuleAssemblyHandoffLatches();
-                if (dimmSlot.IsLatchAnimating)
-                {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-latch-open-timeout");
-                    yield break;
-                }
-
-                MovePlayerToDimmSlot();
-                playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.E);
                 bool detached =
-                    playerCarry.HeldItem == memory &&
-                    session.AssemblyBuild.MemorySlotState == MemorySlotState.EmptyOpen &&
-                    dimmBinding.IsAuthorityInHands;
+                    playerCarry.HeldItem == storage &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.EmptyOpen &&
+                    storageBinding.IsAuthorityInHands;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
                 if (!detached)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-detach-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-detach-mismatch");
                     yield break;
                 }
 
-                MovePlayerToDimmSlot();
+                MovePlayerToM2StorageSlot();
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
                 bool reseatReady =
-                    playerCarry.IsDimmSeatMode &&
-                    playerCarry.CurrentDimmSlotStatus == DimmSlotStatus.ValidSeat;
+                    playerCarry.IsM2StorageSeatMode &&
+                    playerCarry.CurrentM2StorageSlotStatus ==
+                        M2StorageSlotStatus.ValidSeat;
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
                 if (!reseatReady)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
-                        "smoke.memory-reseat-preflight-mismatch");
+                    LogStorageAssemblyHandoffSmokeFailure(
+                        "smoke.storage-reseat-preflight-mismatch");
                     yield break;
                 }
 
                 PressMotherboardBuildKitSmokeKey(smokeKeyboard, Key.G);
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
-                MovePlayerToDimmSlot();
+                MovePlayerToM2StorageSlot();
                 playerCarry.ProcessInputFrame();
                 PressMotherboardBuildKitSmokeMouse(smokeMouse);
                 ReleaseMotherboardBuildKitSmokeMouse(smokeMouse);
-                yield return WaitForMemoryModuleAssemblyHandoffLatches();
 
                 bool finalState =
                     playerCarry.HeldItem == null &&
@@ -337,21 +357,22 @@ namespace PCShopEmpire3D.Presentation
                         ProcessorSocketState.ProcessorRetained &&
                     session.AssemblyBuild.MemorySlotState ==
                         MemorySlotState.MemoryModuleRetained &&
-                    !dimmSlot.IsLatchAnimating &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
                     session.Inventory.Revision == inventoryRevision + 4 &&
                     session.CustomPcBuildKit.Revision == buildKitRevision + 1 &&
                     session.AssemblyBuild.Revision == assemblyRevision + 6 &&
                     session.AssemblyBuild.ReceiptCount == assemblyReceiptCount + 6 &&
                     session.CustomPcBuildKit.StagedComponentCount == 10 &&
-                    session.CustomPcBuildKit.AssemblyHandoffCount == 3 &&
-                    memory.GetInstanceID() == memoryPhysicalIdentity &&
-                    memory.ItemIdValue == memoryItemIdentity &&
+                    session.CustomPcBuildKit.AssemblyHandoffCount == 4 &&
+                    storage.GetInstanceID() == storagePhysicalIdentity &&
+                    storage.ItemIdValue == storageItemIdentity &&
                     Vector3.Distance(
-                        memory.transform.position,
-                        dimmSlot.SnapPose.position) <= 0.0005f &&
+                        storage.transform.position,
+                        storageSlot.SeatedPose.position) <= 0.0005f &&
                     Quaternion.Angle(
-                        memory.transform.rotation,
-                        dimmSlot.SnapPose.rotation) <= 0.05f &&
+                        storage.transform.rotation,
+                        storageSlot.SeatedPose.rotation) <= 0.05f &&
                     MotherboardAssemblyHandoffSmokeReservationIsLive(
                         session,
                         workOrder,
@@ -364,6 +385,10 @@ namespace PCShopEmpire3D.Presentation
                         session,
                         workOrder,
                         memoryLine) &&
+                    MotherboardAssemblyHandoffSmokeReservationIsLive(
+                        session,
+                        workOrder,
+                        storageLine) &&
                     MotherboardAssemblyHandoffSmokeHistoryIsPreserved(
                         session,
                         historicalReceipts,
@@ -371,22 +396,20 @@ namespace PCShopEmpire3D.Presentation
                     motherboardBinding.ValidateProjectionInvariant().IsSuccess &&
                     processorBinding.ValidateProjectionInvariant().IsSuccess &&
                     dimmBinding.ValidateProjectionInvariant().IsSuccess &&
+                    storageBinding.ValidateProjectionInvariant().IsSuccess &&
                     session.ValidateInvariants().IsSuccess;
                 if (!finalState)
                 {
-                    LogMemoryModuleAssemblyHandoffSmokeFailure(
+                    LogStorageAssemblyHandoffSmokeFailure(
                         "smoke.final-state-or-invariant-mismatch");
                     yield break;
                 }
 
-                if (!_suppressMemoryModuleAssemblyHandoffSmokeSuccessMarker)
+                Debug.Log(StorageAssemblyHandoffSmokeSuccessMarker);
+                yield return new WaitForEndOfFrame();
+                if (!Application.isEditor)
                 {
-                    Debug.Log(MemoryModuleAssemblyHandoffSmokeSuccessMarker);
-                    yield return new WaitForEndOfFrame();
-                    if (!Application.isEditor)
-                    {
-                        Application.Quit(0);
-                    }
+                    Application.Quit(0);
                 }
             }
             finally
@@ -395,17 +418,7 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private IEnumerator WaitForMemoryModuleAssemblyHandoffLatches()
-        {
-            int frames = 0;
-            while (dimmSlot != null && dimmSlot.IsLatchAnimating && frames < 120)
-            {
-                frames++;
-                yield return null;
-            }
-        }
-
-        private static bool TryCaptureMemoryModuleAssemblyHandoffOtherContainers(
+        private static bool TryCaptureStorageAssemblyHandoffOtherContainers(
             GarageStockFlowSession session,
             CustomPcBuildOrderRecord workOrder,
             out Dictionary<StableId<ItemInstanceIdScope>,
@@ -417,7 +430,8 @@ namespace PCShopEmpire3D.Presentation
             {
                 if (line.ComponentKind == PcComponentKind.Motherboard ||
                     line.ComponentKind == PcComponentKind.Processor ||
-                    line.ComponentKind == PcComponentKind.MemoryModule)
+                    line.ComponentKind == PcComponentKind.MemoryModule ||
+                    line.ComponentKind == PcComponentKind.StorageDevice)
                 {
                     continue;
                 }
@@ -433,19 +447,13 @@ namespace PCShopEmpire3D.Presentation
                 containers.Add(line.ItemId, item.ContainerId);
             }
 
-            return containers.Count == 7;
+            return containers.Count == 6;
         }
 
-        private void LogMemoryModuleAssemblyHandoffSmokeFailure(string code)
+        private void LogStorageAssemblyHandoffSmokeFailure(string code)
         {
-            if (_suppressMemoryModuleAssemblyHandoffSmokeSuccessMarker)
-            {
-                _nestedMemoryModuleAssemblyHandoffSmokeFailureCode = code;
-                return;
-            }
-
             Debug.LogError(
-                "GARAGE_MEMORY_MODULE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
+                "GARAGE_STORAGE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE " +
                 $"assembly-handoff-flow=failed code={code}");
             if (!Application.isEditor)
             {

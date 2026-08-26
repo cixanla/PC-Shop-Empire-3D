@@ -654,6 +654,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedStorage.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedStorage.BuildKit?.StagedComponentCount ?? 4;
+                        GarageStockFlowSession focusedSession = focusedStorage.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        if (stagedComponentCount <
+                            StorageBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{StorageBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained && memoryRetained
+                            ? $"{interact}: M.2 NVMe'Yİ PRIMARY SLOT MONTAJINA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{StorageBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT";
+                    }
+
                     return focusedStorage.IsSecured
                         ? "M.2 VİDASI SIKILI • yuvayı hedefleyip gevşet"
                         : focusedStorage.IsSeated

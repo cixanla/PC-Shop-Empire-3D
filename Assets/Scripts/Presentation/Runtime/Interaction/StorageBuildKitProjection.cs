@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -203,6 +204,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            session.PrototypeStorageBuildKitOperationId,
                            out CustomPcBuildKitReceipt receipt) &&
                        receipt.Stage == CustomPcBuildKitStage.StorageInHands;
+            }
+        }
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeStorageAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.Line.ComponentKind == PcComponentKind.StorageDevice;
             }
         }
 
@@ -437,9 +451,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nNVMe HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nNVMe BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nM.2 MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nNVMe HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nNVMe BEKLİYOR";
         }
 
         public void ResetFeedback()

@@ -594,6 +594,30 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged M.2 storage device from BuildKit to ActorHands and
+        /// binds all subsequent reserved custody to the capacity-one managed primary M.2
+        /// slot already owned by Assembly. Exact replay returns the original proof without
+        /// advancing Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedStorageForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> storageSlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.StorageDevice,
+                operationId,
+                storageSlotContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(
@@ -622,6 +646,7 @@ namespace PCShopEmpire3D.Inventory
                 return MatchesWorkOrderBuildKitAssemblyHandoff(
                            replay,
                            placementReceipt,
+                           expectedComponentKind,
                            operationId,
                            workbenchContainerId) &&
                        OwnsWorkOrderBuildKitRegistration(replay)
@@ -995,7 +1020,8 @@ namespace PCShopEmpire3D.Inventory
 
             if ((pickup.ComponentKind != PcComponentKind.Motherboard &&
                  pickup.ComponentKind != PcComponentKind.Processor &&
-                 pickup.ComponentKind != PcComponentKind.MemoryModule) ||
+                 pickup.ComponentKind != PcComponentKind.MemoryModule &&
+                 pickup.ComponentKind != PcComponentKind.StorageDevice) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||
@@ -1265,6 +1291,7 @@ namespace PCShopEmpire3D.Inventory
         private static bool MatchesWorkOrderBuildKitAssemblyHandoff(
             InventorySerializedReservationWorkOrderBuildKitRegistration registration,
             InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+            PcComponentKind expectedComponentKind,
             StableId<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
                 operationId,
@@ -1273,6 +1300,7 @@ namespace PCShopEmpire3D.Inventory
             InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt handoff =
                 registration?.AssemblyHandoffReceipt;
             return handoff != null &&
+                   handoff.PlacementReceipt.ComponentKind == expectedComponentKind &&
                    ReferenceEquals(handoff.PlacementReceipt, placementReceipt) &&
                    handoff.OperationId == operationId &&
                    handoff.WorkbenchContainerId == workbenchContainerId;

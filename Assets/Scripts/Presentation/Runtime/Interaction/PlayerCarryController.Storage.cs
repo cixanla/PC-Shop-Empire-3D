@@ -487,26 +487,84 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasSeated = binding.IsSeated;
-            OperationResult physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
-            if (physicalPickup.IsFailure)
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasSeated)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasSeated
-                ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
                 {
-                    Debug.LogError(
-                        $"M2_STORAGE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPickup);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = binding.TryCommitSeatedDetach();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            $"M2_STORAGE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
+            }
+            else
+            {
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
+                {
+                    return Remember(physicalPreflight);
+                }
+
+                if (binding.IsAuthorityInBuildKit)
+                {
+                    physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                    if (physicalPickup.IsFailure)
+                    {
+                        return Remember(physicalPickup);
+                    }
+
+                    authority = binding.TryCommitBuildKitAssemblyPickup();
+                    if (authority.IsFailure)
+                    {
+                        OperationResult rollback = item.RecoverToLastSafePose();
+                        binding.SyncProjectionToAuthority();
+                        return rollback.IsFailure
+                            ? Remember(OperationResult.Fail(Failure.FromCode(
+                                "custom-pc-storage-build-kit." +
+                                "pickup-projection-rollback-failed")))
+                            : Remember(authority);
+                    }
+                }
+                else
+                {
+                    authority = binding.TryCommitLoosePickup();
+                    if (authority.IsFailure)
+                    {
+                        return Remember(authority);
+                    }
+
+                    physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                    if (physicalPickup.IsFailure)
+                    {
+                        OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                            carryAnchor,
+                            heldItemLayer);
+                        if (recovery.IsFailure || !item.IsCarried)
+                        {
+                            return Remember(OperationResult.Fail(
+                                Failure.FromCode(
+                                    "assembly-storage." +
+                                    "pickup-projection-recovery-failed")));
+                        }
+
+                        physicalPickup = recovery;
+                    }
+                }
             }
 
             HeldItem = item;
