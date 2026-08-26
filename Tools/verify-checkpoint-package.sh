@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -229,7 +229,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue85" ||
       "$evidence_contract" == "issue87" ||
       "$evidence_contract" == "issue89" ||
-      "$evidence_contract" == "issue91" ]]; then
+      "$evidence_contract" == "issue91" ||
+      "$evidence_contract" == "issue93" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -259,7 +260,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue85" ||
           "$evidence_contract" == "issue87" ||
           "$evidence_contract" == "issue89" ||
-          "$evidence_contract" == "issue91" ]]; then
+          "$evidence_contract" == "issue91" ||
+          "$evidence_contract" == "issue93" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -303,7 +305,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue85" ||
       "$evidence_contract" == "issue87" ||
       "$evidence_contract" == "issue89" ||
-      "$evidence_contract" == "issue91" ]]; then
+      "$evidence_contract" == "issue91" ||
+      "$evidence_contract" == "issue93" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -325,7 +328,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue85" ||
       "$evidence_contract" == "issue87" ||
       "$evidence_contract" == "issue89" ||
-      "$evidence_contract" == "issue91" ]]; then
+      "$evidence_contract" == "issue91" ||
+      "$evidence_contract" == "issue93" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -428,7 +432,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-MOTHERBOARD-BUILDKIT-TO-CHASSIS-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='motherboard assembly handoff'
     runtime_success_marker='GARAGE_MOTHERBOARD_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 pickup=exact custody=build-kit-to-hands-to-workbench reservation=alive physical-identity=stable input=keyboard+mouse guided-seat=ok secure=ok unsecure=ok detach=ok reseat=ok history=10/10-preserved other-nine=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue91" ]]; then
     technical_commit=003c93f2de191ff3b295a8a88454e74617521970
     technical_tree=1e46049a9a253559b2f9f4ab41524e8be5e0f9ab
     build_forbidden_policy=issue91-hardened-v2
@@ -438,6 +442,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-PROCESSOR-BUILDKIT-TO-SOCKET-RETENTION-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='processor assembly handoff'
     runtime_success_marker='GARAGE_PROCESSOR_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured pickup=exact custody=build-kit-to-hands-to-socket reservation=alive physical-identity=stable input=keyboard+mouse seat=ok retain=ok retained-block=ok open=ok detach=ok reseat=ok history=10/10-preserved other-eight=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
+  else
+    technical_commit=0caca090d2859dfb78219abb089274fe599eaca2
+    technical_tree=e52c75872a8ec59a98b63c0c46d5e3f6f9c5e084
+    build_forbidden_policy=issue93-hardened-v1
+    editmode_total=718
+    playmode_total=125
+    contract_adr=Docs/ADR-0056-CANONICAL-DDR5-BUILDKIT-TO-A2-DUAL-LATCH-ASSEMBLY-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-DDR5-BUILDKIT-TO-A2-DUAL-LATCH-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
+    runtime_success_label='DDR5 memory-module assembly handoff'
+    runtime_success_marker='GARAGE_MEMORY_MODULE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained pickup=exact custody=build-kit-to-hands-to-a2 reservation=alive physical-identity=stable input=keyboard+mouse notch=aligned seat=ok dual-latch=closed retained-block=ok open=ok detach=ok reseat=ok history=10/10-preserved other-seven=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"

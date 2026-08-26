@@ -570,6 +570,30 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged DDR memory module from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed memory slot already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedMemoryModuleForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> memorySlotContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.MemoryModule,
+                operationId,
+                memorySlotContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(
@@ -970,7 +994,8 @@ namespace PCShopEmpire3D.Inventory
             }
 
             if ((pickup.ComponentKind != PcComponentKind.Motherboard &&
-                 pickup.ComponentKind != PcComponentKind.Processor) ||
+                 pickup.ComponentKind != PcComponentKind.Processor &&
+                 pickup.ComponentKind != PcComponentKind.MemoryModule) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||
