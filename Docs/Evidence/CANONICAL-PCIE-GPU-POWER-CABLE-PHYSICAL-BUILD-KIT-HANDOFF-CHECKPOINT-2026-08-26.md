@@ -51,9 +51,9 @@ The complete Git bundle is `7,505,067` bytes with SHA-256 `e0555605581e4f106cddd
 |---|---:|---|---:|---|
 | Windows x64 IL2CPP/D3D11 build | Success | `build-il2cpp-d3d11.log` | 487,798 | `ed39d28588e3fcdf3708d7e46f2dc1539d72ac18557c44c5112451ce6a3ee280` |
 | Native binary manifest | Three exact binaries | `binary-manifest.json` | 1,292 | `54496d0f86074cb517ed58c0e4caa8bca84fa909bba980badb46377d1530b2df` |
-| Intel Iris Xe interactive runtime | Success | `runtime-d3d11.log` | 5,841 | `d98637fe641d40f2fb57ca2d11e6e79155ec9b7dee8d2a9d5ea3161137314d2b` |
-| Runtime summary | Accepted, graceful, residue-free | `runtime-summary.json` | 3,295 | `8c9b60074146fdca049edf3168f029aafbd882336b5928eef91b1555d63c20cf` |
-| Interactive task receipt | Created, completed and deleted | `task-receipt.json` | 1,697 | `f5d3cb5d03b9ece88c3d034536ebdc2acef712037b41c1260fbb647a9ee4a042` |
+| Intel Iris Xe interactive runtime | Success | `runtime-d3d11.log` | 5,838 | `6c54ce46a4d0763281fbf29917f1afe51df65a4533f46bee8f6921aa94d43739` |
+| Runtime summary | Accepted, graceful, residue-free | `runtime-summary.json` | 3,295 | `c118d391c565a79b7a0d1d4dbb768b356cf5a54744389c0b905616f58caf1d8f` |
+| Interactive task receipt | Created, completed and deleted | `task-receipt.json` | 1,697 | `cf5f507276e3682e5848b248eff6692f812fef6edb04d32faef80a986f190ed6` |
 
 The strict `issue87-hardened-v1` build reports `1,339,592,274` bytes and expanded fatal-token count `0`. ProjectSettings is byte-exact before/after. Exact binaries are:
 
@@ -70,7 +70,7 @@ Procedure source and Windows readback are exact:
 | `build-procedure.ps1` | 9,623 | `14c5b84404c58cad6d8db2e273c26586b05cd8995d9eb1db0e4878ecd1620bf4` |
 | `launch-procedure.ps1` | 7,956 | `84e8e70f50ce3541f553b651acc94dcd978020342bdbcab8d23a251f60438dc7` |
 | `runtime-procedure.ps1` | 14,944 | `73be484143045ccf8a404019c4dcb1d43158b6394b3e72594b49c4aa98ffa734` |
-| `procedure-manifest.json` | 1,028 | `72aa02a988b1ba3444d9f6974c61360aa5157b75f4b905a01f4437ee76fb2184` |
+| `procedure-manifest.json` | 1,054 | `4077c5834b275937a8dd3277ef4f3b2b48a512e2e0918539f69cbf3799750b95` |
 
 ## Issue #87 acceptance matrix — current state
 
