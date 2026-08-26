@@ -5,11 +5,21 @@
 **Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `feature/issue91-cpu-buildkit-to-socket-retention`
+**Branch:** `feature/issue93-ddr5-buildkit-to-dual-latch-retention`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 26 Ağustos 2026 üstün gelen güncel durum — Issue #91 CPU BuildKit→Processor Socket/Retention Assembly
+### 26 Ağustos 2026 üstün gelen güncel durum — Issue #93 DDR5 BuildKit→A2 Dual-Latch Assembly
+
+- Exact reserved DDR5 UDIMM yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live Issue #89 secured-motherboard ve Issue #91 retained-CPU receipts sonrasında ayrı stable operation exact BuildKit → ActorHands → existing A2 MemorySlot custody'sini açar.
+- Inventory yalnız kayıtlı DDR5 BuildKit release ve exact A2 MemorySlot↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history, exact replay/revision ve domain-first recovery korunur; motherboard/CPU ve other-seven untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.
+- GarageGraybox r47 keyboard/mouse + gamepad pickup, existing notch-aligned A2 seat, dual-latch close→open, detach ve reseat akışını single-consumer input ile taşır. Motherboard detach/unsecure DIMM seated/retained iken; DIMM remove latch closed iken fail-closed kalır ve CPU retained state değişmez.
+- Technical commit `0caca090d2859dfb78219abb089274fe599eaca2`, tree `e52c75872a8ec59a98b63c0c46d5e3f6f9c5e084`; full EditMode `718/718`, PlayMode `125/125`; Universal Mac report `330173019` bayt, Apple M1/Metal exact r47 smoke ve technical Guard `32946849858` başarılıdır.
+- Complete bundle `7594847` bayt / `039ec06b…1572` ile collision-free detached-clean Windows `issue93-0caca09-hardened-v1` x64 IL2CPP/only-D3D11 report `1342974093` bayt ve fatal-token `0` verdi. Intel Iris Xe Direct3D 11.0 level 11.1 exact r47 runtime host/readiness/success `1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve player/Unity/task residue `0` ile geçti.
+- ADR-0056/tarihli Evidence ve `issue93` verifier contract'ı Mac+Windows teknik kanıtını bağlar. Canonical evidence `13/14`; source/docs Guard, final receipt `14/14`, immutable local/healthy physical USB ve exact-r47 insan oturumu bekler. Strict acceptance `25/26`; Issue #93 ve draft PR #94 açık/In Progress, Dirty/`Full Repair Needed` Windows D: USB read-only kalır.
+- Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #91 CPU BuildKit→Processor Socket/Retention Assembly
 
 - Exact reserved CPU yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; authoritative historical ten-receipt `10/10` aggregate, live Issue #89 motherboard handoff, exact Workbench custody, `SeatedSecured` ve source attach/secure receipts sonrasında ayrı stable operation exact BuildKit → ActorHands → existing ProcessorSocket custody'sini açar.
 - Inventory yalnız kayıtlı Processor BuildKit release ve exact ProcessorSocket↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history, exact replay/revision ve domain-first recovery korunur; secured motherboard ve other-eight untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.

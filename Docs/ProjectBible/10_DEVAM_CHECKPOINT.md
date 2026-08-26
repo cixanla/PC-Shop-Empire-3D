@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 26 Ağustos 2026<br>
-**Durum:** Issue #91 canonical CPU BuildKit→processor socket/retention source/domain/scene/input/full-regression, technical source CI ve exact-head Mac+Windows native kapıları tamamlandı; source/docs CI, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue91-cpu-buildkit-to-socket-retention`, technical commit `003c93f2de191ff3b295a8a88454e74617521970`, tree `1e46049a9a253559b2f9f4ab41524e8be5e0f9ab`; draft PR #92, Roadmap `In Progress`, Issue #91 açık
+**Durum:** Issue #93 canonical DDR5 BuildKit→A2 dual-latch Assembly source/domain/scene/input/full-regression, exact-head Mac/Windows native ve technical CI kapıları tamamlandı; source/docs, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue93-ddr5-buildkit-to-dual-latch-retention`, technical commit `0caca090d2859dfb78219abb089274fe599eaca2`, tree `e52c75872a8ec59a98b63c0c46d5e3f6f9c5e084`; draft PR #94, Roadmap `In Progress`, Issue #93 açık
 
-## En yeni teknik checkpoint — Issue #91 / Epic #10
+## En yeni teknik checkpoint — Issue #93 / Epic #10
+
+- Canonical DDR5 UDIMM yalnız exact `MemoryModule` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 secured-motherboard ve Issue #91 retained-CPU receipt zinciri olmadan release fail-closed'dur.
+- Ayrı stable operation exact DDR5 BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned A2 MemorySlot↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
+- GarageGraybox `garage-memory-module-assembly-handoff-r47-v1`; range/focus/LOS/pause/empty-hands pickup, existing family/A2 topology/notch orientation/obstruction seat, dual-latch close→open, detach ve same-instance reseat döngüsünü sunar. BuildKit slotu okunaklı `DDR5 MONTAJDA`, history `10/10` kalır.
+- Domain custody physical parent/pose/physics/visibility değişiminden önce commit edilir. Projection failure aynı Unity instance ve stable ItemId'yi authoritative hands/A2 pose'una recover eder; secured motherboard, retained CPU ve diğer yedi item/container/receipt/revision untouched, duplicate/ghost/loss `0` kalır.
+- Technical commit `0caca090d2859dfb78219abb089274fe599eaca2`, tree `e52c75872a8ec59a98b63c0c46d5e3f6f9c5e084`; full EditMode `718/718`, full PlayMode `125/125`, failed/skipped/inconclusive `0`; `git diff --check` ve local Repository Guard geçti.
+- Universal Mac Development report `330173019` bayt, valid deep/strict `x86_64 + arm64` executable ve Apple M1/Metal exact r47 readiness + DDR5 Assembly handoff smoke başarılıdır.
+- Technical Repository Guard `32946849858` exact source head üzerinde geçti. Complete bundle `7594847` bayt / `039ec06b…1572` ile detached-clean Windows `issue93-0caca09-hardened-v1` exact technical commit/tree x64 IL2CPP/only-D3D11 report `1342974093` bayt ve fatal-token `0` verdi; Intel Iris Xe Direct3D 11.0 level 11.1 runtime, graceful exit, task deletion ve player/Unity/task residue `0` ile geçti. Canonical teknik evidence `13/14`; source/docs commit+Guard, final receipt `14/14`, immutable local/sağlıklı fiziksel USB ve exact-r47 insan oturumu bekler. Strict acceptance `25/26`; Issue #93 ve draft PR #94 açık/In Progress kalır, Dirty/`Full Repair Needed` Windows D: USB salt-okunurdur.
+- ADR-0056 ve tarihli Evidence exact test/Mac hashlerini ve ayrık kalan kapıları bağlar.
+- Ana hedef fiziksel mağaza/servis/montaj + Dashboard 3D parity, mağaza büyümesi/personel/müşteri, işlevsel mahalle/kişisel ev/araç-lojistik, NPC dünya ekolojisi ve offline güvenli Local Advisor/Guardian sınırlarıdır. Mac tek authoritative yazma hattı, Windows exact detached-clean IL2CPP/D3D11 worker'dır.
+
+## Önceki teknik checkpoint — Issue #91 / Epic #10
 
 - Canonical CPU accepted work order'da yalnız exact `Processor` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 motherboard handoff, exact Workbench custody, `SeatedSecured` ve attach/secure receipts olmadan release fail-closed'dur.
 - Ayrı stable operation exact Processor BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned ProcessorSocket↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
