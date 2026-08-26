@@ -496,8 +496,12 @@ if [[ "$evidence_contract" == "issue71" ||
   }
   expected_source_docs_delta=$(
     {
-      printf 'A\t%s\n' "$contract_adr"
-      printf 'A\t%s\n' "$contract_evidence"
+      contract_document_status=A
+      if [[ "$evidence_contract" == "issue95" ]]; then
+        contract_document_status=M
+      fi
+      printf '%s\t%s\n' "$contract_document_status" "$contract_adr"
+      printf '%s\t%s\n' "$contract_document_status" "$contract_evidence"
       printf 'M\t%s\n' \
         CHANGELOG.md \
         Docs/DEVELOPER-HANDOFF.md \
@@ -612,6 +616,8 @@ if [[ "$evidence_contract" == "issue71" ||
   jq -e \
     --arg commit "$technical_commit" \
     --arg tree "$technical_tree" \
+    --arg source_docs_commit "$source_commit" \
+    --arg source_docs_tree "$source_tree" \
     --arg policy "$build_forbidden_policy" \
     --argjson issue "$contract_issue" \
     --argjson editmode_total "$editmode_total" \
@@ -620,9 +626,12 @@ if [[ "$evidence_contract" == "issue71" ||
       .issue == $issue and
       .sourceCommit == $commit and
       .sourceTree == $tree and
+      .sourceDocsCommit == $source_docs_commit and
+      .sourceDocsTree == $source_docs_tree and
       .repositoryCleanAfterAllLocalGates == true and
       .gitDiffCheck == true and
       .technicalGuard.conclusion == "success" and
+      .sourceDocsGuard.conclusion == "success" and
       .tests.editMode.total == $editmode_total and
       .tests.editMode.passed == $editmode_total and
       .tests.editMode.failed == 0 and
