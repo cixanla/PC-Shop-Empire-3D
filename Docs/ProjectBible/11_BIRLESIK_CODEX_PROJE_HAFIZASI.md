@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `feature/issue89-motherboard-buildkit-to-chassis-assembly`
+**Branch:** `feature/issue91-cpu-buildkit-to-socket-retention`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 26 Ağustos 2026 üstün gelen güncel durum — Issue #89 Motherboard BuildKit→Chassis Assembly
+### 26 Ağustos 2026 üstün gelen güncel durum — Issue #91 CPU BuildKit→Processor Socket/Retention Assembly
+
+- Exact reserved CPU yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; authoritative historical ten-receipt `10/10` aggregate, live Issue #89 motherboard handoff, exact Workbench custody, `SeatedSecured` ve source attach/secure receipts sonrasında ayrı stable operation exact BuildKit → ActorHands → existing ProcessorSocket custody'sini açar.
+- Inventory yalnız kayıtlı Processor BuildKit release ve exact ProcessorSocket↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history, exact replay/revision ve domain-first recovery korunur; secured motherboard ve other-eight untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.
+- GarageGraybox r46 keyboard/mouse + gamepad pickup, existing keyed processor seat, retention close→open, detach ve reseat akışını single-consumer input ile taşır. Motherboard unsecure/detach CPU seated/retained iken; CPU remove retention closed iken fail-closed kalır.
+- Technical commit `003c93f2de191ff3b295a8a88454e74617521970`, tree `1e46049a9a253559b2f9f4ab41524e8be5e0f9ab`; full EditMode `715/715`, PlayMode `122/122`; Universal Mac report `330127900` bayt, Apple M1/Metal exact r46 smoke ve technical Guard `32937325469` başarılıdır.
+- Detached-clean Windows `issue91-hardened-v2` x64 IL2CPP report `1342422475` bayt ve Intel Iris Xe Direct3D 11.0 level 11.1 exact r46 runtime ile geçti; graceful exit, task deletion, player/Unity/build-task residue `0`, checkout exact-head clean kaldı. ADR-0055/tarihli Evidence ve `issue91` verifier contract'ı Mac+Windows teknik kanıtını bağlar. Canonical teknik evidence `13/14`; source/docs Guard, final canonical `14/14`, immutable local/healthy physical USB ve exact-r46 insan oturumu bekler; strict acceptance `24/25`, Issue #91 ve draft PR #92 açık/In Progress kalır.
+- Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #89 Motherboard BuildKit→Chassis Assembly
 
 - Exact reserved motherboard yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation lineage ile seçilir; authoritative historical ten-receipt `10/10` aggregate sonrasında ayrı stable operation exact BuildKit → ActorHands → existing Assembly Workbench custody'sini açar.
 - Inventory yalnız kayıtlı BuildKit release ve exact Workbench↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history, exact replay/revision ve domain-first recovery korunur; other-nine untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.

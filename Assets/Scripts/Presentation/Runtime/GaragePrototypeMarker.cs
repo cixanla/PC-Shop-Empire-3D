@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-motherboard-assembly-handoff-r45-v1";
+        public const string Version = "garage-processor-assembly-handoff-r46-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1182,6 +1182,7 @@ namespace PCShopEmpire3D.Presentation
                 $"eps12v-power-cable-build-kit={(HasEps12vPowerCableBuildKitR43Runtime ? "ready" : "missing")} " +
                 $"pcie-gpu-power-cable-build-kit={(HasPcieGpuPowerCableBuildKitR44Runtime ? "ready" : "missing")} " +
                 $"motherboard-assembly-handoff={(HasMotherboardAssemblyHandoffR45Runtime ? "ready" : "missing")} " +
+                $"processor-assembly-handoff={(HasProcessorAssemblyHandoffR46Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1274,6 +1275,9 @@ namespace PCShopEmpire3D.Presentation
             bool runMotherboardAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-motherboard-assembly-handoff-smoke");
+            bool runProcessorAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-processor-assembly-handoff-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1301,7 +1305,8 @@ namespace PCShopEmpire3D.Presentation
                              (runAtx24PowerCableBuildKitSmoke ? 1 : 0) +
                              (runEps12vPowerCableBuildKitSmoke ? 1 : 0) +
                              (runPcieGpuPowerCableBuildKitSmoke ? 1 : 0) +
-                             (runMotherboardAssemblyHandoffSmoke ? 1 : 0);
+                             (runMotherboardAssemblyHandoffSmoke ? 1 : 0) +
+                             (runProcessorAssemblyHandoffSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1321,12 +1326,18 @@ namespace PCShopEmpire3D.Presentation
                      !runAtx24PowerCableBuildKitSmoke &&
                      !runEps12vPowerCableBuildKitSmoke &&
                      !runPcieGpuPowerCableBuildKitSmoke &&
-                     !runMotherboardAssemblyHandoffSmoke) ||
+                     !runMotherboardAssemblyHandoffSmoke &&
+                     !runProcessorAssemblyHandoffSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runMotherboardAssemblyHandoffSmoke)
+                    if (runProcessorAssemblyHandoffSmoke)
+                    {
+                        LogProcessorAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runMotherboardAssemblyHandoffSmoke)
                     {
                         LogMotherboardAssemblyHandoffSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1594,6 +1605,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runProcessorAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogProcessorAssemblyHandoffSmokeFailure(
+                    "smoke.processor-assembly-handoff-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1747,6 +1765,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunMotherboardAssemblyHandoffSmoke());
+            }
+
+            if (runProcessorAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunProcessorAssemblyHandoffSmoke());
             }
         }
 

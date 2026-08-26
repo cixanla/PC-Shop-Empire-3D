@@ -248,9 +248,9 @@ namespace PCShopEmpire3D.Orders
     }
 
     /// <summary>
-    /// Immutable proof that the canonical, fully staged motherboard was released from the
-    /// reserved BuildKit into the existing chassis-assembly flow. The original ten staging
-    /// receipts remain append-only history and the work-order reservation stays live.
+    /// Immutable proof that one canonical, fully staged component was released from the
+    /// reserved BuildKit into its exact existing Assembly-owned target. The original ten
+    /// staging receipts remain append-only history and the work-order reservation stays live.
     /// </summary>
     public sealed class CustomPcBuildKitAssemblyHandoffReceipt
     {
@@ -279,6 +279,8 @@ namespace PCShopEmpire3D.Orders
         public CustomPcBuildOrderRecord BuildOrder { get; }
 
         public CustomPcBuildOrderLineSnapshot Line { get; }
+
+        public PcComponentKind ComponentKind => Line?.ComponentKind ?? default;
 
         public CustomPcBuildKitReceipt StagingReceipt { get; }
 

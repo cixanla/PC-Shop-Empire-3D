@@ -678,6 +678,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     string interact = input != null
                         ? input.InteractBindingPrompt
                         : "E / A";
+                    if (focusedProcessor.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedProcessor.BuildKit?.StagedComponentCount ?? 2;
+                        GarageStockFlowSession focusedSession = focusedProcessor.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        if (stagedComponentCount <
+                            ProcessorBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{ProcessorBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured
+                            ? $"{interact}: CPU'YU SOKET MONTAJINA AL • BUILD KIT • " +
+                              $"{stagedComponentCount}/" +
+                              $"{ProcessorBuildKitProjection.PrototypeTotalComponentCount}"
+                            : "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK";
+                    }
+
                     return focusedProcessor.IsRetained
                         ? "RETENTION KAPALI • kolu hedefleyip aç"
                         : focusedProcessor.IsSeated
@@ -2655,12 +2678,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(AssemblyFailures.ProcessorRetained));
             }
 
-            if (binding.IsAuthorityInBuildKit)
-            {
-                return Remember(OperationResult.Fail(
-                    Failure.FromCode("custom-pc-processor-build-kit.already-staged")));
-            }
-
             bool wasSeated = binding.IsSeated;
             OperationResult physicalPickup;
             OperationResult authority;
@@ -2695,7 +2712,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return Remember(physicalPreflight);
                 }
 
-                authority = binding.TryCommitLoosePickup();
+                authority = binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
                 if (authority.IsFailure)
                 {
                     return Remember(authority);

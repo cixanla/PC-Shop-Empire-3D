@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -177,6 +178,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            session.PrototypeProcessorBuildKitOperationId,
                            out CustomPcBuildKitReceipt receipt) &&
                        receipt.Stage == CustomPcBuildKitStage.ProcessorInHands;
+            }
+        }
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeProcessorAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.Line.ComponentKind == PcComponentKind.Processor;
             }
         }
 
@@ -402,9 +416,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nİŞLEMCİ HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nİŞLEMCİ BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nCPU MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nİŞLEMCİ HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nİŞLEMCİ BEKLİYOR";
         }
 
         public void ResetFeedback()

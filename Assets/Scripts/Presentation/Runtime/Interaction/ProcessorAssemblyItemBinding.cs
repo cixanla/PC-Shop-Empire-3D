@@ -16,7 +16,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Seated = 2
+            Seated = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -150,6 +151,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return transfer;
+        }
+
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsSeated ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-processor-assembly.pickup-authority-mismatch"));
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedProcessorForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
         }
 
         public OperationResult TryCommitSeatedDetach()
@@ -447,6 +481,44 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         }
 
                         _carryOrigin = CarryOrigin.None;
+                        SyncProjectionToAuthority();
+                        return OperationResult.Success();
+                    }
+                }
+            }
+
+            if (_carryOrigin == CarryOrigin.BuildKit)
+            {
+                AssemblyBuildSnapshot snapshot = Session.AssemblyBuild.GetSnapshot();
+                if (snapshot.MotherboardSeatState == AssemblySeatState.SeatedSecured &&
+                    snapshot.ProcessorSocketState == ProcessorSocketState.EmptyOpen)
+                {
+                    OperationResult<AssemblyOperationReceipt> seat = Session.SeatProcessor(
+                        CreateOperationId("recovery-build-kit-seat"),
+                        snapshot.InstalledByOperationId,
+                        snapshot.SecuredByOperationId,
+                        snapshot.Revision);
+                    if (seat.IsSuccess)
+                    {
+                        OperationResult physicalRecovery =
+                            physicalItem.PlaceAt(socket.SnapPose);
+                        if (physicalRecovery.IsFailure)
+                        {
+                            OperationResult<AssemblyOperationReceipt> compensation =
+                                Session.RemoveProcessor(
+                                    CreateOperationId(
+                                        "recovery-build-kit-compensation"),
+                                    seat.Value.OperationId,
+                                    Session.AssemblyBuild.Revision);
+                            return compensation.IsFailure
+                                ? OperationResult.Fail(Failure.FromCode(
+                                    "assembly-processor.recovery-build-kit-" +
+                                    "compensation-failed"))
+                                : physicalRecovery;
+                        }
+
+                        _carryOrigin = CarryOrigin.None;
+                        socket.ResetFeedback();
                         SyncProjectionToAuthority();
                         return OperationResult.Success();
                     }
