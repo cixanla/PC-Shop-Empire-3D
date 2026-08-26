@@ -72,6 +72,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-pcie-gpu-cable.paused")));
             }
 
+            if (enabled && pcieGpuPowerCableBuildKit != null &&
+                pcieGpuPowerCableBuildKit.HasPickupReceipt)
+            {
+                return Remember(OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-pcie-gpu-power-cable-build-kit.authority-blocked")));
+            }
+
             SetPcieGpuPowerCableRouteMode(enabled);
             if (enabled)
             {
@@ -163,13 +171,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return false;
             }
 
+            PcieGpuPowerCableBuildKitEvaluation buildKitEvaluation =
+                EvaluatePcieGpuPowerCableBuildKit(binding);
+            bool buildKitOwnsPrimary =
+                IsPcieGpuPowerCableBuildKitMode ||
+                (pcieGpuPowerCableBuildKit != null &&
+                 pcieGpuPowerCableBuildKit.HasPickupReceipt);
+
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
                 input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
                 input.TryConsumeDropPressThisFrame();
-                TrySetPcieGpuPowerCableRouteMode(
-                    !IsPcieGpuPowerCableRouteMode);
+                if (buildKitOwnsPrimary)
+                {
+                    TrySetPcieGpuPowerCableBuildKitMode(
+                        !IsPcieGpuPowerCableBuildKitMode);
+                }
+                else
+                {
+                    TrySetPcieGpuPowerCableRouteMode(
+                        !IsPcieGpuPowerCableRouteMode);
+                }
+                return true;
+            }
+
+            if (IsPcieGpuPowerCableBuildKitMode &&
+                input.TryConsumeRotatePlacementPressThisFrame())
+            {
+                input.TryConsumeInteractPressThisFrame();
+                input.TryConsumeDropPressThisFrame();
+                TryRotatePcieGpuPowerCableBuildKitPreviewClockwise();
                 return true;
             }
 
@@ -182,28 +214,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return true;
             }
 
-            if (!IsPcieGpuPowerCableRouteMode)
+            PcieGpuPowerCableRouteEvaluation evaluation = default;
+            if (IsPcieGpuPowerCableBuildKitMode)
+            {
+                ApplyPcieGpuPowerCableBuildKitEvaluation(buildKitEvaluation);
+            }
+            else if (!IsPcieGpuPowerCableRouteMode)
             {
                 pcieGpuPowerCableRoute?.SetRouteModeActive(active: false);
-                if (input.TryConsumeDropPressThisFrame())
-                {
-                    input.TryConsumePrimaryActionPressThisFrame();
-                    input.TryConsumeRotatePlacementPressThisFrame();
-                    input.TryConsumeInteractPressThisFrame();
-                    TryDrop();
-                }
-
-                return true;
+            }
+            else
+            {
+                evaluation = EvaluatePcieGpuPowerCableRoute(binding);
+                ApplyPcieGpuPowerCableRouteEvaluation(evaluation);
             }
 
-            PcieGpuPowerCableRouteEvaluation evaluation =
-                EvaluatePcieGpuPowerCableRoute(binding);
-            ApplyPcieGpuPowerCableRouteEvaluation(evaluation);
             if (input.TryConsumeDropPressThisFrame())
             {
                 input.TryConsumePrimaryActionPressThisFrame();
+                input.TryConsumeRotatePlacementPressThisFrame();
                 input.TryConsumeInteractPressThisFrame();
-                TryConfirmPcieGpuPowerCableRoute(binding, evaluation);
+                if (IsPcieGpuPowerCableBuildKitMode)
+                {
+                    TryConfirmPcieGpuPowerCableBuildKit();
+                }
+                else if (IsPcieGpuPowerCableRouteMode)
+                {
+                    TryConfirmPcieGpuPowerCableRoute(binding, evaluation);
+                }
+                else
+                {
+                    TryDrop();
+                }
             }
 
             return true;
@@ -211,6 +253,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private void SetPcieGpuPowerCableRouteMode(bool enabled)
         {
+            ResetPcieGpuPowerCableBuildKitState();
             IsPcieGpuPowerCableRouteMode = enabled &&
                                          HeldItem != null &&
                                          GetPcieGpuPowerCableBinding(HeldItem) != null;

@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-eps12v-power-cable-build-kit-r43-v1";
+        public const string Version = "garage-pcie-gpu-power-cable-build-kit-r44-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -404,7 +404,8 @@ namespace PCShopEmpire3D.Presentation
             GraphicsCardBuildKitProjection physicalGraphicsCardBuildKit = null,
             PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null,
             Atx24PowerCableBuildKitProjection physicalAtx24PowerCableBuildKit = null,
-            Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null)
+            Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null,
+            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -423,6 +424,7 @@ namespace PCShopEmpire3D.Presentation
             powerSupplyBuildKit = physicalPowerSupplyBuildKit;
             atx24PowerCableBuildKit = physicalAtx24PowerCableBuildKit;
             eps12vPowerCableBuildKit = physicalEps12vPowerCableBuildKit;
+            pcieGpuPowerCableBuildKit = physicalPcieGpuPowerCableBuildKit;
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1178,6 +1180,7 @@ namespace PCShopEmpire3D.Presentation
                 $"power-supply-build-kit={(HasPowerSupplyBuildKitR41Runtime ? "ready" : "missing")} " +
                 $"atx24-power-cable-build-kit={(HasAtx24PowerCableBuildKitR42Runtime ? "ready" : "missing")} " +
                 $"eps12v-power-cable-build-kit={(HasEps12vPowerCableBuildKitR43Runtime ? "ready" : "missing")} " +
+                $"pcie-gpu-power-cable-build-kit={(HasPcieGpuPowerCableBuildKitR44Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1264,6 +1267,9 @@ namespace PCShopEmpire3D.Presentation
             bool runEps12vPowerCableBuildKitSmoke =
                 HasCommandLineArgument(
                     "-pse-eps12v-power-cable-build-kit-smoke");
+            bool runPcieGpuPowerCableBuildKitSmoke =
+                HasCommandLineArgument(
+                    "-pse-pcie-gpu-power-cable-build-kit-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1289,7 +1295,8 @@ namespace PCShopEmpire3D.Presentation
                              (runGraphicsCardBuildKitSmoke ? 1 : 0) +
                              (runPowerSupplyBuildKitSmoke ? 1 : 0) +
                              (runAtx24PowerCableBuildKitSmoke ? 1 : 0) +
-                             (runEps12vPowerCableBuildKitSmoke ? 1 : 0);
+                             (runEps12vPowerCableBuildKitSmoke ? 1 : 0) +
+                             (runPcieGpuPowerCableBuildKitSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1307,12 +1314,18 @@ namespace PCShopEmpire3D.Presentation
                      !runGraphicsCardBuildKitSmoke &&
                      !runPowerSupplyBuildKitSmoke &&
                      !runAtx24PowerCableBuildKitSmoke &&
-                     !runEps12vPowerCableBuildKitSmoke) ||
+                     !runEps12vPowerCableBuildKitSmoke &&
+                     !runPcieGpuPowerCableBuildKitSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runEps12vPowerCableBuildKitSmoke)
+                    if (runPcieGpuPowerCableBuildKitSmoke)
+                    {
+                        LogPcieGpuPowerCableBuildKitSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runEps12vPowerCableBuildKitSmoke)
                     {
                         LogEps12vPowerCableBuildKitSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1554,6 +1567,15 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runPcieGpuPowerCableBuildKitSmoke && !Debug.isDebugBuild)
+            {
+                Debug.LogError(
+                    "GARAGE_PCIE_GPU_POWER_CABLE_BUILD_KIT_RUNTIME_SMOKE " +
+                    "build-kit-flow=failed " +
+                    "code=smoke.pcie-gpu-power-cable-build-kit-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1695,6 +1717,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunEps12vPowerCableBuildKitSmoke());
+            }
+
+            if (runPcieGpuPowerCableBuildKitSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPcieGpuPowerCableBuildKitSmoke());
             }
         }
 

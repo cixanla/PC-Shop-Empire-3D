@@ -675,6 +675,7 @@ MonoBehaviour:
   motherboardBuildKit: {fileID: 0}
   pcieGpuPowerCableRoute: {fileID: 0}
   pcieGpuPowerCableBinding: {fileID: 0}
+  pcieGpuPowerCableBuildKit: {fileID: 0}
   powerSupplyBay: {fileID: 0}
   powerSupplyBinding: {fileID: 0}
   powerSupplyBuildKit: {fileID: 0}

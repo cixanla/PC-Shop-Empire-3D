@@ -113,6 +113,8 @@ namespace PCShopEmpire3D.Orders
         private readonly InventorySerializedTransferAccess _atx24PowerCableBuildKitAccess;
         private readonly StableId<ContainerIdScope> _eps12vPowerCableBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _eps12vPowerCableBuildKitAccess;
+        private readonly StableId<ContainerIdScope> _pcieGpuPowerCableBuildKitContainerId;
+        private readonly InventorySerializedTransferAccess _pcieGpuPowerCableBuildKitAccess;
         private readonly Dictionary<StableId<CustomPcBuildKitOperationIdScope>,
             CustomPcBuildKitRegistration> _registrationsByOperation =
                 new Dictionary<StableId<CustomPcBuildKitOperationIdScope>,
@@ -143,7 +145,9 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> atx24PowerCableBuildKitContainerId = default,
             InventorySerializedTransferAccess atx24PowerCableBuildKitAccess = null,
             StableId<ContainerIdScope> eps12vPowerCableBuildKitContainerId = default,
-            InventorySerializedTransferAccess eps12vPowerCableBuildKitAccess = null)
+            InventorySerializedTransferAccess eps12vPowerCableBuildKitAccess = null,
+            StableId<ContainerIdScope> pcieGpuPowerCableBuildKitContainerId = default,
+            InventorySerializedTransferAccess pcieGpuPowerCableBuildKitAccess = null)
         {
             _workOrders = workOrders;
             _inventory = workOrders.Inventory;
@@ -167,6 +171,8 @@ namespace PCShopEmpire3D.Orders
             _atx24PowerCableBuildKitAccess = atx24PowerCableBuildKitAccess;
             _eps12vPowerCableBuildKitContainerId = eps12vPowerCableBuildKitContainerId;
             _eps12vPowerCableBuildKitAccess = eps12vPowerCableBuildKitAccess;
+            _pcieGpuPowerCableBuildKitContainerId = pcieGpuPowerCableBuildKitContainerId;
+            _pcieGpuPowerCableBuildKitAccess = pcieGpuPowerCableBuildKitAccess;
         }
 
         public long Revision { get; private set; }
@@ -221,6 +227,9 @@ namespace PCShopEmpire3D.Orders
 
         public StableId<ContainerIdScope> Eps12vPowerCableBuildKitContainerId =>
             _eps12vPowerCableBuildKitContainerId;
+
+        public StableId<ContainerIdScope> PcieGpuPowerCableBuildKitContainerId =>
+            _pcieGpuPowerCableBuildKitContainerId;
 
         internal static OperationResult<CustomPcBuildKitAuthority> Create(
             CustomPcWorkOrderAuthority workOrders,
@@ -1000,6 +1009,126 @@ namespace PCShopEmpire3D.Orders
                     access.Value.Ninth));
         }
 
+        internal static OperationResult<CustomPcBuildKitAuthority> Create(
+            CustomPcWorkOrderAuthority workOrders,
+            StableId<ContainerIdScope> sourceContainerId,
+            StableId<ContainerIdScope> handsContainerId,
+            StableId<ContainerIdScope> motherboardBuildKitContainerId,
+            StableId<ContainerIdScope> processorBuildKitContainerId,
+            StableId<ContainerIdScope> memoryModuleBuildKitContainerId,
+            StableId<ContainerIdScope> storageBuildKitContainerId,
+            StableId<ContainerIdScope> processorCoolerBuildKitContainerId,
+            StableId<ContainerIdScope> graphicsCardBuildKitContainerId,
+            StableId<ContainerIdScope> powerSupplyBuildKitContainerId,
+            StableId<ContainerIdScope> atx24PowerCableBuildKitContainerId,
+            StableId<ContainerIdScope> eps12vPowerCableBuildKitContainerId,
+            StableId<ContainerIdScope> pcieGpuPowerCableBuildKitContainerId)
+        {
+            if (workOrders == null)
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAuthorityMissing);
+            }
+
+            InventoryAuthority inventory = workOrders.Inventory;
+            StableId<ContainerIdScope>[] buildKitContainerIds =
+            {
+                motherboardBuildKitContainerId,
+                processorBuildKitContainerId,
+                memoryModuleBuildKitContainerId,
+                storageBuildKitContainerId,
+                processorCoolerBuildKitContainerId,
+                graphicsCardBuildKitContainerId,
+                powerSupplyBuildKitContainerId,
+                atx24PowerCableBuildKitContainerId,
+                eps12vPowerCableBuildKitContainerId,
+                pcieGpuPowerCableBuildKitContainerId
+            };
+
+            if (!HasValidContainerTopology(
+                    workOrders,
+                    inventory,
+                    sourceContainerId,
+                    handsContainerId,
+                    motherboardBuildKitContainerId))
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            for (int index = 1; index < buildKitContainerIds.Length; index++)
+            {
+                if (!HasValidBuildKitContainer(
+                        workOrders,
+                        inventory,
+                        buildKitContainerIds[index],
+                        sourceContainerId,
+                        handsContainerId))
+                {
+                    return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                        CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+                }
+            }
+
+            for (int left = 0; left < buildKitContainerIds.Length - 1; left++)
+            {
+                for (int right = left + 1; right < buildKitContainerIds.Length; right++)
+                {
+                    if (buildKitContainerIds[left] == buildKitContainerIds[right])
+                    {
+                        return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                            CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+                    }
+                }
+            }
+
+            OperationResult<InventorySerializedTransferAccessDecuple> access =
+                inventory.ClaimManagedSerializedTransferContainers(
+                    motherboardBuildKitContainerId,
+                    processorBuildKitContainerId,
+                    memoryModuleBuildKitContainerId,
+                    storageBuildKitContainerId,
+                    processorCoolerBuildKitContainerId,
+                    graphicsCardBuildKitContainerId,
+                    powerSupplyBuildKitContainerId,
+                    atx24PowerCableBuildKitContainerId,
+                    eps12vPowerCableBuildKitContainerId,
+                    pcieGpuPowerCableBuildKitContainerId);
+            if (access.IsFailure)
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    access.Error == InventoryFailures.RevisionOverflow
+                        ? CustomPcWorkOrderFailures.RevisionOverflow
+                        : CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            return OperationResult<CustomPcBuildKitAuthority>.Success(
+                new CustomPcBuildKitAuthority(
+                    workOrders,
+                    sourceContainerId,
+                    handsContainerId,
+                    motherboardBuildKitContainerId,
+                    access.Value.First,
+                    processorBuildKitContainerId,
+                    access.Value.Second,
+                    memoryModuleBuildKitContainerId,
+                    access.Value.Third,
+                    storageBuildKitContainerId,
+                    access.Value.Fourth,
+                    processorCoolerBuildKitContainerId,
+                    access.Value.Fifth,
+                    graphicsCardBuildKitContainerId,
+                    access.Value.Sixth,
+                    powerSupplyBuildKitContainerId,
+                    access.Value.Seventh,
+                    atx24PowerCableBuildKitContainerId,
+                    access.Value.Eighth,
+                    eps12vPowerCableBuildKitContainerId,
+                    access.Value.Ninth,
+                    pcieGpuPowerCableBuildKitContainerId,
+                    access.Value.Tenth));
+        }
+
         private static OperationResult<CustomPcBuildKitAuthority>
             CreateSingleComponentAuthority(
                 CustomPcWorkOrderAuthority workOrders,
@@ -1299,6 +1428,38 @@ namespace PCShopEmpire3D.Orders
                     PowerCableType.ModularEps12v8PinPsuToMotherboard);
         }
 
+        internal OperationResult<CustomPcBuildKitReceipt> PickupCanonicalPcieGpuPowerCable(
+            StableId<CustomPcBuildKitOperationIdScope> operationId,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (_pcieGpuPowerCableBuildKitContainerId.IsEmpty ||
+                _pcieGpuPowerCableBuildKitAccess == null)
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitContainerInvalid);
+            }
+
+            return PickupCanonicalComponent(
+                operationId,
+                workOrder,
+                PcComponentKind.PowerCable,
+                _pcieGpuPowerCableBuildKitContainerId,
+                _pcieGpuPowerCableBuildKitAccess,
+                CustomPcBuildKitStage.PcieGpuPowerCableInHands,
+                CustomPcWorkOrderFailures.BuildKitPcieGpuPowerCableLineInvalid,
+                requiresStagedMotherboard: true,
+                requiresStagedProcessor: true,
+                requiresStagedMemoryModule: true,
+                requiresStagedStorage: true,
+                requiresStagedProcessorCooler: true,
+                requiresStagedGraphicsCard: true,
+                requiresStagedPowerSupply: true,
+                requiresStagedAtx24PowerCable: true,
+                requiresStagedEps12vPowerCable: true,
+                expectedPowerCableType:
+                    PowerCableType.ModularPcie8PinPsuToGraphicsCard);
+        }
+
         internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalMotherboard(
             CustomPcBuildKitReceipt pickupReceipt)
         {
@@ -1508,6 +1669,30 @@ namespace PCShopEmpire3D.Orders
                 PowerCableType.ModularEps12v8PinPsuToMotherboard);
         }
 
+        internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalPcieGpuPowerCable(
+            CustomPcBuildKitReceipt pickupReceipt)
+        {
+            return PlaceCanonicalPcieGpuPowerCable(
+                pickupReceipt,
+                Revision,
+                _inventory.Revision);
+        }
+
+        internal OperationResult<CustomPcBuildKitReceipt> PlaceCanonicalPcieGpuPowerCable(
+            CustomPcBuildKitReceipt pickupReceipt,
+            long expectedBuildKitRevision,
+            long expectedInventoryRevision)
+        {
+            return PlaceCanonicalComponent(
+                pickupReceipt,
+                expectedBuildKitRevision,
+                expectedInventoryRevision,
+                PcComponentKind.PowerCable,
+                CustomPcBuildKitStage.PcieGpuPowerCableInHands,
+                CustomPcBuildKitStage.PcieGpuPowerCableStaged,
+                PowerCableType.ModularPcie8PinPsuToGraphicsCard);
+        }
+
         private OperationResult<CustomPcBuildKitReceipt> PickupCanonicalComponent(
             StableId<CustomPcBuildKitOperationIdScope> operationId,
             CustomPcBuildOrderRecord workOrder,
@@ -1524,6 +1709,7 @@ namespace PCShopEmpire3D.Orders
             bool requiresStagedGraphicsCard,
             bool requiresStagedPowerSupply = false,
             bool requiresStagedAtx24PowerCable = false,
+            bool requiresStagedEps12vPowerCable = false,
             PowerCableType expectedPowerCableType = default)
         {
             if (operationId.IsEmpty)
@@ -1603,6 +1789,16 @@ namespace PCShopEmpire3D.Orders
                     workOrder,
                     PcComponentKind.PowerCable,
                     PowerCableType.ModularAtx24SplitPsuToMotherboard))
+            {
+                return OperationResult<CustomPcBuildKitReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
+            }
+
+            if (requiresStagedEps12vPowerCable &&
+                !HasStagedComponent(
+                    workOrder,
+                    PcComponentKind.PowerCable,
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard))
             {
                 return OperationResult<CustomPcBuildKitReceipt>.Fail(
                     CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
@@ -1970,7 +2166,40 @@ namespace PCShopEmpire3D.Orders
                   !HasStagedComponent(
                       pickup.BuildOrder,
                       PcComponentKind.PowerCable,
-                      PowerCableType.ModularAtx24SplitPsuToMotherboard))))
+                      PowerCableType.ModularAtx24SplitPsuToMotherboard)))
+                ||
+                (pickup.Line.ComponentKind == PcComponentKind.PowerCable &&
+                 pickup.Line.PowerCableType ==
+                     PowerCableType.ModularPcie8PinPsuToGraphicsCard &&
+                 (!HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.Motherboard) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.Processor) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.MemoryModule) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.StorageDevice) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.ProcessorCooler) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.GraphicsCard) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.PowerSupply) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.PowerCable,
+                      PowerCableType.ModularAtx24SplitPsuToMotherboard) ||
+                  !HasStagedComponent(
+                      pickup.BuildOrder,
+                      PcComponentKind.PowerCable,
+                      PowerCableType.ModularEps12v8PinPsuToMotherboard))))
             {
                 return false;
             }
@@ -2084,7 +2313,14 @@ namespace PCShopEmpire3D.Orders
                                               .ModularEps12v8PinPsuToMotherboard &&
                                           registration.PlacementReceipt.Stage ==
                                           CustomPcBuildKitStage
-                                              .Eps12vPowerCableStaged;
+                                              .Eps12vPowerCableStaged ||
+                                          componentKind == PcComponentKind.PowerCable &&
+                                          powerCableType ==
+                                          PowerCableType
+                                              .ModularPcie8PinPsuToGraphicsCard &&
+                                          registration.PlacementReceipt.Stage ==
+                                          CustomPcBuildKitStage
+                                              .PcieGpuPowerCableStaged;
         }
 
         private bool TryGetComponentConfiguration(
@@ -2180,6 +2416,17 @@ namespace PCShopEmpire3D.Orders
                 return !buildKitContainerId.IsEmpty && buildKitAccess != null;
             }
 
+            if (componentKind == PcComponentKind.PowerCable &&
+                powerCableType ==
+                    PowerCableType.ModularPcie8PinPsuToGraphicsCard)
+            {
+                buildKitContainerId = _pcieGpuPowerCableBuildKitContainerId;
+                buildKitAccess = _pcieGpuPowerCableBuildKitAccess;
+                pickupStage = CustomPcBuildKitStage.PcieGpuPowerCableInHands;
+                placementStage = CustomPcBuildKitStage.PcieGpuPowerCableStaged;
+                return !buildKitContainerId.IsEmpty && buildKitAccess != null;
+            }
+
             buildKitContainerId = default;
             buildKitAccess = null;
             pickupStage = default;
@@ -2197,7 +2444,8 @@ namespace PCShopEmpire3D.Orders
                    stage == CustomPcBuildKitStage.GraphicsCardInHands ||
                    stage == CustomPcBuildKitStage.PowerSupplyInHands ||
                    stage == CustomPcBuildKitStage.Atx24PowerCableInHands ||
-                   stage == CustomPcBuildKitStage.Eps12vPowerCableInHands;
+                   stage == CustomPcBuildKitStage.Eps12vPowerCableInHands ||
+                   stage == CustomPcBuildKitStage.PcieGpuPowerCableInHands;
         }
 
         private static bool IsPlacementStage(CustomPcBuildKitStage stage)
@@ -2210,7 +2458,8 @@ namespace PCShopEmpire3D.Orders
                    stage == CustomPcBuildKitStage.GraphicsCardStaged ||
                    stage == CustomPcBuildKitStage.PowerSupplyStaged ||
                    stage == CustomPcBuildKitStage.Atx24PowerCableStaged ||
-                   stage == CustomPcBuildKitStage.Eps12vPowerCableStaged;
+                   stage == CustomPcBuildKitStage.Eps12vPowerCableStaged ||
+                   stage == CustomPcBuildKitStage.PcieGpuPowerCableStaged;
         }
 
         private static bool MatchesInventoryReceiptIdentity(
