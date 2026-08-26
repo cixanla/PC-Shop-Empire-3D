@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 26 Ağustos 2026<br>
-**Durum:** Issue #93 canonical DDR5 BuildKit→A2 dual-latch Assembly source/domain/scene/input/full-regression, exact-head Mac/Windows native ve technical CI kapıları tamamlandı; source/docs, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue93-ddr5-buildkit-to-dual-latch-retention`, technical commit `0caca090d2859dfb78219abb089274fe599eaca2`, tree `e52c75872a8ec59a98b63c0c46d5e3f6f9c5e084`; draft PR #94, Roadmap `In Progress`, Issue #93 açık
+**Durum:** Issue #95 canonical M.2 BuildKit→primary-slot/captive-screw Assembly source/domain/scene/input/full-regression, exact-head Mac/Windows native ve technical CI kapıları tamamlandı; source/docs, canonical/local paket, sağlıklı fiziksel USB, exact-build insan oturumu ve idari kapanış sürüyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, branch `feature/issue95-m2-buildkit-to-captive-screw-retention`, technical commit `be04e66184abebff7c2d4ac3d0af8c63249a7f2e`, tree `4a6826cc1ecca1e97fd7df252cec10f1f39e1d3f`; draft PR #96, Roadmap `In Progress`, Issue #95 açık
 
-## En yeni teknik checkpoint — Issue #93 / Epic #10
+## En yeni teknik checkpoint — Issue #95 / Epic #10
+
+- Canonical M.2 2280 NVMe yalnız exact `Storage` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 secured-motherboard, Issue #91 retained-CPU ve Issue #93 retained-A2-DDR5 receipt zinciri olmadan release fail-closed'dur.
+- Ayrı stable operation exact Storage BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned primary M.2 Slot↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
+- GarageGraybox `garage-storage-assembly-handoff-r48-v1`; range/focus/LOS/pause/empty-hands pickup, existing M.2 family/primary topology/M-key/obstruction, 18° guided insertion, flat seat, captive-screw tighten, secured-remove block, loosen, detach ve same-instance reseat döngüsünü sunar. BuildKit slotu okunaklı `M.2 MONTAJDA`, history `10/10` kalır.
+- Physical projection önce reversibly stage edilir; held-input state yayınlanmadan exact authority commit olur. Authority reddinde aynı Unity instance ve stable ItemId exact BuildKit safe pose'una döner. Fault-boundary tests stage failure ve authority-rejection rollback için duplicate/ghost/loss `0` kanıtlar; secured motherboard, retained CPU/DDR5 ve diğer altı item/container/receipt/revision untouched kalır.
+- Technical commit `be04e66184abebff7c2d4ac3d0af8c63249a7f2e`, tree `4a6826cc1ecca1e97fd7df252cec10f1f39e1d3f`; full EditMode `722/722`, full PlayMode `130/130`, failed/skipped/inconclusive `0`; `git diff --check` ve technical Repository Guard `32955610423` geçti.
+- Universal Mac Development report `330194031` bayt, valid deep/strict `x86_64 + arm64` executable ve Apple M1/Metal exact r48 readiness + storage Assembly handoff smoke başarılıdır.
+- Complete bundle `7601437` bayt / `61ee0ea4…d5a` ile detached-clean Windows `issue95-be04e66-hardened-v1` exact technical commit/tree x64 IL2CPP/only-D3D11 report `1343566575` bayt ve fatal-token `0` verdi; Intel Iris Xe Direct3D 11.0 level 11.1 runtime host/readiness/success `1/1/1`, forbidden `0`, exit `0`, graceful shutdown, task deletion ve player/Unity/task residue `0` ile geçti. Canonical teknik evidence `13/14`; source/docs commit+Guard, final receipt `14/14`, immutable local/sağlıklı fiziksel USB ve exact-r48 insan oturumu bekler. Strict acceptance `26/27`; Issue #95 ve draft PR #96 açık/In Progress kalır, `Warning / Full Repair Needed` Windows D: USB salt-okunurdur.
+- ADR-0057 ve tarihli Evidence exact test/Mac/Windows hashlerini ve ayrık kalan kapıları bağlar.
+- Ana hedef fiziksel mağaza/servis/montaj + Dashboard 3D parity, mağaza büyümesi/personel/müşteri, işlevsel mahalle/kişisel ev/araç-lojistik, NPC dünya ekolojisi ve offline güvenli Local Advisor/Guardian sınırlarıdır. Mac tek authoritative yazma hattı, Windows exact detached-clean IL2CPP/D3D11 worker'dır.
+
+## Önceki teknik checkpoint — Issue #93 / Epic #10
 
 - Canonical DDR5 UDIMM yalnız exact `MemoryModule` line ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging receipt lineage'iyle çözülür. Historical `10/10` aggregate, live Issue #89 secured-motherboard ve Issue #91 retained-CPU receipt zinciri olmadan release fail-closed'dur.
 - Ayrı stable operation exact DDR5 BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned A2 MemorySlot↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
