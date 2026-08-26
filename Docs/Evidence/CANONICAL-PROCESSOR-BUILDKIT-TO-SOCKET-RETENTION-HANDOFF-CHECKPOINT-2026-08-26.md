@@ -55,19 +55,19 @@ The battery-safe scheduled wrapper waited for the real Unity process and produce
 | `GameAssembly.dll` | 45,553,664 | `6aaf04b248575821a97671541e26f90bc5bef0bd6cba5c6d3d7ca9e031db8410` |
 | `UnityPlayer.dll` | 84,237,744 | `cc018c912f461b0f7bdcaeadd5c1d8d9361d92fe5a1c3aeac27a0ac1186a4a59` |
 
-The interactive task `PSE-Issue91-003c93f-R1` ran under `cixanla\mertk` with D3D11 forced. Intel Iris Xe reported `Direct3D 11.0 [level 11.1]`; the exact host marker, one r46 readiness marker with every required processor token and one exact success marker were observed. The player exited `0` through Input System shutdown in `16.993` seconds, cleanup was not required, the task was deleted, the clone remained exact-head clean and scoped residue was `0`.
+The interactive task `PSE-Issue91-003c93f-R1` ran under `cixanla\mertk` with D3D11 forced. Intel Iris Xe reported `Direct3D 11.0 [level 11.1]`; the exact host marker, one r46 readiness marker with every required processor token and one exact success marker were observed. The schema-bound rerun exited `0` through Input System shutdown in `12.595` seconds, cleanup was not required, the task was deleted, the clone remained exact-head clean and scoped residue was `0`.
 
 | Canonical Windows artifact | Bytes | SHA-256 |
 |---|---:|---|
 | `binary-manifest.json` | 1,293 | `8e5a889399106d2166b1feb69689e2b6a4795b542f726b2a0ab2eb5ad837fde1` |
 | `build-il2cpp-d3d11.log` | 482,934 | `36fc3962400e6428a093865d2380bb4ea2519381295577221f551d29c3592f7d` |
 | `build-procedure.ps1` | 10,082 | `0b29c74468a1121412343b5c8eef9d35a70067c5a6b9bfb3dff45ff27fa83e88` |
-| `launch-procedure.ps1` | 8,015 | `33599f7c2c2a4dc200782d60cd476eb00991abc604ccacb72541bbbe8c9dc62a` |
-| `procedure-manifest.json` | 973 | `a503e523a618c490f46f555c8be580548738ef30ff2daf10a5cd668b6487c491` |
-| `runtime-d3d11.log` | 5,642 | `4de7ddd9deb619118d260efb5b68b0e0bc8ba0ed2effe50b1ee76e0171b97819` |
-| `runtime-procedure.ps1` | 14,988 | `8fe294db32677fa6fcdf6a14a18cab5b6375275b398894b312373f57a21f5a1a` |
-| `runtime-summary.json` | 3,294 | `dea942160e5d751ddfe89440d0f86ffa65e2a3955b5062e52074f035a483857d` |
-| `task-receipt.json` | 1,697 | `b17b93ed4eb8759c8c3f04392127a9d5e32fdcd43d94a8e72e2a575d847f61f9` |
+| `launch-procedure.ps1` | 8,059 | `f8110835a47f8fada979364478cb910262d9e02e8a058616bf5644df90c6f65a` |
+| `procedure-manifest.json` | 999 | `1e5797c990187d796fb09db16f1dc416712f7705b78dd62430ec52c803454668` |
+| `runtime-d3d11.log` | 5,645 | `f2f77735e8f1f20ad63fd74e0a957959607be162afe64bf75cf01338b9103037` |
+| `runtime-procedure.ps1` | 15,032 | `2a0ffa7451d9ddd0e118ef61593ef90aa13dd78e400fac01c0e05dec76377c70` |
+| `runtime-summary.json` | 3,295 | `17e7c32fd63bf7fbb1c8d35a1e4ea6983dba8c133232e8c23b8524c96deb218e` |
+| `task-receipt.json` | 1,698 | `dfc028dac04102d286fa83eee2b0f54fc34acb18eda0b2bc39f2c9184534be6b` |
 
 Only these canonical artifacts were promoted. Earlier orphaned-wrapper observations, diagnostic receipts, done/PID sidecars and provisional logs are excluded from the final evidence contract.
 
