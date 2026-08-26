@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93|issue95|issue97]" >&2
+  echo "Usage: $0 <repository> <checkpoint-package> <canonical-evidence-directory> [canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93|issue95|issue97|issue99]" >&2
   exit 64
 }
 
@@ -15,7 +15,7 @@ evidence_source=$3
 evidence_contract=${4:-canonical}
 
 case "$evidence_contract" in
-  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93|issue95|issue97) ;;
+  canonical|issue66|issue68|issue71|issue73|issue75|issue77|issue79|issue81|issue83|issue85|issue87|issue89|issue91|issue93|issue95|issue97|issue99) ;;
   *) echo "ERROR unsupported evidence contract: $evidence_contract" >&2; usage ;;
 esac
 
@@ -232,7 +232,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue91" ||
       "$evidence_contract" == "issue93" ||
       "$evidence_contract" == "issue95" ||
-      "$evidence_contract" == "issue97" ]]; then
+      "$evidence_contract" == "issue97" ||
+      "$evidence_contract" == "issue99" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_build_log=build-il2cpp-d3d11.log
   contract_evidence_count=14
@@ -265,7 +266,8 @@ if [[ "$evidence_contract" == "issue66" ||
           "$evidence_contract" == "issue91" ||
           "$evidence_contract" == "issue93" ||
           "$evidence_contract" == "issue95" ||
-          "$evidence_contract" == "issue97" ]]; then
+          "$evidence_contract" == "issue97" ||
+          "$evidence_contract" == "issue99" ]]; then
       printf '%s\n' \
         build-procedure.ps1 \
         launch-procedure.ps1 \
@@ -312,7 +314,8 @@ if [[ "$evidence_contract" == "issue66" ||
       "$evidence_contract" == "issue91" ||
       "$evidence_contract" == "issue93" ||
       "$evidence_contract" == "issue95" ||
-      "$evidence_contract" == "issue97" ]]; then
+      "$evidence_contract" == "issue97" ||
+      "$evidence_contract" == "issue99" ]]; then
   contract_issue=${evidence_contract#issue}
   contract_evidence_count=14
   if [[ "$evidence_contract" == "issue66" ]]; then
@@ -337,7 +340,8 @@ if [[ "$evidence_contract" == "issue71" ||
       "$evidence_contract" == "issue91" ||
       "$evidence_contract" == "issue93" ||
       "$evidence_contract" == "issue95" ||
-      "$evidence_contract" == "issue97" ]]; then
+      "$evidence_contract" == "issue97" ||
+      "$evidence_contract" == "issue99" ]]; then
   evidence_root="$package/EVIDENCE"
   contract_issue=${evidence_contract#issue}
   if [[ "$evidence_contract" == "issue71" ]]; then
@@ -470,7 +474,7 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-M2-BUILDKIT-TO-PRIMARY-SLOT-CAPTIVE-SCREW-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='M.2 storage assembly handoff'
     runtime_success_marker='GARAGE_STORAGE_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained memory=retained pickup=exact custody=build-kit-to-hands-to-primary-m2 reservation=alive physical-identity=stable input=keyboard+mouse m-key=aligned guided-angle=18 seat=ok captive-screw=tightened secured-remove-blocked=ok loosen=ok detach=ok reseat=ok history=10/10-preserved other-six=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
-  else
+  elif [[ "$evidence_contract" == "issue97" ]]; then
     technical_commit=b45806f5a584d219de74be33ed97a580af59fd68
     technical_tree=6f62c8653ad2c8505e2927ecc80ac6987399e232
     build_forbidden_policy=issue97-hardened-v1
@@ -480,6 +484,16 @@ if [[ "$evidence_contract" == "issue71" ||
     contract_evidence=Docs/Evidence/CANONICAL-PROCESSOR-COOLER-BUILDKIT-TO-FOUR-POINT-RETENTION-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
     runtime_success_label='processor-cooler assembly handoff'
     runtime_success_marker='GARAGE_PROCESSOR_COOLER_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained memory=retained storage=secured pickup=exact custody=build-kit-to-hands-to-cooler-slot reservation=alive physical-identity=stable input=keyboard+mouse orientation=180 tim=consumed-once four-point=1-3-2-4 reverse=4-2-3-1 retained-remove-blocked=ok detach=ok consumed-tim-reseat-blocked=ok history=10/10-preserved other-five=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
+  else
+    technical_commit=d5532bb921b94715dbb1ed2006092a9542b139a4
+    technical_tree=6f00d7fb23a305e1e9eb4241dd3cba57a5e076dd
+    build_forbidden_policy=issue99-hardened-v1
+    editmode_total=733
+    playmode_total=137
+    contract_adr=Docs/ADR-0059-CANONICAL-GRAPHICS-CARD-BUILDKIT-TO-PCIE-X16-RETENTION-ASSEMBLY-HANDOFF.md
+    contract_evidence=Docs/Evidence/CANONICAL-GRAPHICS-CARD-BUILDKIT-TO-PCIE-X16-RETENTION-ASSEMBLY-HANDOFF-CHECKPOINT-2026-08-26.md
+    runtime_success_label='graphics-card assembly handoff'
+    runtime_success_marker='GARAGE_GRAPHICS_CARD_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=10/10 motherboard=secured processor=retained memory=retained storage=secured cooler=retained prerequisite-setup=assisted pickup=exact custody=build-kit-to-hands-to-pcie-x16 reservation=alive physical-identity=stable gpu-input=keyboard+mouse orientation-invalid=blocked seat=ok slot-latch=retained rear-bracket=secured retained-remove-blocked=ok unretain=ok detach=ok reseat=ok history=10/10-preserved other-four=untouched pcie-power-cable=untouched receipts=ok revisions=ok no-duplicate-loss=ok invariants=ok'
   fi
   binary_manifest="$evidence_root/binary-manifest.json"
   procedure_manifest="$evidence_root/procedure-manifest.json"

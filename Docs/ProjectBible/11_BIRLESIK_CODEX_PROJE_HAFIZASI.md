@@ -2,14 +2,25 @@
 
 **Konsolidasyon tarihi:** 15 Ağustos 2026
 **Tek aktif yazma hattı:** `PC Shop Empire 3D — ANA GÖREV`; proje içindeki yardımcı Codex görevleri yalnız bounded salt-okunur denetim yapar
-**Ana görev kimliği:** `019ff9d8-089c-71a1-93c5-8cb614d0b5ca`
+**Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `feature/issue97-processor-cooler-buildkit-to-four-point-retention`
+**Branch:** `feature/issue99-graphics-card-buildkit-to-pcie-retention`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 26 Ağustos 2026 üstün gelen güncel durum — Issue #97 Processor Cooler BuildKit→Four-Point Retention Assembly
+### 26 Ağustos 2026 üstün gelen güncel durum — Issue #99 Graphics Card BuildKit→PCIe x16 Retention Assembly
+
+- Exact reserved graphics card yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live Issue #89 secured motherboard, #91 retained CPU, #93 retained A2 DDR5, #95 secured primary M.2 ve #97 retained processor-cooler receipts sonrasında ayrı stable operation exact Graphics Card BuildKit → ActorHands → existing GraphicsCardSlot custody'sini açar.
+- Inventory yalnız kayıtlı GPU BuildKit release ve exact GraphicsCardSlot↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history ve exact replay/revision korunur; installed prerequisites ve other-four untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.
+- GarageGraybox r50 keyboard/mouse + gamepad pickup, existing PCIe x16 guided preview, invalid-orientation block, seat, slot-latch + rear-bracket retain, retained-remove block, unretain, detach ve reseat akışını single-consumer input ile taşır. Current obstruction recovery'yi fail-closed tutar; clear sonrasında same-instance exactly-once recovery geçer.
+- Existing Issue #59 compatibility/orientation/seat/latch/rear-bracket/replay authority tek GPU Assembly gerçeğidir. Issue #63 PCIe power-cable item/product/container/state/revision/receipt/operation authority exact untouched kalır; routed cable removal'ı bloklamaya devam eder ve Issue #99 route üretmez.
+- Technical commit `d5532bb921b94715dbb1ed2006092a9542b139a4`, tree `6f00d7fb23a305e1e9eb4241dd3cba57a5e076dd`; targeted Mac/Windows EditMode `5/5`, PlayMode `4/4`; full Mac EditMode `733/733`, PlayMode `137/137`; Universal Mac report `330251472` bayt, Apple M1/Metal exact r50 smoke ve technical Guard `32990791761`/`32990807874` başarılıdır.
+- Exact bundle `7657509` bayt / `4afa8931…c74` ile detached-clean Windows x64 IL2CPP/only-D3D11 report `1350250674` bayt ve fatal-token `0` verdi. Intel Iris Xe/D3D11 exact r50 runtime host/readiness/success `1/1/1`, forbidden `0`, exit `0`, graceful shutdown, scheduled-task deletion ve exact player/Unity/build/task/validation-PowerShell residue `0` ile geçti.
+- ADR-0059/tarihli Evidence ve `issue99` verifier contract'ı Mac+Windows teknik kanıtını bağlar. Canonical evidence `13/14`; source/docs Guard, final receipt `14/14`, kullanıcı tarafından istenen büyük immutable local checkpoint, healthy physical USB ve exact-r50 insan oturumu bekler. Strict acceptance `30/31`; Issue #99 ve PR #100 açık/In Progress kalır.
+- Tek kanonik iletişim merkezi ve yazma hattı bu Game projesine bağlı ana görevdir. Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #97 Processor Cooler BuildKit→Four-Point Retention Assembly
 
 - Exact reserved processor cooler yalnız owned work order/ticket/allocation içindeki tam line/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live Issue #89 secured motherboard, #91 retained CPU, #93 retained A2 DDR5 ve #95 secured primary M.2 receipts sonrasında ayrı stable operation exact ProcessorCooler BuildKit → ActorHands → existing ProcessorCoolerSlot custody'sini açar.
 - Inventory yalnız kayıtlı cooler BuildKit release ve exact ProcessorCoolerSlot↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history ve exact replay/revision korunur; installed prerequisites ve other-five untouched, generic transfer/drop/box/stack/cart ve receipt-free Assembly bypass fail-closed'dur.
