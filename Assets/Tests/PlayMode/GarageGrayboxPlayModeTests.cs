@@ -11,6 +11,7 @@ using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Input;
 using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.Presentation.Player;
 using PCShopEmpire3D.Retail;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
@@ -341,9 +342,84 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(Vector3.Dot(diagonalDelta, forward), Is.GreaterThan(0.001f));
             Assert.That(Vector3.Dot(diagonalDelta, right), Is.GreaterThan(0.001f));
 
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            Vector3 simultaneousStart = player.position;
+            forward = player.forward;
+            right = player.right;
+            float simultaneousYaw = player.eulerAngles.y;
+            float simultaneousPitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.W, Key.D));
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(30f, -12f) });
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.Move.x, Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.Move.y, Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.Look.sqrMagnitude, Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.IsPointerLook, Is.True);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Vector3 simultaneousDelta = player.position - simultaneousStart;
+            Assert.That(Vector3.Dot(simultaneousDelta, forward),
+                Is.GreaterThan(0.001f),
+                "W must keep moving while mouse-look is active.");
+            Assert.That(Vector3.Dot(simultaneousDelta, right),
+                Is.GreaterThan(0.001f),
+                "D must keep moving while mouse-look is active.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    simultaneousYaw,
+                    player.eulerAngles.y)),
+                Is.GreaterThan(0.001f),
+                "Mouse yaw must update while WASD is held.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    simultaneousPitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.GreaterThan(0.001f),
+                "Mouse pitch must update while WASD is held.");
+
+            simultaneousStart = player.position;
+            simultaneousYaw = player.eulerAngles.y;
+            simultaneousPitch = cameraPivot.localEulerAngles.x;
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(-18f, 8f) });
+            InputSystem.QueueStateEvent(
+                keyboard,
+                new KeyboardState(Key.W, Key.D));
+            InputSystem.Update();
+            Assert.That(marker.PlayerInput.Move.sqrMagnitude,
+                Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.Look.sqrMagnitude,
+                Is.GreaterThan(0f));
+            Assert.That(marker.PlayerInput.IsPointerLook, Is.True);
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(
+                    player.position - simultaneousStart,
+                    Vector3.up).magnitude,
+                Is.GreaterThan(0.001f),
+                "Movement must survive mouse-first event ordering.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    simultaneousYaw,
+                    player.eulerAngles.y)),
+                Is.GreaterThan(0.001f),
+                "Mouse yaw must survive keyboard-last event ordering.");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    simultaneousPitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.GreaterThan(0.001f),
+                "Mouse pitch must survive keyboard-last event ordering.");
+
             InputSystem.QueueStateEvent(
                 keyboard,
                 new KeyboardState(Key.W, Key.S, Key.A, Key.D));
+            InputSystem.QueueStateEvent(mouse, new MouseState());
             InputSystem.Update();
             Assert.That(
                 marker.PlayerInput.Move.sqrMagnitude,
@@ -650,6 +726,164 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(Mathf.Abs(Mathf.DeltaAngle(yaw, player.eulerAngles.y)),
                 Is.GreaterThan(0.001f),
                 "Fresh gamepad look after neutral must be accepted.");
+        }
+
+        [UnityTest]
+        public IEnumerator FocusLossRecoversCursorMotorAndRequiresFreshMovement()
+        {
+            const float SimulatedFrameDeltaTime = 1f / 60f;
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            AsyncOperation load = SceneManager.LoadSceneAsync(
+                "GarageGraybox",
+                LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
+            yield return load;
+            yield return null;
+
+            GaragePrototypeMarker marker =
+                Object.FindFirstObjectByType<GaragePrototypeMarker>();
+            Assert.That(marker, Is.Not.Null);
+            Transform player = marker.PlayerMotor.transform;
+            Transform cameraPivot = player.Find("CameraPivot");
+            Assert.That(cameraPivot, Is.Not.Null);
+            CharacterController controller =
+                marker.PlayerMotor.GetComponent<CharacterController>();
+            Assert.That(controller, Is.Not.Null);
+            controller.enabled = false;
+            player.SetPositionAndRotation(
+                FindOpenMovementTestPosition(controller),
+                Quaternion.identity);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            marker.PlayerMotor.SetPaused(false);
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(30f, -12f) });
+            InputSystem.Update();
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                false,
+                SendMessageOptions.RequireReceiver);
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                false,
+                SendMessageOptions.RequireReceiver);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.True);
+            AssertRequestedCursorState(
+                marker.PlayerMotor,
+                CursorLockMode.None,
+                visible: true);
+            marker.PlayerMotor.SetPaused(true);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.True);
+
+            Vector3 pausedPosition = player.position;
+            float pausedYaw = player.eulerAngles.y;
+            float pausedPitch = cameraPivot.localEulerAngles.x;
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(
+                    player.position - pausedPosition,
+                    Vector3.up).magnitude,
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pausedYaw,
+                    player.eulerAngles.y)),
+                Is.LessThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    pausedPitch,
+                    cameraPivot.localEulerAngles.x)),
+                Is.LessThan(0.001f));
+
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.Update();
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                true,
+                SendMessageOptions.RequireReceiver);
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                true,
+                SendMessageOptions.RequireReceiver);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.False);
+            AssertRequestedCursorState(
+                marker.PlayerMotor,
+                CursorLockMode.Locked,
+                visible: false);
+            pausedPosition = player.position;
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.ProjectOnPlane(
+                    player.position - pausedPosition,
+                    Vector3.up).magnitude,
+                Is.LessThan(0.001f),
+                "A movement key held through focus recovery must await neutral.");
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+
+            Vector3 resumedPosition = player.position;
+            Vector3 resumedForward = player.forward;
+            float resumedYaw = player.eulerAngles.y;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            InputSystem.QueueStateEvent(
+                mouse,
+                new MouseState { delta = new Vector2(24f, 0f) });
+            InputSystem.Update();
+            marker.PlayerMotor.ProcessInputFrame(
+                SimulatedFrameDeltaTime,
+                SimulatedFrameDeltaTime);
+            Assert.That(Vector3.Dot(
+                    player.position - resumedPosition,
+                    resumedForward),
+                Is.GreaterThan(0.001f));
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(
+                    resumedYaw,
+                    player.eulerAngles.y)),
+                Is.GreaterThan(0.001f));
+
+            marker.PlayerMotor.SetPaused(true);
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                false,
+                SendMessageOptions.RequireReceiver);
+            marker.PlayerMotor.SendMessage(
+                "OnApplicationFocus",
+                true,
+                SendMessageOptions.RequireReceiver);
+            Assert.That(marker.PlayerMotor.IsPaused, Is.True,
+                "A manual pause must survive focus loss and recovery.");
+            AssertRequestedCursorState(
+                marker.PlayerMotor,
+                CursorLockMode.None,
+                visible: true);
+        }
+
+        private static void AssertRequestedCursorState(
+            FirstPersonMotor motor,
+            CursorLockMode lockState,
+            bool visible)
+        {
+            Assert.That(motor.RequestedCursorLockState, Is.EqualTo(lockState));
+            Assert.That(motor.RequestedCursorVisible, Is.EqualTo(visible));
+            if (Application.isBatchMode)
+            {
+                return;
+            }
+
+            Assert.That(Cursor.lockState, Is.EqualTo(lockState));
+            Assert.That(Cursor.visible, Is.EqualTo(visible));
         }
 
         [UnityTest]

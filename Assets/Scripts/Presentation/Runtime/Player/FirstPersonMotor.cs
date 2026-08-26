@@ -33,8 +33,14 @@ namespace PCShopEmpire3D.Presentation.Player
         private float _transportCartMovementSpeedMultiplier = 1f;
         private bool _moveRequiresNeutralAfterResume;
         private bool _gamepadLookRequiresNeutralAfterResume;
+        private bool _pausedByFocusLoss;
 
         public bool IsPaused { get; private set; }
+
+        internal CursorLockMode RequestedCursorLockState { get; private set; } =
+            CursorLockMode.None;
+
+        internal bool RequestedCursorVisible { get; private set; } = true;
 
         public FirstPersonViewSettings ViewSettings => viewSettings;
 
@@ -145,6 +151,16 @@ namespace PCShopEmpire3D.Presentation.Player
 
         public void SetPaused(bool paused)
         {
+            if (paused != IsPaused)
+            {
+                _pausedByFocusLoss = false;
+            }
+
+            ApplyPaused(paused);
+        }
+
+        private void ApplyPaused(bool paused)
+        {
             bool wasPaused = IsPaused;
             IsPaused = paused;
             if (paused)
@@ -159,8 +175,12 @@ namespace PCShopEmpire3D.Presentation.Player
                     input.GamepadLook.sqrMagnitude > ContinuousInputNeutralThresholdSquared;
             }
 
-            Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
-            Cursor.visible = paused;
+            RequestedCursorLockState = paused
+                ? CursorLockMode.None
+                : CursorLockMode.Locked;
+            RequestedCursorVisible = paused;
+            Cursor.lockState = RequestedCursorLockState;
+            Cursor.visible = RequestedCursorVisible;
         }
 
         private void Awake()
@@ -294,18 +314,38 @@ namespace PCShopEmpire3D.Presentation.Player
 
         private void OnApplicationFocus(bool hasFocus)
         {
-            if (!hasFocus && Application.isPlaying)
+            if (!Application.isPlaying)
             {
-                SetPaused(true);
+                return;
+            }
+
+            if (!hasFocus)
+            {
+                if (!_pausedByFocusLoss && !IsPaused)
+                {
+                    _pausedByFocusLoss = true;
+                    ApplyPaused(true);
+                }
+
+                return;
+            }
+
+            if (_pausedByFocusLoss)
+            {
+                _pausedByFocusLoss = false;
+                ApplyPaused(false);
             }
         }
 
         private void OnDisable()
         {
+            _pausedByFocusLoss = false;
             if (Application.isPlaying)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                RequestedCursorLockState = CursorLockMode.None;
+                RequestedCursorVisible = true;
+                Cursor.lockState = RequestedCursorLockState;
+                Cursor.visible = RequestedCursorVisible;
             }
 
             if (playerCamera != null)
