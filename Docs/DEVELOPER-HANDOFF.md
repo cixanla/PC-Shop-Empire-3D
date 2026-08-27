@@ -14,7 +14,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #102 r51 teknik/native/foreground OS-input kapıları tamamlandı; source/docs PR integration sürüyor
+### Güncel checkpoint — Issue #102 r51 teknik/native/foreground OS-input/source-docs Guard kapıları tamamlandı; PR #103 merge/main integration sürüyor
 
 - Technical head `740a8869e2efc1f525b9560d4d5638343c957eb5`, tree `d64e70bb6bd2d7f0d8583555146050f7060db0f2`. Canonical reserved ATX PS/2 PSU yalnız exact owned work-order/ticket/allocation line/product/item/reservation/staging-receipt tuple'ıyla çözülür; ordinal/display/component/value-equal/regenerated identity authority değildir.
 - Handoff historical `10/10` aggregate, live Issue #89 secured motherboard, #91 retained CPU, #93 retained A2 DDR5, #95 secured primary M.2, #97 retained cooler ve #99 retained GPU exact receipts sonrasında ayrı stable operation ile PowerSupply BuildKit → ActorHands → existing PowerSupplyBay custody'sini açar.
@@ -23,7 +23,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 - Targeted Mac EditMode `6/6`, PlayMode `5/5`, scene/readiness/recovery `1/1`; full Mac EditMode `739/739`, PlayMode `144/144`; full Windows EditMode `739/739`, PlayMode `144/144`; failed/skipped/inconclusive `0`. Universal Mac report `330279904` bayt, valid deep/strict universal executable ve Apple M1/Metal exact r51 markerları başarılıdır.
 - Technical Repository Guard `33027397901` geçti. Complete bundle `7632290` bayt / `3936b661…3fb53f` ile detached-clean Windows x64 IL2CPP/only-D3D11 report `1346115186` bayt ve fatal-token `0` verdi. Intel Iris Xe/D3D11 runtime host/readiness/success `1/1/1`, forbidden `0`, graceful exit, deleted task ve scoped residue `0` ile geçti.
 - Foreground Session-2 Win32 OS input W/A/S/D `1/1`, mouse `18/18`, W+D+mouse `3/3` + held mouse `30/30` verdi. Windows final audit `27/27` check pass; kanıt arşivi Mac'e `6587392` bayt / `c15e21ff…44a0` exact readback ile döndü. Claim `human=false`; fiziksel keyboard/gamepad/endurance Steam 1.0 sertifikasyonunda kalır. USB bulunmadı ve yazılmadı.
-- ADR-0060 ve tarihli Evidence exact kaynak/test/Mac/Windows/OS-input hashlerini bağlar. Issue #102 acceptance `26/27`; yalnız Bible/ADR/Evidence/CHANGELOG source/docs PR integration bekler. Parent Epic #10 ve ana Steam 1.0 Goal açık kalır.
+- ADR-0060 ve tarihli Evidence exact kaynak/test/Mac/Windows/OS-input hashlerini bağlar. Source/docs `988591c18dd5fbbdcb2f16146cc1330daec87657`, tree `bc9c189807abf1c0aa5ac2c8b65b8760e10d9797` ve Guard `33029851072` geçti. Issue #102 acceptance `26/27`; yalnız PR #103 merge/main integration bekler. Parent Epic #10 ve ana Steam 1.0 Goal açık kalır.
 - Ana ürün kapsamı küçükten büyüğe mağaza, personel/müşteri yönetimi, işlevsel mahalle, kişisel ev, araç/kargo/lojistik, dünya NPC ekolojisi, gerçekçi ses/zaman/hava, kaliteye bağlı içerik boyutu ve Guardian'dan ayrılmış güvenli/isteğe bağlı yerel danışman AI sınırlarını korur. Retail çekirdek OpenAI/ChatGPT/Codex/internet/model indirme bağı olmadan çalışacaktır.
 
 ### Önceki checkpoint — Issue #99 exact `034f862` kabul edildi ve PR #100 ile `main`e entegre edildi; Epic #10 sürüyor

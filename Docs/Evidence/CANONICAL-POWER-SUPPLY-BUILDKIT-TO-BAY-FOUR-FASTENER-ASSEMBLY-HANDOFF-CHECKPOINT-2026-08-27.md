@@ -6,7 +6,7 @@
 **Technical head:** `740a8869e2efc1f525b9560d4d5638343c957eb5`<br>
 **Technical tree:** `d64e70bb6bd2d7f0d8583555146050f7060db0f2`<br>
 **Branch:** `feature/issue102-power-supply-buildkit-to-bay-retention`<br>
-**Current state:** source/domain/scene/input/full-regression, exact-head macOS/Windows native and foreground Windows OS-input gates passed; source/docs PR integration is the remaining administrative gate at this document revision
+**Current state:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, foreground Windows OS-input and source/docs Guard passed; PR #103 merge/main integration is the remaining administrative gate at this document revision
 
 ## Delivered playable result
 
@@ -43,6 +43,8 @@ GARAGE_POWER_SUPPLY_ASSEMBLY_HANDOFF_RUNTIME_SMOKE work-ticket=ok prerequisites=
 Every accepted XML has failed, skipped and inconclusive `0`. The first Mac full EditMode run correctly exposed one old scene-contract expectation after the production tray geometry opened the PSU chamber; only that authored test expectation was updated. The final full run is `739/739`. An earlier command with `-quit` produced no XML and is not counted. Windows Unity allocator lifetime warnings are retained in logs; the exact XMLs pass and no compiler/fatal product error is present.
 
 `git diff --check` and local Repository Guard pass. Exact-head technical Repository Guard [33027397901](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33027397901) passed at `740a8869e2efc1f525b9560d4d5638343c957eb5`.
+
+Source/docs commit `988591c18dd5fbbdcb2f16146cc1330daec87657`, tree `bc9c189807abf1c0aa5ac2c8b65b8760e10d9797` and Repository Guard [33029851072](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33029851072) passed.
 
 ## macOS exact-head native gate
 
@@ -127,7 +129,7 @@ No removable Windows volume or USB disk was present at final audit. No USB write
 | 23 | Diff, Repository Guard and universal Mac native gates. | PASS — Guard 33027397901 |
 | 24 | Exact-head clean Windows IL2CPP/only-D3D11 runtime, foreground OS input and zero residue. | PASS |
 | 25 | Binary/procedure/evidence hashes and cross-machine archive readback. | PASS |
-| 26 | Bible/ADR/Evidence/CHANGELOG and private PR/CI chain. | PARTIAL — docs authored; source/docs PR integration pending |
+| 26 | Bible/ADR/Evidence/CHANGELOG and private PR/CI chain. | PARTIAL — docs and source/docs Guard PASS; PR #103 merge/main integration pending |
 | 27 | Claim explicitly preserves physical human/HID/gamepad/endurance certification for Steam 1.0. | PASS |
 
-The bounded product/platform acceptance count is `26/27` at this document revision. Only source/docs PR integration remains. Physical human/HID/gamepad and endurance are deliberately outside Issue #102 closure and remain mandatory before Steam 1.0 release certification.
+The bounded product/platform acceptance count is `26/27` at this document revision. Only PR #103 merge/main integration remains. Physical human/HID/gamepad and endurance are deliberately outside Issue #102 closure and remain mandatory before Steam 1.0 release certification.

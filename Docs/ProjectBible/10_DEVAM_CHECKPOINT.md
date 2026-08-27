@@ -1,8 +1,8 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 27 Ağustos 2026<br>
-**Durum:** Issue #102 canonical Power Supply BuildKit→PowerSupplyBay/four-fastener Assembly exact source/domain/scene/input/full-regression, Mac/Windows native ve foreground Windows OS-input kapıları geçti; source/docs PR integration sürüyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical source `740a8869e2efc1f525b9560d4d5638343c957eb5`, tree `d64e70bb6bd2d7f0d8583555146050f7060db0f2`; technical Guard `33027397901`; PR #103 draft/open; acceptance `26/27`, yalnız source/docs PR integration bekler; parent Epic #10 açık kalır
+**Durum:** Issue #102 canonical Power Supply BuildKit→PowerSupplyBay/four-fastener Assembly exact source/domain/scene/input/full-regression, Mac/Windows native, foreground Windows OS-input ve source/docs Guard kapıları geçti; PR #103 merge/main integration sürüyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical source `740a8869e2efc1f525b9560d4d5638343c957eb5`, tree `d64e70bb6bd2d7f0d8583555146050f7060db0f2`; technical Guard `33027397901`; source/docs `988591c18dd5fbbdcb2f16146cc1330daec87657`, tree `bc9c189807abf1c0aa5ac2c8b65b8760e10d9797`, Guard `33029851072`; PR #103 draft/open; acceptance `26/27`, yalnız merge/main integration bekler; parent Epic #10 açık kalır
 
 ## En yeni teknik checkpoint — Issue #102 / Epic #10
 
@@ -15,7 +15,7 @@
 - Universal Mac Development report `330279904` bayt, valid deep/strict `x86_64 + arm64` executable ve Apple M1/Metal exact r51 readiness + PSU Assembly smoke başarılıdır.
 - Complete bundle `7632290` bayt / `3936b661…3fb53f` ile detached-clean Windows exact source x64 IL2CPP/only-D3D11 report `1346115186` bayt ve fatal-token `0` verdi; Intel Iris Xe/D3D11 runtime host/readiness/success `1/1/1`, forbidden `0`, graceful shutdown, task deletion ve scoped residue `0` ile geçti. Foreground Session-2 Win32 OS input W/A/S/D, relative mouse ve W+D-held + mouse zincirini gerçek r51 player penceresinde doğruladı.
 - Windows final audit `27/27` check pass; exact evidence Mac'e `6587392` bayt / `c15e21ff…44a0` tar readback ile döndü. Claim `human=false`; fiziksel keyboard/gamepad ve endurance Steam 1.0 sertifikasyonunda kalır. USB volume/disk bulunmadı, USB yazımı yapılmadı.
-- ADR-0060 ve tarihli Evidence exact test/Mac/Windows/binary/OS-input hashlerini bağlar. Acceptance `26/27`; source/docs PR integration sonrasında bounded Issue/Roadmap kapanışı yapılabilir.
+- ADR-0060 ve tarihli Evidence exact test/Mac/Windows/binary/OS-input hashlerini bağlar. Source/docs Guard `33029851072` geçti; acceptance `26/27`, PR #103 merge/main integration sonrasında bounded Issue/Roadmap kapanışı yapılabilir.
 - Ana hedef fiziksel mağaza/servis/montaj + Dashboard 3D parity, mağaza büyümesi/personel/müşteri, işlevsel mahalle/kişisel ev/araç-lojistik, NPC dünya ekolojisi ve offline güvenli Local Advisor/Guardian sınırlarıdır. Mac tek authoritative yazma hattı, Windows exact detached-clean IL2CPP/D3D11 worker'dır.
 
 ## Önceki teknik checkpoint — Issue #99 / Epic #10

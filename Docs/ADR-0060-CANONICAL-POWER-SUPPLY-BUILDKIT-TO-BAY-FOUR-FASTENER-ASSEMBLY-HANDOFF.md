@@ -1,6 +1,6 @@
 # ADR-0060 — Canonical Power-Supply BuildKit-to-Bay Four-Fastener Assembly Handoff
 
-**Status:** Source/domain/scene/full-regression, macOS/Windows native and agent-operated foreground Windows OS-input gates passed at exact technical source `740a886`; source/docs PR integration is in progress<br>
+**Status:** Source/domain/scene/full-regression, macOS/Windows native and agent-operated foreground Windows OS-input gates passed at exact technical source `740a886`; source/docs `988591c` and Guard `33029851072` passed; PR #103 merge/main integration is in progress<br>
 **Date:** 27 August 2026<br>
 **Scope:** Issue #102, child of Epic #10
 
@@ -42,6 +42,7 @@ The PC is still not electrically ready. ATX24/EPS12V/PCIe cable installation bri
 - Unity 6000.3.21f1 targeted Mac EditMode `6/6`, targeted Mac PlayMode `5/5`, scene contract `1/1`, runtime-readiness `1/1`, recovery `1/1`, full EditMode `739/739` and full PlayMode `144/144`; failed, skipped and inconclusive `0`.
 - Universal macOS Development build report `330,279,904` bytes across `302` files. The deep/strict-valid `x86_64 + arm64` executable emits one r51 readiness marker and one exact PSU Assembly success marker on Apple M1/Metal, reaches Input System shutdown, exits `0` and leaves no player residue.
 - Exact-head technical Repository Guard [33027397901](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33027397901) passed.
+- Source/docs commit `988591c18dd5fbbdcb2f16146cc1330daec87657`, tree `bc9c189807abf1c0aa5ac2c8b65b8760e10d9797` and Repository Guard [33029851072](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33029851072) passed. PR #103 merge/main integration remains the last administrative gate.
 - Complete bundle `7,632,290` bytes / SHA-256 `3936b661bd1dc711099838949613f745729f30719320632a0ee2c5de535bb53f` restored a detached-clean Windows clone at the exact technical commit/tree.
 - Windows Unity 6000.3.21f1 full EditMode `739/739` and full PlayMode `144/144` passed. The x64 IL2CPP/only-D3D11 build report is `1,346,115,186` bytes with fatal-token count `0` and byte-exact `ProjectSettings.asset` restoration.
 - Intel Iris Xe Direct3D 11.0 feature level 11.1 interactive runtime has exact host/readiness/success counts `1/1/1`, forbidden count `0`, exit `0`, graceful shutdown, deleted task and validation-owned residue `0`.
