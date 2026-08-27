@@ -1,10 +1,23 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 27 Ağustos 2026<br>
-**Durum:** Issue #109 canonical PCIe/GPU 6+2 BuildKit→existing route reversible Assembly exact source/domain/scene/input/full-regression, Mac/Windows native, foreground Windows OS-input, cross-machine readback ve technical CI kapıları kabul edildi; PR #110 integration record'dur<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical source `1acba166855efffa906112e2df24b9b5cef550a7`, tree `eb40a392169e5288e29bc59ae75367029cc00f57`; technical Guard `33054757532`; bounded technical acceptance `27/27`; parent Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #111 Assembly Workbench hero readability exact scene/material/light/render-budget/full-regression, universal Mac native, clean Windows IL2CPP/D3D11, cross-machine screenshot/readback, cleanup ve technical CI kapıları kabul edildi; PR #112 source/docs integration record'dur<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical source `1e2106a822b36f888cb9ad53ee22054ae991cda2`, tree `540992d186ff6e670569ee3cee51807798ffa427`; technical Guard `33089682114`; bounded technical acceptance `6/6`; parent visual Epic #18 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #109 / Epic #10
+## En yeni teknik checkpoint — Issue #111 / Epic #18
+
+- GarageGraybox `garage-assembly-workbench-hero-r55-v1`, Assembly Workbench açık chassis/motherboard/GPU/PSU ve loose/preview/routed cable durumlarını karşılaştırılabilir 1280x720 hero composition'a taşır. Work-ticket/monitor/status-board sunumu okunur; gameplay authority, collider, anchor, waypoint, route topology, stable identity ve input değişmez.
+- `WoodLaminate`, `WorkshopRubber`, `MotherboardPcb` ayarlanır. Shared non-emissive `CableConnectorPolymer` beş connector/PSU-intake renderer'ı ile on dört GPU fan blade'i; `WorkshopMatteHardware` iki GPU rear bracket'i bounded koyulaştırır. Connector glare artık merkezde `0/64`dır.
+- Existing Workbench soft spot light intensity/range/outer angle `0.4 / 2.8 / 62°`; yeni light/camera yoktur. Base→r55 authored MeshRenderer `486→490` (`+4`), light `4→4`, camera `1→1`; runtime total/initial-active/smoke-active renderer `493/473/484`. Dört ek hero renderer Ignore Raycast, no-collider/no-light/no-shadow/no-motion-vector'dır.
+- Technical commit `1e2106a822b36f888cb9ad53ee22054ae991cda2`, tree `540992d186ff6e670569ee3cee51807798ffa427`; Mac P1 work-ticket `7/7`, full EditMode `753/753`, PlayMode `157/157`; Windows full EditMode `753/753`, PlayMode `157/157`; failed/skipped/inconclusive `0`; `git diff --check` ve technical Guard `33089682114` geçti.
+- Universal Mac report `330428946` bayt; valid deep/strict `x86_64 + arm64` app, Apple M1/Metal readiness ve loose/preview/routed r55 smoke geçti. Üç screenshot unique; merkez doygun-beyaz piksel her birinde `0`dır; native process residue `0`.
+- Exact clean Windows x64 IL2CPP/only-D3D11 report `1350529280` bayt ve fatal-token `0`; Intel Iris Xe feature level 11.1 runtime final `26/26`, exact host/readiness/success/composition, forbidden `0`, exit `0`, graceful shutdown ve üç byte-distinct screenshot verdi. Peak working set `465403904` bayttır.
+- İlk build wrapper üç saniyede transient child görüp fail-closed oldu; child doğal kapandı. Player/task tamamlandıktan sonraki validation-only metadata serialization PID'i exact sonlandırıldı; düzeltilmiş no-rerun finalizer `26/26` geçti. Game binary/log/screenshot yeniden üretilmedi. Final process/task/firewall/temp residue `0/0/0/0`.
+- Windows evidence Mac'e exact dosya/hash readback ile döndü. Disposable validation root, iki exact executable-path firewall rule ve beş temp dosya kaldırıldı; canonical Windows checkout exact/clean kaldı. USB `D:` / `cixanla` / Intenso Alu Line / serial `900B00076010` / `Healthy/OK` yalnız okundu, yazılmadı.
+- ADR-0013 production-proof addendum'u ve tarihli Issue #111 Evidence exact test/Mac/Windows/binary/screenshot/cleanup zincirini bağlar. PR #112 integration record'dur. Bu bounded hero proof grafiklerin tamamlandığı iddiası değildir; sonraki visual/world dilimleri aynı ölçülü kapılarla sürer.
+- Ana hedef fiziksel mağaza/servis/montaj + Dashboard 3D parity, mağaza büyümesi/personel/müşteri, işlevsel mahalle/kişisel ev/araç-lojistik, NPC dünya ekolojisi ve offline güvenli Local Advisor/Guardian sınırlarıdır. Mac tek authoritative yazma hattı, Windows exact clean IL2CPP/D3D11 worker'dır.
+
+## Önceki teknik checkpoint — Issue #109 / Epic #10
 
 - Canonical PCIe/GPU 6+2 cable yalnız exact `PowerCable` line, `ModularPcie8PinPsuToGraphicsCard` family ve tam `LineId/ProductId/ItemId/ReservationId` + parent allocation + staging-receipt lineage'iyle çözülür. Historical `10/10` aggregate, live #89/#91/#93/#95/#97/#99/#102 seven-component receipts ve exact routed #105 ATX24 + #107 EPS12V olmadan release fail-closed'dur.
 - Ayrı stable operation exact PCIe/GPU BuildKit → ActorHands release'ini açar; devamındaki reversible transfer yalnız existing Assembly-owned Issue #63 GpuPowerCableRoute↔Hands hattıdır. Live reservation/allocation ve ilk on staging receipt/history değişmez.
