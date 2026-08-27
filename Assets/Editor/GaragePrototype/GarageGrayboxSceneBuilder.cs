@@ -509,6 +509,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 wood,
                 metal,
                 screenGlass);
+            RetailCheckoutHeroBuildResult retailCheckoutHeroBuild =
+                BuildRetailCheckoutHeroReadability(
+                environment,
+                lighting,
+                metal,
+                brushedSteel,
+                accent,
+                labelPaper,
+                rubber);
             CustomPcWorkTicketBuildResult customPcWorkTicketBuild =
                 BuildCustomPcWorkTicketStation(
                     environment,
@@ -630,6 +639,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 deliveryAccepted,
                 deliveryShelved,
                 seedAssemblyPrototype: true);
+            retailCheckoutHeroBuild.Projection.Configure(
+                stockFlow,
+                retailCheckoutHeroBuild.ShelfOfferVisual,
+                retailCheckoutHeroBuild.BasketReservedVisual,
+                retailCheckoutHeroBuild.CashCheckoutVisual,
+                retailCheckoutHeroBuild.ReceiptVisual);
             motherboardBuildKitBuild.Projection.Configure(
                 stockFlow,
                 motherboardBuildKitBuild.Surface,
@@ -3120,19 +3135,22 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             GameObject shelfLabelBoard = CreateDetailCube(
                 "RetailShelfLabelBoard",
                 shelf,
-                new Vector3(3.03f, 1.58f, 0.55f),
-                new Vector3(0.05f, 0.32f, 1.30f),
+                new Vector3(3.03f, 1.60f, 0.55f),
+                new Vector3(0.05f, 0.46f, 1.30f),
                 accent);
             TextMesh shelfLabel = new GameObject("RetailShelfLabel").AddComponent<TextMesh>();
-            shelfLabel.transform.SetParent(shelfLabelBoard.transform, false);
-            shelfLabel.transform.localPosition = new Vector3(-0.56f, 0f, 0f);
+            // The board is a scaled primitive. Keep the glyph transform outside that scale so
+            // line width and height remain proportional on both Mac and Windows renderers.
+            shelfLabel.transform.SetParent(shelf, false);
+            shelfLabel.transform.localPosition = new Vector3(2.998f, 1.60f, 0.48f);
             shelfLabel.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
             shelfLabel.anchor = TextAnchor.MiddleCenter;
             shelfLabel.alignment = TextAlignment.Center;
-            shelfLabel.characterSize = 0.06f;
-            shelfLabel.fontSize = 48;
+            shelfLabel.characterSize = 0.014f;
+            shelfLabel.fontSize = 64;
+            shelfLabel.lineSpacing = 1.10f;
             shelfLabel.color = Color.white;
-            shelfLabel.text = "RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR";
+            shelfLabel.text = "RAF A • FİYAT YOK\nSEPET: BOŞ\nKASA: BEKLİYOR";
 
             return new StockFlowBuildResult(
                 binding,
@@ -3225,12 +3243,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 "Checkout player terminal is missing its interaction collider.");
             TextMesh checkoutStatusText = new GameObject("CheckoutStationStatusText")
                 .AddComponent<TextMesh>();
-            checkoutStatusText.transform.SetParent(checkoutTerminal.transform, false);
-            checkoutStatusText.transform.localPosition = new Vector3(0f, 0f, -0.040f);
+            checkoutStatusText.transform.SetParent(checkoutStation, false);
+            checkoutStatusText.transform.localPosition =
+                new Vector3(0.65f, 1.34f, 2.646f);
             checkoutStatusText.anchor = TextAnchor.MiddleCenter;
             checkoutStatusText.alignment = TextAlignment.Center;
-            checkoutStatusText.characterSize = 0.026f;
+            checkoutStatusText.characterSize = 0.015f;
             checkoutStatusText.fontSize = 42;
+            checkoutStatusText.lineSpacing = 0.88f;
             checkoutStatusText.color = new Color(0.88f, 0.96f, 0.98f);
             checkoutStatusText.text = "KASA İSTASYONU\nMÜŞTERİYİ BEKLİYOR";
             CheckoutStationProjection checkoutProjection =
@@ -3239,18 +3259,20 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             GameObject flowBoard = CreateBeveledCube(
                 "CustomerFlowStatusBoard",
                 checkoutStation,
-                new Vector3(1.20f, 1.72f, 3.38f),
-                new Vector3(1.52f, 0.62f, 0.06f),
+                new Vector3(-0.10f, 1.76f, 3.38f),
+                new Vector3(0.90f, 0.34f, 0.04f),
                 0.018f,
                 counterBody,
                 false);
             TextMesh flowText = new GameObject("CustomerFlowStatusText").AddComponent<TextMesh>();
-            flowText.transform.SetParent(flowBoard.transform, false);
-            flowText.transform.localPosition = new Vector3(0f, 0f, -0.038f);
+            flowText.transform.SetParent(checkoutStation, false);
+            flowText.transform.localPosition =
+                new Vector3(-0.10f, 1.76f, 3.354f);
             flowText.anchor = TextAnchor.MiddleCenter;
             flowText.alignment = TextAlignment.Center;
-            flowText.characterSize = 0.044f;
+            flowText.characterSize = 0.015f;
             flowText.fontSize = 44;
+            flowText.lineSpacing = 0.82f;
             flowText.color = new Color(0.82f, 0.93f, 0.96f);
             flowText.text = "MÜŞTERİ AKIŞI: TEKLİF BEKLİYOR\nROTA BEKLEMEDE";
 
@@ -3344,8 +3366,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             identityText.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             identityText.anchor = TextAnchor.MiddleCenter;
             identityText.alignment = TextAlignment.Center;
-            identityText.characterSize = 0.032f;
+            identityText.characterSize = 0.018f;
             identityText.fontSize = 40;
+            identityText.lineSpacing = 0.88f;
             identityText.color = new Color(0.90f, 0.94f, 0.96f);
             identityText.text = "MÜŞTERİ 001\nYARDIM BEKLİYOR";
 

@@ -74,14 +74,22 @@ namespace PCShopEmpire3D.Presentation
                 "GraphicsCardRearBracketPlate");
             Renderer graphicsCardIoBracket = FindSceneRenderer(
                 "GraphicsCardIoRearBracket");
+            Transform retailHeroRoot = FindSceneTransform(
+                "RetailCheckoutHeroReadability");
             int meshRendererCount = FindObjectsByType<MeshRenderer>(
-                FindObjectsSortMode.None).Length;
+                    FindObjectsSortMode.None)
+                .Count(renderer =>
+                    retailHeroRoot == null ||
+                    !renderer.transform.IsChildOf(retailHeroRoot));
             int totalMeshRendererCount = gameObject.scene.GetRootGameObjects()
                 .SelectMany(root =>
                     root.GetComponentsInChildren<MeshRenderer>(true))
-                .Count();
+                .Count(renderer =>
+                    retailHeroRoot == null ||
+                    !renderer.transform.IsChildOf(retailHeroRoot));
             int lightCount = FindObjectsByType<Light>(
-                FindObjectsSortMode.None).Length;
+                    FindObjectsSortMode.None)
+                .Count(light => light.name != "RetailCheckoutFillLight");
             int cameraCount = FindObjectsByType<Camera>(
                 FindObjectsSortMode.None).Length;
 
@@ -180,7 +188,7 @@ namespace PCShopEmpire3D.Presentation
             SuppressLookdevCaptureUi();
             SetAssemblyWorkbenchHeroCapturePose();
             LogAssemblyWorkbenchHeroCaptureComposition();
-            yield return CaptureAssemblyWorkbenchHeroFrame(
+            yield return CaptureLookdevFrame(
                 captureDirectory,
                 "assembly-workbench-hero-loose-r55.png");
 
@@ -197,7 +205,7 @@ namespace PCShopEmpire3D.Presentation
             }
 
             SetAssemblyWorkbenchHeroCapturePose();
-            yield return CaptureAssemblyWorkbenchHeroFrame(
+            yield return CaptureLookdevFrame(
                 captureDirectory,
                 "assembly-workbench-hero-preview-r55.png");
 
@@ -219,7 +227,7 @@ namespace PCShopEmpire3D.Presentation
             }
 
             SetAssemblyWorkbenchHeroCapturePose();
-            yield return CaptureAssemblyWorkbenchHeroFrame(
+            yield return CaptureLookdevFrame(
                 captureDirectory,
                 "assembly-workbench-hero-routed-r55.png");
 
@@ -240,7 +248,7 @@ namespace PCShopEmpire3D.Presentation
                     yield break;
                 }
 
-                if (!TryCountAssemblyWorkbenchCentralGlarePixels(
+                if (!TryCountLookdevCentralGlarePixels(
                         path,
                         out int centralGlarePixels,
                         out string glareReadFailure))
@@ -321,7 +329,7 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static IEnumerator CaptureAssemblyWorkbenchHeroFrame(
+        private static IEnumerator CaptureLookdevFrame(
             string directory,
             string fileName)
         {
@@ -336,7 +344,7 @@ namespace PCShopEmpire3D.Presentation
             yield return new WaitForSecondsRealtime(0.45f);
         }
 
-        private static bool TryCountAssemblyWorkbenchCentralGlarePixels(
+        private static bool TryCountLookdevCentralGlarePixels(
             string path,
             out int glarePixels,
             out string failure)

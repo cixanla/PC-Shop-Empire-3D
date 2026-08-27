@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-assembly-workbench-hero-r55-v1";
+        public const string Version = "garage-retail-checkout-hero-r56-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -564,6 +564,13 @@ namespace PCShopEmpire3D.Presentation
             bool hasAssemblyWorkbenchEsdMat = false;
             bool hasAssemblyWorkbenchSplashback = false;
             bool hasAssemblyCableRouteReference = false;
+            bool hasRetailCheckoutHero = false;
+            bool hasRetailCustomerApproachAnchor = false;
+            bool hasRetailShelfOfferDisplayAnchor = false;
+            bool hasRetailBasketPresentationAnchor = false;
+            bool hasRetailCheckoutPaymentAnchor = false;
+            bool hasRetailCheckoutReceiptAnchor = false;
+            bool hasRetailCheckoutFillLight = false;
             foreach (Transform sceneTransform in sceneTransforms)
             {
                 hasLookdevCorner |= sceneTransform.name == "VisualBenchmarkCorner";
@@ -577,12 +584,34 @@ namespace PCShopEmpire3D.Presentation
                     sceneTransform.name == "AssemblyWorkbenchSplashback";
                 hasAssemblyCableRouteReference |=
                     sceneTransform.name == "AssemblyCableRouteReferenceStrip";
+                hasRetailCheckoutHero |=
+                    sceneTransform.name == "RetailCheckoutHeroReadability";
+                hasRetailCustomerApproachAnchor |=
+                    sceneTransform.name == "RetailCustomerApproachAnchor";
+                hasRetailShelfOfferDisplayAnchor |=
+                    sceneTransform.name == "RetailShelfOfferDisplayAnchor";
+                hasRetailBasketPresentationAnchor |=
+                    sceneTransform.name == "RetailBasketPresentationAnchor";
+                hasRetailCheckoutPaymentAnchor |=
+                    sceneTransform.name == "RetailCheckoutPaymentAnchor";
+                hasRetailCheckoutReceiptAnchor |=
+                    sceneTransform.name == "RetailCheckoutReceiptAnchor";
+                hasRetailCheckoutFillLight |=
+                    sceneTransform.name == "RetailCheckoutFillLight";
             }
             bool hasAssemblyWorkbenchHeroReadability =
                 hasAssemblyWorkbenchHero &&
                 hasAssemblyWorkbenchEsdMat &&
                 hasAssemblyWorkbenchSplashback &&
                 hasAssemblyCableRouteReference;
+            bool hasRetailCheckoutHeroReadability =
+                hasRetailCheckoutHero &&
+                hasRetailCustomerApproachAnchor &&
+                hasRetailShelfOfferDisplayAnchor &&
+                hasRetailBasketPresentationAnchor &&
+                hasRetailCheckoutPaymentAnchor &&
+                hasRetailCheckoutReceiptAnchor &&
+                hasRetailCheckoutFillLight;
 
             bool hasArrivedStockFlow = stockFlow != null &&
                                        stockFlow.Session != null &&
@@ -1291,6 +1320,7 @@ namespace PCShopEmpire3D.Presentation
                 $"pcie-gpu-power-cable-waypoints={(hasPcieGpuPowerCableAssembly ? "3" : "missing")} " +
                 $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
                 $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
+                $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -1375,6 +1405,9 @@ namespace PCShopEmpire3D.Presentation
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
+            bool runRetailCheckoutHeroReadabilitySmoke =
+                HasCommandLineArgument(
+                    "-pse-retail-checkout-hero-readability-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1412,7 +1445,8 @@ namespace PCShopEmpire3D.Presentation
                              (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0) +
-                             (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0);
+                             (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
+                             (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1442,12 +1476,18 @@ namespace PCShopEmpire3D.Presentation
                      !runAtx24PowerCableAssemblyHandoffSmoke &&
                      !runEps12vPowerCableAssemblyHandoffSmoke &&
                      !runPcieGpuPowerCableAssemblyHandoffSmoke &&
-                     !runAssemblyWorkbenchHeroReadabilitySmoke) ||
+                     !runAssemblyWorkbenchHeroReadabilitySmoke &&
+                     !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runAssemblyWorkbenchHeroReadabilitySmoke)
+                    if (runRetailCheckoutHeroReadabilitySmoke)
+                    {
+                        LogRetailCheckoutHeroReadabilitySmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runAssemblyWorkbenchHeroReadabilitySmoke)
                     {
                         LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1838,6 +1878,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runRetailCheckoutHeroReadabilitySmoke && !Debug.isDebugBuild)
+            {
+                LogRetailCheckoutHeroReadabilitySmokeFailure(
+                    "smoke.retail-checkout-hero-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -2051,6 +2098,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunAssemblyWorkbenchHeroReadabilitySmoke());
+            }
+
+            if (runRetailCheckoutHeroReadabilitySmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunRetailCheckoutHeroReadabilitySmoke());
             }
         }
 

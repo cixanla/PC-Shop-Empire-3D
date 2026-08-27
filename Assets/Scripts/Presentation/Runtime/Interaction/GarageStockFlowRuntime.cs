@@ -97,7 +97,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         }
 
         public string ShelfOfferLabelText =>
-            $"RAF A\n{ShelfOfferPriceText}\nMÜŞTERİ: {CustomerBasketStatusText}\n" +
+            $"RAF A • {ShelfOfferPriceText}\nSEPET: {CustomerBasketStatusText}\n" +
             $"KASA: {CheckoutStatusText}";
 
         public static string PrototypePriceText => FormatPrice(

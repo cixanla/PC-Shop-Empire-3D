@@ -26,7 +26,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
+                Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
 
             Transform heroRoot = Object.FindObjectsByType<Transform>(
                     FindObjectsSortMode.None)
@@ -125,19 +125,30 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     renderer.sharedMaterial.GetColor("_BaseColor")
                         .maxColorComponent <= 0.201f),
                 Is.True);
+            Transform retailHeroRoot = Object.FindObjectsByType<Transform>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .SingleOrDefault(transform =>
+                    transform.name == "RetailCheckoutHeroReadability");
             Assert.That(
                 Object.FindObjectsByType<MeshRenderer>(
-                    FindObjectsSortMode.None).Length,
+                        FindObjectsSortMode.None)
+                    .Count(renderer =>
+                        retailHeroRoot == null ||
+                        !renderer.transform.IsChildOf(retailHeroRoot)),
                 Is.EqualTo(473));
             Assert.That(
                 SceneManager.GetActiveScene().GetRootGameObjects()
                     .SelectMany(root =>
                         root.GetComponentsInChildren<MeshRenderer>(true))
-                    .Count(),
+                    .Count(renderer =>
+                        retailHeroRoot == null ||
+                        !renderer.transform.IsChildOf(retailHeroRoot)),
                 Is.EqualTo(493));
             Assert.That(
                 Object.FindObjectsByType<Light>(
-                    FindObjectsSortMode.None).Length,
+                        FindObjectsSortMode.None)
+                    .Count(light => light.name != "RetailCheckoutFillLight"),
                 Is.EqualTo(4));
             Assert.That(
                 Object.FindObjectsByType<Camera>(

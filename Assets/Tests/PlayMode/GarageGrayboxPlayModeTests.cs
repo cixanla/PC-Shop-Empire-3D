@@ -3429,7 +3429,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.StatusText, Does.Contain("RAF A"));
             Assert.That(stockFlow.Session.RetailOffers.Revision, Is.Zero);
             Assert.That(stockFlow.ShelfOfferText.text,
-                Is.EqualTo("RAF A\nFİYAT YOK\nMÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
+                Is.EqualTo("RAF A • FİYAT YOK\nSEPET: BOŞ\nKASA: BEKLİYOR"));
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState());
@@ -3461,8 +3461,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Orders.Revision, Is.EqualTo(orderRevisionBeforeOffer));
             Assert.That(stockFlow.ShelfOfferText.text,
                 Is.EqualTo(
-                    $"RAF A\n{GarageStockFlowRuntime.PrototypePriceText}\n" +
-                    "MÜŞTERİ: BOŞ\nKASA: BEKLİYOR"));
+                    $"RAF A • {GarageStockFlowRuntime.PrototypePriceText}\n" +
+                    "SEPET: BOŞ\nKASA: BEKLİYOR"));
             Assert.That(stockFlow.StatusText,
                 Does.Contain($"FİYAT: {GarageStockFlowRuntime.PrototypePriceText}"));
             Assert.That(marker.PlayerCarry.PromptText,
@@ -3686,7 +3686,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 stockFlow.Session.ProductId).Value, Is.EqualTo(2));
             AssertAssemblyGraphicsCardIsolated(stockFlow.Session);
             Assert.That(stockFlow.ShelfOfferText.text,
-                Does.Contain("MÜŞTERİ: 1 ÜRÜN • AYRILDI"));
+                Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
             Assert.That(stockFlow.StatusText, Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
             Assert.That(marker.PlayerCarry.PromptText,
                 Does.Contain("SATIN ALMA ONAYLANDI"));
@@ -3731,7 +3731,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(stockFlow.Session.Inventory.GetTotalQuantity(
                 stockFlow.Session.ProductId).Value, Is.EqualTo(2));
             Assert.That(stockFlow.ShelfOfferText.text,
-                Does.Contain("MÜŞTERİ: 1 ÜRÜN • AYRILDI"));
+                Does.Contain("SEPET: 1 ÜRÜN • AYRILDI"));
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
