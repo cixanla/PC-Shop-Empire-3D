@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -184,6 +185,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasPickupReceipt => HasStage(
             Session?.PrototypePcieGpuPowerCableBuildKitOperationId ?? default,
             CustomPcBuildKitStage.PcieGpuPowerCableInHands);
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypePcieGpuPowerCableAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.ComponentKind == PcComponentKind.PowerCable &&
+                       receipt.Line.PowerCableType ==
+                           PowerCableType.ModularPcie8PinPsuToGraphicsCard &&
+                       receipt.WorkbenchContainerId ==
+                           session.PcieGpuPowerCableRouteContainerId;
+            }
+        }
 
         public bool HasAllPrerequisites =>
             HasMotherboardPrerequisite &&
@@ -424,9 +442,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nPCIe GPU HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nPCIe GPU BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nPCIe GPU MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nPCIe GPU HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nPCIe GPU BEKLİYOR";
         }
 
         public void ResetFeedback()

@@ -375,6 +375,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 atx24PowerCableBinding.PhysicalItem;
             if (atx24PowerCableBinding.IsRouted)
             {
+                if (HasCompetingFocusedPowerCable(cable))
+                {
+                    return false;
+                }
+
                 Atx24PowerCableRouteStatus routedFocus =
                     atx24PowerCableRoute.EvaluateRoutedFocus(
                         resolver.Origin,

@@ -36,6 +36,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool _routeModeActive;
         private bool _authoritativeRouted;
+        private Collider[] _installedAssemblyColliders = Array.Empty<Collider>();
 
         public string RouteIdValue => routeId;
 
@@ -60,6 +61,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public Transform GraphicsCardHostRoot => graphicsCardHostRoot;
 
         public Collider[] AllowedRouteColliders => allowedRouteColliders;
+
+        public bool MatchesInstalledAssemblyColliders(
+            Collider chassisCablePassThroughCollider,
+            Collider graphicsCardSlotConnectorCollider)
+        {
+            return chassisCablePassThroughCollider != null &&
+                   graphicsCardSlotConnectorCollider != null &&
+                   _installedAssemblyColliders.Length == 2 &&
+                   _installedAssemblyColliders[0] ==
+                       chassisCablePassThroughCollider &&
+                   _installedAssemblyColliders[1] ==
+                       graphicsCardSlotConnectorCollider;
+        }
 
         public LineRenderer PreviewLine => previewLine;
 
@@ -156,6 +170,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             allowedRouteColliders =
                 (Collider[])authoredAllowedRouteColliders.Clone();
+            _installedAssemblyColliders = Array.Empty<Collider>();
             psuEndpoint = authoredPsuEndpoint ??
                 throw new ArgumentNullException(nameof(authoredPsuEndpoint));
             graphicsCardEndpoint = authoredGraphicsCardEndpoint ??
@@ -182,6 +197,62 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             ApplyAuthoritativeState(routed: false);
             SetRouteModeActive(active: false);
+        }
+
+        public void ConfigureInstalledAssemblyColliders(
+            Collider chassisCablePassThroughCollider,
+            Collider graphicsCardSlotConnectorCollider)
+        {
+            Collider[] additions =
+            {
+                chassisCablePassThroughCollider,
+                graphicsCardSlotConnectorCollider
+            };
+            if (Array.Exists(additions, collider => collider == null) ||
+                !AreDistinct(additions))
+            {
+                throw new ArgumentException(
+                    "PCIe/GPU installed assembly colliders must be non-null and distinct.");
+            }
+
+            if (_installedAssemblyColliders.Length != 0)
+            {
+                if (MatchesInstalledAssemblyColliders(
+                        chassisCablePassThroughCollider,
+                        graphicsCardSlotConnectorCollider))
+                {
+                    return;
+                }
+
+                throw new InvalidOperationException(
+                    "PCIe/GPU installed assembly colliders are already configured.");
+            }
+
+            for (int index = 0; index < additions.Length; index++)
+            {
+                if (Array.Exists(
+                        allowedRouteColliders,
+                        collider => collider == additions[index]))
+                {
+                    throw new ArgumentException(
+                        "PCIe/GPU installed assembly colliders must be distinct from the authored allowlist.");
+                }
+            }
+
+            var expanded = new Collider[
+                allowedRouteColliders.Length + additions.Length];
+            Array.Copy(
+                allowedRouteColliders,
+                expanded,
+                allowedRouteColliders.Length);
+            Array.Copy(
+                additions,
+                0,
+                expanded,
+                allowedRouteColliders.Length,
+                additions.Length);
+            allowedRouteColliders = expanded;
+            _installedAssemblyColliders = (Collider[])additions.Clone();
         }
 
         public void SetRouteModeActive(bool active)
