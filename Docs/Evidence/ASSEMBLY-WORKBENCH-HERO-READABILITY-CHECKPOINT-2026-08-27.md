@@ -6,7 +6,7 @@
 **Technical head:** `1e2106a822b36f888cb9ad53ee22054ae991cda2`<br>
 **Technical tree:** `540992d186ff6e670569ee3cee51807798ffa427`<br>
 **Branch:** `codex/issue111-assembly-workbench-hero-readability`<br>
-**Current state:** bounded technical acceptance `6/6`; exact scene/material/light contracts, full Mac and Windows regression suites, universal macOS native, clean Windows x64 IL2CPP/D3D11 runtime, screenshot/readability, cross-machine evidence readback, process cleanup and technical Repository Guard passed. PR #112 is the source/docs integration record.
+**Current state:** bounded acceptance `6/6`; exact scene/material/light contracts, full Mac and Windows regression suites, universal macOS native, clean Windows x64 IL2CPP/D3D11 runtime, screenshot/readability, cross-machine evidence readback, cleanup, PR/merge and main Repository Guard passed. PR #112 merged as `d20d5bc9fa1a67bf0e9441253834a9de962046e8`; Issue #111 is `CLOSED/COMPLETED` and Roadmap is `Done`.
 
 ## Delivered visible result
 
@@ -114,6 +114,6 @@ USB `D:` was read-only identified as label `cixanla`, exFAT, Intenso Alu Line, s
 | 3 | Renderer/light/material/submission pressure measured and bounded; glare budget enforced. | PASS |
 | 4 | Targeted/full Mac tests, universal native smoke, clean diff and technical CI. | PASS — Guard 33089682114 |
 | 5 | Clean Windows x64 IL2CPP/D3D11 runtime, visible screenshots/readability and zero final residue. | PASS |
-| 6 | Bible, ADR/Evidence, CHANGELOG and Roadmap/PR integration chain. | TECHNICAL PASS — PR #112 is the integration record |
+| 6 | Bible, ADR/Evidence, CHANGELOG and Roadmap/PR integration chain. | PASS — PR #112 merged; Issue closed/Done |
 
-The bounded technical acceptance count is `6/6`. Administrative Issue/Roadmap closure remains tied to PR #112 source/docs integration and final required Guard checks. Parent visual Epic #18 and the full Steam 1.0 Goal remain open. This first hero look-development proof does not claim that the shop, open world, character art, animation, effects or final graphics are complete; it establishes the measured visual-production baseline for subsequent bounded slices.
+The bounded acceptance count is `6/6`. Docs Guard `33093360490`, PR #112 merge `d20d5bc9fa1a67bf0e9441253834a9de962046e8` and main Guard `33093461437` passed; Issue #111 is `CLOSED/COMPLETED` and Roadmap is `Done`. Parent visual Epic #18 and the full Steam 1.0 Goal remain open. This first hero look-development proof does not claim that the shop, open world, character art, animation, effects or final graphics are complete; it establishes the measured visual-production baseline for subsequent bounded slices.
