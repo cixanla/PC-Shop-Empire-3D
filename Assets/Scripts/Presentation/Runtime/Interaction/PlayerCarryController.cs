@@ -234,7 +234,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     {
                         if (IsEps12vPowerCableBuildKitMode ||
                             (eps12vPowerCableBuildKit != null &&
-                             eps12vPowerCableBuildKit.HasPickupReceipt))
+                             eps12vPowerCableBuildKit.HasPickupReceipt &&
+                             !eps12vPowerCableBuildKit.IsReleasedForAssembly))
                         {
                             return GetHeldEps12vPowerCableBuildKitPrompt(
                                 placement,

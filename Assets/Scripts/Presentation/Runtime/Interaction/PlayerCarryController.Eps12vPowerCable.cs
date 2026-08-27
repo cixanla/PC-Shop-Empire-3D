@@ -73,7 +73,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (enabled && eps12vPowerCableBuildKit != null &&
-                eps12vPowerCableBuildKit.HasPickupReceipt)
+                eps12vPowerCableBuildKit.HasPickupReceipt &&
+                !eps12vPowerCableBuildKit.IsReleasedForAssembly)
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode(
@@ -176,7 +177,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             bool buildKitOwnsPrimary =
                 IsEps12vPowerCableBuildKitMode ||
                 (eps12vPowerCableBuildKit != null &&
-                 eps12vPowerCableBuildKit.HasPickupReceipt);
+                 eps12vPowerCableBuildKit.HasPickupReceipt &&
+                 !eps12vPowerCableBuildKit.IsReleasedForAssembly);
 
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
@@ -328,7 +330,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HeldItem,
                 obstructionMask,
                 motor == null || motor.IsPaused,
-                binding.IsAuthorityInHands && !binding.IsRouted,
+                binding.IsAuthorityInHands &&
+                    !binding.IsRouted &&
+                    (eps12vPowerCableBuildKit == null ||
+                     !eps12vPowerCableBuildKit.HasPickupReceipt ||
+                     eps12vPowerCableBuildKit.IsReleasedForAssembly),
                 session.AssemblyBuild.MotherboardSeatState ==
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
@@ -360,6 +366,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 eps12vPowerCableRoute == null ||
                 eps12vPowerCableBinding == null ||
                 (!eps12vPowerCableBinding.IsAuthorityLooseWorld &&
+                 !eps12vPowerCableBinding.IsAuthorityInBuildKit &&
                  !eps12vPowerCableBinding.IsRouted))
             {
                 return false;
@@ -415,28 +422,65 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasRouted = binding.IsRouted;
-            OperationResult physicalPickup = item.BeginCarry(
-                carryAnchor,
-                heldItemLayer);
-            if (physicalPickup.IsFailure)
+            bool wasInBuildKit = binding.IsAuthorityInBuildKit;
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasRouted || wasInBuildKit)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasRouted
-                ? binding.TryCommitRoutedUnroute()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
                 {
-                    Debug.LogError(
-                        $"EPS12V_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPreflight);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = wasRouted
+                    ? binding.TryCommitRoutedUnroute()
+                    : binding.TryCommitBuildKitAssemblyPickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-eps12v-power-cable-assembly." +
+                                "pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
+            }
+            else
+            {
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    return Remember(physicalPickup);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            "EPS12V_POWER_CABLE_PROJECTION_ROLLBACK_FAILED " +
+                            $"code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
             }
 
             HeldItem = item;
@@ -479,9 +523,50 @@ namespace PCShopEmpire3D.Presentation.Interaction
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
-            return binding.IsRouted
-                ? $"[ROUTE] PSU CPU 8 → KANAL → ANAKART CPU 8 • {interact}: çöz"
-                : $"{interact}: {binding.PhysicalItem.DisplayName} al • 2 ANAHTARLI 8-PIN";
+            if (binding.IsRouted)
+            {
+                return $"[ROUTE] PSU CPU 8 → KANAL → ANAKART CPU 8 • " +
+                       $"{interact}: çöz";
+            }
+
+            if (binding.IsAuthorityInBuildKit)
+            {
+                GarageStockFlowSession session = binding.Session;
+                int stagedComponentCount =
+                    binding.BuildKit?.StagedComponentCount ?? 10;
+                bool prerequisitesReady = session != null &&
+                    session.AssemblyBuild.MotherboardSeatState ==
+                        AssemblySeatState.SeatedSecured &&
+                    session.AssemblyBuild.ProcessorSocketState ==
+                        ProcessorSocketState.ProcessorRetained &&
+                    session.AssemblyBuild.MemorySlotState ==
+                        MemorySlotState.MemoryModuleRetained &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
+                    session.AssemblyBuild.ProcessorCoolerSlotState ==
+                        ProcessorCoolerSlotState.CoolerRetained &&
+                    session.AssemblyBuild.GraphicsCardSlotState ==
+                        GraphicsCardSlotState.GraphicsCardRetained &&
+                    session.AssemblyBuild.PowerSupplyBayState ==
+                        PowerSupplyBayState.PowerSupplyRetained &&
+                    session.AssemblyBuild.IsAtx24PowerCableRouted;
+                if (stagedComponentCount <
+                    Eps12vPowerCableBuildKitProjection.PrototypeTotalComponentCount)
+                {
+                    return $"BUILD KIT • {stagedComponentCount}/" +
+                           $"{Eps12vPowerCableBuildKitProjection.PrototypeTotalComponentCount} " +
+                           "• KALAN PARÇALARI TAMAMLA";
+                }
+
+                return prerequisitesReady
+                    ? $"{interact}: EPS12V'Yİ KABLO MONTAJINA AL • BUILD KIT • " +
+                      $"{stagedComponentCount}/" +
+                      $"{Eps12vPowerCableBuildKitProjection.PrototypeTotalComponentCount}"
+                    : "ÖNCE EXACT 7 PARÇALIK MONTAJ ZİNCİRİNİ, PSU 4 VİDAYI VE ATX24 ROTASINI TAMAMLA";
+            }
+
+            return $"{interact}: {binding.PhysicalItem.DisplayName} al • " +
+                   "2 ANAHTARLI 8-PIN";
         }
 
         private static string GetEps12vPowerCableStatusLabel(

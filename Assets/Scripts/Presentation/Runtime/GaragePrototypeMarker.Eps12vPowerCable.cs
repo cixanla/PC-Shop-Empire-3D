@@ -67,6 +67,45 @@ namespace PCShopEmpire3D.Presentation
             FindObjectsByType<Eps12vPowerCableBuildKitProjection>(
                 FindObjectsSortMode.None).Length == 1;
 
+        public bool HasEps12vPowerCableAssemblyHandoffR53Runtime =>
+            HasAtx24PowerCableAssemblyHandoffR52Runtime &&
+            HasEps12vPowerCableR31Runtime &&
+            HasEps12vPowerCableBuildKitR43Runtime &&
+            eps12vPowerCableBinding != null &&
+            eps12vPowerCableBinding.BuildKit == eps12vPowerCableBuildKit &&
+            eps12vPowerCableBinding.Route == eps12vPowerCableRoute &&
+            eps12vPowerCableBinding.PhysicalItem == eps12vPowerCable &&
+            eps12vPowerCableBinding.Geometry == eps12vPowerCableGeometry &&
+            graphicsCard != null &&
+            graphicsCardSlot != null &&
+            ResolveAtx24ChassisCablePassThroughRoot() is Transform
+                chassisCablePassThroughRoot &&
+            chassisCablePassThroughRoot.GetComponent<Collider>() is Collider
+                chassisCablePassThroughCollider &&
+            graphicsCard.GetComponent<Collider>() is Collider
+                graphicsCardCollider &&
+            eps12vPowerCableRoute.MatchesInstalledAssemblyColliders(
+                chassisCablePassThroughCollider,
+                graphicsCardCollider,
+                graphicsCardSlot.SupportCollider) &&
+            playerCarry != null &&
+            playerCarry.MatchesEps12vPowerCableConfiguration(
+                eps12vPowerCableRoute,
+                eps12vPowerCableBinding) &&
+            stockFlow != null &&
+            stockFlow.Session != null &&
+            stockFlow.Session.PrototypeEps12vPowerCableAssemblyHandoffOperationId
+                .Value !=
+                stockFlow.Session.PrototypeEps12vPowerCableBuildKitOperationId.Value &&
+            stockFlow.Session.PrototypeEps12vPowerCableAssemblyHandoffOperationId
+                .Value !=
+                stockFlow.Session.PrototypeAtx24PowerCableAssemblyHandoffOperationId
+                    .Value &&
+            stockFlow.Session.Eps12vPowerCableRouteContainerId !=
+                stockFlow.Session.Eps12vPowerCableBuildKitContainerId &&
+            FindObjectsByType<Eps12vPowerCableAssemblyItemBinding>(
+                FindObjectsSortMode.None).Length == 1;
+
         private void ConfigureEps12vPowerCable(
             Eps12vPowerCableRouteProjection physicalRoute,
             Eps12vPowerCableAssemblyItemBinding physicalBinding,

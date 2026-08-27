@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-atx24-assembly-handoff-r52-v1";
+        public const string Version = "garage-eps12v-assembly-handoff-r53-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -492,6 +492,24 @@ namespace PCShopEmpire3D.Presentation
                     processorCooler.transform,
                     graphicsCard.transform,
                     chassisCablePassThroughRoot);
+            }
+
+            if (eps12vPowerCableRoute != null &&
+                graphicsCard != null &&
+                graphicsCardSlot != null &&
+                ResolveAtx24ChassisCablePassThroughRoot() is Transform
+                    eps12vChassisCablePassThroughRoot &&
+                eps12vChassisCablePassThroughRoot.GetComponent<Collider>() is
+                    Collider eps12vChassisCablePassThroughCollider &&
+                graphicsCard.GetComponent<Collider>() is
+                    Collider eps12vGraphicsCardCollider &&
+                graphicsCardSlot.SupportCollider is
+                    Collider eps12vGraphicsCardSlotConnectorCollider)
+            {
+                eps12vPowerCableRoute.ConfigureInstalledAssemblyColliders(
+                    eps12vChassisCablePassThroughCollider,
+                    eps12vGraphicsCardCollider,
+                    eps12vGraphicsCardSlotConnectorCollider);
             }
 
             bool hasLargeBox = false;
@@ -1201,6 +1219,7 @@ namespace PCShopEmpire3D.Presentation
                 $"graphics-card-assembly-handoff={(HasGraphicsCardAssemblyHandoffR50Runtime ? "ready" : "missing")} " +
                 $"power-supply-assembly-handoff={(HasPowerSupplyAssemblyHandoffR51Runtime ? "ready" : "missing")} " +
                 $"atx24-power-cable-assembly-handoff={(HasAtx24PowerCableAssemblyHandoffR52Runtime ? "ready" : "missing")} " +
+                $"eps12v-power-cable-assembly-handoff={(HasEps12vPowerCableAssemblyHandoffR53Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1314,6 +1333,9 @@ namespace PCShopEmpire3D.Presentation
             bool runAtx24PowerCableAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-atx24-power-cable-assembly-handoff-smoke");
+            bool runEps12vPowerCableAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-eps12v-power-cable-assembly-handoff-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1348,7 +1370,8 @@ namespace PCShopEmpire3D.Presentation
                              (runProcessorCoolerAssemblyHandoffSmoke ? 1 : 0) +
                              (runGraphicsCardAssemblyHandoffSmoke ? 1 : 0) +
                              (runPowerSupplyAssemblyHandoffSmoke ? 1 : 0) +
-                             (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0);
+                             (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
+                             (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1375,12 +1398,18 @@ namespace PCShopEmpire3D.Presentation
                      !runProcessorCoolerAssemblyHandoffSmoke &&
                      !runGraphicsCardAssemblyHandoffSmoke &&
                      !runPowerSupplyAssemblyHandoffSmoke &&
-                     !runAtx24PowerCableAssemblyHandoffSmoke) ||
+                     !runAtx24PowerCableAssemblyHandoffSmoke &&
+                     !runEps12vPowerCableAssemblyHandoffSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runAtx24PowerCableAssemblyHandoffSmoke)
+                    if (runEps12vPowerCableAssemblyHandoffSmoke)
+                    {
+                        LogEps12vPowerCableAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runAtx24PowerCableAssemblyHandoffSmoke)
                     {
                         LogAtx24PowerCableAssemblyHandoffSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1733,6 +1762,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runEps12vPowerCableAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogEps12vPowerCableAssemblyHandoffSmokeFailure(
+                    "smoke.eps12v-power-cable-assembly-handoff-" +
+                    "requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1928,6 +1965,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunAtx24PowerCableAssemblyHandoffSmoke());
+            }
+
+            if (runEps12vPowerCableAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunEps12vPowerCableAssemblyHandoffSmoke());
             }
         }
 

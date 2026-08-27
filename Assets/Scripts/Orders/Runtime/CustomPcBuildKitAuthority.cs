@@ -153,6 +153,7 @@ namespace PCShopEmpire3D.Orders
         private readonly StableId<ContainerIdScope> _atx24PowerCableAssemblyContainerId;
         private readonly StableId<ContainerIdScope> _eps12vPowerCableBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _eps12vPowerCableBuildKitAccess;
+        private readonly StableId<ContainerIdScope> _eps12vPowerCableAssemblyContainerId;
         private readonly StableId<ContainerIdScope> _pcieGpuPowerCableBuildKitContainerId;
         private readonly InventorySerializedTransferAccess _pcieGpuPowerCableBuildKitAccess;
         private readonly Dictionary<StableId<CustomPcBuildKitOperationIdScope>,
@@ -198,7 +199,8 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default,
             StableId<ContainerIdScope> graphicsCardAssemblyContainerId = default,
             StableId<ContainerIdScope> powerSupplyAssemblyContainerId = default,
-            StableId<ContainerIdScope> atx24PowerCableAssemblyContainerId = default)
+            StableId<ContainerIdScope> atx24PowerCableAssemblyContainerId = default,
+            StableId<ContainerIdScope> eps12vPowerCableAssemblyContainerId = default)
         {
             _workOrders = workOrders;
             _inventory = workOrders.Inventory;
@@ -230,6 +232,8 @@ namespace PCShopEmpire3D.Orders
                 atx24PowerCableAssemblyContainerId;
             _eps12vPowerCableBuildKitContainerId = eps12vPowerCableBuildKitContainerId;
             _eps12vPowerCableBuildKitAccess = eps12vPowerCableBuildKitAccess;
+            _eps12vPowerCableAssemblyContainerId =
+                eps12vPowerCableAssemblyContainerId;
             _pcieGpuPowerCableBuildKitContainerId = pcieGpuPowerCableBuildKitContainerId;
             _pcieGpuPowerCableBuildKitAccess = pcieGpuPowerCableBuildKitAccess;
         }
@@ -309,6 +313,9 @@ namespace PCShopEmpire3D.Orders
 
         public StableId<ContainerIdScope> Eps12vPowerCableBuildKitContainerId =>
             _eps12vPowerCableBuildKitContainerId;
+
+        public StableId<ContainerIdScope> Eps12vPowerCableAssemblyContainerId =>
+            _eps12vPowerCableAssemblyContainerId;
 
         public StableId<ContainerIdScope> PcieGpuPowerCableBuildKitContainerId =>
             _pcieGpuPowerCableBuildKitContainerId;
@@ -1111,7 +1118,8 @@ namespace PCShopEmpire3D.Orders
             StableId<ContainerIdScope> processorCoolerAssemblyContainerId = default,
             StableId<ContainerIdScope> graphicsCardAssemblyContainerId = default,
             StableId<ContainerIdScope> powerSupplyAssemblyContainerId = default,
-            StableId<ContainerIdScope> atx24PowerCableAssemblyContainerId = default)
+            StableId<ContainerIdScope> atx24PowerCableAssemblyContainerId = default,
+            StableId<ContainerIdScope> eps12vPowerCableAssemblyContainerId = default)
         {
             if (workOrders == null)
             {
@@ -1294,6 +1302,31 @@ namespace PCShopEmpire3D.Orders
                     CustomPcWorkOrderFailures.BuildKitAssemblyWorkbenchInvalid);
             }
 
+            if (!eps12vPowerCableAssemblyContainerId.IsEmpty &&
+                (!HasValidAssemblyTargetContainer(
+                    workOrders,
+                    inventory,
+                    eps12vPowerCableAssemblyContainerId,
+                    sourceContainerId,
+                    handsContainerId,
+                    buildKitContainerIds,
+                    requireCapacityOne: true) ||
+                 eps12vPowerCableAssemblyContainerId == processorAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId == memoryModuleAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId == storageAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId ==
+                    processorCoolerAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId ==
+                    graphicsCardAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId ==
+                    powerSupplyAssemblyContainerId ||
+                 eps12vPowerCableAssemblyContainerId ==
+                    atx24PowerCableAssemblyContainerId))
+            {
+                return OperationResult<CustomPcBuildKitAuthority>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyWorkbenchInvalid);
+            }
+
             OperationResult<InventorySerializedTransferAccessDecuple> access =
                 inventory.ClaimManagedSerializedTransferContainers(
                     motherboardBuildKitContainerId,
@@ -1345,7 +1378,8 @@ namespace PCShopEmpire3D.Orders
                     processorCoolerAssemblyContainerId,
                     graphicsCardAssemblyContainerId,
                     powerSupplyAssemblyContainerId,
-                    atx24PowerCableAssemblyContainerId));
+                    atx24PowerCableAssemblyContainerId,
+                    eps12vPowerCableAssemblyContainerId));
         }
 
         private static OperationResult<CustomPcBuildKitAuthority>
@@ -2302,6 +2336,24 @@ namespace PCShopEmpire3D.Orders
                 PowerCableType.ModularAtx24SplitPsuToMotherboard);
         }
 
+        internal OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            ReleaseCanonicalEps12vPowerCableForAssembly(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> eps12vRouteContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            return ReleaseCanonicalComponentForAssembly(
+                operationId,
+                workOrder,
+                PcComponentKind.PowerCable,
+                eps12vRouteContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision,
+                PowerCableType.ModularEps12v8PinPsuToMotherboard);
+        }
+
         private OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
             ReleaseCanonicalComponentForAssembly(
                 StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
@@ -2533,6 +2585,25 @@ namespace PCShopEmpire3D.Orders
                 PowerCableType.ModularAtx24SplitPsuToMotherboard);
         }
 
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            PrepareInventoryEps12vPowerCableAssemblyHandoffForRecovery(
+                StableId<CustomPcBuildKitAssemblyOperationIdScope> operationId,
+                CustomPcBuildOrderRecord workOrder,
+                StableId<ContainerIdScope> eps12vRouteContainerId,
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision)
+        {
+            return PrepareInventoryComponentAssemblyHandoffForRecovery(
+                operationId,
+                workOrder,
+                PcComponentKind.PowerCable,
+                eps12vRouteContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision,
+                PowerCableType.ModularEps12v8PinPsuToMotherboard);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             PrepareInventoryComponentAssemblyHandoffForRecovery(
@@ -2662,6 +2733,22 @@ namespace PCShopEmpire3D.Orders
                     CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
             }
 
+            if (componentKind == PcComponentKind.PowerCable &&
+                expectedPowerCableType ==
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard &&
+                (!HasMotherboardAssemblyWorkbenchPrerequisite(workOrder) ||
+                 !HasProcessorAssemblySocketPrerequisite(workOrder) ||
+                 !HasMemoryModuleAssemblySlotPrerequisite(workOrder) ||
+                 !HasStorageAssemblySlotPrerequisite(workOrder) ||
+                 !HasProcessorCoolerAssemblySlotPrerequisite(workOrder) ||
+                 !HasGraphicsCardAssemblySlotPrerequisite(workOrder) ||
+                 !HasPowerSupplyAssemblyBayPrerequisite(workOrder)))
+            {
+                return OperationResult<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitPrerequisiteMissing);
+            }
+
             CustomPcBuildKitStage expectedPlacementStage = componentKind switch
             {
                 PcComponentKind.Motherboard => CustomPcBuildKitStage.MotherboardStaged,
@@ -2677,6 +2764,9 @@ namespace PCShopEmpire3D.Orders
                 PcComponentKind.PowerCable when expectedPowerCableType ==
                     PowerCableType.ModularAtx24SplitPsuToMotherboard =>
                     CustomPcBuildKitStage.Atx24PowerCableStaged,
+                PcComponentKind.PowerCable when expectedPowerCableType ==
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard =>
+                    CustomPcBuildKitStage.Eps12vPowerCableStaged,
                 _ => default
             };
 
@@ -2753,6 +2843,14 @@ namespace PCShopEmpire3D.Orders
                       expectedPowerCableType ==
                         PowerCableType.ModularAtx24SplitPsuToMotherboard
                         ? _inventory.ReleaseReservedAtx24PowerCableForAssembly(
+                            registration.InventoryPlacementReceipt,
+                            ToInventoryAssemblyOperationId(operationId),
+                            assemblyContainerId,
+                            expectedInventoryRevision)
+                    : componentKind == PcComponentKind.PowerCable &&
+                      expectedPowerCableType ==
+                        PowerCableType.ModularEps12v8PinPsuToMotherboard
+                        ? _inventory.ReleaseReservedEps12vPowerCableForAssembly(
                             registration.InventoryPlacementReceipt,
                             ToInventoryAssemblyOperationId(operationId),
                             assemblyContainerId,
@@ -3095,7 +3193,10 @@ namespace PCShopEmpire3D.Orders
                     pickup.Line.ComponentKind == PcComponentKind.PowerSupply ||
                     (pickup.Line.ComponentKind == PcComponentKind.PowerCable &&
                      pickup.Line.PowerCableType ==
-                        PowerCableType.ModularAtx24SplitPsuToMotherboard)) &&
+                        PowerCableType.ModularAtx24SplitPsuToMotherboard) ||
+                    (pickup.Line.ComponentKind == PcComponentKind.PowerCable &&
+                     pickup.Line.PowerCableType ==
+                        PowerCableType.ModularEps12v8PinPsuToMotherboard)) &&
                    handoff.OperationId.IsEmpty == false &&
                    ReferenceEquals(handoff.BuildOrder, pickup.BuildOrder) &&
                    ReferenceEquals(handoff.Line, pickup.Line) &&
@@ -3521,6 +3622,9 @@ namespace PCShopEmpire3D.Orders
                 PcComponentKind.PowerCable when powerCableType ==
                     PowerCableType.ModularAtx24SplitPsuToMotherboard =>
                     _atx24PowerCableAssemblyContainerId,
+                PcComponentKind.PowerCable when powerCableType ==
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard =>
+                    _eps12vPowerCableAssemblyContainerId,
                 _ => default
             };
         }
