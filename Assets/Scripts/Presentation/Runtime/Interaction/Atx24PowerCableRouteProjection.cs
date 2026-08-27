@@ -26,6 +26,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         [SerializeField] private Transform routeRoot;
         [SerializeField] private Transform powerSupplyHostRoot;
         [SerializeField] private Transform motherboardHostRoot;
+        private Transform[] _installedAssemblyHostRoots = Array.Empty<Transform>();
         [SerializeField] private LineRenderer[] previewLines = new LineRenderer[3];
         [SerializeField, Min(0.1f)] private float maximumRange = 2f;
         [SerializeField, Range(0f, 1f)] private float minimumFocusDot = 0.94f;
@@ -62,6 +63,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public Transform MotherboardHostRoot => motherboardHostRoot;
 
+        public bool MatchesInstalledAssemblyHostRoots(
+            Transform processorCoolerRoot,
+            Transform graphicsCardRoot,
+            Transform chassisCablePassThroughRoot)
+        {
+            return processorCoolerRoot != null &&
+                   graphicsCardRoot != null &&
+                   chassisCablePassThroughRoot != null &&
+                   _installedAssemblyHostRoots.Length == 3 &&
+                   _installedAssemblyHostRoots[0] == processorCoolerRoot &&
+                   _installedAssemblyHostRoots[1] == graphicsCardRoot &&
+                   _installedAssemblyHostRoots[2] == chassisCablePassThroughRoot;
+        }
+
         public LineRenderer[] PreviewLines => previewLines;
 
         public bool IsRouteModeActive => _routeModeActive;
@@ -92,6 +107,50 @@ namespace PCShopEmpire3D.Presentation.Interaction
             previewLines.Length == 3 &&
             Array.TrueForAll(previewLines, line => line != null) &&
             AreDistinct(previewLines);
+
+        public void ConfigureInstalledAssemblyHostRoots(
+            Transform processorCoolerRoot,
+            Transform graphicsCardRoot,
+            Transform chassisCablePassThroughRoot)
+        {
+            if (processorCoolerRoot == null)
+            {
+                throw new ArgumentNullException(nameof(processorCoolerRoot));
+            }
+
+            if (graphicsCardRoot == null)
+            {
+                throw new ArgumentNullException(nameof(graphicsCardRoot));
+            }
+
+            if (chassisCablePassThroughRoot == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(chassisCablePassThroughRoot));
+            }
+
+            if (processorCoolerRoot == graphicsCardRoot ||
+                processorCoolerRoot == chassisCablePassThroughRoot ||
+                graphicsCardRoot == chassisCablePassThroughRoot ||
+                processorCoolerRoot.IsChildOf(graphicsCardRoot) ||
+                graphicsCardRoot.IsChildOf(processorCoolerRoot) ||
+                processorCoolerRoot.IsChildOf(chassisCablePassThroughRoot) ||
+                graphicsCardRoot.IsChildOf(chassisCablePassThroughRoot) ||
+                chassisCablePassThroughRoot.IsChildOf(processorCoolerRoot) ||
+                chassisCablePassThroughRoot.IsChildOf(graphicsCardRoot))
+            {
+                throw new ArgumentException(
+                    "ATX24 installed assembly host roots must be distinct.");
+            }
+
+            _installedAssemblyHostRoots =
+                new[]
+                {
+                    processorCoolerRoot,
+                    graphicsCardRoot,
+                    chassisCablePassThroughRoot
+                };
+        }
 
         public void Configure(
             string stableRouteId,
@@ -230,6 +289,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 waypoints != null && waypoints.Length > 2 ? waypoints[2] : null,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                _installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,
@@ -270,6 +330,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 routeRoot,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                _installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,

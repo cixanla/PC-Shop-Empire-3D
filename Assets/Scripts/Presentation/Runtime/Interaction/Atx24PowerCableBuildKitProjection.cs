@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -258,6 +259,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
         }
 
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeAtx24PowerCableAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.ComponentKind == PcComponentKind.PowerCable &&
+                       receipt.Line.PowerCableType ==
+                           PowerCableType.ModularAtx24SplitPsuToMotherboard &&
+                       receipt.WorkbenchContainerId ==
+                           session.Atx24PowerCableRouteContainerId;
+            }
+        }
+
         public bool IsConfigured => runtime != null &&
                                     surface != null &&
                                     surface.SurfaceCollider != null &&
@@ -505,9 +523,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nATX24 HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nATX24 BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nATX24 MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nATX24 HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nATX24 BEKLİYOR";
         }
 
         public void ResetFeedback()

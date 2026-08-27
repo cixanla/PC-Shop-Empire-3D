@@ -252,7 +252,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     {
                         if (IsAtx24PowerCableBuildKitMode ||
                             (atx24PowerCableBuildKit != null &&
-                             atx24PowerCableBuildKit.HasPickupReceipt))
+                             atx24PowerCableBuildKit.HasPickupReceipt &&
+                             !atx24PowerCableBuildKit.IsReleasedForAssembly))
                         {
                             return GetHeldAtx24PowerCableBuildKitPrompt(
                                 placement,

@@ -124,6 +124,154 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 expectedInventoryRevision);
         }
 
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedAtx24PowerCableForAssembly()
+        {
+            return PickupStagedAtx24PowerCableForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision,
+                AssemblyBuild.Atx24PowerCableRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedAtx24PowerCableForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision,
+                long expectedCableRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            if (CustomPcBuildKit.TryGetAssemblyHandoff(
+                    PrototypeAtx24PowerCableAssemblyHandoffOperationId,
+                    out _))
+            {
+                return CustomPcBuildKit.ReleaseCanonicalAtx24PowerCableForAssembly(
+                    PrototypeAtx24PowerCableAssemblyHandoffOperationId,
+                    workOrder,
+                    Atx24PowerCableRouteContainerId,
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            }
+
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            Atx24PowerCableDefinition definition =
+                AssemblyBuild.Atx24PowerCableDefinition;
+            Atx24PowerCableTopology topology = definition.Topology;
+            if (snapshot.Revision != expectedAssemblyRevision ||
+                AssemblyBuild.Atx24PowerCableRevision != expectedCableRevision ||
+                AssemblyBuild.Atx24PowerCableState != Atx24PowerCableState.Loose ||
+                AssemblyBuild.Atx24PowerCableReceiptCount != 0 ||
+                !definition.IsValid ||
+                definition.ProductId != Atx24PowerCableProductId ||
+                definition.RouteContainerId != Atx24PowerCableRouteContainerId ||
+                topology == null ||
+                !topology.IsValid ||
+                topology.RouteId != Atx24PowerCableRouteId ||
+                topology.PsuPrimaryEndpoint.EndpointId !=
+                    Atx24PowerCablePsuPrimaryEndpointId ||
+                topology.PsuPrimaryEndpoint.ConnectorType !=
+                    PowerCableConnectorType.PsuModularAtx24Primary18 ||
+                topology.PsuSenseEndpoint.EndpointId !=
+                    Atx24PowerCablePsuSenseEndpointId ||
+                topology.PsuSenseEndpoint.ConnectorType !=
+                    PowerCableConnectorType.PsuModularAtx24Sense10 ||
+                topology.MotherboardEndpoint.EndpointId !=
+                    Atx24PowerCableMotherboardEndpointId ||
+                topology.MotherboardEndpoint.ConnectorType !=
+                    PowerCableConnectorType.MotherboardAtx24 ||
+                topology.FirstWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Atx24PowerCableWaypoint1IdValue) ||
+                topology.SecondWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Atx24PowerCableWaypoint2IdValue) ||
+                topology.ThirdWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Atx24PowerCableWaypoint3IdValue) ||
+                !Inventory.TryGetContainer(
+                    Atx24PowerCableRouteContainerId,
+                    out InventoryContainerDefinition routeContainer) ||
+                routeContainer.Kind != InventoryContainerKind.Workbench ||
+                routeContainer.UnitCapacity != 1 ||
+                Inventory.GetContainerQuantity(
+                    Atx24PowerCableRouteContainerId).Value != 0 ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.MemoryModuleRetained ||
+                snapshot.StorageSlotState != StorageSlotState.StorageDeviceSecured ||
+                snapshot.ProcessorCoolerSlotState !=
+                    ProcessorCoolerSlotState.CoolerRetained ||
+                snapshot.ProcessorCoolerTimState !=
+                    ProcessorCoolerTimState.AppliedConsumed ||
+                snapshot.GraphicsCardSlotState !=
+                    GraphicsCardSlotState.GraphicsCardRetained ||
+                snapshot.PowerSupplyBayState !=
+                    PowerSupplyBayState.PowerSupplyRetained ||
+                !TryGetAtx24PowerCableItem(out InventoryItemRecord cable) ||
+                cable.Id != Atx24PowerCableItemId ||
+                cable.ProductId != Atx24PowerCableProductId ||
+                (cable.ContainerId != Atx24PowerCableBuildKitContainerId &&
+                 cable.ContainerId != HandsContainerId) ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeAtx24PowerCableBuildKitOperationId,
+                    out CustomPcBuildKitReceipt staging) ||
+                staging.Stage != CustomPcBuildKitStage.Atx24PowerCableStaged ||
+                staging.Line.ComponentKind != PcComponentKind.PowerCable ||
+                staging.Line.PowerCableType !=
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard ||
+                staging.Line.ProductId != cable.ProductId ||
+                staging.Line.ItemId != cable.Id ||
+                staging.BuildKitContainerId !=
+                    Atx24PowerCableBuildKitContainerId ||
+                !ReferenceEquals(staging.BuildOrder, workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedMemoryModuleAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveSecuredStorageAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorCoolerAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedGraphicsCardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedPowerSupplyAssemblyPrerequisite(
+                    snapshot,
+                    workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalAtx24PowerCableForAssembly(
+                PrototypeAtx24PowerCableAssemblyHandoffOperationId,
+                workOrder,
+                Atx24PowerCableRouteContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldAtx24PowerCableToWorld()
         {
             if (!AssemblyBuild.HasAtx24PowerCableRoute ||
@@ -164,6 +312,80 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 Atx24PowerCableItemId,
                 sourceRouteOperationId,
                 expectedCableRevision);
+        }
+
+        private bool HasLiveRetainedPowerSupplyAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                snapshot.PowerSupplyBayState !=
+                    PowerSupplyBayState.PowerSupplyRetained ||
+                snapshot.PowerSupplyItemId != PowerSupplyItemId ||
+                snapshot.PowerSupplyProductId != PowerSupplyProductId ||
+                snapshot.PowerSupplySeatedByOperationId.IsEmpty ||
+                snapshot.PowerSupplyRetainedByOperationId.IsEmpty ||
+                !CustomPcBuildKit.TryGetAssemblyHandoff(
+                    PrototypePowerSupplyAssemblyHandoffOperationId,
+                    out CustomPcBuildKitAssemblyHandoffReceipt handoff) ||
+                !ReferenceEquals(handoff.BuildOrder, workOrder) ||
+                handoff.ComponentKind != PcComponentKind.PowerSupply ||
+                handoff.Line.ItemId != snapshot.PowerSupplyItemId ||
+                handoff.Line.ProductId != snapshot.PowerSupplyProductId ||
+                handoff.WorkbenchContainerId != PowerSupplyBayContainerId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.PowerSupplySeatedByOperationId,
+                    out AssemblyOperationReceipt seat) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.PowerSupplyRetainedByOperationId,
+                    out AssemblyOperationReceipt retain) ||
+                !TryGetPowerSupplyItem(out InventoryItemRecord item))
+            {
+                return false;
+            }
+
+            PowerSupplyBayDefinition bay = snapshot.PowerSupplyBayDefinition;
+            PowerSupplyRetentionTopology retention = bay.RetentionTopology;
+            return bay.IsValid &&
+                   retention != null &&
+                   retention.IsValid &&
+                   item.Id == snapshot.PowerSupplyItemId &&
+                   item.ProductId == snapshot.PowerSupplyProductId &&
+                   item.ContainerId == PowerSupplyBayContainerId &&
+                   seat.OperationId == snapshot.PowerSupplySeatedByOperationId &&
+                   seat.OperationKind == AssemblyOperationKind.SeatPowerSupply &&
+                   seat.BuildId == snapshot.BuildId &&
+                   seat.ChassisId == snapshot.ChassisId &&
+                   seat.SlotId == bay.SlotId &&
+                   seat.ItemId == snapshot.PowerSupplyItemId &&
+                   seat.ProductId == snapshot.PowerSupplyProductId &&
+                   seat.SourceContainerId == HandsContainerId &&
+                   seat.TargetContainerId == PowerSupplyBayContainerId &&
+                   seat.PreviousPowerSupplyBayState == PowerSupplyBayState.EmptyOpen &&
+                   seat.ResultingPowerSupplyBayState ==
+                       PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                   seat.PowerSupplyMountOrientation ==
+                       snapshot.PowerSupplyMountOrientation &&
+                   seat.PowerSupplyBayDefinition.SlotId == bay.SlotId &&
+                   seat.PowerSupplyBayDefinition.ContainerId == bay.ContainerId &&
+                   seat.PowerSupplyBayDefinition.SupportedPowerSupplyType ==
+                       bay.SupportedPowerSupplyType &&
+                   retain.OperationId == snapshot.PowerSupplyRetainedByOperationId &&
+                   retain.OperationKind == AssemblyOperationKind.RetainPowerSupply &&
+                   retain.BuildId == snapshot.BuildId &&
+                   retain.ChassisId == snapshot.ChassisId &&
+                   retain.SlotId == bay.SlotId &&
+                   retain.ItemId == snapshot.PowerSupplyItemId &&
+                   retain.ProductId == snapshot.PowerSupplyProductId &&
+                   retain.SourcePowerSupplySeatOperationId == seat.OperationId &&
+                   retain.PreviousPowerSupplyBayState ==
+                       PowerSupplyBayState.PowerSupplySeatedUnsecured &&
+                   retain.ResultingPowerSupplyBayState ==
+                       PowerSupplyBayState.PowerSupplyRetained &&
+                   retain.PowerSupplyMountOrientation ==
+                       snapshot.PowerSupplyMountOrientation &&
+                   retain.AssemblyRevision == snapshot.Revision;
         }
     }
 }

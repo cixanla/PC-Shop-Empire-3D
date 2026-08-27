@@ -73,7 +73,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (enabled && atx24PowerCableBuildKit != null &&
-                atx24PowerCableBuildKit.HasPickupReceipt)
+                atx24PowerCableBuildKit.HasPickupReceipt &&
+                !atx24PowerCableBuildKit.IsReleasedForAssembly)
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode(
@@ -176,7 +177,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             bool buildKitOwnsPrimary =
                 IsAtx24PowerCableBuildKitMode ||
                 (atx24PowerCableBuildKit != null &&
-                 atx24PowerCableBuildKit.HasPickupReceipt);
+                 atx24PowerCableBuildKit.HasPickupReceipt &&
+                 !atx24PowerCableBuildKit.IsReleasedForAssembly);
 
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
@@ -332,7 +334,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 binding.IsAuthorityInHands &&
                     !binding.IsRouted &&
                     (atx24PowerCableBuildKit == null ||
-                     !atx24PowerCableBuildKit.HasPickupReceipt),
+                     !atx24PowerCableBuildKit.HasPickupReceipt ||
+                     atx24PowerCableBuildKit.IsReleasedForAssembly),
                 session.AssemblyBuild.MotherboardSeatState ==
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
@@ -362,6 +365,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 atx24PowerCableRoute == null ||
                 atx24PowerCableBinding == null ||
                 (!atx24PowerCableBinding.IsAuthorityLooseWorld &&
+                 !atx24PowerCableBinding.IsAuthorityInBuildKit &&
                  !atx24PowerCableBinding.IsRouted))
             {
                 return false;
@@ -416,36 +420,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Failure.FromCode("assembly-power-cable.paused")));
             }
 
-            if (binding.IsAuthorityInBuildKit)
-            {
-                return Remember(OperationResult.Fail(
-                    Failure.FromCode(
-                        "custom-pc-atx24-power-cable-build-kit.already-staged")));
-            }
-
             bool wasRouted = binding.IsRouted;
-            OperationResult physicalPickup = item.BeginCarry(
-                carryAnchor,
-                heldItemLayer);
-            if (physicalPickup.IsFailure)
+            bool wasInBuildKit = binding.IsAuthorityInBuildKit;
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasRouted || wasInBuildKit)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasRouted
-                ? binding.TryCommitRoutedUnroute()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
                 {
-                    Debug.LogError(
-                        $"ATX24_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPreflight);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = wasRouted
+                    ? binding.TryCommitRoutedUnroute()
+                    : binding.TryCommitBuildKitAssemblyPickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-atx24-power-cable-assembly." +
+                                "pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
+            }
+            else
+            {
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    return Remember(physicalPickup);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            "ATX24_POWER_CABLE_PROJECTION_ROLLBACK_FAILED " +
+                            $"code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
             }
 
             HeldItem = item;
@@ -488,9 +522,49 @@ namespace PCShopEmpire3D.Presentation.Interaction
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
-            return binding.IsRouted
-                ? $"[ROUTE] PSU 18+10 → KANAL → ANAKART 24 • {interact}: çöz"
-                : $"{interact}: {binding.PhysicalItem.DisplayName} al • 3 KONEKTÖR";
+            if (binding.IsRouted)
+            {
+                return $"[ROUTE] PSU 18+10 → KANAL → ANAKART 24 • " +
+                       $"{interact}: çöz";
+            }
+
+            if (binding.IsAuthorityInBuildKit)
+            {
+                GarageStockFlowSession session = binding.Session;
+                int stagedComponentCount =
+                    binding.BuildKit?.StagedComponentCount ?? 10;
+                bool prerequisitesReady = session != null &&
+                    session.AssemblyBuild.MotherboardSeatState ==
+                        AssemblySeatState.SeatedSecured &&
+                    session.AssemblyBuild.ProcessorSocketState ==
+                        ProcessorSocketState.ProcessorRetained &&
+                    session.AssemblyBuild.MemorySlotState ==
+                        MemorySlotState.MemoryModuleRetained &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
+                    session.AssemblyBuild.ProcessorCoolerSlotState ==
+                        ProcessorCoolerSlotState.CoolerRetained &&
+                    session.AssemblyBuild.GraphicsCardSlotState ==
+                        GraphicsCardSlotState.GraphicsCardRetained &&
+                    session.AssemblyBuild.PowerSupplyBayState ==
+                        PowerSupplyBayState.PowerSupplyRetained;
+                if (stagedComponentCount <
+                    Atx24PowerCableBuildKitProjection.PrototypeTotalComponentCount)
+                {
+                    return $"BUILD KIT • {stagedComponentCount}/" +
+                           $"{Atx24PowerCableBuildKitProjection.PrototypeTotalComponentCount} " +
+                           "• KALAN PARÇALARI TAMAMLA";
+                }
+
+                return prerequisitesReady
+                    ? $"{interact}: ATX24'Ü KABLO MONTAJINA AL • BUILD KIT • " +
+                      $"{stagedComponentCount}/" +
+                      $"{Atx24PowerCableBuildKitProjection.PrototypeTotalComponentCount}"
+                    : "ÖNCE EXACT 7 PARÇALIK MONTAJ ZİNCİRİNİ VE PSU 4 VİDAYI TAMAMLA";
+            }
+
+            return $"{interact}: {binding.PhysicalItem.DisplayName} al • " +
+                   "3 KONEKTÖR";
         }
 
         private static string GetAtx24PowerCableStatusLabel(

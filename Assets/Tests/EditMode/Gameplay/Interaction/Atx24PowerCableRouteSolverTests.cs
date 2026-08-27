@@ -85,6 +85,39 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void ExactInstalledHostRootsAreIgnoredButForeignObstructionStillFails()
+        {
+            Fixture fixture = CreateFixture();
+            GameObject installedHost = CreateObject("InstalledAssemblyHost");
+            GameObject installedColliderObject = CreateCube(
+                "InstalledHostCollider",
+                Vector3.zero,
+                Vector3.one);
+            installedColliderObject.transform.SetParent(installedHost.transform, false);
+            Collider installedCollider = installedColliderObject.GetComponent<Collider>();
+            fixture.Physics.SetOverlaps(installedCollider);
+
+            Atx24PowerCableRouteEvaluation accepted = fixture.Evaluate(
+                installedAssemblyHostRoots: new[] { installedHost.transform });
+
+            Assert.That(accepted.Status,
+                Is.EqualTo(Atx24PowerCableRouteStatus.ValidRoute));
+
+            Collider foreignCollider =
+                CreateCube(
+                    "ForeignRouteObstruction",
+                    Vector3.zero,
+                    Vector3.one).GetComponent<Collider>();
+            fixture.Physics.SetOverlaps(installedCollider, foreignCollider);
+
+            Atx24PowerCableRouteEvaluation blocked = fixture.Evaluate(
+                installedAssemblyHostRoots: new[] { installedHost.transform });
+
+            Assert.That(blocked.Status,
+                Is.EqualTo(Atx24PowerCableRouteStatus.RouteObstructed));
+        }
+
+        [Test]
         public void RoutedFocusUsesTheAuthoredConnectorWithoutRouteOverlapQueries()
         {
             Fixture fixture = CreateFixture();
@@ -391,7 +424,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                 bool motherboardSecured = true,
                 bool powerSupplyRetained = true,
                 PowerCableKeyOrientation orientation =
-                    PowerCableKeyOrientation.Keyed)
+                    PowerCableKeyOrientation.Keyed,
+                Transform[] installedAssemblyHostRoots = null)
             {
                 return Atx24PowerCableRouteSolver.Evaluate(
                     true,
@@ -408,6 +442,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                     ThirdWaypoint,
                     PowerSupplyHost,
                     MotherboardHost,
+                    installedAssemblyHostRoots,
                     1 << 0,
                     2f,
                     0.94f,

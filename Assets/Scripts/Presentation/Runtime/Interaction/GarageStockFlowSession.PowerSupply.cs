@@ -320,7 +320,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool HasLiveRetainedGraphicsCardAssemblyPrerequisite(
             AssemblyBuildSnapshot snapshot,
-            CustomPcBuildOrderRecord workOrder)
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
         {
             if (workOrder == null ||
                 snapshot.BuildId != AssemblyBuild.BuildId ||
@@ -378,7 +379,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
                    retain.ResultingGraphicsCardSlotState ==
                        GraphicsCardSlotState.GraphicsCardRetained &&
-                   retain.AssemblyRevision == snapshot.Revision;
+                   (requireCurrentRevision
+                       ? retain.AssemblyRevision == snapshot.Revision
+                       : retain.AssemblyRevision > 0 &&
+                         retain.AssemblyRevision < snapshot.Revision);
         }
     }
 }
