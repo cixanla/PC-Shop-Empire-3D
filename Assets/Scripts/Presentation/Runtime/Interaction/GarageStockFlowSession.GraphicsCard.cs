@@ -284,7 +284,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool HasLiveRetainedProcessorCoolerAssemblyPrerequisite(
             AssemblyBuildSnapshot snapshot,
-            CustomPcBuildOrderRecord workOrder)
+            CustomPcBuildOrderRecord workOrder,
+            bool requireCurrentRevision = true)
         {
             if (workOrder == null ||
                 snapshot.BuildId != AssemblyBuild.BuildId ||
@@ -354,7 +355,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                        ProcessorCoolerSlotState.CoolerSeatedUnsecured &&
                    retain.ResultingProcessorCoolerSlotState ==
                        ProcessorCoolerSlotState.CoolerRetained &&
-                   retain.AssemblyRevision == snapshot.Revision;
+                   (requireCurrentRevision
+                       ? retain.AssemblyRevision == snapshot.Revision
+                       : retain.AssemblyRevision > 0 &&
+                         retain.AssemblyRevision < snapshot.Revision);
         }
     }
 }

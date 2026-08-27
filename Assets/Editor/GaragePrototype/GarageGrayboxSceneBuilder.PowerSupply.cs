@@ -81,8 +81,10 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
             Transform snapAnchor = new GameObject("PowerSupplyBaySnapAnchor").transform;
             snapAnchor.SetParent(bayRoot, false);
-            snapAnchor.localPosition = new Vector3(-0.75f, 1.105f, 4.25f);
-            snapAnchor.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            // Keep the ATX housing upright: its 86 mm axis is vertical, the intake fan
+            // faces the filtered floor and the rear panel meets the rear mounting plate.
+            snapAnchor.localPosition = new Vector3(-0.75f, 1.093f, 4.334f);
+            snapAnchor.localRotation = Quaternion.identity;
 
             Vector3[] screwPositions =
             {

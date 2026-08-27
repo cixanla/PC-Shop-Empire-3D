@@ -110,6 +110,56 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void RecoverySeatSkipsPlayerFocusButPreservesExactGeometryGates()
+        {
+            Fixture fixture = CreateFixture();
+            fixture.Origin.position = new Vector3(0f, 0f, -50f);
+            fixture.Origin.rotation = Quaternion.LookRotation(
+                Vector3.back,
+                Vector3.up);
+            fixture.Query.SetLineHits();
+
+            PowerSupplyBayEvaluation result = fixture.EvaluateRecovery();
+            Pose expected = PowerSupplyBaySolver.ResolveSeatPose(fixture.Snap, 0);
+
+            Assert.That(result.Status, Is.EqualTo(PowerSupplyBayStatus.ValidSeat));
+            Assert.That(result.CanSeat, Is.True);
+            Assert.That(result.Pose.position, Is.EqualTo(expected.position));
+            Assert.That(Quaternion.Angle(result.Pose.rotation, expected.rotation),
+                Is.LessThan(0.001f));
+            Assert.That(fixture.Query.RaycastQueryCount, Is.Zero);
+            Assert.That(fixture.Query.SupportQueryCount, Is.EqualTo(1));
+            Assert.That(fixture.Query.OverlapQueryCount, Is.EqualTo(1));
+            Assert.That(fixture.Query.BoxCastQueryCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RecoverySeatFailsClosedForAuthorityAndCurrentObstruction()
+        {
+            Fixture fixture = CreateFixture();
+
+            PowerSupplyBayEvaluation noAuthority = fixture.EvaluateRecovery(
+                authorityAvailable: false);
+            Assert.That(noAuthority.Status,
+                Is.EqualTo(PowerSupplyBayStatus.AuthorityBlocked));
+            Assert.That(fixture.Query.TotalQueryCount, Is.Zero);
+
+            Collider obstruction = CreateCube(
+                "PowerSupplyRecoveryObstruction",
+                fixture.Snap.position,
+                Vector3.one * 0.05f).GetComponent<Collider>();
+            fixture.Query.SetOverlaps(obstruction);
+
+            PowerSupplyBayEvaluation blocked = fixture.EvaluateRecovery();
+
+            Assert.That(blocked.Status,
+                Is.EqualTo(PowerSupplyBayStatus.Obstructed));
+            Assert.That(blocked.CanSeat, Is.False);
+            Assert.That(blocked.FailureCode,
+                Is.EqualTo("assembly-power-supply.obstructed"));
+        }
+
+        [Test]
         public void RotatedHalfTurnKeepsCandidatePoseButRejectsKeyMismatch()
         {
             Fixture fixture = CreateFixture();
@@ -607,6 +657,36 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
                     0.94f,
                     halfTurns,
                     paused,
+                    authorityAvailable,
+                    powerSupplyInterface,
+                    slotInterface,
+                    chassisClearanceAvailable,
+                    cableClearanceAvailable,
+                    chassisBlockers,
+                    cableBlockers,
+                    Query);
+            }
+
+            public PowerSupplyBayEvaluation EvaluateRecovery(
+                int halfTurns = 0,
+                bool authorityAvailable = true,
+                PowerSupplyFormFactor powerSupplyInterface =
+                    PowerSupplyFormFactor.AtxPs2,
+                PowerSupplyFormFactor slotInterface =
+                    PowerSupplyFormFactor.AtxPs2,
+                bool chassisClearanceAvailable = true,
+                bool cableClearanceAvailable = true,
+                IReadOnlyList<Collider> chassisBlockers = null,
+                IReadOnlyList<Collider> cableBlockers = null)
+            {
+                return PowerSupplyBaySolver.EvaluateRecoverySeat(
+                    PowerSupply,
+                    Snap,
+                    Focus,
+                    Support,
+                    Assembly,
+                    1 << 0,
+                    halfTurns,
                     authorityAvailable,
                     powerSupplyInterface,
                     slotInterface,

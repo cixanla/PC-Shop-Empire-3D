@@ -627,11 +627,65 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
                 if (focusedPowerSupply != null)
                 {
+                    string interact = input != null
+                        ? input.InteractBindingPrompt
+                        : "E / A";
+                    if (focusedPowerSupply.IsAuthorityInBuildKit)
+                    {
+                        int stagedComponentCount =
+                            focusedPowerSupply.BuildKit?.StagedComponentCount ?? 10;
+                        GarageStockFlowSession focusedSession =
+                            focusedPowerSupply.Session;
+                        bool motherboardSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MotherboardSeatState ==
+                                AssemblySeatState.SeatedSecured;
+                        bool processorRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorSocketState ==
+                                ProcessorSocketState.ProcessorRetained;
+                        bool memoryRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.MemorySlotState ==
+                                MemorySlotState.MemoryModuleRetained;
+                        bool storageSecured = focusedSession != null &&
+                            focusedSession.AssemblyBuild.StorageSlotState ==
+                                StorageSlotState.StorageDeviceSecured;
+                        bool coolerRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.ProcessorCoolerSlotState ==
+                                ProcessorCoolerSlotState.CoolerRetained;
+                        bool graphicsCardRetained = focusedSession != null &&
+                            focusedSession.AssemblyBuild.GraphicsCardSlotState ==
+                                GraphicsCardSlotState.GraphicsCardRetained;
+                        if (stagedComponentCount <
+                            PowerSupplyBuildKitProjection.PrototypeTotalComponentCount)
+                        {
+                            return $"BUILD KIT • {stagedComponentCount}/" +
+                                   $"{PowerSupplyBuildKitProjection.PrototypeTotalComponentCount} • " +
+                                   "KALAN PARÇALARI TAMAMLA";
+                        }
+
+                        return motherboardSecured && processorRetained &&
+                               memoryRetained && storageSecured && coolerRetained &&
+                               graphicsCardRetained
+                            ? $"{interact}: PSU'YU BAY MONTAJINA AL • " +
+                              $"BUILD KIT • {stagedComponentCount}/" +
+                              $"{PowerSupplyBuildKitProjection.PrototypeTotalComponentCount}"
+                            : !motherboardSecured
+                                ? "ÖNCE EXACT ANAKARTI KASAYA OTURT VE VİDAYI SIK"
+                                : !processorRetained
+                                    ? "ÖNCE EXACT İŞLEMCİYİ SOKETE OTURT VE RETENTION'I KAPAT"
+                                    : !memoryRetained
+                                        ? "ÖNCE EXACT DDR5'İ A2 SLOTUNA OTURT VE ÇİFT MANDALI KAPAT"
+                                        : !storageSecured
+                                            ? "ÖNCE EXACT M.2 NVMe'Yİ PRIMARY SLOTTA VİDAYLA SABİTLE"
+                                            : !coolerRetained
+                                                ? "ÖNCE EXACT SOĞUTUCUYU 4 NOKTADA KİLİTLE"
+                                                : "ÖNCE EXACT GPU'YU PCIe x16 SLOTUNDA KİLİTLE";
+                    }
+
                     return focusedPowerSupply.IsRetained
                         ? "PSU ARKA PLAKA + 4 VİDA KİLİTLİ • sökme kilitli"
                         : focusedPowerSupply.IsSeated
-                            ? $"{(input != null ? input.InteractBindingPrompt : "E / A")}: PSU'yu çıkar • 4 VİDA GEVŞEK"
-                            : $"{(input != null ? input.InteractBindingPrompt : "E / A")}: {FocusedItem.DisplayName} al • ATX PS/2";
+                            ? $"{interact}: PSU'yu çıkar • 4 VİDA GEVŞEK"
+                            : $"{interact}: {FocusedItem.DisplayName} al • ATX PS/2";
                 }
                 if (focusedGraphicsCard != null)
                 {
@@ -2521,7 +2575,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 OperationResult recovery =
                     powerSupplyAssemblyBinding.TryRecoverHeld(
                         carryAnchor,
-                        heldItemLayer);
+                        heldItemLayer,
+                        obstructionMask);
                 if (recovery.IsFailure)
                 {
                     return Remember(recovery);

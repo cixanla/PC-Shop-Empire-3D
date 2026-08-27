@@ -262,6 +262,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return LastEvaluation;
         }
 
+        public PowerSupplyBayEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection powerSupply,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            PowerSupplyFormFactor powerSupplyFormFactor,
+            bool chassisClearanceAvailable,
+            bool cableClearanceAvailable)
+        {
+            LastEvaluation = PowerSupplyBaySolver.EvaluateRecoverySeat(
+                powerSupply,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                assemblyRoot,
+                obstructionMask,
+                halfTurns,
+                authorityAvailable,
+                powerSupplyFormFactor,
+                bayFormFactor,
+                chassisClearanceAvailable,
+                cableClearanceAvailable,
+                chassisClearanceBlockers,
+                cableClearanceBlockers);
+            return LastEvaluation;
+        }
+
         public PowerSupplyBayEvaluation EvaluateInteraction(
             bool interactionModeEnabled,
             Transform interactionOrigin,

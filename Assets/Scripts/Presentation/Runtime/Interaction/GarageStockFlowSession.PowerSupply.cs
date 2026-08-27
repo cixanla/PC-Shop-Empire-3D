@@ -126,6 +126,108 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 expectedInventoryRevision);
         }
 
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedPowerSupplyForAssembly()
+        {
+            return PickupStagedPowerSupplyForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedPowerSupplyForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision)
+        {
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            if (CustomPcBuildKit == null ||
+                snapshot.Revision != expectedAssemblyRevision ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.MemoryModuleRetained ||
+                snapshot.StorageSlotState != StorageSlotState.StorageDeviceSecured ||
+                snapshot.ProcessorCoolerSlotState !=
+                    ProcessorCoolerSlotState.CoolerRetained ||
+                snapshot.ProcessorCoolerTimState !=
+                    ProcessorCoolerTimState.AppliedConsumed ||
+                snapshot.GraphicsCardSlotState !=
+                    GraphicsCardSlotState.GraphicsCardRetained ||
+                snapshot.PowerSupplyBayState != PowerSupplyBayState.EmptyOpen ||
+                snapshot.MotherboardItemId != MotherboardItemId ||
+                snapshot.ProcessorItemId != ProcessorItemId ||
+                snapshot.MemoryItemId != MemoryItemId ||
+                snapshot.StorageItemId != StorageItemId ||
+                snapshot.ProcessorCoolerItemId != ProcessorCoolerItemId ||
+                snapshot.GraphicsCardItemId != GraphicsCardAssemblyItemId ||
+                snapshot.InstalledByOperationId.IsEmpty ||
+                snapshot.SecuredByOperationId.IsEmpty ||
+                snapshot.ProcessorSeatedByOperationId.IsEmpty ||
+                snapshot.ProcessorRetainedByOperationId.IsEmpty ||
+                snapshot.MemorySeatedByOperationId.IsEmpty ||
+                snapshot.MemoryRetainedByOperationId.IsEmpty ||
+                snapshot.StorageSeatedByOperationId.IsEmpty ||
+                snapshot.StorageSecuredByOperationId.IsEmpty ||
+                snapshot.ProcessorCoolerSeatedByOperationId.IsEmpty ||
+                snapshot.ProcessorCoolerRetainedByOperationId.IsEmpty ||
+                snapshot.GraphicsCardSeatedByOperationId.IsEmpty ||
+                snapshot.GraphicsCardRetainedByOperationId.IsEmpty ||
+                !TryGetMotherboardItem(out InventoryItemRecord motherboard) ||
+                motherboard.ContainerId != WorkbenchContainerId ||
+                !TryGetProcessorItem(out InventoryItemRecord processor) ||
+                processor.ContainerId != ProcessorSocketContainerId ||
+                !TryGetMemoryItem(out InventoryItemRecord memoryModule) ||
+                memoryModule.ContainerId != MemorySlotContainerId ||
+                !TryGetStorageItem(out InventoryItemRecord storage) ||
+                storage.ContainerId != StorageSlotContainerId ||
+                !TryGetProcessorCoolerItem(out InventoryItemRecord processorCooler) ||
+                processorCooler.ContainerId != ProcessorCoolerSlotContainerId ||
+                (processorCooler.StateFlags &
+                 InventorySerializedItemStateFlags.PreAppliedConsumableConsumed) == 0 ||
+                !TryGetGraphicsCardAssemblyItem(out InventoryItemRecord graphicsCard) ||
+                graphicsCard.ContainerId != GraphicsCardSlotContainerId ||
+                !TryGetPowerSupplyItem(out InventoryItemRecord powerSupply) ||
+                powerSupply.Id != PowerSupplyItemId ||
+                powerSupply.ProductId != PowerSupplyProductId ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedMemoryModuleAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveSecuredStorageAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorCoolerAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedGraphicsCardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalPowerSupplyForAssembly(
+                PrototypePowerSupplyAssemblyHandoffOperationId,
+                workOrder,
+                PowerSupplyBayContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldPowerSupplyToWorld()
         {
             if (CustomPcBuildKit != null &&
@@ -214,6 +316,69 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 PowerSupplyBaySlotId,
                 sourcePowerSupplySeatOperationId,
                 expectedAssemblyRevision);
+        }
+
+        private bool HasLiveRetainedGraphicsCardAssemblyPrerequisite(
+            AssemblyBuildSnapshot snapshot,
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (workOrder == null ||
+                snapshot.BuildId != AssemblyBuild.BuildId ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.GraphicsCardSeatedByOperationId,
+                    out AssemblyOperationReceipt seat) ||
+                !AssemblyBuild.TryGetReceipt(
+                    snapshot.GraphicsCardRetainedByOperationId,
+                    out AssemblyOperationReceipt retain))
+            {
+                return false;
+            }
+
+            CustomPcBuildOrderLineSnapshot canonicalGraphicsCard = null;
+            foreach (CustomPcBuildOrderLineSnapshot line in workOrder.Lines)
+            {
+                if (line.ComponentKind == PcComponentKind.GraphicsCard)
+                {
+                    if (canonicalGraphicsCard != null)
+                    {
+                        return false;
+                    }
+
+                    canonicalGraphicsCard = line;
+                }
+            }
+
+            return canonicalGraphicsCard != null &&
+                   canonicalGraphicsCard.ItemId == snapshot.GraphicsCardItemId &&
+                   canonicalGraphicsCard.ProductId == snapshot.GraphicsCardProductId &&
+                   seat.OperationId == snapshot.GraphicsCardSeatedByOperationId &&
+                   seat.OperationKind == AssemblyOperationKind.SeatGraphicsCard &&
+                   seat.BuildId == snapshot.BuildId &&
+                   seat.ChassisId == snapshot.ChassisId &&
+                   seat.SlotId == snapshot.GraphicsCardSlotId &&
+                   seat.ItemId == snapshot.GraphicsCardItemId &&
+                   seat.ProductId == snapshot.GraphicsCardProductId &&
+                   seat.SourceContainerId == HandsContainerId &&
+                   seat.TargetContainerId == GraphicsCardSlotContainerId &&
+                   seat.SourceAttachOperationId == snapshot.InstalledByOperationId &&
+                   seat.SourceSecureOperationId == snapshot.SecuredByOperationId &&
+                   seat.PreviousGraphicsCardSlotState ==
+                       GraphicsCardSlotState.EmptyOpen &&
+                   seat.ResultingGraphicsCardSlotState ==
+                       GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                   retain.OperationId == snapshot.GraphicsCardRetainedByOperationId &&
+                   retain.OperationKind == AssemblyOperationKind.RetainGraphicsCard &&
+                   retain.BuildId == snapshot.BuildId &&
+                   retain.ChassisId == snapshot.ChassisId &&
+                   retain.SlotId == snapshot.GraphicsCardSlotId &&
+                   retain.ItemId == snapshot.GraphicsCardItemId &&
+                   retain.ProductId == snapshot.GraphicsCardProductId &&
+                   retain.SourceGraphicsCardSeatOperationId == seat.OperationId &&
+                   retain.PreviousGraphicsCardSlotState ==
+                       GraphicsCardSlotState.GraphicsCardSeatedUnsecured &&
+                   retain.ResultingGraphicsCardSlotState ==
+                       GraphicsCardSlotState.GraphicsCardRetained &&
+                   retain.AssemblyRevision == snapshot.Revision;
         }
     }
 }
