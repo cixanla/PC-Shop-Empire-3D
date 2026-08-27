@@ -121,6 +121,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "orders.custom-pc-build-kit-assembly-operation.prototype-atx24-power-cable";
         public const string PrototypeEps12vPowerCableAssemblyHandoffOperationIdValue =
             "orders.custom-pc-build-kit-assembly-operation.prototype-eps12v-power-cable";
+        public const string PrototypePcieGpuPowerCableAssemblyHandoffOperationIdValue =
+            "orders.custom-pc-build-kit-assembly-operation.prototype-pcie-gpu-power-cable";
         public const string PrototypeBuildIdValue = "assembly.build.prototype-001";
         public const string PrototypeChassisIdValue = "assembly.chassis.prototype-001";
         public const string MotherboardSlotIdValue = "assembly.slot.motherboard-main";
@@ -398,6 +400,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PrototypeEps12vPowerCableAssemblyHandoffOperationId =>
                 StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
                     PrototypeEps12vPowerCableAssemblyHandoffOperationIdValue);
+
+        public StableId<CustomPcBuildKitAssemblyOperationIdScope>
+            PrototypePcieGpuPowerCableAssemblyHandoffOperationId =>
+                StableId<CustomPcBuildKitAssemblyOperationIdScope>.Parse(
+                    PrototypePcieGpuPowerCableAssemblyHandoffOperationIdValue);
 
         public StableId<ContainerIdScope> ProcessorSocketContainerId =>
             StableId<ContainerIdScope>.Parse(ProcessorSocketContainerIdValue);
@@ -1081,7 +1088,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         StableId<ContainerIdScope>.Parse(
                             Atx24PowerCableRouteContainerIdValue),
                         StableId<ContainerIdScope>.Parse(
-                            Eps12vPowerCableRouteContainerIdValue)).Value
+                            Eps12vPowerCableRouteContainerIdValue),
+                        StableId<ContainerIdScope>.Parse(
+                            PcieGpuPowerCableRouteContainerIdValue)).Value
                 : null;
             CustomerOfferDecisionActionAuthority customerOfferActions =
                 CustomerOfferDecisionActionAuthority.Create(

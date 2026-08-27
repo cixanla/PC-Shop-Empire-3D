@@ -376,6 +376,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 eps12vPowerCableBinding.PhysicalItem;
             if (eps12vPowerCableBinding.IsRouted)
             {
+                if (HasCompetingFocusedPowerCable(cable))
+                {
+                    return false;
+                }
+
                 Eps12vPowerCableRouteStatus routedFocus =
                     eps12vPowerCableRoute.EvaluateRoutedFocus(
                         resolver.Origin,

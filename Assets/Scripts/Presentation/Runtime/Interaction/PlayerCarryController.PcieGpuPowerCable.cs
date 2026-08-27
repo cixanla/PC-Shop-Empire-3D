@@ -73,7 +73,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (enabled && pcieGpuPowerCableBuildKit != null &&
-                pcieGpuPowerCableBuildKit.HasPickupReceipt)
+                pcieGpuPowerCableBuildKit.HasPickupReceipt &&
+                !pcieGpuPowerCableBuildKit.IsReleasedForAssembly)
             {
                 return Remember(OperationResult.Fail(
                     Failure.FromCode(
@@ -176,7 +177,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             bool buildKitOwnsPrimary =
                 IsPcieGpuPowerCableBuildKitMode ||
                 (pcieGpuPowerCableBuildKit != null &&
-                 pcieGpuPowerCableBuildKit.HasPickupReceipt);
+                 pcieGpuPowerCableBuildKit.HasPickupReceipt &&
+                 !pcieGpuPowerCableBuildKit.IsReleasedForAssembly);
 
             if (input.TryConsumePrimaryActionPressThisFrame())
             {
@@ -328,7 +330,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HeldItem,
                 obstructionMask,
                 motor == null || motor.IsPaused,
-                binding.IsAuthorityInHands && !binding.IsRouted,
+                binding.IsAuthorityInHands &&
+                    !binding.IsRouted &&
+                    (pcieGpuPowerCableBuildKit == null ||
+                     !pcieGpuPowerCableBuildKit.HasPickupReceipt ||
+                     pcieGpuPowerCableBuildKit.IsReleasedForAssembly),
                 session.AssemblyBuild.MotherboardSeatState ==
                     AssemblySeatState.SeatedSecured,
                 session.AssemblyBuild.PowerSupplyBayState ==
@@ -360,6 +366,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 pcieGpuPowerCableRoute == null ||
                 pcieGpuPowerCableBinding == null ||
                 (!pcieGpuPowerCableBinding.IsAuthorityLooseWorld &&
+                 !pcieGpuPowerCableBinding.IsAuthorityInBuildKit &&
                  !pcieGpuPowerCableBinding.IsRouted))
             {
                 return false;
@@ -369,6 +376,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 pcieGpuPowerCableBinding.PhysicalItem;
             if (pcieGpuPowerCableBinding.IsRouted)
             {
+                if (HasCompetingFocusedPowerCable(cable))
+                {
+                    return false;
+                }
+
                 PcieGpuPowerCableRouteStatus routedFocus =
                     pcieGpuPowerCableRoute.EvaluateRoutedFocus(
                         resolver.Origin,
@@ -415,28 +427,65 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             bool wasRouted = binding.IsRouted;
-            OperationResult physicalPickup = item.BeginCarry(
-                carryAnchor,
-                heldItemLayer);
-            if (physicalPickup.IsFailure)
+            bool wasInBuildKit = binding.IsAuthorityInBuildKit;
+            OperationResult physicalPickup;
+            OperationResult authority;
+            if (wasRouted || wasInBuildKit)
             {
-                return Remember(physicalPickup);
-            }
-
-            OperationResult authority = wasRouted
-                ? binding.TryCommitRoutedUnroute()
-                : binding.TryCommitLoosePickup();
-            if (authority.IsFailure)
-            {
-                OperationResult rollback = item.RecoverToLastSafePose();
-                if (rollback.IsFailure)
+                OperationResult physicalPreflight =
+                    item.ValidateBeginCarry(carryAnchor);
+                if (physicalPreflight.IsFailure)
                 {
-                    Debug.LogError(
-                        $"PCIe GPU_POWER_CABLE_PROJECTION_ROLLBACK_FAILED code={rollback.Error.Code}");
+                    return Remember(physicalPreflight);
                 }
 
-                binding.SyncProjectionToAuthority();
-                return Remember(authority);
+                authority = wasRouted
+                    ? binding.TryCommitRoutedUnroute()
+                    : binding.TryCommitBuildKitAssemblyPickup();
+                if (authority.IsFailure)
+                {
+                    return Remember(authority);
+                }
+
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    OperationResult recovery = item.RecoverToCarryAfterAuthority(
+                        carryAnchor,
+                        heldItemLayer);
+                    if (recovery.IsFailure || !item.IsCarried)
+                    {
+                        return Remember(OperationResult.Fail(
+                            Failure.FromCode(
+                                "custom-pc-pcie-gpu-power-cable-assembly." +
+                                "pickup-projection-recovery-failed")));
+                    }
+
+                    physicalPickup = recovery;
+                }
+            }
+            else
+            {
+                physicalPickup = item.BeginCarry(carryAnchor, heldItemLayer);
+                if (physicalPickup.IsFailure)
+                {
+                    return Remember(physicalPickup);
+                }
+
+                authority = binding.TryCommitLoosePickup();
+                if (authority.IsFailure)
+                {
+                    OperationResult rollback = item.RecoverToLastSafePose();
+                    if (rollback.IsFailure)
+                    {
+                        Debug.LogError(
+                            "PCIE_GPU_POWER_CABLE_PROJECTION_ROLLBACK_FAILED " +
+                            $"code={rollback.Error.Code}");
+                    }
+
+                    binding.SyncProjectionToAuthority();
+                    return Remember(authority);
+                }
             }
 
             HeldItem = item;
@@ -479,9 +528,50 @@ namespace PCShopEmpire3D.Presentation.Interaction
             string interact = input != null
                 ? input.InteractBindingPrompt
                 : "E / A";
-            return binding.IsRouted
-                ? $"[ROUTE] PSU PCIe 8 → KANAL → GPU 6+2 • {interact}: çöz"
-                : $"{interact}: {binding.PhysicalItem.DisplayName} al • ANAHTARLI 6+2-PIN";
+            if (binding.IsRouted)
+            {
+                return $"[ROUTE] PSU PCIe 8 → KANAL → GPU 6+2 • {interact}: çöz";
+            }
+
+            if (binding.IsAuthorityInBuildKit)
+            {
+                GarageStockFlowSession session = binding.Session;
+                int stagedComponentCount =
+                    binding.BuildKit?.StagedComponentCount ?? 10;
+                bool prerequisitesReady = session != null &&
+                    session.AssemblyBuild.MotherboardSeatState ==
+                        AssemblySeatState.SeatedSecured &&
+                    session.AssemblyBuild.ProcessorSocketState ==
+                        ProcessorSocketState.ProcessorRetained &&
+                    session.AssemblyBuild.MemorySlotState ==
+                        MemorySlotState.MemoryModuleRetained &&
+                    session.AssemblyBuild.StorageSlotState ==
+                        StorageSlotState.StorageDeviceSecured &&
+                    session.AssemblyBuild.ProcessorCoolerSlotState ==
+                        ProcessorCoolerSlotState.CoolerRetained &&
+                    session.AssemblyBuild.GraphicsCardSlotState ==
+                        GraphicsCardSlotState.GraphicsCardRetained &&
+                    session.AssemblyBuild.PowerSupplyBayState ==
+                        PowerSupplyBayState.PowerSupplyRetained &&
+                    session.AssemblyBuild.IsAtx24PowerCableRouted &&
+                    session.AssemblyBuild.IsEps12vPowerCableRouted;
+                if (stagedComponentCount <
+                    PcieGpuPowerCableBuildKitProjection.PrototypeTotalComponentCount)
+                {
+                    return $"BUILD KIT • {stagedComponentCount}/" +
+                           $"{PcieGpuPowerCableBuildKitProjection.PrototypeTotalComponentCount} " +
+                           "• KALAN PARÇALARI TAMAMLA";
+                }
+
+                return prerequisitesReady
+                    ? $"{interact}: PCIe GPU 6+2'Yİ KABLO MONTAJINA AL • " +
+                      $"BUILD KIT • {stagedComponentCount}/" +
+                      $"{PcieGpuPowerCableBuildKitProjection.PrototypeTotalComponentCount}"
+                    : "ÖNCE EXACT 7 PARÇALIK MONTAJ ZİNCİRİNİ, PSU 4 VİDAYI, ATX24 VE EPS12V ROTALARINI TAMAMLA";
+            }
+
+            return $"{interact}: {binding.PhysicalItem.DisplayName} al • " +
+                   "ANAHTARLI 6+2-PIN";
         }
 
         private static string GetPcieGpuPowerCableStatusLabel(

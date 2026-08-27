@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-eps12v-assembly-handoff-r53-v1";
+        public const string Version = "garage-pcie-gpu-assembly-handoff-r54-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -510,6 +510,20 @@ namespace PCShopEmpire3D.Presentation
                     eps12vChassisCablePassThroughCollider,
                     eps12vGraphicsCardCollider,
                     eps12vGraphicsCardSlotConnectorCollider);
+            }
+
+            if (pcieGpuPowerCableRoute != null &&
+                graphicsCardSlot != null &&
+                ResolveAtx24ChassisCablePassThroughRoot() is Transform
+                    pcieGpuChassisCablePassThroughRoot &&
+                pcieGpuChassisCablePassThroughRoot.GetComponent<Collider>() is
+                    Collider pcieGpuChassisCablePassThroughCollider &&
+                graphicsCardSlot.SupportCollider is
+                    Collider pcieGpuGraphicsCardSlotConnectorCollider)
+            {
+                pcieGpuPowerCableRoute.ConfigureInstalledAssemblyColliders(
+                    pcieGpuChassisCablePassThroughCollider,
+                    pcieGpuGraphicsCardSlotConnectorCollider);
             }
 
             bool hasLargeBox = false;
@@ -1220,6 +1234,7 @@ namespace PCShopEmpire3D.Presentation
                 $"power-supply-assembly-handoff={(HasPowerSupplyAssemblyHandoffR51Runtime ? "ready" : "missing")} " +
                 $"atx24-power-cable-assembly-handoff={(HasAtx24PowerCableAssemblyHandoffR52Runtime ? "ready" : "missing")} " +
                 $"eps12v-power-cable-assembly-handoff={(HasEps12vPowerCableAssemblyHandoffR53Runtime ? "ready" : "missing")} " +
+                $"pcie-gpu-power-cable-assembly-handoff={(HasPcieGpuPowerCableAssemblyHandoffR54Runtime ? "ready" : "missing")} " +
                 $"customer-buy-action={(hasCustomerBuyActionAuthority ? "ready" : "missing")} " +
                 $"customer-leave-action={(hasCustomerLeaveActionAuthority ? "ready" : "missing")} " +
                 $"customer-navmesh={(hasCustomerNavigation ? "ready" : "missing")} " +
@@ -1336,6 +1351,9 @@ namespace PCShopEmpire3D.Presentation
             bool runEps12vPowerCableAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-eps12v-power-cable-assembly-handoff-smoke");
+            bool runPcieGpuPowerCableAssemblyHandoffSmoke =
+                HasCommandLineArgument(
+                    "-pse-pcie-gpu-power-cable-assembly-handoff-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1371,7 +1389,8 @@ namespace PCShopEmpire3D.Presentation
                              (runGraphicsCardAssemblyHandoffSmoke ? 1 : 0) +
                              (runPowerSupplyAssemblyHandoffSmoke ? 1 : 0) +
                              (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
-                             (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0);
+                             (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0) +
+                             (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1399,12 +1418,18 @@ namespace PCShopEmpire3D.Presentation
                      !runGraphicsCardAssemblyHandoffSmoke &&
                      !runPowerSupplyAssemblyHandoffSmoke &&
                      !runAtx24PowerCableAssemblyHandoffSmoke &&
-                     !runEps12vPowerCableAssemblyHandoffSmoke) ||
+                     !runEps12vPowerCableAssemblyHandoffSmoke &&
+                     !runPcieGpuPowerCableAssemblyHandoffSmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runEps12vPowerCableAssemblyHandoffSmoke)
+                    if (runPcieGpuPowerCableAssemblyHandoffSmoke)
+                    {
+                        LogPcieGpuPowerCableAssemblyHandoffSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runEps12vPowerCableAssemblyHandoffSmoke)
                     {
                         LogEps12vPowerCableAssemblyHandoffSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1770,6 +1795,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runPcieGpuPowerCableAssemblyHandoffSmoke && !Debug.isDebugBuild)
+            {
+                LogPcieGpuPowerCableAssemblyHandoffSmokeFailure(
+                    "smoke.pcie-gpu-power-cable-assembly-handoff-" +
+                    "requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -1971,6 +2004,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunEps12vPowerCableAssemblyHandoffSmoke());
+            }
+
+            if (runPcieGpuPowerCableAssemblyHandoffSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPcieGpuPowerCableAssemblyHandoffSmoke());
             }
         }
 

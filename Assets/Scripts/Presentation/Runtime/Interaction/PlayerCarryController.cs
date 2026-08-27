@@ -1642,6 +1642,29 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 GetAtx24PowerCableBinding(HeldItem);
             Eps12vPowerCableAssemblyItemBinding eps12vCableBinding =
                 GetEps12vPowerCableBinding(HeldItem);
+            PcieGpuPowerCableAssemblyItemBinding pcieGpuCableBinding =
+                GetPcieGpuPowerCableBinding(HeldItem);
+            if (pcieGpuCableBinding != null)
+            {
+                if (motor != null && motor.IsPaused)
+                {
+                    return Remember(OperationResult.Fail(
+                        Failure.FromCode("assembly-pcie-gpu-cable.paused")));
+                }
+
+                OperationResult drop =
+                    pcieGpuCableBinding.TryDropToWorld(pose.Value);
+                if (drop.IsSuccess)
+                {
+                    CompleteHeldItemRelease();
+                }
+                else
+                {
+                    SetCarryHandsState(blocked: true);
+                }
+
+                return Remember(drop);
+            }
             if (eps12vCableBinding != null)
             {
                 if (motor != null && motor.IsPaused)
@@ -1821,6 +1844,25 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             return ReleaseHeldItem(pose.Value, stabilizePlacement: false, placementSurface: null);
+        }
+
+        private bool HasCompetingFocusedPowerCable(
+            PhysicalItemProjection candidate)
+        {
+            if (resolver == null || candidate == null)
+            {
+                return false;
+            }
+
+            OperationResult<PhysicalItemProjection> target = resolver.Resolve();
+            if (target.IsFailure || target.Value == candidate)
+            {
+                return false;
+            }
+
+            return GetAtx24PowerCableBinding(target.Value) != null ||
+                   GetEps12vPowerCableBinding(target.Value) != null ||
+                   GetPcieGpuPowerCableBinding(target.Value) != null;
         }
 
         public OperationResult TryConfirmMotherboardSeat()
