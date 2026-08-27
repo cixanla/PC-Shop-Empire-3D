@@ -33,6 +33,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material brushedSteel,
             Material accent,
             Material rubber,
+            Material connectorPolymer,
+            Material matteHardware,
             Material labelPaper,
             int interactableLayer,
             Collider[] chassisClearanceBlockers,
@@ -84,7 +86,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Vector3.zero,
                 new Vector3(0.012f, 0.142f, 0.058f),
                 0.002f,
-                brushedSteel,
+                matteHardware,
                 false);
             Object.DestroyImmediate(bracket.GetComponent<Collider>());
             DisableDecorativeRendererCost(bracket.GetComponent<Renderer>());
@@ -211,7 +213,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                         new Vector3(0.024f, -0.006f, 0f),
                         new Vector3(0.032f, 0.003f, 0.010f),
                         0.002f,
-                        rubber,
+                        connectorPolymer,
                         false);
                     Object.DestroyImmediate(blade.GetComponent<Collider>());
                     DisableDecorativeRendererCost(blade.GetComponent<Renderer>());
@@ -224,7 +226,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(-0.140f, -0.028f, 0.068f),
                 new Vector3(0.012f, 0.056f, 0.136f),
                 0.002f,
-                brushedSteel,
+                matteHardware,
                 false);
             Object.DestroyImmediate(rearBracket.GetComponent<Collider>());
             DisableDecorativeRendererCost(rearBracket.GetComponent<Renderer>());

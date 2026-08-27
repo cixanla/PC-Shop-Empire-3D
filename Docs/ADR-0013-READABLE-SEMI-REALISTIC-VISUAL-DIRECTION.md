@@ -1,8 +1,8 @@
 # ADR-0013 — Okunaklı Yarı Gerçekçi Görsel Yön
 
-**Durum:** Kabul edildi; kademeli üretim bekliyor<br>
+**Durum:** Kabul edildi; ilk bounded r55 production proof geçti, kademeli üretim sürüyor<br>
 **Tarih:** 13 Ağustos 2026<br>
-**İlgili işler:** GitHub #18 ve gelecekteki bounded look-development alt işleri
+**İlgili işler:** GitHub #18, #111 ve gelecekteki bounded look-development alt işleri
 
 ## Bağlam
 
@@ -31,3 +31,11 @@ Görsel hedef **okunaklı yarı gerçekçilik**tir:
 - Fotogerçekçilik, tam mağaza sanat dönüşümü, ücretli asset paketi, büyük texture indirmesi ve bütün sahneyi tek seferde yenileme bu kararla onaylanmış sayılmaz.
 - İlk uygulama, mevcut Unity/URP araçlarıyla küçük ve geri alınabilir bir look-development benchmark paketi olmalıdır. Kalite ve performans kanıtlanmadan kapsam sahne geneline büyütülmez.
 - Provenansı doğrulanmış özgün/modüler içerik, hazır asset miktarından daha önemlidir; R-008, R-017 ve R-020 riskleri bu kalite kapısında ölçülür.
+
+## 27 Ağustos 2026 uygulama addendum'u — Issue #111
+
+Issue #111, bu kararın ilk bounded production proof'udur. Assembly Workbench r55; açık chassis, motherboard, GPU, PSU ve üç cable-route durumunu existing authored material ailesi, iki dar shared matte material ve yeniden odaklanan existing task light ile okunur bir hero composition'a taşır. Technical source `1e2106a822b36f888cb9ad53ee22054ae991cda2`, tree `540992d186ff6e670569ee3cee51807798ffa427`dir.
+
+Base→r55 authored MeshRenderer etkisi `+4`, light/camera etkisi `0/0`dır. Dört yeni renderer yalnız Ignore Raycast presentation geometry'sidir; collider, light, shadow, motion-vector veya gameplay authority taşımaz. Runtime exact budget `493` total renderer, `484` nested-smoke active renderer, `4` light ve `1` camera'dır. Mac ve Windows loose/preview/routed karelerinin kritik merkezinde doygun-beyaz glare `0/64`; clean Windows Intel Iris Xe/D3D11 runtime ve final residue kapıları geçmiştir.
+
+Bu kabul yalnız Assembly Workbench benchmark'ını production baseline yapar. Tam mağaza, açık dünya, karakter, animasyon, VFX, bütün asset ailesi veya final Steam grafik kalitesinin tamamlandığı anlamına gelmez. Sonraki görsel dilimler aynı source provenance, render budget, native Mac/Windows ve görünür screenshot kapılarıyla ayrı ayrı büyütülür. Exact kanıt [Assembly Workbench Hero Readability checkpoint](Evidence/ASSEMBLY-WORKBENCH-HERO-READABILITY-CHECKPOINT-2026-08-27.md) dosyasındadır.

@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-pcie-gpu-assembly-handoff-r54-v1";
+        public const string Version = "garage-assembly-workbench-hero-r55-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -560,12 +560,29 @@ namespace PCShopEmpire3D.Presentation
             bool hasLookdevCorner = false;
             bool hasLookdevVolume = false;
             bool hasTaskLight = false;
+            bool hasAssemblyWorkbenchHero = false;
+            bool hasAssemblyWorkbenchEsdMat = false;
+            bool hasAssemblyWorkbenchSplashback = false;
+            bool hasAssemblyCableRouteReference = false;
             foreach (Transform sceneTransform in sceneTransforms)
             {
                 hasLookdevCorner |= sceneTransform.name == "VisualBenchmarkCorner";
                 hasLookdevVolume |= sceneTransform.name == "GlobalLookdevVolume";
                 hasTaskLight |= sceneTransform.name == "WorkbenchTaskLight";
+                hasAssemblyWorkbenchHero |=
+                    sceneTransform.name == "AssemblyWorkbenchHeroReadability";
+                hasAssemblyWorkbenchEsdMat |=
+                    sceneTransform.name == "AssemblyWorkbenchEsdMat";
+                hasAssemblyWorkbenchSplashback |=
+                    sceneTransform.name == "AssemblyWorkbenchSplashback";
+                hasAssemblyCableRouteReference |=
+                    sceneTransform.name == "AssemblyCableRouteReferenceStrip";
             }
+            bool hasAssemblyWorkbenchHeroReadability =
+                hasAssemblyWorkbenchHero &&
+                hasAssemblyWorkbenchEsdMat &&
+                hasAssemblyWorkbenchSplashback &&
+                hasAssemblyCableRouteReference;
 
             bool hasArrivedStockFlow = stockFlow != null &&
                                        stockFlow.Session != null &&
@@ -1273,6 +1290,7 @@ namespace PCShopEmpire3D.Presentation
                 $"pcie-gpu-power-cable-connectors={(hasPcieGpuPowerCableAssembly ? "2" : "missing")} " +
                 $"pcie-gpu-power-cable-waypoints={(hasPcieGpuPowerCableAssembly ? "3" : "missing")} " +
                 $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
+                $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
             bool cartSmokeRequested = HasCommandLineArgument("-pse-cart-smoke");
@@ -1354,6 +1372,9 @@ namespace PCShopEmpire3D.Presentation
             bool runPcieGpuPowerCableAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-pcie-gpu-power-cable-assembly-handoff-smoke");
+            bool runAssemblyWorkbenchHeroReadabilitySmoke =
+                HasCommandLineArgument(
+                    "-pse-assembly-workbench-hero-readability-smoke");
             bool requireWindowsD3D11 =
                 HasCommandLineArgument("-pse-require-d3d11");
             int smokeCount = (cartSmokeRequested ? 1 : 0) +
@@ -1390,7 +1411,8 @@ namespace PCShopEmpire3D.Presentation
                              (runPowerSupplyAssemblyHandoffSmoke ? 1 : 0) +
                              (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0) +
-                             (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0);
+                             (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0) +
+                             (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
@@ -1419,12 +1441,18 @@ namespace PCShopEmpire3D.Presentation
                      !runPowerSupplyAssemblyHandoffSmoke &&
                      !runAtx24PowerCableAssemblyHandoffSmoke &&
                      !runEps12vPowerCableAssemblyHandoffSmoke &&
-                     !runPcieGpuPowerCableAssemblyHandoffSmoke) ||
+                     !runPcieGpuPowerCableAssemblyHandoffSmoke &&
+                     !runAssemblyWorkbenchHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runPcieGpuPowerCableAssemblyHandoffSmoke)
+                    if (runAssemblyWorkbenchHeroReadabilitySmoke)
+                    {
+                        LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPcieGpuPowerCableAssemblyHandoffSmoke)
                     {
                         LogPcieGpuPowerCableAssemblyHandoffSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1803,6 +1831,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
+            {
+                LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
+                    "smoke.assembly-workbench-hero-requires-development-build");
+                return;
+            }
+
             if (cartSmokeRequested)
             {
                 StartCoroutine(RunTransportCartSmoke());
@@ -2010,6 +2045,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableAssemblyHandoffSmoke());
+            }
+
+            if (runAssemblyWorkbenchHeroReadabilitySmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunAssemblyWorkbenchHeroReadabilitySmoke());
             }
         }
 
