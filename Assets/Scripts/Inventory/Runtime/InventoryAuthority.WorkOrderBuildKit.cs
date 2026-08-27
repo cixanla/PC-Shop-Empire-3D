@@ -690,6 +690,31 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged ATX24 power cable from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed ATX24 route container
+        /// already owned by Assembly. The Custom-PC authority validates the exact cable family;
+        /// Inventory preserves the exact line/product/item/reservation tuple carried by the
+        /// staging receipt. Exact replay returns the original proof without advancing Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedAtx24PowerCableForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> routeContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.PowerCable,
+                operationId,
+                routeContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(
@@ -1096,7 +1121,8 @@ namespace PCShopEmpire3D.Inventory
                  pickup.ComponentKind != PcComponentKind.StorageDevice &&
                  pickup.ComponentKind != PcComponentKind.ProcessorCooler &&
                  pickup.ComponentKind != PcComponentKind.GraphicsCard &&
-                 pickup.ComponentKind != PcComponentKind.PowerSupply) ||
+                 pickup.ComponentKind != PcComponentKind.PowerSupply &&
+                 pickup.ComponentKind != PcComponentKind.PowerCable) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||

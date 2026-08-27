@@ -152,6 +152,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 routeRoot,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                null,
+                obstructionMask,
+                maximumRange,
+                minimumFocusDot,
+                paused,
+                UnityAtx24PowerCableRoutePhysics.Instance);
+        }
+
+        public static Atx24PowerCableRouteStatus EvaluateRoutedFocus(
+            bool authoritativeRouted,
+            Transform interactionOrigin,
+            Transform playerRoot,
+            PhysicalItemProjection cable,
+            Collider focusCollider,
+            Transform routeRoot,
+            Transform powerSupplyHostRoot,
+            Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
+            LayerMask obstructionMask,
+            float maximumRange,
+            float minimumFocusDot,
+            bool paused)
+        {
+            return EvaluateRoutedFocus(
+                authoritativeRouted,
+                interactionOrigin,
+                playerRoot,
+                cable,
+                focusCollider,
+                routeRoot,
+                powerSupplyHostRoot,
+                motherboardHostRoot,
+                installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,
@@ -168,6 +201,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform routeRoot,
             Transform powerSupplyHostRoot,
             Transform motherboardHostRoot,
+            LayerMask obstructionMask,
+            float maximumRange,
+            float minimumFocusDot,
+            bool paused,
+            IAtx24PowerCableRoutePhysics physics)
+        {
+            return EvaluateRoutedFocus(
+                authoritativeRouted,
+                interactionOrigin,
+                playerRoot,
+                cable,
+                focusCollider,
+                routeRoot,
+                powerSupplyHostRoot,
+                motherboardHostRoot,
+                null,
+                obstructionMask,
+                maximumRange,
+                minimumFocusDot,
+                paused,
+                physics);
+        }
+
+        internal static Atx24PowerCableRouteStatus EvaluateRoutedFocus(
+            bool authoritativeRouted,
+            Transform interactionOrigin,
+            Transform playerRoot,
+            PhysicalItemProjection cable,
+            Collider focusCollider,
+            Transform routeRoot,
+            Transform powerSupplyHostRoot,
+            Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
             LayerMask obstructionMask,
             float maximumRange,
             float minimumFocusDot,
@@ -205,6 +271,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 routeRoot,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,
@@ -251,6 +318,61 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 thirdWaypoint,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                null,
+                obstructionMask,
+                maximumRange,
+                minimumFocusDot,
+                routeRadius,
+                paused,
+                authorityAvailable,
+                motherboardSecured,
+                powerSupplyRetained,
+                orientation,
+                UnityAtx24PowerCableRoutePhysics.Instance);
+        }
+
+        public static Atx24PowerCableRouteEvaluation Evaluate(
+            bool routeModeEnabled,
+            Transform interactionOrigin,
+            Transform playerRoot,
+            PhysicalItemProjection cable,
+            Collider focusCollider,
+            Transform routeRoot,
+            Transform psuPrimaryEndpoint,
+            Transform psuSenseEndpoint,
+            Transform motherboardEndpoint,
+            Transform firstWaypoint,
+            Transform secondWaypoint,
+            Transform thirdWaypoint,
+            Transform powerSupplyHostRoot,
+            Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
+            LayerMask obstructionMask,
+            float maximumRange,
+            float minimumFocusDot,
+            float routeRadius,
+            bool paused,
+            bool authorityAvailable,
+            bool motherboardSecured,
+            bool powerSupplyRetained,
+            PowerCableKeyOrientation orientation)
+        {
+            return Evaluate(
+                routeModeEnabled,
+                interactionOrigin,
+                playerRoot,
+                cable,
+                focusCollider,
+                routeRoot,
+                psuPrimaryEndpoint,
+                psuSenseEndpoint,
+                motherboardEndpoint,
+                firstWaypoint,
+                secondWaypoint,
+                thirdWaypoint,
+                powerSupplyHostRoot,
+                motherboardHostRoot,
+                installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,
@@ -278,6 +400,61 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform thirdWaypoint,
             Transform powerSupplyHostRoot,
             Transform motherboardHostRoot,
+            LayerMask obstructionMask,
+            float maximumRange,
+            float minimumFocusDot,
+            float routeRadius,
+            bool paused,
+            bool authorityAvailable,
+            bool motherboardSecured,
+            bool powerSupplyRetained,
+            PowerCableKeyOrientation orientation,
+            IAtx24PowerCableRoutePhysics physics)
+        {
+            return Evaluate(
+                routeModeEnabled,
+                interactionOrigin,
+                playerRoot,
+                cable,
+                focusCollider,
+                routeRoot,
+                psuPrimaryEndpoint,
+                psuSenseEndpoint,
+                motherboardEndpoint,
+                firstWaypoint,
+                secondWaypoint,
+                thirdWaypoint,
+                powerSupplyHostRoot,
+                motherboardHostRoot,
+                null,
+                obstructionMask,
+                maximumRange,
+                minimumFocusDot,
+                routeRadius,
+                paused,
+                authorityAvailable,
+                motherboardSecured,
+                powerSupplyRetained,
+                orientation,
+                physics);
+        }
+
+        internal static Atx24PowerCableRouteEvaluation Evaluate(
+            bool routeModeEnabled,
+            Transform interactionOrigin,
+            Transform playerRoot,
+            PhysicalItemProjection cable,
+            Collider focusCollider,
+            Transform routeRoot,
+            Transform psuPrimaryEndpoint,
+            Transform psuSenseEndpoint,
+            Transform motherboardEndpoint,
+            Transform firstWaypoint,
+            Transform secondWaypoint,
+            Transform thirdWaypoint,
+            Transform powerSupplyHostRoot,
+            Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
             LayerMask obstructionMask,
             float maximumRange,
             float minimumFocusDot,
@@ -364,6 +541,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 routeRoot,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                installedAssemblyHostRoots,
                 obstructionMask,
                 maximumRange,
                 minimumFocusDot,
@@ -383,6 +561,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 routeRoot,
                 powerSupplyHostRoot,
                 motherboardHostRoot,
+                installedAssemblyHostRoots,
                 obstructionMask,
                 physics);
             if (routeStatus == Atx24PowerCableRouteStatus.ValidRoute)
@@ -396,6 +575,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     routeRoot,
                     powerSupplyHostRoot,
                     motherboardHostRoot,
+                    installedAssemblyHostRoots,
                     obstructionMask,
                     physics);
             }
@@ -411,6 +591,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     routeRoot,
                     powerSupplyHostRoot,
                     motherboardHostRoot,
+                    installedAssemblyHostRoots,
                     obstructionMask,
                     physics);
             }
@@ -426,6 +607,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     routeRoot,
                     powerSupplyHostRoot,
                     motherboardHostRoot,
+                    installedAssemblyHostRoots,
                     obstructionMask,
                     physics);
             }
@@ -441,6 +623,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     routeRoot,
                     powerSupplyHostRoot,
                     motherboardHostRoot,
+                    installedAssemblyHostRoots,
                     obstructionMask,
                     physics);
             }
@@ -466,6 +649,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform routeRoot,
             Transform powerSupplyHostRoot,
             Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
             LayerMask obstructionMask,
             IAtx24PowerCableRoutePhysics physics)
         {
@@ -488,7 +672,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         cableRoot,
                         routeRoot,
                         powerSupplyHostRoot,
-                        motherboardHostRoot))
+                        motherboardHostRoot,
+                        installedAssemblyHostRoots))
                 {
                     return Atx24PowerCableRouteStatus.RouteObstructed;
                 }
@@ -505,6 +690,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform routeRoot,
             Transform powerSupplyHostRoot,
             Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots,
             LayerMask obstructionMask,
             float maximumRange,
             float minimumFocusDot,
@@ -564,7 +750,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (collider.isTrigger ||
                     IsChildOf(collider.transform, routeRoot) ||
                     IsChildOf(collider.transform, powerSupplyHostRoot) ||
-                    IsChildOf(collider.transform, motherboardHostRoot))
+                    IsChildOf(collider.transform, motherboardHostRoot) ||
+                    IsChildOfAny(
+                        collider.transform,
+                        installedAssemblyHostRoots))
                 {
                     continue;
                 }
@@ -588,7 +777,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Transform cableRoot,
             Transform routeRoot,
             Transform powerSupplyHostRoot,
-            Transform motherboardHostRoot)
+            Transform motherboardHostRoot,
+            Transform[] installedAssemblyHostRoots)
         {
             return collider == null ||
                    collider == focusCollider ||
@@ -596,7 +786,30 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    IsChildOf(collider.transform, cableRoot) ||
                    IsChildOf(collider.transform, routeRoot) ||
                    IsChildOf(collider.transform, powerSupplyHostRoot) ||
-                   IsChildOf(collider.transform, motherboardHostRoot);
+                   IsChildOf(collider.transform, motherboardHostRoot) ||
+                   IsChildOfAny(
+                       collider.transform,
+                       installedAssemblyHostRoots);
+        }
+
+        private static bool IsChildOfAny(
+            Transform candidate,
+            Transform[] roots)
+        {
+            if (candidate == null || roots == null)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < roots.Length; index++)
+            {
+                if (IsChildOf(candidate, roots[index]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsChildOf(Transform candidate, Transform root)
