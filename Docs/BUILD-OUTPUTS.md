@@ -2,6 +2,21 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B canonical PCIe/GPU 6+2 BuildKit-to-route reversible Assembly doğrulaması — 27 Ağustos 2026
+
+Issue #109 technical source `1acba166855efffa906112e2df24b9b5cef550a7`, tree `eb40a392169e5288e29bc59ae75367029cc00f57` aynı kaynak kimliğiyle iki gerçek platformda doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.366.591` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `80556318de7d2aa5e1f1f0abc8315cc0a0453c67a7a804fe0e9c4df467879dd0`.
+- macOS testleri: targeted domain EditMode `87/87`, scene contract `9/9`, P1 PlayMode `4/4`, full EditMode `752/752`, full PlayMode `156/156`; failed/skipped/inconclusive `0`.
+- macOS runtime: Apple M1/Metal, pencereli exact r54 readiness ve canonical PCIe/GPU BuildKit→route→unroute Assembly smoke başarılı; Input System graceful shutdown, exit `0`, player residue `0`.
+- Windows: Development x64 IL2CPP, Direct3D11 only; Unity report `1.349.053.878` bayt, output `666` dosya / `1.349.222.872` bayt. Build fatal-token sayısı `0`, `ProjectSettings.asset` byte-exact restore edildi ve clone temiz kaldı.
+- Windows native binaries: `PC Shop Empire 3D.exe` `667.136` bayt / `9688ae089d590352dbe0cba8722328926cd4d9b7722f68ec9942243925c1282a`; `GameAssembly.dll` `45.821.952` bayt / `f327f7036c483fa6edcfcfcc1a6cfd261bd6472e23d337a2f59c01e8fd7522a7`; `UnityPlayer.dll` `84.237.744` bayt / `cc018c912f461b0f7bdcaeadd5c1d8d9361d92fe5a1c3aeac27a0ac1186a4a59`.
+- Windows testleri: full EditMode `752/752`, full PlayMode `156/156`; failed/skipped/inconclusive `0`.
+- Windows runtime/input: Intel Iris Xe, Direct3D 11.0 feature level 11.1; exact host/readiness/success `1/1/1`, forbidden `0`, graceful exit. Foreground Win32 OS-input W/A/S/D, relative mouse ve W+D-held + mouse zinciri geçti; `human=false`.
+- Windows final audit `28/28`; process/task/firewall residue `0/0/0`. Kanıt arşivi `4.599.837` bayt / SHA-256 `924792e2c4dd239e8b5209b9f8eaed8b8d248a9ca93cfe597d39450785db74e4` ile Mac'te exact readback verdi; geçici Windows validation kökü sonrasında kaldırıldı.
+
+Bu çıktılar Issue #109 teknik geliştirme kabulüdür; üç cable routed olsa da electrical power-on/POST/BIOS/OS/benchmark, real-human fiziksel HID/gamepad/endurance, Steam packaging/signing ve release-candidate iddiası değildir. Kabulden sonra Windows'taki USB yalnız kimlik/sağlık için okundu ve yazılmadı.
+
 ## Stage B accepted custom-PC request, immutable quote and exact reservation doğrulaması — 24 Ağustos 2026
 
 Issue #64 feature `c7d38845ffccb5ae6e5365e580c238d70f8dac95` aynı kaynak kimliğiyle iki gerçek platformda doğrulandı:
