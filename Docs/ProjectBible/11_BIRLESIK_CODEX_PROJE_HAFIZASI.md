@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Branch:** `codex/issue109-pcie-gpu-buildkit-route-handoff`
+**Authoritative Git state:** `main` merge `d20d5bc9fa1a67bf0e9441253834a9de962046e8`; PR #112; main Guard `33093461437`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 27 Ağustos 2026 üstün gelen güncel durum — Issue #109 PCIe/GPU 6+2 BuildKit→Route Reversible Assembly
+### 27 Ağustos 2026 üstün gelen güncel durum — Issue #111 Assembly Workbench Hero Readability
+
+- GarageGraybox r55, açık chassis/motherboard/GPU/PSU ile loose/preview/routed cable durumlarını aynı 1280x720 composition'da ayırır. Shared non-emissive `CableConnectorPolymer` beş connector/PSU-intake renderer'ı ve on dört GPU fan blade'i; `WorkshopMatteHardware` iki rear bracket'i glare-safe matte sunuma taşır. Existing Workbench light `0.4 / 2.8 / 62°`; authority/collider/anchor/waypoint/topology/identity/input untouched, ProjectSettings byte-exact'tir.
+- Base→r55 authored MeshRenderer `486→490` (`+4`), light/camera delta `0/0`; runtime total/initial-active/smoke-active `493/473/484`. Dört ek hero renderer Ignore Raycast, collider/light/shadow/motion-vector içermez. Mac P1 `7/7`, full `753/753 + 157/157`; Windows full `753/753 + 157/157`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330428946` bayt, strict/deep-valid `x86_64 + arm64`, Apple M1/Metal three-state smoke başarılıdır. Clean Windows x64 IL2CPP/only-D3D11 report `1350529280` bayt; Intel Iris Xe/D3D11 runtime final `26/26`, exit `0`, graceful shutdown ve central glare `0/64`dır.
+- Windows evidence Mac'e exact readback edildi. Disposable root, iki exact firewall rule ve beş temp dosya kaldırıldı; final process/task/firewall/temp residue `0/0/0/0`. USB `D:` Intenso Alu Line serial `900B00076010` `Healthy/OK` olarak yalnız okundu, yazılmadı. Claim `human=false`; physical HID/gamepad/endurance Steam 1.0 sertifikasyonunda kalır.
+- Technical Guard `33089682114`, docs Guard `33093360490`, PR #112 merge `d20d5bc9fa1a67bf0e9441253834a9de962046e8` ve main Guard `33093461437` geçti. Issue #111 `CLOSED/COMPLETED`, Roadmap `Done`; parent Epic #18 ve full Steam 1.0 Goal sürer. Sıradaki bounded visual aday müşteri-facing retail floor/checkout readability dilimidir.
+- Tek kanonik iletişim merkezi ve yazma hattı bu Game projesine bağlı ana görevdir. Ürün kuzey yıldızı Dashboard parity'yi fiziksel 3D oynanışa, küçük→büyük mağazalara, çalışan/müşterilere, işlevsel mahalle/kişisel ev/araç-lojistiğe, dünya NPC ekolojisine ve retail çekirdekten ayrılmış güvenli offline Local Advisor/Guardian sınırına bağlar. Kontrolsüz self-modifying code yoktur; Mac tek write lane, Windows clean native worker'dır.
+
+### Önceki üstün gelen durum — Issue #109 PCIe/GPU 6+2 BuildKit→Route Reversible Assembly
 
 - Exact reserved PCIe/GPU 6+2 cable yalnız owned work order/ticket/allocation içindeki tam line/kind/`ModularPcie8PinPsuToGraphicsCard` family/product/item/reservation/staging-receipt lineage ile seçilir; historical ten-receipt `10/10` aggregate, live #89/#91/#93/#95/#97/#99/#102 receipts ve exact routed #105 ATX24 + #107 EPS12V sonrasında ayrı stable operation exact PCIe/GPU BuildKit → ActorHands → existing Issue #63 route → ActorHands custody'sini açar.
 - Inventory yalnız kayıtlı PCIe/GPU BuildKit release ve exact GpuPowerCableRoute↔Hands reversible transferini kabul eder. Same Unity instance/stable ItemId, live reservation/allocation, immutable staging history ve exact replay/revision korunur; installed seven prerequisites ile routed ATX24/EPS12V protected, generic transfer/drop/box/stack/cart/raw Inventory ve receipt-free bypass fail-closed'dur.
