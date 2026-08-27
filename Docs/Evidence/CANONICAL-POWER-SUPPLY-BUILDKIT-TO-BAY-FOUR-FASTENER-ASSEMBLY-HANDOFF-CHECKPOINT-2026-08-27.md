@@ -6,7 +6,7 @@
 **Technical head:** `740a8869e2efc1f525b9560d4d5638343c957eb5`<br>
 **Technical tree:** `d64e70bb6bd2d7f0d8583555146050f7060db0f2`<br>
 **Branch:** `feature/issue102-power-supply-buildkit-to-bay-retention`<br>
-**Current state:** source/domain/scene/input/full-regression, exact-head macOS/Windows native, foreground Windows OS-input and source/docs Guard passed; PR #103 merge/main integration is the remaining administrative gate at this document revision
+**Current state:** accepted and integrated; source/domain/scene/input/full-regression, exact-head macOS/Windows native, foreground Windows OS-input, source/docs/final-PR/main Guards, PR #103 merge, Issue closure and Roadmap Done passed
 
 ## Delivered playable result
 
@@ -129,7 +129,7 @@ No removable Windows volume or USB disk was present at final audit. No USB write
 | 23 | Diff, Repository Guard and universal Mac native gates. | PASS — Guard 33027397901 |
 | 24 | Exact-head clean Windows IL2CPP/only-D3D11 runtime, foreground OS input and zero residue. | PASS |
 | 25 | Binary/procedure/evidence hashes and cross-machine archive readback. | PASS |
-| 26 | Bible/ADR/Evidence/CHANGELOG and private PR/CI chain. | PARTIAL — docs and source/docs Guard PASS; PR #103 merge/main integration pending |
+| 26 | Bible/ADR/Evidence/CHANGELOG and private PR/CI chain. | PASS — PR #103 merge `a66c19b`, main Guard 33030020415 |
 | 27 | Claim explicitly preserves physical human/HID/gamepad/endurance certification for Steam 1.0. | PASS |
 
-The bounded product/platform acceptance count is `26/27` at this document revision. Only PR #103 merge/main integration remains. Physical human/HID/gamepad and endurance are deliberately outside Issue #102 closure and remain mandatory before Steam 1.0 release certification.
+The bounded Issue #102 acceptance count is `27/27`. Final PR head `7ee80bba8964ccfb8edf1c3f06d89ac293fdc1a0` passed Repository Guard [33029974821](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33029974821); PR #103 merged as `a66c19be79b9265d1a01ff1127373136146fcd1e`; merged tree remains exact `13e20ebd1ab6a29336255f19cc68990ec24ee7df`; [main Guard 33030020415](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33030020415) passed. Issue #102 is `CLOSED`, Roadmap is `Done`, and parent Epic #10 remains open for dependent assembly/electrical/product work. Physical human/HID/gamepad and endurance remain mandatory before Steam 1.0 release certification.
