@@ -715,6 +715,32 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged EPS12V power cable from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed CPU-power route
+        /// container already owned by Assembly. The Custom-PC authority validates the exact
+        /// cable family; Inventory preserves the exact line/product/item/reservation tuple
+        /// carried by the staging receipt. Exact replay returns the original proof without
+        /// advancing Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedEps12vPowerCableForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> routeContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.PowerCable,
+                operationId,
+                routeContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(

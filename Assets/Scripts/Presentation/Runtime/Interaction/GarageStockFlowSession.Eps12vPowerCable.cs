@@ -133,6 +133,153 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 expectedInventoryRevision);
         }
 
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedEps12vPowerCableForAssembly()
+        {
+            return PickupStagedEps12vPowerCableForAssembly(
+                CustomPcBuildKit?.Revision ?? -1L,
+                Inventory.Revision,
+                AssemblyBuild.Revision,
+                AssemblyBuild.Eps12vPowerCableRevision,
+                AssemblyBuild.Atx24PowerCableRevision);
+        }
+
+        public OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>
+            PickupStagedEps12vPowerCableForAssembly(
+                long expectedBuildKitRevision,
+                long expectedInventoryRevision,
+                long expectedAssemblyRevision,
+                long expectedCableRevision,
+                long expectedAtx24CableRevision)
+        {
+            if (CustomPcBuildKit == null ||
+                !TryGetPrototypeCustomPcBuildOrder(
+                    out CustomPcBuildOrderRecord workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            if (CustomPcBuildKit.TryGetAssemblyHandoff(
+                    PrototypeEps12vPowerCableAssemblyHandoffOperationId,
+                    out _))
+            {
+                return CustomPcBuildKit.ReleaseCanonicalEps12vPowerCableForAssembly(
+                    PrototypeEps12vPowerCableAssemblyHandoffOperationId,
+                    workOrder,
+                    Eps12vPowerCableRouteContainerId,
+                    expectedBuildKitRevision,
+                    expectedInventoryRevision);
+            }
+
+            AssemblyBuildSnapshot snapshot = AssemblyBuild.GetSnapshot();
+            Eps12vPowerCableDefinition definition =
+                AssemblyBuild.Eps12vPowerCableDefinition;
+            Eps12vPowerCableTopology topology = definition.Topology;
+            if (snapshot.Revision != expectedAssemblyRevision ||
+                AssemblyBuild.Eps12vPowerCableRevision != expectedCableRevision ||
+                AssemblyBuild.Eps12vPowerCableState != Eps12vPowerCableState.Loose ||
+                AssemblyBuild.Eps12vPowerCableReceiptCount != 0 ||
+                AssemblyBuild.Atx24PowerCableRevision != expectedAtx24CableRevision ||
+                !definition.IsValid ||
+                definition.ProductId != Eps12vPowerCableProductId ||
+                definition.RouteContainerId != Eps12vPowerCableRouteContainerId ||
+                topology == null ||
+                !topology.IsValid ||
+                topology.RouteId != Eps12vPowerCableRouteId ||
+                topology.PsuEndpoint.EndpointId != Eps12vPowerCablePsuEndpointId ||
+                topology.PsuEndpoint.ConnectorType !=
+                    PowerCableConnectorType.PsuModularEps12v8 ||
+                topology.MotherboardEndpoint.EndpointId !=
+                    Eps12vPowerCableMotherboardEndpointId ||
+                topology.MotherboardEndpoint.ConnectorType !=
+                    PowerCableConnectorType.MotherboardEps12v8 ||
+                topology.FirstWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Eps12vPowerCableWaypoint1IdValue) ||
+                topology.SecondWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Eps12vPowerCableWaypoint2IdValue) ||
+                topology.ThirdWaypointId != StableId<
+                    AssemblyPowerCableWaypointIdScope>.Parse(
+                    Eps12vPowerCableWaypoint3IdValue) ||
+                !Inventory.TryGetContainer(
+                    Eps12vPowerCableRouteContainerId,
+                    out InventoryContainerDefinition routeContainer) ||
+                routeContainer.Kind != InventoryContainerKind.Workbench ||
+                routeContainer.UnitCapacity != 1 ||
+                Inventory.GetContainerQuantity(
+                    Eps12vPowerCableRouteContainerId).Value != 0 ||
+                snapshot.MotherboardSeatState != AssemblySeatState.SeatedSecured ||
+                snapshot.ProcessorSocketState != ProcessorSocketState.ProcessorRetained ||
+                snapshot.MemorySlotState != MemorySlotState.MemoryModuleRetained ||
+                snapshot.StorageSlotState != StorageSlotState.StorageDeviceSecured ||
+                snapshot.ProcessorCoolerSlotState !=
+                    ProcessorCoolerSlotState.CoolerRetained ||
+                snapshot.ProcessorCoolerTimState !=
+                    ProcessorCoolerTimState.AppliedConsumed ||
+                snapshot.GraphicsCardSlotState !=
+                    GraphicsCardSlotState.GraphicsCardRetained ||
+                snapshot.PowerSupplyBayState !=
+                    PowerSupplyBayState.PowerSupplyRetained ||
+                !HasExactRoutedAtx24AssemblyPrerequisite(workOrder) ||
+                !TryGetEps12vPowerCableItem(out InventoryItemRecord cable) ||
+                cable.Id != Eps12vPowerCableItemId ||
+                cable.ProductId != Eps12vPowerCableProductId ||
+                (cable.ContainerId != Eps12vPowerCableBuildKitContainerId &&
+                 cable.ContainerId != HandsContainerId) ||
+                !CustomPcBuildKit.TryGetReceipt(
+                    PrototypeEps12vPowerCableBuildKitOperationId,
+                    out CustomPcBuildKitReceipt staging) ||
+                staging.Stage != CustomPcBuildKitStage.Eps12vPowerCableStaged ||
+                staging.Line.ComponentKind != PcComponentKind.PowerCable ||
+                staging.Line.PowerCableType !=
+                    PowerCableType.ModularEps12v8PinPsuToMotherboard ||
+                staging.Line.ProductId != cable.ProductId ||
+                staging.Line.ItemId != cable.Id ||
+                staging.BuildKitContainerId !=
+                    Eps12vPowerCableBuildKitContainerId ||
+                !ReferenceEquals(staging.BuildOrder, workOrder) ||
+                !HasLiveSecuredMotherboardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedMemoryModuleAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveSecuredStorageAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedProcessorCoolerAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedGraphicsCardAssemblyPrerequisite(
+                    snapshot,
+                    workOrder,
+                    requireCurrentRevision: false) ||
+                !HasLiveRetainedPowerSupplyAssemblyPrerequisite(
+                    snapshot,
+                    workOrder))
+            {
+                return OperationResult<CustomPcBuildKitAssemblyHandoffReceipt>.Fail(
+                    CustomPcWorkOrderFailures.BuildKitAssemblyStageInvalid);
+            }
+
+            return CustomPcBuildKit.ReleaseCanonicalEps12vPowerCableForAssembly(
+                PrototypeEps12vPowerCableAssemblyHandoffOperationId,
+                workOrder,
+                Eps12vPowerCableRouteContainerId,
+                expectedBuildKitRevision,
+                expectedInventoryRevision);
+        }
+
         public OperationResult DropHeldEps12vPowerCableToWorld()
         {
             if (!AssemblyBuild.HasEps12vPowerCableRoute ||
@@ -174,6 +321,47 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 Eps12vPowerCableItemId,
                 sourceRouteOperationId,
                 expectedCableRevision);
+        }
+
+        private bool HasExactRoutedAtx24AssemblyPrerequisite(
+            CustomPcBuildOrderRecord workOrder)
+        {
+            if (workOrder == null ||
+                !AssemblyBuild.IsAtx24PowerCableRouted ||
+                AssemblyBuild.Atx24PowerCableRoutedByOperationId.IsEmpty ||
+                AssemblyBuild.ValidateAtx24PowerCableReceiptHistory().IsFailure ||
+                !AssemblyBuild.TryGetAtx24PowerCableReceipt(
+                    AssemblyBuild.Atx24PowerCableRoutedByOperationId,
+                    out Atx24PowerCableOperationReceipt routeReceipt) ||
+                routeReceipt.OperationKind != Atx24PowerCableOperationKind.Route ||
+                routeReceipt.BuildId != AssemblyBuild.BuildId ||
+                routeReceipt.ChassisId != AssemblyBuild.ChassisId ||
+                routeReceipt.ItemId != Atx24PowerCableItemId ||
+                routeReceipt.ProductId != Atx24PowerCableProductId ||
+                routeReceipt.SourceContainerId != HandsContainerId ||
+                routeReceipt.TargetContainerId != Atx24PowerCableRouteContainerId ||
+                routeReceipt.ResultingState != Atx24PowerCableState.Routed ||
+                routeReceipt.CableRevision != AssemblyBuild.Atx24PowerCableRevision ||
+                !TryGetAtx24PowerCableItem(out InventoryItemRecord atx24) ||
+                atx24.ContainerId != Atx24PowerCableRouteContainerId ||
+                !CustomPcBuildKit.TryGetAssemblyHandoff(
+                    PrototypeAtx24PowerCableAssemblyHandoffOperationId,
+                    out CustomPcBuildKitAssemblyHandoffReceipt handoff) ||
+                !ReferenceEquals(handoff.BuildOrder, workOrder) ||
+                handoff.ComponentKind != PcComponentKind.PowerCable ||
+                handoff.Line.PowerCableType !=
+                    PowerCableType.ModularAtx24SplitPsuToMotherboard ||
+                handoff.Line.ItemId != atx24.Id ||
+                handoff.Line.ProductId != atx24.ProductId ||
+                handoff.WorkbenchContainerId != Atx24PowerCableRouteContainerId)
+            {
+                return false;
+            }
+
+            return routeReceipt.Definition.IsValid &&
+                   routeReceipt.Definition.ProductId == atx24.ProductId &&
+                   routeReceipt.Definition.RouteContainerId ==
+                       Atx24PowerCableRouteContainerId;
         }
     }
 }

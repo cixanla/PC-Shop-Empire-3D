@@ -36,6 +36,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         private bool _routeModeActive;
         private bool _authoritativeRouted;
+        private Collider[] _installedAssemblyColliders = Array.Empty<Collider>();
 
         public string RouteIdValue => routeId;
 
@@ -60,6 +61,22 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public Transform MotherboardHostRoot => motherboardHostRoot;
 
         public Collider[] AllowedRouteColliders => allowedRouteColliders;
+
+        public bool MatchesInstalledAssemblyColliders(
+            Collider chassisCablePassThroughCollider,
+            Collider graphicsCardCollider,
+            Collider graphicsCardSlotConnectorCollider)
+        {
+            return chassisCablePassThroughCollider != null &&
+                   graphicsCardCollider != null &&
+                   graphicsCardSlotConnectorCollider != null &&
+                   _installedAssemblyColliders.Length == 3 &&
+                   _installedAssemblyColliders[0] ==
+                       chassisCablePassThroughCollider &&
+                   _installedAssemblyColliders[1] == graphicsCardCollider &&
+                   _installedAssemblyColliders[2] ==
+                       graphicsCardSlotConnectorCollider;
+        }
 
         public LineRenderer PreviewLine => previewLine;
 
@@ -156,6 +173,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             allowedRouteColliders =
                 (Collider[])authoredAllowedRouteColliders.Clone();
+            _installedAssemblyColliders = Array.Empty<Collider>();
             psuEndpoint = authoredPsuEndpoint ??
                 throw new ArgumentNullException(nameof(authoredPsuEndpoint));
             motherboardEndpoint = authoredMotherboardEndpoint ??
@@ -182,6 +200,67 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             ApplyAuthoritativeState(routed: false);
             SetRouteModeActive(active: false);
+        }
+
+        public void ConfigureInstalledAssemblyColliders(
+            Collider chassisCablePassThroughCollider,
+            Collider graphicsCardCollider,
+            Collider graphicsCardSlotConnectorCollider)
+        {
+            Collider[] additions =
+            {
+                chassisCablePassThroughCollider,
+                graphicsCardCollider,
+                graphicsCardSlotConnectorCollider
+            };
+            if (Array.Exists(additions, collider => collider == null) ||
+                !AreDistinct(additions))
+            {
+                throw new ArgumentException(
+                    "EPS12V installed assembly colliders must be non-null and distinct.");
+            }
+
+            if (_installedAssemblyColliders.Length != 0)
+            {
+                if (MatchesInstalledAssemblyColliders(
+                        chassisCablePassThroughCollider,
+                        graphicsCardCollider,
+                        graphicsCardSlotConnectorCollider))
+                {
+                    return;
+                }
+
+                throw new InvalidOperationException(
+                    "EPS12V installed assembly colliders are already configured.");
+            }
+
+            for (int additionIndex = 0;
+                 additionIndex < additions.Length;
+                 additionIndex++)
+            {
+                if (Array.Exists(
+                        allowedRouteColliders,
+                        collider => collider == additions[additionIndex]))
+                {
+                    throw new ArgumentException(
+                        "EPS12V installed assembly colliders must be distinct from the authored allowlist.");
+                }
+            }
+
+            var expanded = new Collider[
+                allowedRouteColliders.Length + additions.Length];
+            Array.Copy(
+                allowedRouteColliders,
+                expanded,
+                allowedRouteColliders.Length);
+            Array.Copy(
+                additions,
+                0,
+                expanded,
+                allowedRouteColliders.Length,
+                additions.Length);
+            allowedRouteColliders = expanded;
+            _installedAssemblyColliders = (Collider[])additions.Clone();
         }
 
         public void SetRouteModeActive(bool active)

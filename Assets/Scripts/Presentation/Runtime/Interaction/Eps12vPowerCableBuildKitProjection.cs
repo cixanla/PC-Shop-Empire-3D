@@ -1,4 +1,5 @@
 using System;
+using PCShopEmpire3D.Catalog;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.World.Interaction;
@@ -180,6 +181,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasPickupReceipt => HasStage(
             Session?.PrototypeEps12vPowerCableBuildKitOperationId ?? default,
             CustomPcBuildKitStage.Eps12vPowerCableInHands);
+
+        public bool IsReleasedForAssembly
+        {
+            get
+            {
+                GarageStockFlowSession session = Session;
+                return session?.CustomPcBuildKit != null &&
+                       session.CustomPcBuildKit.TryGetAssemblyHandoff(
+                           session.PrototypeEps12vPowerCableAssemblyHandoffOperationId,
+                           out CustomPcBuildKitAssemblyHandoffReceipt receipt) &&
+                       receipt.ComponentKind == PcComponentKind.PowerCable &&
+                       receipt.Line.PowerCableType ==
+                           PowerCableType.ModularEps12v8PinPsuToMotherboard &&
+                       receipt.WorkbenchContainerId ==
+                           session.Eps12vPowerCableRouteContainerId;
+            }
+        }
 
         public bool HasAllPrerequisites =>
             HasMotherboardPrerequisite &&
@@ -417,9 +435,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            progressText.text = IsStaged
-                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nEPS12V HAZIR"
-                : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nEPS12V BEKLİYOR";
+            progressText.text = IsReleasedForAssembly
+                ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nEPS12V MONTAJDA"
+                : IsStaged
+                    ? $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nEPS12V HAZIR"
+                    : $"BUILD KIT • {StagedComponentCount}/{PrototypeTotalComponentCount}\nEPS12V BEKLİYOR";
         }
 
         public void ResetFeedback()

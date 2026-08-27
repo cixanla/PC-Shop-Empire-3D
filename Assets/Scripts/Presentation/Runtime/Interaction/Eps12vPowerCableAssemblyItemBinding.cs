@@ -17,7 +17,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             None = 0,
             LooseWorld = 1,
-            Routed = 2
+            Routed = 2,
+            BuildKit = 3
         }
 
         [SerializeField] private GarageStockFlowRuntime runtime;
@@ -143,6 +144,48 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return transfer;
         }
 
+        public OperationResult TryCommitBuildKitAssemblyPickup()
+        {
+            OperationResult context = ValidateContext();
+            if (context.IsFailure)
+            {
+                return context;
+            }
+
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                IsRouted ||
+                !IsAuthorityInBuildKit ||
+                buildKit == null ||
+                !buildKit.IsStaged ||
+                buildKit.IsReleasedForAssembly)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-eps12v-power-cable-assembly." +
+                        "pickup-authority-mismatch"));
+            }
+
+            OperationResult headroom = ValidateBuildKitAssemblyPickupHeadroom();
+            if (headroom.IsFailure)
+            {
+                return headroom;
+            }
+
+            OperationResult<CustomPcBuildKitAssemblyHandoffReceipt> handoff =
+                Session.PickupStagedEps12vPowerCableForAssembly();
+            if (handoff.IsSuccess)
+            {
+                _carryOrigin = CarryOrigin.BuildKit;
+                buildKit.RefreshPresentation();
+                geometry.SetRouted(routed: false);
+            }
+
+            return handoff.IsSuccess
+                ? OperationResult.Success()
+                : OperationResult.Fail(handoff.Error);
+        }
+
         public OperationResult TryCommitRoutedUnroute()
         {
             OperationResult context = ValidateContext();
@@ -151,7 +194,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return context;
             }
 
-            if (!physicalItem.IsCarried || !IsRouted)
+            if (physicalItem.Ownership != PhysicalItemOwnership.World ||
+                physicalItem.IsCarried ||
+                !IsRouted)
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-eps12v-cable.unroute-authority-mismatch"));
@@ -188,7 +233,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (!physicalItem.IsCarried || !IsAuthorityInHands || IsRouted ||
-                (buildKit != null && buildKit.HasPickupReceipt))
+                (buildKit != null &&
+                 buildKit.HasPickupReceipt &&
+                 !buildKit.IsReleasedForAssembly))
             {
                 return OperationResult.Fail(
                     Failure.FromCode("assembly-eps12v-cable.route-authority-mismatch"));
@@ -208,15 +255,6 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return headroom;
             }
 
-            var previousSafePose = new Pose(
-                physicalItem.LastSafePosition,
-                physicalItem.LastSafeRotation);
-            OperationResult physicalCommit = physicalItem.PlaceAt(exactRoutePose);
-            if (physicalCommit.IsFailure)
-            {
-                return physicalCommit;
-            }
-
             OperationResult<Eps12vPowerCableOperationReceipt> domain =
                 Session.RouteEps12vPowerCable(
                     CreateOperationId("route"),
@@ -224,34 +262,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     Session.AssemblyBuild.Eps12vPowerCableRevision);
             if (domain.IsFailure)
             {
-                OperationResult safePoseRestore =
-                    physicalItem.RestoreLastSafePoseSnapshot(previousSafePose);
-                if (safePoseRestore.IsFailure)
+                return OperationResult.Fail(domain.Error);
+            }
+
+            OperationResult physicalCommit = physicalItem.PlaceAt(exactRoutePose);
+            if (physicalCommit.IsFailure)
+            {
+                OperationResult recovery =
+                    physicalItem.RecoverToStablePlacementAfterAuthority(
+                        exactRoutePose);
+                if (recovery.IsFailure ||
+                    !physicalItem.IsStablePlacement ||
+                    physicalItem.Ownership != PhysicalItemOwnership.World)
                 {
                     return OperationResult.Fail(
-                        Failure.FromCode("assembly-eps12v-cable.safe-pose-rollback-failed"));
+                        Failure.FromCode(
+                            "custom-pc-eps12v-power-cable-assembly." +
+                            "projection-recovery-failed"));
                 }
-
-                OperationResult rollback = physicalItem.BeginCarry(
-                    carryAnchor,
-                    heldLayer);
-                if (rollback.IsFailure)
-                {
-                    OperationResult physicalRecovery =
-                        physicalItem.RecoverToLastSafePose();
-                    OperationResult authorityRecovery = physicalRecovery.IsSuccess
-                        ? Session.DropHeldEps12vPowerCableToWorld()
-                        : OperationResult.Fail(
-                            Failure.FromCode("assembly-eps12v-cable.recovery-unavailable"));
-                    _carryOrigin = CarryOrigin.None;
-                    return physicalRecovery.IsFailure || authorityRecovery.IsFailure
-                        ? OperationResult.Fail(Failure.FromCode(
-                            "assembly-eps12v-cable.physical-rollback-compensation-failed"))
-                        : OperationResult.Fail(Failure.FromCode(
-                            "assembly-eps12v-cable.physical-rollback-failed"));
-                }
-
-                return OperationResult.Fail(domain.Error);
             }
 
             _carryOrigin = CarryOrigin.None;
@@ -314,7 +342,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 obstructionMask,
                 clockwiseHalfTurns,
                 paused,
-                IsAuthorityInHands && !IsRouted && buildKit.HasPickupReceipt);
+                IsAuthorityInHands &&
+                !IsRouted &&
+                buildKit.HasPickupReceipt &&
+                !buildKit.IsReleasedForAssembly);
             if (!evaluation.IsValid)
             {
                 return OperationResult.Fail(
@@ -633,6 +664,34 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             if (session.AssemblyBuild.Eps12vPowerCableRevision == long.MaxValue)
+            {
+                return OperationResult.Fail(AssemblyFailures.RevisionOverflow);
+            }
+
+            return session.Inventory.Revision > long.MaxValue - 2L
+                ? OperationResult.Fail(AssemblyFailures.InventoryRevisionOverflow)
+                : OperationResult.Success();
+        }
+
+        private OperationResult ValidateBuildKitAssemblyPickupHeadroom()
+        {
+            GarageStockFlowSession session = Session;
+            if (session == null || session.CustomPcBuildKit == null)
+            {
+                return OperationResult.Fail(
+                    Failure.FromCode(
+                        "custom-pc-eps12v-power-cable-assembly.context-missing"));
+            }
+
+            if (session.CustomPcBuildKit.Revision == long.MaxValue)
+            {
+                return OperationResult.Fail(
+                    CustomPcWorkOrderFailures.RevisionOverflow);
+            }
+
+            if (session.AssemblyBuild.Revision == long.MaxValue ||
+                session.AssemblyBuild.Eps12vPowerCableRevision == long.MaxValue ||
+                session.AssemblyBuild.Atx24PowerCableRevision == long.MaxValue)
             {
                 return OperationResult.Fail(AssemblyFailures.RevisionOverflow);
             }
