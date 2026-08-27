@@ -39,6 +39,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material metal,
             Material accent,
             Material rubber,
+            Material connectorPolymer,
             Material labelPaper,
             Material validMaterial,
             int interactableLayer)
@@ -72,7 +73,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 Vector3.zero,
                 new Vector3(0.036f, 0.018f, 0.020f),
                 0.002f,
-                rubber,
+                connectorPolymer,
                 false).transform;
             Object.DestroyImmediate(graphicsCardHeader.GetComponent<Collider>());
             DisableDecorativeRendererCost(
@@ -169,14 +170,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 "PcieGpuPsuGpu8Connector",
                 itemRoot.transform,
                 new Vector3(-0.030f, 0.006f, 0f),
-                metal,
+                connectorPolymer,
                 accent,
                 false);
             Transform graphicsCardConnector = CreatePcieGpuConnector(
                 "PcieGpuGraphicsCardGpu8Connector",
                 itemRoot.transform,
                 new Vector3(0.030f, 0.006f, 0f),
-                rubber,
+                connectorPolymer,
                 accent,
                 true);
 

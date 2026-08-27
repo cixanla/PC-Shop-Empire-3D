@@ -365,19 +365,25 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector2(3f, 2f));
             Material wood = GetOrCreateMaterial(
                 "WoodLaminate",
-                new Color(0.48f, 0.27f, 0.11f),
+                new Color(0.55f, 0.31f, 0.13f),
                 0f,
                 0.32f,
                 woodDetail,
                 new Vector2(3.5f, 1.2f));
             Material rubber = GetOrCreateMaterial(
                 "WorkshopRubber",
-                new Color(0.035f, 0.045f, 0.05f),
+                new Color(0.055f, 0.075f, 0.085f),
                 0f,
-                0.24f);
+                0.20f);
+            Material connectorPolymer = GetOrCreateUnlitMaterial(
+                "CableConnectorPolymer",
+                new Color(0.018f, 0.024f, 0.030f));
+            Material matteHardware = GetOrCreateUnlitMaterial(
+                "WorkshopMatteHardware",
+                new Color(0.16f, 0.18f, 0.20f));
             Material motherboardPcb = GetOrCreateMaterial(
                 "MotherboardPcb",
-                new Color(0.035f, 0.16f, 0.105f),
+                new Color(0.045f, 0.22f, 0.14f),
                 0.06f,
                 0.28f);
             Material labelPaper = GetOrCreateMaterial(
@@ -476,6 +482,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 brushedSteel,
                 accent,
                 rubber,
+                connectorPolymer,
+                matteHardware,
                 motherboardPcb,
                 labelPaper,
                 screenGlass,
@@ -996,6 +1004,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
             BuildVisualBenchmarkCorner(
                 parent,
+                concrete,
+                wall,
                 metal,
                 brushedSteel,
                 accent,
@@ -1063,6 +1073,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
         private static void BuildVisualBenchmarkCorner(
             Transform parent,
+            Material concrete,
+            Material wall,
             Material metal,
             Material brushedSteel,
             Material accent,
@@ -1146,7 +1158,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(0f, 1.76f, 4.77f),
                 new Vector3(3.5f, 1.48f, 0.08f),
                 0.025f,
-                rubber);
+                wall);
             CreateDetailCube(
                 "PegboardTopFrame",
                 workshop,
@@ -1191,7 +1203,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             CreateBeveledCube(
                 "DiagnosticMonitorBody",
                 workshop,
-                new Vector3(0.66f, 1.36f, 4.15f),
+                new Vector3(1.35f, 1.36f, 4.15f),
                 new Vector3(0.82f, 0.52f, 0.09f),
                 0.035f,
                 rubber,
@@ -1199,13 +1211,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             CreateDetailCube(
                 "DiagnosticMonitorScreen",
                 workshop,
-                new Vector3(0.66f, 1.36f, 4.098f),
+                new Vector3(1.35f, 1.36f, 4.098f),
                 new Vector3(0.72f, 0.42f, 0.018f),
                 screenGlass);
             CreateBeveledCube(
                 "DiagnosticMonitorStand",
                 workshop,
-                new Vector3(0.66f, 1.09f, 4.20f),
+                new Vector3(1.35f, 1.09f, 4.20f),
                 new Vector3(0.09f, 0.18f, 0.09f),
                 0.015f,
                 brushedSteel,
@@ -1213,7 +1225,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             CreateBeveledCube(
                 "DiagnosticKeyboard",
                 workshop,
-                new Vector3(0.65f, 1.015f, 3.98f),
+                new Vector3(1.35f, 1.015f, 3.98f),
                 new Vector3(0.72f, 0.045f, 0.23f),
                 0.018f,
                 rubber,
@@ -1231,6 +1243,13 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(0f, 2.375f, 4.56f),
                 new Vector3(1.72f, 0.025f, 0.08f),
                 lightDiffuser);
+
+            BuildAssemblyWorkbenchHeroReadability(
+                workshop,
+                concrete,
+                brushedSteel,
+                accent,
+                rubber);
 
             Transform shelf = new GameObject("StarterShelf").transform;
             shelf.SetParent(benchmark, false);
@@ -1287,6 +1306,62 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 screenGlass);
         }
 
+        private static void BuildAssemblyWorkbenchHeroReadability(
+            Transform workshop,
+            Material concrete,
+            Material brushedSteel,
+            Material accent,
+            Material rubber)
+        {
+            Transform heroRoot = new GameObject(
+                "AssemblyWorkbenchHeroReadability").transform;
+            heroRoot.SetParent(workshop, false);
+
+            GameObject esdMat = CreateBeveledCube(
+                "AssemblyWorkbenchEsdMat",
+                heroRoot,
+                new Vector3(-0.50f, 0.993f, 4.28f),
+                new Vector3(1.60f, 0.010f, 0.70f),
+                0.004f,
+                rubber,
+                false);
+            GameObject splashback = CreateBeveledCube(
+                "AssemblyWorkbenchSplashback",
+                heroRoot,
+                new Vector3(-0.68f, 1.36f, 4.718f),
+                new Vector3(0.88f, 0.60f, 0.016f),
+                0.006f,
+                concrete,
+                false);
+            GameObject frontEdge = CreateDetailCube(
+                "AssemblyWorkbenchZoneAccent",
+                heroRoot,
+                new Vector3(-0.50f, 0.958f, 3.868f),
+                new Vector3(1.60f, 0.030f, 0.022f),
+                accent);
+            GameObject cableGuide = CreateDetailCube(
+                "AssemblyCableRouteReferenceStrip",
+                heroRoot,
+                new Vector3(-1.125f, 1.51f, 4.706f),
+                new Vector3(0.024f, 0.54f, 0.012f),
+                accent);
+
+            int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
+            Require(ignoreRaycastLayer >= 0,
+                "Ignore Raycast layer is missing for the hero readability pass.");
+            foreach (GameObject visual in new[]
+                     {
+                         esdMat,
+                         splashback,
+                         frontEdge,
+                         cableGuide
+                     })
+            {
+                visual.layer = ignoreRaycastLayer;
+                DisableDecorativeRendererCost(visual.GetComponent<Renderer>());
+            }
+        }
+
         private static void BuildStaticShippingBox(
             string name,
             Transform parent,
@@ -1332,6 +1407,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material brushedSteel,
             Material accent,
             Material rubber,
+            Material connectorPolymer,
+            Material matteHardware,
             Material motherboardPcb,
             Material labelPaper,
             Material readyMaterial,
@@ -1384,7 +1461,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(-0.75f, 1.595f, 4.25f),
                 new Vector3(0.45f, 0.05f, 0.32f),
                 0.012f,
-                metal,
+                brushedSteel,
                 false);
             GameObject tray = CreateBeveledCube(
                 "MotherboardTray",
@@ -2280,6 +2357,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 brushedSteel,
                 accent,
                 rubber,
+                connectorPolymer,
+                matteHardware,
                 labelPaper,
                 interactableLayer,
                 new[]
@@ -2298,6 +2377,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 brushedSteel,
                 accent,
                 rubber,
+                connectorPolymer,
                 labelPaper,
                 interactableLayer,
                 new[]
@@ -2346,6 +2426,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     metal,
                     accent,
                     rubber,
+                    connectorPolymer,
                     labelPaper,
                     validMaterial,
                     interactableLayer);
@@ -2433,12 +2514,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             CreateSpotLight(
                 parent,
                 "WorkbenchTaskLight",
-                new Vector3(0f, 2.34f, 4.44f),
-                new Vector3(-0.55f, 1.12f, 4.28f),
-                new Color(1f, 0.77f, 0.55f),
-                3.8f,
-                3.4f,
-                74f);
+                new Vector3(0.35f, 2.34f, 4.44f),
+                new Vector3(-0.68f, 1.30f, 4.28f),
+                new Color(1f, 0.88f, 0.76f),
+                0.4f,
+                2.8f,
+                62f);
 
             GameObject reflectionObject = new GameObject("GarageReflectionProbe");
             reflectionObject.transform.SetParent(parent, false);
@@ -3158,7 +3239,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             GameObject flowBoard = CreateBeveledCube(
                 "CustomerFlowStatusBoard",
                 checkoutStation,
-                new Vector3(-0.55f, 1.72f, 3.38f),
+                new Vector3(1.20f, 1.72f, 3.38f),
                 new Vector3(1.52f, 0.62f, 0.06f),
                 0.018f,
                 counterBody,
@@ -4220,6 +4301,42 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
 
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static Material GetOrCreateUnlitMaterial(
+            string name,
+            Color color,
+            bool enableInstancing = true)
+        {
+            string path = $"{MaterialRoot}/{name}.mat";
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            Require(shader != null, "The URP Unlit shader is unavailable.");
+
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
+            }
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", color);
+            }
+
+            if (material.HasProperty("_Color"))
+            {
+                material.SetColor("_Color", color);
+            }
+
+            material.shaderKeywords = System.Array.Empty<string>();
+            material.enableInstancing = enableInstancing;
             EditorUtility.SetDirty(material);
             return material;
         }

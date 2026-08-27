@@ -36,6 +36,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material brushedSteel,
             Material accent,
             Material rubber,
+            Material connectorPolymer,
             Material labelPaper,
             int interactableLayer,
             Collider[] chassisClearanceBlockers)
@@ -49,7 +50,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 new Vector3(-0.75f, 1.045f, 4.25f),
                 new Vector3(0.19f, 0.008f, 0.18f),
                 0.003f,
-                rubber,
+                connectorPolymer,
                 true);
             BoxCollider supportCollider = floorFilter.GetComponent<BoxCollider>();
             supportCollider.isTrigger = false;

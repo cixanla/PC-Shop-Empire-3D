@@ -550,6 +550,9 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(customerFlow.CustomPcQuoteReady, Is.True);
             Assert.That(session.TryGetPrototypeCustomPcQuote(out _), Is.True);
             inventoryRevisionBeforeIssue = session.Inventory.Revision;
+            Vector3 stationApproach = ResolveStationApproachPoint(
+                station,
+                1.55f);
 
             DriveToWorldPoint(
                 marker,
@@ -565,8 +568,19 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 keyboard,
                 mouse,
                 gamepad,
-                new Vector3(-1.22f, 0.05f, 2.15f),
-                65);
+                new Vector3(
+                    stationApproach.x,
+                    0.05f,
+                    2.15f),
+                120);
+            DriveToWorldPoint(
+                marker,
+                device,
+                keyboard,
+                mouse,
+                gamepad,
+                stationApproach,
+                70);
             AimAtWorldTarget(
                 marker,
                 device,
@@ -1224,13 +1238,10 @@ namespace PCShopEmpire3D.Tests.PlayMode
         {
             CustomPcWorkTicketStationProjection station =
                 marker.CustomPcWorkTicketStation;
-            Collider targetCollider = station.InteractionCollider;
-            Vector3 target = targetCollider.bounds.center;
-            Vector3 approach = -targetCollider.transform.forward;
-            approach.y = 0f;
-            approach.Normalize();
-            Vector3 playerPosition = target + (approach * distance);
-            playerPosition.y = 0.05f;
+            Vector3 target = station.InteractionCollider.bounds.center;
+            Vector3 playerPosition = ResolveStationApproachPoint(
+                station,
+                distance);
             Vector3 horizontalLook = target - playerPosition;
             horizontalLook.y = 0f;
 
@@ -1246,6 +1257,20 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Vector3.up);
             controller.enabled = true;
             Physics.SyncTransforms();
+        }
+
+        private static Vector3 ResolveStationApproachPoint(
+            CustomPcWorkTicketStationProjection station,
+            float distance)
+        {
+            Collider targetCollider = station.InteractionCollider;
+            Vector3 approach = -targetCollider.transform.forward;
+            approach.y = 0f;
+            approach.Normalize();
+            Vector3 playerPosition =
+                targetCollider.bounds.center + (approach * distance);
+            playerPosition.y = 0.05f;
+            return playerPosition;
         }
 
         private static IEnumerator WaitForCustomerState(

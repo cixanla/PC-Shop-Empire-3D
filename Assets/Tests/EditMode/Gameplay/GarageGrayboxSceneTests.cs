@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-pcie-gpu-assembly-handoff-r54-v1"));
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-pcie-gpu-assembly-handoff-r54-v1"));
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-pcie-gpu-assembly-handoff-r54-v1"));
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-pcie-gpu-assembly-handoff-r54-v1"));
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2031,6 +2031,247 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsAssemblyWorkbenchHeroReadabilityContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                Transform[] transforms = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                    .ToArray();
+                Transform heroRoot = transforms.Single(transform =>
+                    transform.name == "AssemblyWorkbenchHeroReadability");
+                Renderer[] heroRenderers = heroRoot.GetComponentsInChildren<Renderer>(true);
+
+                Assert.That(
+                    GaragePrototypeMarker.Version,
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
+                Assert.That(heroRenderers.Length, Is.EqualTo(4));
+                Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
+                Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
+                Assert.That(
+                    heroRenderers.Select(renderer => renderer.name),
+                    Is.EquivalentTo(new[]
+                    {
+                        "AssemblyWorkbenchEsdMat",
+                        "AssemblyWorkbenchSplashback",
+                        "AssemblyWorkbenchZoneAccent",
+                        "AssemblyCableRouteReferenceStrip"
+                    }));
+                Assert.That(
+                    heroRenderers.All(renderer =>
+                        renderer.gameObject.layer ==
+                        LayerMask.NameToLayer("Ignore Raycast")),
+                    Is.True);
+                Assert.That(
+                    heroRenderers.All(renderer =>
+                        renderer.shadowCastingMode == ShadowCastingMode.Off &&
+                        !renderer.receiveShadows &&
+                        renderer.motionVectorGenerationMode ==
+                        MotionVectorGenerationMode.ForceNoMotion),
+                    Is.True);
+
+                Renderer esdMat = heroRenderers.Single(renderer =>
+                    renderer.name == "AssemblyWorkbenchEsdMat");
+                Renderer splashback = heroRenderers.Single(renderer =>
+                    renderer.name == "AssemblyWorkbenchSplashback");
+                Renderer zoneAccent = heroRenderers.Single(renderer =>
+                    renderer.name == "AssemblyWorkbenchZoneAccent");
+                Renderer routeReference = heroRenderers.Single(renderer =>
+                    renderer.name == "AssemblyCableRouteReferenceStrip");
+                Assert.That(esdMat.sharedMaterial.name,
+                    Does.StartWith("WorkshopRubber"));
+                Assert.That(splashback.sharedMaterial.name,
+                    Does.StartWith("Concrete"));
+                Assert.That(zoneAccent.sharedMaterial.name,
+                    Does.StartWith("SafetyAccent"));
+                Assert.That(routeReference.sharedMaterial.name,
+                    Does.StartWith("SafetyAccent"));
+                Assert.That(Vector3.Distance(
+                    esdMat.transform.localPosition,
+                    new Vector3(-0.50f, 0.993f, 4.28f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    splashback.transform.localPosition,
+                    new Vector3(-0.68f, 1.36f, 4.718f)), Is.LessThan(0.0001f));
+
+                Renderer workbenchTop = transforms
+                    .Single(transform => transform.name == "WorkbenchTop")
+                    .GetComponent<Renderer>();
+                Renderer chassisBase = transforms
+                    .Single(transform => transform.name == "ChassisBase")
+                    .GetComponent<Renderer>();
+                Renderer chassisTopRail = transforms
+                    .Single(transform => transform.name == "ChassisTopRail")
+                    .GetComponent<Renderer>();
+                Renderer motherboardTray = transforms
+                    .Single(transform => transform.name == "MotherboardTray")
+                    .GetComponent<Renderer>();
+                Renderer motherboardPcb = transforms
+                    .Single(transform => transform.name == "MotherboardPcb")
+                    .GetComponent<Renderer>();
+                Renderer pegboard = transforms
+                    .Single(transform => transform.name == "Pegboard")
+                    .GetComponent<Renderer>();
+                Renderer[] mattePolymerRenderers = transforms
+                    .Where(transform => new[]
+                    {
+                        "PcieGpuPsuGpu8ConnectorHousing",
+                        "PcieGpuGraphicsCardGpu8ConnectorSixPinHousing",
+                        "PcieGpuGraphicsCardGpu8ConnectorTwoPinHousing",
+                        "PcieGpuGraphicsCard8HeaderHousing",
+                        "PowerSupplyFilteredFloorIntake"
+                    }.Contains(transform.name))
+                    .Select(transform => transform.GetComponent<Renderer>())
+                    .ToArray();
+                Transform diagnosticMonitor = transforms.Single(transform =>
+                    transform.name == "DiagnosticMonitorBody");
+                Transform workTicketStation = transforms.Single(transform =>
+                    transform.name == "CustomPcWorkTicketStation");
+                Transform customerFlowStatusBoard = transforms.Single(transform =>
+                    transform.name == "CustomerFlowStatusBoard");
+                Assert.That(workbenchTop.sharedMaterial.name,
+                    Does.StartWith("WoodLaminate"));
+                Assert.That(chassisBase.sharedMaterial.name,
+                    Does.StartWith("DarkMetal"));
+                Assert.That(chassisTopRail.sharedMaterial.name,
+                    Does.StartWith("BrushedSteel"));
+                Assert.That(motherboardTray.sharedMaterial.name,
+                    Does.StartWith("DarkMetal"));
+                Assert.That(motherboardPcb.sharedMaterial.name,
+                    Does.StartWith("MotherboardPcb"));
+                Assert.That(pegboard.sharedMaterial.name,
+                    Does.StartWith("WarmWall"));
+                Assert.That(mattePolymerRenderers.Length, Is.EqualTo(5));
+                Assert.That(
+                    mattePolymerRenderers.All(renderer =>
+                        renderer != null &&
+                        renderer.sharedMaterial.name.StartsWith(
+                            "CableConnectorPolymer",
+                            StringComparison.Ordinal) &&
+                        renderer.sharedMaterial.shader != null &&
+                        renderer.sharedMaterial.shader.name ==
+                        "Universal Render Pipeline/Unlit"),
+                    Is.True);
+                Renderer[] graphicsCardFanBlades = transforms
+                    .Where(transform =>
+                        transform.name.StartsWith(
+                            "GraphicsCardFan",
+                            StringComparison.Ordinal) &&
+                        transform.name.Contains("Blade_"))
+                    .Select(transform => transform.GetComponent<Renderer>())
+                    .ToArray();
+                Assert.That(graphicsCardFanBlades.Length, Is.EqualTo(14));
+                Assert.That(
+                    graphicsCardFanBlades.All(renderer =>
+                        renderer != null &&
+                        renderer.sharedMaterial.name.StartsWith(
+                            "CableConnectorPolymer",
+                            StringComparison.Ordinal) &&
+                        renderer.sharedMaterial.shader.name ==
+                        "Universal Render Pipeline/Unlit"),
+                    Is.True);
+                Renderer[] graphicsCardBrackets = transforms
+                    .Where(transform =>
+                        transform.name == "GraphicsCardRearBracketPlate" ||
+                        transform.name == "GraphicsCardIoRearBracket")
+                    .Select(transform => transform.GetComponent<Renderer>())
+                    .ToArray();
+                Assert.That(graphicsCardBrackets.Length, Is.EqualTo(2));
+                Assert.That(
+                    graphicsCardBrackets.All(renderer =>
+                        renderer != null &&
+                        renderer.sharedMaterial.name.StartsWith(
+                            "WorkshopMatteHardware",
+                            StringComparison.Ordinal) &&
+                        renderer.sharedMaterial.shader.name ==
+                        "Universal Render Pipeline/Unlit"),
+                    Is.True);
+                Assert.That(diagnosticMonitor.localPosition.x,
+                    Is.EqualTo(1.35f).Within(0.0001f));
+                Assert.That(Vector3.Distance(
+                    workTicketStation.localPosition,
+                    new Vector3(-3.35f, 0f, 4.78f)), Is.LessThan(0.0001f));
+                Assert.That(customerFlowStatusBoard.localPosition.x,
+                    Is.EqualTo(1.20f).Within(0.0001f));
+
+                Material wood = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/WoodLaminate.mat");
+                Material rubber = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/WorkshopRubber.mat");
+                Material pcb = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/MotherboardPcb.mat");
+                Material connectorPolymer = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/CableConnectorPolymer.mat");
+                Material matteHardware = AssetDatabase.LoadAssetAtPath<Material>(
+                    "Assets/Art/Prototype/Materials/WorkshopMatteHardware.mat");
+                Assert.That(wood, Is.Not.Null);
+                Assert.That(rubber, Is.Not.Null);
+                Assert.That(pcb, Is.Not.Null);
+                Assert.That(connectorPolymer, Is.Not.Null);
+                Assert.That(matteHardware, Is.Not.Null);
+                Assert.That(wood.GetColor("_BaseColor").r,
+                    Is.EqualTo(0.55f).Within(0.001f));
+                Assert.That(rubber.GetColor("_BaseColor").b,
+                    Is.EqualTo(0.085f).Within(0.001f));
+                Assert.That(pcb.GetColor("_BaseColor").g,
+                    Is.EqualTo(0.22f).Within(0.001f));
+                Assert.That(connectorPolymer.GetColor("_BaseColor").b,
+                    Is.EqualTo(0.030f).Within(0.001f));
+                Assert.That(connectorPolymer.shader, Is.Not.Null);
+                Assert.That(connectorPolymer.shader.name,
+                    Is.EqualTo("Universal Render Pipeline/Unlit"));
+                Assert.That(connectorPolymer.IsKeywordEnabled("_EMISSION"),
+                    Is.False);
+                Assert.That(matteHardware.shader, Is.Not.Null);
+                Assert.That(matteHardware.shader.name,
+                    Is.EqualTo("Universal Render Pipeline/Unlit"));
+                Assert.That(matteHardware.GetColor("_BaseColor").b,
+                    Is.EqualTo(0.20f).Within(0.001f));
+                Assert.That(matteHardware.IsKeywordEnabled("_EMISSION"),
+                    Is.False);
+
+                MeshRenderer[] sceneRenderers = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<MeshRenderer>(true))
+                    .ToArray();
+                Light[] sceneLights = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Light>(true))
+                    .ToArray();
+                Camera[] sceneCameras = scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Camera>(true))
+                    .ToArray();
+                Assert.That(sceneRenderers.Length, Is.EqualTo(493));
+                Assert.That(sceneLights.Length, Is.EqualTo(4));
+                Assert.That(sceneCameras.Length, Is.EqualTo(1));
+
+                Light taskLight = sceneLights.Single(light =>
+                    light.name == "WorkbenchTaskLight");
+                Assert.That(taskLight.type, Is.EqualTo(LightType.Spot));
+                Assert.That(taskLight.intensity, Is.EqualTo(0.4f).Within(0.0001f));
+                Assert.That(taskLight.range, Is.EqualTo(2.8f).Within(0.0001f));
+                Assert.That(taskLight.spotAngle, Is.EqualTo(62f).Within(0.0001f));
+                Assert.That(taskLight.innerSpotAngle,
+                    Is.EqualTo(38.44f).Within(0.001f));
+                Assert.That(taskLight.shadows, Is.EqualTo(LightShadows.Soft));
+                Assert.That(taskLight.shadowStrength,
+                    Is.EqualTo(0.68f).Within(0.0001f));
+                Assert.That(Vector3.Distance(
+                    taskLight.transform.localPosition,
+                    new Vector3(0.35f, 2.34f, 4.44f)), Is.LessThan(0.0001f));
+                Assert.That(Quaternion.Angle(
+                    taskLight.transform.localRotation,
+                    Quaternion.LookRotation(
+                        new Vector3(-0.68f, 1.30f, 4.28f) -
+                        new Vector3(0.35f, 2.34f, 4.44f))), Is.LessThan(0.01f));
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsReadableSemiRealisticBenchmarkContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -2042,7 +2283,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-pcie-gpu-assembly-handoff-r54-v1"));
+                    Is.EqualTo("garage-assembly-workbench-hero-r55-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
