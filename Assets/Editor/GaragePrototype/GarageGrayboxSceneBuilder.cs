@@ -1389,10 +1389,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             GameObject tray = CreateBeveledCube(
                 "MotherboardTray",
                 chassis,
-                new Vector3(-0.75f, 1.305f, 4.387f),
+                new Vector3(-0.75f, 1.361f, 4.387f),
                 new Vector3(0.454f, 0.534f, 0.050f),
                 0.006f,
                 metal);
+            // Preserve the tray's top edge while opening a real lower PSU chamber.
+            tray.transform.localScale = new Vector3(1f, 0.79f, 1f);
 
             SetLayerRecursively(chassisBase, interactableLayer);
             SetLayerRecursively(chassisBack, interactableLayer);
@@ -1434,11 +1436,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             GameObject statusPlate = CreateBeveledCube(
                 "MotherboardSeatStatusPlate",
                 seatRoot,
-                new Vector3(-0.75f, 1.105f, 4.353f),
+                new Vector3(-0.75f, 1.155f, 4.353f),
                 new Vector3(0.24f, 0.035f, 0.018f),
                 0.005f,
                 metal);
             SetLayerRecursively(statusPlate, interactableLayer);
+            BoxCollider statusCollider = statusPlate.GetComponent<BoxCollider>();
             Renderer statusRenderer = statusPlate.GetComponent<Renderer>();
             DisableDecorativeRendererCost(statusRenderer);
 
@@ -1446,7 +1449,7 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 MotherboardSeatProjection>();
             seat.Configure(
                 snapAnchor,
-                statusPlate.GetComponent<Collider>(),
+                statusCollider,
                 tray.GetComponent<Collider>(),
                 chassis,
                 statusRenderer,

@@ -541,7 +541,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             OperationResult authority = wasSeated
                 ? binding.TryCommitSeatedDetach()
-                : binding.TryCommitLoosePickup();
+                : binding.IsAuthorityInBuildKit
+                    ? binding.TryCommitBuildKitAssemblyPickup()
+                    : binding.TryCommitLoosePickup();
             if (authority.IsFailure)
             {
                 OperationResult rollback = item.RecoverToLastSafePose();

@@ -235,6 +235,102 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 UnityPowerSupplyBayPhysics.Instance);
         }
 
+        public static PowerSupplyBayEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection powerSupply,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            PowerSupplyFormFactor powerSupplyFormFactor,
+            PowerSupplyFormFactor bayFormFactor,
+            bool chassisClearanceAvailable,
+            bool cableClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers = null,
+            IReadOnlyList<Collider> cableClearanceBlockers = null)
+        {
+            return EvaluateRecoverySeat(
+                powerSupply,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                assemblyRoot,
+                obstructionMask,
+                halfTurns,
+                authorityAvailable,
+                powerSupplyFormFactor,
+                bayFormFactor,
+                chassisClearanceAvailable,
+                cableClearanceAvailable,
+                chassisClearanceBlockers,
+                cableClearanceBlockers,
+                UnityPowerSupplyBayPhysics.Instance);
+        }
+
+        internal static PowerSupplyBayEvaluation EvaluateRecoverySeat(
+            PhysicalItemProjection powerSupply,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int halfTurns,
+            bool authorityAvailable,
+            PowerSupplyFormFactor powerSupplyFormFactor,
+            PowerSupplyFormFactor bayFormFactor,
+            bool chassisClearanceAvailable,
+            bool cableClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers,
+            IReadOnlyList<Collider> cableClearanceBlockers,
+            IPowerSupplyBayPhysics physics)
+        {
+            if (powerSupply == null ||
+                snapAnchor == null ||
+                focusCollider == null ||
+                supportCollider == null ||
+                assemblyRoot == null ||
+                physics == null ||
+                !focusCollider.enabled ||
+                !focusCollider.gameObject.activeInHierarchy)
+            {
+                return Invalid(PowerSupplyBayStatus.ContextMissing);
+            }
+
+            int normalizedHalfTurns = NormalizeHalfTurns(halfTurns);
+            PowerSupplySeatOrientation orientation = normalizedHalfTurns == 0
+                ? PowerSupplySeatOrientation.FanToFilteredVent
+                : PowerSupplySeatOrientation.FanAwayFromFilteredVent;
+            Pose candidatePose = ResolveSeatPose(snapAnchor, normalizedHalfTurns);
+            if (!authorityAvailable)
+            {
+                return Invalid(
+                    PowerSupplyBayStatus.AuthorityBlocked,
+                    candidatePose,
+                    orientation);
+            }
+
+            return EvaluateSeatGeometry(
+                powerSupply,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                null,
+                assemblyRoot,
+                obstructionMask,
+                normalizedHalfTurns,
+                candidatePose,
+                orientation,
+                powerSupplyFormFactor,
+                bayFormFactor,
+                chassisClearanceAvailable,
+                cableClearanceAvailable,
+                chassisClearanceBlockers,
+                cableClearanceBlockers,
+                physics);
+        }
+
         internal static PowerSupplyBayEvaluation EvaluateSeat(
             bool placementModeEnabled,
             Transform interactionOrigin,
@@ -315,6 +411,45 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Invalid(focusStatus, candidatePose, orientation);
             }
 
+            return EvaluateSeatGeometry(
+                powerSupply,
+                snapAnchor,
+                focusCollider,
+                supportCollider,
+                playerRoot,
+                assemblyRoot,
+                obstructionMask,
+                normalizedHalfTurns,
+                candidatePose,
+                orientation,
+                powerSupplyFormFactor,
+                bayFormFactor,
+                chassisClearanceAvailable,
+                cableClearanceAvailable,
+                chassisClearanceBlockers,
+                cableClearanceBlockers,
+                physics);
+        }
+
+        private static PowerSupplyBayEvaluation EvaluateSeatGeometry(
+            PhysicalItemProjection powerSupply,
+            Transform snapAnchor,
+            Collider focusCollider,
+            Collider supportCollider,
+            Transform playerRoot,
+            Transform assemblyRoot,
+            LayerMask obstructionMask,
+            int normalizedHalfTurns,
+            Pose candidatePose,
+            PowerSupplySeatOrientation orientation,
+            PowerSupplyFormFactor powerSupplyFormFactor,
+            PowerSupplyFormFactor bayFormFactor,
+            bool chassisClearanceAvailable,
+            bool cableClearanceAvailable,
+            IReadOnlyList<Collider> chassisClearanceBlockers,
+            IReadOnlyList<Collider> cableClearanceBlockers,
+            IPowerSupplyBayPhysics physics)
+        {
             if (powerSupplyFormFactor != PowerSupplyFormFactor.AtxPs2 ||
                 bayFormFactor != PowerSupplyFormFactor.AtxPs2)
             {
@@ -324,7 +459,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     orientation);
             }
 
-            if (orientation != PowerSupplySeatOrientation.FanToFilteredVent)
+            if (normalizedHalfTurns != 0 ||
+                orientation != PowerSupplySeatOrientation.FanToFilteredVent)
             {
                 return Invalid(
                     PowerSupplyBayStatus.OrientationInvalid,
@@ -348,12 +484,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     orientation);
             }
 
-            Vector3 insertionNormal = snapAnchor.forward.sqrMagnitude > Mathf.Epsilon
-                ? snapAnchor.forward.normalized
-                : Vector3.forward;
+            Vector3 supportNormal = assemblyRoot.up.sqrMagnitude > Mathf.Epsilon
+                ? assemblyRoot.up.normalized
+                : Vector3.up;
+            Vector3 insertionNormal = assemblyRoot.forward.sqrMagnitude > Mathf.Epsilon
+                ? -assemblyRoot.forward.normalized
+                : supportNormal;
             Ray supportRay = new Ray(
-                candidatePose.position + insertionNormal * SupportProbeOffset,
-                -insertionNormal);
+                candidatePose.position + supportNormal * SupportProbeOffset,
+                -supportNormal);
             if (!supportCollider.enabled ||
                 !supportCollider.gameObject.activeInHierarchy ||
                 !physics.RaycastCollider(
@@ -695,6 +834,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             IReadOnlyList<Collider> cableClearanceBlockers)
         {
             if (collider == null ||
+                collider.isTrigger ||
                 collider == focusCollider ||
                 collider == supportCollider ||
                 IsChildOf(collider.transform, playerRoot) ||

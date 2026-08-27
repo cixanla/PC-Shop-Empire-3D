@@ -1367,8 +1367,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-graphics-card-assembly-handoff-r50-v1"));
+                    Is.EqualTo("garage-power-supply-assembly-handoff-r51-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
+                Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
+                    Is.True, "power-supply BuildKit runtime");
+                Assert.That(binding.BuildKit, Is.SameAs(marker.PowerSupplyBuildKit),
+                    "power-supply binding BuildKit wiring");
+                Assert.That(Vector3.Dot(
+                        bay.SnapAnchor.up,
+                        bay.AssemblyRoot.up),
+                    Is.GreaterThan(0.999f), "upright ATX support axis");
+                Assert.That(Vector3.Dot(
+                        bay.SnapAnchor.forward,
+                        bay.AssemblyRoot.forward),
+                    Is.GreaterThan(0.999f), "rear-mount insertion axis");
                 Assert.That(bay, Is.Not.Null);
                 Assert.That(bay.IsConfigured, Is.True);
                 Assert.That(bay.SlotIdValue,
@@ -1513,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-graphics-card-assembly-handoff-r50-v1"));
+                    Is.EqualTo("garage-power-supply-assembly-handoff-r51-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1669,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-graphics-card-assembly-handoff-r50-v1"));
+                    Is.EqualTo("garage-power-supply-assembly-handoff-r51-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1830,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-graphics-card-assembly-handoff-r50-v1"));
+                    Is.EqualTo("garage-power-supply-assembly-handoff-r51-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2030,7 +2042,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-graphics-card-assembly-handoff-r50-v1"));
+                    Is.EqualTo("garage-power-supply-assembly-handoff-r51-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
@@ -2555,7 +2567,10 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Quaternion.Euler(0f, 180f, 0f)), Is.LessThan(0.1f));
                 Assert.That(Vector3.Distance(
                     tray.localPosition,
-                    new Vector3(-0.75f, 1.305f, 4.387f)), Is.LessThan(0.0001f));
+                    new Vector3(-0.75f, 1.361f, 4.387f)), Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    tray.localScale,
+                    new Vector3(1f, 0.79f, 1f)), Is.LessThan(0.0001f));
                 Assert.That(Vector3.Distance(
                     tray.GetComponent<BoxCollider>().size,
                     new Vector3(0.454f, 0.534f, 0.050f)), Is.LessThan(0.0001f));
@@ -2563,7 +2578,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("DarkMetal"));
                 Assert.That(Vector3.Distance(
                     statusPlate.localPosition,
-                    new Vector3(-0.75f, 1.105f, 4.353f)), Is.LessThan(0.0001f));
+                    new Vector3(-0.75f, 1.155f, 4.353f)), Is.LessThan(0.0001f));
                 Assert.That(Vector3.Distance(
                     ioKey.localPosition,
                     new Vector3(-0.085f, 0.070f, 0.022f)), Is.LessThan(0.0001f));

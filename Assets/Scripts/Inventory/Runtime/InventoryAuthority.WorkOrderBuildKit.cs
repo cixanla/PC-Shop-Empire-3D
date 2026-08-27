@@ -666,6 +666,30 @@ namespace PCShopEmpire3D.Inventory
                 expectedInventoryRevision);
         }
 
+        /// <summary>
+        /// Releases the exact staged ATX power supply from BuildKit to ActorHands and binds
+        /// all subsequent reserved custody to the capacity-one managed PSU bay already
+        /// owned by Assembly. Exact replay returns the original proof without advancing
+        /// Inventory Revision.
+        /// </summary>
+        internal OperationResult<
+                InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
+            ReleaseReservedPowerSupplyForAssembly(
+                InventorySerializedReservationWorkOrderBuildKitReceipt placementReceipt,
+                StableId<
+                    InventorySerializedReservationWorkOrderBuildKitAssemblyOperationIdScope>
+                    operationId,
+                StableId<ContainerIdScope> powerSupplyBayContainerId,
+                long expectedInventoryRevision)
+        {
+            return ReleaseReservedComponentForAssembly(
+                placementReceipt,
+                PcComponentKind.PowerSupply,
+                operationId,
+                powerSupplyBayContainerId,
+                expectedInventoryRevision);
+        }
+
         private OperationResult<
                 InventorySerializedReservationWorkOrderBuildKitAssemblyHandoffReceipt>
             ReleaseReservedComponentForAssembly(
@@ -1071,7 +1095,8 @@ namespace PCShopEmpire3D.Inventory
                  pickup.ComponentKind != PcComponentKind.MemoryModule &&
                  pickup.ComponentKind != PcComponentKind.StorageDevice &&
                  pickup.ComponentKind != PcComponentKind.ProcessorCooler &&
-                 pickup.ComponentKind != PcComponentKind.GraphicsCard) ||
+                 pickup.ComponentKind != PcComponentKind.GraphicsCard &&
+                 pickup.ComponentKind != PcComponentKind.PowerSupply) ||
                 !ReferenceEquals(handoff.Owner, this) ||
                 !ReferenceEquals(handoff.PlacementReceipt, placement) ||
                 handoff.OperationId.IsEmpty ||
