@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
-**Tarih:** 27 Ağustos 2026<br>
-**Durum:** Issue #111 Assembly Workbench hero readability exact scene/material/light/render-budget/full-regression, universal Mac native, clean Windows IL2CPP/D3D11, cross-machine screenshot/readback, cleanup, PR/merge ve main CI kapıları kabul edildi; Issue `CLOSED/COMPLETED`, Roadmap `Done`<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical source `1e2106a822b36f888cb9ad53ee22054ae991cda2`, tree `540992d186ff6e670569ee3cee51807798ffa427`; PR #112 merge `d20d5bc9fa1a67bf0e9441253834a9de962046e8`; technical/docs/main Guards `33089682114 / 33093360490 / 33093461437`; bounded acceptance `6/6`; parent visual Epic #18 ve Steam 1.0 Goal açık
+**Tarih:** 31 Ağustos 2026<br>
+**Durum:** Issue #114 Retail/Checkout hero readability exact scene/presentation/render-budget/full-regression, universal Mac native, clean Windows IL2CPP/D3D11, cross-machine screenshot/readback, cleanup, PR/merge ve main CI kapıları kabul edildi; Issue `CLOSED`, Roadmap `Done`; USB physical checkpoint ayrı bekliyor<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical/main source `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`; PR #116; technical/main Guards `33109651186 / 33127652290`; bounded acceptance `5/5`; parent visual Epic #18 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #111 / Epic #18
+## En yeni teknik checkpoint — Issue #114 / Epic #18
+
+- GarageGraybox `garage-retail-checkout-hero-r56-v1`; customer approach, gerçek authoritative shelf offer/reserved basket ve checkout/payment/receipt durumlarını üç karşılaştırılabilir 1280x720 composition'a taşır. Projection yalnız existing state'i okur; ikinci retail, placement, reservation, payment veya receipt authority üretmez.
+- Base→r56 authored MeshRenderer `490→499` (`+9`), light `4→5`, camera `1→1`; runtime total/active `502/478`. Dokuz hero renderer Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light `0.42 / 4.4 / 110°` ve shadowless'tır. Existing NavMesh, route, waypoint, collider, input ve stable identity untouched'tır.
+- Mac retail hero `2/2`, full EditMode `754/754`, PlayMode `158/158`; Windows full EditMode `754/754`, PlayMode `158/158`; failed/skipped/inconclusive `0`. Technical/main source `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`.
+- Universal Mac report `330481405` bayt; valid deep/strict `x86_64 + arm64` app, Apple M1/Metal r56 retail ve r55 Assembly regression smoke geçti. Mac üç screenshot glare `0`, minimum contrast `1.348`dır.
+- Exact clean Windows x64 IL2CPP/only-D3D11 report `1351471280` bayt; Intel Iris Xe runtime `27/27`, host/readiness/success exact, forbidden `0`, graceful exit ve forced cleanup `0`. Üç screenshot Mac'te hash/dimension/glare/contrast exact readback aldı; final task/firewall/process/temp residue `0`.
+- Technical Guard `33109651186`, PR #116 fast-forward merge ve main Guard `33127652290` geçti. Issue #114 `CLOSED`, Roadmap `Done`; parent Epic #18 ve full Goal açık. USB bağlı değildi/yazılmadı; physical checkpoint ayrı bekler. Claim `human=false`.
+- Sıradaki bounded iş #115'tir: pre-existing `StarterShelf` on-collider/NavMesh hacmini gerçek `AuthoritativeRetailShelfA` ile tek placement/inventory authority ve çakışmasız customer route olacak biçimde consolidate et. Accepted r56 readability ve input regressions korunmalıdır. Mac tek write lane; fiziksel Windows yokken coding/Mac gates sürer, exact Iris Xe gate ertelenir.
+
+## Önceki teknik checkpoint — Issue #111 / Epic #18
 
 - GarageGraybox `garage-assembly-workbench-hero-r55-v1`, Assembly Workbench açık chassis/motherboard/GPU/PSU ve loose/preview/routed cable durumlarını karşılaştırılabilir 1280x720 hero composition'a taşır. Work-ticket/monitor/status-board sunumu okunur; gameplay authority, collider, anchor, waypoint, route topology, stable identity ve input değişmez.
 - `WoodLaminate`, `WorkshopRubber`, `MotherboardPcb` ayarlanır. Shared non-emissive `CableConnectorPolymer` beş connector/PSU-intake renderer'ı ile on dört GPU fan blade'i; `WorkshopMatteHardware` iki GPU rear bracket'i bounded koyulaştırır. Connector glare artık merkezde `0/64`dır.
