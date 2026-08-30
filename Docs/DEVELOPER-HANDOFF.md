@@ -14,7 +14,15 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #107 r53 teknik accepted; PR #108 entegrasyonu sürüyor; Epic #10 ve Steam 1.0 Goal açık
+### Güncel checkpoint — Issue #114 r56 accepted/main; Issue #115 sıradaki bounded scene işi
+
+- Technical/main head `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`. GarageGraybox r56 customer approach, authoritative shelf offer/reserved basket ve checkout/payment/receipt durumlarını üç 1280x720 native composition'a taşır; `RetailCheckoutHeroProjection` ikinci authority üretmez.
+- Authored renderer delta `+9`, light/camera `+1/0`; runtime `502` total / `478` active renderer. Hero geometry Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light shadowless'tır. Existing NavMesh, route, waypoints, input ve retail/checkout authorities untouched kalır.
+- Mac hero `2/2`, full `754/754 EditMode + 158/158 PlayMode`; Windows full aynı counts; failed/skipped/inconclusive `0`. Universal Mac `330481405` bayt; Windows IL2CPP/D3D11 `1351471280` bayt; Windows runtime `27/27`, graceful exit ve final residue `0`.
+- Technical Guard `33109651186`, PR #116 fast-forward merge ve main Guard `33127652290` geçti; Issue #114 closed/Done. ADR-0013 ve tarihli Evidence authoritative ayrıntıdır. USB yoktu/yazılmadı; physical checkpoint açık kalır. Human claim `false`tır.
+- Çalışma yönü Issue #115'tir: legacy `StarterShelf` on-collider hacmini exact scene/NavMesh kanıtıyla haritala; yalnız tek authoritative retail placement surface bırak; customer approach/browse/checkout/exit, accepted r56 visual budget, WASD+mouse ve regressions korunmadan kapsamı genişletme. Mac tek write lane'dir. UTM fiziksel Iris Xe/D3D11 release kanıtı değildir.
+
+### Önceki checkpoint — Issue #107 r53 teknik accepted; PR #108 entegrasyonu sürüyor; Epic #10 ve Steam 1.0 Goal açık
 
 - Technical head `9cd3276d60c03cec1b5b15049027523dddbee8b6`, tree `01f3edc99dd94aeeb125323048bf8532891c028a`. Canonical reserved EPS12V yalnız exact owned work-order/ticket/allocation line/kind/family/product/item/reservation/staging-receipt tuple'ıyla çözülür; ordinal/display/value-equal/regenerated identity authority değildir.
 - Handoff historical `10/10` aggregate, live Issue #89/#91/#93/#95/#97/#99/#102 exact seven-component Assembly receipts ve exact routed #105 ATX24 sonrasında ayrı stable operation ile EPS12V BuildKit → ActorHands → existing Issue #62 route → ActorHands custody'sini açar.

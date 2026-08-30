@@ -1,11 +1,21 @@
 # PC Shop Empire 3D — Yaşayan Proje Bible ve Ana Handoff
 
 **Belge rolü:** Projenin ana fikrini, güncel durumunu, teknik sınırlarını, yapılmış ve yapılacak işleri tek giriş noktasında tutar.  
-**Son kapsam güncellemesi:** 27 Ağustos 2026
+**Son kapsam güncellemesi:** 31 Ağustos 2026
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #111 r55 kabul edildi ve PR #112 ile `main`e entegre edildi; Epic #18 ve Steam 1.0 Goal açık
+## Güncel geliştirme checkpoint'i — Issue #114 r56 kabul edildi ve PR #116 ile `main`e entegre edildi; Issue #115 sıradaki bounded scene işi
+
+Issue #114'ün bounded customer-facing retail/checkout hero-readability dilimi technical head/main `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619` üzerindedir. GarageGraybox r56; customer approach, gerçek `AuthoritativeRetailShelfA` offer/reserved-basket durumu ve gerçek checkout/payment/receipt durumunu üç karşılaştırılabilir 1280x720 composition'a taşır. `RetailCheckoutHeroProjection` yalnız mevcut authority state'ini sunuma yansıtır; ikinci item, reservation, placement, payment veya receipt authority üretmez.
+
+Base→r56 authored MeshRenderer `490→499` (`+9`), light/camera `4→5 / 1→1`; runtime total/smoke-active renderer `502/478`dir. Dokuz ek hero renderer Ignore Raycast, no-collider/no-shadow/no-motion-vector presentation geometry'sidir. Tek soft fill spot light `0.42 / 4.4 / 110°`, shadow `off`tur. Existing customer route, retail/checkout authority, collider, NavMesh, waypoint, input ve stable serialized identity değiştirilmemiştir. Pre-existing legacy `StarterShelf` collider hacmi #114 içinde sessizce değiştirilmemiş, Issue #115'e taşınmıştır.
+
+Mac retail hero P1 `2/2`, full EditMode `754/754`, PlayMode `158/158`; Windows full EditMode `754/754`, PlayMode `158/158`; accepted failed/skipped/inconclusive `0`dır. Universal Mac report `330481405` bayt ve strict/deep-valid `x86_64 + arm64`; clean Windows x64 IL2CPP/only-D3D11 report `1351471280` bayt ve fatal-token `0`dır. Apple M1/Metal ile Intel Iris Xe/D3D11 üçer native screenshot verdi; glare her karede `0`, minimum contrast `1.348`dır. Windows runtime `27/27`, graceful exit ve final task/firewall/process/temp residue `0` ile geçti; evidence Mac'te bağımsız hash/dimension/metric readback aldı.
+
+Technical Guard `33109651186`, PR #116 fast-forward merge ve main Guard `33127652290` geçti; Issue #114 `CLOSED`, Roadmap `Done`dur. ADR-0013 addendum'u ve tarihli Evidence exact zinciri bağlar. USB bağlı olmadığı için #114 immutable USB checkpoint'i yazılmadı ve ayrı fiziksel teslim kapısı olarak bekliyor; bu durum teknik acceptance ile karıştırılmaz. Claim `human=false`; fiziksel HID/gamepad/endurance yayın sertifikasyonunda kalır. Parent visual Epic #18 ve ana Steam 1.0 Goal açıktır. Sıradaki bounded iş Issue #115 ile legacy `StarterShelf` collider/NavMesh hacmini tek authoritative shelf ve çakışmasız customer route sözleşmesine dönüştürmektir. Mac tek authoritative write lane'dir; UTM yardımcı taşınabilirlik kontrolü olabilir fakat fiziksel Windows/Iris Xe release kanıtının yerine geçmez.
+
+## Önceki geliştirme checkpoint'i — Issue #111 r55 kabul edildi ve PR #112 ile `main`e entegre edildi; Epic #18 ve Steam 1.0 Goal açık
 
 Issue #111'in bounded Assembly Workbench hero-readability dilimi technical head `1e2106a822b36f888cb9ad53ee22054ae991cda2`, tree `540992d186ff6e670569ee3cee51807798ffa427` üzerindedir. GarageGraybox r55, açık chassis/motherboard/GPU/PSU ile loose/preview/routed cable durumlarını karşılaştırılabilir 1280x720 composition'a taşır. `CableConnectorPolymer` ve `WorkshopMatteHardware` exact glare kaynaklarını non-emissive matte sunuma çeker; existing task light `0.4 / 2.8 / 62°` olarak odaklanır. Gameplay authority, collider, anchor, waypoint, route topology, stable serialized identity ve input değişmez; ProjectSettings byte-exact kalır.
 

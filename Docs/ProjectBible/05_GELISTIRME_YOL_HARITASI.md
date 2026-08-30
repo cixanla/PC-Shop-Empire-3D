@@ -2,7 +2,7 @@
 
 **Belge durumu:** Ön üretim yol haritası 0.1  
 **Tarih:** 10 Ağustos 2026  
-**Son bütünlük QA güncellemesi:** 15 Ağustos 2026<br>
+**Son bütünlük QA güncellemesi:** 31 Ağustos 2026<br>
 **Planlama ufku:** Araştırma → teknik prototip → vertical slice → üretim → test → Steam/Windows 1.0 → sonradan macOS.
 
 ## Yönetici özeti
@@ -12,6 +12,12 @@ Bu proje büyük ölçeklidir. En güvenli üretim sırası, bütün özellikler
 > Dashboard siparişi → fiziksel teslimat → stok → raf/satış veya özel PC işi → montaj → test → paketleme → teslim → muhasebe → kayıt ve hata raporu.
 
 Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan çalışan, şube, yüzlerce ürün veya servis merkezi eklenmeyecek.
+
+### Güncel üretim checkpoint'i
+
+Issue #114 customer-facing Retail/Checkout hero readability r56 technical/main `0ea82e826aff9d245e0d4002386193278f25b483` üzerinde kabul edildi: Mac `754/754 EditMode + 158/158 PlayMode`, clean Windows aynı counts, universal Mac native, Windows x64 IL2CPP/D3D11 Intel Iris Xe runtime, üç-state readability ve final residue kapıları geçti. Issue closed/Roadmap Done; parent visual Epic #18 ve Steam 1.0 Goal açık kalır. USB bağlı olmadığı için immutable checkpoint ertelenmiştir; fiziksel Windows geçici olarak erişilemezken Mac tek write lane'de geliştirme ve Mac/CI kapıları sürer. UTM, taşınabilirlik/derleme yardımcısı olabilir fakat gerçek Windows/Iris Xe release kanıtının yerini tutmaz.
+
+Sıradaki bounded P1, Issue #115'tir: legacy `StarterShelf` collider/NavMesh hacmini gerçek `AuthoritativeRetailShelfA` ile tek placement/inventory authority ve çakışmasız customer approach→browse→checkout→exit rotasına dönüştürmek. Accepted r56 readability, WASD+mouse, gamepad automation ve full regression korunmadan sonraki görsel veya dünya kapsamına geçilmez.
 
 Geçici gerçekçi takvim:
 

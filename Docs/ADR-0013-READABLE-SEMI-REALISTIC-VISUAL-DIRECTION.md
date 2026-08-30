@@ -1,8 +1,8 @@
 # ADR-0013 — Okunaklı Yarı Gerçekçi Görsel Yön
 
-**Durum:** Kabul edildi; ilk bounded r55 production proof geçti, kademeli üretim sürüyor<br>
+**Durum:** Kabul edildi; bounded r55 Workbench ve r56 Retail/Checkout production proof'ları geçti, kademeli üretim sürüyor<br>
 **Tarih:** 13 Ağustos 2026<br>
-**İlgili işler:** GitHub #18, #111 ve gelecekteki bounded look-development alt işleri
+**İlgili işler:** GitHub #18, #111, #114, #115 ve gelecekteki bounded look-development alt işleri
 
 ## Bağlam
 
@@ -39,3 +39,11 @@ Issue #111, bu kararın ilk bounded production proof'udur. Assembly Workbench r5
 Base→r55 authored MeshRenderer etkisi `+4`, light/camera etkisi `0/0`dır. Dört yeni renderer yalnız Ignore Raycast presentation geometry'sidir; collider, light, shadow, motion-vector veya gameplay authority taşımaz. Runtime exact budget `493` total renderer, `484` nested-smoke active renderer, `4` light ve `1` camera'dır. Mac ve Windows loose/preview/routed karelerinin kritik merkezinde doygun-beyaz glare `0/64`; clean Windows Intel Iris Xe/D3D11 runtime ve final residue kapıları geçmiştir.
 
 Bu kabul yalnız Assembly Workbench benchmark'ını production baseline yapar. Tam mağaza, açık dünya, karakter, animasyon, VFX, bütün asset ailesi veya final Steam grafik kalitesinin tamamlandığı anlamına gelmez. Sonraki görsel dilimler aynı source provenance, render budget, native Mac/Windows ve görünür screenshot kapılarıyla ayrı ayrı büyütülür. Exact kanıt [Assembly Workbench Hero Readability checkpoint](Evidence/ASSEMBLY-WORKBENCH-HERO-READABILITY-CHECKPOINT-2026-08-27.md) dosyasındadır.
+
+## 27 Ağustos 2026 uygulama addendum'u — Issue #114
+
+Issue #114, okunaklı yarı gerçekçilik kararını customer-facing retail floor ve checkout'a taşır. GarageGraybox r56; customer approach, gerçek authoritative shelf offer/reserved-basket ve gerçek checkout/payment/receipt durumlarını üç karşılaştırılabilir 1280x720 native composition'da görünür kılar. `RetailCheckoutHeroProjection` existing authority state'ini yalnız presentation geometry'ye yansıtır; ikinci retail item, placement, reservation, payment veya receipt authority yaratmaz.
+
+Issue #111 baseline→r56 authored MeshRenderer etkisi `+9`, light/camera etkisi `+1/0`dır. Dokuz renderer Ignore Raycast/no-collider/no-shadow/no-motion-vector'dır; tek fill spot light `0.42 / 4.4 / 110°` ve shadow `off`tur. Runtime exact budget `502` total renderer, `478` smoke-active renderer, `5` light ve `1` camera'dır. Mac/Windows üç-state glare `0`, minimum contrast `1.348`; clean Windows Intel Iris Xe/D3D11 runtime, normal exit ve final residue kapıları geçmiştir.
+
+Bu kabul look-development sunumunu onaylar; NavMesh, collider ve shelf authority borcunu gizlemez. Pre-existing `StarterShelf` ile `AuthoritativeRetailShelfA` fizik hacmi Issue #115'in ayrı architecture/scene kabul kapsamıdır. Tam mağaza, açık dünya, karakter, animasyon, VFX veya final Steam grafik kalitesi tamamlanmış sayılmaz. Exact kanıt [Retail Checkout Hero Readability checkpoint](Evidence/RETAIL-CHECKOUT-HERO-READABILITY-CHECKPOINT-2026-08-27.md) dosyasındadır.

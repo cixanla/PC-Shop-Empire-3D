@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** `main` merge `d20d5bc9fa1a67bf0e9441253834a9de962046e8`; PR #112; main Guard `33093461437`
+**Authoritative Git state:** `main` `0ea82e826aff9d245e0d4002386193278f25b483`; PR #116; main Guard `33127652290`
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 27 Ağustos 2026 üstün gelen güncel durum — Issue #111 Assembly Workbench Hero Readability
+### 27 Ağustos 2026 üstün gelen güncel durum — Issue #114 Retail/Checkout Hero Readability
+
+- GarageGraybox r56 customer approach, gerçek authoritative shelf offer/reserved basket ve gerçek checkout/payment/receipt durumlarını üç 1280x720 native composition'da ayırır. `RetailCheckoutHeroProjection` existing authority state'ini sunar; ikinci item/placement/reservation/payment/receipt authority üretmez.
+- Issue #111 baseline→r56 authored MeshRenderer `490→499` (`+9`), light/camera `4→5 / 1→1`; runtime `502/478`. Dokuz hero renderer Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light shadowless'tır. NavMesh, route, collider, waypoint, input ve stable identity untouched; pre-existing `StarterShelf` collider borcu #115'e taşınmıştır.
+- Technical/main `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`; Mac hero `2/2`, full `754/754 + 158/158`; Windows full `754/754 + 158/158`; accepted failures/skips/inconclusive `0`.
+- Universal Mac report `330481405` bayt ve Apple M1/Metal retail + Assembly regression smoke geçti. Clean Windows x64 IL2CPP/only-D3D11 report `1351471280` bayt; Intel Iris Xe runtime `27/27`, graceful exit, glare `0`, minimum contrast `1.348` ve final residue `0` verdi.
+- Windows evidence Mac'te bağımsız hash/dimension/metric readback aldı. Technical Guard `33109651186`, PR #116 fast-forward merge ve main Guard `33127652290` geçti; Issue closed/Done. USB yoktu/yazılmadı; physical checkpoint açık, claim `human=false`tır.
+- Parent Epic #18 ve Steam 1.0 Goal sürer. Sıradaki bounded source işi #115 legacy `StarterShelf` collider/NavMesh consolidation'dır. Mac tek write lane; UTM yardımcı portability kontrolü olabilir ama physical Windows/Iris Xe kanıtı değildir.
+
+### Önceki üstün gelen durum — Issue #111 Assembly Workbench Hero Readability
 
 - GarageGraybox r55, açık chassis/motherboard/GPU/PSU ile loose/preview/routed cable durumlarını aynı 1280x720 composition'da ayırır. Shared non-emissive `CableConnectorPolymer` beş connector/PSU-intake renderer'ı ve on dört GPU fan blade'i; `WorkshopMatteHardware` iki rear bracket'i glare-safe matte sunuma taşır. Existing Workbench light `0.4 / 2.8 / 62°`; authority/collider/anchor/waypoint/topology/identity/input untouched, ProjectSettings byte-exact'tir.
 - Base→r55 authored MeshRenderer `486→490` (`+4`), light/camera delta `0/0`; runtime total/initial-active/smoke-active `493/473/484`. Dört ek hero renderer Ignore Raycast, collider/light/shadow/motion-vector içermez. Mac P1 `7/7`, full `753/753 + 157/157`; Windows full `753/753 + 157/157`; accepted fail/skip/inconclusive `0`.
