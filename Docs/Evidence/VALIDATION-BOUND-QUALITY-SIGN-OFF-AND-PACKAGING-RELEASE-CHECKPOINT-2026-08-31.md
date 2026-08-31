@@ -95,7 +95,7 @@ Technical commit `b6c0f629b78566d743dbb041bfaf792f7c0164c8` contains exactly `36
 
 `ProjectSettings/ProjectSettings.asset` is SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` after tests/build/smoke and unchanged from the accepted baseline. No ProjectSettings edit or build-induced restoration was needed.
 
-Local `Tools/verify-repository.sh`, `git diff --check`, staged-scope audit, domain-boundary tests, codesign and residue checks pass. Draft PR #138 final Repository Guard run will be recorded after the documentation commit reaches GitHub.
+Local `Tools/verify-repository.sh`, `git diff --check`, staged-scope audit, domain-boundary tests, codesign and residue checks pass. Draft PR #138 docs checkpoint `c7f5fbc2b5bb1485d96c09b497d1cdf0fbc45d9e` Repository Guard run [33401676887](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33401676887) passed.
 
 Forty-four raw diagnostic and accepted Mac XML/log artifacts were copied byte-for-byte from `/private/tmp/pse-issue137-*` into `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue137-quality-release-2026-08-31/raw`; source/destination comparison passed and the durable directory occupies `6,656 KiB`.
 
