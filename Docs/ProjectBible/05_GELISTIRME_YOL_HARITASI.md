@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #115 Retail Shelf Authority Consolidation r57 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d` üzerinde Mac-ready durumdadır. Legacy `StarterShelf` hiyerarşisi kaldırıldı; exact tek `AuthoritativeRetailShelfA`, `5` collider, tek placement surface ve tek inventory shelf zone kaldı. Authored renderer `499→483`; retail runtime `486/462`, Assembly regression `477/468`; accepted r56/r55 readability ve customer approach→browse→checkout→fulfilled-exit authority zinciri korunur.
+Issue #119 Exact Electrical Readiness r58 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc` üzerinde Mac-ready durumdadır. Exact retained motherboard/CPU/A2-DDR5/primary-M.2/cooler+TIM/GPU/PSU ve routed ATX24/EPS12V/PCIe-GPU zinciri salt-okunur deterministic readiness snapshot'ına bağlandı. Existing Workbench ikinci authority üretmeden ready veya exact blocked nedeni gösterir; final unroute geri bildirimi anında bloke duruma döner. Power-on/POST/BIOS/OS/benchmark üretilmez.
 
-Mac scene `11/11`, targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad flows `2/2`, full `754/754 EditMode + 158/158 PlayMode`, universal Mac build ve iki Apple M1/Metal native smoke geçti. Draft PR #118 açıktır; Issue/Roadmap `In Progress`, parent Epic #18 ve Steam 1.0 Goal açıktır. Fiziksel Windows olmadığından exact-head clean x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Bu kapılar ve CI/PR entegrasyonu tamamlanmadan Issue #115 kapatılmaz; Mac tek authoritative write lane'de sonraki bounded ürün işini hazırlamayı sürdürebilir.
+Mac full `758/758 EditMode + 158/158 PlayMode`, universal `330441141` bayt build, Apple M1/Metal exact readiness ve Assembly readability smoke geçti. Draft PR #120 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Fiziksel Windows olmadığından exact-head clean x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Issue #115 dalı parent integration checkpoint'i olarak korunur; Mac tek authoritative write lane'de sonraki bounded ürün işini hazırlamayı sürdürebilir.
 
 Geçici gerçekçi takvim:
 

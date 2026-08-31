@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #115 r57 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #119 r58 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`, branch `codex/issue119-electrical-readiness-feedback`; draft PR #120 open, Issue/Roadmap `In Progress`.
+- `EvaluateElectricalReadiness()` exact secured/retained motherboard, CPU, A2 DDR5, primary M.2, cooler+TIM, GPU, PSU ve exact routed ATX24/EPS12V/PCIe-GPU zincirini deterministik sırada okur. Snapshot exact build/chassis, on item, on source operation ve dört revision kimliğini bağlar; mutation yoktur.
+- Workbench projection yalnız initialized canonical session'ı okur. Ready metni `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; final cable unroute sonrasında exact blocker geri döner. İki renderer dışında collider/light/camera/NavMesh/input/authority delta yoktur.
+- Mac targeted contracts, full `758/758 EditMode + 158/158 PlayMode`, universal `330441141` bayt build, Apple M1/Metal exact readiness ve Assembly-readability smokes geçti. Assembly renderer budget `479/470`, üç 1280x720 capture byte-distinct, central glare `0`dır.
+- Benchmark readiness değişmedi; power-on, POST, BIOS/OS, driver, benchmark, package veya delivery state üretilmedi. Bütün ProjectSettings ve build sırasında korunan ProBuilder user-setting hashleri byte-exact kaldı; ProBuilder diff'i stage/revert edilmez.
+- Fiziksel Windows yoktur: clean exact-head x64 IL2CPP/only-D3D11 Intel Iris Xe gate bekler; UTM onun yerine geçmez. USB yoktur ve checkpoint yazılmadı. PR draft, Issue/Roadmap açık; physical-human HID/endurance claim'i `false`tır.
+
+### Önceki checkpoint — Issue #115 r57 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`, branch `codex/issue115-retail-shelf-authority-consolidation`; draft PR #118 open, Issue/Roadmap `In Progress`.
 - Legacy `StarterShelf` hierarchy kaldırıldı. Sahne exact tek `AuthoritativeRetailShelfA`, `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` taşır. İkinci shelf/zone/surface ve collider overlap yoktur.

@@ -5,7 +5,17 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #115 r57 Mac teknik kapıları tamamlandı; fiziksel Windows ve USB kapıları bekliyor
+## Güncel geliştirme checkpoint'i — Issue #119 r58 exact electrical readiness Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #119 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc` üzerindedir; draft PR #120 açıktır. Canonical seven-component retained Assembly ve exact routed ATX24/EPS12V/PCIe-GPU zinciri artık tek salt-okunur `EvaluateElectricalReadiness()` sözleşmesine sahiptir. Başarılı snapshot exact build/chassis, on stable item, yedi retain/secure ve üç route operation kimliği ile Assembly+üç cable revision'ı bağlar. Eksik/loose/unsupported/invariant drift fail-closed kalır; sorgu hiçbir authority state'ini değiştirmez.
+
+GarageGraybox `garage-electrical-readiness-r58-v1`; existing Workbench üzerindeki presentation-only projection ready durumda `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`, unroute sonrasında exact blocker ve `GÜÇ HAZIR DEĞİL` gösterir. Projection initialized canonical session'ı yalnız okur; collider, NavMesh obstacle, waypoint, item, input owner veya ikinci authority üretmez. İki dekoratif Ignore Raycast renderer ile authored scene `483→485`; retail runtime `488/464`, Assembly runtime `479/470`; light/camera değişmez.
+
+Final Mac EditMode `758/758`, PlayMode `158/158`; failed/skipped/inconclusive `0`. Universal Mac report `330441141` bayt; deep/strict-valid `x86_64 + arm64` app, Apple M1/Metal exact route→ready→unroute smoke ve üç-state Assembly readability smoke geçti. Üç 1280x720 Assembly capture byte-distinct ve central glare `0`dır. ProjectSettings ve build boyunca korunan ProBuilder user-setting hashleri byte-exact kaldı; ProBuilder diff'i commit kapsamı dışındadır.
+
+Benchmark readiness hâlâ blocked'dır; power-on, POST, BIOS/OS, driver, benchmark, packaging veya delivery state üretilmez. Fiziksel Windows yokken clean exact-head x64 IL2CPP/only-D3D11 Intel Iris Xe gate ertelenmiştir; UTM bunun yerine geçmez. USB bağlı değildir ve checkpoint/readback yapılmadı. PR #120 draft, Issue/Roadmap `In Progress`; merge/closure ve physical-human HID/endurance iddiası yoktur. Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
+
+## Önceki geliştirme checkpoint'i — Issue #115 r57 Mac teknik kapıları tamamlandı; fiziksel Windows ve USB kapıları bekliyor
 
 Issue #115 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c` üzerindedir; draft PR #118 açıktır. Legacy `StarterShelf` hiyerarşisi (`17` child object, `16` renderer, `10` collider) sahneden kaldırıldı. `AuthoritativeRetailShelfA` artık exact tek retail placement/inventory authority'dir: `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone`. İkinci shelf, surface, zone veya gameplay authority yoktur.
 
