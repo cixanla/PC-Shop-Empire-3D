@@ -117,7 +117,7 @@ Technical commit `f082ef5df913ce6a4664cdda5eb64d1b26f007d6` contains exactly `52
 
 `ProjectSettings/ProjectSettings.asset` is SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` after tests/build/smoke and unchanged from the accepted baseline. No ProjectSettings edit or build-induced restoration was needed.
 
-Local `Tools/verify-repository.sh`, `git diff --check`, staged-scope audit, GUID uniqueness, deterministic-code scan, codesign and residue checks pass. Draft PR #136 is the integration record; remote Repository Guard is tracked separately. Raw Mac evidence lives at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue135-validation-2026-08-31`.
+Local `Tools/verify-repository.sh`, `git diff --check`, staged-scope audit, GUID uniqueness, deterministic-code scan, codesign and residue checks pass. Draft PR #136 Repository Guard run [33389640619](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33389640619) passed on docs head `7eaf2d53d7c905bf1f7cfb328f9d81b2e2d73994`. Raw Mac evidence lives at `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue135-validation-2026-08-31`.
 
 ## Deferred physical gates
 
@@ -143,7 +143,7 @@ Automated keyboard/mouse and Input System virtual-gamepad paths pass, but the cl
 | 12 | Validation leaves all upstream authorities unchanged. | PASS — zero-mutation snapshots/native marker |
 | 13–15 | Existing interaction surface; two-step review/run; strict P0 power-off and context-loss recovery. | PASS — scene/input/full PlayMode/native smoke |
 | 16 | Workbench is observer-only with five distinct states and exact metrics/failure code. | PASS — input/presentation/static audit |
-| 17 | Targeted/full Mac, universal build, native smoke and Repository Guard. | PASS locally; remote Guard tracked on PR #136 |
+| 17 | Targeted/full Mac, universal build, native smoke and Repository Guard. | PASS — Repository Guard `33389640619` |
 | 18 | Clean physical Windows and physical USB checkpoint/readback. | DEFERRED — devices unavailable |
 
 Issue #135 remains open and its Roadmap card In Progress until the deferred physical gates and integration/closure steps complete. PR #136 is draft and intentionally does not auto-close the issue.
