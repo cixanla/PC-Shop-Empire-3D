@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #131 r64 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #133 r65 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052`, branch `codex/issue133-installed-os-bound-fictional-driver`; draft PR #134 clean/mergeable, Repository Guard `33378476265` PASS, Issue/Roadmap `In Progress`.
+- Separate `PcFictionalDriverInstallationAuthority`, exact current installed OS/storage ve current firmware→POST→power→preflight lineage'ına bound immutable driver receipt history'si taşır. Completion exact component/product/retain/cable lineage ve revisions ister; drift receipt üretmeden fail-closed olur.
+- Installed driver aynı current OS/storage'a aittir ve non-storage hardware daha sonra değişse de kalır. Storage/OS değişimi current sonucu reddeder; historical receipt/replay immutable'dır.
+- Existing Workbench'te ilk Primary Action driver review, ikinci completion; `Waiting / Reviewing / Installed / Rejected` presentation-only ayrıdır. Interact strict-priority explicit power-off'tur. Motor/raw pause, range/focus/LOS, busy hands ve competing owner açık review'ı input tüketmeden sıfırlar. Malformed driver history power-off'u softlock etmez.
+- Targeted `5/5 + 6/6 + 1/1 + 23/23`, full `793/793 EditMode + 181/181 PlayMode`, universal `330641904` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r65 keyboard+mouse+virtual-gamepad smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Final bounded audit P0/P1 bulmadı.
+- Bu yalnız fictional driver installation receipt'idir; gerçek vendor driver/download/installer/update/reboot, benchmark/stress/thermals/quality, save ve delivery tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #131 r64 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`, branch `codex/issue131-active-uefi-bound-fictional-os-install`; draft PR #132 clean/mergeable, Repository Guard `33372528502` PASS, Issue/Roadmap `In Progress`.
 - Separate `PcFictionalOsInstallationAuthority`, exact current UEFI receipt ve exact Assembly/storage lineage'ına bound immutable OS receipt history'si taşır. Receipt firmware→POST→power→preflight, exact M.2 item/product/secure-operation/full Assembly revision ve `WorkshopStandard / InstalledForDriverStage` sonucunu bağlar.

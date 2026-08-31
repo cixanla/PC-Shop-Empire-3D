@@ -32,9 +32,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// <summary>
     /// Focused player command surface for one exact power-test preflight, its safe
     /// Off/Energized transition, bounded post-POST UEFI baseline review/save and the
-    /// exact-storage fictional OS installation command. The existing readiness display
-    /// remains the presentation observer; this component owns only interaction gates
-    /// and delegates immutable receipts.
+    /// exact-storage fictional OS and driver installation commands. The existing
+    /// readiness display remains the presentation observer; this component owns only
+    /// interaction gates and delegates immutable receipts.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(68)]
@@ -69,6 +69,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private PcPostStartupReceipt _reviewedPostStartupReceipt;
         private bool _isReviewingFictionalOsInstallation;
         private PcFirmwareBaselineReceipt _reviewedFirmwareBaselineReceipt;
+        private bool _isReviewingFictionalDriverInstallation;
+        private PcFictionalOsInstallationReceipt
+            _reviewedOperatingSystemReceipt;
+        private PcFirmwareBaselineReceipt
+            _reviewedDriverFirmwareBaselineReceipt;
         private readonly RaycastHit[] _lineOfSightHits =
             new RaycastHit[LineOfSightHitCapacity];
         private int _promptCacheFrame = -1;
@@ -102,6 +107,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsReviewingFictionalOsInstallation =>
             _isReviewingFictionalOsInstallation;
+
+        public bool IsReviewingFictionalDriverInstallation =>
+            _isReviewingFictionalDriverInstallation;
 
         public string LastFailureCode { get; private set; } = string.Empty;
 
@@ -165,6 +173,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RefreshFocusState();
             ResetFirmwareReviewIfContextChanged();
             ResetFictionalOsReviewIfContextChanged();
+            ResetFictionalDriverReviewIfContextChanged();
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
                 playerInput.PausePressedThisFrame)
             {
@@ -251,6 +260,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         }
 
         internal OperationResult TryAttemptFictionalOsAuthorizedForTests()
+        {
+            return Remember(TryAttemptFirmwareAuthorized());
+        }
+
+        internal OperationResult InspectFictionalDriverInteractionGateForTests()
+        {
+            return ValidateFirmwareInteractionGate();
+        }
+
+        internal OperationResult TryAttemptFictionalDriverAuthorizedForTests()
         {
             return Remember(TryAttemptFirmwareAuthorized());
         }
@@ -399,6 +418,32 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 powerState.EvaluateCurrentFirmwareBaseline();
             if (currentFirmware.IsSuccess)
             {
+                if (session.TryGetFictionalOsInstallation(
+                        out PcFictionalOsInstallationAuthority osAuthority) &&
+                    osAuthority.ReceiptCount > 0)
+                {
+                    OperationResult osHistory =
+                        osAuthority.ValidateReceiptHistory();
+                    if (osHistory.IsFailure)
+                    {
+                        return osHistory;
+                    }
+
+                    OperationResult<PcFictionalOsInstallationReceipt>
+                        installedOs =
+                            osAuthority.EvaluateInstalledOperatingSystem();
+                    if (installedOs.IsFailure)
+                    {
+                        return OperationResult.Fail(installedOs.Error);
+                    }
+
+                    return TryAttemptFictionalDriverAuthorized(
+                        session,
+                        powerState,
+                        currentFirmware.Value,
+                        installedOs.Value);
+                }
+
                 return TryAttemptFictionalOsAuthorized(
                     session,
                     powerState,
@@ -484,6 +529,64 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             _lastSuccessfulOperationFrame = Time.frameCount;
             ResetFictionalOsReview();
+            return OperationResult.Success();
+        }
+
+        private OperationResult TryAttemptFictionalDriverAuthorized(
+            GarageStockFlowSession session,
+            PcPowerStateAuthority powerState,
+            PcFirmwareBaselineReceipt currentFirmware,
+            PcFictionalOsInstallationReceipt currentOperatingSystem)
+        {
+            if (!_isReviewingFictionalDriverInstallation)
+            {
+                _isReviewingFictionalDriverInstallation = true;
+                _reviewedOperatingSystemReceipt = currentOperatingSystem;
+                _reviewedDriverFirmwareBaselineReceipt = currentFirmware;
+                _lastSuccessfulOperationFrame = Time.frameCount;
+                readinessProjection?.ObserveFictionalDriverReview();
+                return OperationResult.Success();
+            }
+
+            if (!ReferenceEquals(
+                    _reviewedOperatingSystemReceipt,
+                    currentOperatingSystem) ||
+                !ReferenceEquals(
+                    _reviewedDriverFirmwareBaselineReceipt,
+                    currentFirmware))
+            {
+                ResetFictionalDriverReview();
+                return OperationResult.Fail(
+                    PcFictionalDriverInstallationFailures.NotCurrent);
+            }
+
+            OperationResult<PcFictionalDriverInstallationAuthority> ensured =
+                session.EnsureFictionalDriverInstallationAuthority();
+            if (ensured.IsFailure)
+            {
+                ResetFictionalDriverReview();
+                return OperationResult.Fail(ensured.Error);
+            }
+
+            PcFictionalDriverInstallationAuthority authority = ensured.Value;
+            OperationResult<PcFictionalDriverInstallationReceipt> installed =
+                authority.TryCompleteInstallation(
+                    session
+                        .CreatePrototypeFictionalDriverInstallationOperationId(
+                            currentOperatingSystem),
+                    currentOperatingSystem,
+                    currentFirmware,
+                    session.AssemblyBuild.StorageItemId,
+                    powerState.Revision,
+                    authority.Revision);
+            if (installed.IsFailure)
+            {
+                ResetFictionalDriverReview();
+                return OperationResult.Fail(installed.Error);
+            }
+
+            _lastSuccessfulOperationFrame = Time.frameCount;
+            ResetFictionalDriverReview();
             return OperationResult.Success();
         }
 
@@ -628,10 +731,50 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         return osHistory;
                     }
 
-                    if (osAuthority.EvaluateInstalledOperatingSystem().IsSuccess)
+                    OperationResult<PcFictionalOsInstallationReceipt>
+                        installedOs =
+                            osAuthority.EvaluateInstalledOperatingSystem();
+                    if (installedOs.IsSuccess)
                     {
-                        return OperationResult.Fail(
-                            PcFictionalOsInstallationFailures.AlreadyCompleted);
+                        if (session.TryGetFictionalDriverInstallation(
+                                out PcFictionalDriverInstallationAuthority
+                                    driverAuthority))
+                        {
+                            OperationResult driverHistory =
+                                driverAuthority.ValidateReceiptHistory();
+                            if (driverHistory.IsFailure)
+                            {
+                                return driverHistory;
+                            }
+
+                            if (driverAuthority
+                                .EvaluateInstalledDrivers().IsSuccess)
+                            {
+                                return OperationResult.Fail(
+                                    PcFictionalDriverInstallationFailures
+                                        .AlreadyCompleted);
+                            }
+                        }
+
+                        if (_isReviewingFictionalDriverInstallation &&
+                            (!ReferenceEquals(
+                                _reviewedOperatingSystemReceipt,
+                                installedOs.Value) ||
+                             !ReferenceEquals(
+                                _reviewedDriverFirmwareBaselineReceipt,
+                                currentFirmware.Value)))
+                        {
+                            return OperationResult.Fail(
+                                PcFictionalDriverInstallationFailures
+                                    .NotCurrent);
+                        }
+
+                        return OperationResult.Success();
+                    }
+
+                    if (osAuthority.ReceiptCount > 0)
+                    {
+                        return OperationResult.Fail(installedOs.Error);
                     }
                 }
 
@@ -678,6 +821,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             RefreshFocusState();
             ResetFirmwareReviewIfContextChanged();
             ResetFictionalOsReviewIfContextChanged();
+            ResetFictionalDriverReviewIfContextChanged();
             if (playerMotor == null || playerMotor.IsPaused)
             {
                 return string.Empty;
@@ -759,13 +903,68 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                            osHistory.Error.Code;
                                 }
 
-                                if (osAuthority
-                                    .EvaluateInstalledOperatingSystem()
-                                    .IsSuccess)
+                                OperationResult<
+                                    PcFictionalOsInstallationReceipt>
+                                    installedOs = osAuthority
+                                        .EvaluateInstalledOperatingSystem();
+                                if (installedOs.IsSuccess)
                                 {
+                                    if (session
+                                        .TryGetFictionalDriverInstallation(
+                                            out
+                                            PcFictionalDriverInstallationAuthority
+                                                driverAuthority))
+                                    {
+                                        OperationResult driverHistory =
+                                            driverAuthority
+                                                .ValidateReceiptHistory();
+                                        if (driverHistory.IsFailure)
+                                        {
+                                            return $"{bindingPrompt}: " +
+                                                   "GÜCÜ KAPAT • " +
+                                                   "DRIVER KAYDI ENGELLİ • " +
+                                                   driverHistory.Error.Code;
+                                        }
+
+                                        if (driverAuthority
+                                            .EvaluateInstalledDrivers()
+                                            .IsSuccess)
+                                        {
+                                            return $"{bindingPrompt}: " +
+                                                   "GÜCÜ KAPAT • " +
+                                                   "KURGUSAL DRIVER KURULDU • " +
+                                                   "SONRAKİ AŞAMA: BENCHMARK";
+                                        }
+                                    }
+
+                                    string driverPrimaryBinding =
+                                        playerInput != null
+                                            ? playerInput.PrimaryBindingPrompt
+                                            : "LMB / RT";
+                                    if (_isReviewingFictionalDriverInstallation)
+                                    {
+                                        return "KURGUSAL DRIVER KURULUMU • " +
+                                               "WORKSHOP DRIVER BUNDLE • " +
+                                               $"{driverPrimaryBinding}: " +
+                                               "KURULUMU BAŞLAT VE TAMAMLA • " +
+                                               $"{bindingPrompt}: GÜCÜ KAPAT";
+                                    }
+
+                                    if (LastFailureCode.StartsWith(
+                                            "assembly.fictional-driver-" +
+                                            "installation.",
+                                            StringComparison.Ordinal))
+                                    {
+                                        return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                               "DRIVER KURULUMU ENGELLİ • " +
+                                               LastFailureCode;
+                                    }
+
                                     return $"{bindingPrompt}: GÜCÜ KAPAT • " +
                                            "KURGUSAL OS KURULDU • " +
-                                           "SONRAKİ AŞAMA: DRIVER";
+                                           "SONRAKİ AŞAMA: DRIVER • " +
+                                           $"{driverPrimaryBinding}: " +
+                                           "DRIVER KURULUMUNU AÇ";
                                 }
                             }
 
@@ -936,10 +1135,67 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _reviewedFirmwareBaselineReceipt = null;
         }
 
+        private void ResetFictionalDriverReviewIfContextChanged()
+        {
+            if (!_isReviewingFictionalDriverInstallation)
+            {
+                return;
+            }
+
+            if (playerInput == null || playerMotor == null ||
+                playerMotor.IsPaused ||
+                playerInput.PausePressedThisFrame || PlayerIsBusy() ||
+                PlayerHasCompetingWorldInteractOwner() || !_isFocused)
+            {
+                ResetFictionalDriverReview();
+                return;
+            }
+
+            GarageStockFlowSession session = ResolveSession();
+            if (session != null &&
+                session.TryGetPowerState(
+                    out PcPowerStateAuthority powerState) &&
+                powerState.IsEnergized &&
+                session.TryGetFictionalOsInstallation(
+                    out PcFictionalOsInstallationAuthority osAuthority))
+            {
+                OperationResult<PcFirmwareBaselineReceipt> currentFirmware =
+                    powerState.EvaluateCurrentFirmwareBaseline();
+                OperationResult<PcFictionalOsInstallationReceipt> currentOs =
+                    osAuthority.EvaluateInstalledOperatingSystem();
+                bool alreadyInstalled =
+                    session.TryGetFictionalDriverInstallation(
+                        out PcFictionalDriverInstallationAuthority authority) &&
+                    authority.EvaluateInstalledDrivers().IsSuccess;
+                if (currentFirmware.IsSuccess && currentOs.IsSuccess &&
+                    !alreadyInstalled &&
+                    ReferenceEquals(
+                        currentOs.Value,
+                        _reviewedOperatingSystemReceipt) &&
+                    ReferenceEquals(
+                        currentFirmware.Value,
+                        _reviewedDriverFirmwareBaselineReceipt))
+                {
+                    return;
+                }
+            }
+
+            ResetFictionalDriverReview();
+        }
+
+        private void ResetFictionalDriverReview()
+        {
+            _isReviewingFictionalDriverInstallation = false;
+            _reviewedOperatingSystemReceipt = null;
+            _reviewedDriverFirmwareBaselineReceipt = null;
+            readinessProjection?.ObserveFictionalDriverWaiting();
+        }
+
         private void ResetPrimaryReviews()
         {
             ResetFirmwareReview();
             ResetFictionalOsReview();
+            ResetFictionalDriverReview();
         }
 
         private void InvalidatePromptCache()
@@ -1048,6 +1304,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             InvalidatePromptCache();
             LastFailureCode = result.IsFailure ? result.Error.Code : string.Empty;
+            if (result.IsFailure && result.Error.Code.StartsWith(
+                    "assembly.fictional-driver-installation.",
+                    StringComparison.Ordinal))
+            {
+                readinessProjection?.ObserveFictionalDriverRejected(
+                    result.Error);
+            }
+
             return result;
         }
     }

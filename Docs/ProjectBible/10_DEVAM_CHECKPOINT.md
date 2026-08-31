@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #131 active-UEFI-bound deterministic fictional OS r64 source, immutable receipt/history, exact physical storage persistence, two-step player path, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #132 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #129 docs head `b6070cec7da818bce9d333f97def192603b520cf`; technical source `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`; draft PR #132; acceptance #1–#13 PASS, #14 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #133 installed-OS-bound deterministic fictional driver r65 source, immutable receipt/history, exact completion-time hardware/cable gate, same-OS/storage persistence, two-step player path, four-state Workbench presentation, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #134 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #131 docs head `f1bca88386b89309269418f56092cc1ff0a87dd1`; technical source `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052`; draft PR #134; acceptance #1–#13 PASS, #14 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #131 / Epic #10
+## En yeni teknik checkpoint — Issue #133 / Epic #10
+
+- Separate `PcFictionalDriverInstallationAuthority`, exact OS + power + Assembly owner chain'ine bağlanır. Receipt exact current installed OS/storage ile current completion firmware/POST/power/preflight ve `WorkshopDriverBundle / InstalledForBenchmarkStage` sonucunu immutable taşır.
+- Completion bütün component item/product, retain/secure operation ve ATX24/EPS12V/PCIe-GPU item/route/revision lineage'ını fail-closed doğrular. Product, retain-operation ve cable-revision drift receipt oluşturmadan reddedilir; upstream authority revisions değişmez.
+- Installed state exact current OS/storage'a aittir. Aynı OS/storage current kaldığında daha sonraki non-storage hardware değişimi sonucu gizlemez; storage/OS değişimi current evaluation'ı reddeder, historical receipt/replay immutable kalır.
+- Existing station ilk Primary Action ile review, ikinciyle install yapar; Interact explicit power-off strict priority'dir. Motor/raw pause, range/focus/LOS, busy hands ve competing owner açık review'ı input tüketmeden sıfırlar; dönüşte fresh review gerekir.
+- Workbench presentation-only `Waiting / Reviewing / Installed / Rejected` durumlarını ve exact failure code'u ayırır; authority yaratmaz. Malformed driver history dahi `GÜCÜ KAPAT` prompt'unu veya normal player Interact power-off yolunu kapatmaz. Benchmark `BuildIncomplete`, upstream gameplay authority'leri untouched kalır.
+- Technical commit `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052`. Targeted `5/5 + 6/6 + 1/1 + 23/23`, full EditMode `793/793`, PlayMode `181/181`; accepted fail/skip/inconclusive `0`. Bounded final audit P0/P1 bulmadı.
+- Universal Mac report `330641904` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r65 readiness + keyboard/mouse/virtual-gamepad driver markerları birer kez geçti; exit/residue `0`. Repository Guard `33378476265` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+- Sıradaki bounded zincir fictional driver receipt'ini gerçek vendor update/reboot workflow'una büyütmeden ayrı benchmark/stres/ısı/kalite authority ve görünür player workflow'udur; fault/damage, packaging/delivery daha sonra kalır.
+
+## Önceki teknik checkpoint — Issue #131 / Epic #10
 
 - Separate `PcFictionalOsInstallationAuthority`, exact power + Assembly owner pair'ına bağlanır. Receipt exact current UEFI/POST/power/preflight, M.2 item/product, source secure operation/full Assembly revision ve `WorkshopStandard / InstalledForDriverStage` sonucunu immutable taşır.
 - Source storage lineage creation/history sırasında preflight snapshot ve source Assembly `SecureStorageDevice` receipt'iyle doğrulanır. Exact replay same-instance; changed reuse conflict, foreign/stale/off/unsecured/malformed input fail-closed ve aynı storage/firmware için second completion blocked'dır.

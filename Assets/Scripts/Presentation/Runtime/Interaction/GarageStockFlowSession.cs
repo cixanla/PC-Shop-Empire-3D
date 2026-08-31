@@ -2617,6 +2617,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
             }
 
+            if (_fictionalDriverInstallation != null)
+            {
+                OperationResult fictionalDriverResult =
+                    _fictionalDriverInstallation.ValidateReceiptHistory();
+                if (fictionalDriverResult.IsFailure)
+                {
+                    return fictionalDriverResult;
+                }
+            }
+
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();
             return actionResult.IsFailure
                 ? actionResult
