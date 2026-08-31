@@ -45,13 +45,20 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Energized));
             Assert.That(powerState.Revision, Is.EqualTo(1));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupRevision, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
+            Assert.That(powerState.EvaluateCurrentStartupSelfTest().Value.Result,
+                Is.EqualTo(PcPostStartupResult.Passed));
             Assert.That(session.AssemblyBuild.IsElectricallyEnergized, Is.True);
             Assert.That(station.PromptText,
-                Does.Contain("GÜCÜ KAPAT").And.Contain("POST BEKLİYOR"));
+                Does.Contain("GÜCÜ KAPAT").And.Contain("POST GEÇTİ"));
             Assert.That(marker.ElectricalReadinessWorkbench.IsEnergized, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench
+                .HasCurrentPostStartupPass, Is.True);
             Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
                 Does.Contain("GÜÇ AÇIK")
-                    .And.Contain("POST BEKLİYOR")
+                    .And.Contain("POST GEÇTİ")
+                    .And.Contain("FIRMWARE BEKLİYOR")
                     .And.Contain("BAKIM KİLİDİ AKTİF"));
             Assert.That(session.UnroutePcieGpuPowerCable(
                     AssemblyOperationId("blocked-unroute-powered"),
@@ -70,8 +77,15 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerState.Revision, Is.EqualTo(2));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(2));
             Assert.That(powerState.ActivePowerOnReceipt, Is.Null);
+            Assert.That(powerState.ActivePostStartupReceipt, Is.Null);
+            Assert.That(powerState.PostStartupRevision, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
+            Assert.That(powerState.EvaluateCurrentStartupSelfTest().Error,
+                Is.EqualTo(PcPostStartupFailures.NotCurrent));
             Assert.That(session.AssemblyBuild.IsElectricallyEnergized, Is.False);
             Assert.That(marker.ElectricalReadinessWorkbench.IsEnergized, Is.False);
+            Assert.That(marker.ElectricalReadinessWorkbench
+                .HasCurrentPostStartupPass, Is.False);
             Assert.That(station.PromptText,
                 Does.Contain("ÖN KONTROL GEÇTİ").And.Contain("GÜCÜ AÇ"));
             Assert.That(session.UnroutePcieGpuPowerCable(
@@ -106,13 +120,16 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerInput.UsesGamepadPrompts, Is.True);
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Energized));
             Assert.That(station.PromptText,
-                Does.Contain("A").And.Contain("GÜCÜ KAPAT"));
+                Does.Contain("A").And.Contain("GÜCÜ KAPAT")
+                    .And.Contain("POST GEÇTİ"));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
 
             PressGamepadInteract(gamepad, station.ProcessInputFrame);
             yield return null;
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Off));
             Assert.That(powerState.Revision, Is.EqualTo(2));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(2));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
             Assert.That(station.PromptText,
                 Does.Contain("A").And.Contain("GÜCÜ AÇ"));
             Assert.That(powerState.ValidateReceiptHistory().IsSuccess, Is.True);
@@ -150,6 +167,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Energized));
             Assert.That(powerState.Revision, Is.EqualTo(1));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupRevision, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
             Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
@@ -165,6 +184,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Energized));
             Assert.That(powerState.Revision, Is.EqualTo(1));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(1));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
             Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.True,
                 "A paused station must not consume or execute the power-off press.");
 
@@ -179,6 +199,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(powerState.State, Is.EqualTo(PcPowerState.Off));
             Assert.That(powerState.Revision, Is.EqualTo(2));
             Assert.That(powerState.ReceiptCount, Is.EqualTo(2));
+            Assert.That(powerState.PostStartupReceiptCount, Is.EqualTo(1));
             Assert.That(powerState.ValidateReceiptHistory().IsSuccess, Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }

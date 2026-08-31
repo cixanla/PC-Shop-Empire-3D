@@ -19,10 +19,10 @@ namespace PCShopEmpire3D.Presentation
             "power-on=player-triggered power-off=player-triggered " +
             "input=keyboard+gamepad state=off cycles=1 " +
             "maintenance-while-energized=blocked receipt=immutable " +
-            "replay=ok presentation=ok post=not-started " +
+            "replay=ok presentation=ok post=passed " +
             "benchmark=untouched invariants=ok";
 
-        public bool HasPowerStateInterlockR61Runtime
+        public bool HasPowerStateInterlockR62Runtime
         {
             get
             {
@@ -95,7 +95,7 @@ namespace PCShopEmpire3D.Presentation
                 playerCarry == null || station == null ||
                 electricalReadinessWorkbench == null ||
                 pcieGpuPowerCableBinding == null ||
-                !HasPowerStateInterlockR61Runtime ||
+                !HasPowerStateInterlockR62Runtime ||
                 playerCarry.HeldItem != pcieGpuPowerCableBinding.PhysicalItem ||
                 !pcieGpuPowerCableBinding.IsAuthorityInHands)
             {
@@ -197,6 +197,8 @@ namespace PCShopEmpire3D.Presentation
 
                 PcPowerStateAuthority powerState = ensuredPowerState.Value;
                 PcPowerStateReceipt powerOn = powerState.ActivePowerOnReceipt;
+                PcPostStartupReceipt postStartup =
+                    powerState.ActivePostStartupReceipt;
                 OperationResult blocked = playerCarry.TryPickup(
                     pcieGpuPowerCableBinding.PhysicalItem);
                 OperationResult<PcPowerStateReceipt> powerOnReplay =
@@ -207,12 +209,27 @@ namespace PCShopEmpire3D.Presentation
                             powerOn.OperationId,
                             powerOn.PreflightReceipt,
                             powerOn.ExpectedRevision);
+                OperationResult<PcPostStartupReceipt> postStartupReplay =
+                    postStartup == null
+                        ? OperationResult<PcPostStartupReceipt>.Fail(
+                            PcPostStartupFailures.ReceiptHistoryInvalid)
+                        : powerState.TryCompleteStartupSelfTest(
+                            postStartup.OperationId,
+                            powerOn,
+                            postStartup.ExpectedPowerStateRevision);
                 electricalReadinessWorkbench.RefreshPresentation();
                 if (!playerInput.UsesGamepadPrompts ||
                     powerState.State != PcPowerState.Energized ||
                     powerState.Revision != 1 || powerState.ReceiptCount != 1 ||
+                    powerState.PostStartupRevision != 1 ||
+                    powerState.PostStartupReceiptCount != 1 ||
                     powerOn == null || powerOnReplay.IsFailure ||
                     !ReferenceEquals(powerOnReplay.Value, powerOn) ||
+                    postStartup == null || postStartupReplay.IsFailure ||
+                    !ReferenceEquals(postStartupReplay.Value, postStartup) ||
+                    !ReferenceEquals(
+                        postStartup.SourcePowerOnReceipt,
+                        powerOn) ||
                     blocked.Error !=
                         AssemblyFailures.ElectricalPowerOnMaintenanceBlocked ||
                     playerCarry.HeldItem != null ||
@@ -221,8 +238,14 @@ namespace PCShopEmpire3D.Presentation
                         PhysicalItemOwnership.World ||
                     !session.AssemblyBuild.IsElectricallyEnergized ||
                     !station.PromptText.Contains("GÜCÜ KAPAT") ||
-                    !station.PromptText.Contains("POST BEKLİYOR") ||
+                    !station.PromptText.Contains("POST GEÇTİ") ||
                     !electricalReadinessWorkbench.IsEnergized ||
+                    !electricalReadinessWorkbench
+                        .HasCurrentPostStartupPass ||
+                    !electricalReadinessWorkbench.StatusText.text.Contains(
+                        "POST GEÇTİ") ||
+                    !electricalReadinessWorkbench.StatusText.text.Contains(
+                        "FIRMWARE BEKLİYOR") ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "BAKIM KİLİDİ AKTİF"))
                 {
@@ -256,11 +279,17 @@ namespace PCShopEmpire3D.Presentation
                 if (powerState.State != PcPowerState.Off ||
                     powerState.Revision != 2 || powerState.ReceiptCount != 2 ||
                     powerState.ActivePowerOnReceipt != null ||
+                    powerState.ActivePostStartupReceipt != null ||
+                    powerState.PostStartupRevision != 1 ||
+                    powerState.PostStartupReceiptCount != 1 ||
+                    powerState.EvaluateCurrentStartupSelfTest().Error !=
+                        PcPostStartupFailures.NotCurrent ||
                     !hasPowerOff || powerOffReplay.IsFailure ||
                     !ReferenceEquals(powerOffReplay.Value, powerOff) ||
                     session.AssemblyBuild.IsElectricallyEnergized ||
                     !station.PromptText.Contains("GÜCÜ AÇ") ||
                     electricalReadinessWorkbench.IsEnergized ||
+                    electricalReadinessWorkbench.HasCurrentPostStartupPass ||
                     powerState.ValidateReceiptHistory().IsFailure ||
                     attempts.ValidateReceiptHistory().IsFailure ||
                     !PowerTestSmokeGameplayStateUnchanged(

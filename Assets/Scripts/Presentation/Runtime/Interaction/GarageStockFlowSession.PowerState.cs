@@ -74,6 +74,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 resultingRevision);
         }
 
+        public StableId<PcPostStartupOperationIdScope>
+            CreatePrototypePostStartupOperationId(
+                PcPowerStateReceipt sourcePowerOnReceipt)
+        {
+            long sourceRevision = sourcePowerOnReceipt?.Revision ?? -1L;
+            return StableId<PcPostStartupOperationIdScope>.Parse(
+                "assembly.post-startup.prototype.power-on-" + sourceRevision);
+        }
+
         public bool TryGetPowerState(out PcPowerStateAuthority powerState)
         {
             powerState = _powerState;

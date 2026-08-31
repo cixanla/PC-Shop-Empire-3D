@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-safe-power-state-r61-v1";
+        public const string Version = "garage-post-startup-r62-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1329,7 +1329,7 @@ namespace PCShopEmpire3D.Presentation
                 $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
                 $"power-budget-workbench={(HasPowerBudgetWorkbenchR59Runtime ? "ready" : "missing")} " +
                 $"power-test-preflight={(HasPowerTestPreflightR60Runtime ? "ready" : "missing")} " +
-                $"power-state-interlock={(HasPowerStateInterlockR61Runtime ? "ready" : "missing")} " +
+                $"power-state-interlock={(HasPowerStateInterlockR62Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 

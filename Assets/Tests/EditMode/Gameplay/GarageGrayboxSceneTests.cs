@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2047,7 +2047,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(4));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2310,7 +2310,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Is.True);
                 Assert.That(marker.HasPowerTestPreflightR60Runtime,
                     Is.True);
-                Assert.That(marker.HasPowerStateInterlockR61Runtime,
+                Assert.That(marker.HasPowerStateInterlockR62Runtime,
                     Is.True);
                 Assert.That(projection.ProjectionIdValue,
                     Is.EqualTo(ElectricalReadinessWorkbenchProjection
@@ -2405,7 +2405,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(9));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2682,7 +2682,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-safe-power-state-r61-v1"));
+                    Is.EqualTo("garage-post-startup-r62-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

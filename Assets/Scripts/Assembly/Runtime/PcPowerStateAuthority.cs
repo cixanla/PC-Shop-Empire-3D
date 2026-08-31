@@ -4,8 +4,9 @@ using PCShopEmpire3D.Core.Primitives;
 namespace PCShopEmpire3D.Assembly
 {
     /// <summary>
-    /// Owns the safe Off/Energized state for one exact assembly and preflight authority.
-    /// It deliberately does not own POST, BIOS, operating-system or benchmark outcomes.
+    /// Owns the safe Off/Energized state and bounded baseline POST receipts for one exact
+    /// assembly and preflight authority. It deliberately does not own BIOS, firmware,
+    /// operating-system, driver or benchmark outcomes.
     /// </summary>
     public sealed class PcPowerStateAuthority
     {
@@ -17,8 +18,15 @@ namespace PCShopEmpire3D.Assembly
                     PcPowerStateReceipt>();
         private readonly List<PcPowerStateReceipt> _receiptsByRevision =
             new List<PcPowerStateReceipt>();
+        private readonly Dictionary<StableId<PcPostStartupOperationIdScope>,
+            PcPostStartupReceipt> _postStartupReceipts =
+                new Dictionary<StableId<PcPostStartupOperationIdScope>,
+                    PcPostStartupReceipt>();
+        private readonly List<PcPostStartupReceipt> _postStartupReceiptsByRevision =
+            new List<PcPostStartupReceipt>();
 
         private PcPowerStateReceipt _activePowerOnReceipt;
+        private PcPostStartupReceipt _activePostStartupReceipt;
 
         private PcPowerStateAuthority(
             PowerTestAttemptAuthority powerTestAttempts,
@@ -41,6 +49,13 @@ namespace PCShopEmpire3D.Assembly
         public bool IsEnergized => State == PcPowerState.Energized;
 
         public PcPowerStateReceipt ActivePowerOnReceipt => _activePowerOnReceipt;
+
+        public long PostStartupRevision { get; private set; }
+
+        public int PostStartupReceiptCount => _postStartupReceipts.Count;
+
+        public PcPostStartupReceipt ActivePostStartupReceipt =>
+            _activePostStartupReceipt;
 
         public static OperationResult<PcPowerStateAuthority> Create(
             PowerTestAttemptAuthority powerTestAttempts,
@@ -120,6 +135,12 @@ namespace PCShopEmpire3D.Assembly
             {
                 return OperationResult<PcPowerStateReceipt>.Fail(
                     PcPowerStateFailures.AlreadyEnergized);
+            }
+
+            if (_activePostStartupReceipt != null)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
             }
 
             if (!HasLiveInterlockBinding())
@@ -243,6 +264,7 @@ namespace PCShopEmpire3D.Assembly
             _receipts.Add(operationId, receipt);
             _receiptsByRevision.Add(receipt);
             _activePowerOnReceipt = null;
+            _activePostStartupReceipt = null;
             State = PcPowerState.Off;
             Revision = nextRevision;
             return OperationResult<PcPowerStateReceipt>.Success(receipt);
@@ -273,6 +295,132 @@ namespace PCShopEmpire3D.Assembly
                     _activePowerOnReceipt)
                 : OperationResult<PcPowerStateReceipt>.Fail(
                     PcPowerStateFailures.PreflightStale);
+        }
+
+        public OperationResult<PcPostStartupReceipt>
+            TryCompleteStartupSelfTest(
+                StableId<PcPostStartupOperationIdScope> operationId,
+                PcPowerStateReceipt sourcePowerOnReceipt,
+                long expectedPowerStateRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.InvalidOperationId);
+            }
+
+            if (_postStartupReceipts.TryGetValue(
+                    operationId,
+                    out PcPostStartupReceipt replay))
+            {
+                return replay.MatchesCommand(
+                        operationId,
+                        sourcePowerOnReceipt,
+                        expectedPowerStateRevision)
+                    ? OperationResult<PcPostStartupReceipt>.Success(replay)
+                    : OperationResult<PcPostStartupReceipt>.Fail(
+                        PcPostStartupFailures.OperationConflict);
+            }
+
+            if (expectedPowerStateRevision != Revision)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.PowerStateRevisionMismatch);
+            }
+
+            if (PostStartupRevision == long.MaxValue)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.RevisionOverflow);
+            }
+
+            if (State != PcPowerState.Energized ||
+                _activePowerOnReceipt == null)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.NotCurrent);
+            }
+
+            if (sourcePowerOnReceipt == null ||
+                !sourcePowerOnReceipt.IsOwnedBy(this) ||
+                sourcePowerOnReceipt.TransitionKind !=
+                    PcPowerTransitionKind.PowerOn ||
+                !ReferenceEquals(
+                    sourcePowerOnReceipt,
+                    _activePowerOnReceipt))
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.InvalidPowerOnReceipt);
+            }
+
+            if (_activePostStartupReceipt != null)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.AlreadyCompleted);
+            }
+
+            OperationResult<PcPowerStateReceipt> currentPowerOn =
+                EvaluateCurrentPowerOn();
+            if (currentPowerOn.IsFailure)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    currentPowerOn.Error);
+            }
+
+            if (!ReferenceEquals(currentPowerOn.Value, sourcePowerOnReceipt))
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.InvalidPowerOnReceipt);
+            }
+
+            long nextPostStartupRevision = PostStartupRevision + 1L;
+            var receipt = new PcPostStartupReceipt(
+                this,
+                operationId,
+                sourcePowerOnReceipt,
+                expectedPowerStateRevision,
+                nextPostStartupRevision);
+            _postStartupReceipts.Add(operationId, receipt);
+            _postStartupReceiptsByRevision.Add(receipt);
+            _activePostStartupReceipt = receipt;
+            PostStartupRevision = nextPostStartupRevision;
+            return OperationResult<PcPostStartupReceipt>.Success(receipt);
+        }
+
+        public OperationResult<PcPostStartupReceipt>
+            EvaluateCurrentStartupSelfTest()
+        {
+            if (State != PcPowerState.Energized ||
+                _activePowerOnReceipt == null ||
+                _activePostStartupReceipt == null)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    PcPostStartupFailures.NotCurrent);
+            }
+
+            OperationResult<PcPowerStateReceipt> currentPowerOn =
+                EvaluateCurrentPowerOn();
+            if (currentPowerOn.IsFailure ||
+                !ReferenceEquals(
+                    currentPowerOn.Value,
+                    _activePostStartupReceipt.SourcePowerOnReceipt) ||
+                _activePostStartupReceipt.ExpectedPowerStateRevision != Revision)
+            {
+                return OperationResult<PcPostStartupReceipt>.Fail(
+                    currentPowerOn.IsFailure
+                        ? currentPowerOn.Error
+                        : PcPostStartupFailures.NotCurrent);
+            }
+
+            return OperationResult<PcPostStartupReceipt>.Success(
+                _activePostStartupReceipt);
+        }
+
+        public bool TryGetStartupSelfTestReceipt(
+            StableId<PcPostStartupOperationIdScope> operationId,
+            out PcPostStartupReceipt receipt)
+        {
+            return _postStartupReceipts.TryGetValue(operationId, out receipt);
         }
 
         public bool TryGetReceipt(
@@ -359,12 +507,90 @@ namespace PCShopEmpire3D.Assembly
                 }
             }
 
-            return foldedState == State &&
-                   ReferenceEquals(foldedPowerOn, _activePowerOnReceipt) &&
-                   _assemblyBuild.IsElectricallyEnergized == IsEnergized
+            if (foldedState != State ||
+                !ReferenceEquals(foldedPowerOn, _activePowerOnReceipt) ||
+                _assemblyBuild.IsElectricallyEnergized != IsEnergized)
+            {
+                return OperationResult.Fail(
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
+            }
+
+            return ValidatePostStartupReceiptHistory();
+        }
+
+        private OperationResult ValidatePostStartupReceiptHistory()
+        {
+            if (PostStartupRevision != _postStartupReceipts.Count ||
+                _postStartupReceipts.Count !=
+                    _postStartupReceiptsByRevision.Count ||
+                (State == PcPowerState.Off &&
+                 _activePostStartupReceipt != null))
+            {
+                return OperationResult.Fail(
+                    PcPostStartupFailures.ReceiptHistoryInvalid);
+            }
+
+            for (int index = 0;
+                 index < _postStartupReceiptsByRevision.Count;
+                 index++)
+            {
+                PcPostStartupReceipt receipt =
+                    _postStartupReceiptsByRevision[index];
+                long postRevision = index + 1L;
+                PcPowerStateReceipt source = receipt?.SourcePowerOnReceipt;
+                if (receipt == null || !receipt.IsOwnedBy(this) ||
+                    receipt.OperationId.IsEmpty ||
+                    receipt.Revision != postRevision || source == null ||
+                    !source.IsOwnedBy(this) ||
+                    source.TransitionKind != PcPowerTransitionKind.PowerOn ||
+                    receipt.ExpectedPowerStateRevision != source.Revision ||
+                    receipt.PowerStateRevision != source.Revision ||
+                    !ReferenceEquals(
+                        receipt.PreflightReceipt,
+                        source.PreflightReceipt) ||
+                    !_postStartupReceipts.TryGetValue(
+                        receipt.OperationId,
+                        out PcPostStartupReceipt mappedPost) ||
+                    !ReferenceEquals(mappedPost, receipt) ||
+                    !_receipts.TryGetValue(
+                        source.OperationId,
+                        out PcPowerStateReceipt mappedPowerOn) ||
+                    !ReferenceEquals(mappedPowerOn, source))
+                {
+                    return OperationResult.Fail(
+                        PcPostStartupFailures.ReceiptHistoryInvalid);
+                }
+
+                for (int previous = 0; previous < index; previous++)
+                {
+                    if (ReferenceEquals(
+                        _postStartupReceiptsByRevision[previous]
+                            .SourcePowerOnReceipt,
+                        source))
+                    {
+                        return OperationResult.Fail(
+                            PcPostStartupFailures.ReceiptHistoryInvalid);
+                    }
+                }
+            }
+
+            if (_activePostStartupReceipt == null)
+            {
+                return OperationResult.Success();
+            }
+
+            return State == PcPowerState.Energized &&
+                   _activePowerOnReceipt != null &&
+                   ReferenceEquals(
+                       _activePostStartupReceipt.SourcePowerOnReceipt,
+                       _activePowerOnReceipt) &&
+                   _postStartupReceipts.TryGetValue(
+                       _activePostStartupReceipt.OperationId,
+                       out PcPostStartupReceipt activeMapped) &&
+                   ReferenceEquals(activeMapped, _activePostStartupReceipt)
                 ? OperationResult.Success()
                 : OperationResult.Fail(
-                    PcPowerStateFailures.ReceiptHistoryInvalid);
+                    PcPostStartupFailures.ReceiptHistoryInvalid);
         }
 
         private bool HasLiveInterlockBinding()
