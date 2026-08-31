@@ -14,7 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #133 r65 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #135 r66 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d`, branch `codex/issue135-driver-bound-validation-receipt`; draft PR #136 açıktır, Issue/Roadmap `In Progress`.
+- Separate `PcValidationAuthority`, exact current driver/power/Assembly/power-budget owner chain'ine bound immutable receipt history'si taşır. Exact driver/OS/storage, firmware→POST→power→preflight, electrical readiness, power budget, component/cable operation/revision ve catalog/profile lineage'ı fail-closed doğrulanır.
+- Fictional immutable performance catalog/profile yalnız integer kullanır: score `401`, fixed stress `300/Stable`, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good`. Wall-clock/frame/FPS/random/host probe/real sensor validation gerçeği değildir.
+- Same-operation exact replay same-instance, changed reuse conflict'tir; distinct operation kontrollü rerun ve monotonik history üretir. History bütünlük kontrolü replay lookup'tan önce çalışır. Power-off history'yi korur fakat current validation `NotCurrent` olur.
+- Existing Workbench'te ilk Primary Action review, ikinci run; `Waiting / Reviewing / Passed / Rejected / NotCurrent` presentation-only ayrıdır. Interact strict-priority explicit power-off'tur. Pause/raw pause, range/focus/LOS, busy hands, competing owner veya context drift review'ı input tüketmeden sıfırlar; malformed history power-off'u softlock etmez.
+- Targeted `5/5 + 125/125 + 6/6 + 12/12 + 29/29`, final full `804/804 EditMode + 187/187 PlayMode`, universal `330709325` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r66 validation smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Local Repository Guard PASS.
+- Bu yalnız fictional benchmark/stress/thermal validation receipt'idir; gerçek benchmark/process/sensor/endurance, fan/airflow/noise, fault/damage, repair/save/delivery tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #133 r65 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052`, branch `codex/issue133-installed-os-bound-fictional-driver`; draft PR #134 clean/mergeable, Repository Guard `33378476265` PASS, Issue/Roadmap `In Progress`.
 - Separate `PcFictionalDriverInstallationAuthority`, exact current installed OS/storage ve current firmware→POST→power→preflight lineage'ına bound immutable driver receipt history'si taşır. Completion exact component/product/retain/cable lineage ve revisions ister; drift receipt üretmeden fail-closed olur.

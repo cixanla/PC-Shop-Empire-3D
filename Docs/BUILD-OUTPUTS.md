@@ -2,6 +2,19 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B driver-bound deterministic validation doğrulaması — 31 Ağustos 2026
+
+Issue #135 technical source `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.709.325` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `0e5bbb99a8eef26e6d121660788c5bec6c3de3c667725defb7e4f8b388a7672f`.
+- Testler: performance catalog `5/5`, validation authority/history `125/125`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, scene/r66 `12/12`, power/POST/UEFI/OS/driver/validation regression `29/29`, final full EditMode `804/804`, full PlayMode `187/187`; failed/skipped/inconclusive `0`.
+- Native r66 runtime: Apple M1/Metal 1280×720; assisted exact driver/current-cycle setup, player-triggered two-step validation review/run, score `401`, fixed `300` stable stress step, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good`, same-instance replay, explicit power-off, current-after-power-off false, history preservation, upstream isolation ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal `0`, exit/residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `Waiting / Reviewing / Passed / Rejected / NotCurrent` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, bütün review-context kayıpları input'u korur ve malformed validation history explicit power-off'u bloklamaz.
+- Build log `601.732` bayt / SHA-256 `352714cc97f4423580e98ecaa1d47f494b65c0d16267d9a062c1d78f07f6d043`; runtime log `9.596` bayt / SHA-256 `4197d3e16e7d82045aed1833797023df01c6c054faac4dd02ad57d7bcf8917a6`.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional benchmark/stress/thermal validation receipt'i için Mac teknik geliştirme kabulüdür; gerçek benchmark binary/process, physical sensor/telemetry, wall-clock endurance, fan/airflow/noise, overclock/fault/damage, repair/save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B installed-OS-bound fictional driver doğrulaması — 31 Ağustos 2026
 
 Issue #133 technical source `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052` Mac üzerinde doğrulandı:
