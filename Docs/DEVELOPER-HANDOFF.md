@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #123 r60 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #125 r61 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`, branch `codex/issue125-safe-power-state-interlock`; draft PR #126 open/mergeable, Issue/Roadmap `In Progress`.
+- `PcPowerStateAuthority` exact current preflight ve Assembly instances'ına reference-bound'dur. Stable operation + expected revision + exact current receipt power-on; exact active power-on receipt + revision explicit power-off üretir. On/off receipts immutable ve same-instance replay-safe'dir.
+- Energized durumunda motherboard/component/fastener removal/unretain/unsecure ve üç power-cable unroute yolu central maintenance interlock'ta mutation öncesi bloklanır. Native smoke routed PCIe/GPU cable pickup'ını player carry/binding yolundan dener ve physical/domain state'in değişmediğini doğrular.
+- Existing Workbench normal Interact kullanır. Keyboard/mouse + virtual-gamepad aynı single-consumer path'te `GÜCÜ AÇ` / `GÜCÜ KAPAT • POST BEKLİYOR` çalıştırır; concurrent press tek transition, pause fail-closed'dur. Prompt/readiness/gate authority yaratmaz.
+- İki bounded review turunun bütün P1/P2 bulguları final source öncesi düzeltildi. Mac targeted `6/6 + 4/4`, full `778/778 EditMode + 164/164 PlayMode`, universal `330540613` bayt build ve Apple M1/Metal exact r61 smoke geçti; Guard `33361533350` yeşildir.
+- User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır. POST/BIOS/OS/benchmark/fault/damage sonraki bounded dilimlerdir.
+
+### Önceki checkpoint — Issue #123 r60 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`, branch `codex/issue123-power-test-preflight-attempt`; draft PR #124 open, Issue/Roadmap `In Progress`.
 - `PowerTestAttemptAuthority` exact power-budget ve Assembly authority instance'larına reference-bound'dur. Command stable operation ID, expected attempt revision ve exact current context ister; accepted receipt build/chassis, seven component + three cable identities/operations/revisions, product/policy ve `380/500/550 W` değerlerini immutable bağlar.

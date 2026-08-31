@@ -1,0 +1,376 @@
+using System.Collections.Generic;
+using PCShopEmpire3D.Core.Primitives;
+
+namespace PCShopEmpire3D.Assembly
+{
+    /// <summary>
+    /// Owns the safe Off/Energized state for one exact assembly and preflight authority.
+    /// It deliberately does not own POST, BIOS, operating-system or benchmark outcomes.
+    /// </summary>
+    public sealed class PcPowerStateAuthority
+    {
+        private readonly PowerTestAttemptAuthority _powerTestAttempts;
+        private readonly AssemblyBuildAuthority _assemblyBuild;
+        private readonly Dictionary<StableId<PcPowerStateOperationIdScope>,
+            PcPowerStateReceipt> _receipts =
+                new Dictionary<StableId<PcPowerStateOperationIdScope>,
+                    PcPowerStateReceipt>();
+        private readonly List<PcPowerStateReceipt> _receiptsByRevision =
+            new List<PcPowerStateReceipt>();
+
+        private PcPowerStateReceipt _activePowerOnReceipt;
+
+        private PcPowerStateAuthority(
+            PowerTestAttemptAuthority powerTestAttempts,
+            AssemblyBuildAuthority assemblyBuild)
+        {
+            _powerTestAttempts = powerTestAttempts;
+            _assemblyBuild = assemblyBuild;
+        }
+
+        public PowerTestAttemptAuthority PowerTestAttempts => _powerTestAttempts;
+
+        public AssemblyBuildAuthority AssemblyBuild => _assemblyBuild;
+
+        public PcPowerState State { get; private set; }
+
+        public long Revision { get; private set; }
+
+        public int ReceiptCount => _receipts.Count;
+
+        public bool IsEnergized => State == PcPowerState.Energized;
+
+        public PcPowerStateReceipt ActivePowerOnReceipt => _activePowerOnReceipt;
+
+        public static OperationResult<PcPowerStateAuthority> Create(
+            PowerTestAttemptAuthority powerTestAttempts,
+            AssemblyBuildAuthority assemblyBuild)
+        {
+            if (powerTestAttempts == null || assemblyBuild == null)
+            {
+                return OperationResult<PcPowerStateAuthority>.Fail(
+                    PcPowerStateFailures.ConfigurationMissing);
+            }
+
+            if (!ReferenceEquals(
+                    powerTestAttempts.AssemblyBuild,
+                    assemblyBuild))
+            {
+                return OperationResult<PcPowerStateAuthority>.Fail(
+                    PcPowerStateFailures.AuthorityMismatch);
+            }
+
+            var authority = new PcPowerStateAuthority(
+                powerTestAttempts,
+                assemblyBuild);
+            OperationResult binding =
+                assemblyBuild.BindElectricalPowerState(authority);
+            return binding.IsFailure
+                ? OperationResult<PcPowerStateAuthority>.Fail(binding.Error)
+                : OperationResult<PcPowerStateAuthority>.Success(authority);
+        }
+
+        public OperationResult<PcPowerStateReceipt> TryPowerOn(
+            StableId<PcPowerStateOperationIdScope> operationId,
+            PowerTestAttemptReceipt preflightReceipt,
+            long expectedRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(
+                    operationId,
+                    out PcPowerStateReceipt replay))
+            {
+                return replay.MatchesPowerOnCommand(
+                        operationId,
+                        preflightReceipt,
+                        expectedRevision)
+                    ? OperationResult<PcPowerStateReceipt>.Success(replay)
+                    : OperationResult<PcPowerStateReceipt>.Fail(
+                        PcPowerStateFailures.OperationConflict);
+            }
+
+            if (preflightReceipt == null ||
+                !_powerTestAttempts.TryGetReceipt(
+                    preflightReceipt.OperationId,
+                    out PowerTestAttemptReceipt knownPreflight) ||
+                !ReferenceEquals(knownPreflight, preflightReceipt))
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InvalidPreflightReceipt);
+            }
+
+            if (expectedRevision != Revision)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.RevisionMismatch);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.RevisionOverflow);
+            }
+
+            if (State != PcPowerState.Off || _activePowerOnReceipt != null)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.AlreadyEnergized);
+            }
+
+            if (!HasLiveInterlockBinding())
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InterlockRejected);
+            }
+
+            OperationResult<PowerTestAttemptReceipt> currentPreflight =
+                _powerTestAttempts.EvaluateCurrentReceipt();
+            if (currentPreflight.IsFailure ||
+                !ReferenceEquals(currentPreflight.Value, preflightReceipt))
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.PreflightStale);
+            }
+
+            long nextRevision = Revision + 1;
+            var receipt = new PcPowerStateReceipt(
+                this,
+                operationId,
+                PcPowerTransitionKind.PowerOn,
+                expectedRevision,
+                nextRevision,
+                preflightReceipt,
+                null);
+            OperationResult interlock = _assemblyBuild.SetElectricalPowerState(
+                this,
+                energized: true);
+            if (interlock.IsFailure)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    interlock.Error);
+            }
+
+            _receipts.Add(operationId, receipt);
+            _receiptsByRevision.Add(receipt);
+            _activePowerOnReceipt = receipt;
+            State = PcPowerState.Energized;
+            Revision = nextRevision;
+            return OperationResult<PcPowerStateReceipt>.Success(receipt);
+        }
+
+        public OperationResult<PcPowerStateReceipt> TryPowerOff(
+            StableId<PcPowerStateOperationIdScope> operationId,
+            PcPowerStateReceipt sourcePowerOnReceipt,
+            long expectedRevision)
+        {
+            if (operationId.IsEmpty)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InvalidOperationId);
+            }
+
+            if (_receipts.TryGetValue(
+                    operationId,
+                    out PcPowerStateReceipt replay))
+            {
+                return replay.MatchesPowerOffCommand(
+                        operationId,
+                        sourcePowerOnReceipt,
+                        expectedRevision)
+                    ? OperationResult<PcPowerStateReceipt>.Success(replay)
+                    : OperationResult<PcPowerStateReceipt>.Fail(
+                        PcPowerStateFailures.OperationConflict);
+            }
+
+            if (expectedRevision != Revision)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.RevisionMismatch);
+            }
+
+            if (Revision == long.MaxValue)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.RevisionOverflow);
+            }
+
+            if (State != PcPowerState.Energized ||
+                _activePowerOnReceipt == null)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.AlreadyOff);
+            }
+
+            if (sourcePowerOnReceipt == null ||
+                !sourcePowerOnReceipt.IsOwnedBy(this) ||
+                !ReferenceEquals(
+                    sourcePowerOnReceipt,
+                    _activePowerOnReceipt))
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.ActivePowerOnMismatch);
+            }
+
+            if (!HasLiveInterlockBinding())
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InterlockRejected);
+            }
+
+            long nextRevision = Revision + 1;
+            var receipt = new PcPowerStateReceipt(
+                this,
+                operationId,
+                PcPowerTransitionKind.PowerOff,
+                expectedRevision,
+                nextRevision,
+                sourcePowerOnReceipt.PreflightReceipt,
+                sourcePowerOnReceipt);
+            OperationResult interlock = _assemblyBuild.SetElectricalPowerState(
+                this,
+                energized: false);
+            if (interlock.IsFailure)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    interlock.Error);
+            }
+
+            _receipts.Add(operationId, receipt);
+            _receiptsByRevision.Add(receipt);
+            _activePowerOnReceipt = null;
+            State = PcPowerState.Off;
+            Revision = nextRevision;
+            return OperationResult<PcPowerStateReceipt>.Success(receipt);
+        }
+
+        public OperationResult<PcPowerStateReceipt> EvaluateCurrentPowerOn()
+        {
+            if (State != PcPowerState.Energized ||
+                _activePowerOnReceipt == null)
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.NotEnergized);
+            }
+
+            if (!HasLiveInterlockBinding())
+            {
+                return OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.InterlockRejected);
+            }
+
+            OperationResult<PowerTestAttemptReceipt> currentPreflight =
+                _powerTestAttempts.EvaluateCurrentReceipt();
+            return currentPreflight.IsSuccess &&
+                   ReferenceEquals(
+                       currentPreflight.Value,
+                       _activePowerOnReceipt.PreflightReceipt)
+                ? OperationResult<PcPowerStateReceipt>.Success(
+                    _activePowerOnReceipt)
+                : OperationResult<PcPowerStateReceipt>.Fail(
+                    PcPowerStateFailures.PreflightStale);
+        }
+
+        public bool TryGetReceipt(
+            StableId<PcPowerStateOperationIdScope> operationId,
+            out PcPowerStateReceipt receipt)
+        {
+            return _receipts.TryGetValue(operationId, out receipt);
+        }
+
+        public OperationResult ValidateReceiptHistory()
+        {
+            if (Revision != _receipts.Count ||
+                _receipts.Count != _receiptsByRevision.Count ||
+                !_assemblyBuild.IsElectricalPowerStateBoundTo(this))
+            {
+                return OperationResult.Fail(
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
+            }
+
+            PcPowerState foldedState = PcPowerState.Off;
+            PcPowerStateReceipt foldedPowerOn = null;
+            for (int index = 0; index < _receiptsByRevision.Count; index++)
+            {
+                PcPowerStateReceipt receipt = _receiptsByRevision[index];
+                long revision = index + 1L;
+                if (receipt == null || !receipt.IsOwnedBy(this) ||
+                    receipt.OperationId.IsEmpty ||
+                    receipt.ExpectedRevision != revision - 1L ||
+                    receipt.Revision != revision ||
+                    !_receipts.TryGetValue(
+                        receipt.OperationId,
+                        out PcPowerStateReceipt mapped) ||
+                    !ReferenceEquals(mapped, receipt) ||
+                    receipt.PreflightReceipt == null ||
+                    !_powerTestAttempts.TryGetReceipt(
+                        receipt.PreflightReceipt.OperationId,
+                        out PowerTestAttemptReceipt knownPreflight) ||
+                    !ReferenceEquals(
+                        knownPreflight,
+                        receipt.PreflightReceipt))
+                {
+                    return OperationResult.Fail(
+                        PcPowerStateFailures.ReceiptHistoryInvalid);
+                }
+
+                if (receipt.TransitionKind == PcPowerTransitionKind.PowerOn)
+                {
+                    if (foldedState != PcPowerState.Off ||
+                        foldedPowerOn != null ||
+                        receipt.SourcePowerOnReceipt != null ||
+                        receipt.ResultingState != PcPowerState.Energized)
+                    {
+                        return OperationResult.Fail(
+                            PcPowerStateFailures.ReceiptHistoryInvalid);
+                    }
+
+                    foldedState = PcPowerState.Energized;
+                    foldedPowerOn = receipt;
+                }
+                else if (receipt.TransitionKind ==
+                         PcPowerTransitionKind.PowerOff)
+                {
+                    if (foldedState != PcPowerState.Energized ||
+                        foldedPowerOn == null ||
+                        !ReferenceEquals(
+                            receipt.SourcePowerOnReceipt,
+                            foldedPowerOn) ||
+                        !ReferenceEquals(
+                            receipt.PreflightReceipt,
+                            foldedPowerOn.PreflightReceipt) ||
+                        receipt.ResultingState != PcPowerState.Off)
+                    {
+                        return OperationResult.Fail(
+                            PcPowerStateFailures.ReceiptHistoryInvalid);
+                    }
+
+                    foldedState = PcPowerState.Off;
+                    foldedPowerOn = null;
+                }
+                else
+                {
+                    return OperationResult.Fail(
+                        PcPowerStateFailures.ReceiptHistoryInvalid);
+                }
+            }
+
+            return foldedState == State &&
+                   ReferenceEquals(foldedPowerOn, _activePowerOnReceipt) &&
+                   _assemblyBuild.IsElectricallyEnergized == IsEnergized
+                ? OperationResult.Success()
+                : OperationResult.Fail(
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
+        }
+
+        private bool HasLiveInterlockBinding()
+        {
+            return _assemblyBuild.IsElectricalPowerStateBoundTo(this) &&
+                   _assemblyBuild.IsElectricallyEnergized == IsEnergized;
+        }
+    }
+}

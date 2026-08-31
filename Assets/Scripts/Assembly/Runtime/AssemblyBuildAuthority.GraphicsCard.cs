@@ -631,6 +631,13 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
+            }
+
             if (IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
@@ -700,6 +707,13 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
             }
 
             if (IsPcieGpuPowerCableRouted)
@@ -871,6 +885,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasGraphicsCardSlot)
             {
                 return AssemblyFailures.InvalidGraphicsCardSlotDefinition;
@@ -964,6 +984,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool retaining)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasGraphicsCardSlot ||
                 slotId != _graphicsCardSlotDefinition.SlotId)
             {
@@ -1056,6 +1082,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceGraphicsCardSeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasGraphicsCardSlot ||
                 slotId != _graphicsCardSlotDefinition.SlotId)
             {

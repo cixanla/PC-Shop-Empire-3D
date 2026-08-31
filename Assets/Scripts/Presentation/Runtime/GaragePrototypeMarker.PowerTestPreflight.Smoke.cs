@@ -383,6 +383,7 @@ namespace PCShopEmpire3D.Presentation
                 !electricalReadinessWorkbench.StatusText.text.Contains(
                     "POWER-ON BEKLİYOR") ||
                 !station.PromptText.Contains("ÖN KONTROL GEÇTİ") ||
+                !station.PromptText.Contains("GÜCÜ AÇ") ||
                 !PowerTestSmokeGameplayStateUnchanged(
                     session,
                     inventoryRevision,
@@ -417,7 +418,7 @@ namespace PCShopEmpire3D.Presentation
             if (replay.IsFailure ||
                 !ReferenceEquals(replay.Value, receipt) ||
                 duplicate.Error != PowerTestAttemptFailures.AlreadyCompleted ||
-                completedGate.Error != PowerTestAttemptFailures.AlreadyCompleted ||
+                completedGate.IsFailure ||
                 attempts.Revision != 1 ||
                 attempts.ReceiptCount != 1 ||
                 attempts.ValidateReceiptHistory().IsFailure ||
