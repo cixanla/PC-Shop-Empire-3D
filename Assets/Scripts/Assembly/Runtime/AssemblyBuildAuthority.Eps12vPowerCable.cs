@@ -435,6 +435,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
             long expectedCableRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasEps12vPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;
@@ -527,6 +533,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
             long expectedCableRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasEps12vPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;

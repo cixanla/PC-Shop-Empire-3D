@@ -1326,6 +1326,8 @@ namespace PCShopEmpire3D.Assembly
         public static readonly Failure InvalidRetention =
             Failure.FromCode("assembly.retention.invalid");
         public static readonly Failure InvalidOperationId = Failure.FromCode("assembly.operation-id.invalid");
+        public static readonly Failure ElectricalPowerOnMaintenanceBlocked =
+            Failure.FromCode("assembly.electrical-power-on.maintenance-blocked");
         public static readonly Failure InvalidHandsContainer =
             Failure.FromCode("assembly.hands-container.invalid");
         public static readonly Failure InvalidWorkbenchContainer =

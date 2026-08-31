@@ -174,6 +174,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PcComponentCatalog components,
             InventoryAuthority inventory,
             AssemblyBuildAuthority assemblyBuild,
+            PcPowerBudgetAuthority powerBudget,
+            PcPerformanceCatalog performanceCatalog,
+            PcValidationProfile validationProfile,
             PurchaseOrderAuthority orders,
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
@@ -192,6 +195,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Components = components;
             Inventory = inventory;
             AssemblyBuild = assemblyBuild;
+            PowerBudget = powerBudget;
+            PerformanceCatalog = performanceCatalog;
+            ValidationProfile = validationProfile;
             Orders = orders;
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
@@ -1021,6 +1027,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     MotherboardFormFactor.MicroAtx).Value;
+            PcPowerBudgetAuthority powerBudget = includeAssemblyPrototype
+                ? CreatePrototypePowerBudget(components, assemblyBuild)
+                : null;
+            PcPerformanceCatalog performanceCatalog = includeAssemblyPrototype
+                ? CreatePrototypePerformanceCatalog(components)
+                : null;
+            PcValidationProfile validationProfile = includeAssemblyPrototype
+                ? CreatePrototypeValidationProfile()
+                : null;
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
@@ -1229,6 +1244,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 components,
                 inventory,
                 assemblyBuild,
+                powerBudget,
+                performanceCatalog,
+                validationProfile,
                 orders,
                 retailOffers,
                 retailBaskets,
@@ -2578,6 +2596,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (customPcBuildKitResult.IsFailure)
                 {
                     return customPcBuildKitResult;
+                }
+            }
+
+            if (_powerTestAttempts != null)
+            {
+                OperationResult powerTestAttemptResult =
+                    _powerTestAttempts.ValidateReceiptHistory();
+                if (powerTestAttemptResult.IsFailure)
+                {
+                    return powerTestAttemptResult;
+                }
+            }
+
+            if (_powerState != null)
+            {
+                OperationResult powerStateResult =
+                    _powerState.ValidateReceiptHistory();
+                if (powerStateResult.IsFailure)
+                {
+                    return powerStateResult;
+                }
+            }
+
+            if (_fictionalOsInstallation != null)
+            {
+                OperationResult fictionalOsResult =
+                    _fictionalOsInstallation.ValidateReceiptHistory();
+                if (fictionalOsResult.IsFailure)
+                {
+                    return fictionalOsResult;
+                }
+            }
+
+            if (_fictionalDriverInstallation != null)
+            {
+                OperationResult fictionalDriverResult =
+                    _fictionalDriverInstallation.ValidateReceiptHistory();
+                if (fictionalDriverResult.IsFailure)
+                {
+                    return fictionalDriverResult;
+                }
+            }
+
+            if (_validation != null)
+            {
+                OperationResult validationResult =
+                    _validation.ValidateReceiptHistory();
+                if (validationResult.IsFailure)
+                {
+                    return validationResult;
+                }
+            }
+
+            if (_qualityRelease != null)
+            {
+                OperationResult qualityReleaseResult =
+                    _qualityRelease.ValidateReceiptHistory();
+                if (qualityReleaseResult.IsFailure)
+                {
+                    return qualityReleaseResult;
                 }
             }
 

@@ -353,7 +353,7 @@ namespace PCShopEmpire3D.Presentation
                     session.AssemblyBuild.Atx24PowerCableRevision == 1 &&
                     session.AssemblyBuild.Atx24PowerCableReceiptCount == 1 &&
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==
-                        AssemblyFailures.BuildIncomplete &&
+                        AssemblyFailures.PowerCableMissing &&
                     physicalCable.GetInstanceID() == physicalIdentity &&
                     physicalCable.ItemIdValue == stableItemId &&
                     physicalCable.Ownership == PhysicalItemOwnership.World &&

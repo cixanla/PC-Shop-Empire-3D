@@ -14,7 +14,108 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #114 r56 accepted/main; Issue #115 sıradaki bounded scene işi
+### Güncel checkpoint — Issue #137 r67 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`, branch `codex/issue137-validation-bound-quality-release`; draft PR #138 açıktır, Issue/Roadmap `In Progress`.
+- Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ve exact owner passed/stable validation + matching safe power-off zincirine bound immutable `ReadyForPackaging` receipt history'si taşır. İkinci Inventory/Orders/Assembly/power/validation authority yoktur.
+- Completion exact request/quote/customer/claim/workbench ile on serialized reservation satırını doğrular: yedi component item/product ve typed ATX24/EPS12V/PCIe-GPU cable item. Current Assembly readiness bütün retain/secure/route operation ve revision'larıyla validation source'una exact eşit kalmalıdır.
+- Exact same-operation replay same-instance, changed reuse conflict, distinct operation controlled rerun'dır. History fold replay lookup'tan önce çalışır; tamper replay'i de fail-closed reddeder. New power cycle veya Assembly drift historical receipt'i korur fakat current result `NotCurrent` olur.
+- Existing station validation sonrası strict-priority `E / A` safe shutdown, ilk `LMB / RT` quality review ve ikinci `LMB / RT` release çalıştırır. Workbench observer-only yedi state gösterir; same-frame power priority, pause/range/focus/LOS/busy/competing-owner no-consume ve malformed-history power-on recovery testlidir.
+- Final targeted `12/12 + 5/5 + 4/4 + 6/6`, full `810/810 EditMode + 191/191 PlayMode`, universal `330776338` bayt/`304` dosya build ve Apple M1/Metal 1280×720 exact r67 quality-release smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Docs checkpoint Repository Guard `33401676887` PASS.
+- Bu yalnız quality sign-off ve packaging giriş receipt'idir; fiziksel package item/workcell/custody, shipping/delivery, warranty/settlement/save tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #135 r66 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d`, branch `codex/issue135-driver-bound-validation-receipt`; draft PR #136 açıktır, Issue/Roadmap `In Progress`.
+- Separate `PcValidationAuthority`, exact current driver/power/Assembly/power-budget owner chain'ine bound immutable receipt history'si taşır. Exact driver/OS/storage, firmware→POST→power→preflight, electrical readiness, power budget, component/cable operation/revision ve catalog/profile lineage'ı fail-closed doğrulanır.
+- Fictional immutable performance catalog/profile yalnız integer kullanır: score `401`, fixed stress `300/Stable`, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good`. Wall-clock/frame/FPS/random/host probe/real sensor validation gerçeği değildir.
+- Same-operation exact replay same-instance, changed reuse conflict'tir; distinct operation kontrollü rerun ve monotonik history üretir. History bütünlük kontrolü replay lookup'tan önce çalışır. Power-off history'yi korur fakat current validation `NotCurrent` olur.
+- Existing Workbench'te ilk Primary Action review, ikinci run; `Waiting / Reviewing / Passed / Rejected / NotCurrent` presentation-only ayrıdır. Interact strict-priority explicit power-off'tur. Pause/raw pause, range/focus/LOS, busy hands, competing owner veya context drift review'ı input tüketmeden sıfırlar; malformed history power-off'u softlock etmez.
+- Targeted `5/5 + 125/125 + 6/6 + 12/12 + 29/29`, final full `804/804 EditMode + 187/187 PlayMode`, universal `330709325` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r66 validation smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Repository Guard `33389640619` PASS.
+- Bu yalnız fictional benchmark/stress/thermal validation receipt'idir; gerçek benchmark/process/sensor/endurance, fan/airflow/noise, fault/damage, repair/save/delivery tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #133 r65 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052`, branch `codex/issue133-installed-os-bound-fictional-driver`; draft PR #134 clean/mergeable, Repository Guard `33378476265` PASS, Issue/Roadmap `In Progress`.
+- Separate `PcFictionalDriverInstallationAuthority`, exact current installed OS/storage ve current firmware→POST→power→preflight lineage'ına bound immutable driver receipt history'si taşır. Completion exact component/product/retain/cable lineage ve revisions ister; drift receipt üretmeden fail-closed olur.
+- Installed driver aynı current OS/storage'a aittir ve non-storage hardware daha sonra değişse de kalır. Storage/OS değişimi current sonucu reddeder; historical receipt/replay immutable'dır.
+- Existing Workbench'te ilk Primary Action driver review, ikinci completion; `Waiting / Reviewing / Installed / Rejected` presentation-only ayrıdır. Interact strict-priority explicit power-off'tur. Motor/raw pause, range/focus/LOS, busy hands ve competing owner açık review'ı input tüketmeden sıfırlar. Malformed driver history power-off'u softlock etmez.
+- Targeted `5/5 + 6/6 + 1/1 + 23/23`, full `793/793 EditMode + 181/181 PlayMode`, universal `330641904` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r65 keyboard+mouse+virtual-gamepad smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Final bounded audit P0/P1 bulmadı.
+- Bu yalnız fictional driver installation receipt'idir; gerçek vendor driver/download/installer/update/reboot, benchmark/stress/thermals/quality, save ve delivery tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #131 r64 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`, branch `codex/issue131-active-uefi-bound-fictional-os-install`; draft PR #132 clean/mergeable, Repository Guard `33372528502` PASS, Issue/Roadmap `In Progress`.
+- Separate `PcFictionalOsInstallationAuthority`, exact current UEFI receipt ve exact Assembly/storage lineage'ına bound immutable OS receipt history'si taşır. Receipt firmware→POST→power→preflight, exact M.2 item/product/secure-operation/full Assembly revision ve `WorkshopStandard / InstalledForDriverStage` sonucunu bağlar.
+- Exact replay same-instance, changed reuse conflict'tir. Kurulum power-off boyunca exact storage item üzerinde kalır; removal `NotCurrent`, same-item reseat reinstall olmadan Installed, different item ise not-installed'dır.
+- Existing Workbench'te ilk Primary Action OS review, ikinci install completion; Interact strict-priority explicit power-off'tur. Pause/Pause edge, range/focus/LOS, busy hands ve competing owner review'ı input tüketmeden sıfırlar. Malformed OS history power-off'u softlock etmez.
+- Targeted `4/4 + 1/1 + 6/6 + 17/17`, full `788/788 EditMode + 175/175 PlayMode`, universal `330604881` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r64 keyboard+mouse+virtual-gamepad smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`.
+- Bu yalnız fictional OS installation receipt'idir; gerçek OS media/download/disk write/partition/reboot/license, driver, benchmark, save ve delivery tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #129 r63 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`, branch `codex/issue129-post-bound-uefi-baseline`; draft PR #130 open/mergeable, Repository Guard `33367768909` PASS, Issue/Roadmap `In Progress`.
+- Existing `PcPowerStateAuthority` ayrı immutable `PcFirmwareBaselineReceipt` history'si taşır. Receipt exact current POST/power-on/preflight lineage, stable operation ID, expected power/firmware revisions ve `OptimizedDefaults / SavedAndExited` sonucunu bağlar; ikinci firmware/gameplay authority değildir.
+- Exact replay same-instance, changed reuse conflict'tir. Bir POST'ta exactly one save; power-off active pointer'ı temizler, historical receipt/replay'i korur ve sonraki cycle yeni POST/operation/revision ister.
+- Existing Workbench'te ilk Primary Action review, ikinci Primary Action `KAYDET VE ÇIK`; Interact explicit power-off'tur. Same-frame Interact strict priority taşır, pause/competing owner consume etmez, exact context kaybında review sıfırlanır. Malformed firmware history dahi power-off'u softlock etmez.
+- Targeted `3/3 + 1/1 + 5/5 + 10/10`, full `784/784 EditMode + 169/169 PlayMode`, universal `330573681` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r63 keyboard+mouse+virtual-gamepad smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`.
+- Bu yalnız fictional safe-default UEFI baseline receipt'idir; gerçek firmware flashing, vendor BIOS, XMP/EXPO, boot/security settings, OS, driver, benchmark, thermals ve damage tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #127 r62 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`, branch `codex/issue127-active-power-on-post-self-test`; draft PR #128 open/clean/mergeable, Issue/Roadmap `In Progress`.
+- Existing `PcPowerStateAuthority` ayrı immutable `PcPostStartupReceipt` history'si taşır. Receipt exact active power-on/preflight owner identity'sini, stable operation ID, expected/current power revision ve bağımsız monotonik POST revision'ını bağlar; ikinci gameplay authority değildir.
+- Exact replay same-instance, changed reuse conflict'tir. Bir active cycle'da exactly one POST; power-off active pointer'ı temizler, historical receipt/replay'i korur ve current evaluation `NotCurrent` olur. Yeni cycle ayrı operation/revision ister.
+- Player station accepted power-on sonrasında aynı consumed Interact path'inde baseline POST'u tamamlar; domain API'leri ayrı kalır ve POST failure power-off yolunu softlock etmez. Existing Workbench `GÜCÜ KAPAT • POST GEÇTİ`, `GÜÇ AÇIK • POST GEÇTİ`, `FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF` gösterir.
+- Final-source targeted `3/3`, full `781/781 EditMode + 164/164 PlayMode`, universal `330548985` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r62 `post=passed benchmark=untouched invariants=ok` smoke geçti; Guard `33364272612` yeşildir.
+- Bu yalnız deterministic baseline receipt'tir; gerçek hardware POST fault/code, firmware/BIOS/UEFI, OS, driver, benchmark, thermals ve damage tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #125 r61 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`, branch `codex/issue125-safe-power-state-interlock`; draft PR #126 open/mergeable, Issue/Roadmap `In Progress`.
+- `PcPowerStateAuthority` exact current preflight ve Assembly instances'ına reference-bound'dur. Stable operation + expected revision + exact current receipt power-on; exact active power-on receipt + revision explicit power-off üretir. On/off receipts immutable ve same-instance replay-safe'dir.
+- Energized durumunda motherboard/component/fastener removal/unretain/unsecure ve üç power-cable unroute yolu central maintenance interlock'ta mutation öncesi bloklanır. Native smoke routed PCIe/GPU cable pickup'ını player carry/binding yolundan dener ve physical/domain state'in değişmediğini doğrular.
+- Existing Workbench normal Interact kullanır. Keyboard/mouse + virtual-gamepad aynı single-consumer path'te `GÜCÜ AÇ` / `GÜCÜ KAPAT • POST BEKLİYOR` çalıştırır; concurrent press tek transition, pause fail-closed'dur. Prompt/readiness/gate authority yaratmaz.
+- İki bounded review turunun bütün P1/P2 bulguları final source öncesi düzeltildi. Mac targeted `6/6 + 4/4`, full `778/778 EditMode + 164/164 PlayMode`, universal `330540613` bayt build ve Apple M1/Metal exact r61 smoke geçti; Guard `33361533350` yeşildir.
+- User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır. POST/BIOS/OS/benchmark/fault/damage sonraki bounded dilimlerdir.
+
+### Önceki checkpoint — Issue #123 r60 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`, branch `codex/issue123-power-test-preflight-attempt`; draft PR #124 open, Issue/Roadmap `In Progress`.
+- `PowerTestAttemptAuthority` exact power-budget ve Assembly authority instance'larına reference-bound'dur. Command stable operation ID, expected attempt revision ve exact current context ister; accepted receipt build/chassis, seven component + three cable identities/operations/revisions, product/policy ve `380/500/550 W` değerlerini immutable bağlar.
+- Exact historical replay same-instance kalır; changed-command conflict ve second completion blocked'dır. Current evaluation cable/Assembly lineage drift'inde `ContextStale` olur, historical receipt'i değiştirmez. Gameplay/benchmark authority mutation'ı yoktur.
+- Existing Workbench üzerinde normal Interact kullanılır. Keyboard/mouse + virtual-gamepad aynı single-consumer path'te range/focus/LOS/pause/co-edge/busy/competing owner/replay gates'ten geçer. Yeni gameplay collider/renderer/light/camera/NavMesh/item/authority yoktur; status `POWER-ON BEKLİYOR` sınırını korur.
+- Bağımsız review'un P1 replay-order ve iki P2 invariant/allocation bulgusu final rerundan önce düzeltildi. Mac targeted `6/6 + 3/3`, full `773/773 EditMode + 161/161 PlayMode`, universal `330507808` bayt build ve Apple M1/Metal exact r60 smoke geçti; Guard `33357285973` yeşildir.
+- User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #121 r59 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`, branch `codex/issue121-power-budget-headroom-preflight`; draft PR #122 open, Issue/Roadmap `In Progress`.
+- Exact immutable electrical catalog canonical component catalog'a bağlanır. Legacy-v1 policy platform/chassis/CPU/GPU/DDR5/NVMe/cooler yüklerinden `380 W`, yüzde 30 headroom + 50 W ceiling ile `500 W` minimum ve installed `550 W` için `+50 W` margin üretir.
+- `AssessPowerBudget()` her çağrıda exact electrical readiness'i yeniden değerlendirir; missing/foreign/mismatched metadata fail-closed, insufficient PSU valid blocked assessment'tır. Inventory/Assembly/BuildKit/reservation/receipt/replay/benchmark mutation'ı yoktur.
+- Existing Workbench projection ready text'i `GÜÇ BÜTÇESİ UYGUN / 380W / EN AZ 500W / PSU 550W / GÜÇ TESTİ BEKLİYOR`; yeni input/collider/renderer/light/camera/authority yoktur. Power-on/POST/fault/BIOS/OS/benchmark ayrı kalır.
+- Mac targeted `15/15`, full `768/768 EditMode + 158/158 PlayMode`, universal `330465045` bayt build, Apple M1/Metal exact power-budget ve Assembly-readability smokes geçti. Assembly budget `479/470`, üç 1280x720 capture byte-distinct, central glare `0`dır.
+- Complete settings manifesti byte-exact; user/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #119 r58 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`, branch `codex/issue119-electrical-readiness-feedback`; draft PR #120 open, Issue/Roadmap `In Progress`.
+- `EvaluateElectricalReadiness()` exact secured/retained motherboard, CPU, A2 DDR5, primary M.2, cooler+TIM, GPU, PSU ve exact routed ATX24/EPS12V/PCIe-GPU zincirini deterministik sırada okur. Snapshot exact build/chassis, on item, on source operation ve dört revision kimliğini bağlar; mutation yoktur.
+- Workbench projection yalnız initialized canonical session'ı okur. Ready metni `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; final cable unroute sonrasında exact blocker geri döner. İki renderer dışında collider/light/camera/NavMesh/input/authority delta yoktur.
+- Mac targeted contracts, full `758/758 EditMode + 158/158 PlayMode`, universal `330441141` bayt build, Apple M1/Metal exact readiness ve Assembly-readability smokes geçti. Assembly renderer budget `479/470`, üç 1280x720 capture byte-distinct, central glare `0`dır.
+- Benchmark readiness değişmedi; power-on, POST, BIOS/OS, driver, benchmark, package veya delivery state üretilmedi. Bütün ProjectSettings ve build sırasında korunan ProBuilder user-setting hashleri byte-exact kaldı; ProBuilder diff'i stage/revert edilmez.
+- Fiziksel Windows yoktur: clean exact-head x64 IL2CPP/only-D3D11 Intel Iris Xe gate bekler; UTM onun yerine geçmez. USB yoktur ve checkpoint yazılmadı. PR draft, Issue/Roadmap açık; physical-human HID/endurance claim'i `false`tır.
+
+### Önceki checkpoint — Issue #115 r57 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`, branch `codex/issue115-retail-shelf-authority-consolidation`; draft PR #118 open, Issue/Roadmap `In Progress`.
+- Legacy `StarterShelf` hierarchy kaldırıldı. Sahne exact tek `AuthoritativeRetailShelfA`, `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` taşır. İkinci shelf/zone/surface ve collider overlap yoktur.
+- Authored renderer `499→483`; retail runtime `486/462`, Assembly regression runtime `477/468`; light/camera değişmedi. r56 retail/checkout readability, r55 Assembly readability, customer route, checkout/receipt authority, stable identity ve input ownership korunur.
+- Mac scene `11/11`, targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad retail flows `2/2`, full `754/754 EditMode + 158/158 PlayMode`; universal macOS build ve Apple M1/Metal iki native smoke geçti. Retail marker `shelf-authority=single legacy-starter-shelf=absent`; glare `0`, minimum contrast `1.348`.
+- `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Evidence-driven Version Control baseline correction sonrası technical baseline `5/5` ve full EditMode yeşildir. User/editor-owned ProBuilder ayarı unstaged/untouched tutulur; stage veya revert edilmez.
+- Fiziksel Windows yoktur: exact-head clean x64 IL2CPP/D3D11/Iris Xe gate bekler. UTM bu kapının yerine geçmez. USB yoktur ve checkpoint yazılmadı. Windows dönmeden Issue #115 merge/close edilmez; Mac tek write lane'de sonraki güvenli hazırlık ve CI sürer.
+
+### Önceki checkpoint — Issue #114 r56 accepted/main; Issue #115 bounded scene işi açıldı
 
 - Technical/main head `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`. GarageGraybox r56 customer approach, authoritative shelf offer/reserved basket ve checkout/payment/receipt durumlarını üç 1280x720 native composition'a taşır; `RetailCheckoutHeroProjection` ikinci authority üretmez.
 - Authored renderer delta `+9`, light/camera `+1/0`; runtime `502` total / `478` active renderer. Hero geometry Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light shadowless'tır. Existing NavMesh, route, waypoints, input ve retail/checkout authorities untouched kalır.

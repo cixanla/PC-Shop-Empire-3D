@@ -26,7 +26,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
 
             Transform heroRoot = Object.FindObjectsByType<Transform>(
                     FindObjectsSortMode.None)
@@ -136,7 +136,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     .Count(renderer =>
                         retailHeroRoot == null ||
                         !renderer.transform.IsChildOf(retailHeroRoot)),
-                Is.EqualTo(473));
+                Is.EqualTo(459));
             Assert.That(
                 SceneManager.GetActiveScene().GetRootGameObjects()
                     .SelectMany(root =>
@@ -144,7 +144,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     .Count(renderer =>
                         retailHeroRoot == null ||
                         !renderer.transform.IsChildOf(retailHeroRoot)),
-                Is.EqualTo(493));
+                Is.EqualTo(479));
             Assert.That(
                 Object.FindObjectsByType<Light>(
                         FindObjectsSortMode.None)

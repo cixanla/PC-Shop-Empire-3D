@@ -525,6 +525,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     brushedSteel,
                     accent,
                     labelPaper);
+            ElectricalReadinessWorkbenchBuildResult
+                electricalReadinessWorkbenchBuild =
+                    BuildElectricalReadinessWorkbenchStatus(
+                        environment,
+                        deliveryShelved,
+                        deliveryArrived);
             MotherboardBuildKitBuildResult motherboardBuildKitBuild =
                 BuildMotherboardBuildKit(
                     environment,
@@ -852,6 +858,20 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 carry,
                 customPcWorkTicketBuild.InteractionCollider,
                 customPcWorkTicketBuild.StatusText);
+            electricalReadinessWorkbenchBuild.Projection.Configure(
+                stockFlow,
+                electricalReadinessWorkbenchBuild.StatusText,
+                electricalReadinessWorkbenchBuild.StatusIndicator,
+                electricalReadinessWorkbenchBuild.ReadyMaterial,
+                electricalReadinessWorkbenchBuild.BlockedMaterial);
+            electricalReadinessWorkbenchBuild.PowerTestStation.Configure(
+                stockFlow,
+                input,
+                motor,
+                playerCamera,
+                carry,
+                electricalReadinessWorkbenchBuild.Projection,
+                electricalReadinessWorkbenchBuild.StatusText.transform);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
             marker.Configure(
                 motor,
@@ -906,7 +926,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 powerSupplyBuildKitBuild.Projection,
                 atx24PowerCableBuildKitBuild.Projection,
                 eps12vPowerCableBuildKitBuild.Projection,
-                pcieGpuPowerCableBuildKitBuild.Projection);
+                pcieGpuPowerCableBuildKitBuild.Projection,
+                electricalReadinessWorkbenchBuild.Projection,
+                electricalReadinessWorkbenchBuild.PowerTestStation);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -914,7 +936,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 customerFlow,
                 customerFlowBuild.CheckoutStation,
-                customPcWorkTicketBuild.Projection);
+                customPcWorkTicketBuild.Projection,
+                electricalReadinessWorkbenchBuild.PowerTestStation);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",
@@ -1024,7 +1047,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 metal,
                 brushedSteel,
                 accent,
-                cardboard,
                 wood,
                 rubber,
                 labelPaper,
@@ -1093,7 +1115,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             Material metal,
             Material brushedSteel,
             Material accent,
-            Material cardboard,
             Material wood,
             Material rubber,
             Material labelPaper,
@@ -1265,60 +1286,6 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 brushedSteel,
                 accent,
                 rubber);
-
-            Transform shelf = new GameObject("StarterShelf").transform;
-            shelf.SetParent(benchmark, false);
-            shelf.localPosition = new Vector3(3.15f, 0f, 1.4f);
-            foreach (float x in new[] { -0.65f, 0.65f })
-            {
-                CreateBeveledCube(
-                    x < 0f ? "Shelf_LeftPost" : "Shelf_RightPost",
-                    shelf,
-                    new Vector3(x, 1.1f, 0f),
-                    new Vector3(0.08f, 2.2f, 0.65f),
-                    0.012f,
-                    metal);
-                CreateBeveledCube(
-                    x < 0f ? "Shelf_LeftFoot" : "Shelf_RightFoot",
-                    shelf,
-                    new Vector3(x, 0.035f, -0.02f),
-                    new Vector3(0.16f, 0.07f, 0.72f),
-                    0.015f,
-                    rubber);
-            }
-
-            for (int index = 0; index < 4; index++)
-            {
-                CreateBeveledCube(
-                    $"Shelf_{index + 1}",
-                    shelf,
-                    new Vector3(0f, 0.25f + (index * 0.55f), 0f),
-                    new Vector3(1.4f, 0.08f, 0.72f),
-                    0.012f,
-                    metal);
-            }
-
-            BuildStaticShippingBox(
-                "ShelfPartsBox",
-                shelf,
-                new Vector3(-0.28f, 0.57f, 0f),
-                new Vector3(0.56f, 0.50f, 0.50f),
-                cardboard,
-                labelPaper,
-                rubber);
-            CreateBeveledCube(
-                "ShelfTechUnit",
-                shelf,
-                new Vector3(0.20f, 1.12f, 0f),
-                new Vector3(0.76f, 0.46f, 0.48f),
-                0.03f,
-                metal);
-            CreateDetailCube(
-                "ShelfTechDisplay",
-                shelf,
-                new Vector3(0.20f, 1.12f, -0.247f),
-                new Vector3(0.40f, 0.16f, 0.016f),
-                screenGlass);
         }
 
         private static void BuildAssemblyWorkbenchHeroReadability(

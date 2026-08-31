@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2047,7 +2047,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(4));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2243,7 +2243,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     sceneRenderers.Count(renderer =>
                         retailHeroRoot == null ||
                         !renderer.transform.IsChildOf(retailHeroRoot)),
-                    Is.EqualTo(493));
+                    Is.EqualTo(479));
                 Assert.That(
                     sceneLights.Count(light =>
                         light.name != "RetailCheckoutFillLight"),
@@ -2277,6 +2277,126 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsElectricalReadinessWorkbenchContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
+                ElectricalReadinessWorkbenchProjection[] projections = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        ElectricalReadinessWorkbenchProjection>(true))
+                    .ToArray();
+                ElectricalPowerTestStationProjection[] powerTestStations = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        ElectricalPowerTestStationProjection>(true))
+                    .ToArray();
+
+                Assert.That(marker, Is.Not.Null);
+                Assert.That(projections.Length, Is.EqualTo(1));
+                Assert.That(powerTestStations.Length, Is.EqualTo(1));
+                ElectricalReadinessWorkbenchProjection projection = projections[0];
+                ElectricalPowerTestStationProjection powerTestStation =
+                    powerTestStations[0];
+                Assert.That(marker.ElectricalReadinessWorkbench,
+                    Is.SameAs(projection));
+                Assert.That(marker.ElectricalPowerTestStation,
+                    Is.SameAs(powerTestStation));
+                Assert.That(marker.HasPowerBudgetWorkbenchR59Runtime,
+                    Is.True);
+                Assert.That(marker.HasPowerTestPreflightR60Runtime,
+                    Is.True);
+                Assert.That(marker.HasPowerStateInterlockR62Runtime,
+                    Is.True);
+                Assert.That(marker.HasFirmwareBaselineR63Runtime,
+                    Is.True);
+                Assert.That(marker.HasFictionalOsInstallationR64Runtime,
+                    Is.True);
+                Assert.That(marker.HasFictionalDriverInstallationR65Runtime,
+                    Is.True);
+                Assert.That(marker.HasValidationR66Runtime, Is.True);
+                Assert.That(marker.HasQualityReleaseR67Runtime, Is.True);
+                Assert.That(projection.ProjectionIdValue,
+                    Is.EqualTo(ElectricalReadinessWorkbenchProjection
+                        .PrototypeProjectionIdValue));
+                Assert.That(projection.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(projection.IsConfigured, Is.True);
+                Assert.That(projection.StatusText, Is.Not.Null);
+                Assert.That(projection.StatusIndicator, Is.Not.Null);
+                Assert.That(projection.GetComponentsInChildren<Collider>(true),
+                    Is.Empty);
+                Assert.That(projection.GetComponentsInChildren<Light>(true),
+                    Is.Empty);
+                Assert.That(projection.GetComponentsInChildren<Renderer>(true).Length,
+                    Is.EqualTo(2));
+                Assert.That(projection.GetComponentsInChildren<Renderer>(true).All(
+                    renderer => renderer.gameObject.layer ==
+                                LayerMask.NameToLayer("Ignore Raycast")), Is.True);
+                Assert.That(Vector3.Distance(
+                    projection.StatusText.transform.localPosition,
+                    new Vector3(1.35f, 1.36f, 4.066f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    projection.StatusIndicator.transform.localPosition,
+                    new Vector3(1.66f, 1.55f, 4.068f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(projection.ReadyMaterial.name,
+                    Does.StartWith("DeliveryStatusShelved"));
+                Assert.That(projection.BlockedMaterial.name,
+                    Does.StartWith("DeliveryStatusArrived"));
+                Assert.That(powerTestStation.IsConfigured, Is.True);
+                Assert.That(powerTestStation.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(powerTestStation.PlayerInput,
+                    Is.SameAs(marker.PlayerInput));
+                Assert.That(powerTestStation.PlayerMotor,
+                    Is.SameAs(marker.PlayerMotor));
+                Assert.That(powerTestStation.PlayerCarry,
+                    Is.SameAs(marker.PlayerCarry));
+                Assert.That(powerTestStation.ReadinessProjection,
+                    Is.SameAs(projection));
+                Assert.That(powerTestStation.FocusAnchor,
+                    Is.SameAs(projection.StatusText.transform));
+                Assert.That(powerTestStation.GetComponentsInChildren<Collider>(true),
+                    Is.Empty);
+                Assert.That(powerTestStation.InteractionRange,
+                    Is.EqualTo(ElectricalPowerTestStationProjection
+                        .DefaultInteractionRange).Within(0.001f));
+                Assert.That(powerTestStation.FocusDegrees,
+                    Is.EqualTo(ElectricalPowerTestStationProjection
+                        .DefaultFocusDegrees).Within(0.001f));
+                GaragePrototypeHud hud = FindInScene<GaragePrototypeHud>(scene);
+                Assert.That(hud.ElectricalPowerTestStation,
+                    Is.SameAs(powerTestStation));
+
+                GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+                long assemblyRevision = session.AssemblyBuild.Revision;
+                long inventoryRevision = session.Inventory.Revision;
+                OperationResult refresh = projection.RefreshPresentation();
+                Assert.That(refresh.Error,
+                    Is.EqualTo(AssemblyFailures.MotherboardMissing));
+                Assert.That(projection.IsReady, Is.False);
+                Assert.That(projection.PowerState, Is.EqualTo(PcPowerState.Off));
+                Assert.That(projection.CurrentFailureCode,
+                    Is.EqualTo(AssemblyFailures.MotherboardMissing.Code));
+                Assert.That(projection.StatusText.text,
+                    Does.Contain("ANAKART EKSİK")
+                        .And.Contain("GÜÇ HAZIR DEĞİL"));
+                Assert.That(session.AssemblyBuild.Revision,
+                    Is.EqualTo(assemblyRevision));
+                Assert.That(session.Inventory.Revision,
+                    Is.EqualTo(inventoryRevision));
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsRetailCheckoutHeroReadabilityContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -2293,7 +2413,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(9));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2406,21 +2526,20 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     "RetailCheckoutReceiptAnchor",
                     new Vector3(-0.02f, 1.18f, 3.02f));
 
-                Transform starterShelf = transforms.Single(transform =>
-                    transform.name == "StarterShelf");
-                Assert.That(Vector3.Distance(
-                    starterShelf.localPosition,
-                    new Vector3(3.15f, 0f, 1.40f)), Is.LessThan(0.0001f));
                 Assert.That(
-                    starterShelf.GetComponentsInChildren<Renderer>(true).Length,
-                    Is.EqualTo(16));
-                Assert.That(
-                    starterShelf.GetComponentsInChildren<Collider>(true).Length,
-                    Is.EqualTo(10),
-                    "Issue #114 must not change the existing NavMesh collider geometry.");
+                    transforms.Where(transform =>
+                        transform.name == "StarterShelf" ||
+                        transform.name == "ShelfPartsBox" ||
+                        transform.name == "ShelfTechUnit" ||
+                        transform.name == "ShelfTechDisplay"),
+                    Is.Empty,
+                    "The legacy decorative shelf must not compete with retail authority.");
 
                 Transform shelfRoot = transforms.Single(transform =>
                     transform.name == "AuthoritativeRetailShelfA");
+                Assert.That(
+                    shelfRoot.GetComponentsInChildren<Collider>(true).Length,
+                    Is.EqualTo(5));
                 Transform placementSurface = transforms.Single(transform =>
                     transform.name == "AuthoritativeShelfPlacementSurface");
                 Assert.That(placementSurface.parent, Is.SameAs(shelfRoot));
@@ -2431,8 +2550,27 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     placementSurface.localScale,
                     new Vector3(0.72f, 0.05f, 1.48f)), Is.LessThan(0.0001f));
                 Assert.That(placementSurface.GetComponent<BoxCollider>(), Is.Not.Null);
-                Assert.That(placementSurface.GetComponent<PlacementSurface>(), Is.Not.Null);
-                Assert.That(placementSurface.GetComponent<InventoryPlacementZone>(), Is.Not.Null);
+                PlacementSurface retailSurface =
+                    placementSurface.GetComponent<PlacementSurface>();
+                InventoryPlacementZone retailZone =
+                    placementSurface.GetComponent<InventoryPlacementZone>();
+                Assert.That(retailSurface, Is.Not.Null);
+                Assert.That(retailSurface.SurfaceId,
+                    Is.EqualTo("prototype.retail-shelf-a"));
+                Assert.That(retailZone, Is.Not.Null);
+                Assert.That(retailZone.PlacementSurface, Is.SameAs(retailSurface));
+                Assert.That(retailZone.ContainerKind,
+                    Is.EqualTo(InventoryContainerKind.Shelf));
+                Assert.That(retailZone.ContainerId.Value,
+                    Is.EqualTo(GarageStockFlowSession.ShelfContainerIdValue));
+                Assert.That(
+                    transforms.Select(transform =>
+                            transform.GetComponent<InventoryPlacementZone>())
+                        .Count(zone =>
+                            zone != null &&
+                            zone.ContainerId.Value ==
+                                GarageStockFlowSession.ShelfContainerIdValue),
+                    Is.EqualTo(1));
 
                 TextMesh shelfLabel = transforms.Single(transform =>
                         transform.name == "RetailShelfLabel")
@@ -2552,25 +2690,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
                     .Single(transform => transform.name == "VisualBenchmarkCorner");
-                Assert.That(benchmark.GetComponentsInChildren<Renderer>(true).Length, Is.GreaterThan(90));
+                Assert.That(benchmark.GetComponentsInChildren<Renderer>(true).Length, Is.GreaterThan(75));
 
                 string[] rendererNames = benchmark.GetComponentsInChildren<Renderer>(true)
                     .Select(renderer => renderer.name)
                     .ToArray();
                 Assert.That(rendererNames, Does.Contain("WorkbenchTop"));
                 Assert.That(rendererNames, Does.Contain("DiagnosticMonitorScreen"));
-                Assert.That(rendererNames, Does.Contain("ShelfTechUnit"));
                 Assert.That(
                     benchmark.GetComponentsInChildren<Transform>(true)
                         .Select(transform => transform.name),
-                    Does.Contain("StarterShelf")
-                        .And.Contain("ShelfPartsBox")
-                        .And.Contain("ShelfTechUnit"));
+                    Does.Not.Contain("StarterShelf")
+                        .And.Not.Contain("ShelfPartsBox")
+                        .And.Not.Contain("ShelfTechUnit")
+                        .And.Not.Contain("ShelfTechDisplay"));
 
                 Transform assemblySlice = benchmark.GetComponentsInChildren<Transform>(true)
                     .Single(transform => transform.name ==

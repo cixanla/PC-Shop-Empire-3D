@@ -782,6 +782,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceProcessorRetentionOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorCoolerSlot)
             {
                 return AssemblyFailures.InvalidProcessorCoolerSlotDefinition;
@@ -913,6 +919,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool retaining)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorCoolerSlot ||
                 slotId != _processorCoolerSlotDefinition.SlotId)
             {
@@ -1014,6 +1026,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceProcessorCoolerSeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorCoolerSlot ||
                 slotId != _processorCoolerSlotDefinition.SlotId)
             {

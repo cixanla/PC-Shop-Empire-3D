@@ -26,7 +26,9 @@ namespace PCShopEmpire3D.Presentation
             "generic-drop=blocked route=ok psu-unretain=blocked unroute=ok " +
             "history=10/10-preserved cables=2/2-protected " +
             "replay=immediate+delayed receipts=ok revisions=ok " +
-            "electrical-readiness=blocked no-duplicate-loss=ok invariants=ok";
+            "electrical-readiness=ready-then-blocked power-budget=380/500/550 " +
+            "monitor=ok " +
+            "no-duplicate-loss=ok invariants=ok";
 
         private bool _suppressPcieGpuPowerCableAssemblyHandoffSmokeSuccessMarker;
         private string _nestedPcieGpuPowerCableAssemblyHandoffSmokeFailureCode;
@@ -79,6 +81,8 @@ namespace PCShopEmpire3D.Presentation
                 pcieGpuPowerCableBuildKit == null ||
                 pcieGpuPowerCableRoute == null ||
                 pcieGpuPowerCableGeometry == null ||
+                electricalReadinessWorkbench == null ||
+                !HasPowerBudgetWorkbenchR59Runtime ||
                 !HasPcieGpuPowerCableAssemblyHandoffR54Runtime ||
                 !pcieGpuPowerCableBuildKit.IsStaged ||
                 pcieGpuPowerCableBuildKit.IsReleasedForAssembly ||
@@ -184,6 +188,19 @@ namespace PCShopEmpire3D.Presentation
                         eps12vRoute.IsFailure
                             ? $"smoke.eps12v-route-{eps12vRoute.Error.Code}"
                             : "smoke.eps12v-route-mismatch");
+                    yield break;
+                }
+
+                OperationResult electricalBeforePcie =
+                    electricalReadinessWorkbench.RefreshPresentation();
+                if (electricalBeforePcie.Error !=
+                        ElectricalReadinessFailures.PcieGpuPowerCableMissing ||
+                    electricalReadinessWorkbench.IsReady ||
+                    !electricalReadinessWorkbench.StatusText.text.Contains(
+                        "PCIe GPU 6+2 KABLOSUNU BAĞLA"))
+                {
+                    LogPcieGpuPowerCableAssemblyHandoffSmokeFailure(
+                        "smoke.electrical-monitor-pre-route-mismatch");
                     yield break;
                 }
 
@@ -317,6 +334,10 @@ namespace PCShopEmpire3D.Presentation
                 StableId<AssemblyOperationIdScope> routeOperationId =
                     PcieGpuPowerCablePrototypeOperationId("route", 1);
                 PcieGpuPowerCableOperationReceipt routeReceipt = null;
+                OperationResult electricalReady =
+                    electricalReadinessWorkbench.RefreshPresentation();
+                OperationResult<PcPowerBudgetSnapshot> powerBudget =
+                    session.PowerBudget.AssessPowerBudget();
                 bool routed =
                     playerCarry.HeldItem == null &&
                     pcieGpuPowerCableBinding.IsRouted &&
@@ -337,8 +358,20 @@ namespace PCShopEmpire3D.Presentation
                     session.AssemblyBuild.ReceiptCount == assemblyReceiptCount &&
                     session.AssemblyBuild.PcieGpuPowerCableRevision == 1 &&
                     session.AssemblyBuild.PcieGpuPowerCableReceiptCount == 1 &&
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==
-                        AssemblyFailures.BuildIncomplete &&
+                    electricalReady.IsSuccess &&
+                    powerBudget.IsSuccess &&
+                    powerBudget.Value.IsSufficient &&
+                    powerBudget.Value.SystemPowerDrawWatts == 380 &&
+                    powerBudget.Value.MinimumRecommendedPsuWatts == 500 &&
+                    powerBudget.Value.InstalledPsuWatts == 550 &&
+                    electricalReadinessWorkbench.IsReady &&
+                    electricalReadinessWorkbench.StatusText.text.Contains(
+                        "GÜÇ BÜTÇESİ UYGUN") &&
+                    electricalReadinessWorkbench.StatusText.text.Contains(
+                        "380W / EN AZ 500W / PSU 550W") &&
+                    electricalReadinessWorkbench.StatusText.text.Contains(
+                        "GÜÇ TESTİ BEKLİYOR") &&
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess &&
                     physicalCable.GetInstanceID() == physicalIdentity &&
                     physicalCable.ItemIdValue == stableItemId;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
@@ -382,6 +415,8 @@ namespace PCShopEmpire3D.Presentation
                 StableId<AssemblyOperationIdScope> unrouteOperationId =
                     PcieGpuPowerCablePrototypeOperationId("unroute", 2);
                 PcieGpuPowerCableOperationReceipt unrouteReceipt = null;
+                OperationResult electricalBlockedAgain =
+                    electricalReadinessWorkbench.RefreshPresentation();
                 bool unrouted =
                     playerCarry.HeldItem == physicalCable &&
                     !pcieGpuPowerCableBinding.IsRouted &&
@@ -397,6 +432,11 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.Revision == buildKitRevision + 1 &&
                     session.AssemblyBuild.PcieGpuPowerCableRevision == 2 &&
                     session.AssemblyBuild.PcieGpuPowerCableReceiptCount == 2 &&
+                    electricalBlockedAgain.Error ==
+                        ElectricalReadinessFailures.PcieGpuPowerCableMissing &&
+                    !electricalReadinessWorkbench.IsReady &&
+                    electricalReadinessWorkbench.StatusText.text.Contains(
+                        "GÜÇ HAZIR DEĞİL") &&
                     physicalCable.GetInstanceID() == physicalIdentity &&
                     physicalCable.ItemIdValue == stableItemId;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
@@ -496,7 +536,10 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.StagedComponentCount != 10 ||
                     session.CustomPcBuildKit.AssemblyHandoffCount != 10 ||
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                        AssemblyFailures.PowerCableMissing ||
+                    electricalReadinessWorkbench.IsReady ||
+                    electricalReadinessWorkbench.CurrentFailureCode !=
+                        ElectricalReadinessFailures.PcieGpuPowerCableMissing.Code ||
                     !GraphicsCardAssemblyHandoffReservationsAreLive(
                         session,
                         workOrder,

@@ -1330,6 +1330,13 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
+            }
+
             if (IsAtx24PowerCableRouted ||
                 IsEps12vPowerCableRouted ||
                 IsPcieGpuPowerCableRouted)
@@ -1405,6 +1412,13 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
             }
 
             if (IsEps12vPowerCableRouted || IsPcieGpuPowerCableRouted)
@@ -1541,6 +1555,12 @@ namespace PCShopEmpire3D.Assembly
             PowerSupplyMountOrientation orientation,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasPowerSupplyBay)
             {
                 return AssemblyFailures.InvalidPowerSupplyBayDefinition;
@@ -1605,6 +1625,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool retaining)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasPowerSupplyBay || slotId != _powerSupplyBayDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -1688,6 +1714,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourcePowerSupplySeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasPowerSupplyBay || slotId != _powerSupplyBayDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;

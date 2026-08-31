@@ -2,6 +2,129 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B validation-bound quality sign-off ve packaging release doğrulaması — 31 Ağustos 2026
+
+Issue #137 technical source `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.776.338` bayt, `304` dosya. Executable `117.179` bayt / SHA-256 `de920bcd2d1c0ac8c8e7317ba082356487d4c50999b2acb20cecb04fded00941`.
+- Testler: scene/r67 `12/12`, quality authority/history `5/5`, keyboard/mouse/virtual-gamepad/context/P0 `4/4`, validation regression `6/6`, final full EditMode `810/810`, full PlayMode `191/191`; failed/skipped/inconclusive `0`.
+- Native r67 runtime: Apple M1/Metal 1280×720; assisted exact validation setup, player-triggered safe power-off, mouse quality review, virtual-gamepad release, exact work order/ticket + ten serialized line lineage, score `401`, quality `Good`, immutable same-instance replay, history preservation, upstream isolation ve invariants başarılı. Exact readiness/success markerları birer kez, quality failure/fatal `0`, observed exit/residue `0`.
+- Existing Workbench/station surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `WaitingForValidation / AwaitingSafeShutdown / ReadyForReview / Reviewing / ReadyForPackaging / Rejected / NotCurrent` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, review-context kaybı input'u korur ve malformed quality history explicit power-on'u bloklamaz.
+- Build log `598.000` bayt / SHA-256 `aa4a23fe327f51748366e65baad424ffc753fe3086e4fbca8ad7e7beccf581fc`; runtime log `9.557` bayt / SHA-256 `d2fae1e5154fe632c8eb9dd9752c3eb841f21d3fac49afa39572e01e76e36b0d`.
+- Draft PR #138 docs checkpoint `c7f5fbc2b5bb1485d96c09b497d1cdf0fbc45d9e` Repository Guard `33401676887` PASS.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded quality sign-off ve `ReadyForPackaging` receipt'i için Mac teknik geliştirme kabulüdür; fiziksel package item/workcell/custody, shipping/teslimat, warranty/final settlement, save/load persistence, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B driver-bound deterministic validation doğrulaması — 31 Ağustos 2026
+
+Issue #135 technical source `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.709.325` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `0e5bbb99a8eef26e6d121660788c5bec6c3de3c667725defb7e4f8b388a7672f`.
+- Testler: performance catalog `5/5`, validation authority/history `125/125`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, scene/r66 `12/12`, power/POST/UEFI/OS/driver/validation regression `29/29`, final full EditMode `804/804`, full PlayMode `187/187`; failed/skipped/inconclusive `0`.
+- Native r66 runtime: Apple M1/Metal 1280×720; assisted exact driver/current-cycle setup, player-triggered two-step validation review/run, score `401`, fixed `300` stable stress step, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good`, same-instance replay, explicit power-off, current-after-power-off false, history preservation, upstream isolation ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal `0`, exit/residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `Waiting / Reviewing / Passed / Rejected / NotCurrent` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, bütün review-context kayıpları input'u korur ve malformed validation history explicit power-off'u bloklamaz.
+- Build log `601.732` bayt / SHA-256 `352714cc97f4423580e98ecaa1d47f494b65c0d16267d9a062c1d78f07f6d043`; runtime log `9.596` bayt / SHA-256 `4197d3e16e7d82045aed1833797023df01c6c054faac4dd02ad57d7bcf8917a6`.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional benchmark/stress/thermal validation receipt'i için Mac teknik geliştirme kabulüdür; gerçek benchmark binary/process, physical sensor/telemetry, wall-clock endurance, fan/airflow/noise, overclock/fault/damage, repair/save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B installed-OS-bound fictional driver doğrulaması — 31 Ağustos 2026
+
+Issue #133 technical source `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.641.904` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `c347fd358af6c1afe8e5d89699995ebaf81a4e9c65b4ff0cc9ac3a9f79ad2ad7`.
+- Testler: driver lineage/domain `5/5`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, scene `1/1`, power/POST/UEFI/OS/driver regression `23/23`, full EditMode `793/793`, full PlayMode `181/181`; failed/skipped/inconclusive `0`.
+- Native r65 runtime: Apple M1/Metal 1280×720; assisted preflight, player-triggered power-on/POST/UEFI/OS, two-step driver review/install, exact M.2 identity, completion-time hardware/cable gate, same-instance replay, explicit power-off, same-OS/storage persistence, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `Waiting / Reviewing / Installed / Rejected` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, bütün review-context kayıpları input'u korur ve malformed driver history explicit power-off'u bloklamaz.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional driver installation receipt'i için Mac teknik geliştirme kabulüdür; gerçek vendor driver/download/installer/kernel/device enumeration/update/reboot, benchmark/stress/thermals/quality sonucu, save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B active-UEFI-bound fictional OS doğrulaması — 31 Ağustos 2026
+
+Issue #131 technical source `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.604.881` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `815d1e34a208eddd8272168f0859c1e7dc58b942f71d04eb0fded2f3f46d2244`.
+- Testler: storage lineage/domain `4/4`, scene `1/1`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, power/POST/UEFI/OS regression `17/17`, full EditMode `788/788`, full PlayMode `175/175`; failed/skipped/inconclusive `0`.
+- Native r64 runtime: Apple M1/Metal 1280×720; assisted preflight, player-triggered power-on/POST/UEFI, two-step OS review/install, exact M.2 identity, same-instance replay, explicit power-off, storage persistence, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. Same-frame Interact strict priority'dir; bütün review-context kayıpları input'u korur ve malformed OS history explicit power-off'u bloklamaz.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional OS installation receipt'i için Mac teknik geliştirme kabulüdür; gerçek Windows/Linux/SteamOS, ISO/download/disk yazımı, partition/bootloader/reboot/licensing, driver/update/benchmark, save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B active-POST-bound UEFI baseline doğrulaması — 31 Ağustos 2026
+
+Issue #129 technical source `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.573.681` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `2d55d534a6b692f2594c7135cb4b13b4fabc6085165e27d244187f8881700a1f`.
+- Testler: firmware authority `3/3`, scene `1/1`, keyboard/mouse/virtual-gamepad/P0 `5/5`, power/POST regression `10/10`, full EditMode `784/784`, full PlayMode `169/169`; failed/skipped/inconclusive `0`.
+- Native r63 runtime: Apple M1/Metal 1280×720; assisted preflight, player-triggered power-on/POST, mouse review, virtual-gamepad `KAYDET VE ÇIK`, keyboard explicit power-off, immutable same-instance replay, active-clear/history-preserve, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action/second authority yoktur. Same-frame Interact strict priority'dir ve malformed firmware history explicit power-off'u bloklamaz.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional UEFI safe-default review/save receipt'i için Mac teknik geliştirme kabulüdür; gerçek firmware/BIOS flashing, XMP/EXPO, boot/security settings, OS/driver, benchmark/thermals/damage, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B active-power-on-bound baseline POST doğrulaması — 31 Ağustos 2026
+
+Issue #127 technical source `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.548.985` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `4e1ebbba08867a7fa592d7b6b1868747ab4bc74210f86247e2446c80de86a87e`.
+- Testler: final-source targeted POST authority `3/3`, full EditMode `781/781`, full PlayMode `164/164`; failed/skipped/inconclusive `0`.
+- Native r62 runtime: Apple M1/Metal 1280×720; assisted exact preflight, player-triggered keyboard+gamepad power-on, active-cycle-bound immutable POST receipt, same-instance replay, `POST GEÇTİ`, firmware-waiting presentation, explicit power-off, energized maintenance block, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second authority yoktur. Domain power-on ve POST iki açık command'dır; player path POST'u hemen tamamlar fakat failure durumunda power-off ulaşılabilir kalır.
+- `ProjectSettings/ProjectSettings.asset` build öncesi/sonrası SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded deterministic baseline POST receipt'i için Mac teknik geliştirme kabulüdür; gerçek hardware POST code/fault, connector pinout/polarity/rail/short-circuit fiziği, firmware/BIOS/UEFI, OS/driver, benchmark/thermals/damage, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B safe power-state and maintenance-interlock doğrulaması — 31 Ağustos 2026
+
+Issue #125 technical source `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.540.613` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `cd5643fbe7e455ca049ae29350a8847b984bf8a040efbdea419b42a32c989e26`.
+- Testler: targeted authority/interlock/scene `6/6`, targeted keyboard/mouse + virtual-gamepad/presentation `4/4`, full EditMode `778/778`, full PlayMode `164/164`; failed/skipped/inconclusive `0`.
+- Native safe-power runtime: Apple M1/Metal; assisted exact route/preflight, player-triggered keyboard+gamepad power-on/off, one-cycle Off final state, player-carry cable maintenance block, immutable replay, presentation ve invariant markerları başarılı. Input System graceful shutdown, exit `0`, player/Unity/shader/IL2CPP residue `0`.
+- Existing Workbench focus/status surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second Assembly authority yoktur. `GÜÇ AÇIK • POST BEKLİYOR` sınırı ve `BAKIM KİLİDİ AKTİF` görünürdür; benchmark `BuildIncomplete` kalır.
+- Build-induced tek `ProjectSettings.asset` preloaded-assets hunk'ı kanıtla repository baseline'a döndürüldü. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, connector/fault/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B player-triggered power-test preflight doğrulaması — 31 Ağustos 2026
+
+Issue #123 technical source `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.507.808` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `c39ab49b5177b05935a18cc93e7e05d3327ba91c59405b10a421f6c13f558c1f`.
+- Testler: targeted domain/scene `6/6`, targeted keyboard/mouse + virtual-gamepad/presentation `3/3`, full EditMode `773/773`, full PlayMode `161/161`; failed/skipped/inconclusive `0`.
+- Native power-test runtime: Apple M1/Metal; assisted exact route readiness `380/500/550`, keyboard+gamepad single-consumer, range/focus/LOS/pause/co-edge, immutable same-instance replay, stale-current detection, zero gameplay mutation, untouched benchmark, presentation ve invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Existing Workbench focus/status surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second authority yoktur. Power-on açıkça `not-started` kalır.
+- User/editor-owned ProBuilder ayarı aynı SHA-256 ile korundu ve technical commit'e alınmadı; başka ProjectSettings veya Packages farkı yoktur.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, gerçek power-on/connector/fault/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B exact system power budget and PSU headroom doğrulaması — 31 Ağustos 2026
+
+Issue #121 technical source `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.465.045` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `ed6ede7c7cdb48c359df33cad4bbfd228489271abb972a898f88e39a4ef70798`.
+- Testler: targeted catalog/authority/scene/input/hero `15/15`, full EditMode `768/768`, full PlayMode `158/158`; failed/skipped/inconclusive `0`.
+- Native power-budget runtime: Apple M1/Metal 1280x720; exact final-cable route/readiness zinciri `power-budget=380/500/550`, monitor/no-duplicate-loss/invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Native Assembly readability: `479` total / `470` smoke-active renderer, `4` light, `1` camera; üç byte-distinct 1280x720 capture ve central glare `0`.
+- Complete `ProjectSettings + Packages` manifesti build öncesi/sonrası byte-exact. Ayrı user/editor-owned ProBuilder ayarı da build boyunca aynı kaldı ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, connector/pinout/short-circuit fiziği, power-test/power-on/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
+## Stage B exact electrical readiness ve workbench feedback doğrulaması — 31 Ağustos 2026
+
+Issue #119 technical source `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.441.141` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `4a903a2b3c4ef6f9c283a603d74c891d3cb70f402e3c69d1a15ec9750c093b85`.
+- Testler: full EditMode `758/758`, full PlayMode `158/158`; failed/skipped/inconclusive `0`. Scene, fail-closed/read-only projection ve keyboard/mouse + Input System virtual-gamepad targeted contracts ayrıca geçti.
+- Native readiness runtime: Apple M1/Metal 1280×720; exact final-cable route `blocked → ready`, aynı cable unroute `ready → blocked`, workbench monitor ve no-duplicate-loss/invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Native Assembly readability: `479` total / `470` smoke-active renderer, `4` light, `1` camera; üç byte-distinct 1280×720 capture ve central glare `0`.
+- ProjectSettings manifesti build öncesi/sonrası byte-exact. Ayrı user/editor-owned ProBuilder ayarı da build boyunca aynı kaldı ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, power-on/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B canonical PCIe/GPU 6+2 BuildKit-to-route reversible Assembly doğrulaması — 27 Ağustos 2026
 
 Issue #109 technical source `1acba166855efffa906112e2df24b9b5cef550a7`, tree `eb40a392169e5288e29bc59ae75367029cc00f57` aynı kaynak kimliğiyle iki gerçek platformda doğrulandı:

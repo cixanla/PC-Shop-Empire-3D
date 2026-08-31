@@ -205,7 +205,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(GetItem(session, eps12v.ItemId).ContainerId,
                 Is.EqualTo(session.Eps12vPowerCableRouteContainerId));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
             Assert.That(session.UnretainPowerSupply(
                 StableId<AssemblyOperationIdScope>.Parse(
                     "assembly.operation.issue107.blocked-unretain-psu"),

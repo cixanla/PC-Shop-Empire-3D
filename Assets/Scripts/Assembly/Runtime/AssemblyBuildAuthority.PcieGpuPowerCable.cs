@@ -435,6 +435,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceGraphicsCardRetentionOperationId,
             long expectedCableRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasPcieGpuPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;
@@ -528,6 +534,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceRouteOperationId,
             long expectedCableRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasPcieGpuPowerCableRoute)
             {
                 return AssemblyFailures.PowerCableUnsupported;

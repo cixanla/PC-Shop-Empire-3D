@@ -20,7 +20,8 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-retail-checkout-hero-r56-v1";
+        public const string Version =
+            "garage-validation-bound-quality-release-r67-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -405,7 +406,11 @@ namespace PCShopEmpire3D.Presentation
             PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null,
             Atx24PowerCableBuildKitProjection physicalAtx24PowerCableBuildKit = null,
             Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null,
-            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null)
+            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null,
+            ElectricalReadinessWorkbenchProjection
+                physicalElectricalReadinessWorkbench = null,
+            ElectricalPowerTestStationProjection
+                physicalElectricalPowerTestStation = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -425,6 +430,9 @@ namespace PCShopEmpire3D.Presentation
             atx24PowerCableBuildKit = physicalAtx24PowerCableBuildKit;
             eps12vPowerCableBuildKit = physicalEps12vPowerCableBuildKit;
             pcieGpuPowerCableBuildKit = physicalPcieGpuPowerCableBuildKit;
+            ConfigureElectricalReadinessWorkbench(
+                physicalElectricalReadinessWorkbench,
+                physicalElectricalPowerTestStation);
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1320,6 +1328,14 @@ namespace PCShopEmpire3D.Presentation
                 $"pcie-gpu-power-cable-waypoints={(hasPcieGpuPowerCableAssembly ? "3" : "missing")} " +
                 $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
                 $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
+                $"power-budget-workbench={(HasPowerBudgetWorkbenchR59Runtime ? "ready" : "missing")} " +
+                $"power-test-preflight={(HasPowerTestPreflightR60Runtime ? "ready" : "missing")} " +
+                $"power-state-interlock={(HasPowerStateInterlockR62Runtime ? "ready" : "missing")} " +
+                $"firmware-baseline={(HasFirmwareBaselineR63Runtime ? "ready" : "missing")} " +
+                $"fictional-os-installation={(HasFictionalOsInstallationR64Runtime ? "ready" : "missing")} " +
+                $"fictional-driver-installation={(HasFictionalDriverInstallationR65Runtime ? "ready" : "missing")} " +
+                $"validation={(HasValidationR66Runtime ? "ready" : "missing")} " +
+                $"quality-release={(HasQualityReleaseR67Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1402,6 +1418,22 @@ namespace PCShopEmpire3D.Presentation
             bool runPcieGpuPowerCableAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-pcie-gpu-power-cable-assembly-handoff-smoke");
+            bool runPowerTestPreflightSmoke =
+                HasCommandLineArgument("-pse-power-test-preflight-smoke");
+            bool runPowerStateInterlockSmoke =
+                HasCommandLineArgument("-pse-power-state-interlock-smoke");
+            bool runFirmwareBaselineSmoke =
+                HasCommandLineArgument("-pse-firmware-baseline-smoke");
+            bool runFictionalOsInstallationSmoke =
+                HasCommandLineArgument(
+                    "-pse-fictional-os-installation-smoke");
+            bool runFictionalDriverInstallationSmoke =
+                HasCommandLineArgument(
+                    "-pse-fictional-driver-installation-smoke");
+            bool runValidationSmoke =
+                HasCommandLineArgument("-pse-validation-smoke");
+            bool runQualityReleaseSmoke =
+                HasCommandLineArgument("-pse-quality-release-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1445,11 +1477,23 @@ namespace PCShopEmpire3D.Presentation
                              (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0) +
+                             (runPowerTestPreflightSmoke ? 1 : 0) +
+                             (runPowerStateInterlockSmoke ? 1 : 0) +
+                             (runFirmwareBaselineSmoke ? 1 : 0) +
+                             (runFictionalOsInstallationSmoke ? 1 : 0) +
+                             (runFictionalDriverInstallationSmoke ? 1 : 0) +
+                             (runValidationSmoke ? 1 : 0) +
+                             (runQualityReleaseSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
             {
                 Debug.LogError("GARAGE_RUNTIME_SMOKE smoke=failed code=smoke.conflicting-flags");
+                if (!Application.isEditor)
+                {
+                    Application.Quit(1);
+                }
+
                 return;
             }
 
@@ -1476,13 +1520,55 @@ namespace PCShopEmpire3D.Presentation
                      !runAtx24PowerCableAssemblyHandoffSmoke &&
                      !runEps12vPowerCableAssemblyHandoffSmoke &&
                      !runPcieGpuPowerCableAssemblyHandoffSmoke &&
+                     !runPowerTestPreflightSmoke &&
+                     !runPowerStateInterlockSmoke &&
+                     !runFirmwareBaselineSmoke &&
+                     !runFictionalOsInstallationSmoke &&
+                     !runFictionalDriverInstallationSmoke &&
+                     !runValidationSmoke &&
+                     !runQualityReleaseSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runRetailCheckoutHeroReadabilitySmoke)
+                    if (runQualityReleaseSmoke)
+                    {
+                        LogQualityReleaseSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runValidationSmoke)
+                    {
+                        LogValidationSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runFictionalDriverInstallationSmoke)
+                    {
+                        LogFictionalDriverInstallationSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runFictionalOsInstallationSmoke)
+                    {
+                        LogFictionalOsInstallationSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runFirmwareBaselineSmoke)
+                    {
+                        LogFirmwareBaselineSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPowerStateInterlockSmoke)
+                    {
+                        LogPowerStateInterlockSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPowerTestPreflightSmoke)
+                    {
+                        LogPowerTestPreflightSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runRetailCheckoutHeroReadabilitySmoke)
                     {
                         LogRetailCheckoutHeroReadabilitySmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1871,6 +1957,57 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runPowerTestPreflightSmoke && !Debug.isDebugBuild)
+            {
+                LogPowerTestPreflightSmokeFailure(
+                    "smoke.power-test-preflight-requires-development-build");
+                return;
+            }
+
+            if (runPowerStateInterlockSmoke && !Debug.isDebugBuild)
+            {
+                LogPowerStateInterlockSmokeFailure(
+                    "smoke.power-state-interlock-requires-development-build");
+                return;
+            }
+
+            if (runFirmwareBaselineSmoke && !Debug.isDebugBuild)
+            {
+                LogFirmwareBaselineSmokeFailure(
+                    "smoke.firmware-baseline-requires-development-build");
+                return;
+            }
+
+            if (runFictionalOsInstallationSmoke && !Debug.isDebugBuild)
+            {
+                LogFictionalOsInstallationSmokeFailure(
+                    "smoke.fictional-os-installation-requires-" +
+                    "development-build");
+                return;
+            }
+
+            if (runFictionalDriverInstallationSmoke && !Debug.isDebugBuild)
+            {
+                LogFictionalDriverInstallationSmokeFailure(
+                    "smoke.fictional-driver-installation-requires-" +
+                    "development-build");
+                return;
+            }
+
+            if (runValidationSmoke && !Debug.isDebugBuild)
+            {
+                LogValidationSmokeFailure(
+                    "smoke.validation-requires-development-build");
+                return;
+            }
+
+            if (runQualityReleaseSmoke && !Debug.isDebugBuild)
+            {
+                LogQualityReleaseSmokeFailure(
+                    "smoke.quality-release-requires-development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2092,6 +2229,48 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableAssemblyHandoffSmoke());
+            }
+
+            if (runPowerTestPreflightSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPowerTestPreflightSmoke());
+            }
+
+            if (runPowerStateInterlockSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPowerStateInterlockSmoke());
+            }
+
+            if (runFirmwareBaselineSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunFirmwareBaselineSmoke());
+            }
+
+            if (runFictionalOsInstallationSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunFictionalOsInstallationSmoke());
+            }
+
+            if (runFictionalDriverInstallationSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunFictionalDriverInstallationSmoke());
+            }
+
+            if (runValidationSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunValidationSmoke());
+            }
+
+            if (runQualityReleaseSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunQualityReleaseSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)

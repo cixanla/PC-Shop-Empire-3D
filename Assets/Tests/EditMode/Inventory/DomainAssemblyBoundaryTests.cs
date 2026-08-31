@@ -8,6 +8,7 @@ using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Orders;
 using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.Quality;
 using PCShopEmpire3D.Retail;
 
 namespace PCShopEmpire3D.Tests.EditMode.Inventory
@@ -76,6 +77,26 @@ namespace PCShopEmpire3D.Tests.EditMode.Inventory
             Assert.That(references, Does.Contain("PSE.Inventory"));
             Assert.That(references, Does.Contain("PSE.Retail"));
             Assert.That(references, Does.Not.Contain("PSE.Assembly"));
+            Assert.That(references, Does.Not.Contain("PSE.Presentation"));
+            AssertNoUnityReferences(references);
+        }
+
+        [Test]
+        public void QualityJoinsOrdersAndAssemblyWithoutCreatingAnUpstreamCycle()
+        {
+            string[] references = typeof(QualityAssembly).Assembly
+                .GetReferencedAssemblies()
+                .Select(reference => reference.Name ?? string.Empty)
+                .ToArray();
+
+            Assert.That(typeof(QualityAssembly).Assembly.GetName().Name,
+                Is.EqualTo(QualityAssembly.Name));
+            Assert.That(references, Does.Contain("PSE.Core"));
+            Assert.That(references, Does.Contain("PSE.Catalog"));
+            Assert.That(references, Does.Contain("PSE.Inventory"));
+            Assert.That(references, Does.Contain("PSE.Retail"));
+            Assert.That(references, Does.Contain("PSE.Orders"));
+            Assert.That(references, Does.Contain("PSE.Assembly"));
             Assert.That(references, Does.Not.Contain("PSE.Presentation"));
             AssertNoUnityReferences(references);
         }

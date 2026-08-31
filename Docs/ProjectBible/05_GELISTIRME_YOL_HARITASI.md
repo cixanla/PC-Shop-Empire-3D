@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #114 customer-facing Retail/Checkout hero readability r56 technical/main `0ea82e826aff9d245e0d4002386193278f25b483` üzerinde kabul edildi: Mac `754/754 EditMode + 158/158 PlayMode`, clean Windows aynı counts, universal Mac native, Windows x64 IL2CPP/D3D11 Intel Iris Xe runtime, üç-state readability ve final residue kapıları geçti. Issue closed/Roadmap Done; parent visual Epic #18 ve Steam 1.0 Goal açık kalır. USB bağlı olmadığı için immutable checkpoint ertelenmiştir; fiziksel Windows geçici olarak erişilemezken Mac tek write lane'de geliştirme ve Mac/CI kapıları sürer. UTM, taşınabilirlik/derleme yardımcısı olabilir fakat gerçek Windows/Iris Xe release kanıtının yerini tutmaz.
+Issue #137 Validation-Bound Quality Sign-Off and Packaging Release r67 technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8` üzerinde Mac-ready durumdadır. Unity-independent quality authority exact owner work order/ticket, on serialized component/cable reservation satırı, passed/stable validation receipt'i, matching safe power-off ve current Assembly readiness'i immutable `ReadyForPackaging` receipt history'sine bağlar. Replay-before-history tamper gate, controlled rerun, new-cycle/Assembly-drift sonrası `NotCurrent` ve no-upstream-mutation korunur.
 
-Sıradaki bounded P1, Issue #115'tir: legacy `StarterShelf` collider/NavMesh hacmini gerçek `AuthoritativeRetailShelfA` ile tek placement/inventory authority ve çakışmasız customer approach→browse→checkout→exit rotasına dönüştürmek. Accepted r56 readability, WASD+mouse, gamepad automation ve full regression korunmadan sonraki görsel veya dünya kapsamına geçilmez.
+Mac targeted `12/12 + 5/5 + 4/4 + 6/6`, final full `810/810 EditMode + 191/191 PlayMode`, universal `330776338` bayt/`304` dosya build ve Apple M1/Metal 1280×720 keyboard+mouse+virtual-gamepad validation→safe-shutdown→quality-review→release smoke geçti. Exact result `line-lineage=10`, score `401`, quality `Good`, immutable replay/history/invariants'tır. Draft PR #138 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Bu yalnız bounded quality sign-off/packaging giriş receipt'idir: fiziksel package item/workcell/custody, fault/repair, save, shipping/delivery ve settlement ayrı sonraki dilimlerdir. Fiziksel Windows olmadığından clean exact-source x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Mac tek authoritative write lane'de receipt'i fiziksel paketleme ve teslim custody zincirine bağlayan sıradaki bounded ürünü sürdürür.
 
 Geçici gerçekçi takvim:
 
@@ -254,11 +254,13 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 5. Kasa açma, anakart/CPU/RAM/depolama/PSU/GPU/soğutucu montajı.
 6. Vida, kablo ve termal macun için yönlendirilmiş fizik.
 7. Hata/risk/kalite dereceleri.
-8. Kurgusal firmware/OS kurulumu.
-9. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
-10. Kablo yönetimi/temizlik, paketleme ve teslim.
-11. Garanti kaydı ve müşteri kabulü.
-12. Guardian build graph ve iş zinciri invariant'ları.
+8. Electrical readiness → power-test preflight → safe power-on/interlock → exact active-cycle-bound deterministic baseline POST receipt.
+9. Ayrı firmware/BIOS/UEFI authority ve görünür player workflow'u; baseline receipt firmware başarı kanıtı sayılmaz.
+10. Kurgusal OS ve driver kurulumu.
+11. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
+12. Kablo yönetimi/temizlik, paketleme ve teslim.
+13. Garanti kaydı ve müşteri kabulü.
+14. Guardian build graph ve iş zinciri invariant'ları.
 
 ### Ana riskler
 
