@@ -5,11 +5,21 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #123 docs head `3df0ada189d4caf8d047b4d5c4e4f2083a1092c0`; active Issue #125 technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`; draft PR #126
+**Authoritative Git state:** parent Issue #125 docs head `ec84e84c42aae16d7b979b7e643e399a52a5a0b2`; active Issue #127 technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`; draft PR #128
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #125 Safe Power-State Interlock
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #127 Deterministic Baseline POST Self-Test
+
+- Existing `PcPowerStateAuthority`, exact active power-on ve onun preflight lineage'ına bound ayrı immutable `PcPostStartupReceipt` history'si taşır. Stable POST operation ID, expected/current power revision ve bağımsız monotonik POST revision vardır; ikinci gameplay authority yoktur.
+- Exact same-command replay same-instance; changed reuse conflict, foreign/stale/off inputs fail-closed, aynı active cycle'daki second completion blocked'dır. Power-off active POST pointer'ını temizler fakat historical receipt/replay'i korur; later cycle ayrı operation/revision kullanır.
+- Player station accepted power-on'dan hemen sonra aynı consumed Interact path'inde baseline completion çalıştırır. Domain power-on/POST iki açık command'dır ve POST failure explicit power-off yolunu softlock etmez. Presentation read-only'dir.
+- Existing Workbench `GÜCÜ KAPAT • POST GEÇTİ`, `GÜÇ AÇIK • POST GEÇTİ`, `FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF` durumlarını gösterir. Energized maintenance interlock korunur; benchmark `BuildIncomplete` ve gameplay state untouched kalır.
+- Technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`; final-source targeted `3/3`, full Mac `781/781 EditMode + 164/164 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330548985` bayt, `302` dosya; strict/deep-valid universal app ve Apple M1/Metal 1280×720 exact r62 smoke geçti. Success marker `post=passed benchmark=untouched invariants=ok`; Repository Guard `33364272612` PASS.
+- ProBuilder diff'i untouched/unstaged. Draft PR #128 open/clean/mergeable; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`. Gerçek hardware POST/fault, firmware/BIOS/UEFI, OS/driver, benchmark/thermals/damage sonraki ayrı bounded dilimlerdir.
+
+### Önceki üstün gelen durum — Issue #125 Safe Power-State Interlock
 
 - Exact current Issue #123 preflight receipt'i ve canonical Assembly instance'ına reference-bound ayrı `PcPowerStateAuthority`, stable operation/revision ve immutable same-instance replay receipt'leriyle deterministic `Off → Energized → Off` döngüsü üretir. Stale/foreign/conflicting lineage fail-closed'dur.
 - Energized durumda bütün live motherboard/component/fastener maintenance ve ATX24/EPS12V/PCIe-GPU unroute command'ları central Assembly interlock'ta mutation öncesi `ElectricalPowerOnMaintenanceBlocked` olur. Historical exact replay korunur; native smoke routed PCIe/GPU cable pickup'ını player carry/binding yolundan dener ve ownership/route/revision state'inin değişmediğini doğrular.

@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #125 Safe Power-State Interlock r61 technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f` üzerinde Mac-ready durumdadır. Exact current preflight ve canonical Assembly lineage, ayrı reference-bound power-state authority üzerinden deterministic `Off → Energized → Off` döngüsüne taşındı. Immutable on/off receipt replay'i korunur; Energized durumda component, fastener ve üç power-cable bakım yolu central interlock'ta mutation öncesi fail-closed bloklanır.
+Issue #127 Deterministic Baseline POST r62 technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1` üzerinde Mac-ready durumdadır. Existing safe power-state authority exact active power-on/preflight lineage'ına bağlı ayrı immutable POST receipt history'si taşır. One-per-cycle, same-instance replay, historical preservation ve explicit power-off recovery fail-closed doğrulanır; ikinci authority veya gameplay mutation'ı yoktur.
 
-Mac targeted `6/6 + 4/4`, full `778/778 EditMode + 164/164 PlayMode`, universal `330540613` bayt/`302` dosya build ve Apple M1/Metal keyboard+gamepad single-consumer power-on/off, player-path maintenance block, replay, presentation ve invariant smoke geçti. Draft PR #126 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Connector fault/polarity fiziği, POST/BIOS/OS/benchmark ayrı sonraki dilimlerdir. Fiziksel Windows olmadığından clean exact-commit x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Mac tek authoritative write lane'de bounded ürün zincirini sürdürür.
+Mac final-source targeted `3/3`, full `781/781 EditMode + 164/164 PlayMode`, universal `330548985` bayt/`302` dosya build ve Apple M1/Metal 1280×720 keyboard+gamepad power-on→`post=passed`→power-off, maintenance block, replay, presentation, untouched benchmark ve invariants smoke geçti. Draft PR #128 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Bu yalnız deterministic baseline receipt'tir: gerçek hardware POST/fault, firmware/BIOS/UEFI, OS/driver ve benchmark ayrı sonraki dilimlerdir. Fiziksel Windows olmadığından clean exact-source x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Mac tek authoritative write lane'de bounded ürün zincirini sürdürür.
 
 Geçici gerçekçi takvim:
 
@@ -254,11 +254,13 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 5. Kasa açma, anakart/CPU/RAM/depolama/PSU/GPU/soğutucu montajı.
 6. Vida, kablo ve termal macun için yönlendirilmiş fizik.
 7. Hata/risk/kalite dereceleri.
-8. Kurgusal firmware/OS kurulumu.
-9. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
-10. Kablo yönetimi/temizlik, paketleme ve teslim.
-11. Garanti kaydı ve müşteri kabulü.
-12. Guardian build graph ve iş zinciri invariant'ları.
+8. Electrical readiness → power-test preflight → safe power-on/interlock → exact active-cycle-bound deterministic baseline POST receipt.
+9. Ayrı firmware/BIOS/UEFI authority ve görünür player workflow'u; baseline receipt firmware başarı kanıtı sayılmaz.
+10. Kurgusal OS ve driver kurulumu.
+11. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
+12. Kablo yönetimi/temizlik, paketleme ve teslim.
+13. Garanti kaydı ve müşteri kabulü.
+14. Guardian build graph ve iş zinciri invariant'ları.
 
 ### Ana riskler
 

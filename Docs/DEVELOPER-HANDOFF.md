@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #125 r61 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #127 r62 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`, branch `codex/issue127-active-power-on-post-self-test`; draft PR #128 open/clean/mergeable, Issue/Roadmap `In Progress`.
+- Existing `PcPowerStateAuthority` ayrı immutable `PcPostStartupReceipt` history'si taşır. Receipt exact active power-on/preflight owner identity'sini, stable operation ID, expected/current power revision ve bağımsız monotonik POST revision'ını bağlar; ikinci gameplay authority değildir.
+- Exact replay same-instance, changed reuse conflict'tir. Bir active cycle'da exactly one POST; power-off active pointer'ı temizler, historical receipt/replay'i korur ve current evaluation `NotCurrent` olur. Yeni cycle ayrı operation/revision ister.
+- Player station accepted power-on sonrasında aynı consumed Interact path'inde baseline POST'u tamamlar; domain API'leri ayrı kalır ve POST failure power-off yolunu softlock etmez. Existing Workbench `GÜCÜ KAPAT • POST GEÇTİ`, `GÜÇ AÇIK • POST GEÇTİ`, `FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF` gösterir.
+- Final-source targeted `3/3`, full `781/781 EditMode + 164/164 PlayMode`, universal `330548985` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r62 `post=passed benchmark=untouched invariants=ok` smoke geçti; Guard `33364272612` yeşildir.
+- Bu yalnız deterministic baseline receipt'tir; gerçek hardware POST fault/code, firmware/BIOS/UEFI, OS, driver, benchmark, thermals ve damage tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #125 r61 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`, branch `codex/issue125-safe-power-state-interlock`; draft PR #126 open/mergeable, Issue/Roadmap `In Progress`.
 - `PcPowerStateAuthority` exact current preflight ve Assembly instances'ına reference-bound'dur. Stable operation + expected revision + exact current receipt power-on; exact active power-on receipt + revision explicit power-off üretir. On/off receipts immutable ve same-instance replay-safe'dir.

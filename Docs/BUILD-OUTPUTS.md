@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B active-power-on-bound baseline POST doğrulaması — 31 Ağustos 2026
+
+Issue #127 technical source `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.548.985` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `4e1ebbba08867a7fa592d7b6b1868747ab4bc74210f86247e2446c80de86a87e`.
+- Testler: final-source targeted POST authority `3/3`, full EditMode `781/781`, full PlayMode `164/164`; failed/skipped/inconclusive `0`.
+- Native r62 runtime: Apple M1/Metal 1280×720; assisted exact preflight, player-triggered keyboard+gamepad power-on, active-cycle-bound immutable POST receipt, same-instance replay, `POST GEÇTİ`, firmware-waiting presentation, explicit power-off, energized maintenance block, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second authority yoktur. Domain power-on ve POST iki açık command'dır; player path POST'u hemen tamamlar fakat failure durumunda power-off ulaşılabilir kalır.
+- `ProjectSettings/ProjectSettings.asset` build öncesi/sonrası SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded deterministic baseline POST receipt'i için Mac teknik geliştirme kabulüdür; gerçek hardware POST code/fault, connector pinout/polarity/rail/short-circuit fiziği, firmware/BIOS/UEFI, OS/driver, benchmark/thermals/damage, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B safe power-state and maintenance-interlock doğrulaması — 31 Ağustos 2026
 
 Issue #125 technical source `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4` Mac üzerinde doğrulandı:

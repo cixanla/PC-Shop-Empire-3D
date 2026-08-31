@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #125 Safe Power-State Interlock r61 source, power authority/on-off receipt/maintenance-interlock/presentation/input contracts, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #126 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #123 docs head `3df0ada189d4caf8d047b4d5c4e4f2083a1092c0`; technical source `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`; draft PR #126; acceptance #1–#8 PASS, #9 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #127 active-power-on-bound deterministic baseline POST r62 source, immutable receipt/history, player path, presentation, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #128 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #125 docs head `ec84e84c42aae16d7b979b7e643e399a52a5a0b2`; technical source `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`; draft PR #128; acceptance #1–#8 PASS, #9 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #125 / Epic #10
+## En yeni teknik checkpoint — Issue #127 / Epic #10
+
+- Existing power-state authority ayrı immutable `PcPostStartupReceipt` ledger'ı taşır. Receipt exact active power-on/preflight owner identity, stable POST operation ID, expected/current power-state revision ve bağımsız monotonik POST revision'ını bağlar; ikinci authority değildir.
+- Exact replay same-instance; changed reuse conflict, foreign/stale/off inputs fail-closed ve aynı cycle'daki ikinci distinct completion blocked'dır. Power-off active pointer'ı temizler, historical receipt/replay'i korur; yeni cycle ayrı operation/revision ister.
+- Player station accepted power-on'dan hemen sonra aynı consumed Interact path'inde baseline POST completion yapar. Domain commands ayrı kalır; POST failure explicit power-off yolunu kapatmaz. Presentation reads side-effect-free'dir.
+- Existing Workbench `GÜCÜ KAPAT • POST GEÇTİ`, `GÜÇ AÇIK • POST GEÇTİ`, `FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF` gösterir. Issue #125 maintenance interlock ve benchmark `BuildIncomplete` sınırı korunur.
+- Technical commit `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`. Final-source targeted `3/3`, full EditMode `781/781`, PlayMode `164/164`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330548985` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r62 readiness + `post=passed benchmark=untouched invariants=ok` markerları birer kez geçti; exit/residue `0`. Repository Guard `33364272612` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+- Sıradaki bounded zincir baseline receipt'i gerçek hardware POST gibi büyütmeden ayrı firmware/BIOS/UEFI authority ve görünür player workflow'udur; OS/driver, benchmark/thermals/fault/damage daha sonra kalır.
+
+## Önceki teknik checkpoint — Issue #125 / Epic #10
 
 - Dedicated power-state authority exact current `PowerTestAttemptAuthority` ve canonical `AssemblyBuildAuthority` instance'larına reference-bound'dur. `Off → Energized → Off` transitions stable operation/revision, exact current preflight ve immutable same-instance replay receipt'leriyle yürür.
 - Central Assembly maintenance interlock Energized durumunda bütün live motherboard/component/fastener remove/unsecure/unretain ve üç power-cable unroute command'ını mutation öncesi bloklar. Historical exact replay korunur; distinct bakım command'ı `ElectricalPowerOnMaintenanceBlocked` olur.

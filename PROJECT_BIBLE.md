@@ -5,7 +5,19 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #125 r61 safe power-state interlock Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #127 r62 deterministic baseline POST Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #127 technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b` üzerindedir; draft PR #128 açık/clean/mergeable'dır. Existing `PcPowerStateAuthority`, exact active power-on ve onun exact preflight lineage'ına bağlı ayrı immutable `PcPostStartupReceipt` ledger'ı taşır. Receipt stable POST operation ID, expected/current power-state revision ve bağımsız monotonik POST revision'ını bağlar; ikinci gameplay authority değildir.
+
+Exact command replay aynı receipt instance'ını döndürür; changed reuse conflict, foreign/stale/off inputs fail-closed ve aynı active cycle'daki ikinci distinct completion blocked'dır. Power-off active POST pointer'ını temizler fakat historical receipt ve replay'i immutable korur; old cycle current evaluation `NotCurrent` olur. Sonraki power cycle ayrı operation ID ve sonraki POST revision'ı kullanır.
+
+Existing station accepted player-triggered power-on'dan hemen sonra aynı consumed Interact path'inde baseline POST completion çağrısını yapar. Domain seviyesinde power-on ve POST iki açık command olarak kalır; POST failure accepted Energized state'i gizlemez ve sonraki Interact explicit power-off'a erişir. Existing Workbench `GÜCÜ KAPAT • POST GEÇTİ`, `GÜÇ AÇIK • POST GEÇTİ` ve `FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF` gösterir; presentation reads side-effect-free'dir.
+
+Final-source targeted EditMode `3/3`, full EditMode `781/781`, PlayMode `164/164`; failed/skipped/inconclusive `0`. Universal Mac report `330548985` bayt, app `302` dosya ve deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 exact r62 readiness ile `post=passed benchmark=untouched invariants=ok` markerı birer kez geçti. Repository Guard `33364272612` başarılıdır; ProBuilder user-setting diff'i commit dışındadır.
+
+Bu bounded sonuç gerçek hardware POST code/fault, connector pinout/polarity/rail/short-circuit fiziği, firmware/BIOS/UEFI, OS, driver, benchmark, thermals, damage, packaging veya delivery değildir. Fiziksel Windows clean exact-source x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #128 draft, Issue/Roadmap `In Progress`, claim `human=false`; Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
+
+## Önceki geliştirme checkpoint'i — Issue #125 r61 safe power-state interlock Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #125 technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4` üzerindedir; draft PR #126 açıktır. Exact current Issue #123 preflight receipt'i ve canonical Assembly instance'ına reference-bound ayrı `PcPowerStateAuthority`, stable operation/revision ve immutable same-instance replay receipt'leriyle deterministic `Off → Energized → Off` döngüsünü yönetir.
 
