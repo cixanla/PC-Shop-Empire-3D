@@ -36,6 +36,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedAtx24PowerCableRevision;
         private long _observedEps12vPowerCableRevision;
         private long _observedPcieGpuPowerCableRevision;
+        private long _observedPowerTestAttemptRevision;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -60,6 +61,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public int InstalledPsuWatts { get; private set; }
 
         public int CapacityMarginWatts { get; private set; }
+
+        public bool HasAcceptedPreflight { get; private set; }
+
+        public bool HasCurrentAcceptedPreflight { get; private set; }
 
         public string CurrentFailureCode { get; private set; } =
             ElectricalReadinessWorkbenchFailures.ConfigurationMissing.Code;
@@ -149,14 +154,55 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(assessment.Value.Blocker);
             }
 
+            PowerTestAttemptAuthority attempts = session.PowerTestAttempts;
+            if (attempts == null)
+            {
+                ApplyBlockedPresentation(
+                    "ÖN KONTROL AUTHORITY EKSİK",
+                    PowerTestAttemptFailures.ConfigurationMissing);
+                return OperationResult.Fail(
+                    PowerTestAttemptFailures.ConfigurationMissing);
+            }
+
             IsReady = true;
+            HasAcceptedPreflight = attempts.HasCompletedPreflight;
+            if (!HasAcceptedPreflight)
+            {
+                CurrentFailureCode = string.Empty;
+                statusText.text =
+                    "GÜÇ BÜTÇESİ UYGUN\n" +
+                    $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                    $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                    $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                    "GÜÇ TESTİ BEKLİYOR";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            OperationResult<PowerTestAttemptReceipt> currentReceipt =
+                attempts.EvaluateCurrentReceipt();
+            if (currentReceipt.IsFailure)
+            {
+                HasCurrentAcceptedPreflight = false;
+                CurrentFailureCode = currentReceipt.Error.Code;
+                statusText.text =
+                    "ÖN KONTROL GEÇERSİZ\n" +
+                    ResolveBlockerMessage(currentReceipt.Error) + "\n" +
+                    "POWER-ON BEKLİYOR";
+                statusText.color = new Color(1f, 0.78f, 0.50f);
+                statusIndicator.sharedMaterial = blockedMaterial;
+                return OperationResult.Fail(currentReceipt.Error);
+            }
+
+            HasCurrentAcceptedPreflight = true;
             CurrentFailureCode = string.Empty;
             statusText.text =
-                "GÜÇ BÜTÇESİ UYGUN\n" +
+                "ÖN KONTROL GEÇTİ\n" +
                 $"{assessment.Value.SystemPowerDrawWatts}W / " +
                 $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
                 $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
-                "GÜÇ TESTİ BEKLİYOR";
+                "POWER-ON BEKLİYOR";
             statusText.color = new Color(0.68f, 1f, 0.76f);
             statusIndicator.sharedMaterial = readyMaterial;
             return OperationResult.Success();
@@ -209,7 +255,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedEps12vPowerCableRevision !=
                        session.AssemblyBuild.Eps12vPowerCableRevision ||
                    _observedPcieGpuPowerCableRevision !=
-                       session.AssemblyBuild.PcieGpuPowerCableRevision;
+                       session.AssemblyBuild.PcieGpuPowerCableRevision ||
+                   _observedPowerTestAttemptRevision !=
+                       (session.PowerTestAttempts?.Revision ?? -1);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -222,6 +270,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 session.AssemblyBuild.Eps12vPowerCableRevision;
             _observedPcieGpuPowerCableRevision =
                 session.AssemblyBuild.PcieGpuPowerCableRevision;
+            _observedPowerTestAttemptRevision =
+                session.PowerTestAttempts?.Revision ?? -1;
             _hasObservedAuthorityState = true;
         }
 
@@ -232,6 +282,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             MinimumRecommendedPsuWatts = 0;
             InstalledPsuWatts = 0;
             CapacityMarginWatts = 0;
+            HasAcceptedPreflight = false;
+            HasCurrentAcceptedPreflight = false;
         }
 
         private void CapturePowerBudgetAssessment(PcPowerBudgetSnapshot assessment)
@@ -379,6 +431,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 failure == PcPowerBudgetFailures.ArithmeticOverflow)
             {
                 return "GÜÇ HESABI DOĞRULANAMADI";
+            }
+
+            if (failure == PowerTestAttemptFailures.ContextStale)
+            {
+                return "YAPILANDIRMA DEĞİŞTİ";
             }
 
             return failure == ElectricalReadinessFailures.InvariantInvalid

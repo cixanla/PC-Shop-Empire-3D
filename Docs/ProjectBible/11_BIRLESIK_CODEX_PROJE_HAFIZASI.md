@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #119 docs head `8f0671fd04016b1115e622d963e9d28e7ef08c19`; active Issue #121 technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`; draft PR #122
+**Authoritative Git state:** parent Issue #121 docs head `48e1c8d6278c9c255cc3c49e5e88d05db85da9a1`; active Issue #123 technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`; draft PR #124
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #121 Exact System Power Budget
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #123 Player-Triggered Power-Test Preflight
+
+- Exact readiness + power-budget lineage ayrı reference-bound attempt authority üzerinden oyuncunun existing Workbench'te normal Interact ile istediği tek immutable receipt'e bağlandı. Receipt exact build/chassis, component/cable item+operation+revision, product/policy ve `380/500/550 W` context'ini taşır; power-on başlatmaz.
+- Exact same-operation replay same instance kalır; changed reuse conflict, second completion blocked'dır. Current cable/Assembly drift `ContextStale` üretir fakat historical receipt değişmez. Inventory/BuildKit/Assembly/cables/benchmark mutation'ı yoktur.
+- Keyboard/mouse ve virtual-gamepad aynı single-consumer input path'te range/focus/LOS/pause/co-edge/busy/competing owner/replay gates kullanır. Existing surface reused; yeni gameplay geometry/item/authority yoktur. Non-alloc LOS fail-closed, prompt same-frame cached'dir.
+- Independent review'un replay-order P1 ve invariant/allocation P2 bulguları final rerun öncesi düzeltildi. Technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`; targeted `6/6 + 3/3`, full Mac `773/773 EditMode + 161/161 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330507808` bayt; strict/deep-valid universal app ve Apple M1/Metal exact r60 smoke geçti. Repository Guard `33357285973` PASS.
+- ProBuilder diff'i untouched/unstaged. Draft PR #124 open; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`.
+
+### Önceki üstün gelen durum — Issue #121 Exact System Power Budget
 
 - Canonical electrical readiness, exact ProductId/kind çözen immutable electrical catalog ve integer-only legacy-v1 policy ile salt-okunur PSU sizing preflight'a bağlandı. Prototype `380 W` draw, `500 W` minimum recommended, installed `550 W`, margin `+50 W`dır.
 - Every assessment readiness'i yeniden değerlendirir; stale UI boolean/snapshot authority değildir. Missing/foreign/mismatched metadata fail-closed, insufficient PSU valid blocked assessment'tır; gameplay authority mutation'ı yoktur.

@@ -9,12 +9,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
         {
             public ElectricalReadinessWorkbenchBuildResult(
                 ElectricalReadinessWorkbenchProjection projection,
+                ElectricalPowerTestStationProjection powerTestStation,
                 TextMesh statusText,
                 Renderer statusIndicator,
                 Material readyMaterial,
                 Material blockedMaterial)
             {
                 Projection = projection;
+                PowerTestStation = powerTestStation;
                 StatusText = statusText;
                 StatusIndicator = statusIndicator;
                 ReadyMaterial = readyMaterial;
@@ -22,6 +24,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
             }
 
             public ElectricalReadinessWorkbenchProjection Projection { get; }
+
+            public ElectricalPowerTestStationProjection PowerTestStation { get; }
 
             public TextMesh StatusText { get; }
 
@@ -69,8 +73,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
 
             ElectricalReadinessWorkbenchProjection projection =
                 root.gameObject.AddComponent<ElectricalReadinessWorkbenchProjection>();
+            ElectricalPowerTestStationProjection powerTestStation =
+                root.gameObject.AddComponent<ElectricalPowerTestStationProjection>();
             return new ElectricalReadinessWorkbenchBuildResult(
                 projection,
+                powerTestStation,
                 statusText,
                 statusIndicator,
                 readyMaterial,

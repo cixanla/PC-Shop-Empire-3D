@@ -8,9 +8,14 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField]
         private ElectricalReadinessWorkbenchProjection
             electricalReadinessWorkbench;
+        [SerializeField]
+        private ElectricalPowerTestStationProjection electricalPowerTestStation;
 
         public ElectricalReadinessWorkbenchProjection ElectricalReadinessWorkbench =>
             electricalReadinessWorkbench;
+
+        public ElectricalPowerTestStationProjection ElectricalPowerTestStation =>
+            electricalPowerTestStation;
 
         public bool HasPowerBudgetWorkbenchR59Runtime =>
             electricalReadinessWorkbench != null &&
@@ -26,10 +31,26 @@ namespace PCShopEmpire3D.Presentation
         public bool HasElectricalReadinessWorkbenchR58Runtime =>
             HasPowerBudgetWorkbenchR59Runtime;
 
+        public bool HasPowerTestPreflightR60Runtime =>
+            HasPowerBudgetWorkbenchR59Runtime &&
+            electricalPowerTestStation != null &&
+            electricalPowerTestStation.IsConfigured &&
+            electricalPowerTestStation.StockFlow == stockFlow &&
+            electricalPowerTestStation.ReadinessProjection ==
+                electricalReadinessWorkbench &&
+            electricalPowerTestStation.FocusAnchor ==
+                electricalReadinessWorkbench.StatusText.transform &&
+            electricalPowerTestStation.GetComponentsInChildren<Collider>(true)
+                .Length == 0 &&
+            FindObjectsByType<ElectricalPowerTestStationProjection>(
+                FindObjectsSortMode.None).Length == 1;
+
         private void ConfigureElectricalReadinessWorkbench(
-            ElectricalReadinessWorkbenchProjection projection)
+            ElectricalReadinessWorkbenchProjection projection,
+            ElectricalPowerTestStationProjection powerTestStation)
         {
             electricalReadinessWorkbench = projection;
+            electricalPowerTestStation = powerTestStation;
         }
     }
 }

@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #121 Exact System Power Budget r59 source, catalog/policy/authority/scene contracts, full Mac regression, universal Mac native ve Apple M1/Metal power-budget/Assembly smoke kapıları geçti; draft PR #122 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #119 docs head `8f0671fd04016b1115e622d963e9d28e7ef08c19`; technical source `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`; draft PR #122; acceptance #1–#5 PASS, #6 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #123 Player-Triggered Power-Test Preflight r60 source, authority/context/receipt/scene/input contracts, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #124 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #121 docs head `48e1c8d6278c9c255cc3c49e5e88d05db85da9a1`; technical source `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`; draft PR #124; acceptance #1–#8 PASS, #9 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #121 / Epic #10
+## En yeni teknik checkpoint — Issue #123 / Epic #10
+
+- Dedicated attempt authority exact `PcPowerBudgetAuthority` ve `AssemblyBuildAuthority` instance'larına reference-bound'dur. Accepted context exact build/chassis, seven component + three cable items, retain/route operations, Assembly/cable revisions, product/policy ve `380/500/550 W` değerlerini bağlar.
+- Stable operation ID + expected attempt revision + current exact context ilk completion'ı üretir. Exact replay same receipt instance; changed reuse conflict; ikinci distinct completion blocked'dır. Historical replay stale sonrasında da immutable, `EvaluateCurrentReceipt()` ise current lineage değişiminde `ContextStale`dır.
+- Existing Workbench focus/status surface ve normal Interact action reused. Keyboard/mouse + virtual-gamepad aynı command path'te range/focus/LOS/pause/co-edge/busy hands/cart/Assembly/competing owner/same-frame replay gates'i kullanır; consumption yalnız success sonrasında. Yeni gameplay collider/renderer/light/camera/NavMesh/item/authority yoktur.
+- Fixed-capacity non-alloc LOS yalnız player hierarchy'yi ignore eder ve saturation'da fail-closed kalır. Prompt aynı frame'de cache edilir; command fresh authority okur. Independent review'un bir P1 ve iki P2 bulgusu final verification öncesinde testleriyle düzeltildi.
+- Technical commit `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`. Targeted `6/6 + 3/3`, full EditMode `773/773`, PlayMode `161/161`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330507808` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal exact r60 marker input/single-consumer/gates/receipt/replay/stale/no-mutation/benchmark/presentation/invariants zincirini geçti. Repository Guard `33357285973` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback kapıları ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+
+## Önceki teknik checkpoint — Issue #121 / Epic #10
 
 - Exact immutable electrical metadata canonical component catalog'a reference-bound kalır. Legacy-v1 policy `380 W` draw, `500 W` minimum PSU ve installed `550 W` için `+50 W` margin üretir; threshold/undersized/missing/foreign cases fail-closed testlidir.
 - `AssessPowerBudget()` cached presentation state'ine güvenmez; her çağrıda exact electrical readiness'i yeniden değerlendirir ve current ProductId/kind lineage'ını çözer. Inventory/Assembly/BuildKit/reservation/receipt/replay/benchmark mutation'ı yoktur.

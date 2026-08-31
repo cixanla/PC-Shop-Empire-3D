@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2047,7 +2047,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(4));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2290,13 +2290,25 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     .SelectMany(root => root.GetComponentsInChildren<
                         ElectricalReadinessWorkbenchProjection>(true))
                     .ToArray();
+                ElectricalPowerTestStationProjection[] powerTestStations = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        ElectricalPowerTestStationProjection>(true))
+                    .ToArray();
 
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(projections.Length, Is.EqualTo(1));
+                Assert.That(powerTestStations.Length, Is.EqualTo(1));
                 ElectricalReadinessWorkbenchProjection projection = projections[0];
+                ElectricalPowerTestStationProjection powerTestStation =
+                    powerTestStations[0];
                 Assert.That(marker.ElectricalReadinessWorkbench,
                     Is.SameAs(projection));
+                Assert.That(marker.ElectricalPowerTestStation,
+                    Is.SameAs(powerTestStation));
                 Assert.That(marker.HasPowerBudgetWorkbenchR59Runtime,
+                    Is.True);
+                Assert.That(marker.HasPowerTestPreflightR60Runtime,
                     Is.True);
                 Assert.That(projection.ProjectionIdValue,
                     Is.EqualTo(ElectricalReadinessWorkbenchProjection
@@ -2326,6 +2338,29 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     Does.StartWith("DeliveryStatusShelved"));
                 Assert.That(projection.BlockedMaterial.name,
                     Does.StartWith("DeliveryStatusArrived"));
+                Assert.That(powerTestStation.IsConfigured, Is.True);
+                Assert.That(powerTestStation.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(powerTestStation.PlayerInput,
+                    Is.SameAs(marker.PlayerInput));
+                Assert.That(powerTestStation.PlayerMotor,
+                    Is.SameAs(marker.PlayerMotor));
+                Assert.That(powerTestStation.PlayerCarry,
+                    Is.SameAs(marker.PlayerCarry));
+                Assert.That(powerTestStation.ReadinessProjection,
+                    Is.SameAs(projection));
+                Assert.That(powerTestStation.FocusAnchor,
+                    Is.SameAs(projection.StatusText.transform));
+                Assert.That(powerTestStation.GetComponentsInChildren<Collider>(true),
+                    Is.Empty);
+                Assert.That(powerTestStation.InteractionRange,
+                    Is.EqualTo(ElectricalPowerTestStationProjection
+                        .DefaultInteractionRange).Within(0.001f));
+                Assert.That(powerTestStation.FocusDegrees,
+                    Is.EqualTo(ElectricalPowerTestStationProjection
+                        .DefaultFocusDegrees).Within(0.001f));
+                GaragePrototypeHud hud = FindInScene<GaragePrototypeHud>(scene);
+                Assert.That(hud.ElectricalPowerTestStation,
+                    Is.SameAs(powerTestStation));
 
                 GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
                 long assemblyRevision = session.AssemblyBuild.Revision;
@@ -2367,7 +2402,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(9));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2644,7 +2679,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-power-budget-r59-v1"));
+                    Is.EqualTo("garage-power-test-preflight-r60-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B player-triggered power-test preflight doğrulaması — 31 Ağustos 2026
+
+Issue #123 technical source `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.507.808` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `c39ab49b5177b05935a18cc93e7e05d3327ba91c59405b10a421f6c13f558c1f`.
+- Testler: targeted domain/scene `6/6`, targeted keyboard/mouse + virtual-gamepad/presentation `3/3`, full EditMode `773/773`, full PlayMode `161/161`; failed/skipped/inconclusive `0`.
+- Native power-test runtime: Apple M1/Metal; assisted exact route readiness `380/500/550`, keyboard+gamepad single-consumer, range/focus/LOS/pause/co-edge, immutable same-instance replay, stale-current detection, zero gameplay mutation, untouched benchmark, presentation ve invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Existing Workbench focus/status surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second authority yoktur. Power-on açıkça `not-started` kalır.
+- User/editor-owned ProBuilder ayarı aynı SHA-256 ile korundu ve technical commit'e alınmadı; başka ProjectSettings veya Packages farkı yoktur.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, gerçek power-on/connector/fault/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B exact system power budget and PSU headroom doğrulaması — 31 Ağustos 2026
 
 Issue #121 technical source `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7` Mac üzerinde doğrulandı:

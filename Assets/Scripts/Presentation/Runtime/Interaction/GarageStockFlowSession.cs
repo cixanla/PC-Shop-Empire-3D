@@ -2587,6 +2587,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
             }
 
+            if (_powerTestAttempts != null)
+            {
+                OperationResult powerTestAttemptResult =
+                    _powerTestAttempts.ValidateReceiptHistory();
+                if (powerTestAttemptResult.IsFailure)
+                {
+                    return powerTestAttemptResult;
+                }
+            }
+
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();
             return actionResult.IsFailure
                 ? actionResult

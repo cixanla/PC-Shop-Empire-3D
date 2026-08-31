@@ -864,6 +864,14 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 electricalReadinessWorkbenchBuild.StatusIndicator,
                 electricalReadinessWorkbenchBuild.ReadyMaterial,
                 electricalReadinessWorkbenchBuild.BlockedMaterial);
+            electricalReadinessWorkbenchBuild.PowerTestStation.Configure(
+                stockFlow,
+                input,
+                motor,
+                playerCamera,
+                carry,
+                electricalReadinessWorkbenchBuild.Projection,
+                electricalReadinessWorkbenchBuild.StatusText.transform);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
             marker.Configure(
                 motor,
@@ -919,7 +927,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 atx24PowerCableBuildKitBuild.Projection,
                 eps12vPowerCableBuildKitBuild.Projection,
                 pcieGpuPowerCableBuildKitBuild.Projection,
-                electricalReadinessWorkbenchBuild.Projection);
+                electricalReadinessWorkbenchBuild.Projection,
+                electricalReadinessWorkbenchBuild.PowerTestStation);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -927,7 +936,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 stockFlow,
                 customerFlow,
                 customerFlowBuild.CheckoutStation,
-                customPcWorkTicketBuild.Projection);
+                customPcWorkTicketBuild.Projection,
+                electricalReadinessWorkbenchBuild.PowerTestStation);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",

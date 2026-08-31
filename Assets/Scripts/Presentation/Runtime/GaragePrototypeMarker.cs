@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-power-budget-r59-v1";
+        public const string Version = "garage-power-test-preflight-r60-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -407,7 +407,9 @@ namespace PCShopEmpire3D.Presentation
             Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null,
             PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null,
             ElectricalReadinessWorkbenchProjection
-                physicalElectricalReadinessWorkbench = null)
+                physicalElectricalReadinessWorkbench = null,
+            ElectricalPowerTestStationProjection
+                physicalElectricalPowerTestStation = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -428,7 +430,8 @@ namespace PCShopEmpire3D.Presentation
             eps12vPowerCableBuildKit = physicalEps12vPowerCableBuildKit;
             pcieGpuPowerCableBuildKit = physicalPcieGpuPowerCableBuildKit;
             ConfigureElectricalReadinessWorkbench(
-                physicalElectricalReadinessWorkbench);
+                physicalElectricalReadinessWorkbench,
+                physicalElectricalPowerTestStation);
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1325,6 +1328,7 @@ namespace PCShopEmpire3D.Presentation
                 $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
                 $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
                 $"power-budget-workbench={(HasPowerBudgetWorkbenchR59Runtime ? "ready" : "missing")} " +
+                $"power-test-preflight={(HasPowerTestPreflightR60Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1407,6 +1411,8 @@ namespace PCShopEmpire3D.Presentation
             bool runPcieGpuPowerCableAssemblyHandoffSmoke =
                 HasCommandLineArgument(
                     "-pse-pcie-gpu-power-cable-assembly-handoff-smoke");
+            bool runPowerTestPreflightSmoke =
+                HasCommandLineArgument("-pse-power-test-preflight-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1450,6 +1456,7 @@ namespace PCShopEmpire3D.Presentation
                              (runAtx24PowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runEps12vPowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0) +
+                             (runPowerTestPreflightSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
@@ -1481,13 +1488,19 @@ namespace PCShopEmpire3D.Presentation
                      !runAtx24PowerCableAssemblyHandoffSmoke &&
                      !runEps12vPowerCableAssemblyHandoffSmoke &&
                      !runPcieGpuPowerCableAssemblyHandoffSmoke &&
+                     !runPowerTestPreflightSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runRetailCheckoutHeroReadabilitySmoke)
+                    if (runPowerTestPreflightSmoke)
+                    {
+                        LogPowerTestPreflightSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runRetailCheckoutHeroReadabilitySmoke)
                     {
                         LogRetailCheckoutHeroReadabilitySmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1876,6 +1889,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runPowerTestPreflightSmoke && !Debug.isDebugBuild)
+            {
+                LogPowerTestPreflightSmokeFailure(
+                    "smoke.power-test-preflight-requires-development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2097,6 +2117,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPcieGpuPowerCableAssemblyHandoffSmoke());
+            }
+
+            if (runPowerTestPreflightSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunPowerTestPreflightSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)
