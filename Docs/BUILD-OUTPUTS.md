@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B installed-OS-bound fictional driver doğrulaması — 31 Ağustos 2026
+
+Issue #133 technical source `b144a3ef1a0ac5fcbd9704c850426baa9a727044`, tree `271bf53012e44e5162cdc5bdd2f41fa2cbbd3052` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.641.904` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `c347fd358af6c1afe8e5d89699995ebaf81a4e9c65b4ff0cc9ac3a9f79ad2ad7`.
+- Testler: driver lineage/domain `5/5`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, scene `1/1`, power/POST/UEFI/OS/driver regression `23/23`, full EditMode `793/793`, full PlayMode `181/181`; failed/skipped/inconclusive `0`.
+- Native r65 runtime: Apple M1/Metal 1280×720; assisted preflight, player-triggered power-on/POST/UEFI/OS, two-step driver review/install, exact M.2 identity, completion-time hardware/cable gate, same-instance replay, explicit power-off, same-OS/storage persistence, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `Waiting / Reviewing / Installed / Rejected` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, bütün review-context kayıpları input'u korur ve malformed driver history explicit power-off'u bloklamaz.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional driver installation receipt'i için Mac teknik geliştirme kabulüdür; gerçek vendor driver/download/installer/kernel/device enumeration/update/reboot, benchmark/stress/thermals/quality sonucu, save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B active-UEFI-bound fictional OS doğrulaması — 31 Ağustos 2026
 
 Issue #131 technical source `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57` Mac üzerinde doğrulandı:
