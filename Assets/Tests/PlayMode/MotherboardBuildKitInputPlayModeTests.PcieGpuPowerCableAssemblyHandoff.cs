@@ -196,12 +196,18 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return LoadGarage(value => marker = value);
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.HasPcieGpuPowerCableAssemblyHandoffR54Runtime, Is.True);
+            Assert.That(marker.HasElectricalReadinessWorkbenchR58Runtime, Is.True);
 
             GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
             yield return PrepareQuote(marker, keyboard);
             yield return IssuePhysicalWorkTicket(marker, keyboard);
             StageCompleteIssue89BuildKit(marker);
             PrepareIssue109RoutedAtx24AndEps12v(marker);
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation().Error,
+                Is.EqualTo(ElectricalReadinessFailures.PcieGpuPowerCableMissing));
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.False);
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("PCIe GPU 6+2 KABLOSUNU BAĞLA"));
 
             Assert.That(session.TryGetPrototypeCustomPcBuildOrder(
                 out CustomPcBuildOrderRecord workOrder), Is.True);
@@ -334,6 +340,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
                 Is.EqualTo(1));
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation()
+                .IsSuccess, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("10/10 PARÇA • 3/3 KABLO")
+                    .And.Contain("ELEKTRİK HAZIR")
+                    .And.Contain("GÜÇ TESTİ BEKLİYOR"));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
                 Is.EqualTo(AssemblyFailures.BuildIncomplete));
             Assert.That(cable.GetInstanceID(), Is.EqualTo(physicalIdentity));
@@ -383,6 +396,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(2));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
                 Is.EqualTo(2));
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation().Error,
+                Is.EqualTo(ElectricalReadinessFailures.PcieGpuPowerCableMissing));
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.False);
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("GÜÇ HAZIR DEĞİL"));
             Assert.That(session.CustomPcBuildKit.StagedComponentCount, Is.EqualTo(10));
             Assert.That(session.CustomPcBuildKit.AssemblyHandoffCount, Is.EqualTo(10));
             AssertIssue89ReservationStillLive(session, workOrder, pcieGpuLine);

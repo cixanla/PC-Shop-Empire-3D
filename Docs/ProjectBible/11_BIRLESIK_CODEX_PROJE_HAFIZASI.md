@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** `main` `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; active Issue #115 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`; draft PR #118
+**Authoritative Git state:** `main` `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; parent Issue #115 head `f26e95ce288e2e7f17d0aa642f59ee9fa0fffef5`; active Issue #119 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`; draft PR #120
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #115 Retail Shelf Authority Consolidation
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #119 Exact Electrical Readiness
+
+- Canonical retained motherboard/CPU/A2-DDR5/primary-M.2/cooler+TIM/GPU/PSU ve routed ATX24/EPS12V/PCIe-GPU state'i deterministic salt-okunur readiness contract'ına bağlandı. Exact snapshot build/chassis, on stable item, on source operation ve Assembly+üç cable revision'ı taşır; missing/loose/unsupported/invariant drift fail-closed'dur.
+- Existing Workbench projection initialized canonical session'ı yalnız okur. Ready text `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; final cable unroute sonrasında exact blocker geri döner. İki presentation renderer Ignore Raycast/no-collider/no-light/no-input-owner'dır; ikinci authority yoktur.
+- Technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`; final Mac `758/758 EditMode + 158/158 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330441141` bayt; strict/deep-valid universal app, Apple M1/Metal exact route→ready→unroute ve Assembly readability smokes geçti. Assembly runtime `479/470`, üç screenshot byte-distinct, central glare `0`.
+- ProjectSettings ve build boyunca korunan ProBuilder user-setting hashleri exact; ProBuilder diff'i untouched/unstaged. Draft PR #120 open; Issue/Roadmap `In Progress`.
+- Benchmark/power-on/POST/BIOS/OS/driver/benchmark/customer completion yoktur. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez. Parent Epic #10 ve Steam 1.0 Goal sürer; claim `human=false`.
+
+### Önceki üstün gelen durum — Issue #115 Retail Shelf Authority Consolidation
 
 - GarageGraybox r57 legacy `StarterShelf` hiyerarşisini kaldırır ve exact tek `AuthoritativeRetailShelfA` bırakır. Kalan authority `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` taşır; second shelf/surface/zone yoktur.
 - r56→r57 authored MeshRenderer `499→483` (`-16`), light/camera delta `0/0`; retail runtime `486/462`, Assembly regression runtime `477/468`. Customer approach/browse/checkout/fulfilled-exit, reservation/payment/receipt, stable identity ve input authorities untouched kalır.

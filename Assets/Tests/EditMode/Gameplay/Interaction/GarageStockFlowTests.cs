@@ -46,6 +46,73 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
         }
 
         [Test]
+        public void ElectricalReadinessProjectionDoesNotInitializeAuthorityState()
+        {
+            _root = new GameObject("ElectricalReadinessUninitializedRoot");
+            GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            itemObject.name = "UninitializedDeliveryItem";
+            itemObject.transform.SetParent(_root.transform, false);
+            Rigidbody body = itemObject.AddComponent<Rigidbody>();
+            body.useGravity = false;
+            body.isKinematic = true;
+            PhysicalItemProjection item =
+                itemObject.AddComponent<PhysicalItemProjection>();
+            item.Configure(
+                GarageStockFlowSession.ItemInstanceIdValue,
+                GarageStockFlowSession.ProductDisplayName,
+                body,
+                Vector3.one * 0.5f,
+                Vector3.zero,
+                Vector3.zero);
+            InventoryItemWorldBinding binding =
+                itemObject.AddComponent<InventoryItemWorldBinding>();
+            GarageStockFlowRuntime runtime =
+                _root.AddComponent<GarageStockFlowRuntime>();
+            runtime.Configure(
+                binding,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                seedAssemblyPrototype: true);
+            Assert.That(runtime.Session, Is.Null);
+            Assert.That(runtime.TryGetInitializedSession(out _), Is.False);
+
+            TextMesh statusText = new GameObject(
+                "ElectricalReadinessStatus").AddComponent<TextMesh>();
+            statusText.transform.SetParent(_root.transform, false);
+            GameObject indicatorObject = GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
+            indicatorObject.name = "ElectricalReadinessIndicator";
+            indicatorObject.transform.SetParent(_root.transform, false);
+            Renderer indicator = indicatorObject.GetComponent<Renderer>();
+            ElectricalReadinessWorkbenchProjection projection =
+                _root.AddComponent<ElectricalReadinessWorkbenchProjection>();
+
+            projection.Configure(
+                runtime,
+                statusText,
+                indicator,
+                indicator.sharedMaterial,
+                indicator.sharedMaterial);
+            OperationResult result = projection.RefreshPresentation();
+
+            Assert.That(result.Error,
+                Is.EqualTo(ElectricalReadinessWorkbenchFailures.RuntimeNotReady));
+            Assert.That(runtime.Session, Is.Null);
+            Assert.That(runtime.TryGetInitializedSession(out _), Is.False);
+            Assert.That(projection.IsReady, Is.False);
+            Assert.That(projection.CurrentFailureCode,
+                Is.EqualTo(
+                    ElectricalReadinessWorkbenchFailures.RuntimeNotReady.Code));
+            Assert.That(statusText.text,
+                Does.Contain("AUTHORITY HENÜZ HAZIR DEĞİL")
+                    .And.Contain("GÜÇ HAZIR DEĞİL"));
+        }
+
+        [Test]
         public void AssemblyPrototypeSeedsCanonicalBuildPartsAndPowerCables()
         {
             GarageStockFlowSession session = GarageStockFlowSession.CreateArrived(

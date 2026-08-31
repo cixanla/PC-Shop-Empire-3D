@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2047,7 +2047,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(4));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2243,7 +2243,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     sceneRenderers.Count(renderer =>
                         retailHeroRoot == null ||
                         !renderer.transform.IsChildOf(retailHeroRoot)),
-                    Is.EqualTo(477));
+                    Is.EqualTo(479));
                 Assert.That(
                     sceneLights.Count(light =>
                         light.name != "RetailCheckoutFillLight"),
@@ -2277,6 +2277,80 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsElectricalReadinessWorkbenchContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
+                ElectricalReadinessWorkbenchProjection[] projections = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        ElectricalReadinessWorkbenchProjection>(true))
+                    .ToArray();
+
+                Assert.That(marker, Is.Not.Null);
+                Assert.That(projections.Length, Is.EqualTo(1));
+                ElectricalReadinessWorkbenchProjection projection = projections[0];
+                Assert.That(marker.ElectricalReadinessWorkbench,
+                    Is.SameAs(projection));
+                Assert.That(marker.HasElectricalReadinessWorkbenchR58Runtime,
+                    Is.True);
+                Assert.That(projection.ProjectionIdValue,
+                    Is.EqualTo(ElectricalReadinessWorkbenchProjection
+                        .PrototypeProjectionIdValue));
+                Assert.That(projection.Runtime, Is.SameAs(marker.StockFlow));
+                Assert.That(projection.IsConfigured, Is.True);
+                Assert.That(projection.StatusText, Is.Not.Null);
+                Assert.That(projection.StatusIndicator, Is.Not.Null);
+                Assert.That(projection.GetComponentsInChildren<Collider>(true),
+                    Is.Empty);
+                Assert.That(projection.GetComponentsInChildren<Light>(true),
+                    Is.Empty);
+                Assert.That(projection.GetComponentsInChildren<Renderer>(true).Length,
+                    Is.EqualTo(2));
+                Assert.That(projection.GetComponentsInChildren<Renderer>(true).All(
+                    renderer => renderer.gameObject.layer ==
+                                LayerMask.NameToLayer("Ignore Raycast")), Is.True);
+                Assert.That(Vector3.Distance(
+                    projection.StatusText.transform.localPosition,
+                    new Vector3(1.35f, 1.36f, 4.066f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(Vector3.Distance(
+                    projection.StatusIndicator.transform.localPosition,
+                    new Vector3(1.66f, 1.55f, 4.068f)),
+                    Is.LessThan(0.0001f));
+                Assert.That(projection.ReadyMaterial.name,
+                    Does.StartWith("DeliveryStatusShelved"));
+                Assert.That(projection.BlockedMaterial.name,
+                    Does.StartWith("DeliveryStatusArrived"));
+
+                GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
+                long assemblyRevision = session.AssemblyBuild.Revision;
+                long inventoryRevision = session.Inventory.Revision;
+                OperationResult refresh = projection.RefreshPresentation();
+                Assert.That(refresh.Error,
+                    Is.EqualTo(AssemblyFailures.MotherboardMissing));
+                Assert.That(projection.IsReady, Is.False);
+                Assert.That(projection.CurrentFailureCode,
+                    Is.EqualTo(AssemblyFailures.MotherboardMissing.Code));
+                Assert.That(projection.StatusText.text,
+                    Does.Contain("ANAKART EKSİK")
+                        .And.Contain("GÜÇ HAZIR DEĞİL"));
+                Assert.That(session.AssemblyBuild.Revision,
+                    Is.EqualTo(assemblyRevision));
+                Assert.That(session.Inventory.Revision,
+                    Is.EqualTo(inventoryRevision));
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsRetailCheckoutHeroReadabilityContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -2293,7 +2367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(9));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2570,7 +2644,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                    Is.EqualTo("garage-electrical-readiness-r58-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

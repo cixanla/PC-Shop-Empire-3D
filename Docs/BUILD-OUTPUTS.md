@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B exact electrical readiness ve workbench feedback doğrulaması — 31 Ağustos 2026
+
+Issue #119 technical source `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.441.141` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `4a903a2b3c4ef6f9c283a603d74c891d3cb70f402e3c69d1a15ec9750c093b85`.
+- Testler: full EditMode `758/758`, full PlayMode `158/158`; failed/skipped/inconclusive `0`. Scene, fail-closed/read-only projection ve keyboard/mouse + Input System virtual-gamepad targeted contracts ayrıca geçti.
+- Native readiness runtime: Apple M1/Metal 1280×720; exact final-cable route `blocked → ready`, aynı cable unroute `ready → blocked`, workbench monitor ve no-duplicate-loss/invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Native Assembly readability: `479` total / `470` smoke-active renderer, `4` light, `1` camera; üç byte-distinct 1280×720 capture ve central glare `0`.
+- ProjectSettings manifesti build öncesi/sonrası byte-exact. Ayrı user/editor-owned ProBuilder ayarı da build boyunca aynı kaldı ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, power-on/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B canonical PCIe/GPU 6+2 BuildKit-to-route reversible Assembly doğrulaması — 27 Ağustos 2026
 
 Issue #109 technical source `1acba166855efffa906112e2df24b9b5cef550a7`, tree `eb40a392169e5288e29bc59ae75367029cc00f57` aynı kaynak kimliğiyle iki gerçek platformda doğrulandı:

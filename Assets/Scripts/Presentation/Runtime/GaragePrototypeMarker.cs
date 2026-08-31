@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-retail-shelf-authority-r57-v1";
+        public const string Version = "garage-electrical-readiness-r58-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -405,7 +405,9 @@ namespace PCShopEmpire3D.Presentation
             PowerSupplyBuildKitProjection physicalPowerSupplyBuildKit = null,
             Atx24PowerCableBuildKitProjection physicalAtx24PowerCableBuildKit = null,
             Eps12vPowerCableBuildKitProjection physicalEps12vPowerCableBuildKit = null,
-            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null)
+            PcieGpuPowerCableBuildKitProjection physicalPcieGpuPowerCableBuildKit = null,
+            ElectricalReadinessWorkbenchProjection
+                physicalElectricalReadinessWorkbench = null)
         {
             playerMotor = motor;
             playerInput = input;
@@ -425,6 +427,8 @@ namespace PCShopEmpire3D.Presentation
             atx24PowerCableBuildKit = physicalAtx24PowerCableBuildKit;
             eps12vPowerCableBuildKit = physicalEps12vPowerCableBuildKit;
             pcieGpuPowerCableBuildKit = physicalPcieGpuPowerCableBuildKit;
+            ConfigureElectricalReadinessWorkbench(
+                physicalElectricalReadinessWorkbench);
             motherboardSeat = physicalMotherboardSeat;
             motherboardFastener = physicalMotherboardFastener;
             motherboardBinding = physicalMotherboardBinding;
@@ -1320,6 +1324,7 @@ namespace PCShopEmpire3D.Presentation
                 $"pcie-gpu-power-cable-waypoints={(hasPcieGpuPowerCableAssembly ? "3" : "missing")} " +
                 $"pcie-gpu-power-cable-identity={(hasPcieGpuPowerCableIdentity ? "stable" : "missing")} " +
                 $"assembly-workbench-hero={(hasAssemblyWorkbenchHeroReadability ? "ready" : "missing")} " +
+                $"electrical-readiness-workbench={(HasElectricalReadinessWorkbenchR58Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 

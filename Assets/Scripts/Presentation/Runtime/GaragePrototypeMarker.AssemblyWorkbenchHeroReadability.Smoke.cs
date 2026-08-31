@@ -16,7 +16,7 @@ namespace PCShopEmpire3D.Presentation
             "materials=wood+rubber+dark-metal+brushed-steel+concrete+pcb+" +
             "safety-accent+connector-polymer+psu-intake+gpu-hardware " +
             "connector-glare=bounded " +
-            "light=focused total-renderers=477 lights=4 cameras=1 " +
+            "light=focused total-renderers=479 lights=4 cameras=1 " +
             "screenshots=3 glare-pixels<=64 " +
             "ui=lookdev-suppressed human=false";
 
@@ -142,7 +142,7 @@ namespace PCShopEmpire3D.Presentation
                 !Mathf.Approximately(taskLight.intensity, 0.4f) ||
                 !Mathf.Approximately(taskLight.range, 2.8f) ||
                 !Mathf.Approximately(taskLight.spotAngle, 62f) ||
-                totalMeshRendererCount != 477 ||
+                totalMeshRendererCount != 479 ||
                 lightCount != 4 ||
                 cameraCount != 1)
             {

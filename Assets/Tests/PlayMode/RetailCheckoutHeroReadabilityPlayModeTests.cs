@@ -30,7 +30,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-retail-shelf-authority-r57-v1"));
+                Is.EqualTo("garage-electrical-readiness-r58-v1"));
 
             Transform[] transforms = SceneManager.GetActiveScene()
                 .GetRootGameObjects()
@@ -186,13 +186,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(
                 Object.FindObjectsByType<MeshRenderer>(
                     FindObjectsSortMode.None).Length,
-                Is.EqualTo(462));
+                Is.EqualTo(464));
             Assert.That(
                 SceneManager.GetActiveScene().GetRootGameObjects()
                     .SelectMany(root =>
                         root.GetComponentsInChildren<MeshRenderer>(true))
                     .Count(),
-                Is.EqualTo(486));
+                Is.EqualTo(488));
             Assert.That(
                 Object.FindObjectsByType<Light>(
                     FindObjectsSortMode.None).Length,

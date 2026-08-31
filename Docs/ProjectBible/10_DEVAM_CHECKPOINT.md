@@ -1,10 +1,19 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #115 Retail Shelf Authority Consolidation r57 source, exact scene/authority contracts, full Mac regression, universal Mac native ve Apple M1/Metal retail/Assembly smoke kapıları geçti; draft PR #118 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; base main `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; technical source `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`; draft PR #118; acceptance #1–#3 PASS, #4 Mac PASS/Windows DEFERRED, #5 docs/PR/CI IN PROGRESS; parent visual Epic #18 ve Steam 1.0 Goal açık
+**Durum:** Issue #119 Exact Electrical Readiness r58 source, exact authority/scene contracts, full Mac regression, universal Mac native ve Apple M1/Metal readiness/Assembly smoke kapıları geçti; draft PR #120 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; base main `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; parent Issue #115 head `f26e95ce288e2e7f17d0aa642f59ee9fa0fffef5`; technical source `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`; draft PR #120; acceptance #1–#5 PASS, #6 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #115 / Epic #18
+## En yeni teknik checkpoint — Issue #119 / Epic #10
+
+- Exact retained seven-component Assembly ile routed ATX24/EPS12V/PCIe-GPU zinciri, deterministic blocker order kullanan pure `EvaluateElectricalReadiness()` query'sine bağlandı. Successful snapshot exact build/chassis, on item, on source operation ve dört revision kimliğini taşır; re-evaluation no-mutation'dır.
+- Workbench projection yalnız initialized canonical session'ı okur ve revision değişiminde yenilenir. Ready text `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; accepted unroute exact blocker'a döner. İki Ignore Raycast renderer dışında collider/light/camera/NavMesh/item/input/authority delta yoktur.
+- Technical commit `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`. Final full EditMode `758/758`, PlayMode `158/158`; accepted fail/skip/inconclusive `0`. Targeted scene, fail-closed/read-only ve keyboard/mouse + virtual-gamepad contracts geçti.
+- Universal Mac report `330441141` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal exact route→ready→unroute marker ve Assembly `479/470` readability smoke başarılı; üç 1280x720 capture unique, central glare `0`.
+- Bütün ProjectSettings build boyunca byte-exact. Korunan ProBuilder user-setting hash'i de before/after exact; diff unstaged ve technical commit dışında. Repository Guard ve `git diff --check` geçti.
+- Benchmark readiness blocked kalır; power-on/POST/BIOS/OS/driver/benchmark/package/delivery yoktur. Draft PR #120 açık. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint kapıları ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+
+## Önceki teknik checkpoint — Issue #115 / Epic #18
 
 - GarageGraybox `garage-retail-shelf-authority-r57-v1`. Legacy `StarterShelf` hierarchy (`17` child object, `16` renderer, `10` collider) kaldırıldı. Exact tek `AuthoritativeRetailShelfA`, `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` kaldı.
 - Authored MeshRenderer `499→483` (`-16`), light/camera `5→5 / 1→1`; retail runtime total/active `486/462`, Assembly regression runtime `477/468`. r56 retail/checkout ve r55 Assembly visual contracts korunur; customer route failure/fallback `0`, duplicate shelf/surface/zone authority `0`.
