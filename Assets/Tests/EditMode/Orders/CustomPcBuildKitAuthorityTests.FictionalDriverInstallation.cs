@@ -122,8 +122,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 Is.EqualTo(firmwareRevision));
             Assert.That(session.FictionalOsInstallation.Revision,
                 Is.EqualTo(osRevision));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
 
             Assert.That(session.PowerState.TryPowerOff(
                     session.PrototypePowerOffOperationId,

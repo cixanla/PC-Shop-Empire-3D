@@ -334,7 +334,7 @@ namespace PCShopEmpire3D.Presentation
                     session.AssemblyBuild.Eps12vPowerCableRevision == 1 &&
                     session.AssemblyBuild.Eps12vPowerCableReceiptCount == 1 &&
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==
-                        AssemblyFailures.BuildIncomplete &&
+                        AssemblyFailures.PowerCableMissing &&
                     physicalCable.GetInstanceID() == physicalIdentity &&
                     physicalCable.ItemIdValue == stableItemId;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
@@ -491,7 +491,7 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.StagedComponentCount != 10 ||
                     session.CustomPcBuildKit.AssemblyHandoffCount != 9 ||
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                        AssemblyFailures.PowerCableMissing ||
                     !GraphicsCardAssemblyHandoffReservationsAreLive(
                         session,
                         workOrder,

@@ -1244,7 +1244,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay.Interaction
             long assemblyRevision = session.AssemblyBuild.Revision;
 
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
 
             Assert.That(session.Inventory.Revision, Is.EqualTo(inventoryRevision));
             Assert.That(session.AssemblyBuild.Revision, Is.EqualTo(assemblyRevision));

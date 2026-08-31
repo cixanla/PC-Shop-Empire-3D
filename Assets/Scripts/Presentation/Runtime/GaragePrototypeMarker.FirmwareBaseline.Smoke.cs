@@ -260,8 +260,7 @@ namespace PCShopEmpire3D.Presentation
                         atx24ReceiptCount,
                         eps12vReceiptCount,
                         pcieReceiptCount) ||
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure ||
                     session.ValidateInvariants().IsFailure)
                 {
                     LogFirmwareBaselineSmokeFailure(

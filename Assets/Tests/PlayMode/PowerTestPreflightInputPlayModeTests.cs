@@ -87,8 +87,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     .And.Contain("500W")
                     .And.Contain("550W")
                     .And.Contain("POWER-ON BEKLİYOR"));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
 
             PowerTestAttemptReceipt historical =

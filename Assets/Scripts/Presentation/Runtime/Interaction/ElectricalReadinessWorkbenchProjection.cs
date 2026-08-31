@@ -27,7 +27,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(70)]
-    public sealed class ElectricalReadinessWorkbenchProjection : MonoBehaviour
+    public sealed partial class ElectricalReadinessWorkbenchProjection : MonoBehaviour
     {
         public const string PrototypeProjectionIdValue =
             "world.assembly-workbench.electrical-readiness.garage-001";
@@ -335,6 +335,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 FictionalDriverFailureCode = string.Empty;
             }
 
+            ObserveValidationAuthorityState(session);
+
             CaptureAuthorityState(session);
             if (powerState?.IsEnergized == true)
             {
@@ -345,12 +347,58 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     powerState.EvaluateCurrentFirmwareBaseline().IsSuccess;
                 if (HasCurrentFirmwareBaseline &&
                     HasInstalledFictionalOs &&
-                    HasInstalledFictionalDrivers)
+                    HasInstalledFictionalDrivers &&
+                    ValidationState == PcValidationPresentationState.Passed)
+                {
+                    statusText.text =
+                        $"VALIDATION GEÇTİ • {ValidationQualityLabel}\n" +
+                        $"SCORE {ValidationBenchmarkScore} • " +
+                        $"STRESS {ValidationStressSteps} ADIM STABLE\n" +
+                        $"CPU {ValidationProcessorPeakTemperatureCelsius}°C • " +
+                        $"GPU {ValidationGraphicsPeakTemperatureCelsius}°C • " +
+                        $"PSU +{ValidationPowerMarginWatts}W";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         HasInstalledFictionalDrivers &&
+                         ValidationState ==
+                         PcValidationPresentationState.Reviewing)
+                {
+                    statusText.text =
+                        "WORKSHOP VALIDATION İNCELENİYOR\n" +
+                        "BENCHMARK + SABİT STRESS • ONAY BEKLİYOR\n" +
+                        "BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         HasInstalledFictionalDrivers &&
+                         ValidationState ==
+                         PcValidationPresentationState.Rejected)
+                {
+                    statusText.text =
+                        "VALIDATION REDDEDİLDİ\n" +
+                        ValidationFailureCode + "\n" +
+                        "TEKRAR İNCELE • BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         HasInstalledFictionalDrivers &&
+                         ValidationState ==
+                         PcValidationPresentationState.NotCurrent)
+                {
+                    statusText.text =
+                        "VALIDATION CURRENT DEĞİL\n" +
+                        "YENİ POWER-CYCLE İÇİN YENİ RUN GEREKLİ\n" +
+                        "BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         HasInstalledFictionalDrivers)
                 {
                     statusText.text =
                         "GÜÇ AÇIK • POST GEÇTİ\n" +
                         "WORKSHOP DRIVER BUNDLE KURULDU\n" +
-                        "SONRAKİ AŞAMA: BENCHMARK • " +
+                        "SONRAKİ AŞAMA: VALIDATION • " +
                         "BAKIM KİLİDİ AKTİF";
                 }
                 else if (HasCurrentFirmwareBaseline &&
@@ -415,10 +463,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             if (HasInstalledFictionalOs && HasInstalledFictionalDrivers)
             {
-                statusText.text =
-                    "KURGUSAL DRIVER KURULDU\n" +
-                    "WORKSHOP DRIVER BUNDLE • DEPOLAMADA KALICI\n" +
-                    "POWER-ON BEKLİYOR • SONRAKİ AŞAMA: BENCHMARK";
+                statusText.text = ValidationState ==
+                                  PcValidationPresentationState.NotCurrent
+                    ? "VALIDATION TARİHÇEDE KORUNDU\n" +
+                      "CURRENT RUN YOK • POWER-ON BEKLİYOR\n" +
+                      "YENİ CYCLE İÇİN YENİ VALIDATION GEREKLİ"
+                    : "KURGUSAL DRIVER KURULDU\n" +
+                      "WORKSHOP DRIVER BUNDLE • DEPOLAMADA KALICI\n" +
+                      "POWER-ON BEKLİYOR • SONRAKİ AŞAMA: VALIDATION";
                 statusText.color = new Color(0.68f, 1f, 0.76f);
                 statusIndicator.sharedMaterial = readyMaterial;
                 return OperationResult.Success();
@@ -507,7 +559,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedFictionalOsInstallationRevision !=
                        ResolveFictionalOsInstallationRevision(session) ||
                    _observedFictionalDriverInstallationRevision !=
-                       ResolveFictionalDriverInstallationRevision(session);
+                       ResolveFictionalDriverInstallationRevision(session) ||
+                   _observedValidationRevision !=
+                       ResolveValidationRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -533,6 +587,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ResolveFictionalOsInstallationRevision(session);
             _observedFictionalDriverInstallationRevision =
                 ResolveFictionalDriverInstallationRevision(session);
+            _observedValidationRevision = ResolveValidationRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -549,6 +604,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasCurrentFirmwareBaseline = false;
             HasInstalledFictionalOs = false;
             HasInstalledFictionalDrivers = false;
+            ClearValidationMetrics();
         }
 
         private void ObservePowerState(GarageStockFlowSession session)

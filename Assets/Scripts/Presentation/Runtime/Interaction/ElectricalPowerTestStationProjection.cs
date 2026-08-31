@@ -38,7 +38,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(68)]
-    public sealed class ElectricalPowerTestStationProjection : MonoBehaviour
+    public sealed partial class ElectricalPowerTestStationProjection : MonoBehaviour
     {
         public const float DefaultInteractionRange = 2.25f;
         public const float DefaultFocusDegrees = 24f;
@@ -174,6 +174,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFirmwareReviewIfContextChanged();
             ResetFictionalOsReviewIfContextChanged();
             ResetFictionalDriverReviewIfContextChanged();
+            ResetValidationReviewIfContextChanged();
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
                 playerInput.PausePressedThisFrame)
             {
@@ -270,6 +271,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         }
 
         internal OperationResult TryAttemptFictionalDriverAuthorizedForTests()
+        {
+            return Remember(TryAttemptFirmwareAuthorized());
+        }
+
+        internal OperationResult InspectValidationInteractionGateForTests()
+        {
+            return ValidateFirmwareInteractionGate();
+        }
+
+        internal OperationResult TryAttemptValidationAuthorizedForTests()
         {
             return Remember(TryAttemptFirmwareAuthorized());
         }
@@ -435,6 +446,35 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     if (installedOs.IsFailure)
                     {
                         return OperationResult.Fail(installedOs.Error);
+                    }
+
+                    if (session.TryGetFictionalDriverInstallation(
+                            out PcFictionalDriverInstallationAuthority
+                                driverAuthority))
+                    {
+                        OperationResult driverHistory =
+                            driverAuthority.ValidateReceiptHistory();
+                        if (driverHistory.IsFailure)
+                        {
+                            return driverHistory;
+                        }
+
+                        OperationResult<PcFictionalDriverInstallationReceipt>
+                            installedDriver =
+                                driverAuthority.EvaluateInstalledDrivers();
+                        if (installedDriver.IsSuccess)
+                        {
+                            return TryAttemptValidationAuthorized(
+                                session,
+                                powerState,
+                                currentFirmware.Value,
+                                installedDriver.Value);
+                        }
+
+                        if (driverAuthority.ReceiptCount > 0)
+                        {
+                            return OperationResult.Fail(installedDriver.Error);
+                        }
                     }
 
                     return TryAttemptFictionalDriverAuthorized(
@@ -748,11 +788,23 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             }
 
                             if (driverAuthority
-                                .EvaluateInstalledDrivers().IsSuccess)
+                                .EvaluateInstalledDrivers()
+                                .TryGetValue(
+                                    out PcFictionalDriverInstallationReceipt
+                                        installedDriver))
+                            {
+                                return ValidateValidationInteractionContext(
+                                    session,
+                                    powerState,
+                                    currentFirmware.Value,
+                                    installedDriver);
+                            }
+
+                            if (driverAuthority.ReceiptCount > 0)
                             {
                                 return OperationResult.Fail(
-                                    PcFictionalDriverInstallationFailures
-                                        .AlreadyCompleted);
+                                    driverAuthority.EvaluateInstalledDrivers()
+                                        .Error);
                             }
                         }
 
@@ -822,6 +874,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFirmwareReviewIfContextChanged();
             ResetFictionalOsReviewIfContextChanged();
             ResetFictionalDriverReviewIfContextChanged();
+            ResetValidationReviewIfContextChanged();
             if (playerMotor == null || playerMotor.IsPaused)
             {
                 return string.Empty;
@@ -926,14 +979,18 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                                    driverHistory.Error.Code;
                                         }
 
-                                        if (driverAuthority
-                                            .EvaluateInstalledDrivers()
-                                            .IsSuccess)
+                                        OperationResult<
+                                            PcFictionalDriverInstallationReceipt>
+                                            installedDriver = driverAuthority
+                                                .EvaluateInstalledDrivers();
+                                        if (installedDriver.IsSuccess)
                                         {
-                                            return $"{bindingPrompt}: " +
-                                                   "GÜCÜ KAPAT • " +
-                                                   "KURGUSAL DRIVER KURULDU • " +
-                                                   "SONRAKİ AŞAMA: BENCHMARK";
+                                            return BuildValidationPrompt(
+                                                session,
+                                                powerState,
+                                                firmware.Value,
+                                                installedDriver.Value,
+                                                bindingPrompt);
                                         }
                                     }
 
@@ -1196,6 +1253,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFirmwareReview();
             ResetFictionalOsReview();
             ResetFictionalDriverReview();
+            ResetValidationReview();
         }
 
         private void InvalidatePromptCache()
@@ -1310,6 +1368,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 readinessProjection?.ObserveFictionalDriverRejected(
                     result.Error);
+            }
+
+            if (result.IsFailure && result.Error.Code.StartsWith(
+                    "assembly.validation.",
+                    StringComparison.Ordinal))
+            {
+                readinessProjection?.ObserveValidationRejected(result.Error);
             }
 
             return result;

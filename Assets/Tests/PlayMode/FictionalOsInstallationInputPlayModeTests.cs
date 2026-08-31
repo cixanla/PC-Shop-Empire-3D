@@ -108,8 +108,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.EqualTo(eps12vRevision));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision,
                 Is.EqualTo(pcieRevision));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
 
             PressInteract(keyboard, station.ProcessInputFrame);
             yield return null;

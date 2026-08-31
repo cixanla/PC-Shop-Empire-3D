@@ -315,7 +315,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Atx24PowerCableReceiptCount,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
             Assert.That(cable.GetInstanceID(), Is.EqualTo(physicalIdentity));
             ReleaseIssue89Drop(marker, keyboard, gamepad, useGamepad);
 

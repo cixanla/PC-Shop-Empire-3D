@@ -26,7 +26,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-fictional-driver-installation-r65-v1"));
+                Is.EqualTo("garage-driver-bound-validation-r66-v1"));
 
             Transform heroRoot = Object.FindObjectsByType<Transform>(
                     FindObjectsSortMode.None)

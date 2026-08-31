@@ -60,8 +60,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 atx24Revision,
                 eps12vRevision,
                 pcieRevision);
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

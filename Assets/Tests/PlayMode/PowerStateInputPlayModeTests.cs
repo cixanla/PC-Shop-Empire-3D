@@ -95,7 +95,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Is.True);
             Assert.That(powerState.ValidateReceiptHistory().IsSuccess, Is.True);
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
 

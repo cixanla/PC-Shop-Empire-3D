@@ -26,6 +26,9 @@ namespace PCShopEmpire3D.Presentation
             "persistence=power-off-preserved receipt=immutable " +
             "replay=ok benchmark=untouched invariants=ok";
 
+        private string _nestedFictionalDriverInstallationSmokeFailureCode;
+        private bool _suppressFictionalDriverInstallationSmokeSuccessMarker;
+
         public bool HasFictionalDriverInstallationR65Runtime =>
             HasFictionalOsInstallationR64Runtime &&
             electricalPowerTestStation != null &&
@@ -261,14 +264,14 @@ namespace PCShopEmpire3D.Presentation
                         osReceipt.SourceFirmwareBaselineReceipt) ||
                     driverReceipt.StorageItemId != storageItemId ||
                     authority.Revision != 1 || authority.ReceiptCount != 1 ||
-                    !station.PromptText.Contains("KURGUSAL DRIVER KURULDU") ||
-                    !station.PromptText.Contains("SONRAKİ AŞAMA: BENCHMARK") ||
+                    !station.PromptText.Contains(
+                        "WORKSHOP DRIVER BUNDLE KURULDU") ||
+                    !station.PromptText.Contains("SONRAKİ AŞAMA: VALIDATION") ||
                     !electricalReadinessWorkbench
                         .HasInstalledFictionalDrivers ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "WORKSHOP DRIVER BUNDLE KURULDU") ||
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete)
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure)
                 {
                     LogFictionalDriverInstallationSmokeFailure(
                         "smoke.install-replay-or-presentation-mismatch");
@@ -319,8 +322,7 @@ namespace PCShopEmpire3D.Presentation
                         atx24ReceiptCount,
                         eps12vReceiptCount,
                         pcieReceiptCount) ||
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure ||
                     session.ValidateInvariants().IsFailure)
                 {
                     LogFictionalDriverInstallationSmokeFailure(
@@ -340,11 +342,14 @@ namespace PCShopEmpire3D.Presentation
                     smokeGamepad);
             }
 
-            Debug.Log(FictionalDriverInstallationSmokeSuccessMarker);
-            yield return new WaitForEndOfFrame();
-            if (!Application.isEditor)
+            if (!_suppressFictionalDriverInstallationSmokeSuccessMarker)
             {
-                Application.Quit(0);
+                Debug.Log(FictionalDriverInstallationSmokeSuccessMarker);
+                yield return new WaitForEndOfFrame();
+                if (!Application.isEditor)
+                {
+                    Application.Quit(0);
+                }
             }
         }
 
@@ -407,9 +412,14 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static void LogFictionalDriverInstallationSmokeFailure(
-            string code)
+        private void LogFictionalDriverInstallationSmokeFailure(string code)
         {
+            if (_suppressFictionalDriverInstallationSmokeSuccessMarker)
+            {
+                _nestedFictionalDriverInstallationSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_FICTIONAL_DRIVER_INSTALLATION_RUNTIME_SMOKE " +
                 "driver-flow=failed code=" + code);

@@ -251,8 +251,7 @@ namespace PCShopEmpire3D.Presentation
                     !electricalReadinessWorkbench.HasInstalledFictionalOs ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "WORKSHOP STANDARD") ||
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete)
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure)
                 {
                     LogFictionalOsInstallationSmokeFailure(
                         "smoke.install-replay-or-presentation-mismatch");
@@ -300,8 +299,7 @@ namespace PCShopEmpire3D.Presentation
                         atx24ReceiptCount,
                         eps12vReceiptCount,
                         pcieReceiptCount) ||
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure ||
                     session.ValidateInvariants().IsFailure)
                 {
                     LogFictionalOsInstallationSmokeFailure(

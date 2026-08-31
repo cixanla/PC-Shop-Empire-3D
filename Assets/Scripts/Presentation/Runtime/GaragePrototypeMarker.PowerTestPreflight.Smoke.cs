@@ -110,8 +110,7 @@ namespace PCShopEmpire3D.Presentation
                 electricalReadinessWorkbench.HasAcceptedPreflight ||
                 !electricalReadinessWorkbench.StatusText.text.Contains(
                     "GÜÇ TESTİ BEKLİYOR") ||
-                session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                    AssemblyFailures.BuildIncomplete)
+                session.AssemblyBuild.EvaluateBenchmarkReadiness().IsFailure)
             {
                 LogPowerTestPreflightSmokeFailure(
                     route.IsFailure
@@ -483,7 +482,7 @@ namespace PCShopEmpire3D.Presentation
                 !electricalReadinessWorkbench.StatusText.text.Contains(
                     "POWER-ON BEKLİYOR") ||
                 session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                    AssemblyFailures.BuildIncomplete ||
+                    AssemblyFailures.PowerCableMissing ||
                 pcieGpuPowerCableBinding.ValidateProjectionInvariant().IsFailure ||
                 session.ValidateInvariants().IsFailure)
             {
@@ -617,8 +616,7 @@ namespace PCShopEmpire3D.Presentation
                        eps12vReceiptCount &&
                    session.AssemblyBuild.PcieGpuPowerCableReceiptCount ==
                        pcieReceiptCount &&
-                   session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==
-                       AssemblyFailures.BuildIncomplete;
+                   session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess;
         }
 
         private static void LogPowerTestPreflightSmokeFailure(string code)

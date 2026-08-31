@@ -371,8 +371,7 @@ namespace PCShopEmpire3D.Presentation
                         "380W / EN AZ 500W / PSU 550W") &&
                     electricalReadinessWorkbench.StatusText.text.Contains(
                         "GÜÇ TESTİ BEKLİYOR") &&
-                    session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==
-                        AssemblyFailures.BuildIncomplete &&
+                    session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess &&
                     physicalCable.GetInstanceID() == physicalIdentity &&
                     physicalCable.ItemIdValue == stableItemId;
                 ReleaseMotherboardBuildKitSmokeKeyboard(smokeKeyboard);
@@ -537,7 +536,7 @@ namespace PCShopEmpire3D.Presentation
                     session.CustomPcBuildKit.StagedComponentCount != 10 ||
                     session.CustomPcBuildKit.AssemblyHandoffCount != 10 ||
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
-                        AssemblyFailures.BuildIncomplete ||
+                        AssemblyFailures.PowerCableMissing ||
                     electricalReadinessWorkbench.IsReady ||
                     electricalReadinessWorkbench.CurrentFailureCode !=
                         ElectricalReadinessFailures.PcieGpuPowerCableMissing.Code ||

@@ -360,8 +360,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 Is.EqualTo(readyEps12vRevision));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision,
                 Is.EqualTo(readyPcieGpuRevision));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(session.UnretainPowerSupply(
                 StableId<AssemblyOperationIdScope>.Parse(
                     "assembly.operation.issue109.blocked-unretain-psu"),
@@ -388,7 +388,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
             Assert.That(session.AssemblyBuild.EvaluateElectricalReadiness().Error,
                 Is.EqualTo(ElectricalReadinessFailures.PcieGpuPowerCableMissing));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
             AssertReservationStillLive(session, pcieGpu);
             AssertAtx24AndEps12vProtected(
                 session,

@@ -175,6 +175,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             InventoryAuthority inventory,
             AssemblyBuildAuthority assemblyBuild,
             PcPowerBudgetAuthority powerBudget,
+            PcPerformanceCatalog performanceCatalog,
+            PcValidationProfile validationProfile,
             PurchaseOrderAuthority orders,
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
@@ -194,6 +196,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Inventory = inventory;
             AssemblyBuild = assemblyBuild;
             PowerBudget = powerBudget;
+            PerformanceCatalog = performanceCatalog;
+            ValidationProfile = validationProfile;
             Orders = orders;
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
@@ -1026,6 +1030,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PcPowerBudgetAuthority powerBudget = includeAssemblyPrototype
                 ? CreatePrototypePowerBudget(components, assemblyBuild)
                 : null;
+            PcPerformanceCatalog performanceCatalog = includeAssemblyPrototype
+                ? CreatePrototypePerformanceCatalog(components)
+                : null;
+            PcValidationProfile validationProfile = includeAssemblyPrototype
+                ? CreatePrototypeValidationProfile()
+                : null;
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
@@ -1235,6 +1245,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 inventory,
                 assemblyBuild,
                 powerBudget,
+                performanceCatalog,
+                validationProfile,
                 orders,
                 retailOffers,
                 retailBaskets,
@@ -2624,6 +2636,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (fictionalDriverResult.IsFailure)
                 {
                     return fictionalDriverResult;
+                }
+            }
+
+            if (_validation != null)
+            {
+                OperationResult validationResult =
+                    _validation.ValidateReceiptHistory();
+                if (validationResult.IsFailure)
+                {
+                    return validationResult;
                 }
             }
 

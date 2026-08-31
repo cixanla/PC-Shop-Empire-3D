@@ -355,8 +355,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                 Does.Contain("380W / EN AZ 500W / PSU 550W")
                     .And.Contain("GÜÇ BÜTÇESİ UYGUN")
                     .And.Contain("GÜÇ TESTİ BEKLİYOR"));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(cable.GetInstanceID(), Is.EqualTo(physicalIdentity));
             AssertIssue109ProtectedCables(
                 session,

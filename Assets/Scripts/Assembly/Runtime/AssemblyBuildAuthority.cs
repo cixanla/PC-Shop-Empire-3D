@@ -1439,12 +1439,21 @@ namespace PCShopEmpire3D.Assembly
                 return OperationResult.Fail(AssemblyFailures.PowerSupplyUnretained);
             }
 
-            if (HasAtx24PowerCableRoute && !IsAtx24PowerCableRouted)
+            if (!HasAtx24PowerCableRoute ||
+                !HasEps12vPowerCableRoute ||
+                !HasPcieGpuPowerCableRoute)
+            {
+                return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            }
+
+            if (!IsAtx24PowerCableRouted ||
+                !IsEps12vPowerCableRouted ||
+                !IsPcieGpuPowerCableRouted)
             {
                 return OperationResult.Fail(AssemblyFailures.PowerCableMissing);
             }
 
-            return OperationResult.Fail(AssemblyFailures.BuildIncomplete);
+            return OperationResult.Success();
         }
 
         public AssemblyBuildSnapshot GetSnapshot()

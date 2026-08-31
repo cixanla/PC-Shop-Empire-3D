@@ -82,8 +82,8 @@ namespace PCShopEmpire3D.Tests.EditMode.Orders
                 Is.EqualTo(eps12vRevision));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision,
                 Is.EqualTo(pcieRevision));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(powerState.ValidateReceiptHistory().IsSuccess, Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }
