@@ -5,7 +5,17 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #119 r58 exact electrical readiness Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #121 r59 exact power budget Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #121 technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7` üzerindedir; draft PR #122 açıktır. Canonical component catalog'a exact bağlanan immutable electrical metadata, mevcut exact electrical-readiness lineage'ını salt-okunur PSU budget assessment'ına taşır. Legacy-v1 policy `35 W` platform + `4 W` chassis + CPU/GPU/DDR5/NVMe/cooler yüklerinden `380 W` draw, yüzde 30 headroom ve 50 W ceiling ile `500 W` minimum PSU üretir; installed `550 W` PSU margin'i `+50 W`dır.
+
+Her assessment canonical `EvaluateElectricalReadiness()` sorgusunu yeniden çalıştırır; UI boolean veya stale caller snapshot kullanmaz. Missing/foreign/mismatched profile fail-closed, undersized PSU exact blocked assessment'tır. Inventory, Assembly, BuildKit, reservation, custody, receipt, replay ve benchmark state değişmez. Workbench presentation ready durumda `GÜÇ BÜTÇESİ UYGUN / 380W / EN AZ 500W / PSU 550W / GÜÇ TESTİ BEKLİYOR` gösterir; yeni input, collider, renderer, light, camera veya authority eklenmez.
+
+Mac targeted `15/15`, full EditMode `768/768`, PlayMode `158/158`; failed/skipped/inconclusive `0`. Universal Mac report `330465045` bayt, deep/strict-valid `x86_64 + arm64`; Apple M1/Metal exact power-budget marker ve three-state Assembly readability smoke geçti. Assembly budget `479/470`, üç 1280x720 capture byte-distinct, central glare `0`; complete settings manifesti byte-exact ve ProBuilder user-setting diff'i commit dışındadır.
+
+Bu dilim power-test/power-on, connector pinout/polarity/short-circuit fiziği, fault/damage, POST, BIOS/OS, driver, benchmark, packaging veya delivery üretmez. Fiziksel Windows clean exact-commit x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #122 draft, Issue/Roadmap `In Progress`, claim `human=false`; Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
+
+## Önceki geliştirme checkpoint'i — Issue #119 r58 exact electrical readiness Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #119 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc` üzerindedir; draft PR #120 açıktır. Canonical seven-component retained Assembly ve exact routed ATX24/EPS12V/PCIe-GPU zinciri artık tek salt-okunur `EvaluateElectricalReadiness()` sözleşmesine sahiptir. Başarılı snapshot exact build/chassis, on stable item, yedi retain/secure ve üç route operation kimliği ile Assembly+üç cable revision'ı bağlar. Eksik/loose/unsupported/invariant drift fail-closed kalır; sorgu hiçbir authority state'ini değiştirmez.
 

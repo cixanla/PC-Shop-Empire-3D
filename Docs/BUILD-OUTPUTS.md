@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B exact system power budget and PSU headroom doğrulaması — 31 Ağustos 2026
+
+Issue #121 technical source `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.465.045` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `ed6ede7c7cdb48c359df33cad4bbfd228489271abb972a898f88e39a4ef70798`.
+- Testler: targeted catalog/authority/scene/input/hero `15/15`, full EditMode `768/768`, full PlayMode `158/158`; failed/skipped/inconclusive `0`.
+- Native power-budget runtime: Apple M1/Metal 1280x720; exact final-cable route/readiness zinciri `power-budget=380/500/550`, monitor/no-duplicate-loss/invariant markerları başarılı. Input System graceful shutdown, exit `0`, player residue `0`.
+- Native Assembly readability: `479` total / `470` smoke-active renderer, `4` light, `1` camera; üç byte-distinct 1280x720 capture ve central glare `0`.
+- Complete `ProjectSettings + Packages` manifesti build öncesi/sonrası byte-exact. Ayrı user/editor-owned ProBuilder ayarı da build boyunca aynı kaldı ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, connector/pinout/short-circuit fiziği, power-test/power-on/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B exact electrical readiness ve workbench feedback doğrulaması — 31 Ağustos 2026
 
 Issue #119 technical source `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc` Mac üzerinde doğrulandı:

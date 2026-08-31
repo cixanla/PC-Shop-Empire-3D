@@ -1,10 +1,20 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #119 Exact Electrical Readiness r58 source, exact authority/scene contracts, full Mac regression, universal Mac native ve Apple M1/Metal readiness/Assembly smoke kapıları geçti; draft PR #120 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; base main `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; parent Issue #115 head `f26e95ce288e2e7f17d0aa642f59ee9fa0fffef5`; technical source `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`; draft PR #120; acceptance #1–#5 PASS, #6 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #121 Exact System Power Budget r59 source, catalog/policy/authority/scene contracts, full Mac regression, universal Mac native ve Apple M1/Metal power-budget/Assembly smoke kapıları geçti; draft PR #122 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #119 docs head `8f0671fd04016b1115e622d963e9d28e7ef08c19`; technical source `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`; draft PR #122; acceptance #1–#5 PASS, #6 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #119 / Epic #10
+## En yeni teknik checkpoint — Issue #121 / Epic #10
+
+- Exact immutable electrical metadata canonical component catalog'a reference-bound kalır. Legacy-v1 policy `380 W` draw, `500 W` minimum PSU ve installed `550 W` için `+50 W` margin üretir; threshold/undersized/missing/foreign cases fail-closed testlidir.
+- `AssessPowerBudget()` cached presentation state'ine güvenmez; her çağrıda exact electrical readiness'i yeniden değerlendirir ve current ProductId/kind lineage'ını çözer. Inventory/Assembly/BuildKit/reservation/receipt/replay/benchmark mutation'ı yoktur.
+- Workbench ready text `GÜÇ BÜTÇESİ UYGUN / 380W / EN AZ 500W / PSU 550W / GÜÇ TESTİ BEKLİYOR`; no new input/collider/renderer/light/camera/authority. Power-test/power-on/POST/fault/BIOS/OS/benchmark ayrı kalır.
+- Technical commit `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`. Targeted `15/15`, full EditMode `768/768`, PlayMode `158/158`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330465045` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal exact `power-budget=380/500/550` ve Assembly `479/470` readability smoke başarılı; üç 1280x720 capture unique, central glare `0`.
+- Complete ProjectSettings/Packages manifesti build boyunca byte-exact. Korunan ProBuilder user-setting hash'i before/after exact; diff unstaged ve technical commit dışında. Draft PR #122 açık.
+- Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback kapıları ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+
+## Önceki teknik checkpoint — Issue #119 / Epic #10
 
 - Exact retained seven-component Assembly ile routed ATX24/EPS12V/PCIe-GPU zinciri, deterministic blocker order kullanan pure `EvaluateElectricalReadiness()` query'sine bağlandı. Successful snapshot exact build/chassis, on item, on source operation ve dört revision kimliğini taşır; re-evaluation no-mutation'dır.
 - Workbench projection yalnız initialized canonical session'ı okur ve revision değişiminde yenilenir. Ready text `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; accepted unroute exact blocker'a döner. İki Ignore Raycast renderer dışında collider/light/camera/NavMesh/item/input/authority delta yoktur.
