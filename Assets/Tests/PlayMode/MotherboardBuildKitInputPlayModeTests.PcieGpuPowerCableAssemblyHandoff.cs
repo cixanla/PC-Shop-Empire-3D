@@ -196,12 +196,18 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return LoadGarage(value => marker = value);
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.HasPcieGpuPowerCableAssemblyHandoffR54Runtime, Is.True);
+            Assert.That(marker.HasPowerBudgetWorkbenchR59Runtime, Is.True);
 
             GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
             yield return PrepareQuote(marker, keyboard);
             yield return IssuePhysicalWorkTicket(marker, keyboard);
             StageCompleteIssue89BuildKit(marker);
             PrepareIssue109RoutedAtx24AndEps12v(marker);
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation().Error,
+                Is.EqualTo(ElectricalReadinessFailures.PcieGpuPowerCableMissing));
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.False);
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("PCIe GPU 6+2 KABLOSUNU BAĞLA"));
 
             Assert.That(session.TryGetPrototypeCustomPcBuildOrder(
                 out CustomPcBuildOrderRecord workOrder), Is.True);
@@ -334,8 +340,23 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
                 Is.EqualTo(1));
-            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation()
+                .IsSuccess, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.HasPowerBudgetAssessment,
+                Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.SystemPowerDrawWatts,
+                Is.EqualTo(380));
+            Assert.That(marker.ElectricalReadinessWorkbench.MinimumRecommendedPsuWatts,
+                Is.EqualTo(500));
+            Assert.That(marker.ElectricalReadinessWorkbench.InstalledPsuWatts,
+                Is.EqualTo(550));
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("380W / EN AZ 500W / PSU 550W")
+                    .And.Contain("GÜÇ BÜTÇESİ UYGUN")
+                    .And.Contain("GÜÇ TESTİ BEKLİYOR"));
+            Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().IsSuccess,
+                Is.True);
             Assert.That(cable.GetInstanceID(), Is.EqualTo(physicalIdentity));
             AssertIssue109ProtectedCables(
                 session,
@@ -383,6 +404,11 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableRevision, Is.EqualTo(2));
             Assert.That(session.AssemblyBuild.PcieGpuPowerCableReceiptCount,
                 Is.EqualTo(2));
+            Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation().Error,
+                Is.EqualTo(ElectricalReadinessFailures.PcieGpuPowerCableMissing));
+            Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.False);
+            Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
+                Does.Contain("GÜÇ HAZIR DEĞİL"));
             Assert.That(session.CustomPcBuildKit.StagedComponentCount, Is.EqualTo(10));
             Assert.That(session.CustomPcBuildKit.AssemblyHandoffCount, Is.EqualTo(10));
             AssertIssue89ReservationStillLive(session, workOrder, pcieGpuLine);

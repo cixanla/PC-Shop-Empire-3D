@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -29,7 +30,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-retail-checkout-hero-r56-v1"));
+                Is.EqualTo("garage-driver-bound-validation-r66-v1"));
 
             Transform[] transforms = SceneManager.GetActiveScene()
                 .GetRootGameObjects()
@@ -103,10 +104,42 @@ namespace PCShopEmpire3D.Tests.PlayMode
 
             Assert.That(
                 transforms.Count(transform => transform.name == "StarterShelf"),
-                Is.EqualTo(1));
+                Is.Zero);
+            Assert.That(
+                transforms.Count(transform =>
+                    transform.name == "ShelfPartsBox" ||
+                    transform.name == "ShelfTechUnit" ||
+                    transform.name == "ShelfTechDisplay"),
+                Is.Zero);
             Assert.That(
                 transforms.Count(transform =>
                     transform.name == "AuthoritativeRetailShelfA"),
+                Is.EqualTo(1));
+            Transform authoritativeShelf = transforms.Single(transform =>
+                transform.name == "AuthoritativeRetailShelfA");
+            Assert.That(
+                authoritativeShelf.GetComponentsInChildren<Collider>(true).Length,
+                Is.EqualTo(5));
+            PlacementSurface[] shelfSurfaces = authoritativeShelf
+                .GetComponentsInChildren<PlacementSurface>(true);
+            InventoryPlacementZone[] shelfZones = authoritativeShelf
+                .GetComponentsInChildren<InventoryPlacementZone>(true);
+            Assert.That(shelfSurfaces.Length, Is.EqualTo(1));
+            Assert.That(shelfZones.Length, Is.EqualTo(1));
+            Assert.That(
+                shelfSurfaces[0].SurfaceId,
+                Is.EqualTo("prototype.retail-shelf-a"));
+            Assert.That(shelfZones[0].PlacementSurface, Is.SameAs(shelfSurfaces[0]));
+            Assert.That(
+                shelfZones[0].ContainerId.Value,
+                Is.EqualTo(GarageStockFlowSession.ShelfContainerIdValue));
+            Assert.That(
+                transforms.Select(transform =>
+                        transform.GetComponent<InventoryPlacementZone>())
+                    .Count(zone =>
+                        zone != null &&
+                        zone.ContainerId.Value ==
+                            GarageStockFlowSession.ShelfContainerIdValue),
                 Is.EqualTo(1));
             Assert.That(
                 transforms.Count(transform =>
@@ -153,13 +186,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(
                 Object.FindObjectsByType<MeshRenderer>(
                     FindObjectsSortMode.None).Length,
-                Is.EqualTo(478));
+                Is.EqualTo(464));
             Assert.That(
                 SceneManager.GetActiveScene().GetRootGameObjects()
                     .SelectMany(root =>
                         root.GetComponentsInChildren<MeshRenderer>(true))
                     .Count(),
-                Is.EqualTo(502));
+                Is.EqualTo(488));
             Assert.That(
                 Object.FindObjectsByType<Light>(
                     FindObjectsSortMode.None).Length,
@@ -181,6 +214,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
                     .RetailCheckoutHeroReadabilitySmokeSuccessMarker,
                 Does.Contain("states=customer-approach+shelf-offer-basket+")
                     .And.Contain("checkout-payment-receipt")
+                    .And.Contain("shelf-authority=single")
+                    .And.Contain("legacy-starter-shelf=absent")
                     .And.Contain("screenshots=3")
                     .And.Contain("world-text=preserved")
                     .And.Contain("human=false"));

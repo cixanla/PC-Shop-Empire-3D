@@ -703,6 +703,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasStorageSlot)
             {
                 return AssemblyFailures.InvalidStorageSlotDefinition;
@@ -794,6 +800,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool closing)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasStorageSlot || slotId != _storageSlotDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -877,6 +889,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceStorageSeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasStorageSlot || slotId != _storageSlotDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;

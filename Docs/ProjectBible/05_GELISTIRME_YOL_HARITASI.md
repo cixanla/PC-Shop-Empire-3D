@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #114 customer-facing Retail/Checkout hero readability r56 technical/main `0ea82e826aff9d245e0d4002386193278f25b483` üzerinde kabul edildi: Mac `754/754 EditMode + 158/158 PlayMode`, clean Windows aynı counts, universal Mac native, Windows x64 IL2CPP/D3D11 Intel Iris Xe runtime, üç-state readability ve final residue kapıları geçti. Issue closed/Roadmap Done; parent visual Epic #18 ve Steam 1.0 Goal açık kalır. USB bağlı olmadığı için immutable checkpoint ertelenmiştir; fiziksel Windows geçici olarak erişilemezken Mac tek write lane'de geliştirme ve Mac/CI kapıları sürer. UTM, taşınabilirlik/derleme yardımcısı olabilir fakat gerçek Windows/Iris Xe release kanıtının yerini tutmaz.
+Issue #135 Driver-Bound Deterministic Benchmark, Stress and Thermal Validation r66 technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6` üzerinde Mac-ready durumdadır. Separate validation authority exact current driver/power/Assembly/power-budget owner chain'ine bağlı immutable receipt history'si taşır. Fictional immutable performance catalog/profile bütün sonucu integer-only hesaplar; replay-before-history tamper gate, controlled rerun, power-off sonrası `NotCurrent` ve no-upstream-mutation korunur.
 
-Sıradaki bounded P1, Issue #115'tir: legacy `StarterShelf` collider/NavMesh hacmini gerçek `AuthoritativeRetailShelfA` ile tek placement/inventory authority ve çakışmasız customer approach→browse→checkout→exit rotasına dönüştürmek. Accepted r56 readability, WASD+mouse, gamepad automation ve full regression korunmadan sonraki görsel veya dünya kapsamına geçilmez.
+Mac targeted `5/5 + 125/125 + 6/6 + 12/12 + 29/29`, final full `804/804 EditMode + 187/187 PlayMode`, universal `330709325` bayt/`302` dosya build ve Apple M1/Metal 1280×720 keyboard+mouse+virtual-gamepad validation review/run→power-off smoke geçti. Exact result `401`, `300` stable step, CPU/GPU `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good` ve immutable replay/history/invariants'tır. Draft PR #136 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Bu yalnız bounded fictional validation receipt'idir: gerçek benchmark/process/sensor/endurance, fault/repair/quality decision ve delivery ayrı sonraki dilimlerdir. Fiziksel Windows olmadığından clean exact-source x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Mac tek authoritative write lane'de validation receipt'ini tüketen fault/quality/servis karar zincirini sürdürür.
 
 Geçici gerçekçi takvim:
 
@@ -254,11 +254,13 @@ Bir özel PC işinin tekliften teslimata fiziksel, açıklanabilir ve teknik ola
 5. Kasa açma, anakart/CPU/RAM/depolama/PSU/GPU/soğutucu montajı.
 6. Vida, kablo ve termal macun için yönlendirilmiş fizik.
 7. Hata/risk/kalite dereceleri.
-8. Kurgusal firmware/OS kurulumu.
-9. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
-10. Kablo yönetimi/temizlik, paketleme ve teslim.
-11. Garanti kaydı ve müşteri kabulü.
-12. Guardian build graph ve iş zinciri invariant'ları.
+8. Electrical readiness → power-test preflight → safe power-on/interlock → exact active-cycle-bound deterministic baseline POST receipt.
+9. Ayrı firmware/BIOS/UEFI authority ve görünür player workflow'u; baseline receipt firmware başarı kanıtı sayılmaz.
+10. Kurgusal OS ve driver kurulumu.
+11. Boot, stabilite, termal, güç, gürültü ve kullanım benchmark'ı.
+12. Kablo yönetimi/temizlik, paketleme ve teslim.
+13. Garanti kaydı ve müşteri kabulü.
+14. Guardian build graph ve iş zinciri invariant'ları.
 
 ### Ana riskler
 

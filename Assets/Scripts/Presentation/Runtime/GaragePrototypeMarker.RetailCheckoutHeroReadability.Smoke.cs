@@ -9,6 +9,7 @@ using PCShopEmpire3D.Economy;
 using PCShopEmpire3D.Inventory;
 using PCShopEmpire3D.Presentation.Interaction;
 using PCShopEmpire3D.Retail;
+using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation
@@ -20,7 +21,8 @@ namespace PCShopEmpire3D.Presentation
             "states=customer-approach+shelf-offer-basket+" +
             "checkout-payment-receipt hero=ready " +
             "materials=dark-metal+brushed-steel+rubber+safety-accent+" +
-            "label-paper light=focused total-renderers=502 lights=5 cameras=1 " +
+            "label-paper light=focused shelf-authority=single " +
+            "legacy-starter-shelf=absent total-renderers=486 lights=5 cameras=1 " +
             "screenshots=3 glare=bounded glare-pixels<=256 " +
             "contrast=bounded contrast-ratio>=1.25 " +
             "ui=hud-suppressed world-text=preserved human=false";
@@ -218,7 +220,7 @@ namespace PCShopEmpire3D.Presentation
                 LogRetailCheckoutCaptureComposition("customer-approach");
                 yield return CaptureLookdevFrame(
                     captureDirectory,
-                    "retail-customer-approach-r56.png");
+                    "retail-customer-approach-r57.png");
                 RestoreRetailCaptureControl(paused: true);
 
                 customerFlow.CustomerAgent.speed = originalAgentSpeed;
@@ -367,7 +369,7 @@ namespace PCShopEmpire3D.Presentation
                 LogRetailCheckoutCaptureComposition("shelf-offer-basket");
                 yield return CaptureLookdevFrame(
                     captureDirectory,
-                    "retail-shelf-offer-basket-r56.png");
+                    "retail-shelf-offer-basket-r57.png");
                 RestoreRetailCaptureControl(paused: true);
 
                 playerMotor.SetPaused(true);
@@ -484,14 +486,14 @@ namespace PCShopEmpire3D.Presentation
                     "checkout-payment-receipt");
                 yield return CaptureLookdevFrame(
                     captureDirectory,
-                    "retail-checkout-payment-receipt-r56.png");
+                    "retail-checkout-payment-receipt-r57.png");
                 RestoreRetailCaptureControl(paused: true);
 
                 string[] expectedScreenshots =
                 {
-                    "retail-customer-approach-r56.png",
-                    "retail-shelf-offer-basket-r56.png",
-                    "retail-checkout-payment-receipt-r56.png"
+                    "retail-customer-approach-r57.png",
+                    "retail-shelf-offer-basket-r57.png",
+                    "retail-checkout-payment-receipt-r57.png"
                 };
                 int maximumGlarePixels = 0;
                 float minimumContrastRatio = float.PositiveInfinity;
@@ -631,6 +633,11 @@ namespace PCShopEmpire3D.Presentation
             Transform heroRoot = heroProjection.transform;
             Renderer[] heroRenderers = heroRoot.GetComponentsInChildren<Renderer>(true);
             Light retailLight = FindSceneLight("RetailCheckoutFillLight");
+            Transform[] sceneTransforms = heroProjection.gameObject.scene
+                .GetRootGameObjects()
+                .SelectMany(root =>
+                    root.GetComponentsInChildren<Transform>(true))
+                .ToArray();
 
             Renderer FindHeroRenderer(string name)
             {
@@ -706,6 +713,70 @@ namespace PCShopEmpire3D.Presentation
                 mismatches.Add("duplicate-authority-decoy");
             }
 
+            if (sceneTransforms.Any(transform =>
+                    transform.name == "StarterShelf" ||
+                    transform.name == "ShelfPartsBox" ||
+                    transform.name == "ShelfTechUnit" ||
+                    transform.name == "ShelfTechDisplay"))
+            {
+                mismatches.Add("legacy-starter-shelf-present");
+            }
+
+            Transform[] authoritativeShelves = sceneTransforms
+                .Where(transform =>
+                    transform.name == "AuthoritativeRetailShelfA")
+                .ToArray();
+            if (authoritativeShelves.Length != 1)
+            {
+                mismatches.Add(
+                    $"authoritative-shelf-count-{authoritativeShelves.Length}");
+            }
+            else
+            {
+                Transform authoritativeShelf = authoritativeShelves[0];
+                PlacementSurface[] shelfSurfaces = authoritativeShelf
+                    .GetComponentsInChildren<PlacementSurface>(true);
+                InventoryPlacementZone[] shelfZones = authoritativeShelf
+                    .GetComponentsInChildren<InventoryPlacementZone>(true);
+                InventoryPlacementZone[] sceneShelfZones = sceneTransforms
+                    .Select(transform =>
+                        transform.GetComponent<InventoryPlacementZone>())
+                    .Where(zone =>
+                        zone != null &&
+                        zone.ContainerId.Value ==
+                            GarageStockFlowSession.ShelfContainerIdValue)
+                    .ToArray();
+                int shelfColliderCount = authoritativeShelf
+                    .GetComponentsInChildren<Collider>(true).Length;
+                bool surfaceContractMatches =
+                    shelfSurfaces.Length == 1 &&
+                    shelfSurfaces[0].SurfaceId ==
+                        "prototype.retail-shelf-a" &&
+                    shelfSurfaces[0].transform.parent == authoritativeShelf;
+                bool zoneContractMatches =
+                    shelfZones.Length == 1 &&
+                    surfaceContractMatches &&
+                    shelfZones[0].ContainerKind ==
+                        InventoryContainerKind.Shelf &&
+                    shelfZones[0].ContainerId.Value ==
+                        GarageStockFlowSession.ShelfContainerIdValue &&
+                    shelfZones[0].PlacementSurface == shelfSurfaces[0];
+
+                if (shelfColliderCount != 5 ||
+                    !surfaceContractMatches ||
+                    !zoneContractMatches ||
+                    sceneShelfZones.Length != 1 ||
+                    zoneContractMatches &&
+                    sceneShelfZones[0] != shelfZones[0])
+                {
+                    mismatches.Add(
+                        $"shelf-contract-colliders-{shelfColliderCount}-" +
+                        $"surfaces-{shelfSurfaces.Length}-" +
+                        $"zones-{shelfZones.Length}-" +
+                        $"scene-zones-{sceneShelfZones.Length}");
+                }
+            }
+
             if (heroProjection.StockFlow == null ||
                 heroProjection.ShelfOfferVisual == null ||
                 heroProjection.BasketReservedVisual == null ||
@@ -733,8 +804,8 @@ namespace PCShopEmpire3D.Presentation
                 mismatches.Add("fill-light");
             }
 
-            if (activeRendererCount != 478 ||
-                totalRendererCount != 502 ||
+            if (activeRendererCount != 462 ||
+                totalRendererCount != 486 ||
                 lightCount != 5 ||
                 cameraCount != 1)
             {

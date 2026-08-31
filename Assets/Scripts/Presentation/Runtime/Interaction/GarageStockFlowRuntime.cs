@@ -157,6 +157,12 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return Session;
         }
 
+        public bool TryGetInitializedSession(out GarageStockFlowSession session)
+        {
+            session = Session;
+            return session != null;
+        }
+
         public void RefreshPresentation()
         {
             GarageStockFlowSession session = EnsureInitialized();

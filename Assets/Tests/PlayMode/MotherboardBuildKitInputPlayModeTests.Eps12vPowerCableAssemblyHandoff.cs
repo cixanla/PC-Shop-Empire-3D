@@ -318,7 +318,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(session.AssemblyBuild.Eps12vPowerCableReceiptCount,
                 Is.EqualTo(1));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
-                Is.EqualTo(AssemblyFailures.BuildIncomplete));
+                Is.EqualTo(AssemblyFailures.PowerCableMissing));
             Assert.That(cable.GetInstanceID(), Is.EqualTo(physicalIdentity));
             AssertIssue107ProtectedCables(
                 session,
