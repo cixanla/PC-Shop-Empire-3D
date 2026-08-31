@@ -31,9 +31,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
     /// <summary>
     /// Focused player command surface for one exact power-test preflight, its safe
-    /// Off/Energized transition and the bounded post-POST UEFI baseline review/save step.
-    /// The existing readiness display remains the presentation observer; this component
-    /// owns only interaction gates and delegates immutable receipts.
+    /// Off/Energized transition, bounded post-POST UEFI baseline review/save and the
+    /// exact-storage fictional OS installation command. The existing readiness display
+    /// remains the presentation observer; this component owns only interaction gates
+    /// and delegates immutable receipts.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(68)]
@@ -66,6 +67,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private int _lastSuccessfulOperationFrame = -1;
         private bool _isReviewingFirmwareBaseline;
         private PcPostStartupReceipt _reviewedPostStartupReceipt;
+        private bool _isReviewingFictionalOsInstallation;
+        private PcFirmwareBaselineReceipt _reviewedFirmwareBaselineReceipt;
         private readonly RaycastHit[] _lineOfSightHits =
             new RaycastHit[LineOfSightHitCapacity];
         private int _promptCacheFrame = -1;
@@ -96,6 +99,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsReviewingFirmwareBaseline =>
             _isReviewingFirmwareBaseline;
+
+        public bool IsReviewingFictionalOsInstallation =>
+            _isReviewingFictionalOsInstallation;
 
         public string LastFailureCode { get; private set; } = string.Empty;
 
@@ -158,6 +164,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             InvalidatePromptCache();
             RefreshFocusState();
             ResetFirmwareReviewIfContextChanged();
+            ResetFictionalOsReviewIfContextChanged();
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
                 playerInput.PausePressedThisFrame)
             {
@@ -194,17 +201,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 OperationResult powerResult = Remember(TryAttemptAuthorized());
                 if (powerResult.IsSuccess)
                 {
-                    ResetFirmwareReview();
+                    ResetPrimaryReviews();
                 }
 
                 readinessProjection.RefreshPresentation();
                 return;
             }
 
-            OperationResult firmwareGate = ValidateFirmwareInteractionGate();
-            if (firmwareGate.IsFailure)
+            OperationResult primaryGate = ValidateFirmwareInteractionGate();
+            if (primaryGate.IsFailure)
             {
-                Remember(firmwareGate);
+                Remember(primaryGate);
                 readinessProjection?.RefreshPresentation();
                 return;
             }
@@ -234,6 +241,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         }
 
         internal OperationResult TryAttemptFirmwareAuthorizedForTests()
+        {
+            return Remember(TryAttemptFirmwareAuthorized());
+        }
+
+        internal OperationResult InspectFictionalOsInteractionGateForTests()
+        {
+            return ValidateFirmwareInteractionGate();
+        }
+
+        internal OperationResult TryAttemptFictionalOsAuthorizedForTests()
         {
             return Remember(TryAttemptFirmwareAuthorized());
         }
@@ -378,6 +395,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(currentPostStartup.Error);
             }
 
+            OperationResult<PcFirmwareBaselineReceipt> currentFirmware =
+                powerState.EvaluateCurrentFirmwareBaseline();
+            if (currentFirmware.IsSuccess)
+            {
+                return TryAttemptFictionalOsAuthorized(
+                    session,
+                    powerState,
+                    currentFirmware.Value);
+            }
+
             if (!_isReviewingFirmwareBaseline)
             {
                 _isReviewingFirmwareBaseline = true;
@@ -409,6 +436,54 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             _lastSuccessfulOperationFrame = Time.frameCount;
             ResetFirmwareReview();
+            return OperationResult.Success();
+        }
+
+        private OperationResult TryAttemptFictionalOsAuthorized(
+            GarageStockFlowSession session,
+            PcPowerStateAuthority powerState,
+            PcFirmwareBaselineReceipt currentFirmware)
+        {
+            if (!_isReviewingFictionalOsInstallation)
+            {
+                _isReviewingFictionalOsInstallation = true;
+                _reviewedFirmwareBaselineReceipt = currentFirmware;
+                _lastSuccessfulOperationFrame = Time.frameCount;
+                return OperationResult.Success();
+            }
+
+            if (!ReferenceEquals(
+                    _reviewedFirmwareBaselineReceipt,
+                    currentFirmware))
+            {
+                ResetFictionalOsReview();
+                return OperationResult.Fail(
+                    PcFictionalOsInstallationFailures.NotCurrent);
+            }
+
+            OperationResult<PcFictionalOsInstallationAuthority> ensured =
+                session.EnsureFictionalOsInstallationAuthority();
+            if (ensured.IsFailure)
+            {
+                return OperationResult.Fail(ensured.Error);
+            }
+
+            PcFictionalOsInstallationAuthority authority = ensured.Value;
+            OperationResult<PcFictionalOsInstallationReceipt> installed =
+                authority.TryCompleteInstallation(
+                    session.CreatePrototypeFictionalOsInstallationOperationId(
+                        currentFirmware),
+                    currentFirmware,
+                    session.AssemblyBuild.StorageItemId,
+                    powerState.Revision,
+                    authority.Revision);
+            if (installed.IsFailure)
+            {
+                return OperationResult.Fail(installed.Error);
+            }
+
+            _lastSuccessfulOperationFrame = Time.frameCount;
+            ResetFictionalOsReview();
             return OperationResult.Success();
         }
 
@@ -539,10 +614,37 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(currentPostStartup.Error);
             }
 
-            if (powerState.EvaluateCurrentFirmwareBaseline().IsSuccess)
+            OperationResult<PcFirmwareBaselineReceipt> currentFirmware =
+                powerState.EvaluateCurrentFirmwareBaseline();
+            if (currentFirmware.IsSuccess)
             {
-                return OperationResult.Fail(
-                    PcFirmwareBaselineFailures.AlreadyCompleted);
+                if (session.TryGetFictionalOsInstallation(
+                        out PcFictionalOsInstallationAuthority osAuthority))
+                {
+                    OperationResult osHistory =
+                        osAuthority.ValidateReceiptHistory();
+                    if (osHistory.IsFailure)
+                    {
+                        return osHistory;
+                    }
+
+                    if (osAuthority.EvaluateInstalledOperatingSystem().IsSuccess)
+                    {
+                        return OperationResult.Fail(
+                            PcFictionalOsInstallationFailures.AlreadyCompleted);
+                    }
+                }
+
+                if (_isReviewingFictionalOsInstallation &&
+                    !ReferenceEquals(
+                        _reviewedFirmwareBaselineReceipt,
+                        currentFirmware.Value))
+                {
+                    return OperationResult.Fail(
+                        PcFictionalOsInstallationFailures.NotCurrent);
+                }
+
+                return OperationResult.Success();
             }
 
             if (_isReviewingFirmwareBaseline &&
@@ -575,6 +677,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             RefreshFocusState();
             ResetFirmwareReviewIfContextChanged();
+            ResetFictionalOsReviewIfContextChanged();
             if (playerMotor == null || playerMotor.IsPaused)
             {
                 return string.Empty;
@@ -643,9 +746,55 @@ namespace PCShopEmpire3D.Presentation.Interaction
                             powerState.EvaluateCurrentFirmwareBaseline();
                         if (firmware.IsSuccess)
                         {
+                            if (session.TryGetFictionalOsInstallation(
+                                    out PcFictionalOsInstallationAuthority
+                                        osAuthority))
+                            {
+                                OperationResult osHistory =
+                                    osAuthority.ValidateReceiptHistory();
+                                if (osHistory.IsFailure)
+                                {
+                                    return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                           "OS KAYDI ENGELLİ • " +
+                                           osHistory.Error.Code;
+                                }
+
+                                if (osAuthority
+                                    .EvaluateInstalledOperatingSystem()
+                                    .IsSuccess)
+                                {
+                                    return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                           "KURGUSAL OS KURULDU • " +
+                                           "SONRAKİ AŞAMA: DRIVER";
+                                }
+                            }
+
+                            string osPrimaryBinding = playerInput != null
+                                ? playerInput.PrimaryBindingPrompt
+                                : "LMB / RT";
+                            if (_isReviewingFictionalOsInstallation)
+                            {
+                                return "KURGUSAL OS KURULUMU • " +
+                                       "WORKSHOP STANDARD • " +
+                                       $"{osPrimaryBinding}: KURULUMU BAŞLAT " +
+                                       "VE TAMAMLA • " +
+                                       $"{bindingPrompt}: GÜCÜ KAPAT";
+                            }
+
+                            if (LastFailureCode.StartsWith(
+                                    "assembly.fictional-os-installation.",
+                                    StringComparison.Ordinal))
+                            {
+                                return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                       "OS KURULUMU ENGELLİ • " +
+                                       LastFailureCode;
+                            }
+
                             return $"{bindingPrompt}: GÜCÜ KAPAT • " +
                                    "UEFI BASELINE KAYDEDİLDİ • " +
-                                   "SONRAKİ AŞAMA: OS";
+                                   "SONRAKİ AŞAMA: OS • " +
+                                   $"{osPrimaryBinding}: KURGUSAL OS " +
+                                   "KURULUMUNU AÇ";
                         }
 
                         string primaryBinding = playerInput != null
@@ -739,6 +888,58 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             _isReviewingFirmwareBaseline = false;
             _reviewedPostStartupReceipt = null;
+        }
+
+        private void ResetFictionalOsReviewIfContextChanged()
+        {
+            if (!_isReviewingFictionalOsInstallation)
+            {
+                return;
+            }
+
+            if (playerInput == null || playerMotor == null ||
+                playerMotor.IsPaused ||
+                playerInput.PausePressedThisFrame || PlayerIsBusy() ||
+                PlayerHasCompetingWorldInteractOwner() || !_isFocused)
+            {
+                ResetFictionalOsReview();
+                return;
+            }
+
+            GarageStockFlowSession session = ResolveSession();
+            if (session != null &&
+                session.TryGetPowerState(
+                    out PcPowerStateAuthority powerState) &&
+                powerState.IsEnergized)
+            {
+                OperationResult<PcFirmwareBaselineReceipt> currentFirmware =
+                    powerState.EvaluateCurrentFirmwareBaseline();
+                bool alreadyInstalled =
+                    session.TryGetFictionalOsInstallation(
+                        out PcFictionalOsInstallationAuthority authority) &&
+                    authority.EvaluateInstalledOperatingSystem().IsSuccess;
+                if (currentFirmware.IsSuccess && !alreadyInstalled &&
+                    ReferenceEquals(
+                        currentFirmware.Value,
+                        _reviewedFirmwareBaselineReceipt))
+                {
+                    return;
+                }
+            }
+
+            ResetFictionalOsReview();
+        }
+
+        private void ResetFictionalOsReview()
+        {
+            _isReviewingFictionalOsInstallation = false;
+            _reviewedFirmwareBaselineReceipt = null;
+        }
+
+        private void ResetPrimaryReviews()
+        {
+            ResetFirmwareReview();
+            ResetFictionalOsReview();
         }
 
         private void InvalidatePromptCache()
