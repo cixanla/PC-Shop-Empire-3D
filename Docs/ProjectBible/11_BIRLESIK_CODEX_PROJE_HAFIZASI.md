@@ -5,11 +5,22 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #133 docs head `712dec942d82f1887952de7a15e18fa3be93ae4e`; active Issue #135 technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d`; draft PR #136
+**Authoritative Git state:** parent Issue #135 docs head `17f74a6f953707b9cd7240957a0cc906f614aeda`; active Issue #137 technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`; draft PR #138
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #135 Driver-Bound Deterministic Benchmark, Stress and Thermal Validation
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #137 Validation-Bound Quality Sign-Off and Packaging Release
+
+- Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner `CustomPcWorkOrderAuthority` ve `PcValidationAuthority` pair'ına reference-bound'dur. İkinci Inventory/Orders/Assembly/power/validation gameplay authority yoktur.
+- Immutable release receipt exact work order/ticket, request/quote/customer/claim/workbench; on serialized reservation line'ı; passed/stable owner validation; matching owner safe power-off ve exact current electrical readiness'i bağlar. Yedi component item/product ile typed ATX24/EPS12V/PCIe-GPU cable item/route lineage'ı fail-closed doğrulanır.
+- Exact same-command replay same-instance; changed reuse conflict, distinct operation controlled rerun ve monotonik history üretir. Receipt-history fold replay lookup'tan önce çalışır; deliberate tamper replay'i de `ReceiptHistoryInvalid` ile reddeder. New power cycle veya Assembly drift history'yi korur fakat current quality result `NotCurrent` olur.
+- Existing station validation sonrasında `E / A` safe power-off, ilk Primary Action quality review, ikinci `ReadyForPackaging` release yapar. Interact strict priority, pause/raw Pause, range/focus/LOS, busy hands, competing owner ve context-loss no-consume kuralları testlidir. Workbench observer-only yedi state gösterir; malformed quality history normal power-on'u softlock etmez.
+- Technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`; final targeted `12/12 + 5/5 + 4/4 + 6/6`, final full Mac `810/810 EditMode + 191/191 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330776338` bayt, `304` dosya; strict/deep-valid `x86_64 + arm64` app ve Apple M1/Metal 1280×720 exact r67 native smoke geçti. Marker player-triggered safe shutdown/review/release, keyboard+mouse+virtual-gamepad, exact ten-line job, immutable replay/history ve unchanged upstream/invariants zincirini kanıtlar; local Repository Guard PASS.
+- ProBuilder diff'i untouched/unstaged ve `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Draft PR #138 açık; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`.
+- Bu bounded dilim fiziksel package item/workcell/custody, delivery/shipping, save/load, warranty veya final settlement değildir. Sıradaki ayrı dilim immutable `ReadyForPackaging` receipt'ini fiziksel paketleme ve teslim custody zincirine bağlar.
+
+### Önceki üstün gelen durum — Issue #135 Driver-Bound Deterministic Benchmark, Stress and Thermal Validation
 
 - Exact `PcFictionalDriverInstallationAuthority`, `PcPowerStateAuthority`, `AssemblyBuildAuthority` ve `PcPowerBudgetAuthority` chain'ine bound ayrı `PcValidationAuthority`, current driver/OS/storage ile current firmware → POST → power-on → preflight, electrical readiness, power budget ve all component/cable lineage'ını immutable validation receipt history'sine bağlar. İkinci Assembly/power/driver/benchmark gameplay authority yoktur.
 - Immutable `PcPerformanceCatalog` canonical component catalog owner'ına bağlı yedi fictional product score/thermal/cooling kaydı taşır. Bounded integer-only `PcValidationProfile`; score `401`, fixed stress `300/Stable`, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W` ve quality `Good` üretir. Wall-clock/frame/FPS/random/host probe/physical sensor kullanılmaz.

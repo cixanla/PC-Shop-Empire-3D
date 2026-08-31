@@ -6,6 +6,14 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #137 r67, Unity bağımsız `PSE.Quality` assembly'si içinde exact work-order/ticket + owner validation + matching safe-shutdown zincirine bağlı ayrı `CustomPcQualityReleaseAuthority` ve immutable `ReadyForPackaging` receipt/history ekledi.
+- Quality completion, on exact serialized reservation satırını yedi component item/product ve typed ATX24/EPS12V/PCIe-GPU cable item lineage'ıyla doğrular; current Assembly/cable operation+revision drift'i, foreign/stale owner receipt'i ve yanlış power cycle'ı fail-closed reddeder.
+- Exact same-command replay same-instance, changed reuse conflict, distinct operation controlled rerun'dır; receipt-history fold replay lookup'tan önce çalışır ve deliberate tamper replay'i de reddeder. Inventory, Orders, BuildKit, Assembly, power ve validation authority'leri değişmez.
+- Existing Workbench'te validation sonrası `E / A` strict-priority safe shutdown; ilk `LMB / RT` quality review, ikinci release yürütür. Observer-only yedi state, keyboard+mouse+virtual-gamepad eşliği, same-frame power priority, context-loss no-consume ve malformed-history power-on recovery testlidir.
+- Technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`; final targeted `12/12 + 5/5 + 4/4 + 6/6`, full EditMode `810/810`, full PlayMode `191/191`, failed/skipped/inconclusive `0`.
+- Universal Mac report `330776338` bayt, `304` dosya, deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 r67 exact markerı `validation=passed stress=stable safe-shutdown=exact line-lineage=10 result=ready-for-packaging score=401 quality=good` ile geçti, observed exit/residue `0`.
+- Draft PR #138 açıktır; Issue #137/Roadmap `In Progress`, fiziksel Windows ve USB kapıları cihazlar olmadığı için ertelendi; UTM yerine geçmez, claim `human=false`tır. Ayrı user/editor-owned ProBuilder diff'i untouched/unstaged ve commit dışında kaldı.
+
 - Issue #135 r66, exact current driver/power/Assembly/power-budget owner chain'ine bağlı ayrı `PcValidationAuthority`, immutable receipt/history, controlled rerun ve replay-before-history tamper gate'i ekledi.
 - Immutable `PcPerformanceCatalog` ve bounded integer-only `PcValidationProfile`; yedi fictional component score/thermal/cooling kaydından deterministic `401` benchmark score, `300` stress step, `67 °C` CPU, `64 °C` GPU, `380/500/550 W`, `+50 W` margin ve `Good` quality sonucu üretir. Wall-clock, FPS, random, float truth, host probe veya gerçek sensor kullanılmaz.
 - Aggregate `EvaluateBenchmarkReadiness()` tam 10-parça/üç-kablo build için `Success`, eksik route için `PowerCableMissing`, incomplete tanım için `BuildIncomplete` döndürecek biçimde düzeltildi; validation exact electrical/power/driver lineage'ını ayrıca fail-closed doğrular.

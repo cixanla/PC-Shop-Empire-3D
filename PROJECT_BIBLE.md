@@ -5,7 +5,21 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #135 r66 driver-bound deterministic validation Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #137 r67 validation-bound quality release Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #137 technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2` üzerindedir; draft PR #138 açıktır. Unity-independent `PSE.Quality` içindeki ayrı `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ile exact owner `PcValidationAuthority` ve matching `PcPowerStateAuthority` evidence chain'ine bağlıdır. İkinci Inventory, Orders, Assembly, power, validation veya Economy gameplay authority yoktur.
+
+Immutable `CustomPcQualityReleaseReceipt`, request/quote/customer binding/inventory claim/workbench; exact on serialized reservation satırı; passed/stable validation; matching safe power-off; validation source electrical readiness ve deterministic score/stress/thermal/power/quality provenance'ını taşır. Yedi component item/product ile typed ATX24/EPS12V/PCIe-GPU cable item'ları exact reservation'a bağlıdır. Current Assembly bütün retain/secure/route operation ve cable revision'larıyla validation source snapshot'ına exact eşit kalmalıdır.
+
+Exact command replay same-instance, changed reuse conflict'tir; distinct operation controlled rerun üretir. Receipt-history fold replay lookup'tan önce çalışır ve tamper edilmiş history replay'i dahi reddeder. New power cycle veya Assembly/cable drift historical receipt'i korur fakat current evaluation'ı `NotCurrent` yapar.
+
+Existing station validation sonrasında strict-priority `E / A` safe shutdown, ilk `LMB / RT` quality dosyası review'ı ve ikinci `LMB / RT` `ReadyForPackaging` release'i çalıştırır. Pause/raw Pause, range/focus/LOS, busy hands, competing owner veya exact context drift review'ı input tüketmeden sıfırlar. Workbench authority yaratmadan `WaitingForValidation / AwaitingSafeShutdown / ReadyForReview / Reviewing / ReadyForPackaging / Rejected / NotCurrent` durumlarını ve exact failure code/metrics'i gösterir. Malformed quality history normal player power-on yolunu softlock etmez.
+
+Final targeted `12/12 + 5/5 + 4/4 + 6/6`, final full EditMode `810/810`, PlayMode `191/191`; failed/skipped/inconclusive `0`. Universal Mac report `330776338` bayt, app `304` dosya ve deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 exact r67 native smoke `validation=passed stress=stable safe-shutdown=exact line-lineage=10 result=ready-for-packaging score=401 quality=good` markerını bir kez verdi. Observed exit ve PC Shop process residue `0`dır; local Repository Guard geçti.
+
+Bu bounded sonuç fiziksel package item/workcell/custody, shipping/delivery, fault/repair, save/load, warranty veya final settlement değildir. Fiziksel Windows clean exact-source x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #138 draft, Issue/Roadmap `In Progress`, claim `human=false`; ProBuilder user-setting diff'i commit dışıdır ve `ProjectSettings/ProjectSettings.asset` byte-exact kalmıştır. Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı `ReadyForPackaging` receipt'ini fiziksel paketleme ve teslim custody zincirine bağlayan sıradaki dilime taşır.
+
+## Önceki geliştirme checkpoint'i — Issue #135 r66 driver-bound deterministic validation Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #135 technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d` üzerindedir; draft PR #136 açıktır. Exact current `PcFictionalDriverInstallationAuthority`, `PcPowerStateAuthority`, `AssemblyBuildAuthority` ve `PcPowerBudgetAuthority` owner chain'ine bağlı ayrı `PcValidationAuthority`, exact current driver/OS/storage, firmware → POST → power-on → preflight, electrical readiness, power budget ve bütün component/cable lineage'ını immutable `PcValidationReceipt` ledger'ına bağlar. İkinci Assembly, power, driver, Economy veya benchmark gameplay authority yoktur.
 

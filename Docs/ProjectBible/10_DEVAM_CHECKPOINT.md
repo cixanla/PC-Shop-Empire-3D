@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #135 driver-bound deterministic validation r66 source, fictional integer-only catalog/profile, exact current-cycle/electrical/power lineage, immutable rerun/history, replay-before-history tamper gate, two-step player path, five-state Workbench presentation, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #136 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #133 docs head `712dec942d82f1887952de7a15e18fa3be93ae4e`; technical source `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d`; draft PR #136; acceptance #1–#17 Mac PASS, #18 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #137 validation-bound quality sign-off ve packaging release r67 source, exact owner work-order/ticket/ten-line reservation, passed/stable validation + matching safe-shutdown, current Assembly drift gate, immutable rerun/history, replay-before-history tamper gate, two-step player path, seven-state Workbench presentation, P0 power recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #138 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #135 docs head `17f74a6f953707b9cd7240957a0cc906f614aeda`; technical source `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`; draft PR #138; Mac source/tests/build/native PASS, physical Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #135 / Epic #10
+## En yeni teknik checkpoint — Issue #137 / Epic #10
+
+- Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ve exact owner validation/power authority chain'ine bağlanır. Receipt exact request/quote/customer/claim/workbench, on serialized reservation satırı, passed/stable validation ve matching safe-shutdown provenance'ını immutable taşır.
+- Yedi component item/product ile typed ATX24/EPS12V/PCIe-GPU cable item'ları exact work-order reservation'ına bağlıdır. Current electrical readiness bütün item, retain/secure/route operation ve Assembly/cable revision'larıyla validation source snapshot'ına eşit kalmalıdır; drift receipt üretmez.
+- Exact same-operation replay same-instance; changed reuse conflict, distinct operation controlled rerun ve monotonik history üretir. History fold replay lookup'tan önce çalışır. New power cycle veya Assembly drift history'yi korur fakat current result `NotCurrent` olur.
+- Existing station validation sonrasında Interact strict-priority safe power-off, ilk Primary Action quality review, ikinci release yapar. Motor/raw pause, range/focus/LOS, busy hands, competing owner ve context drift review'ı input tüketmeden sıfırlar. Workbench observer-only yedi state ve exact metric/failure code gösterir; malformed history power-on'u softlock etmez.
+- Technical commit `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`. Final targeted `12/12 + 5/5 + 4/4 + 6/6`, final full EditMode `810/810`, PlayMode `191/191`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330776338` bayt; app `304` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r67 readiness + quality-release markerları birer kez geçti; observed exit/residue `0`. Local Repository Guard PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+- Sıradaki bounded zincir immutable `ReadyForPackaging` receipt'ini fiziksel package item/workcell/custody ve sonrasında shipping/delivery authority'sine bağlar; fault/repair, save/load, warranty ve final settlement ayrıca açık kalır.
+
+## Önceki teknik checkpoint — Issue #135 / Epic #10
 
 - Separate `PcValidationAuthority`, exact driver + power + Assembly + power-budget owner chain'ine bağlanır. Receipt exact current driver/OS/storage, firmware/POST/power/preflight, electrical readiness, power budget, component/cable operations/revisions ve performance catalog/profile lineage'ını immutable taşır.
 - Fictional immutable catalog/profile yalnız bounded integer hesap kullanır: benchmark `401`, fixed stress `300/Stable`, CPU/GPU peak `67/64 °C`, power `380/500/550 W`, margin `+50 W`, quality `Good`. Wall-clock/frame/FPS/random/host probe/sensor sonucu kullanılmaz.

@@ -2,6 +2,19 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B validation-bound quality sign-off ve packaging release doğrulaması — 31 Ağustos 2026
+
+Issue #137 technical source `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.776.338` bayt, `304` dosya. Executable `117.179` bayt / SHA-256 `de920bcd2d1c0ac8c8e7317ba082356487d4c50999b2acb20cecb04fded00941`.
+- Testler: scene/r67 `12/12`, quality authority/history `5/5`, keyboard/mouse/virtual-gamepad/context/P0 `4/4`, validation regression `6/6`, final full EditMode `810/810`, full PlayMode `191/191`; failed/skipped/inconclusive `0`.
+- Native r67 runtime: Apple M1/Metal 1280×720; assisted exact validation setup, player-triggered safe power-off, mouse quality review, virtual-gamepad release, exact work order/ticket + ten serialized line lineage, score `401`, quality `Good`, immutable same-instance replay, history preservation, upstream isolation ve invariants başarılı. Exact readiness/success markerları birer kez, quality failure/fatal `0`, observed exit/residue `0`.
+- Existing Workbench/station surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. `WaitingForValidation / AwaitingSafeShutdown / ReadyForReview / Reviewing / ReadyForPackaging / Rejected / NotCurrent` presentation-only durumları ayrıdır; same-frame Interact strict priority'dir, review-context kaybı input'u korur ve malformed quality history explicit power-on'u bloklamaz.
+- Build log `598.000` bayt / SHA-256 `aa4a23fe327f51748366e65baad424ffc753fe3086e4fbca8ad7e7beccf581fc`; runtime log `9.557` bayt / SHA-256 `d2fae1e5154fe632c8eb9dd9752c3eb841f21d3fac49afa39572e01e76e36b0d`.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded quality sign-off ve `ReadyForPackaging` receipt'i için Mac teknik geliştirme kabulüdür; fiziksel package item/workcell/custody, shipping/teslimat, warranty/final settlement, save/load persistence, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B driver-bound deterministic validation doğrulaması — 31 Ağustos 2026
 
 Issue #135 technical source `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d` Mac üzerinde doğrulandı:

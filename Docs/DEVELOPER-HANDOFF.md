@@ -14,7 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #135 r66 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #137 r67 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`, branch `codex/issue137-validation-bound-quality-release`; draft PR #138 açıktır, Issue/Roadmap `In Progress`.
+- Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ve exact owner passed/stable validation + matching safe power-off zincirine bound immutable `ReadyForPackaging` receipt history'si taşır. İkinci Inventory/Orders/Assembly/power/validation authority yoktur.
+- Completion exact request/quote/customer/claim/workbench ile on serialized reservation satırını doğrular: yedi component item/product ve typed ATX24/EPS12V/PCIe-GPU cable item. Current Assembly readiness bütün retain/secure/route operation ve revision'larıyla validation source'una exact eşit kalmalıdır.
+- Exact same-operation replay same-instance, changed reuse conflict, distinct operation controlled rerun'dır. History fold replay lookup'tan önce çalışır; tamper replay'i de fail-closed reddeder. New power cycle veya Assembly drift historical receipt'i korur fakat current result `NotCurrent` olur.
+- Existing station validation sonrası strict-priority `E / A` safe shutdown, ilk `LMB / RT` quality review ve ikinci `LMB / RT` release çalıştırır. Workbench observer-only yedi state gösterir; same-frame power priority, pause/range/focus/LOS/busy/competing-owner no-consume ve malformed-history power-on recovery testlidir.
+- Final targeted `12/12 + 5/5 + 4/4 + 6/6`, full `810/810 EditMode + 191/191 PlayMode`, universal `330776338` bayt/`304` dosya build ve Apple M1/Metal 1280×720 exact r67 quality-release smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Local Repository Guard PASS.
+- Bu yalnız quality sign-off ve packaging giriş receipt'idir; fiziksel package item/workcell/custody, shipping/delivery, warranty/settlement/save tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #135 r66 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `f082ef5df913ce6a4664cdda5eb64d1b26f007d6`, tree `c387100c6dd7e314768756ebfb78104f6557081d`, branch `codex/issue135-driver-bound-validation-receipt`; draft PR #136 açıktır, Issue/Roadmap `In Progress`.
 - Separate `PcValidationAuthority`, exact current driver/power/Assembly/power-budget owner chain'ine bound immutable receipt history'si taşır. Exact driver/OS/storage, firmware→POST→power→preflight, electrical readiness, power budget, component/cable operation/revision ve catalog/profile lineage'ı fail-closed doğrulanır.
