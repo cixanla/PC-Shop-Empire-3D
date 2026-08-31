@@ -51,6 +51,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public bool IsReady { get; private set; }
 
+        public bool HasPowerBudgetAssessment { get; private set; }
+
+        public int SystemPowerDrawWatts { get; private set; }
+
+        public int MinimumRecommendedPsuWatts { get; private set; }
+
+        public int InstalledPsuWatts { get; private set; }
+
+        public int CapacityMarginWatts { get; private set; }
+
         public string CurrentFailureCode { get; private set; } =
             ElectricalReadinessWorkbenchFailures.ConfigurationMissing.Code;
 
@@ -87,6 +97,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
         public OperationResult RefreshPresentation()
         {
+            ClearPowerBudgetAssessment();
             if (!IsConfigured)
             {
                 ApplyBlockedPresentation(
@@ -107,22 +118,44 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     ElectricalReadinessWorkbenchFailures.RuntimeNotReady);
             }
 
-            OperationResult<ElectricalReadinessSnapshot> readiness =
-                session.AssemblyBuild.EvaluateElectricalReadiness();
+            if (session.PowerBudget == null)
+            {
+                CaptureAuthorityState(session);
+                ApplyBlockedPresentation(
+                    "GÜÇ BÜTÇESİ BAĞLANTISI EKSİK",
+                    PcPowerBudgetFailures.ConfigurationMissing);
+                return OperationResult.Fail(
+                    PcPowerBudgetFailures.ConfigurationMissing);
+            }
+
+            OperationResult<PcPowerBudgetSnapshot> assessment =
+                session.PowerBudget.AssessPowerBudget();
             CaptureAuthorityState(session);
-            if (readiness.IsFailure)
+            if (assessment.IsFailure)
             {
                 ApplyBlockedPresentation(
-                    ResolveBlockerMessage(readiness.Error),
-                    readiness.Error);
-                return OperationResult.Fail(readiness.Error);
+                    ResolveBlockerMessage(assessment.Error),
+                    assessment.Error);
+                return OperationResult.Fail(assessment.Error);
+            }
+
+            CapturePowerBudgetAssessment(assessment.Value);
+            if (!assessment.Value.IsSufficient)
+            {
+                ApplyBlockedPresentation(
+                    $"PSU YETERSİZ • {assessment.Value.InstalledPsuWatts}W / " +
+                    $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W",
+                    assessment.Value.Blocker);
+                return OperationResult.Fail(assessment.Value.Blocker);
             }
 
             IsReady = true;
             CurrentFailureCode = string.Empty;
             statusText.text =
-                "ELEKTRİK HAZIR\n" +
-                "10/10 PARÇA • 3/3 KABLO\n" +
+                "GÜÇ BÜTÇESİ UYGUN\n" +
+                $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
                 "GÜÇ TESTİ BEKLİYOR";
             statusText.color = new Color(0.68f, 1f, 0.76f);
             statusIndicator.sharedMaterial = readyMaterial;
@@ -190,6 +223,24 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _observedPcieGpuPowerCableRevision =
                 session.AssemblyBuild.PcieGpuPowerCableRevision;
             _hasObservedAuthorityState = true;
+        }
+
+        private void ClearPowerBudgetAssessment()
+        {
+            HasPowerBudgetAssessment = false;
+            SystemPowerDrawWatts = 0;
+            MinimumRecommendedPsuWatts = 0;
+            InstalledPsuWatts = 0;
+            CapacityMarginWatts = 0;
+        }
+
+        private void CapturePowerBudgetAssessment(PcPowerBudgetSnapshot assessment)
+        {
+            HasPowerBudgetAssessment = true;
+            SystemPowerDrawWatts = assessment.SystemPowerDrawWatts;
+            MinimumRecommendedPsuWatts = assessment.MinimumRecommendedPsuWatts;
+            InstalledPsuWatts = assessment.InstalledPsuWatts;
+            CapacityMarginWatts = assessment.CapacityMarginWatts;
         }
 
         private void ApplyBlockedPresentation(string blocker, Failure failure)
@@ -301,6 +352,33 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (failure == ElectricalReadinessFailures.PcieGpuPowerCableMissing)
             {
                 return "PCIe GPU 6+2 KABLOSUNU BAĞLA";
+            }
+
+            if (failure == PcPowerBudgetFailures.ConfigurationMissing)
+            {
+                return "GÜÇ BÜTÇESİ BAĞLANTISI EKSİK";
+            }
+
+            if (failure == PcPowerBudgetFailures.CatalogMismatch)
+            {
+                return "GÜÇ KATALOĞU UYUMSUZ";
+            }
+
+            if (failure == PcPowerBudgetFailures.ElectricalProfileMissing)
+            {
+                return "PARÇA GÜÇ PROFİLİ EKSİK";
+            }
+
+            if (failure == PcPowerBudgetFailures.ElectricalProfileKindMismatch)
+            {
+                return "PARÇA GÜÇ PROFİLİ UYUMSUZ";
+            }
+
+            if (failure == PcPowerBudgetFailures.PolicyInvalid ||
+                failure == PcPowerBudgetFailures.SystemPowerDrawInvalid ||
+                failure == PcPowerBudgetFailures.ArithmeticOverflow)
+            {
+                return "GÜÇ HESABI DOĞRULANAMADI";
             }
 
             return failure == ElectricalReadinessFailures.InvariantInvalid

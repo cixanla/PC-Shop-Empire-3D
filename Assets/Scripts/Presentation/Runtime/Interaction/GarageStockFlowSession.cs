@@ -174,6 +174,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             PcComponentCatalog components,
             InventoryAuthority inventory,
             AssemblyBuildAuthority assemblyBuild,
+            PcPowerBudgetAuthority powerBudget,
             PurchaseOrderAuthority orders,
             ShelfOfferAuthority retailOffers,
             RetailBasketAuthority retailBaskets,
@@ -192,6 +193,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             Components = components;
             Inventory = inventory;
             AssemblyBuild = assemblyBuild;
+            PowerBudget = powerBudget;
             Orders = orders;
             RetailOffers = retailOffers;
             RetailBaskets = retailBaskets;
@@ -1021,6 +1023,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     StableId<ContainerIdScope>.Parse(HandsContainerIdValue),
                     StableId<ContainerIdScope>.Parse(WorkbenchContainerIdValue),
                     MotherboardFormFactor.MicroAtx).Value;
+            PcPowerBudgetAuthority powerBudget = includeAssemblyPrototype
+                ? CreatePrototypePowerBudget(components, assemblyBuild)
+                : null;
 
             PurchaseOrderAuthority orders = PurchaseOrderAuthority.Create(catalog).Value;
             ShelfOfferAuthority retailOffers = ShelfOfferAuthority.Create(catalog, inventory).Value;
@@ -1229,6 +1234,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 components,
                 inventory,
                 assemblyBuild,
+                powerBudget,
                 orders,
                 retailOffers,
                 retailBaskets,

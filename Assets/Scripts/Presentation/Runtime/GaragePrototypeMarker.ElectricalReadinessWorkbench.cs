@@ -12,7 +12,7 @@ namespace PCShopEmpire3D.Presentation
         public ElectricalReadinessWorkbenchProjection ElectricalReadinessWorkbench =>
             electricalReadinessWorkbench;
 
-        public bool HasElectricalReadinessWorkbenchR58Runtime =>
+        public bool HasPowerBudgetWorkbenchR59Runtime =>
             electricalReadinessWorkbench != null &&
             electricalReadinessWorkbench.IsConfigured &&
             electricalReadinessWorkbench.Runtime == stockFlow &&
@@ -22,6 +22,9 @@ namespace PCShopEmpire3D.Presentation
                 .Length == 0 &&
             FindObjectsByType<ElectricalReadinessWorkbenchProjection>(
                 FindObjectsSortMode.None).Length == 1;
+
+        public bool HasElectricalReadinessWorkbenchR58Runtime =>
+            HasPowerBudgetWorkbenchR59Runtime;
 
         private void ConfigureElectricalReadinessWorkbench(
             ElectricalReadinessWorkbenchProjection projection)

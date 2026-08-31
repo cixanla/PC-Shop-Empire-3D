@@ -184,6 +184,8 @@ namespace PCShopEmpire3D.Assembly
 
         public StableId<PcBuildIdScope> BuildId { get; }
 
+        internal PcComponentCatalog ComponentCatalog => _componentCatalog;
+
         public StableId<ChassisIdScope> ChassisId { get; }
 
         public StableId<AssemblySlotIdScope> MotherboardSlotId { get; }
