@@ -13,51 +13,50 @@ namespace PCShopEmpire3D.Presentation
 {
     public sealed partial class GaragePrototypeMarker
     {
-        public const string FictionalOsInstallationSmokeSuccessMarker =
-            "GARAGE_FICTIONAL_OS_INSTALLATION_RUNTIME_SMOKE " +
+        public const string FictionalDriverInstallationSmokeSuccessMarker =
+            "GARAGE_FICTIONAL_DRIVER_INSTALLATION_RUNTIME_SMOKE " +
             "prerequisite-setup=assisted preflight=current " +
             "power-on=player-triggered post=passed " +
             "firmware=optimized-defaults-saved " +
-            "os=workshop-standard-installed storage=identity-bound " +
-            "review=player-triggered install=player-triggered " +
-            "input=keyboard+mouse+gamepad power-off=player-triggered " +
-            "state=off persistence=power-off-preserved receipt=immutable " +
+            "os=workshop-standard-installed " +
+            "driver=workshop-driver-bundle-installed " +
+            "storage=identity-bound review=player-triggered " +
+            "install=player-triggered input=keyboard+mouse+gamepad " +
+            "power-off=player-triggered state=off " +
+            "persistence=power-off-preserved receipt=immutable " +
             "replay=ok benchmark=untouched invariants=ok";
 
-        private string _nestedFictionalOsInstallationSmokeFailureCode;
-        private bool _suppressFictionalOsInstallationSmokeSuccessMarker;
-
-        public bool HasFictionalOsInstallationR64Runtime =>
-            HasFirmwareBaselineR63Runtime &&
+        public bool HasFictionalDriverInstallationR65Runtime =>
+            HasFictionalOsInstallationR64Runtime &&
             electricalPowerTestStation != null &&
             electricalReadinessWorkbench != null;
 
-        private IEnumerator RunFictionalOsInstallationSmoke()
+        private IEnumerator RunFictionalDriverInstallationSmoke()
         {
-            return RunFictionalOsInstallationSmokeGuarded(
-                RunFictionalOsInstallationSmokeCore());
+            return RunFictionalDriverInstallationSmokeGuarded(
+                RunFictionalDriverInstallationSmokeCore());
         }
 
-        private IEnumerator RunFictionalOsInstallationSmokeCore()
+        private IEnumerator RunFictionalDriverInstallationSmokeCore()
         {
             yield return null;
             playerMotor?.SetPaused(false);
             yield return new WaitForFixedUpdate();
 
-            _nestedFirmwareBaselineSmokeFailureCode = null;
-            _suppressFirmwareBaselineSmokeSuccessMarker = true;
+            _nestedFictionalOsInstallationSmokeFailureCode = null;
+            _suppressFictionalOsInstallationSmokeSuccessMarker = true;
             try
             {
-                yield return RunFirmwareBaselineSmoke();
+                yield return RunFictionalOsInstallationSmoke();
             }
             finally
             {
-                _suppressFirmwareBaselineSmokeSuccessMarker = false;
+                _suppressFictionalOsInstallationSmokeSuccessMarker = false;
             }
 
             string prerequisiteFailure =
-                _nestedFirmwareBaselineSmokeFailureCode;
-            _nestedFirmwareBaselineSmokeFailureCode = null;
+                _nestedFictionalOsInstallationSmokeFailureCode;
+            _nestedFictionalOsInstallationSmokeFailureCode = null;
             if (!string.IsNullOrEmpty(prerequisiteFailure))
             {
                 const string SmokePrefix = "smoke.";
@@ -66,8 +65,8 @@ namespace PCShopEmpire3D.Presentation
                     StringComparison.Ordinal)
                         ? prerequisiteFailure.Substring(SmokePrefix.Length)
                         : prerequisiteFailure;
-                LogFictionalOsInstallationSmokeFailure(
-                    "smoke.firmware-prerequisite-" + suffix);
+                LogFictionalDriverInstallationSmokeFailure(
+                    "smoke.os-prerequisite-" + suffix);
                 yield break;
             }
 
@@ -80,20 +79,26 @@ namespace PCShopEmpire3D.Presentation
                 playerCarry == null || station == null ||
                 electricalReadinessWorkbench == null ||
                 pcieGpuPowerCableBinding == null ||
-                !HasFictionalOsInstallationR64Runtime ||
+                !HasFictionalDriverInstallationR65Runtime ||
                 !pcieGpuPowerCableBinding.IsRouted ||
                 session.PowerState == null ||
                 session.PowerState.State != PcPowerState.Off ||
-                session.PowerState.Revision != 4 ||
-                session.PowerState.PostStartupRevision != 2 ||
-                session.PowerState.FirmwareBaselineRevision != 1 ||
-                session.TryGetFictionalOsInstallation(out _))
+                session.PowerState.Revision != 6 ||
+                session.PowerState.PostStartupRevision != 3 ||
+                session.PowerState.FirmwareBaselineRevision != 2 ||
+                !session.TryGetFictionalOsInstallation(
+                    out PcFictionalOsInstallationAuthority osAuthority) ||
+                osAuthority.Revision != 1 || osAuthority.ReceiptCount != 1 ||
+                osAuthority.EvaluateInstalledOperatingSystem().IsFailure ||
+                session.TryGetFictionalDriverInstallation(out _))
             {
-                LogFictionalOsInstallationSmokeFailure(
+                LogFictionalDriverInstallationSmokeFailure(
                     "smoke.context-mismatch");
                 yield break;
             }
 
+            PcFictionalOsInstallationReceipt osReceipt =
+                osAuthority.EvaluateInstalledOperatingSystem().Value;
             long inventoryRevision = session.Inventory.Revision;
             long buildKitRevision = session.CustomPcBuildKit.Revision;
             long assemblyRevision = session.AssemblyBuild.Revision;
@@ -113,8 +118,8 @@ namespace PCShopEmpire3D.Presentation
             Keyboard smokeKeyboard = null;
             Mouse smokeMouse = null;
             Gamepad smokeGamepad = null;
-            PcFirmwareBaselineReceipt firmware = null;
-            PcFictionalOsInstallationReceipt osReceipt = null;
+            PcFirmwareBaselineReceipt completionFirmware = null;
+            PcFictionalDriverInstallationReceipt driverReceipt = null;
             try
             {
                 smokeKeyboard = InputSystem.AddDevice<Keyboard>();
@@ -129,7 +134,7 @@ namespace PCShopEmpire3D.Presentation
                 if (station.InspectInteractionGateForTests().IsFailure ||
                     !station.PromptText.Contains("GÜCÜ AÇ"))
                 {
-                    LogFictionalOsInstallationSmokeFailure(
+                    LogFictionalDriverInstallationSmokeFailure(
                         "smoke.power-on-prompt-mismatch");
                     yield break;
                 }
@@ -143,13 +148,13 @@ namespace PCShopEmpire3D.Presentation
 
                 PcPowerStateAuthority powerState = session.PowerState;
                 if (powerState.State != PcPowerState.Energized ||
-                    powerState.Revision != 5 ||
-                    powerState.PostStartupRevision != 3 ||
-                    powerState.FirmwareBaselineRevision != 1 ||
+                    powerState.Revision != 7 ||
+                    powerState.PostStartupRevision != 4 ||
+                    powerState.FirmwareBaselineRevision != 2 ||
                     station.InspectFirmwareInteractionGateForTests().IsFailure ||
                     !station.PromptText.Contains("UEFI SETUP'I AÇ"))
                 {
-                    LogFictionalOsInstallationSmokeFailure(
+                    LogFictionalDriverInstallationSmokeFailure(
                         "smoke.post-or-firmware-gate-mismatch");
                     yield break;
                 }
@@ -167,18 +172,20 @@ namespace PCShopEmpire3D.Presentation
                 InputSystem.QueueStateEvent(smokeGamepad, new GamepadState());
                 yield return null;
 
-                firmware = powerState.ActiveFirmwareBaselineReceipt;
-                if (firmware == null ||
-                    powerState.FirmwareBaselineRevision != 2 ||
+                completionFirmware = powerState.ActiveFirmwareBaselineReceipt;
+                if (completionFirmware == null ||
+                    powerState.FirmwareBaselineRevision != 3 ||
                     powerState.EvaluateCurrentFirmwareBaseline().IsFailure ||
-                    station.InspectFictionalOsInteractionGateForTests()
+                    ReferenceEquals(
+                        completionFirmware,
+                        osReceipt.SourceFirmwareBaselineReceipt) ||
+                    station.InspectFictionalDriverInteractionGateForTests()
                         .IsFailure ||
-                    !station.PromptText.Contains(
-                        "KURGUSAL OS KURULUMUNU AÇ") ||
-                    session.TryGetFictionalOsInstallation(out _))
+                    !station.PromptText.Contains("DRIVER KURULUMUNU AÇ") ||
+                    session.TryGetFictionalDriverInstallation(out _))
                 {
-                    LogFictionalOsInstallationSmokeFailure(
-                        "smoke.firmware-or-os-gate-mismatch");
+                    LogFictionalDriverInstallationSmokeFailure(
+                        "smoke.firmware-or-driver-gate-mismatch");
                     yield break;
                 }
 
@@ -188,14 +195,14 @@ namespace PCShopEmpire3D.Presentation
                 yield return null;
                 InputSystem.QueueStateEvent(smokeMouse, new MouseState());
                 yield return null;
-                if (!station.IsReviewingFictionalOsInstallation ||
-                    !station.PromptText.Contains("WORKSHOP STANDARD") ||
+                if (!station.IsReviewingFictionalDriverInstallation ||
+                    !station.PromptText.Contains("WORKSHOP DRIVER BUNDLE") ||
                     !station.PromptText.Contains(
                         "KURULUMU BAŞLAT VE TAMAMLA") ||
-                    session.TryGetFictionalOsInstallation(out _))
+                    session.TryGetFictionalDriverInstallation(out _))
                 {
-                    LogFictionalOsInstallationSmokeFailure(
-                        "smoke.os-review-mismatch");
+                    LogFictionalDriverInstallationSmokeFailure(
+                        "smoke.driver-review-mismatch");
                     yield break;
                 }
 
@@ -206,55 +213,64 @@ namespace PCShopEmpire3D.Presentation
                 InputSystem.QueueStateEvent(smokeGamepad, new GamepadState());
                 yield return null;
 
-                if (!session.TryGetFictionalOsInstallation(
-                        out PcFictionalOsInstallationAuthority authority))
+                if (!session.TryGetFictionalDriverInstallation(
+                        out PcFictionalDriverInstallationAuthority authority))
                 {
-                    LogFictionalOsInstallationSmokeFailure(
-                        "smoke.os-authority-missing");
+                    LogFictionalDriverInstallationSmokeFailure(
+                        "smoke.driver-authority-missing");
                     yield break;
                 }
 
-                OperationResult<PcFictionalOsInstallationReceipt> installed =
-                    authority.EvaluateInstalledOperatingSystem();
-                osReceipt = installed.TryGetValue(
-                    out PcFictionalOsInstallationReceipt value)
+                OperationResult<PcFictionalDriverInstallationReceipt>
+                    installed = authority.EvaluateInstalledDrivers();
+                driverReceipt = installed.TryGetValue(
+                    out PcFictionalDriverInstallationReceipt value)
                         ? value
                         : null;
-                OperationResult<PcFictionalOsInstallationReceipt> replay =
-                    osReceipt == null
-                        ? OperationResult<PcFictionalOsInstallationReceipt>.Fail(
-                            PcFictionalOsInstallationFailures
+                OperationResult<PcFictionalDriverInstallationReceipt> replay =
+                    driverReceipt == null
+                        ? OperationResult<
+                            PcFictionalDriverInstallationReceipt>.Fail(
+                            PcFictionalDriverInstallationFailures
                                 .ReceiptHistoryInvalid)
                         : authority.TryCompleteInstallation(
-                            osReceipt.OperationId,
-                            firmware,
+                            driverReceipt.OperationId,
+                            osReceipt,
+                            completionFirmware,
                             storageItemId,
-                            osReceipt.ExpectedPowerStateRevision,
-                            osReceipt.ExpectedRevision);
+                            driverReceipt.ExpectedPowerStateRevision,
+                            driverReceipt.ExpectedRevision);
                 electricalReadinessWorkbench.RefreshPresentation();
                 if (!playerInput.UsesGamepadPrompts ||
-                    station.IsReviewingFictionalOsInstallation ||
-                    osReceipt == null || replay.IsFailure ||
-                    !ReferenceEquals(replay.Value, osReceipt) ||
-                    osReceipt.Profile !=
-                        PcFictionalOsProfile.WorkshopStandard ||
-                    osReceipt.Result !=
-                        PcFictionalOsInstallationResult
-                            .InstalledForDriverStage ||
+                    station.IsReviewingFictionalDriverInstallation ||
+                    driverReceipt == null || replay.IsFailure ||
+                    !ReferenceEquals(replay.Value, driverReceipt) ||
+                    driverReceipt.Profile !=
+                        PcFictionalDriverProfile.WorkshopDriverBundle ||
+                    driverReceipt.Result !=
+                        PcFictionalDriverInstallationResult
+                            .InstalledForBenchmarkStage ||
                     !ReferenceEquals(
-                        osReceipt.SourceFirmwareBaselineReceipt,
-                        firmware) ||
-                    osReceipt.StorageItemId != storageItemId ||
+                        driverReceipt.SourceOperatingSystemReceipt,
+                        osReceipt) ||
+                    !ReferenceEquals(
+                        driverReceipt.SourceFirmwareBaselineReceipt,
+                        completionFirmware) ||
+                    ReferenceEquals(
+                        driverReceipt.SourceFirmwareBaselineReceipt,
+                        osReceipt.SourceFirmwareBaselineReceipt) ||
+                    driverReceipt.StorageItemId != storageItemId ||
                     authority.Revision != 1 || authority.ReceiptCount != 1 ||
-                    !station.PromptText.Contains("KURGUSAL OS KURULDU") ||
-                    !station.PromptText.Contains("SONRAKİ AŞAMA: DRIVER") ||
-                    !electricalReadinessWorkbench.HasInstalledFictionalOs ||
+                    !station.PromptText.Contains("KURGUSAL DRIVER KURULDU") ||
+                    !station.PromptText.Contains("SONRAKİ AŞAMA: BENCHMARK") ||
+                    !electricalReadinessWorkbench
+                        .HasInstalledFictionalDrivers ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
-                        "WORKSHOP STANDARD") ||
+                        "WORKSHOP DRIVER BUNDLE KURULDU") ||
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error !=
                         AssemblyFailures.BuildIncomplete)
                 {
-                    LogFictionalOsInstallationSmokeFailure(
+                    LogFictionalDriverInstallationSmokeFailure(
                         "smoke.install-replay-or-presentation-mismatch");
                     yield break;
                 }
@@ -267,26 +283,29 @@ namespace PCShopEmpire3D.Presentation
                 yield return null;
 
                 electricalReadinessWorkbench.RefreshPresentation();
-                OperationResult<PcFictionalOsInstallationReceipt>
+                OperationResult<PcFictionalDriverInstallationReceipt>
                     historicalReplay = authority.TryCompleteInstallation(
-                        osReceipt.OperationId,
-                        firmware,
+                        driverReceipt.OperationId,
+                        osReceipt,
+                        completionFirmware,
                         storageItemId,
-                        osReceipt.ExpectedPowerStateRevision,
-                        osReceipt.ExpectedRevision);
+                        driverReceipt.ExpectedPowerStateRevision,
+                        driverReceipt.ExpectedRevision);
                 if (powerState.State != PcPowerState.Off ||
-                    powerState.Revision != 6 ||
+                    powerState.Revision != 8 ||
                     powerState.ActivePowerOnReceipt != null ||
                     powerState.ActivePostStartupReceipt != null ||
                     powerState.ActiveFirmwareBaselineReceipt != null ||
                     historicalReplay.IsFailure ||
-                    !ReferenceEquals(historicalReplay.Value, osReceipt) ||
-                    authority.EvaluateInstalledOperatingSystem().Value !=
-                        osReceipt ||
-                    !electricalReadinessWorkbench.HasInstalledFictionalOs ||
+                    !ReferenceEquals(historicalReplay.Value, driverReceipt) ||
+                    authority.EvaluateInstalledDrivers().Value !=
+                        driverReceipt ||
+                    !electricalReadinessWorkbench
+                        .HasInstalledFictionalDrivers ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "DEPOLAMADA KALICI") ||
                     authority.ValidateReceiptHistory().IsFailure ||
+                    osAuthority.ValidateReceiptHistory().IsFailure ||
                     powerState.ValidateReceiptHistory().IsFailure ||
                     !PowerTestSmokeGameplayStateUnchanged(
                         session,
@@ -304,7 +323,7 @@ namespace PCShopEmpire3D.Presentation
                         AssemblyFailures.BuildIncomplete ||
                     session.ValidateInvariants().IsFailure)
                 {
-                    LogFictionalOsInstallationSmokeFailure(
+                    LogFictionalDriverInstallationSmokeFailure(
                         "smoke.power-off-persistence-or-invariant-mismatch");
                     yield break;
                 }
@@ -321,18 +340,15 @@ namespace PCShopEmpire3D.Presentation
                     smokeGamepad);
             }
 
-            if (!_suppressFictionalOsInstallationSmokeSuccessMarker)
+            Debug.Log(FictionalDriverInstallationSmokeSuccessMarker);
+            yield return new WaitForEndOfFrame();
+            if (!Application.isEditor)
             {
-                Debug.Log(FictionalOsInstallationSmokeSuccessMarker);
-                yield return new WaitForEndOfFrame();
-                if (!Application.isEditor)
-                {
-                    Application.Quit(0);
-                }
+                Application.Quit(0);
             }
         }
 
-        private IEnumerator RunFictionalOsInstallationSmokeGuarded(
+        private IEnumerator RunFictionalDriverInstallationSmokeGuarded(
             IEnumerator root)
         {
             var routines = new Stack<IEnumerator>();
@@ -361,7 +377,7 @@ namespace PCShopEmpire3D.Presentation
                     if (failure != null)
                     {
                         Debug.LogException(failure);
-                        LogFictionalOsInstallationSmokeFailure(
+                        LogFictionalDriverInstallationSmokeFailure(
                             "smoke.unhandled-exception");
                         yield break;
                     }
@@ -391,17 +407,12 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private void LogFictionalOsInstallationSmokeFailure(string code)
+        private static void LogFictionalDriverInstallationSmokeFailure(
+            string code)
         {
-            if (_suppressFictionalOsInstallationSmokeSuccessMarker)
-            {
-                _nestedFictionalOsInstallationSmokeFailureCode = code;
-                return;
-            }
-
             Debug.LogError(
-                "GARAGE_FICTIONAL_OS_INSTALLATION_RUNTIME_SMOKE " +
-                "os-flow=failed code=" + code);
+                "GARAGE_FICTIONAL_DRIVER_INSTALLATION_RUNTIME_SMOKE " +
+                "driver-flow=failed code=" + code);
             if (!Application.isEditor)
             {
                 Application.Quit(1);

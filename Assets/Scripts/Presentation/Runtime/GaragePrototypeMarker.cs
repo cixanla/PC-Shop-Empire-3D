@@ -21,7 +21,7 @@ namespace PCShopEmpire3D.Presentation
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
         public const string Version =
-            "garage-fictional-os-installation-r64-v1";
+            "garage-fictional-driver-installation-r65-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1333,6 +1333,7 @@ namespace PCShopEmpire3D.Presentation
                 $"power-state-interlock={(HasPowerStateInterlockR62Runtime ? "ready" : "missing")} " +
                 $"firmware-baseline={(HasFirmwareBaselineR63Runtime ? "ready" : "missing")} " +
                 $"fictional-os-installation={(HasFictionalOsInstallationR64Runtime ? "ready" : "missing")} " +
+                $"fictional-driver-installation={(HasFictionalDriverInstallationR65Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1424,6 +1425,9 @@ namespace PCShopEmpire3D.Presentation
             bool runFictionalOsInstallationSmoke =
                 HasCommandLineArgument(
                     "-pse-fictional-os-installation-smoke");
+            bool runFictionalDriverInstallationSmoke =
+                HasCommandLineArgument(
+                    "-pse-fictional-driver-installation-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1471,6 +1475,7 @@ namespace PCShopEmpire3D.Presentation
                              (runPowerStateInterlockSmoke ? 1 : 0) +
                              (runFirmwareBaselineSmoke ? 1 : 0) +
                              (runFictionalOsInstallationSmoke ? 1 : 0) +
+                             (runFictionalDriverInstallationSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
@@ -1511,13 +1516,19 @@ namespace PCShopEmpire3D.Presentation
                      !runPowerStateInterlockSmoke &&
                      !runFirmwareBaselineSmoke &&
                      !runFictionalOsInstallationSmoke &&
+                     !runFictionalDriverInstallationSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runFictionalOsInstallationSmoke)
+                    if (runFictionalDriverInstallationSmoke)
+                    {
+                        LogFictionalDriverInstallationSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runFictionalOsInstallationSmoke)
                     {
                         LogFictionalOsInstallationSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1955,6 +1966,14 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runFictionalDriverInstallationSmoke && !Debug.isDebugBuild)
+            {
+                LogFictionalDriverInstallationSmokeFailure(
+                    "smoke.fictional-driver-installation-requires-" +
+                    "development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2200,6 +2219,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunFictionalOsInstallationSmoke());
+            }
+
+            if (runFictionalDriverInstallationSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunFictionalDriverInstallationSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)

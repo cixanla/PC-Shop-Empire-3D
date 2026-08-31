@@ -13,6 +13,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
             "electrical-readiness-workbench.runtime-not-ready");
     }
 
+    public enum FictionalDriverPresentationState
+    {
+        Waiting = 0,
+        Reviewing = 1,
+        Installed = 2,
+        Rejected = 3
+    }
+
     /// <summary>
     /// Presentation-only view of the canonical assembly authority's electrical-readiness
     /// decision. It owns no input, power state, receipt, inventory or assembly mutation.
@@ -41,6 +49,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedPostStartupRevision = -1;
         private long _observedFirmwareBaselineRevision = -1;
         private long _observedFictionalOsInstallationRevision = -1;
+        private long _observedFictionalDriverInstallationRevision = -1;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -75,6 +84,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasCurrentFirmwareBaseline { get; private set; }
 
         public bool HasInstalledFictionalOs { get; private set; }
+
+        public bool HasInstalledFictionalDrivers { get; private set; }
+
+        public FictionalDriverPresentationState FictionalDriverState
+        {
+            get;
+            private set;
+        } = FictionalDriverPresentationState.Waiting;
+
+        public string FictionalDriverFailureCode { get; private set; } =
+            string.Empty;
 
         public PcPowerState PowerState { get; private set; }
 
@@ -111,6 +131,27 @@ namespace PCShopEmpire3D.Presentation.Interaction
             blockedMaterial = electricalBlockedMaterial != null
                 ? electricalBlockedMaterial
                 : throw new ArgumentNullException(nameof(electricalBlockedMaterial));
+            RefreshPresentation();
+        }
+
+        public void ObserveFictionalDriverWaiting()
+        {
+            FictionalDriverState = FictionalDriverPresentationState.Waiting;
+            FictionalDriverFailureCode = string.Empty;
+            RefreshPresentation();
+        }
+
+        public void ObserveFictionalDriverReview()
+        {
+            FictionalDriverState = FictionalDriverPresentationState.Reviewing;
+            FictionalDriverFailureCode = string.Empty;
+            RefreshPresentation();
+        }
+
+        public void ObserveFictionalDriverRejected(Failure failure)
+        {
+            FictionalDriverState = FictionalDriverPresentationState.Rejected;
+            FictionalDriverFailureCode = failure.Code;
             RefreshPresentation();
         }
 
@@ -259,6 +300,41 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     .IsSuccess;
             }
 
+            PcFictionalDriverInstallationAuthority fictionalDriverAuthority =
+                session.TryGetFictionalDriverInstallation(
+                    out PcFictionalDriverInstallationAuthority existingDriver)
+                    ? existingDriver
+                    : null;
+            if (fictionalDriverAuthority != null)
+            {
+                OperationResult driverHistory =
+                    fictionalDriverAuthority.ValidateReceiptHistory();
+                if (driverHistory.IsFailure)
+                {
+                    ApplyBlockedPresentation(
+                        "DRIVER AUTHORITY DOĞRULANAMADI",
+                        driverHistory.Error);
+                    return driverHistory;
+                }
+
+                HasInstalledFictionalDrivers = fictionalDriverAuthority
+                    .EvaluateInstalledDrivers()
+                    .IsSuccess;
+            }
+
+            if (HasInstalledFictionalDrivers)
+            {
+                FictionalDriverState =
+                    FictionalDriverPresentationState.Installed;
+                FictionalDriverFailureCode = string.Empty;
+            }
+            else if (FictionalDriverState ==
+                     FictionalDriverPresentationState.Installed)
+            {
+                FictionalDriverState = FictionalDriverPresentationState.Waiting;
+                FictionalDriverFailureCode = string.Empty;
+            }
+
             CaptureAuthorityState(session);
             if (powerState?.IsEnergized == true)
             {
@@ -267,7 +343,38 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HasCurrentPostStartupPass = postStartup.IsSuccess;
                 HasCurrentFirmwareBaseline = HasCurrentPostStartupPass &&
                     powerState.EvaluateCurrentFirmwareBaseline().IsSuccess;
-                if (HasCurrentFirmwareBaseline && HasInstalledFictionalOs)
+                if (HasCurrentFirmwareBaseline &&
+                    HasInstalledFictionalOs &&
+                    HasInstalledFictionalDrivers)
+                {
+                    statusText.text =
+                        "GÜÇ AÇIK • POST GEÇTİ\n" +
+                        "WORKSHOP DRIVER BUNDLE KURULDU\n" +
+                        "SONRAKİ AŞAMA: BENCHMARK • " +
+                        "BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         FictionalDriverState ==
+                         FictionalDriverPresentationState.Reviewing)
+                {
+                    statusText.text =
+                        "KURGUSAL DRIVER KURULUMU İNCELENİYOR\n" +
+                        "WORKSHOP DRIVER BUNDLE • ONAY BEKLİYOR\n" +
+                        "BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs &&
+                         FictionalDriverState ==
+                         FictionalDriverPresentationState.Rejected)
+                {
+                    statusText.text =
+                        "DRIVER KURULUMU REDDEDİLDİ\n" +
+                        FictionalDriverFailureCode + "\n" +
+                        "TEKRAR İNCELE • BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline &&
+                         HasInstalledFictionalOs)
                 {
                     statusText.text =
                         "GÜÇ AÇIK • POST GEÇTİ\n" +
@@ -302,6 +409,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 statusText.color = new Color(1f, 0.90f, 0.42f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            if (HasInstalledFictionalOs && HasInstalledFictionalDrivers)
+            {
+                statusText.text =
+                    "KURGUSAL DRIVER KURULDU\n" +
+                    "WORKSHOP DRIVER BUNDLE • DEPOLAMADA KALICI\n" +
+                    "POWER-ON BEKLİYOR • SONRAKİ AŞAMA: BENCHMARK";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
                 statusIndicator.sharedMaterial = readyMaterial;
                 return OperationResult.Success();
             }
@@ -387,7 +505,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedFirmwareBaselineRevision !=
                        ResolveFirmwareBaselineRevision(session) ||
                    _observedFictionalOsInstallationRevision !=
-                       ResolveFictionalOsInstallationRevision(session);
+                       ResolveFictionalOsInstallationRevision(session) ||
+                   _observedFictionalDriverInstallationRevision !=
+                       ResolveFictionalDriverInstallationRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -411,6 +531,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ResolveFirmwareBaselineRevision(session);
             _observedFictionalOsInstallationRevision =
                 ResolveFictionalOsInstallationRevision(session);
+            _observedFictionalDriverInstallationRevision =
+                ResolveFictionalDriverInstallationRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -426,6 +548,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasCurrentPostStartupPass = false;
             HasCurrentFirmwareBaseline = false;
             HasInstalledFictionalOs = false;
+            HasInstalledFictionalDrivers = false;
         }
 
         private void ObservePowerState(GarageStockFlowSession session)
@@ -462,6 +585,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return session != null &&
                    session.TryGetFictionalOsInstallation(
                        out PcFictionalOsInstallationAuthority authority)
+                ? authority.Revision
+                : -1L;
+        }
+
+        private static long ResolveFictionalDriverInstallationRevision(
+            GarageStockFlowSession session)
+        {
+            return session != null &&
+                   session.TryGetFictionalDriverInstallation(
+                       out PcFictionalDriverInstallationAuthority authority)
                 ? authority.Revision
                 : -1L;
         }
