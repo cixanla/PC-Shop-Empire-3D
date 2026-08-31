@@ -12,11 +12,16 @@ namespace PCShopEmpire3D.Presentation
         [SerializeField] private GarageCustomerFlowRuntime customerFlow;
         [SerializeField] private CheckoutStationProjection checkoutStation;
         [SerializeField] private CustomPcWorkTicketStationProjection customPcWorkTicketStation;
+        [SerializeField]
+        private ElectricalPowerTestStationProjection electricalPowerTestStation;
 
         public CheckoutStationProjection CheckoutStation => checkoutStation;
 
         public CustomPcWorkTicketStationProjection CustomPcWorkTicketStation =>
             customPcWorkTicketStation;
+
+        public ElectricalPowerTestStationProjection ElectricalPowerTestStation =>
+            electricalPowerTestStation;
 
         public bool UsesCompactAssemblyUi =>
             carryController != null && carryController.HasAssemblyPromptOwnership;
@@ -36,6 +41,11 @@ namespace PCShopEmpire3D.Presentation
                 if (string.IsNullOrEmpty(prompt) && customPcWorkTicketStation != null)
                 {
                     prompt = customPcWorkTicketStation.PromptText;
+                }
+
+                if (string.IsNullOrEmpty(prompt) && electricalPowerTestStation != null)
+                {
+                    prompt = electricalPowerTestStation.PromptText;
                 }
 
                 if (string.IsNullOrEmpty(prompt) && customerFlow != null)
@@ -58,7 +68,8 @@ namespace PCShopEmpire3D.Presentation
             GarageStockFlowRuntime garageStockFlow = null,
             GarageCustomerFlowRuntime garageCustomerFlow = null,
             CheckoutStationProjection physicalCheckoutStation = null,
-            CustomPcWorkTicketStationProjection physicalCustomPcWorkTicketStation = null)
+            CustomPcWorkTicketStationProjection physicalCustomPcWorkTicketStation = null,
+            ElectricalPowerTestStationProjection physicalElectricalPowerTestStation = null)
         {
             motor = playerMotor;
             carryController = playerCarryController;
@@ -66,6 +77,7 @@ namespace PCShopEmpire3D.Presentation
             customerFlow = garageCustomerFlow;
             checkoutStation = physicalCheckoutStation;
             customPcWorkTicketStation = physicalCustomPcWorkTicketStation;
+            electricalPowerTestStation = physicalElectricalPowerTestStation;
         }
 
         private void OnGUI()

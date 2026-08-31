@@ -30072,6 +30072,7 @@ GameObject:
   m_Component:
   - component: {fileID: 766398942}
   - component: {fileID: 766398943}
+  - component: {fileID: 766398944}
   m_Layer: 0
   m_Name: ElectricalReadinessWorkbenchStatus
   m_TagString: Untagged
@@ -30113,6 +30114,27 @@ MonoBehaviour:
   statusIndicator: {fileID: 736674872}
   readyMaterial: {fileID: 2100000, guid: 2c71f6d04f164433c94c4ba26da0583f, type: 2}
   blockedMaterial: {fileID: 2100000, guid: 504f1ed5a6ed0412d8b75b66c668bb6c, type: 2}
+--- !u!114 &766398944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766398941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40bb6785eeef4ed0ac2375af300c657b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PSE.Presentation::PCShopEmpire3D.Presentation.Interaction.ElectricalPowerTestStationProjection
+  stockFlow: {fileID: 1200580290}
+  playerInput: {fileID: 1339483881}
+  playerMotor: {fileID: 1339483880}
+  playerCamera: {fileID: 1339483878}
+  playerCarry: {fileID: 1339483879}
+  readinessProjection: {fileID: 766398943}
+  focusAnchor: {fileID: 1800404505}
+  interactionRange: 2.25
+  focusDegrees: 24
 --- !u!1 &766422687
 GameObject:
   m_ObjectHideFlags: 0
@@ -46307,6 +46329,7 @@ MonoBehaviour:
   customerFlow: {fileID: 1200580291}
   checkoutStation: {fileID: 1293610016}
   customPcWorkTicketStation: {fileID: 1654213214}
+  electricalPowerTestStation: {fileID: 766398944}
 --- !u!114 &1200580293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46324,6 +46347,7 @@ MonoBehaviour:
   atx24PowerCable: {fileID: 1444842811}
   atx24PowerCableGeometry: {fileID: 1444842810}
   electricalReadinessWorkbench: {fileID: 766398943}
+  electricalPowerTestStation: {fileID: 766398944}
   eps12vPowerCableRoute: {fileID: 713125097}
   eps12vPowerCableBinding: {fileID: 824517999}
   eps12vPowerCable: {fileID: 824517996}
