@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #114 r56 accepted/main; Issue #115 sıradaki bounded scene işi
+### Güncel checkpoint — Issue #115 r57 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`, branch `codex/issue115-retail-shelf-authority-consolidation`; draft PR #118 open, Issue/Roadmap `In Progress`.
+- Legacy `StarterShelf` hierarchy kaldırıldı. Sahne exact tek `AuthoritativeRetailShelfA`, `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` taşır. İkinci shelf/zone/surface ve collider overlap yoktur.
+- Authored renderer `499→483`; retail runtime `486/462`, Assembly regression runtime `477/468`; light/camera değişmedi. r56 retail/checkout readability, r55 Assembly readability, customer route, checkout/receipt authority, stable identity ve input ownership korunur.
+- Mac scene `11/11`, targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad retail flows `2/2`, full `754/754 EditMode + 158/158 PlayMode`; universal macOS build ve Apple M1/Metal iki native smoke geçti. Retail marker `shelf-authority=single legacy-starter-shelf=absent`; glare `0`, minimum contrast `1.348`.
+- `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Evidence-driven Version Control baseline correction sonrası technical baseline `5/5` ve full EditMode yeşildir. User/editor-owned ProBuilder ayarı unstaged/untouched tutulur; stage veya revert edilmez.
+- Fiziksel Windows yoktur: exact-head clean x64 IL2CPP/D3D11/Iris Xe gate bekler. UTM bu kapının yerine geçmez. USB yoktur ve checkpoint yazılmadı. Windows dönmeden Issue #115 merge/close edilmez; Mac tek write lane'de sonraki güvenli hazırlık ve CI sürer.
+
+### Önceki checkpoint — Issue #114 r56 accepted/main; Issue #115 bounded scene işi açıldı
 
 - Technical/main head `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`. GarageGraybox r56 customer approach, authoritative shelf offer/reserved basket ve checkout/payment/receipt durumlarını üç 1280x720 native composition'a taşır; `RetailCheckoutHeroProjection` ikinci authority üretmez.
 - Authored renderer delta `+9`, light/camera `+1/0`; runtime `502` total / `478` active renderer. Hero geometry Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light shadowless'tır. Existing NavMesh, route, waypoints, input ve retail/checkout authorities untouched kalır.

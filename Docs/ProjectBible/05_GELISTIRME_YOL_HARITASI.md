@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #114 customer-facing Retail/Checkout hero readability r56 technical/main `0ea82e826aff9d245e0d4002386193278f25b483` üzerinde kabul edildi: Mac `754/754 EditMode + 158/158 PlayMode`, clean Windows aynı counts, universal Mac native, Windows x64 IL2CPP/D3D11 Intel Iris Xe runtime, üç-state readability ve final residue kapıları geçti. Issue closed/Roadmap Done; parent visual Epic #18 ve Steam 1.0 Goal açık kalır. USB bağlı olmadığı için immutable checkpoint ertelenmiştir; fiziksel Windows geçici olarak erişilemezken Mac tek write lane'de geliştirme ve Mac/CI kapıları sürer. UTM, taşınabilirlik/derleme yardımcısı olabilir fakat gerçek Windows/Iris Xe release kanıtının yerini tutmaz.
+Issue #115 Retail Shelf Authority Consolidation r57 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d` üzerinde Mac-ready durumdadır. Legacy `StarterShelf` hiyerarşisi kaldırıldı; exact tek `AuthoritativeRetailShelfA`, `5` collider, tek placement surface ve tek inventory shelf zone kaldı. Authored renderer `499→483`; retail runtime `486/462`, Assembly regression `477/468`; accepted r56/r55 readability ve customer approach→browse→checkout→fulfilled-exit authority zinciri korunur.
 
-Sıradaki bounded P1, Issue #115'tir: legacy `StarterShelf` collider/NavMesh hacmini gerçek `AuthoritativeRetailShelfA` ile tek placement/inventory authority ve çakışmasız customer approach→browse→checkout→exit rotasına dönüştürmek. Accepted r56 readability, WASD+mouse, gamepad automation ve full regression korunmadan sonraki görsel veya dünya kapsamına geçilmez.
+Mac scene `11/11`, targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad flows `2/2`, full `754/754 EditMode + 158/158 PlayMode`, universal Mac build ve iki Apple M1/Metal native smoke geçti. Draft PR #118 açıktır; Issue/Roadmap `In Progress`, parent Epic #18 ve Steam 1.0 Goal açıktır. Fiziksel Windows olmadığından exact-head clean x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Bu kapılar ve CI/PR entegrasyonu tamamlanmadan Issue #115 kapatılmaz; Mac tek authoritative write lane'de sonraki bounded ürün işini hazırlamayı sürdürebilir.
 
 Geçici gerçekçi takvim:
 
