@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #127 r62 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #129 r63 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`, branch `codex/issue129-post-bound-uefi-baseline`; draft PR #130 open/mergeable, Repository Guard `33367768909` PASS, Issue/Roadmap `In Progress`.
+- Existing `PcPowerStateAuthority` ayrı immutable `PcFirmwareBaselineReceipt` history'si taşır. Receipt exact current POST/power-on/preflight lineage, stable operation ID, expected power/firmware revisions ve `OptimizedDefaults / SavedAndExited` sonucunu bağlar; ikinci firmware/gameplay authority değildir.
+- Exact replay same-instance, changed reuse conflict'tir. Bir POST'ta exactly one save; power-off active pointer'ı temizler, historical receipt/replay'i korur ve sonraki cycle yeni POST/operation/revision ister.
+- Existing Workbench'te ilk Primary Action review, ikinci Primary Action `KAYDET VE ÇIK`; Interact explicit power-off'tur. Same-frame Interact strict priority taşır, pause/competing owner consume etmez, exact context kaybında review sıfırlanır. Malformed firmware history dahi power-off'u softlock etmez.
+- Targeted `3/3 + 1/1 + 5/5 + 10/10`, full `784/784 EditMode + 169/169 PlayMode`, universal `330573681` bayt/`302` dosya build ve Apple M1/Metal 1280×720 exact r63 keyboard+mouse+virtual-gamepad smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`.
+- Bu yalnız fictional safe-default UEFI baseline receipt'idir; gerçek firmware flashing, vendor BIOS, XMP/EXPO, boot/security settings, OS, driver, benchmark, thermals ve damage tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #127 r62 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`, branch `codex/issue127-active-power-on-post-self-test`; draft PR #128 open/clean/mergeable, Issue/Roadmap `In Progress`.
 - Existing `PcPowerStateAuthority` ayrı immutable `PcPostStartupReceipt` history'si taşır. Receipt exact active power-on/preflight owner identity'sini, stable operation ID, expected/current power revision ve bağımsız monotonik POST revision'ını bağlar; ikinci gameplay authority değildir.

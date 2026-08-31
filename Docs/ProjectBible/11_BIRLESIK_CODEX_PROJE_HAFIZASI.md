@@ -5,11 +5,21 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #125 docs head `ec84e84c42aae16d7b979b7e643e399a52a5a0b2`; active Issue #127 technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`; draft PR #128
+**Authoritative Git state:** parent Issue #127 docs head `c10f8f314e096465ac0a1df49cedd46347660a39`; active Issue #129 technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`; draft PR #130
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #127 Deterministic Baseline POST Self-Test
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #129 Deterministic UEFI Baseline Review/Save-Exit
+
+- Existing `PcPowerStateAuthority`, exact current POST → power-on → preflight lineage'ına bound ayrı immutable `PcFirmwareBaselineReceipt` history'si taşır. Stable operation ID, expected power/firmware revisions ve bounded `OptimizedDefaults / SavedAndExited` sonucu vardır; ikinci gameplay/firmware authority yoktur.
+- Exact same-command replay same-instance; changed reuse conflict, foreign/stale/off/historical POST inputs fail-closed, aynı POST'taki second completion blocked'dır. Power-off active firmware pointer'ını temizler fakat historical receipt/replay'i korur; later cycle yeni POST/operation/revision kullanır.
+- Existing Workbench ilk Primary Action ile review, ikinciyle `KAYDET VE ÇIK`; Interact explicit power-off'tur. Same-frame Interact strict priority, pause/competing-owner no-consume ve context-loss review reset kuralları testlidir.
+- Malformed firmware history dahi görünür `GÜCÜ KAPAT` prompt'unu ve normal player Interact power-off yolunu kapatmaz. Presentation read-only, gameplay/benchmark state untouched ve benchmark `BuildIncomplete` kalır.
+- Technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`; targeted `3/3 + 1/1 + 5/5 + 10/10`, full Mac `784/784 EditMode + 169/169 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330573681` bayt, `302` dosya; strict/deep-valid universal app ve Apple M1/Metal 1280×720 exact r63 smoke geçti. Success marker keyboard+mouse+virtual-gamepad review/save-exit/power-off, replay/history/benchmark/invariants zincirini kanıtlar; Repository Guard `33367768909` PASS.
+- ProBuilder diff'i untouched/unstaged. Draft PR #130 open/mergeable; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`. Gerçek firmware/vendor BIOS, OS/driver ve benchmark/thermals/damage sonraki ayrı bounded dilimlerdir.
+
+### Önceki üstün gelen durum — Issue #127 Deterministic Baseline POST Self-Test
 
 - Existing `PcPowerStateAuthority`, exact active power-on ve onun preflight lineage'ına bound ayrı immutable `PcPostStartupReceipt` history'si taşır. Stable POST operation ID, expected/current power revision ve bağımsız monotonik POST revision vardır; ikinci gameplay authority yoktur.
 - Exact same-command replay same-instance; changed reuse conflict, foreign/stale/off inputs fail-closed, aynı active cycle'daki second completion blocked'dır. Power-off active POST pointer'ını temizler fakat historical receipt/replay'i korur; later cycle ayrı operation/revision kullanır.
