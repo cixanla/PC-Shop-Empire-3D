@@ -5,7 +5,17 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #114 r56 kabul edildi ve PR #116 ile `main`e entegre edildi; Issue #115 sıradaki bounded scene işi
+## Güncel geliştirme checkpoint'i — Issue #115 r57 Mac teknik kapıları tamamlandı; fiziksel Windows ve USB kapıları bekliyor
+
+Issue #115 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c` üzerindedir; draft PR #118 açıktır. Legacy `StarterShelf` hiyerarşisi (`17` child object, `16` renderer, `10` collider) sahneden kaldırıldı. `AuthoritativeRetailShelfA` artık exact tek retail placement/inventory authority'dir: `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone`. İkinci shelf, surface, zone veya gameplay authority yoktur.
+
+GarageGraybox `garage-retail-shelf-authority-r57-v1`; authored MeshRenderer `499→483` (`-16`), light/camera `5→5 / 1→1`; retail runtime total/active renderer `486/462`, Assembly regression runtime `477/468`dir. Accepted r56 customer approach→offer/basket→checkout/payment/receipt görsel zinciri ve r55 Workbench composition korunur. Retail native marker `shelf-authority=single legacy-starter-shelf=absent`; glare `0`, minimum contrast `1.348`dır. Customer NavMesh/route failure veya fallback üretilmez; existing reservation, checkout, cash, receipt, stable identity ve input authorities yeniden yazılmaz.
+
+Mac scene contracts `11/11`, retail/Assembly targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad retail flow `2/2`, full EditMode `754/754`, full PlayMode `158/158`; accepted failed/skipped/inconclusive `0`dır. Universal Mac report `330421709` bayt; deep/strict-valid universal app, Apple M1/Metal r57 retail ve r55 Assembly native smoke geçti. `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Technical-baseline'ın kanıtladığı pre-existing yanlış Version Control mode repository baseline'a döndürüldü; ayrı ProBuilder ayarı unstaged ve untouched kaldı.
+
+Issue #115 strict acceptance henüz tamamlanmış sayılmaz: fiziksel Windows makinesi yokken clean exact-head x64 IL2CPP/only-D3D11 Intel Iris Xe gate ertelendi; UTM bunun yerine geçmez. USB bağlı değildir ve immutable checkpoint/readback yapılmadı. Draft PR #118, Issue ve Roadmap `In Progress`; merge/closure yoktur. Mac tek authoritative write/Git lane olarak ana Steam 1.0 Goal'ı sürdürür. Physical-human keyboard/gamepad/endurance yayın sertifikasyonu ayrıca açık, claim `human=false`tır.
+
+## Önceki geliştirme checkpoint'i — Issue #114 r56 kabul edildi ve PR #116 ile `main`e entegre edildi; Issue #115 bounded scene işi açıldı
 
 Issue #114'ün bounded customer-facing retail/checkout hero-readability dilimi technical head/main `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619` üzerindedir. GarageGraybox r56; customer approach, gerçek `AuthoritativeRetailShelfA` offer/reserved-basket durumu ve gerçek checkout/payment/receipt durumunu üç karşılaştırılabilir 1280x720 composition'a taşır. `RetailCheckoutHeroProjection` yalnız mevcut authority state'ini sunuma yansıtır; ikinci item, reservation, placement, payment veya receipt authority üretmez.
 

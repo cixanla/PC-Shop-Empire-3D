@@ -1,10 +1,19 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #114 Retail/Checkout hero readability exact scene/presentation/render-budget/full-regression, universal Mac native, clean Windows IL2CPP/D3D11, cross-machine screenshot/readback, cleanup, PR/merge ve main CI kapıları kabul edildi; Issue `CLOSED`, Roadmap `Done`; USB physical checkpoint ayrı bekliyor<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`, technical/main source `0ea82e826aff9d245e0d4002386193278f25b483`, tree `8cbe7bd7c7628d923930213de30e1bda73cb7619`; PR #116; technical/main Guards `33109651186 / 33127652290`; bounded acceptance `5/5`; parent visual Epic #18 ve Steam 1.0 Goal açık
+**Durum:** Issue #115 Retail Shelf Authority Consolidation r57 source, exact scene/authority contracts, full Mac regression, universal Mac native ve Apple M1/Metal retail/Assembly smoke kapıları geçti; draft PR #118 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; base main `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; technical source `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`; draft PR #118; acceptance #1–#3 PASS, #4 Mac PASS/Windows DEFERRED, #5 docs/PR/CI IN PROGRESS; parent visual Epic #18 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #114 / Epic #18
+## En yeni teknik checkpoint — Issue #115 / Epic #18
+
+- GarageGraybox `garage-retail-shelf-authority-r57-v1`. Legacy `StarterShelf` hierarchy (`17` child object, `16` renderer, `10` collider) kaldırıldı. Exact tek `AuthoritativeRetailShelfA`, `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` kaldı.
+- Authored MeshRenderer `499→483` (`-16`), light/camera `5→5 / 1→1`; retail runtime total/active `486/462`, Assembly regression runtime `477/468`. r56 retail/checkout ve r55 Assembly visual contracts korunur; customer route failure/fallback `0`, duplicate shelf/surface/zone authority `0`.
+- Technical commit `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`. Scene contracts `11/11`, retail/Assembly targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad retail flows `2/2`, full EditMode `754/754`, full PlayMode `158/158`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330421709` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal retail marker `shelf-authority=single legacy-starter-shelf=absent`, runtime `486/462`, üç 1280x720 capture glare `0` ve minimum contrast `1.348`; Assembly regression `477/468`, üç capture ve central glare `0`.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` ile byte-exact. Pre-existing yanlış Version Control mode baseline fail'i ile kanıtlanıp repository değeri `Visible Meta Files`a döndürüldü; baseline `5/5` ve full EditMode rerun yeşil. ProBuilder user/editor diff'i untouched/unstaged.
+- Draft PR #118 açıktır. Fiziksel Windows bulunmadığı için exact-head clean x64 IL2CPP/only-D3D11 Intel Iris Xe test/build/runtime/readback kapısı; USB bulunmadığı için immutable checkpoint/readback kapısı ertelenmiştir. UTM release kanıtı değildir. Issue/Roadmap `In Progress`; merge/close yok, claim `human=false`.
+
+## Önceki teknik checkpoint — Issue #114 / Epic #18
 
 - GarageGraybox `garage-retail-checkout-hero-r56-v1`; customer approach, gerçek authoritative shelf offer/reserved basket ve checkout/payment/receipt durumlarını üç karşılaştırılabilir 1280x720 composition'a taşır. Projection yalnız existing state'i okur; ikinci retail, placement, reservation, payment veya receipt authority üretmez.
 - Base→r56 authored MeshRenderer `490→499` (`+9`), light `4→5`, camera `1→1`; runtime total/active `502/478`. Dokuz hero renderer Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light `0.42 / 4.4 / 110°` ve shadowless'tır. Existing NavMesh, route, waypoint, collider, input ve stable identity untouched'tır.

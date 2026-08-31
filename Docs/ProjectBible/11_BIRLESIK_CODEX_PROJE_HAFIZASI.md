@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** `main` `0ea82e826aff9d245e0d4002386193278f25b483`; PR #116; main Guard `33127652290`
+**Authoritative Git state:** `main` `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; active Issue #115 technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`; draft PR #118
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 27 Ağustos 2026 üstün gelen güncel durum — Issue #114 Retail/Checkout Hero Readability
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #115 Retail Shelf Authority Consolidation
+
+- GarageGraybox r57 legacy `StarterShelf` hiyerarşisini kaldırır ve exact tek `AuthoritativeRetailShelfA` bırakır. Kalan authority `5` child collider, tek `PlacementSurface` (`prototype.retail-shelf-a`) ve tek shelf `InventoryPlacementZone` taşır; second shelf/surface/zone yoktur.
+- r56→r57 authored MeshRenderer `499→483` (`-16`), light/camera delta `0/0`; retail runtime `486/462`, Assembly regression runtime `477/468`. Customer approach/browse/checkout/fulfilled-exit, reservation/payment/receipt, stable identity ve input authorities untouched kalır.
+- Technical head `96d72d5202cdb72b1c017ce5e063948c892ce88d`, tree `fb8821c2dc84d887e5ef9c1940d2bef255258d3c`; scene `11/11`, targeted PlayMode `1/1 + 1/1`, keyboard/mouse + virtual-gamepad flows `2/2`, full Mac `754/754 + 158/158`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330421709` bayt; strict/deep-valid universal app, Apple M1/Metal r57 retail ve r55 Assembly native smoke geçti. Retail marker single shelf authority/legacy absence kanıtlar; üç retail screenshot glare `0`, minimum contrast `1.348`.
+- ProjectSettings main asset byte-exact. Evidence-driven Version Control baseline correction sonrası full suite yeşil; ayrı ProBuilder user/editor diff'i untouched/unstaged. Draft PR #118 open; Issue/Roadmap `In Progress`.
+- Fiziksel Windows yoktur; exact-head clean x64 IL2CPP/D3D11/Iris Xe gate ertelenir ve UTM onun yerine geçmez. USB yoktur; checkpoint/readback yapılmaz. Parent Epic #18 ve Steam 1.0 Goal sürer; merge/closure ve physical-human HID/endurance claim'i yoktur.
+
+### Önceki üstün gelen durum — Issue #114 Retail/Checkout Hero Readability
 
 - GarageGraybox r56 customer approach, gerçek authoritative shelf offer/reserved basket ve gerçek checkout/payment/receipt durumlarını üç 1280x720 native composition'da ayırır. `RetailCheckoutHeroProjection` existing authority state'ini sunar; ikinci item/placement/reservation/payment/receipt authority üretmez.
 - Issue #111 baseline→r56 authored MeshRenderer `490→499` (`+9`), light/camera `4→5 / 1→1`; runtime `502/478`. Dokuz hero renderer Ignore Raycast/no-collider/no-shadow/no-motion-vector, fill light shadowless'tır. NavMesh, route, collider, waypoint, input ve stable identity untouched; pre-existing `StarterShelf` collider borcu #115'e taşınmıştır.
