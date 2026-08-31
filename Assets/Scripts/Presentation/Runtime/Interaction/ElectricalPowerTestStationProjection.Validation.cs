@@ -94,6 +94,14 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(completed.Error);
             }
 
+            OperationResult qualityCandidate =
+                session.ObserveValidationCandidateForQuality(completed.Value);
+            if (qualityCandidate.IsFailure)
+            {
+                ResetValidationReview();
+                return qualityCandidate;
+            }
+
             _lastSuccessfulOperationFrame = UnityEngine.Time.frameCount;
             ResetValidationReviewState();
             readinessProjection?.ObserveValidationWaiting();

@@ -175,6 +175,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFictionalOsReviewIfContextChanged();
             ResetFictionalDriverReviewIfContextChanged();
             ResetValidationReviewIfContextChanged();
+            ResetQualityReleaseReviewIfContextChanged();
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
                 playerInput.PausePressedThisFrame)
             {
@@ -218,7 +219,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            OperationResult primaryGate = ValidateFirmwareInteractionGate();
+            bool qualityReleasePrimary = HasQualityReleasePrimaryContext();
+            OperationResult primaryGate = qualityReleasePrimary
+                ? ValidateQualityReleaseInteractionGate()
+                : ValidateFirmwareInteractionGate();
             if (primaryGate.IsFailure)
             {
                 Remember(primaryGate);
@@ -231,7 +235,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return;
             }
 
-            Remember(TryAttemptFirmwareAuthorized());
+            Remember(qualityReleasePrimary
+                ? TryAttemptQualityReleaseAuthorized()
+                : TryAttemptFirmwareAuthorized());
             readinessProjection.RefreshPresentation();
         }
 
@@ -283,6 +289,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         internal OperationResult TryAttemptValidationAuthorizedForTests()
         {
             return Remember(TryAttemptFirmwareAuthorized());
+        }
+
+        internal OperationResult InspectQualityReleaseInteractionGateForTests()
+        {
+            return ValidateQualityReleaseInteractionGate();
+        }
+
+        internal OperationResult TryAttemptQualityReleaseAuthorizedForTests()
+        {
+            return Remember(TryAttemptQualityReleaseAuthorized());
         }
 
         private void Update()
@@ -366,6 +382,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 if (transition.Value.TransitionKind ==
                     PcPowerTransitionKind.PowerOn)
                 {
+                    session.ObservePowerOnForQuality();
                     OperationResult<PcPostStartupReceipt> postStartup =
                         powerState.TryCompleteStartupSelfTest(
                             session.CreatePrototypePostStartupOperationId(
@@ -376,6 +393,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ? OperationResult.Success()
                         : OperationResult.Fail(postStartup.Error);
                 }
+
+                session.ObservePowerOffCandidateForQuality(transition.Value);
 
                 return OperationResult.Success();
             }
@@ -875,6 +894,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFictionalOsReviewIfContextChanged();
             ResetFictionalDriverReviewIfContextChanged();
             ResetValidationReviewIfContextChanged();
+            ResetQualityReleaseReviewIfContextChanged();
             if (playerMotor == null || playerMotor.IsPaused)
             {
                 return string.Empty;
@@ -1088,6 +1108,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     return "GÜÇ TESTİ ENGELLİ • POWER AUTHORITY GEÇERSİZ";
                 }
 
+                if (powerState != null && !powerState.IsEnergized)
+                {
+                    string qualityReleasePrompt = BuildQualityReleasePrompt(
+                        session,
+                        bindingPrompt);
+                    if (!string.IsNullOrEmpty(qualityReleasePrompt))
+                    {
+                        return qualityReleasePrompt;
+                    }
+                }
+
                 OperationResult<PowerTestAttemptReceipt> current =
                     attempts.EvaluateCurrentReceipt();
                 return current.IsSuccess
@@ -1254,6 +1285,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ResetFictionalOsReview();
             ResetFictionalDriverReview();
             ResetValidationReview();
+            ResetQualityReleaseReview();
         }
 
         private void InvalidatePromptCache()

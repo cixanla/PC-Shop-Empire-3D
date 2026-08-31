@@ -5,6 +5,7 @@
     "PSE.Core",
     "PSE.Catalog",
     "PSE.Assembly",
+    "PSE.Quality",
     "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",

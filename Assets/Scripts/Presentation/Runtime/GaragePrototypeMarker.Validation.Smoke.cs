@@ -23,6 +23,9 @@ namespace PCShopEmpire3D.Presentation
             "power-off=player-triggered current-after-power-off=false " +
             "history=preserved upstream=unchanged invariants=ok";
 
+        private string _nestedValidationSmokeFailureCode;
+        private bool _suppressValidationSmokeSuccessMarker;
+
         public bool HasValidationR66Runtime =>
             HasFictionalDriverInstallationR65Runtime &&
             electricalPowerTestStation != null &&
@@ -348,6 +351,12 @@ namespace PCShopEmpire3D.Presentation
                         completionFirmware,
                         validationReceipt.ExpectedPowerStateRevision,
                         validationReceipt.ExpectedRevision);
+                bool hasQualityCandidate =
+                    session.TryGetQualityReleaseCandidate(
+                        out _,
+                        out _,
+                        out PcValidationReceipt qualityValidation,
+                        out PcPowerStateReceipt qualityPowerOff);
                 if (powerState.State != PcPowerState.Off ||
                     powerState.Revision != 10 ||
                     powerState.ActivePowerOnReceipt != null ||
@@ -366,8 +375,19 @@ namespace PCShopEmpire3D.Presentation
                     electricalReadinessWorkbench.ValidationState !=
                         PcValidationPresentationState.NotCurrent ||
                     electricalReadinessWorkbench.HasCurrentValidation ||
+                    !hasQualityCandidate ||
+                    !ReferenceEquals(qualityValidation, validationReceipt) ||
+                    qualityPowerOff == null ||
+                    qualityPowerOff.Revision != powerState.Revision ||
+                    !ReferenceEquals(
+                        qualityPowerOff.SourcePowerOnReceipt,
+                        validationReceipt.SourcePowerOnReceipt) ||
+                    electricalReadinessWorkbench.QualityReleaseState !=
+                        CustomPcQualityReleasePresentationState.ReadyForReview ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
-                        "VALIDATION TARİHÇEDE KORUNDU") ||
+                        "VALIDATION GEÇTİ • GÜVENLİ KAPATILDI") ||
+                    !electricalReadinessWorkbench.StatusText.text.Contains(
+                        "SONRAKİ AŞAMA: KALİTE DOSYASI") ||
                     validationAuthority.ValidateReceiptHistory().IsFailure ||
                     driverAuthority.ValidateReceiptHistory().IsFailure ||
                     session.FictionalOsInstallation.ValidateReceiptHistory()
@@ -405,11 +425,14 @@ namespace PCShopEmpire3D.Presentation
                     smokeGamepad);
             }
 
-            Debug.Log(ValidationSmokeSuccessMarker);
-            yield return new WaitForEndOfFrame();
-            if (!Application.isEditor)
+            if (!_suppressValidationSmokeSuccessMarker)
             {
-                Application.Quit(0);
+                Debug.Log(ValidationSmokeSuccessMarker);
+                yield return new WaitForEndOfFrame();
+                if (!Application.isEditor)
+                {
+                    Application.Quit(0);
+                }
             }
         }
 
@@ -470,8 +493,14 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static void LogValidationSmokeFailure(string code)
+        private void LogValidationSmokeFailure(string code)
         {
+            if (_suppressValidationSmokeSuccessMarker)
+            {
+                _nestedValidationSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_VALIDATION_RUNTIME_SMOKE " +
                 "validation-flow=failed code=" + code);

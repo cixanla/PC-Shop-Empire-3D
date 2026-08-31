@@ -5,6 +5,7 @@ using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
 using PCShopEmpire3D.Presentation;
 using PCShopEmpire3D.Presentation.Interaction;
+using PCShopEmpire3D.Quality;
 using PCShopEmpire3D.World.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -198,10 +199,13 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(historical, Is.SameAs(current.Value));
             Assert.That(marker.ElectricalReadinessWorkbench.ValidationState,
                 Is.EqualTo(PcValidationPresentationState.NotCurrent));
+            Assert.That(marker.ElectricalReadinessWorkbench.QualityReleaseState,
+                Is.EqualTo(
+                    CustomPcQualityReleasePresentationState.ReadyForReview));
             Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
-                Does.Contain("VALIDATION TARİHÇEDE KORUNDU")
-                    .And.Contain("CURRENT RUN YOK")
-                    .And.Contain("YENİ VALIDATION GEREKLİ"));
+                Does.Contain("VALIDATION GEÇTİ")
+                    .And.Contain("GÜVENLİ KAPATILDI")
+                    .And.Contain("KALİTE DOSYASI"));
             Assert.That(authority.ValidateReceiptHistory().IsSuccess, Is.True);
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
         }

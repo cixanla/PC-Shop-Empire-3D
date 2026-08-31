@@ -21,7 +21,7 @@ namespace PCShopEmpire3D.Presentation
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
         public const string Version =
-            "garage-driver-bound-validation-r66-v1";
+            "garage-validation-bound-quality-release-r67-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1335,6 +1335,7 @@ namespace PCShopEmpire3D.Presentation
                 $"fictional-os-installation={(HasFictionalOsInstallationR64Runtime ? "ready" : "missing")} " +
                 $"fictional-driver-installation={(HasFictionalDriverInstallationR65Runtime ? "ready" : "missing")} " +
                 $"validation={(HasValidationR66Runtime ? "ready" : "missing")} " +
+                $"quality-release={(HasQualityReleaseR67Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1431,6 +1432,8 @@ namespace PCShopEmpire3D.Presentation
                     "-pse-fictional-driver-installation-smoke");
             bool runValidationSmoke =
                 HasCommandLineArgument("-pse-validation-smoke");
+            bool runQualityReleaseSmoke =
+                HasCommandLineArgument("-pse-quality-release-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1480,6 +1483,7 @@ namespace PCShopEmpire3D.Presentation
                              (runFictionalOsInstallationSmoke ? 1 : 0) +
                              (runFictionalDriverInstallationSmoke ? 1 : 0) +
                              (runValidationSmoke ? 1 : 0) +
+                             (runQualityReleaseSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
@@ -1522,13 +1526,19 @@ namespace PCShopEmpire3D.Presentation
                      !runFictionalOsInstallationSmoke &&
                      !runFictionalDriverInstallationSmoke &&
                      !runValidationSmoke &&
+                     !runQualityReleaseSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runValidationSmoke)
+                    if (runQualityReleaseSmoke)
+                    {
+                        LogQualityReleaseSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runValidationSmoke)
                     {
                         LogValidationSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1991,6 +2001,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runQualityReleaseSmoke && !Debug.isDebugBuild)
+            {
+                LogQualityReleaseSmokeFailure(
+                    "smoke.quality-release-requires-development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2248,6 +2265,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunValidationSmoke());
+            }
+
+            if (runQualityReleaseSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunQualityReleaseSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)

@@ -1,6 +1,7 @@
 using System;
 using PCShopEmpire3D.Assembly;
 using PCShopEmpire3D.Core.Primitives;
+using PCShopEmpire3D.Quality;
 using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation.Interaction
@@ -336,6 +337,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             ObserveValidationAuthorityState(session);
+            ObserveQualityReleaseAuthorityState(session);
 
             CaptureAuthorityState(session);
             if (powerState?.IsEnergized == true)
@@ -461,6 +463,69 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Success();
             }
 
+            if (QualityReleaseState ==
+                CustomPcQualityReleasePresentationState.ReadyForPackaging)
+            {
+                statusText.text =
+                    "KALİTE ONAYLANDI • PAKETLEMEYE HAZIR\n" +
+                    $"SCORE {QualityReleaseBenchmarkScore} • " +
+                    $"{ResolveValidationQualityLabel(QualityReleaseTier)}\n" +
+                    "EXACT İŞ EMRİ + SAFE SHUTDOWN KANITLANDI";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            if (QualityReleaseState ==
+                CustomPcQualityReleasePresentationState.Reviewing)
+            {
+                statusText.text =
+                    "KALİTE DOSYASI İNCELENİYOR\n" +
+                    "EXACT İŞ EMRİ + VALIDATION + SAFE SHUTDOWN\n" +
+                    "PAKETLEME SERBEST BIRAKMA ONAYI BEKLİYOR";
+                statusText.color = new Color(1f, 0.90f, 0.42f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            if (QualityReleaseState ==
+                CustomPcQualityReleasePresentationState.ReadyForReview)
+            {
+                statusText.text =
+                    "VALIDATION GEÇTİ • GÜVENLİ KAPATILDI\n" +
+                    "EXACT MÜŞTERİ İŞ EMRİ KORUNDU\n" +
+                    "SONRAKİ AŞAMA: KALİTE DOSYASI";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            if (QualityReleaseState ==
+                CustomPcQualityReleasePresentationState.Rejected)
+            {
+                statusText.text =
+                    "KALİTE ONAYI REDDEDİLDİ\n" +
+                    QualityReleaseFailureCode + "\n" +
+                    "BUILD KORUNDU • TEKRAR İNCELE";
+                statusText.color = new Color(1f, 0.78f, 0.50f);
+                statusIndicator.sharedMaterial = blockedMaterial;
+                return OperationResult.Fail(Failure.FromCode(
+                    QualityReleaseFailureCode));
+            }
+
+            if (QualityReleaseState ==
+                CustomPcQualityReleasePresentationState.NotCurrent)
+            {
+                statusText.text =
+                    "KALİTE ONAYI CURRENT DEĞİL\n" +
+                    "YENİ POWER CYCLE VEYA BUILD DEĞİŞİKLİĞİ\n" +
+                    "YENİ VALIDATION + KALİTE ONAYI GEREKLİ";
+                statusText.color = new Color(1f, 0.78f, 0.50f);
+                statusIndicator.sharedMaterial = blockedMaterial;
+                return OperationResult.Fail(
+                    CustomPcQualityReleaseFailures.NotCurrent);
+            }
+
             if (HasInstalledFictionalOs && HasInstalledFictionalDrivers)
             {
                 statusText.text = ValidationState ==
@@ -561,7 +626,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedFictionalDriverInstallationRevision !=
                        ResolveFictionalDriverInstallationRevision(session) ||
                    _observedValidationRevision !=
-                       ResolveValidationRevision(session);
+                       ResolveValidationRevision(session) ||
+                   _observedQualityReleaseRevision !=
+                       ResolveQualityReleaseRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -588,6 +655,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _observedFictionalDriverInstallationRevision =
                 ResolveFictionalDriverInstallationRevision(session);
             _observedValidationRevision = ResolveValidationRevision(session);
+            _observedQualityReleaseRevision =
+                ResolveQualityReleaseRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -605,6 +674,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasInstalledFictionalOs = false;
             HasInstalledFictionalDrivers = false;
             ClearValidationMetrics();
+            ClearQualityReleaseMetrics();
         }
 
         private void ObservePowerState(GarageStockFlowSession session)

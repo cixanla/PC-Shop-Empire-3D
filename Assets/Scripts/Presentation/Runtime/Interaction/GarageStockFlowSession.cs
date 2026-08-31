@@ -2649,6 +2649,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
             }
 
+            if (_qualityRelease != null)
+            {
+                OperationResult qualityReleaseResult =
+                    _qualityRelease.ValidateReceiptHistory();
+                if (qualityReleaseResult.IsFailure)
+                {
+                    return qualityReleaseResult;
+                }
+            }
+
             OperationResult actionResult = CustomerOfferActions.ValidateInvariants();
             return actionResult.IsFailure
                 ? actionResult

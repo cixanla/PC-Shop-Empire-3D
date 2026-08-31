@@ -1,0 +1,21 @@
+{
+  "name": "PSE.Quality",
+  "rootNamespace": "PCShopEmpire3D.Quality",
+  "references": [
+    "PSE.Core",
+    "PSE.Catalog",
+    "PSE.Inventory",
+    "PSE.Retail",
+    "PSE.Orders",
+    "PSE.Assembly"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
