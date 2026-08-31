@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #121 r59 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #123 r60 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`, branch `codex/issue123-power-test-preflight-attempt`; draft PR #124 open, Issue/Roadmap `In Progress`.
+- `PowerTestAttemptAuthority` exact power-budget ve Assembly authority instance'larına reference-bound'dur. Command stable operation ID, expected attempt revision ve exact current context ister; accepted receipt build/chassis, seven component + three cable identities/operations/revisions, product/policy ve `380/500/550 W` değerlerini immutable bağlar.
+- Exact historical replay same-instance kalır; changed-command conflict ve second completion blocked'dır. Current evaluation cable/Assembly lineage drift'inde `ContextStale` olur, historical receipt'i değiştirmez. Gameplay/benchmark authority mutation'ı yoktur.
+- Existing Workbench üzerinde normal Interact kullanılır. Keyboard/mouse + virtual-gamepad aynı single-consumer path'te range/focus/LOS/pause/co-edge/busy/competing owner/replay gates'ten geçer. Yeni gameplay collider/renderer/light/camera/NavMesh/item/authority yoktur; status `POWER-ON BEKLİYOR` sınırını korur.
+- Bağımsız review'un P1 replay-order ve iki P2 invariant/allocation bulgusu final rerundan önce düzeltildi. Mac targeted `6/6 + 3/3`, full `773/773 EditMode + 161/161 PlayMode`, universal `330507808` bayt build ve Apple M1/Metal exact r60 smoke geçti; Guard `33357285973` yeşildir.
+- User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #121 r59 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`, branch `codex/issue121-power-budget-headroom-preflight`; draft PR #122 open, Issue/Roadmap `In Progress`.
 - Exact immutable electrical catalog canonical component catalog'a bağlanır. Legacy-v1 policy platform/chassis/CPU/GPU/DDR5/NVMe/cooler yüklerinden `380 W`, yüzde 30 headroom + 50 W ceiling ile `500 W` minimum ve installed `550 W` için `+50 W` margin üretir.
