@@ -30,7 +30,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker, Is.Not.Null);
             Assert.That(
                 GaragePrototypeMarker.Version,
-                Is.EqualTo("garage-safe-power-state-r61-v1"));
+                Is.EqualTo("garage-post-startup-r62-v1"));
 
             Transform[] transforms = SceneManager.GetActiveScene()
                 .GetRootGameObjects()

@@ -38,6 +38,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedPcieGpuPowerCableRevision;
         private long _observedPowerTestAttemptRevision;
         private long _observedPowerStateRevision = -1;
+        private long _observedPostStartupRevision = -1;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -66,6 +67,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasAcceptedPreflight { get; private set; }
 
         public bool HasCurrentAcceptedPreflight { get; private set; }
+
+        public bool HasCurrentPostStartupPass { get; private set; }
 
         public PcPowerState PowerState { get; private set; }
 
@@ -231,12 +234,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CaptureAuthorityState(session);
             if (powerState?.IsEnergized == true)
             {
-                statusText.text =
-                    "GÜÇ AÇIK • POST BEKLİYOR\n" +
-                    $"{assessment.Value.SystemPowerDrawWatts}W / " +
-                    $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
-                    $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
-                    "BAKIM KİLİDİ AKTİF";
+                OperationResult<PcPostStartupReceipt> postStartup =
+                    powerState.EvaluateCurrentStartupSelfTest();
+                HasCurrentPostStartupPass = postStartup.IsSuccess;
+                statusText.text = HasCurrentPostStartupPass
+                    ? "GÜÇ AÇIK • POST GEÇTİ\n" +
+                      $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                      $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                      $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                      "FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF"
+                    : "GÜÇ AÇIK • POST BEKLİYOR\n" +
+                      $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                      $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                      $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                      "BAKIM KİLİDİ AKTİF";
                 statusText.color = new Color(1f, 0.90f, 0.42f);
                 statusIndicator.sharedMaterial = readyMaterial;
                 return OperationResult.Success();
@@ -306,7 +317,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                            out PowerTestAttemptAuthority attempts)
                                ? attempts.Revision
                                : -1L) ||
-                   _observedPowerStateRevision != ResolvePowerStateRevision(session);
+                   _observedPowerStateRevision != ResolvePowerStateRevision(session) ||
+                   _observedPostStartupRevision !=
+                       ResolvePostStartupRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -325,6 +338,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         ? attempts.Revision
                         : -1L;
             _observedPowerStateRevision = ResolvePowerStateRevision(session);
+            _observedPostStartupRevision = ResolvePostStartupRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -337,6 +351,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CapacityMarginWatts = 0;
             HasAcceptedPreflight = false;
             HasCurrentAcceptedPreflight = false;
+            HasCurrentPostStartupPass = false;
         }
 
         private void ObservePowerState(GarageStockFlowSession session)
@@ -511,6 +526,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return session != null &&
                    session.TryGetPowerState(out PcPowerStateAuthority powerState)
                 ? powerState.Revision
+                : -1L;
+        }
+
+        private static long ResolvePostStartupRevision(
+            GarageStockFlowSession session)
+        {
+            return session != null &&
+                   session.TryGetPowerState(out PcPowerStateAuthority powerState)
+                ? powerState.PostStartupRevision
                 : -1L;
         }
     }

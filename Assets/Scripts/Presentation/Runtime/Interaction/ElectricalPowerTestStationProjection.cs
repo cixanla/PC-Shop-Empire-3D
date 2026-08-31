@@ -263,6 +263,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 _lastSuccessfulOperationFrame = Time.frameCount;
+                if (transition.Value.TransitionKind ==
+                    PcPowerTransitionKind.PowerOn)
+                {
+                    OperationResult<PcPostStartupReceipt> postStartup =
+                        powerState.TryCompleteStartupSelfTest(
+                            session.CreatePrototypePostStartupOperationId(
+                                transition.Value),
+                            transition.Value,
+                            powerState.Revision);
+                    return postStartup.IsSuccess
+                        ? OperationResult.Success()
+                        : OperationResult.Fail(postStartup.Error);
+                }
+
                 return OperationResult.Success();
             }
 
@@ -466,7 +480,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
                 if (powerState?.IsEnergized == true)
                 {
-                    return $"{bindingPrompt}: GÜCÜ KAPAT • POST BEKLİYOR";
+                    OperationResult<PcPostStartupReceipt> postStartup =
+                        powerState.EvaluateCurrentStartupSelfTest();
+                    if (postStartup.IsSuccess)
+                    {
+                        return $"{bindingPrompt}: GÜCÜ KAPAT • POST GEÇTİ";
+                    }
+
+                    return string.IsNullOrEmpty(LastFailureCode)
+                        ? $"{bindingPrompt}: GÜCÜ KAPAT • POST BEKLİYOR"
+                        : $"{bindingPrompt}: GÜCÜ KAPAT • POST ENGELLİ • " +
+                          LastFailureCode;
                 }
 
                 OperationResult<PowerTestAttemptReceipt> current =
