@@ -617,6 +617,13 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
+            }
+
             if (IsEps12vPowerCableRouted || IsPcieGpuPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
@@ -799,6 +806,13 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
             }
 
             if (IsAtx24PowerCableRouted ||
@@ -1103,6 +1117,13 @@ namespace PCShopEmpire3D.Assembly
                         AssemblyFailures.OperationConflict);
             }
 
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
+            }
+
             if (IsEps12vPowerCableRouted)
             {
                 return OperationResult<AssemblyOperationReceipt>.Fail(
@@ -1202,6 +1223,13 @@ namespace PCShopEmpire3D.Assembly
                     ? OperationResult<AssemblyOperationReceipt>.Success(replay)
                     : OperationResult<AssemblyOperationReceipt>.Fail(
                         AssemblyFailures.OperationConflict);
+            }
+
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return OperationResult<AssemblyOperationReceipt>.Fail(
+                    maintenanceFailure);
             }
 
             if (IsEps12vPowerCableRouted)
@@ -1515,6 +1543,7 @@ namespace PCShopEmpire3D.Assembly
         {
             if (_componentCatalog == null ||
                 _inventory == null ||
+                !ValidateElectricalMaintenanceInterlockInvariant() ||
                 BuildId.IsEmpty ||
                 ChassisId.IsEmpty ||
                 MotherboardSlotId.IsEmpty ||
@@ -1828,6 +1857,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<ItemInstanceIdScope> itemId,
             StableId<AssemblySlotIdScope> slotId)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (slotId != MotherboardSlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -1871,6 +1906,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<ItemInstanceIdScope> itemId,
             StableId<AssemblySlotIdScope> slotId)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (slotId != MotherboardSlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -1946,6 +1987,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool securing)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (slotId != MotherboardSlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -2026,6 +2073,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorSocket)
             {
                 return AssemblyFailures.ProcessorSocketUnavailable;
@@ -2117,6 +2170,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool closing)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorSocket)
             {
                 return AssemblyFailures.ProcessorSocketUnavailable;
@@ -2215,6 +2274,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceProcessorSeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasProcessorSocket)
             {
                 return AssemblyFailures.ProcessorSocketUnavailable;

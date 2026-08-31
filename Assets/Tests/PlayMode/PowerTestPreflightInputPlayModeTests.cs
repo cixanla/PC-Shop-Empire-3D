@@ -17,7 +17,7 @@ using UnityEngine.TestTools;
 
 namespace PCShopEmpire3D.Tests.PlayMode
 {
-    public sealed class PowerTestPreflightInputPlayModeTests : InputTestFixture
+    public sealed partial class PowerTestPreflightInputPlayModeTests : InputTestFixture
     {
         [UnityTest]
         public IEnumerator KeyboardInteractPublishesOneReceiptWithoutGameplayMutation()
@@ -30,6 +30,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             ElectricalPowerTestStationProjection station =
                 marker.ElectricalPowerTestStation;
             MovePlayerToPowerTestStation(marker, 1.35f);
+            Assert.That(session.TryGetPowerTestAttempts(out _), Is.False);
             yield return null;
             Assert.That(station.InspectInteractionGateForTests().IsSuccess, Is.True);
             string initialPrompt = station.PromptText;
@@ -38,6 +39,8 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(initialPrompt, Does.Contain("GÜÇ TESTİ ÖN KONTROLÜ"));
             Assert.That(station.PromptText, Is.SameAs(initialPrompt),
                 "Repeated same-frame HUD reads must reuse the cached prompt.");
+            Assert.That(session.TryGetPowerTestAttempts(out _), Is.False,
+                "Prompt and gate observation must not create gameplay authority.");
 
             long inventoryRevision = session.Inventory.Revision;
             long buildKitRevision = session.CustomPcBuildKit.Revision;
@@ -55,7 +58,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.PlayerInput.InteractPressedThisFrame, Is.False);
             Assert.That(station.PromptText,
                 Does.Contain("ÖN KONTROL GEÇTİ")
-                    .And.Contain("POWER-ON BEKLİYOR"));
+                    .And.Contain("GÜCÜ AÇ"));
             Assert.That(session.PowerTestAttempts.Revision, Is.EqualTo(1));
             Assert.That(session.PowerTestAttempts.ReceiptCount, Is.EqualTo(1));
             Assert.That(session.PowerTestAttempts.HasCompletedPreflight, Is.True);
@@ -156,7 +159,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.GetComponent<GaragePrototypeHud>()
                     .EffectivePromptText,
                 Does.Contain("ÖN KONTROL GEÇTİ")
-                    .And.Contain("POWER-ON BEKLİYOR"));
+                    .And.Contain("GÜCÜ AÇ"));
             Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();

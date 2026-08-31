@@ -672,6 +672,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceMotherboardSecureOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasMemorySlot)
             {
                 return AssemblyFailures.InvalidMemorySlotDefinition;
@@ -763,6 +769,12 @@ namespace PCShopEmpire3D.Assembly
             long expectedAssemblyRevision,
             bool closing)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasMemorySlot || slotId != _memorySlotDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;
@@ -846,6 +858,12 @@ namespace PCShopEmpire3D.Assembly
             StableId<AssemblyOperationIdScope> sourceMemorySeatOperationId,
             long expectedAssemblyRevision)
         {
+            Failure maintenanceFailure = ValidateElectricalMaintenanceInterlock();
+            if (!maintenanceFailure.IsNone)
+            {
+                return maintenanceFailure;
+            }
+
             if (!HasMemorySlot || slotId != _memorySlotDefinition.SlotId)
             {
                 return AssemblyFailures.UnknownSlot;

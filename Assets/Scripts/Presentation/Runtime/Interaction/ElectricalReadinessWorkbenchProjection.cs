@@ -37,6 +37,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedEps12vPowerCableRevision;
         private long _observedPcieGpuPowerCableRevision;
         private long _observedPowerTestAttemptRevision;
+        private long _observedPowerStateRevision = -1;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -65,6 +66,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasAcceptedPreflight { get; private set; }
 
         public bool HasCurrentAcceptedPreflight { get; private set; }
+
+        public PcPowerState PowerState { get; private set; }
+
+        public bool IsEnergized => PowerState == PcPowerState.Energized;
 
         public string CurrentFailureCode { get; private set; } =
             ElectricalReadinessWorkbenchFailures.ConfigurationMissing.Code;
@@ -105,6 +110,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             ClearPowerBudgetAssessment();
             if (!IsConfigured)
             {
+                PowerState = PcPowerState.Off;
                 ApplyBlockedPresentation(
                     "AUTHORITY BAĞLANTISI EKSİK",
                     ElectricalReadinessWorkbenchFailures.ConfigurationMissing);
@@ -116,12 +122,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     out GarageStockFlowSession session))
             {
                 _hasObservedAuthorityState = false;
+                PowerState = PcPowerState.Off;
                 ApplyBlockedPresentation(
                     "AUTHORITY HENÜZ HAZIR DEĞİL",
                     ElectricalReadinessWorkbenchFailures.RuntimeNotReady);
                 return OperationResult.Fail(
                     ElectricalReadinessWorkbenchFailures.RuntimeNotReady);
             }
+
+            ObservePowerState(session);
 
             if (session.PowerBudget == null)
             {
@@ -154,14 +163,21 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return OperationResult.Fail(assessment.Value.Blocker);
             }
 
-            PowerTestAttemptAuthority attempts = session.PowerTestAttempts;
-            if (attempts == null)
+            if (!session.TryGetPowerTestAttempts(
+                    out PowerTestAttemptAuthority attempts))
             {
-                ApplyBlockedPresentation(
-                    "ÖN KONTROL AUTHORITY EKSİK",
-                    PowerTestAttemptFailures.ConfigurationMissing);
-                return OperationResult.Fail(
-                    PowerTestAttemptFailures.ConfigurationMissing);
+                IsReady = true;
+                CurrentFailureCode = string.Empty;
+                statusText.text =
+                    "GÜÇ BÜTÇESİ UYGUN\n" +
+                    $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                    $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                    $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                    "GÜÇ TESTİ BEKLİYOR";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                CaptureAuthorityState(session);
+                return OperationResult.Success();
             }
 
             IsReady = true;
@@ -197,6 +213,35 @@ namespace PCShopEmpire3D.Presentation.Interaction
 
             HasCurrentAcceptedPreflight = true;
             CurrentFailureCode = string.Empty;
+            PcPowerStateAuthority powerState =
+                session.TryGetPowerState(out PcPowerStateAuthority existing)
+                    ? existing
+                    : null;
+            if (powerState != null &&
+                powerState.ValidateReceiptHistory().IsFailure)
+            {
+                ApplyBlockedPresentation(
+                    "POWER AUTHORITY DOĞRULANAMADI",
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
+                return OperationResult.Fail(
+                    PcPowerStateFailures.ReceiptHistoryInvalid);
+            }
+
+            PowerState = powerState?.State ?? PcPowerState.Off;
+            CaptureAuthorityState(session);
+            if (powerState?.IsEnergized == true)
+            {
+                statusText.text =
+                    "GÜÇ AÇIK • POST BEKLİYOR\n" +
+                    $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                    $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                    $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                    "BAKIM KİLİDİ AKTİF";
+                statusText.color = new Color(1f, 0.90f, 0.42f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
             statusText.text =
                 "ÖN KONTROL GEÇTİ\n" +
                 $"{assessment.Value.SystemPowerDrawWatts}W / " +
@@ -257,7 +302,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedPcieGpuPowerCableRevision !=
                        session.AssemblyBuild.PcieGpuPowerCableRevision ||
                    _observedPowerTestAttemptRevision !=
-                       (session.PowerTestAttempts?.Revision ?? -1);
+                       (session.TryGetPowerTestAttempts(
+                           out PowerTestAttemptAuthority attempts)
+                               ? attempts.Revision
+                               : -1L) ||
+                   _observedPowerStateRevision != ResolvePowerStateRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -271,7 +320,11 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _observedPcieGpuPowerCableRevision =
                 session.AssemblyBuild.PcieGpuPowerCableRevision;
             _observedPowerTestAttemptRevision =
-                session.PowerTestAttempts?.Revision ?? -1;
+                session.TryGetPowerTestAttempts(
+                    out PowerTestAttemptAuthority attempts)
+                        ? attempts.Revision
+                        : -1L;
+            _observedPowerStateRevision = ResolvePowerStateRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -284,6 +337,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             CapacityMarginWatts = 0;
             HasAcceptedPreflight = false;
             HasCurrentAcceptedPreflight = false;
+        }
+
+        private void ObservePowerState(GarageStockFlowSession session)
+        {
+            PowerState = session != null &&
+                         session.TryGetPowerState(
+                             out PcPowerStateAuthority powerState)
+                ? powerState.State
+                : PcPowerState.Off;
         }
 
         private void CapturePowerBudgetAssessment(PcPowerBudgetSnapshot assessment)
@@ -441,6 +503,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return failure == ElectricalReadinessFailures.InvariantInvalid
                 ? "MONTAJ SOYUNU DOĞRULA"
                 : $"KONTROL GEREKİYOR • {failure.Code}";
+        }
+
+        private static long ResolvePowerStateRevision(
+            GarageStockFlowSession session)
+        {
+            return session != null &&
+                   session.TryGetPowerState(out PcPowerStateAuthority powerState)
+                ? powerState.Revision
+                : -1L;
         }
     }
 }

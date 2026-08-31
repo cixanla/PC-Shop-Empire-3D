@@ -30,9 +30,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
     }
 
     /// <summary>
-    /// Focused player command surface for one exact power-test preflight. The existing
-    /// readiness display remains the presentation observer; this component owns only the
-    /// interaction gate and delegates the immutable receipt to PowerTestAttemptAuthority.
+    /// Focused player command surface for one exact power-test preflight and its safe
+    /// Off/Energized transition. The existing readiness display remains the presentation
+    /// observer; this component owns only interaction gates and delegates immutable receipts.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(68)]
@@ -204,11 +204,66 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             GarageStockFlowSession session = ResolveSession();
-            PowerTestAttemptAuthority attempts = session?.PowerTestAttempts;
-            if (attempts == null)
+            if (session == null)
             {
                 return OperationResult.Fail(
                     ElectricalPowerTestStationFailures.RuntimeNotReady);
+            }
+
+            OperationResult<PowerTestAttemptAuthority> ensuredAttempts =
+                session.EnsurePowerTestAttemptsAuthority();
+            if (ensuredAttempts.IsFailure)
+            {
+                return OperationResult.Fail(ensuredAttempts.Error);
+            }
+
+            PowerTestAttemptAuthority attempts = ensuredAttempts.Value;
+
+            if (attempts.HasCompletedPreflight)
+            {
+                OperationResult<PcPowerStateAuthority> ensuredPowerState =
+                    session.EnsurePowerStateAuthority();
+                if (ensuredPowerState.IsFailure)
+                {
+                    return OperationResult.Fail(ensuredPowerState.Error);
+                }
+
+                PcPowerStateAuthority powerState = ensuredPowerState.Value;
+
+                OperationResult<PcPowerStateReceipt> transition;
+                if (powerState.IsEnergized)
+                {
+                    transition = powerState.TryPowerOff(
+                        session.CreatePrototypePowerStateOperationId(
+                            PcPowerTransitionKind.PowerOff,
+                            powerState.Revision + 1L),
+                        powerState.ActivePowerOnReceipt,
+                        powerState.Revision);
+                }
+                else
+                {
+                    OperationResult<PowerTestAttemptReceipt> current =
+                        attempts.EvaluateCurrentReceipt();
+                    if (current.IsFailure)
+                    {
+                        return OperationResult.Fail(current.Error);
+                    }
+
+                    transition = powerState.TryPowerOn(
+                        session.CreatePrototypePowerStateOperationId(
+                            PcPowerTransitionKind.PowerOn,
+                            powerState.Revision + 1L),
+                        current.Value,
+                        powerState.Revision);
+                }
+
+                if (transition.IsFailure)
+                {
+                    return OperationResult.Fail(transition.Error);
+                }
+
+                _lastSuccessfulOperationFrame = Time.frameCount;
+                return OperationResult.Success();
             }
 
             OperationResult<PowerTestAttemptContext> observed =
@@ -265,19 +320,53 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             GarageStockFlowSession session = ResolveSession();
-            PowerTestAttemptAuthority attempts = session?.PowerTestAttempts;
-            if (attempts == null)
+            if (session == null || session.PowerBudget == null)
             {
                 return OperationResult.Fail(
                     ElectricalPowerTestStationFailures.RuntimeNotReady);
             }
 
+            if (!session.TryGetPowerTestAttempts(
+                    out PowerTestAttemptAuthority attempts))
+            {
+                OperationResult<PcPowerBudgetSnapshot> assessment =
+                    session.PowerBudget.AssessPowerBudget();
+                if (assessment.IsFailure)
+                {
+                    return OperationResult.Fail(assessment.Error);
+                }
+
+                return assessment.Value.IsSufficient
+                    ? OperationResult.Success()
+                    : OperationResult.Fail(
+                        PowerTestAttemptFailures.PowerSupplyInsufficient);
+            }
+
             if (attempts.HasCompletedPreflight)
             {
+                PcPowerStateAuthority powerState =
+                    session.TryGetPowerState(out PcPowerStateAuthority existing)
+                        ? existing
+                        : null;
+                if (powerState != null &&
+                    powerState.ValidateReceiptHistory().IsFailure)
+                {
+                    return OperationResult.Fail(
+                        ElectricalPowerTestStationFailures.RuntimeNotReady);
+                }
+
+                if (powerState?.IsEnergized == true)
+                {
+                    return powerState.ActivePowerOnReceipt != null
+                        ? OperationResult.Success()
+                        : OperationResult.Fail(
+                            PcPowerStateFailures.ReceiptHistoryInvalid);
+                }
+
                 OperationResult<PowerTestAttemptReceipt> current =
                     attempts.EvaluateCurrentReceipt();
                 return current.IsSuccess
-                    ? OperationResult.Fail(PowerTestAttemptFailures.AlreadyCompleted)
+                    ? OperationResult.Success()
                     : OperationResult.Fail(current.Error);
             }
 
@@ -334,18 +423,56 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             GarageStockFlowSession session = ResolveSession();
-            PowerTestAttemptAuthority attempts = session?.PowerTestAttempts;
-            if (attempts == null)
+            if (session == null || session.PowerBudget == null)
             {
                 return "GÜÇ TESTİ ENGELLİ • AUTHORITY HAZIR DEĞİL";
             }
 
+            if (!session.TryGetPowerTestAttempts(
+                    out PowerTestAttemptAuthority attempts))
+            {
+                OperationResult<PcPowerBudgetSnapshot> assessment =
+                    session.PowerBudget.AssessPowerBudget();
+                if (assessment.IsFailure)
+                {
+                    return $"GÜÇ TESTİ ENGELLİ • {assessment.Error.Code}";
+                }
+
+                if (!assessment.Value.IsSufficient)
+                {
+                    return "GÜÇ TESTİ ENGELLİ • PSU YETERSİZ";
+                }
+
+                string freshInteract = playerInput != null
+                    ? playerInput.InteractBindingPrompt
+                    : "E / A";
+                return $"{freshInteract}: GÜÇ TESTİ ÖN KONTROLÜNÜ ÇALIŞTIR";
+            }
+
             if (attempts.HasCompletedPreflight)
             {
+                string bindingPrompt = playerInput != null
+                    ? playerInput.InteractBindingPrompt
+                    : "E / A";
+                PcPowerStateAuthority powerState =
+                    session.TryGetPowerState(out PcPowerStateAuthority existing)
+                        ? existing
+                        : null;
+                if (powerState != null &&
+                    powerState.ValidateReceiptHistory().IsFailure)
+                {
+                    return "GÜÇ TESTİ ENGELLİ • POWER AUTHORITY GEÇERSİZ";
+                }
+
+                if (powerState?.IsEnergized == true)
+                {
+                    return $"{bindingPrompt}: GÜCÜ KAPAT • POST BEKLİYOR";
+                }
+
                 OperationResult<PowerTestAttemptReceipt> current =
                     attempts.EvaluateCurrentReceipt();
                 return current.IsSuccess
-                    ? "ÖN KONTROL GEÇTİ • POWER-ON BEKLİYOR"
+                    ? $"ÖN KONTROL GEÇTİ • {bindingPrompt}: GÜCÜ AÇ"
                     : $"ÖN KONTROL GEÇERSİZ • {current.Error.Code}";
             }
 
