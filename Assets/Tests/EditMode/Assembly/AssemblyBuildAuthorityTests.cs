@@ -394,6 +394,38 @@ namespace PCShopEmpire3D.Tests.EditMode.Assembly
         }
 
         [Test]
+        public void ElectricalReadinessRejectsUnsupportedTopologyWithoutMutation()
+        {
+            Fixture fixture = Fixture.Create();
+            StableId<AssemblyOperationIdScope> attachId =
+                OperationId("operation.electrical-topology-attach");
+            Assert.That(fixture.Authority.AttachMotherboard(
+                attachId,
+                fixture.ItemId,
+                fixture.SlotId).IsSuccess, Is.True);
+            Assert.That(fixture.Authority.SecureMotherboardFastener(
+                OperationId("operation.electrical-topology-secure"),
+                fixture.ItemId,
+                fixture.SlotId,
+                fixture.FastenerId,
+                attachId,
+                fixture.Authority.Revision).IsSuccess, Is.True);
+            long assemblyRevision = fixture.Authority.Revision;
+            long inventoryRevision = fixture.Inventory.Revision;
+            int receiptCount = fixture.Authority.ReceiptCount;
+
+            OperationResult<ElectricalReadinessSnapshot> result =
+                fixture.Authority.EvaluateElectricalReadiness();
+
+            Assert.That(result.Error,
+                Is.EqualTo(ElectricalReadinessFailures.ConfigurationUnsupported));
+            Assert.That(fixture.Authority.Revision, Is.EqualTo(assemblyRevision));
+            Assert.That(fixture.Inventory.Revision, Is.EqualTo(inventoryRevision));
+            Assert.That(fixture.Authority.ReceiptCount, Is.EqualTo(receiptCount));
+            Assert.That(fixture.Authority.ValidateInvariants().IsSuccess, Is.True);
+        }
+
+        [Test]
         public void SecureAndUnsecurePreserveExactMotherboardAndInventory()
         {
             Fixture fixture = Fixture.Create();

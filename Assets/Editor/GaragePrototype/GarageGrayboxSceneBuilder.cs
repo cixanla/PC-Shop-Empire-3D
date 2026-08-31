@@ -525,6 +525,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                     brushedSteel,
                     accent,
                     labelPaper);
+            ElectricalReadinessWorkbenchBuildResult
+                electricalReadinessWorkbenchBuild =
+                    BuildElectricalReadinessWorkbenchStatus(
+                        environment,
+                        deliveryShelved,
+                        deliveryArrived);
             MotherboardBuildKitBuildResult motherboardBuildKitBuild =
                 BuildMotherboardBuildKit(
                     environment,
@@ -852,6 +858,12 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 carry,
                 customPcWorkTicketBuild.InteractionCollider,
                 customPcWorkTicketBuild.StatusText);
+            electricalReadinessWorkbenchBuild.Projection.Configure(
+                stockFlow,
+                electricalReadinessWorkbenchBuild.StatusText,
+                electricalReadinessWorkbenchBuild.StatusIndicator,
+                electricalReadinessWorkbenchBuild.ReadyMaterial,
+                electricalReadinessWorkbenchBuild.BlockedMaterial);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
             marker.Configure(
                 motor,
@@ -906,7 +918,8 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 powerSupplyBuildKitBuild.Projection,
                 atx24PowerCableBuildKitBuild.Projection,
                 eps12vPowerCableBuildKitBuild.Projection,
-                pcieGpuPowerCableBuildKitBuild.Projection);
+                pcieGpuPowerCableBuildKitBuild.Projection,
+                electricalReadinessWorkbenchBuild.Projection);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
