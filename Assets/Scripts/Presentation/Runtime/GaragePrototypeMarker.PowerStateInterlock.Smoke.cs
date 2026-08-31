@@ -22,6 +22,9 @@ namespace PCShopEmpire3D.Presentation
             "replay=ok presentation=ok post=passed " +
             "benchmark=untouched invariants=ok";
 
+        private string _nestedPowerStateInterlockSmokeFailureCode;
+        private bool _suppressPowerStateInterlockSmokeSuccessMarker;
+
         public bool HasPowerStateInterlockR62Runtime
         {
             get
@@ -245,7 +248,7 @@ namespace PCShopEmpire3D.Presentation
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "POST GEÇTİ") ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
-                        "FIRMWARE BEKLİYOR") ||
+                        "UEFI SETUP BEKLİYOR") ||
                     !electricalReadinessWorkbench.StatusText.text.Contains(
                         "BAKIM KİLİDİ AKTİF"))
                 {
@@ -318,15 +321,18 @@ namespace PCShopEmpire3D.Presentation
                     smokeGamepad);
             }
 
-            Debug.Log(PowerStateInterlockSmokeSuccessMarker);
-            yield return new WaitForEndOfFrame();
-            if (!Application.isEditor)
+            if (!_suppressPowerStateInterlockSmokeSuccessMarker)
             {
-                Application.Quit(0);
+                Debug.Log(PowerStateInterlockSmokeSuccessMarker);
+                yield return new WaitForEndOfFrame();
+                if (!Application.isEditor)
+                {
+                    Application.Quit(0);
+                }
             }
         }
 
-        private static IEnumerator RunPowerStateInterlockSmokeGuarded(
+        private IEnumerator RunPowerStateInterlockSmokeGuarded(
             IEnumerator root)
         {
             var routines = new Stack<IEnumerator>();
@@ -391,8 +397,14 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static void LogPowerStateInterlockSmokeFailure(string code)
+        private void LogPowerStateInterlockSmokeFailure(string code)
         {
+            if (_suppressPowerStateInterlockSmokeSuccessMarker)
+            {
+                _nestedPowerStateInterlockSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_POWER_STATE_INTERLOCK_RUNTIME_SMOKE " +
                 "power-state-flow=failed code=" + code);
