@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace PCShopEmpire3D.Presentation
 {
-    public sealed class GaragePrototypeHud : MonoBehaviour
+    public sealed partial class GaragePrototypeHud : MonoBehaviour
     {
         [SerializeField] private FirstPersonMotor motor;
         [SerializeField] private PlayerCarryController carryController;
@@ -41,6 +41,11 @@ namespace PCShopEmpire3D.Presentation
                 if (string.IsNullOrEmpty(prompt) && customPcWorkTicketStation != null)
                 {
                     prompt = customPcWorkTicketStation.PromptText;
+                }
+
+                if (string.IsNullOrEmpty(prompt))
+                {
+                    prompt = ResolveCustomPcPackagePrompt();
                 }
 
                 if (string.IsNullOrEmpty(prompt) && electricalPowerTestStation != null)

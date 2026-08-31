@@ -1355,6 +1355,13 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(Failure.FromCode("pickup.slot-occupied")));
             }
 
+            CustomPcPackagePhysicalBinding customPcPackageBinding =
+                GetCustomPcPackageBinding(item);
+            if (customPcPackageBinding != null)
+            {
+                return TryPickupCustomPcPackage(item, customPcPackageBinding);
+            }
+
             MotherboardAssemblyItemBinding motherboardBinding =
                 GetMotherboardBinding(item);
             ProcessorAssemblyItemBinding processorBinding =
@@ -1502,6 +1509,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 return Remember(OperationResult.Fail(Failure.FromCode("cart.load-no-target")));
             }
 
+            CustomPcPackagePhysicalBinding customPcPackageBinding =
+                GetCustomPcPackageBinding(HeldItem);
+            if (customPcPackageBinding != null)
+            {
+                return TryLoadHeldCustomPcPackage(
+                    cart,
+                    customPcPackageBinding);
+            }
+
             PhysicalItemProjection item = HeldItem;
             OperationResult result = cart.TryLoad(item, heldItemLayer);
             if (result.IsFailure)
@@ -1531,6 +1547,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (cart == null)
             {
                 return Remember(OperationResult.Fail(Failure.FromCode("cart.unload-no-target")));
+            }
+
+            CustomPcPackagePhysicalBinding customPcPackageBinding =
+                GetCustomPcPackageBinding(cart.Cargo);
+            if (customPcPackageBinding != null)
+            {
+                return TryUnloadCustomPcPackage(
+                    cart,
+                    customPcPackageBinding);
             }
 
             OperationResult<PhysicalItemProjection> result = cart.TryUnload(
@@ -1624,6 +1649,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             {
                 SetCarryHandsState(blocked: true);
                 return Remember(OperationResult.Fail(pose.Error));
+            }
+
+            CustomPcPackagePhysicalBinding customPcPackageBinding =
+                GetCustomPcPackageBinding(HeldItem);
+            if (customPcPackageBinding != null)
+            {
+                return TryDropCustomPcPackage(
+                    pose.Value,
+                    customPcPackageBinding);
             }
 
             MotherboardAssemblyItemBinding motherboardBinding =
@@ -2552,6 +2586,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
             if (!item.enabled)
             {
                 item.enabled = true;
+            }
+
+            CustomPcPackagePhysicalBinding customPcPackageBinding =
+                GetCustomPcPackageBinding(item);
+            if (customPcPackageBinding != null)
+            {
+                return TryRecoverHeldCustomPcPackage(
+                    item,
+                    customPcPackageBinding);
             }
 
             MotherboardAssemblyItemBinding motherboardBinding =

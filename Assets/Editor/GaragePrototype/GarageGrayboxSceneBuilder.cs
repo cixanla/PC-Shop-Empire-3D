@@ -531,6 +531,15 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                         environment,
                         deliveryShelved,
                         deliveryArrived);
+            CustomPcPackagingBuildResult customPcPackagingBuild =
+                BuildCustomPcPackagingAndDispatch(
+                    environment,
+                    metal,
+                    brushedSteel,
+                    accent,
+                    cardboard,
+                    rubber,
+                    labelPaper);
             MotherboardBuildKitBuildResult motherboardBuildKitBuild =
                 BuildMotherboardBuildKit(
                     environment,
@@ -765,6 +774,25 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 assemblyBuild.PcieGpuPowerCableGeometry,
                 GarageStockFlowSession.PcieGpuPowerCableItemInstanceIdValue,
                 pcieGpuPowerCableBuildKitBuild.Projection);
+            customPcPackagingBuild.PackageBinding.Configure(
+                stockFlow,
+                customPcPackagingBuild.PackageItem,
+                customPcPackagingBuild.PackagingAnchor,
+                customPcPackagingBuild.DispatchAnchor,
+                customPcPackagingBuild.PackageLabel,
+                new[]
+                {
+                    assemblyBuild.Motherboard,
+                    assemblyBuild.Processor,
+                    assemblyBuild.MemoryModule,
+                    assemblyBuild.StorageDevice,
+                    assemblyBuild.ProcessorCooler,
+                    assemblyBuild.GraphicsCard,
+                    assemblyBuild.PowerSupply,
+                    assemblyBuild.Atx24PowerCable,
+                    assemblyBuild.Eps12vPowerCable,
+                    assemblyBuild.PcieGpuPowerCable
+                });
             carry.ConfigureMotherboardSeat(assemblyBuild.Seat);
             carry.ConfigureMotherboardFastener(
                 assemblyBuild.Fastener,
@@ -872,6 +900,23 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 carry,
                 electricalReadinessWorkbenchBuild.Projection,
                 electricalReadinessWorkbenchBuild.StatusText.transform);
+            customPcPackagingBuild.PackagingStation.Configure(
+                stockFlow,
+                input,
+                motor,
+                playerCamera,
+                carry,
+                customPcPackagingBuild.PackageBinding,
+                customPcPackagingBuild.PackagingFocusCollider,
+                customPcPackagingBuild.PackagingStatusText);
+            customPcPackagingBuild.DispatchProjection.Configure(
+                input,
+                motor,
+                playerCamera,
+                carry,
+                customPcPackagingBuild.PackageBinding,
+                customPcPackagingBuild.DispatchFocusCollider,
+                customPcPackagingBuild.DispatchStatusText);
             GaragePrototypeMarker marker = systems.gameObject.AddComponent<GaragePrototypeMarker>();
             marker.Configure(
                 motor,
@@ -929,6 +974,11 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 pcieGpuPowerCableBuildKitBuild.Projection,
                 electricalReadinessWorkbenchBuild.Projection,
                 electricalReadinessWorkbenchBuild.PowerTestStation);
+            marker.ConfigureCustomPcPackaging(
+                customPcPackagingBuild.PackagingStation,
+                customPcPackagingBuild.DispatchProjection,
+                customPcPackagingBuild.PackageBinding,
+                customPcPackagingBuild.PackageItem);
             GaragePrototypeHud hud = systems.gameObject.AddComponent<GaragePrototypeHud>();
             hud.Configure(
                 motor,
@@ -938,6 +988,9 @@ namespace PCShopEmpire3D.Editor.GaragePrototype
                 customerFlowBuild.CheckoutStation,
                 customPcWorkTicketBuild.Projection,
                 electricalReadinessWorkbenchBuild.PowerTestStation);
+            hud.ConfigureCustomPcPackage(
+                customPcPackagingBuild.PackagingStation,
+                customPcPackagingBuild.DispatchProjection);
 
             GameObject debugMarker = CreateCube(
                 "InteractionTestMarker",

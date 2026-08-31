@@ -2,6 +2,21 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B quality-bound physical packaging ve dispatch custody doğrulaması — 31 Ağustos 2026
+
+Issue #139 technical source `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.891.503` bayt, `306` dosya. Executable `117.179` bayt / SHA-256 `392b5596e46d2a01b96965ecc51979afcb3b542b53272e13994339c8f65da71d`.
+- Testler: fulfillment domain `4/4`, scene/r68 `13/13`, packaging keyboard/gamepad/context/drop/cart/dispatch `4/4`, work-ticket route regression `2/2`, hero/render-budget regression `2/2`, final full EditMode `815/815`, full PlayMode `195/195`; failed/skipped/inconclusive `0`.
+- Native r68 runtime: Apple M1/Metal 1280×720; assisted exact quality-release setup, keyboard review, virtual-gamepad seal, exactly one physical LargeBox package, ten source projection hidden, pickup, hands→cart→hands, dispatch staging, append-only four custody receipt, replay, upstream isolation ve invariants başarılı. Exact readiness/success markerları birer kez, packaging failure/fatal `0`, observed exit/residue `0`.
+- New `PSE.Fulfillment` owner one exact package identity ve `PackagingWorkbench / ActorHands / WorldFloor / TransportCart / DispatchStaging` custody history'sini yönetir. Physical preflight→move→domain commit protokolü rollback-safe'dir; Inventory/Assembly/Quality authority kopyalanmaz.
+- Runtime renderer bütçesi intentional r68 geometry için retail whole-scene `473 active / 502 total`, retail hero hariç Assembly regression `468 active / 493 total`; light/camera `5/1` kaldı. Packaging workbench pre-existing keyboard/gamepad work-ticket koridoru dışındaki `(-3.28, 0, 0.50)` servis alanına taşındı.
+- Build log `501.375` bayt / SHA-256 `00baff68fbb4476b4e922085eb99dab7441071a5c4f109291ebb6f25b64af49d`; runtime log `9.556` bayt / SHA-256 `ecea1f14105ece7802e1f8038c0b4fa759f62c5ed03742c14b3753ca8034d1bc`.
+- Draft PR #140 açık/mergeable'dır. Technical Repository Guard `33417330365` ve docs checkpoint `a2f74ec118b8de9021f4e400c1de961af0478ff7` Repository Guard `33418499473` PASS'tir. Exact-head raw evidence `16/16` local readback ile kalıcı TestResults dizinine alındı.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded mağaza içi physical package/custody/dispatch-staging dilimi için Mac teknik geliştirme kabulüdür; courier/vehicle/shipping route, müşteri teslimatı/kabulü, invoice/warranty/final settlement/save-load, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B validation-bound quality sign-off ve packaging release doğrulaması — 31 Ağustos 2026
 
 Issue #137 technical source `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2` Mac üzerinde doğrulandı:

@@ -1,0 +1,21 @@
+{
+  "name": "PSE.Fulfillment",
+  "rootNamespace": "PCShopEmpire3D.Fulfillment",
+  "references": [
+    "PSE.Core",
+    "PSE.Inventory",
+    "PSE.Retail",
+    "PSE.Orders",
+    "PSE.Assembly",
+    "PSE.Quality"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
