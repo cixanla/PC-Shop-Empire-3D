@@ -5,11 +5,21 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #127 docs head `c10f8f314e096465ac0a1df49cedd46347660a39`; active Issue #129 technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`; draft PR #130
+**Authoritative Git state:** parent Issue #129 docs head `b6070cec7da818bce9d333f97def192603b520cf`; active Issue #131 technical head `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`; draft PR #132
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #129 Deterministic UEFI Baseline Review/Save-Exit
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #131 Active-UEFI-Bound Deterministic Fictional OS Installation
+
+- Existing `PcPowerStateAuthority` ve `AssemblyBuildAuthority` üzerine bound ayrı `PcFictionalOsInstallationAuthority`, exact current firmware → POST → power-on → preflight zincirini immutable `PcFictionalOsInstallationReceipt` history'sine bağlar. Stable operation ID, exact storage item/product, source secure operation, full Assembly revision ve bağımsız monotonik OS revision taşır; ikinci power/firmware/Assembly gameplay authority yoktur.
+- Exact same-command replay same-instance; changed reuse conflict ve null/foreign/stale/off/historical inputs fail-closed'dur. Storage lineage item/product/secure-operation/full-revision/source-receipt tuple'ı ile doğrulanır. Power-off installed sonucu korur; storage removal `NotCurrent`, aynı exact item'ın reseat/resecure edilmesi `Installed`, farklı storage item'ı ise installed sayılmaz.
+- Existing Workbench ilk Primary Action ile review, ikinciyle fictional Workshop Standard install yapar; Interact strict-priority explicit power-off'tur. Pause, raw Pause edge, range/focus/LOS kaybı, busy hands ve competing owner review'i input tüketmeden sıfırlar. Workbench observer-only kalır; gerçek authority yalnız mevcut player station yolundadır.
+- İki bounded independent review'un storage-lineage ve context-reset P1 bulguları düzeltildi; final re-audit production P0/P1 bulmadı ve input-edge test kanıtı güçlendirildi. Technical head `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`; targeted `4/4 + 1/1 + 6/6 + 17/17`, full Mac `788/788 EditMode + 175/175 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330604881` bayt, `302` dosya; strict/deep-valid `x86_64 + arm64` app ve Apple M1/Metal 1280×720 exact r64 native smoke geçti. Marker player-triggered power-on/POST/firmware/review/install/power-off, keyboard+mouse+virtual-gamepad, identity-bound persistence, immutable replay ve untouched benchmark/invariant zincirini kanıtlar; Repository Guard `33372528502` PASS.
+- ProBuilder diff'i untouched/unstaged ve `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Draft PR #132 open/clean/mergeable; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`.
+- Gerçek Microsoft Windows/başka lisanslı OS, ağdan indirme, boot media/partition/format/data-loss, product key/licensing, driver/firmware install, benchmark/thermals/damage ve müşteri teslimi bu bounded dilime dahil değildir. Sıradaki ayrı dilim installed-OS-bound deterministic fictional driver hazırlama/kurulumudur.
+
+### Önceki üstün gelen durum — Issue #129 Deterministic UEFI Baseline Review/Save-Exit
 
 - Existing `PcPowerStateAuthority`, exact current POST → power-on → preflight lineage'ına bound ayrı immutable `PcFirmwareBaselineReceipt` history'si taşır. Stable operation ID, expected power/firmware revisions ve bounded `OptimizedDefaults / SavedAndExited` sonucu vardır; ikinci gameplay/firmware authority yoktur.
 - Exact same-command replay same-instance; changed reuse conflict, foreign/stale/off/historical POST inputs fail-closed, aynı POST'taki second completion blocked'dır. Power-off active firmware pointer'ını temizler fakat historical receipt/replay'i korur; later cycle yeni POST/operation/revision kullanır.

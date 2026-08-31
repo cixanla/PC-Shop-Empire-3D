@@ -40,6 +40,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedPowerStateRevision = -1;
         private long _observedPostStartupRevision = -1;
         private long _observedFirmwareBaselineRevision = -1;
+        private long _observedFictionalOsInstallationRevision = -1;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -72,6 +73,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasCurrentPostStartupPass { get; private set; }
 
         public bool HasCurrentFirmwareBaseline { get; private set; }
+
+        public bool HasInstalledFictionalOs { get; private set; }
 
         public PcPowerState PowerState { get; private set; }
 
@@ -234,6 +237,28 @@ namespace PCShopEmpire3D.Presentation.Interaction
             }
 
             PowerState = powerState?.State ?? PcPowerState.Off;
+            PcFictionalOsInstallationAuthority fictionalOsAuthority =
+                session.TryGetFictionalOsInstallation(
+                    out PcFictionalOsInstallationAuthority existingOs)
+                    ? existingOs
+                    : null;
+            if (fictionalOsAuthority != null)
+            {
+                OperationResult osHistory =
+                    fictionalOsAuthority.ValidateReceiptHistory();
+                if (osHistory.IsFailure)
+                {
+                    ApplyBlockedPresentation(
+                        "OS AUTHORITY DOĞRULANAMADI",
+                        osHistory.Error);
+                    return osHistory;
+                }
+
+                HasInstalledFictionalOs = fictionalOsAuthority
+                    .EvaluateInstalledOperatingSystem()
+                    .IsSuccess;
+            }
+
             CaptureAuthorityState(session);
             if (powerState?.IsEnergized == true)
             {
@@ -242,12 +267,20 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 HasCurrentPostStartupPass = postStartup.IsSuccess;
                 HasCurrentFirmwareBaseline = HasCurrentPostStartupPass &&
                     powerState.EvaluateCurrentFirmwareBaseline().IsSuccess;
-                if (HasCurrentFirmwareBaseline)
+                if (HasCurrentFirmwareBaseline && HasInstalledFictionalOs)
+                {
+                    statusText.text =
+                        "GÜÇ AÇIK • POST GEÇTİ\n" +
+                        "KURGUSAL OS KURULDU • WORKSHOP STANDARD\n" +
+                        "SONRAKİ AŞAMA: DRIVER • BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentFirmwareBaseline)
                 {
                     statusText.text =
                         "GÜÇ AÇIK • POST GEÇTİ\n" +
                         "UEFI BASELINE KAYDEDİLDİ\n" +
-                        "SONRAKİ AŞAMA: OS • BAKIM KİLİDİ AKTİF";
+                        "SONRAKİ AŞAMA: OS KURULUMU • " +
+                        "BAKIM KİLİDİ AKTİF";
                 }
                 else if (HasCurrentPostStartupPass)
                 {
@@ -269,6 +302,17 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 }
 
                 statusText.color = new Color(1f, 0.90f, 0.42f);
+                statusIndicator.sharedMaterial = readyMaterial;
+                return OperationResult.Success();
+            }
+
+            if (HasInstalledFictionalOs)
+            {
+                statusText.text =
+                    "KURGUSAL OS KURULDU\n" +
+                    "WORKSHOP STANDARD • DEPOLAMADA KALICI\n" +
+                    "POWER-ON BEKLİYOR • SONRAKİ AŞAMA: DRIVER";
+                statusText.color = new Color(0.68f, 1f, 0.76f);
                 statusIndicator.sharedMaterial = readyMaterial;
                 return OperationResult.Success();
             }
@@ -341,7 +385,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    _observedPostStartupRevision !=
                        ResolvePostStartupRevision(session) ||
                    _observedFirmwareBaselineRevision !=
-                       ResolveFirmwareBaselineRevision(session);
+                       ResolveFirmwareBaselineRevision(session) ||
+                   _observedFictionalOsInstallationRevision !=
+                       ResolveFictionalOsInstallationRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -363,6 +409,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
             _observedPostStartupRevision = ResolvePostStartupRevision(session);
             _observedFirmwareBaselineRevision =
                 ResolveFirmwareBaselineRevision(session);
+            _observedFictionalOsInstallationRevision =
+                ResolveFictionalOsInstallationRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -377,6 +425,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasCurrentAcceptedPreflight = false;
             HasCurrentPostStartupPass = false;
             HasCurrentFirmwareBaseline = false;
+            HasInstalledFictionalOs = false;
         }
 
         private void ObservePowerState(GarageStockFlowSession session)
@@ -404,6 +453,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
                    session.TryGetPowerState(
                        out PcPowerStateAuthority powerState)
                 ? powerState.FirmwareBaselineRevision
+                : -1L;
+        }
+
+        private static long ResolveFictionalOsInstallationRevision(
+            GarageStockFlowSession session)
+        {
+            return session != null &&
+                   session.TryGetFictionalOsInstallation(
+                       out PcFictionalOsInstallationAuthority authority)
+                ? authority.Revision
                 : -1L;
         }
 

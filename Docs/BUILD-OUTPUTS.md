@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B active-UEFI-bound fictional OS doğrulaması — 31 Ağustos 2026
+
+Issue #131 technical source `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57` Mac üzerinde doğrulandı:
+
+- macOS: Development/StrictMode Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.604.881` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `815d1e34a208eddd8272168f0859c1e7dc58b942f71d04eb0fded2f3f46d2244`.
+- Testler: storage lineage/domain `4/4`, scene `1/1`, keyboard/mouse/virtual-gamepad/context/P0 `6/6`, power/POST/UEFI/OS regression `17/17`, full EditMode `788/788`, full PlayMode `175/175`; failed/skipped/inconclusive `0`.
+- Native r64 runtime: Apple M1/Metal 1280×720; assisted preflight, player-triggered power-on/POST/UEFI, two-step OS review/install, exact M.2 identity, same-instance replay, explicit power-off, storage persistence, untouched benchmark ve invariants başarılı. Exact readiness/success marker birer kez, failure/fatal marker `0`; Input System shutdown, exit `0`, residue `0`.
+- Existing Workbench surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/input action yoktur. Same-frame Interact strict priority'dir; bütün review-context kayıpları input'u korur ve malformed OS history explicit power-off'u bloklamaz.
+- `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı bounded fictional OS installation receipt'i için Mac teknik geliştirme kabulüdür; gerçek Windows/Linux/SteamOS, ISO/download/disk yazımı, partition/bootloader/reboot/licensing, driver/update/benchmark, save/delivery, fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B active-POST-bound UEFI baseline doğrulaması — 31 Ağustos 2026
 
 Issue #129 technical source `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3` Mac üzerinde doğrulandı:

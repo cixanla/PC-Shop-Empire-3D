@@ -1,10 +1,22 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #129 active-POST-bound deterministic UEFI baseline r63 source, immutable receipt/history, review/save/exit player path, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #130 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #127 docs head `c10f8f314e096465ac0a1df49cedd46347660a39`; technical source `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`; draft PR #130; acceptance #1–#13 PASS, #14 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #131 active-UEFI-bound deterministic fictional OS r64 source, immutable receipt/history, exact physical storage persistence, two-step player path, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #132 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #129 docs head `b6070cec7da818bce9d333f97def192603b520cf`; technical source `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`; draft PR #132; acceptance #1–#13 PASS, #14 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #129 / Epic #10
+## En yeni teknik checkpoint — Issue #131 / Epic #10
+
+- Separate `PcFictionalOsInstallationAuthority`, exact power + Assembly owner pair'ına bağlanır. Receipt exact current UEFI/POST/power/preflight, M.2 item/product, source secure operation/full Assembly revision ve `WorkshopStandard / InstalledForDriverStage` sonucunu immutable taşır.
+- Source storage lineage creation/history sırasında preflight snapshot ve source Assembly `SecureStorageDevice` receipt'iyle doğrulanır. Exact replay same-instance; changed reuse conflict, foreign/stale/off/unsecured/malformed input fail-closed ve aynı storage/firmware için second completion blocked'dır.
+- Installed state exact storage item'a aittir: power-off'ta korunur; removal `NotCurrent`; same-item reseat/resecure reinstall olmadan Installed; different item not-installed'dır.
+- Existing station ilk Primary Action ile review, ikinciyle install yapar; Interact explicit power-off strict priority'dir. Pause/Pause edge, range/focus/LOS, busy hands ve competing owner review'ı input tüketmeden sıfırlar; dönüşte iki adım yeniden gerekir.
+- Malformed OS history dahi `GÜCÜ KAPAT` prompt'unu veya normal player Interact power-off yolunu kapatmaz. Presentation observer-only; benchmark `BuildIncomplete`, upstream gameplay authority'leri untouched kalır.
+- Technical commit `9e6a2334a3d6d778b97ebb9ee6d43e7cd8dbc31f`, tree `dd06f64f295f17d7285938845217e19b9e30fe57`. Targeted `4/4 + 1/1 + 6/6 + 17/17`, full EditMode `788/788`, PlayMode `175/175`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330604881` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r64 readiness + keyboard/mouse/virtual-gamepad OS markerları birer kez geçti; exit/residue `0`. Repository Guard `33372528502` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+- Sıradaki bounded zincir fictional OS receipt'ini gerçek OS media/boot workflow'una büyütmeden ayrı driver hazırlık/kurulum authority ve görünür player workflow'udur; update, benchmark/thermals/fault/damage daha sonra kalır.
+
+## Önceki teknik checkpoint — Issue #129 / Epic #10
 
 - Existing power-state authority ayrı immutable `PcFirmwareBaselineReceipt` ledger'ı taşır. Receipt exact current POST/power/preflight owner identity, stable operation ID, expected power/firmware revisions ve `OptimizedDefaults / SavedAndExited` sonucunu bağlar; ikinci authority değildir.
 - Exact replay same-instance; changed reuse conflict, foreign/stale/off/historical inputs fail-closed ve aynı POST'taki ikinci distinct completion blocked'dır. Power-off active pointer'ı temizler, historical receipt/replay'i korur; yeni cycle yeni POST/operation/revision ister.
