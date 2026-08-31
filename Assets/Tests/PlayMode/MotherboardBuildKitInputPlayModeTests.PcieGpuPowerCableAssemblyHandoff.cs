@@ -196,7 +196,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             yield return LoadGarage(value => marker = value);
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.HasPcieGpuPowerCableAssemblyHandoffR54Runtime, Is.True);
-            Assert.That(marker.HasElectricalReadinessWorkbenchR58Runtime, Is.True);
+            Assert.That(marker.HasPowerBudgetWorkbenchR59Runtime, Is.True);
 
             GarageStockFlowSession session = marker.StockFlow.EnsureInitialized();
             yield return PrepareQuote(marker, keyboard);
@@ -343,9 +343,17 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.ElectricalReadinessWorkbench.RefreshPresentation()
                 .IsSuccess, Is.True);
             Assert.That(marker.ElectricalReadinessWorkbench.IsReady, Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.HasPowerBudgetAssessment,
+                Is.True);
+            Assert.That(marker.ElectricalReadinessWorkbench.SystemPowerDrawWatts,
+                Is.EqualTo(380));
+            Assert.That(marker.ElectricalReadinessWorkbench.MinimumRecommendedPsuWatts,
+                Is.EqualTo(500));
+            Assert.That(marker.ElectricalReadinessWorkbench.InstalledPsuWatts,
+                Is.EqualTo(550));
             Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
-                Does.Contain("10/10 PARÇA • 3/3 KABLO")
-                    .And.Contain("ELEKTRİK HAZIR")
+                Does.Contain("380W / EN AZ 500W / PSU 550W")
+                    .And.Contain("GÜÇ BÜTÇESİ UYGUN")
                     .And.Contain("GÜÇ TESTİ BEKLİYOR"));
             Assert.That(session.AssemblyBuild.EvaluateBenchmarkReadiness().Error,
                 Is.EqualTo(AssemblyFailures.BuildIncomplete));

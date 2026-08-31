@@ -14,7 +14,16 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #119 r58 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #121 r59 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`, branch `codex/issue121-power-budget-headroom-preflight`; draft PR #122 open, Issue/Roadmap `In Progress`.
+- Exact immutable electrical catalog canonical component catalog'a bağlanır. Legacy-v1 policy platform/chassis/CPU/GPU/DDR5/NVMe/cooler yüklerinden `380 W`, yüzde 30 headroom + 50 W ceiling ile `500 W` minimum ve installed `550 W` için `+50 W` margin üretir.
+- `AssessPowerBudget()` her çağrıda exact electrical readiness'i yeniden değerlendirir; missing/foreign/mismatched metadata fail-closed, insufficient PSU valid blocked assessment'tır. Inventory/Assembly/BuildKit/reservation/receipt/replay/benchmark mutation'ı yoktur.
+- Existing Workbench projection ready text'i `GÜÇ BÜTÇESİ UYGUN / 380W / EN AZ 500W / PSU 550W / GÜÇ TESTİ BEKLİYOR`; yeni input/collider/renderer/light/camera/authority yoktur. Power-on/POST/fault/BIOS/OS/benchmark ayrı kalır.
+- Mac targeted `15/15`, full `768/768 EditMode + 158/158 PlayMode`, universal `330465045` bayt build, Apple M1/Metal exact power-budget ve Assembly-readability smokes geçti. Assembly budget `479/470`, üç 1280x720 capture byte-distinct, central glare `0`dır.
+- Complete settings manifesti byte-exact; user/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #119 r58 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`, tree `986ff174209dc55bb98cf7f1151fc8cc480384fc`, branch `codex/issue119-electrical-readiness-feedback`; draft PR #120 open, Issue/Roadmap `In Progress`.
 - `EvaluateElectricalReadiness()` exact secured/retained motherboard, CPU, A2 DDR5, primary M.2, cooler+TIM, GPU, PSU ve exact routed ATX24/EPS12V/PCIe-GPU zincirini deterministik sırada okur. Snapshot exact build/chassis, on item, on source operation ve dört revision kimliğini bağlar; mutation yoktur.

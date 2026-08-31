@@ -26,7 +26,8 @@ namespace PCShopEmpire3D.Presentation
             "generic-drop=blocked route=ok psu-unretain=blocked unroute=ok " +
             "history=10/10-preserved cables=2/2-protected " +
             "replay=immediate+delayed receipts=ok revisions=ok " +
-            "electrical-readiness=ready-then-blocked monitor=ok " +
+            "electrical-readiness=ready-then-blocked power-budget=380/500/550 " +
+            "monitor=ok " +
             "no-duplicate-loss=ok invariants=ok";
 
         private bool _suppressPcieGpuPowerCableAssemblyHandoffSmokeSuccessMarker;
@@ -81,7 +82,7 @@ namespace PCShopEmpire3D.Presentation
                 pcieGpuPowerCableRoute == null ||
                 pcieGpuPowerCableGeometry == null ||
                 electricalReadinessWorkbench == null ||
-                !HasElectricalReadinessWorkbenchR58Runtime ||
+                !HasPowerBudgetWorkbenchR59Runtime ||
                 !HasPcieGpuPowerCableAssemblyHandoffR54Runtime ||
                 !pcieGpuPowerCableBuildKit.IsStaged ||
                 pcieGpuPowerCableBuildKit.IsReleasedForAssembly ||
@@ -335,6 +336,8 @@ namespace PCShopEmpire3D.Presentation
                 PcieGpuPowerCableOperationReceipt routeReceipt = null;
                 OperationResult electricalReady =
                     electricalReadinessWorkbench.RefreshPresentation();
+                OperationResult<PcPowerBudgetSnapshot> powerBudget =
+                    session.PowerBudget.AssessPowerBudget();
                 bool routed =
                     playerCarry.HeldItem == null &&
                     pcieGpuPowerCableBinding.IsRouted &&
@@ -356,11 +359,16 @@ namespace PCShopEmpire3D.Presentation
                     session.AssemblyBuild.PcieGpuPowerCableRevision == 1 &&
                     session.AssemblyBuild.PcieGpuPowerCableReceiptCount == 1 &&
                     electricalReady.IsSuccess &&
+                    powerBudget.IsSuccess &&
+                    powerBudget.Value.IsSufficient &&
+                    powerBudget.Value.SystemPowerDrawWatts == 380 &&
+                    powerBudget.Value.MinimumRecommendedPsuWatts == 500 &&
+                    powerBudget.Value.InstalledPsuWatts == 550 &&
                     electricalReadinessWorkbench.IsReady &&
                     electricalReadinessWorkbench.StatusText.text.Contains(
-                        "ELEKTRİK HAZIR") &&
+                        "GÜÇ BÜTÇESİ UYGUN") &&
                     electricalReadinessWorkbench.StatusText.text.Contains(
-                        "10/10 PARÇA • 3/3 KABLO") &&
+                        "380W / EN AZ 500W / PSU 550W") &&
                     electricalReadinessWorkbench.StatusText.text.Contains(
                         "GÜÇ TESTİ BEKLİYOR") &&
                     session.AssemblyBuild.EvaluateBenchmarkReadiness().Error ==

@@ -15,9 +15,9 @@ Bu zincir eğlenceli, anlaşılır, performanslı ve kayıt güvenli olmadan ça
 
 ### Güncel üretim checkpoint'i
 
-Issue #119 Exact Electrical Readiness r58 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc` üzerinde Mac-ready durumdadır. Exact retained motherboard/CPU/A2-DDR5/primary-M.2/cooler+TIM/GPU/PSU ve routed ATX24/EPS12V/PCIe-GPU zinciri salt-okunur deterministic readiness snapshot'ına bağlandı. Existing Workbench ikinci authority üretmeden ready veya exact blocked nedeni gösterir; final unroute geri bildirimi anında bloke duruma döner. Power-on/POST/BIOS/OS/benchmark üretilmez.
+Issue #121 Exact System Power Budget r59 technical head `57e6b54883ef6756c5522d1de9c17479e7cda481` üzerinde Mac-ready durumdadır. Exact electrical-readiness lineage, canonical component catalog'a bağlı immutable electrical metadata ve legacy-v1 sizing policy ile salt-okunur preflight'a taşındı: prototype draw `380 W`, yüzde 30 headroom/50 W ceiling sonrası minimum `500 W`, installed PSU `550 W`, margin `+50 W`. Existing Workbench ikinci authority veya input üretmeden exact budget değerini gösterir.
 
-Mac full `758/758 EditMode + 158/158 PlayMode`, universal `330441141` bayt build, Apple M1/Metal exact readiness ve Assembly readability smoke geçti. Draft PR #120 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Fiziksel Windows olmadığından exact-head clean x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Issue #115 dalı parent integration checkpoint'i olarak korunur; Mac tek authoritative write lane'de sonraki bounded ürün işini hazırlamayı sürdürebilir.
+Mac targeted `15/15`, full `768/768 EditMode + 158/158 PlayMode`, universal `330465045` bayt build, Apple M1/Metal exact power-budget ve Assembly readability smoke geçti. Draft PR #122 açıktır; Issue/Roadmap `In Progress`, parent Epic #10 ve Steam 1.0 Goal açıktır. Power-test/power-on, connector fault/polarity fiziği, POST/BIOS/OS/benchmark ayrı sonraki dilimlerdir. Fiziksel Windows olmadığından clean exact-commit x64 IL2CPP/D3D11/Iris Xe gate; USB olmadığından immutable checkpoint/readback ertelenmiştir. UTM fiziksel release kanıtının yerine geçmez. Mac tek authoritative write lane'de bounded ürün zincirini sürdürür.
 
 Geçici gerçekçi takvim:
 

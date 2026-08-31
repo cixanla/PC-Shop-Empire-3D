@@ -5,11 +5,20 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** `main` `e5a4f6b110f1eaaa9e6e5eb22dd5314877a100f4`; parent Issue #115 head `f26e95ce288e2e7f17d0aa642f59ee9fa0fffef5`; active Issue #119 technical head `f33a052d3f3ef25d48ff8b5d5f4d4a149f414fdc`; draft PR #120
+**Authoritative Git state:** parent Issue #119 docs head `8f0671fd04016b1115e622d963e9d28e7ef08c19`; active Issue #121 technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`; draft PR #122
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #119 Exact Electrical Readiness
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #121 Exact System Power Budget
+
+- Canonical electrical readiness, exact ProductId/kind çözen immutable electrical catalog ve integer-only legacy-v1 policy ile salt-okunur PSU sizing preflight'a bağlandı. Prototype `380 W` draw, `500 W` minimum recommended, installed `550 W`, margin `+50 W`dır.
+- Every assessment readiness'i yeniden değerlendirir; stale UI boolean/snapshot authority değildir. Missing/foreign/mismatched metadata fail-closed, insufficient PSU valid blocked assessment'tır; gameplay authority mutation'ı yoktur.
+- Existing Workbench ready text exact budget değerlerini ve `GÜÇ TESTİ BEKLİYOR` sınırını gösterir. Input/collider/renderer/light/camera eklenmedi; power-test/power-on/POST/fault/BIOS/OS/benchmark ayrı kalır.
+- Technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7`; targeted `15/15`, full Mac `768/768 EditMode + 158/158 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330465045` bayt; strict/deep-valid universal app, Apple M1/Metal exact `power-budget=380/500/550` ve Assembly readability `479/470`, üç unique 1280x720 screenshot, central glare `0` geçti.
+- Complete settings manifesti exact; ProBuilder diff'i untouched/unstaged. Draft PR #122 open; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`.
+
+### Önceki üstün gelen durum — Issue #119 Exact Electrical Readiness
 
 - Canonical retained motherboard/CPU/A2-DDR5/primary-M.2/cooler+TIM/GPU/PSU ve routed ATX24/EPS12V/PCIe-GPU state'i deterministic salt-okunur readiness contract'ına bağlandı. Exact snapshot build/chassis, on stable item, on source operation ve Assembly+üç cable revision'ı taşır; missing/loose/unsupported/invariant drift fail-closed'dur.
 - Existing Workbench projection initialized canonical session'ı yalnız okur. Ready text `ELEKTRİK HAZIR / 10/10 PARÇA • 3/3 KABLO / GÜÇ TESTİ BEKLİYOR`; final cable unroute sonrasında exact blocker geri döner. İki presentation renderer Ignore Raycast/no-collider/no-light/no-input-owner'dır; ikinci authority yoktur.
