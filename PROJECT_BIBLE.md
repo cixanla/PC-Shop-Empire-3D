@@ -5,7 +5,19 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #137 r67 validation-bound quality release Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #139 r68 quality-bound physical packaging ve dispatch custody Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #139 technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d` üzerindedir; draft PR #140 açıktır. Unity-independent `PSE.Fulfillment` içindeki ayrı `CustomPcPackageAuthority`, exact current owner `CustomPcQualityReleaseAuthority` ile exact work order/ticket/claim evidence chain'ine bağlıdır. İkinci Inventory, Orders, Assembly, Quality, power veya Economy gameplay authority yoktur.
+
+Immutable package receipt stable package/seal identity, exact current `ReadyForPackaging` release ve monotonik package revision'ını taşır. Exact on serialized reservation'daki yedi component ve üç typed cable source projection'ı seal sonrasında gizlenir; upstream item/receipt/history değişmez. İş, dünyada tek fiziksel `LargeBox` package custody nesnesiyle devam eder.
+
+Allowed custody transitions PackagingWorkbench → ActorHands; ActorHands → WorldFloor/TransportCart/DispatchStaging; floor/cart/staging → ActorHands'tir. Exact operation replay same-instance, changed reuse conflict'tir. History fold replay lookup'tan önce çalışır; foreign/stale/revision/overflow/tamper input'ları fail-closed reddedilir. Side-effect-free preflight sonrasında physical move ve domain commit birlikte yürür; commit reddedilirse parent/pose/state rollback edilir.
+
+Existing player path keyboard ile package review, gamepad ile seal, carry/cart/drop/recovery ve DispatchStaging handoff akışını çalıştırır. Packaging workbench r68 scene'de açık koridora alınmıştır. Final targeted `4/4 + 13/13 + 4/4 + 2/2 + 2/2`, final full EditMode `815/815`, PlayMode `195/195`; failed/skipped/inconclusive `0`. Universal Mac report `330891503` bayt, app `306` dosya ve deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 exact r68 native smoke `package=one physical=large-box source-projections=10 hidden-after-seal=true pickup=ok cart=hands-cart-hands dispatch=staged custody-receipts=4 replay=ok upstream=unchanged invariants=ok` markerını verdi. Observed exit ve PC Shop process residue `0`dır.
+
+Bu bounded sonuç courier handoff, customer delivery, settlement, fault/repair, save/load veya warranty değildir. Fiziksel Windows clean exact-source x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #140 draft, Issue/Roadmap `In Progress`, claim `human=false`; ProBuilder user-setting diff'i commit dışıdır ve `ProjectSettings/ProjectSettings.asset` byte-exact kalmıştır. Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı DispatchStaging custody'sini delivery/courier/settlement zincirine bağlayan sıradaki dilime taşır.
+
+## Önceki geliştirme checkpoint'i — Issue #137 r67 validation-bound quality release Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #137 technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2` üzerindedir; draft PR #138 açıktır. Unity-independent `PSE.Quality` içindeki ayrı `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ile exact owner `PcValidationAuthority` ve matching `PcPowerStateAuthority` evidence chain'ine bağlıdır. İkinci Inventory, Orders, Assembly, power, validation veya Economy gameplay authority yoktur.
 

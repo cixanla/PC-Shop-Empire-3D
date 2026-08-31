@@ -6,6 +6,15 @@ Bu dosya teknik ve proje yönetimi checkpointlerini izler. Ayrıntılı oyun kar
 
 ### Added
 
+- Issue #139 r68, Unity bağımsız `PSE.Fulfillment` assembly'si içinde exact current `ReadyForPackaging` quality receipt'ine bağlı ayrı `CustomPcPackageAuthority`, immutable sealed-package receipt'i ve append-only custody history'si ekledi.
+- Exactly one quality release → one package kuralı; exact package/work-order/ticket/customer/claim/build/chassis lineage'ı, revision/overflow, same-instance replay, changed-operation conflict ve replay-before-history tamper gate'leriyle fail-closed korunur. Inventory, Assembly ve Quality authority'leri kopyalanmaz.
+- Custody allowlist `PackagingWorkbench / ActorHands / WorldFloor / TransportCart / DispatchStaging` arasında yönlüdür. Her transfer stable operation/revision receipt'i üretir; player pickup/cart/drop/recovery/dispatch yolları preflight→physical move→domain commit ve explicit rollback uygular.
+- GarageGraybox r68, iki adımlı packaging workbench, one sealed 12 kg LargeBox projection, ten source projection hide-on-seal ve exact dispatch staging ekledi. Workbench eski keyboard/gamepad work-ticket koridoru dışındaki `(-3.28, 0, 0.50)` konumuna taşındı.
+- Intentional renderer budget retail whole-scene `473 active / 502 total`, retail hero hariç Assembly `468 active / 493 total`; light/camera `5/1`. Exact route regression keyboard/mouse+gamepad `2/2`, hero regression `2/2` geçti.
+- Technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; targeted `4/4 + 13/13 + 4/4 + 2/2 + 2/2`, full EditMode `815/815`, full PlayMode `195/195`, failed/skipped/inconclusive `0`. Repository Guard, meta/hygiene ve settings hashleri geçti.
+- Universal Mac report `330891503` bayt, `306` dosya, deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 r68 markerı `package=one physical=large-box source-projections=10 hidden-after-seal=true cart=hands-cart-hands dispatch=staged custody-receipts=4 replay=ok` ile geçti, observed exit/residue `0`.
+- Draft PR #140 açık/mergeable'dır; Issue #139/Roadmap `In Progress`, fiziksel Windows ve USB kapıları cihazlar olmadığı için ertelendi; UTM yerine geçmez, claim `human=false`tır. Ayrı user/editor-owned ProBuilder diff'i untouched/unstaged ve commit dışında kaldı.
+
 - Issue #137 r67, Unity bağımsız `PSE.Quality` assembly'si içinde exact work-order/ticket + owner validation + matching safe-shutdown zincirine bağlı ayrı `CustomPcQualityReleaseAuthority` ve immutable `ReadyForPackaging` receipt/history ekledi.
 - Quality completion, on exact serialized reservation satırını yedi component item/product ve typed ATX24/EPS12V/PCIe-GPU cable item lineage'ıyla doğrular; current Assembly/cable operation+revision drift'i, foreign/stale owner receipt'i ve yanlış power cycle'ı fail-closed reddeder.
 - Exact same-command replay same-instance, changed reuse conflict, distinct operation controlled rerun'dır; receipt-history fold replay lookup'tan önce çalışır ve deliberate tamper replay'i de reddeder. Inventory, Orders, BuildKit, Assembly, power ve validation authority'leri değişmez.

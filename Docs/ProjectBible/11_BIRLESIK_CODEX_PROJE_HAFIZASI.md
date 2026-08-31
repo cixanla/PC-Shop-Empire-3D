@@ -5,11 +5,22 @@
 **Ana görev kimliği:** `01a03e98-bf8c-7190-850e-1bff81843fa8`
 **Canonical Unity/Git kökü:** `/Users/cixanla/Developer/PCShopEmpire3D/Game`
 **Private GitHub:** `cixanla/PC-Shop-Empire-3D`
-**Authoritative Git state:** parent Issue #135 docs head `17f74a6f953707b9cd7240957a0cc906f614aeda`; active Issue #137 technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`; draft PR #138
+**Authoritative Git state:** parent Issue #137 docs head `e3f4e662daef437582e08c4d2919c5d1c0d41654`; active Issue #139 technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; draft PR #140
 
 Bu belge, `PC Shop Empire Similator` altındaki üç Codex görevinin proje açısından anlamlı bütün bilgisini tek uygulanabilir hafızada birleştirir. Tam kullanıcı/Codex konuşmaları [CodexHistory indeksinde](../CodexHistory/README.md) korunur. Günlük teknik devam noktası için her zaman [10_DEVAM_CHECKPOINT.md](10_DEVAM_CHECKPOINT.md) daha günceldir.
 
-### 31 Ağustos 2026 üstün gelen güncel durum — Issue #137 Validation-Bound Quality Sign-Off and Packaging Release
+### 31 Ağustos 2026 üstün gelen güncel durum — Issue #139 Quality-Bound Physical Custom-PC Packaging and Dispatch Custody
+
+- Unity-independent `PSE.Fulfillment` içindeki separate `CustomPcPackageAuthority`, exact current owner `CustomPcQualityReleaseAuthority` ve exact owner work-order/ticket/claim chain'ine reference-bound'dur. İkinci Inventory/Orders/Assembly/Quality/Economy gameplay authority yoktur.
+- Immutable package receipt stable package/seal identity, exact current `ReadyForPackaging` release ve package revision'ını taşır. Exact on serialized reservation'daki yedi component ve üç typed cable source projection'ı seal sonrasında gizlenir; upstream item/receipt/history değişmez ve tek fiziksel `LargeBox` package custody nesnesi olur.
+- Allowed custody transitions PackagingWorkbench → ActorHands; ActorHands → WorldFloor/TransportCart/DispatchStaging; floor/cart/staging → ActorHands'tir. Same-operation replay same-instance; changed reuse conflict, foreign/stale/revision/overflow/tamper fail-closed ve monotonik append-only custody history üretir.
+- Side-effect-free preflight sonrasında physical move/domain commit atomic davranır; domain commit reddedilirse package parent/pose/state rollback edilir. Keyboard review + gamepad seal, carry/cart/drop/recovery/dispatch path'leri testlidir; r68 scene'deki packaging workbench açık koridordadır.
+- Technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; final targeted `4/4 + 13/13 + 4/4 + 2/2 + 2/2`, final full Mac `815/815 EditMode + 195/195 PlayMode`, accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330891503` bayt, `306` dosya; strict/deep-valid `x86_64 + arm64` app ve Apple M1/Metal 1280×720 exact r68 native smoke geçti. Marker one physical large-box package, ten hidden source projections, hands→cart→hands→dispatch custody, four immutable receipts, replay ve unchanged upstream/invariants zincirini kanıtlar; exit/residue `0`.
+- ProBuilder diff'i untouched/unstaged ve `ProjectSettings/ProjectSettings.asset` byte-exact kaldı. Draft PR #140 açık; Issue/Roadmap `In Progress`. Fiziksel Windows x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint ertelendi; UTM yerine geçmez, claim `human=false`.
+- Bu bounded dilim courier handoff, customer delivery, settlement, fault/repair, save/load veya warranty değildir. Sıradaki ayrı dilim immutable DispatchStaging custody'sini delivery/courier/settlement authority zincirine bağlar.
+
+### Önceki üstün gelen durum — Issue #137 Validation-Bound Quality Sign-Off and Packaging Release
 
 - Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner `CustomPcWorkOrderAuthority` ve `PcValidationAuthority` pair'ına reference-bound'dur. İkinci Inventory/Orders/Assembly/power/validation gameplay authority yoktur.
 - Immutable release receipt exact work order/ticket, request/quote/customer/claim/workbench; on serialized reservation line'ı; passed/stable owner validation; matching owner safe power-off ve exact current electrical readiness'i bağlar. Yedi component item/product ile typed ATX24/EPS12V/PCIe-GPU cable item/route lineage'ı fail-closed doğrulanır.

@@ -14,7 +14,17 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 Önceki Codex görevlerindeki tam kullanıcı/Codex yazışmaları veya tarihsel dosya değişiklikleri gerektiğinde `Docs/CodexHistory/README.md` indeksinden bulunur. Normal geliştirme yalnız `PC Shop Empire 3D — ANA GÖREV` adlı tek Codex görevi üzerinden sürdürülür.
 
-### Güncel checkpoint — Issue #137 r67 Mac teknik kapıları geçti; Windows/USB deferred
+### Güncel checkpoint — Issue #139 r68 Mac teknik kapıları geçti; Windows/USB deferred
+
+- Technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`, branch `codex/issue139-quality-bound-physical-packaging`; draft PR #140 açık/mergeable, Issue/Roadmap `In Progress`.
+- Unity-independent `PSE.Fulfillment` içindeki `CustomPcPackageAuthority`, one exact current `ReadyForPackaging` quality receipt'inden exactly one sealed package üretir. Package identity/work order/ticket/customer/claim/build/chassis lineage'ı immutable'dır; Inventory, Assembly ve Quality authority'leri kopyalanmaz.
+- Append-only custody graph `PackagingWorkbench → ActorHands → WorldFloor/TransportCart/DispatchStaging` ve floor/cart/dispatch→hands dönüşlerini exact allowlist ile sınırlar. Her geçiş stable operation/revision receipt'i üretir; same-command replay same-instance, changed reuse conflict, tamper replay fail-closed'dur.
+- Player carry/cart/drop/recovery/dispatch yolları side-effect-free custody preflight → physical operation → domain commit uygular; commit fail olursa physical rollback yapılır. Source ten component/cable projection seal sonrasında gizlenir, aynı sealed LargeBox item instance'ı 12 kg carry profile ile taşınır.
+- Packaging first `E / A` review, second `E / A` seal akışıdır. Pause/range/focus/LOS/busy/competing-owner no-consume kapıları testlidir. Dispatch yalnız exact package eldeyken stage eder; workbench `(-3.28, 0, 0.50)` konumunda eski work-ticket koridorunu açık bırakır.
+- Exact-head targeted `4/4 + 13/13 + 4/4 + 2/2 + 2/2`, full `815/815 EditMode + 195/195 PlayMode`, universal `330891503` bayt/`306` dosya build ve Apple M1/Metal 1280×720 exact r68 packaging smoke geçti; accepted fail/skip/inconclusive/fatal/residue `0`. Exact raw evidence local readback `16/16`.
+- Bu yalnız mağaza içi physical package/custody ve dispatch-staging dilimidir; shipping/courier/vehicle/customer handover, final settlement/invoice/warranty/save-load tamamlanmış değildir. User/editor-owned ProBuilder diff'i untouched/unstaged tutulur. Fiziksel Windows clean x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback bekler; UTM yerine geçmez, claim `human=false`tır.
+
+### Önceki checkpoint — Issue #137 r67 Mac teknik kapıları geçti; Windows/USB deferred
 
 - Technical head `b6c0f629b78566d743dbb041bfaf792f7c0164c8`, tree `36f8cb6cec9340966181511a18f3caa276eb12f2`, branch `codex/issue137-validation-bound-quality-release`; draft PR #138 açıktır, Issue/Roadmap `In Progress`.
 - Unity-independent `PSE.Quality` içindeki separate `CustomPcQualityReleaseAuthority`, exact owner work order/ticket ve exact owner passed/stable validation + matching safe power-off zincirine bound immutable `ReadyForPackaging` receipt history'si taşır. İkinci Inventory/Orders/Assembly/power/validation authority yoktur.
