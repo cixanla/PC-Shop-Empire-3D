@@ -40,10 +40,10 @@ Bu bounded sonuç mağaza içi paketleme ve sevk hazırlığıdır. Courier assi
 
 ## Current verification
 
-- Technical source `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; draft PR #140 açık/mergeable'dır. Issue #139 ve Roadmap kartı `OPEN / In Progress` kalır.
+- Technical source `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; docs checkpoint `a2f74ec118b8de9021f4e400c1de961af0478ff7`; draft PR #140 açık/mergeable'dır. Issue #139 ve Roadmap kartı `OPEN / In Progress` kalır.
 - Exact-head targeted fulfillment domain `4/4`, scene/r68 `13/13`, packaging input `4/4`, keyboard/mouse+gamepad work-ticket route regression `2/2`, Assembly/Retail hero regression `2/2`; full EditMode `815/815`, full PlayMode `195/195`; failed/skipped/inconclusive `0`.
 - Universal macOS Development/StrictMode build `330,891,503` bayt ve `306` dosyadır. Executable `117,179` bayt, SHA-256 `392b5596e46d2a01b96965ecc51979afcb3b542b53272e13994339c8f65da71d`, deep/strict-valid universal Mach-O `x86_64 + arm64`dır.
 - Apple M1/Metal 1280×720 graphical r68 native smoke readiness ve exact packaging success markerlarını birer kez üretir; observed exit `0` ve final PC Shop/Unity/player/IL2CPP residue `0`dır.
-- Local Repository Guard technical head üzerinde `REPOSITORY_GUARD_OK unity=6000.3.21f1 legacy=26 project_bible_docs=12 tracked=1326` verdi. `git diff --check`, meta pairing ve focused hygiene audit temizdir.
+- Local Repository Guard technical head üzerinde `REPOSITORY_GUARD_OK unity=6000.3.21f1 legacy=26 project_bible_docs=12 tracked=1326` verdi. GitHub technical Repository Guard `33417330365` ve docs checkpoint Guard `33418499473` PASS'tir; `git diff --check`, meta pairing ve focused hygiene audit temizdir.
 - `ProjectSettings/ProjectSettings.asset` SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` olarak byte-exact kaldı. User/editor-owned ProBuilder setting SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` olarak unstaged ve commit dışında korundu.
 - Fiziksel Windows x64 IL2CPP/only-D3D11/Intel Iris Xe, physical-human HID/endurance ve USB checkpoint/readback yoktur; geçmediği hâlde geçmiş sayılmaz. UTM fiziksel Windows kanıtı değildir.

@@ -2,7 +2,7 @@
 
 **Tarih:** 31 Ağustos 2026<br>
 **Durum:** Issue #139 quality-bound physical custom-PC packaging ve dispatch custody r68 source, exact current quality release, stable package/seal identity, append-only four-receipt custody history, history-before-replay tamper gate, physical move/domain commit rollback, keyboard+mouse+gamepad player path, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #140 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #137 docs head `e3f4e662daef437582e08c4d2919c5d1c0d41654`; technical source `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; draft PR #140; Mac source/tests/build/native PASS, physical Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #137 docs head `e3f4e662daef437582e08c4d2919c5d1c0d41654`; technical source `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`; docs checkpoint `a2f74ec118b8de9021f4e400c1de961af0478ff7`, Repository Guard `33418499473` PASS; draft PR #140; Mac source/tests/build/native PASS, physical Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
 ## En yeni teknik checkpoint — Issue #139 / Epic #10
 

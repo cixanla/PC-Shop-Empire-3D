@@ -16,7 +16,7 @@ Bu belge, projeyi hiç bilmeyen bir geliştiricinin mevcut sağlam checkpoint'te
 
 ### Güncel checkpoint — Issue #139 r68 Mac teknik kapıları geçti; Windows/USB deferred
 
-- Technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`, branch `codex/issue139-quality-bound-physical-packaging`; draft PR #140 açık/mergeable, Issue/Roadmap `In Progress`.
+- Technical head `79ea367af67549592a6ba58acd53afa74e7f25cb`, tree `12dabe0220ffe759750d73cc25e96e2c6774221d`, docs checkpoint `a2f74ec118b8de9021f4e400c1de961af0478ff7`, branch `codex/issue139-quality-bound-physical-packaging`; Repository Guard `33417330365` + `33418499473` PASS, draft PR #140 açık/mergeable, Issue/Roadmap `In Progress`.
 - Unity-independent `PSE.Fulfillment` içindeki `CustomPcPackageAuthority`, one exact current `ReadyForPackaging` quality receipt'inden exactly one sealed package üretir. Package identity/work order/ticket/customer/claim/build/chassis lineage'ı immutable'dır; Inventory, Assembly ve Quality authority'leri kopyalanmaz.
 - Append-only custody graph `PackagingWorkbench → ActorHands → WorldFloor/TransportCart/DispatchStaging` ve floor/cart/dispatch→hands dönüşlerini exact allowlist ile sınırlar. Her geçiş stable operation/revision receipt'i üretir; same-command replay same-instance, changed reuse conflict, tamper replay fail-closed'dur.
 - Player carry/cart/drop/recovery/dispatch yolları side-effect-free custody preflight → physical operation → domain commit uygular; commit fail olursa physical rollback yapılır. Source ten component/cable projection seal sonrasında gizlenir, aynı sealed LargeBox item instance'ı 12 kg carry profile ile taşınır.

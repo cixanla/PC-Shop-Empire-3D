@@ -126,7 +126,7 @@ Technical commit `79ea367af67549592a6ba58acd53afa74e7f25cb` contains exactly `47
 
 The separately preserved user/editor-owned ProBuilder setting remains the only unrelated tracked difference, SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b`; it is unstaged and unreverted. `ProjectSettings/ProjectSettings.asset` remains SHA-256 `b1b99a75273d4a1c7737da9cb5ab4fa8e0fc5a414b367c3506078584aeca0244` after exact-head tests/build/smoke.
 
-Local `Tools/verify-repository.sh` reports `tracked=1326`; `git diff --check`, meta pairing, focused temporary-marker search, codesign and residue checks pass.
+Local `Tools/verify-repository.sh` reports `tracked=1326`; `git diff --check`, meta pairing, focused temporary-marker search, codesign and residue checks pass. GitHub technical Repository Guard [33417330365](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33417330365) passed on `79ea367af67549592a6ba58acd53afa74e7f25cb`; docs checkpoint `a2f74ec118b8de9021f4e400c1de961af0478ff7` passed [Repository Guard 33418499473](https://github.com/cixanla/PC-Shop-Empire-3D/actions/runs/33418499473).
 
 Sixteen accepted exact-head XML/log artifacts were copied byte-for-byte from `/private/tmp/pse-issue139-exact-head-*` into `/Users/cixanla/Developer/PCShopEmpire3D/TestResults/issue139-quality-bound-packaging-2026-08-31/raw`. Source/destination SHA-256 comparison passed `16/16`; the durable raw directory occupies `2,960 KiB`.
 
