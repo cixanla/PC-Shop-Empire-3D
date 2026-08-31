@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #127 active-power-on-bound deterministic baseline POST r62 source, immutable receipt/history, player path, presentation, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #128 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #125 docs head `ec84e84c42aae16d7b979b7e643e399a52a5a0b2`; technical source `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`; draft PR #128; acceptance #1–#8 PASS, #9 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #129 active-POST-bound deterministic UEFI baseline r63 source, immutable receipt/history, review/save/exit player path, P0 power-off recovery, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #130 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #127 docs head `c10f8f314e096465ac0a1df49cedd46347660a39`; technical source `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`; draft PR #130; acceptance #1–#13 PASS, #14 Windows/USB DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #127 / Epic #10
+## En yeni teknik checkpoint — Issue #129 / Epic #10
+
+- Existing power-state authority ayrı immutable `PcFirmwareBaselineReceipt` ledger'ı taşır. Receipt exact current POST/power/preflight owner identity, stable operation ID, expected power/firmware revisions ve `OptimizedDefaults / SavedAndExited` sonucunu bağlar; ikinci authority değildir.
+- Exact replay same-instance; changed reuse conflict, foreign/stale/off/historical inputs fail-closed ve aynı POST'taki ikinci distinct completion blocked'dır. Power-off active pointer'ı temizler, historical receipt/replay'i korur; yeni cycle yeni POST/operation/revision ister.
+- Existing station ilk Primary Action ile review, ikinciyle `KAYDET VE ÇIK` yapar; Interact explicit power-off'tur. Same-frame Interact strict priority, pause/competing owner fail-closed ve context kaybında review reset testlidir.
+- Malformed firmware history dahi `GÜCÜ KAPAT` prompt'unu veya normal player Interact power-off yolunu kapatmaz. Presentation side-effect-free; benchmark `BuildIncomplete`, Inventory/Assembly/cables/power/POST state untouched kalır.
+- Technical commit `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3`. Targeted `3/3 + 1/1 + 5/5 + 10/10`, full EditMode `784/784`, PlayMode `169/169`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330573681` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r63 readiness + keyboard/mouse/virtual-gamepad UEFI markerları birer kez geçti; exit/residue `0`. Repository Guard `33367768909` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
+- Sıradaki bounded zincir bu kurgusal UEFI receipt'ini gerçek firmware gibi büyütmeden ayrı OS hazırlık/kurulum workflow'udur; driver, benchmark/thermals/fault/damage daha sonra kalır.
+
+## Önceki teknik checkpoint — Issue #127 / Epic #10
 
 - Existing power-state authority ayrı immutable `PcPostStartupReceipt` ledger'ı taşır. Receipt exact active power-on/preflight owner identity, stable POST operation ID, expected/current power-state revision ve bağımsız monotonik POST revision'ını bağlar; ikinci authority değildir.
 - Exact replay same-instance; changed reuse conflict, foreign/stale/off inputs fail-closed ve aynı cycle'daki ikinci distinct completion blocked'dır. Power-off active pointer'ı temizler, historical receipt/replay'i korur; yeni cycle ayrı operation/revision ister.
@@ -13,7 +24,6 @@
 - Technical commit `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b`. Final-source targeted `3/3`, full EditMode `781/781`, PlayMode `164/164`; accepted fail/skip/inconclusive `0`.
 - Universal Mac report `330548985` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal 1280×720 exact r62 readiness + `post=passed benchmark=untouched invariants=ok` markerları birer kez geçti; exit/residue `0`. Repository Guard `33364272612` PASS.
 - ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-source x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`.
-- Sıradaki bounded zincir baseline receipt'i gerçek hardware POST gibi büyütmeden ayrı firmware/BIOS/UEFI authority ve görünür player workflow'udur; OS/driver, benchmark/thermals/fault/damage daha sonra kalır.
 
 ## Önceki teknik checkpoint — Issue #125 / Epic #10
 

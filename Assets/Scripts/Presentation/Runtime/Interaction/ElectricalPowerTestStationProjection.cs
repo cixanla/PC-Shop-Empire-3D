@@ -30,9 +30,10 @@ namespace PCShopEmpire3D.Presentation.Interaction
     }
 
     /// <summary>
-    /// Focused player command surface for one exact power-test preflight and its safe
-    /// Off/Energized transition. The existing readiness display remains the presentation
-    /// observer; this component owns only interaction gates and delegates immutable receipts.
+    /// Focused player command surface for one exact power-test preflight, its safe
+    /// Off/Energized transition and the bounded post-POST UEFI baseline review/save step.
+    /// The existing readiness display remains the presentation observer; this component
+    /// owns only interaction gates and delegates immutable receipts.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(68)]
@@ -63,6 +64,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private Failure _focusFailure =
             ElectricalPowerTestStationFailures.FocusMissing;
         private int _lastSuccessfulOperationFrame = -1;
+        private bool _isReviewingFirmwareBaseline;
+        private PcPostStartupReceipt _reviewedPostStartupReceipt;
         private readonly RaycastHit[] _lineOfSightHits =
             new RaycastHit[LineOfSightHitCapacity];
         private int _promptCacheFrame = -1;
@@ -90,6 +93,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool IsFocused => _isFocused;
 
         public bool HasContextualAttention => _hasContextualAttention;
+
+        public bool IsReviewingFirmwareBaseline =>
+            _isReviewingFirmwareBaseline;
 
         public string LastFailureCode { get; private set; } = string.Empty;
 
@@ -151,27 +157,64 @@ namespace PCShopEmpire3D.Presentation.Interaction
         {
             InvalidatePromptCache();
             RefreshFocusState();
+            ResetFirmwareReviewIfContextChanged();
             if (playerInput == null || playerMotor == null || playerMotor.IsPaused ||
-                playerInput.PausePressedThisFrame ||
-                !playerInput.InteractPressedThisFrame)
+                playerInput.PausePressedThisFrame)
             {
                 return;
             }
 
-            OperationResult gate = ValidateInteractionGate();
-            if (gate.IsFailure)
+            bool interactPressed = playerInput.InteractPressedThisFrame;
+            bool primaryPressed = playerInput.PrimaryActionPressedThisFrame;
+            if (!interactPressed && !primaryPressed)
             {
-                Remember(gate);
+                return;
+            }
+
+            if (interactPressed)
+            {
+                OperationResult powerGate = ValidateInteractionGate();
+                if (powerGate.IsFailure)
+                {
+                    Remember(powerGate);
+                    readinessProjection?.RefreshPresentation();
+                    return;
+                }
+
+                if (!playerInput.TryConsumeInteractPressThisFrame())
+                {
+                    return;
+                }
+
+                if (primaryPressed)
+                {
+                    playerInput.TryConsumePrimaryActionPressThisFrame();
+                }
+
+                OperationResult powerResult = Remember(TryAttemptAuthorized());
+                if (powerResult.IsSuccess)
+                {
+                    ResetFirmwareReview();
+                }
+
+                readinessProjection.RefreshPresentation();
+                return;
+            }
+
+            OperationResult firmwareGate = ValidateFirmwareInteractionGate();
+            if (firmwareGate.IsFailure)
+            {
+                Remember(firmwareGate);
                 readinessProjection?.RefreshPresentation();
                 return;
             }
 
-            if (!playerInput.TryConsumeInteractPressThisFrame())
+            if (!playerInput.TryConsumePrimaryActionPressThisFrame())
             {
                 return;
             }
 
-            Remember(TryAttemptAuthorized());
+            Remember(TryAttemptFirmwareAuthorized());
             readinessProjection.RefreshPresentation();
         }
 
@@ -183,6 +226,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
         internal OperationResult TryAttemptAuthorizedForTests()
         {
             return Remember(TryAttemptAuthorized());
+        }
+
+        internal OperationResult InspectFirmwareInteractionGateForTests()
+        {
+            return ValidateFirmwareInteractionGate();
+        }
+
+        internal OperationResult TryAttemptFirmwareAuthorizedForTests()
+        {
+            return Remember(TryAttemptFirmwareAuthorized());
         }
 
         private void Update()
@@ -301,6 +354,64 @@ namespace PCShopEmpire3D.Presentation.Interaction
             return OperationResult.Success();
         }
 
+        private OperationResult TryAttemptFirmwareAuthorized()
+        {
+            if (_lastSuccessfulOperationFrame == Time.frameCount)
+            {
+                return OperationResult.Fail(
+                    ElectricalPowerTestStationFailures.InputReplay);
+            }
+
+            GarageStockFlowSession session = ResolveSession();
+            if (session == null ||
+                !session.TryGetPowerState(
+                    out PcPowerStateAuthority powerState))
+            {
+                return OperationResult.Fail(
+                    ElectricalPowerTestStationFailures.RuntimeNotReady);
+            }
+
+            OperationResult<PcPostStartupReceipt> currentPostStartup =
+                powerState.EvaluateCurrentStartupSelfTest();
+            if (currentPostStartup.IsFailure)
+            {
+                return OperationResult.Fail(currentPostStartup.Error);
+            }
+
+            if (!_isReviewingFirmwareBaseline)
+            {
+                _isReviewingFirmwareBaseline = true;
+                _reviewedPostStartupReceipt = currentPostStartup.Value;
+                _lastSuccessfulOperationFrame = Time.frameCount;
+                return OperationResult.Success();
+            }
+
+            if (!ReferenceEquals(
+                    _reviewedPostStartupReceipt,
+                    currentPostStartup.Value))
+            {
+                ResetFirmwareReview();
+                return OperationResult.Fail(
+                    PcFirmwareBaselineFailures.NotCurrent);
+            }
+
+            OperationResult<PcFirmwareBaselineReceipt> saved =
+                powerState.TrySaveFirmwareBaseline(
+                    session.CreatePrototypeFirmwareBaselineOperationId(
+                        currentPostStartup.Value),
+                    currentPostStartup.Value,
+                    powerState.Revision,
+                    powerState.FirmwareBaselineRevision);
+            if (saved.IsFailure)
+            {
+                return OperationResult.Fail(saved.Error);
+            }
+
+            _lastSuccessfulOperationFrame = Time.frameCount;
+            ResetFirmwareReview();
+            return OperationResult.Success();
+        }
+
         private OperationResult ValidateInteractionGate()
         {
             if (!IsConfigured)
@@ -362,19 +473,19 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     session.TryGetPowerState(out PcPowerStateAuthority existing)
                         ? existing
                         : null;
-                if (powerState != null &&
-                    powerState.ValidateReceiptHistory().IsFailure)
-                {
-                    return OperationResult.Fail(
-                        ElectricalPowerTestStationFailures.RuntimeNotReady);
-                }
-
                 if (powerState?.IsEnergized == true)
                 {
                     return powerState.ActivePowerOnReceipt != null
                         ? OperationResult.Success()
                         : OperationResult.Fail(
                             PcPowerStateFailures.ReceiptHistoryInvalid);
+                }
+
+                if (powerState != null &&
+                    powerState.ValidateReceiptHistory().IsFailure)
+                {
+                    return OperationResult.Fail(
+                        ElectricalPowerTestStationFailures.RuntimeNotReady);
                 }
 
                 OperationResult<PowerTestAttemptReceipt> current =
@@ -397,6 +508,55 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     PowerTestAttemptFailures.PowerSupplyInsufficient);
         }
 
+        private OperationResult ValidateFirmwareInteractionGate()
+        {
+            OperationResult powerGate = ValidateInteractionGate();
+            if (powerGate.IsFailure)
+            {
+                return powerGate;
+            }
+
+            GarageStockFlowSession session = ResolveSession();
+            if (session == null ||
+                !session.TryGetPowerState(
+                    out PcPowerStateAuthority powerState) ||
+                !powerState.IsEnergized)
+            {
+                return OperationResult.Fail(
+                    PcFirmwareBaselineFailures.NotCurrent);
+            }
+
+            OperationResult history = powerState.ValidateReceiptHistory();
+            if (history.IsFailure)
+            {
+                return OperationResult.Fail(history.Error);
+            }
+
+            OperationResult<PcPostStartupReceipt> currentPostStartup =
+                powerState.EvaluateCurrentStartupSelfTest();
+            if (currentPostStartup.IsFailure)
+            {
+                return OperationResult.Fail(currentPostStartup.Error);
+            }
+
+            if (powerState.EvaluateCurrentFirmwareBaseline().IsSuccess)
+            {
+                return OperationResult.Fail(
+                    PcFirmwareBaselineFailures.AlreadyCompleted);
+            }
+
+            if (_isReviewingFirmwareBaseline &&
+                !ReferenceEquals(
+                    _reviewedPostStartupReceipt,
+                    currentPostStartup.Value))
+            {
+                return OperationResult.Fail(
+                    PcFirmwareBaselineFailures.NotCurrent);
+            }
+
+            return OperationResult.Success();
+        }
+
         private bool PlayerIsBusy()
         {
             return playerCarry != null &&
@@ -414,6 +574,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private string BuildPromptText()
         {
             RefreshFocusState();
+            ResetFirmwareReviewIfContextChanged();
             if (playerMotor == null || playerMotor.IsPaused)
             {
                 return string.Empty;
@@ -472,25 +633,54 @@ namespace PCShopEmpire3D.Presentation.Interaction
                     session.TryGetPowerState(out PcPowerStateAuthority existing)
                         ? existing
                         : null;
-                if (powerState != null &&
-                    powerState.ValidateReceiptHistory().IsFailure)
-                {
-                    return "GÜÇ TESTİ ENGELLİ • POWER AUTHORITY GEÇERSİZ";
-                }
-
                 if (powerState?.IsEnergized == true)
                 {
                     OperationResult<PcPostStartupReceipt> postStartup =
                         powerState.EvaluateCurrentStartupSelfTest();
                     if (postStartup.IsSuccess)
                     {
-                        return $"{bindingPrompt}: GÜCÜ KAPAT • POST GEÇTİ";
+                        OperationResult<PcFirmwareBaselineReceipt> firmware =
+                            powerState.EvaluateCurrentFirmwareBaseline();
+                        if (firmware.IsSuccess)
+                        {
+                            return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                   "UEFI BASELINE KAYDEDİLDİ • " +
+                                   "SONRAKİ AŞAMA: OS";
+                        }
+
+                        string primaryBinding = playerInput != null
+                            ? playerInput.PrimaryBindingPrompt
+                            : "LMB / RT";
+                        if (_isReviewingFirmwareBaseline)
+                        {
+                            return "UEFI SETUP • OPTIMIZED DEFAULTS • " +
+                                   $"{primaryBinding}: KAYDET VE ÇIK • " +
+                                   $"{bindingPrompt}: GÜCÜ KAPAT";
+                        }
+
+                        if (LastFailureCode.StartsWith(
+                                "assembly.firmware-baseline.",
+                                StringComparison.Ordinal))
+                        {
+                            return $"{bindingPrompt}: GÜCÜ KAPAT • " +
+                                   "UEFI KAYDI ENGELLİ • " +
+                                   LastFailureCode;
+                        }
+
+                        return $"{bindingPrompt}: GÜCÜ KAPAT • POST GEÇTİ • " +
+                               $"{primaryBinding}: UEFI SETUP'I AÇ";
                     }
 
                     return string.IsNullOrEmpty(LastFailureCode)
                         ? $"{bindingPrompt}: GÜCÜ KAPAT • POST BEKLİYOR"
                         : $"{bindingPrompt}: GÜCÜ KAPAT • POST ENGELLİ • " +
                           LastFailureCode;
+                }
+
+                if (powerState != null &&
+                    powerState.ValidateReceiptHistory().IsFailure)
+                {
+                    return "GÜÇ TESTİ ENGELLİ • POWER AUTHORITY GEÇERSİZ";
                 }
 
                 OperationResult<PowerTestAttemptReceipt> current =
@@ -516,6 +706,39 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 ? playerInput.InteractBindingPrompt
                 : "E / A";
             return $"{interact}: GÜÇ TESTİ ÖN KONTROLÜNÜ ÇALIŞTIR";
+        }
+
+        private void ResetFirmwareReviewIfContextChanged()
+        {
+            if (!_isReviewingFirmwareBaseline)
+            {
+                return;
+            }
+
+            GarageStockFlowSession session = ResolveSession();
+            if (session != null &&
+                session.TryGetPowerState(
+                    out PcPowerStateAuthority powerState) &&
+                powerState.IsEnergized)
+            {
+                OperationResult<PcPostStartupReceipt> currentPostStartup =
+                    powerState.EvaluateCurrentStartupSelfTest();
+                if (currentPostStartup.IsSuccess &&
+                    ReferenceEquals(
+                        currentPostStartup.Value,
+                        _reviewedPostStartupReceipt))
+                {
+                    return;
+                }
+            }
+
+            ResetFirmwareReview();
+        }
+
+        private void ResetFirmwareReview()
+        {
+            _isReviewingFirmwareBaseline = false;
+            _reviewedPostStartupReceipt = null;
         }
 
         private void InvalidatePromptCache()

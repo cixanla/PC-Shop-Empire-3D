@@ -58,7 +58,7 @@ namespace PCShopEmpire3D.Tests.PlayMode
             Assert.That(marker.ElectricalReadinessWorkbench.StatusText.text,
                 Does.Contain("GÜÇ AÇIK")
                     .And.Contain("POST GEÇTİ")
-                    .And.Contain("FIRMWARE BEKLİYOR")
+                    .And.Contain("UEFI SETUP BEKLİYOR")
                     .And.Contain("BAKIM KİLİDİ AKTİF"));
             Assert.That(session.UnroutePcieGpuPowerCable(
                     AssemblyOperationId("blocked-unroute-powered"),

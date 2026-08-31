@@ -39,6 +39,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
         private long _observedPowerTestAttemptRevision;
         private long _observedPowerStateRevision = -1;
         private long _observedPostStartupRevision = -1;
+        private long _observedFirmwareBaselineRevision = -1;
 
         public string ProjectionIdValue => PrototypeProjectionIdValue;
 
@@ -69,6 +70,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
         public bool HasCurrentAcceptedPreflight { get; private set; }
 
         public bool HasCurrentPostStartupPass { get; private set; }
+
+        public bool HasCurrentFirmwareBaseline { get; private set; }
 
         public PcPowerState PowerState { get; private set; }
 
@@ -237,17 +240,34 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 OperationResult<PcPostStartupReceipt> postStartup =
                     powerState.EvaluateCurrentStartupSelfTest();
                 HasCurrentPostStartupPass = postStartup.IsSuccess;
-                statusText.text = HasCurrentPostStartupPass
-                    ? "GÜÇ AÇIK • POST GEÇTİ\n" +
-                      $"{assessment.Value.SystemPowerDrawWatts}W / " +
-                      $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
-                      $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
-                      "FIRMWARE BEKLİYOR • BAKIM KİLİDİ AKTİF"
-                    : "GÜÇ AÇIK • POST BEKLİYOR\n" +
-                      $"{assessment.Value.SystemPowerDrawWatts}W / " +
-                      $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
-                      $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
-                      "BAKIM KİLİDİ AKTİF";
+                HasCurrentFirmwareBaseline = HasCurrentPostStartupPass &&
+                    powerState.EvaluateCurrentFirmwareBaseline().IsSuccess;
+                if (HasCurrentFirmwareBaseline)
+                {
+                    statusText.text =
+                        "GÜÇ AÇIK • POST GEÇTİ\n" +
+                        "UEFI BASELINE KAYDEDİLDİ\n" +
+                        "SONRAKİ AŞAMA: OS • BAKIM KİLİDİ AKTİF";
+                }
+                else if (HasCurrentPostStartupPass)
+                {
+                    statusText.text =
+                        "GÜÇ AÇIK • POST GEÇTİ\n" +
+                        $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                        $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                        $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                        "UEFI SETUP BEKLİYOR • BAKIM KİLİDİ AKTİF";
+                }
+                else
+                {
+                    statusText.text =
+                        "GÜÇ AÇIK • POST BEKLİYOR\n" +
+                        $"{assessment.Value.SystemPowerDrawWatts}W / " +
+                        $"EN AZ {assessment.Value.MinimumRecommendedPsuWatts}W / " +
+                        $"PSU {assessment.Value.InstalledPsuWatts}W\n" +
+                        "BAKIM KİLİDİ AKTİF";
+                }
+
                 statusText.color = new Color(1f, 0.90f, 0.42f);
                 statusIndicator.sharedMaterial = readyMaterial;
                 return OperationResult.Success();
@@ -319,7 +339,9 @@ namespace PCShopEmpire3D.Presentation.Interaction
                                : -1L) ||
                    _observedPowerStateRevision != ResolvePowerStateRevision(session) ||
                    _observedPostStartupRevision !=
-                       ResolvePostStartupRevision(session);
+                       ResolvePostStartupRevision(session) ||
+                   _observedFirmwareBaselineRevision !=
+                       ResolveFirmwareBaselineRevision(session);
         }
 
         private void CaptureAuthorityState(GarageStockFlowSession session)
@@ -339,6 +361,8 @@ namespace PCShopEmpire3D.Presentation.Interaction
                         : -1L;
             _observedPowerStateRevision = ResolvePowerStateRevision(session);
             _observedPostStartupRevision = ResolvePostStartupRevision(session);
+            _observedFirmwareBaselineRevision =
+                ResolveFirmwareBaselineRevision(session);
             _hasObservedAuthorityState = true;
         }
 
@@ -352,6 +376,7 @@ namespace PCShopEmpire3D.Presentation.Interaction
             HasAcceptedPreflight = false;
             HasCurrentAcceptedPreflight = false;
             HasCurrentPostStartupPass = false;
+            HasCurrentFirmwareBaseline = false;
         }
 
         private void ObservePowerState(GarageStockFlowSession session)
@@ -370,6 +395,16 @@ namespace PCShopEmpire3D.Presentation.Interaction
             MinimumRecommendedPsuWatts = assessment.MinimumRecommendedPsuWatts;
             InstalledPsuWatts = assessment.InstalledPsuWatts;
             CapacityMarginWatts = assessment.CapacityMarginWatts;
+        }
+
+        private static long ResolveFirmwareBaselineRevision(
+            GarageStockFlowSession session)
+        {
+            return session != null &&
+                   session.TryGetPowerState(
+                       out PcPowerStateAuthority powerState)
+                ? powerState.FirmwareBaselineRevision
+                : -1L;
         }
 
         private void ApplyBlockedPresentation(string blocker, Failure failure)

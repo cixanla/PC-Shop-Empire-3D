@@ -5,7 +5,19 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #127 r62 deterministic baseline POST Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #129 r63 deterministic UEFI baseline Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #129 technical head `86df0bc236e2bf90bfc3fa0482715f06242e6f13`, tree `953a09fd3c462e387229a78148c8b28040d797f3` üzerindedir; draft PR #130 açık/mergeable ve Repository Guard `33367768909` başarılıdır. Existing `PcPowerStateAuthority`, exact current POST → power-on → preflight lineage'ına bağlı ayrı immutable `PcFirmwareBaselineReceipt` ledger'ı taşır. Stable operation ID, expected power/firmware revisions ve bounded `OptimizedDefaults / SavedAndExited` sonucu bağlanır; ikinci firmware/gameplay authority yoktur.
+
+Exact command replay aynı receipt instance'ını döndürür; changed reuse conflict, null/foreign/stale/off/historical POST fail-closed ve aynı POST'taki ikinci distinct completion blocked'dır. Power-off active firmware pointer'ını temizler fakat historical receipt/replay'i immutable korur; sonraki power cycle yeni POST, operation ID ve firmware revision ister.
+
+Existing Workbench ilk `LMB / RT` ile `UEFI SETUP • OPTIMIZED DEFAULTS` review açar, ikinci Primary Action ile `KAYDET VE ÇIK` yapar; `E / A` her aşamada explicit power-off'tur. Same-frame Interact strict priority taşır, co-edge Primary Action'ı tüketir ve save üretmez. Pause/competing owner input'u consume etmez; exact context kaybında review sıfırlanır. P0 malformed-history testi downstream firmware ledger invalid olsa bile görünür prompt ve normal Interact power-off yolunun makineyi Off'a getirdiğini kanıtlar.
+
+Targeted `3/3 + 1/1 + 5/5 + 10/10`, full EditMode `784/784`, PlayMode `169/169`; failed/skipped/inconclusive `0`. Universal Mac report `330573681` bayt, app `302` dosya ve deep/strict-valid `x86_64 + arm64`; Apple M1/Metal 1280×720 exact r63 readiness ile keyboard+mouse+virtual-gamepad review→save/exit→power-off markerı birer kez geçti, exit/residue `0`. Inventory, Assembly, cable, power/POST ve benchmark state untouched; benchmark `BuildIncomplete` kalır.
+
+Bu bounded sonuç gerçek firmware flashing/vendor BIOS, XMP/EXPO, boot/security settings, hardware fault, OS/driver, benchmark/thermals/damage, packaging veya delivery değildir. Fiziksel Windows clean exact-source x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #130 draft, Issue/Roadmap `In Progress`, claim `human=false`; Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
+
+## Önceki geliştirme checkpoint'i — Issue #127 r62 deterministic baseline POST Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #127 technical head `30ca892c4c3411b8771c10a39856089ecc5cd3f1`, tree `eaf87358b42f96beb4f5b62d2bf65af78484d03b` üzerindedir; draft PR #128 açık/clean/mergeable'dır. Existing `PcPowerStateAuthority`, exact active power-on ve onun exact preflight lineage'ına bağlı ayrı immutable `PcPostStartupReceipt` ledger'ı taşır. Receipt stable POST operation ID, expected/current power-state revision ve bağımsız monotonik POST revision'ını bağlar; ikinci gameplay authority değildir.
 

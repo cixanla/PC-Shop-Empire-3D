@@ -20,7 +20,7 @@ namespace PCShopEmpire3D.Presentation
     public sealed partial class GaragePrototypeMarker : MonoBehaviour
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
-        public const string Version = "garage-post-startup-r62-v1";
+        public const string Version = "garage-firmware-baseline-r63-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1330,6 +1330,7 @@ namespace PCShopEmpire3D.Presentation
                 $"power-budget-workbench={(HasPowerBudgetWorkbenchR59Runtime ? "ready" : "missing")} " +
                 $"power-test-preflight={(HasPowerTestPreflightR60Runtime ? "ready" : "missing")} " +
                 $"power-state-interlock={(HasPowerStateInterlockR62Runtime ? "ready" : "missing")} " +
+                $"firmware-baseline={(HasFirmwareBaselineR63Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1416,6 +1417,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-power-test-preflight-smoke");
             bool runPowerStateInterlockSmoke =
                 HasCommandLineArgument("-pse-power-state-interlock-smoke");
+            bool runFirmwareBaselineSmoke =
+                HasCommandLineArgument("-pse-firmware-baseline-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1461,6 +1464,7 @@ namespace PCShopEmpire3D.Presentation
                              (runPcieGpuPowerCableAssemblyHandoffSmoke ? 1 : 0) +
                              (runPowerTestPreflightSmoke ? 1 : 0) +
                              (runPowerStateInterlockSmoke ? 1 : 0) +
+                             (runFirmwareBaselineSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
@@ -1499,13 +1503,19 @@ namespace PCShopEmpire3D.Presentation
                      !runPcieGpuPowerCableAssemblyHandoffSmoke &&
                      !runPowerTestPreflightSmoke &&
                      !runPowerStateInterlockSmoke &&
+                     !runFirmwareBaselineSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runPowerStateInterlockSmoke)
+                    if (runFirmwareBaselineSmoke)
+                    {
+                        LogFirmwareBaselineSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runPowerStateInterlockSmoke)
                     {
                         LogPowerStateInterlockSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -1918,6 +1928,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runFirmwareBaselineSmoke && !Debug.isDebugBuild)
+            {
+                LogFirmwareBaselineSmokeFailure(
+                    "smoke.firmware-baseline-requires-development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2151,6 +2168,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunPowerStateInterlockSmoke());
+            }
+
+            if (runFirmwareBaselineSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunFirmwareBaselineSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)

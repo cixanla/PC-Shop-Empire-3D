@@ -83,6 +83,15 @@ namespace PCShopEmpire3D.Presentation.Interaction
                 "assembly.post-startup.prototype.power-on-" + sourceRevision);
         }
 
+        public StableId<PcFirmwareBaselineOperationIdScope>
+            CreatePrototypeFirmwareBaselineOperationId(
+                PcPostStartupReceipt sourcePostStartupReceipt)
+        {
+            long sourceRevision = sourcePostStartupReceipt?.Revision ?? -1L;
+            return StableId<PcFirmwareBaselineOperationIdScope>.Parse(
+                "assembly.firmware-baseline.prototype.post-" + sourceRevision);
+        }
+
         public bool TryGetPowerState(out PcPowerStateAuthority powerState)
         {
             powerState = _powerState;
