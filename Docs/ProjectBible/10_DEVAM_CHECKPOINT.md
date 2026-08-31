@@ -1,10 +1,21 @@
 # PC Shop Empire 3D — Devam ve Kullanım Güvenliği Checkpoint'i
 
 **Tarih:** 31 Ağustos 2026<br>
-**Durum:** Issue #123 Player-Triggered Power-Test Preflight r60 source, authority/context/receipt/scene/input contracts, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #124 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
-**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #121 docs head `48e1c8d6278c9c255cc3c49e5e88d05db85da9a1`; technical source `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d`; draft PR #124; acceptance #1–#8 PASS, #9 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
+**Durum:** Issue #125 Safe Power-State Interlock r61 source, power authority/on-off receipt/maintenance-interlock/presentation/input contracts, full Mac regression, universal Mac native ve Apple M1/Metal player smoke kapıları geçti; draft PR #126 açık, Issue/Roadmap `In Progress`; fiziksel Windows ve USB kapıları ertelendi<br>
+**Authoritative kaynak:** private GitHub `cixanla/PC-Shop-Empire-3D`; parent Issue #123 docs head `3df0ada189d4caf8d047b4d5c4e4f2083a1092c0`; technical source `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`; draft PR #126; acceptance #1–#8 PASS, #9 Mac PASS/Windows DEFERRED; parent Assembly Epic #10 ve Steam 1.0 Goal açık
 
-## En yeni teknik checkpoint — Issue #123 / Epic #10
+## En yeni teknik checkpoint — Issue #125 / Epic #10
+
+- Dedicated power-state authority exact current `PowerTestAttemptAuthority` ve canonical `AssemblyBuildAuthority` instance'larına reference-bound'dur. `Off → Energized → Off` transitions stable operation/revision, exact current preflight ve immutable same-instance replay receipt'leriyle yürür.
+- Central Assembly maintenance interlock Energized durumunda bütün live motherboard/component/fastener remove/unsecure/unretain ve üç power-cable unroute command'ını mutation öncesi bloklar. Historical exact replay korunur; distinct bakım command'ı `ElectricalPowerOnMaintenanceBlocked` olur.
+- Existing Workbench focus/status ve normal Interact reused. Keyboard/mouse + virtual-gamepad preflight/`GÜCÜ AÇ`/`GÜCÜ KAPAT • POST BEKLİYOR` akışını aynı single-consumer path'te çalıştırır. Concurrent input tek transition, pause fail-closed; prompt/readiness/gate optional authority yaratmaz.
+- Native r61 smoke energized cable pickup'ını `PlayerCarryController` yolundan dener; cable world-owned/routed ve revisions/receipts unchanged kalır. Conflicting flags native exit `1`; nested smoke exception/external-stop cleanup disposal fail-closed'dur.
+- İki bounded review turunun supported-failure, presentation state/side-effect, player-path proof ve cleanup P1/P2 bulguları final verification öncesinde düzeltildi; son review başka somut P0/P1/P2 bulmadı.
+- Technical commit `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4`. Targeted `6/6 + 4/4`, full EditMode `778/778`, PlayMode `164/164`; accepted fail/skip/inconclusive `0`.
+- Universal Mac report `330540613` bayt; app `302` dosya, executable `x86_64 + arm64`, deep/strict codesign PASS. Apple M1/Metal exact r61 marker power-on/off/player maintenance/replay/presentation/invariants zincirini geçti. Repository Guard `33361533350` PASS.
+- ProBuilder user-setting hash'i exact korunur; diff unstaged ve technical commit dışında. Fiziksel Windows clean exact-commit x64 IL2CPP/D3D11/Iris Xe ve USB checkpoint/readback kapıları ertelendi; UTM yerine geçmez. Issue/Roadmap `In Progress`, claim `human=false`; POST/BIOS/OS/benchmark/fault/damage sonraki dilimlerdir.
+
+## Önceki teknik checkpoint — Issue #123 / Epic #10
 
 - Dedicated attempt authority exact `PcPowerBudgetAuthority` ve `AssemblyBuildAuthority` instance'larına reference-bound'dur. Accepted context exact build/chassis, seven component + three cable items, retain/route operations, Assembly/cable revisions, product/policy ve `380/500/550 W` değerlerini bağlar.
 - Stable operation ID + expected attempt revision + current exact context ilk completion'ı üretir. Exact replay same receipt instance; changed reuse conflict; ikinci distinct completion blocked'dır. Historical replay stale sonrasında da immutable, `EvaluateCurrentReceipt()` ise current lineage değişiminde `ContextStale`dır.

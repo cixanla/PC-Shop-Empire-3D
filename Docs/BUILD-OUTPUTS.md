@@ -2,6 +2,18 @@
 
 `../../Builds/Local/` yalnız yerel doğrulama buildleri içindir ve UVCS workspace'inin dışında kalır. Yayın buildleri ayrı, imzalı ve denetlenmiş bir süreçte üretilecektir.
 
+## Stage B safe power-state and maintenance-interlock doğrulaması — 31 Ağustos 2026
+
+Issue #125 technical source `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4` Mac üzerinde doğrulandı:
+
+- macOS: Development Universal Mach-O (`arm64` + `x86_64`), deep/strict codesign geçti; Unity report `330.540.613` bayt, `302` dosya. Executable `117.179` bayt / SHA-256 `cd5643fbe7e455ca049ae29350a8847b984bf8a040efbdea419b42a32c989e26`.
+- Testler: targeted authority/interlock/scene `6/6`, targeted keyboard/mouse + virtual-gamepad/presentation `4/4`, full EditMode `778/778`, full PlayMode `164/164`; failed/skipped/inconclusive `0`.
+- Native safe-power runtime: Apple M1/Metal; assisted exact route/preflight, player-triggered keyboard+gamepad power-on/off, one-cycle Off final state, player-carry cable maintenance block, immutable replay, presentation ve invariant markerları başarılı. Input System graceful shutdown, exit `0`, player/Unity/shader/IL2CPP residue `0`.
+- Existing Workbench focus/status surface reused; yeni gameplay collider/renderer/light/camera/NavMesh/item/second Assembly authority yoktur. `GÜÇ AÇIK • POST BEKLİYOR` sınırı ve `BAKIM KİLİDİ AKTİF` görünürdür; benchmark `BuildIncomplete` kalır.
+- Build-induced tek `ProjectSettings.asset` preloaded-assets hunk'ı kanıtla repository baseline'a döndürüldü. User/editor-owned ProBuilder ayarı SHA-256 `20e33f89c50cf395e10b9ec90ba16b027561a87de80917ae86baaa92fcea001b` ile korundu ve technical commit'e alınmadı.
+
+Bu çıktı Mac teknik geliştirme kabulüdür; fiziksel Windows x64 IL2CPP/only-D3D11 Intel Iris Xe, connector/fault/POST/BIOS/OS/benchmark, physical-human HID/endurance, USB checkpoint, Steam packaging/signing veya release-candidate iddiası değildir. UTM fiziksel Windows kapısının yerine geçmez.
+
 ## Stage B player-triggered power-test preflight doğrulaması — 31 Ağustos 2026
 
 Issue #123 technical source `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d` Mac üzerinde doğrulandı:

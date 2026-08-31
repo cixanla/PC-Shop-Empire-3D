@@ -5,7 +5,19 @@
 **Authoritative ayrıntılar:** [`Docs/ProjectBible/`](Docs/ProjectBible/) ve tarihli ADR'ler.  
 **Güncelleme kuralı:** Her GitHub checkpoint/pull request, etkilediği durum ve sıradaki işi bu belgede güncellemek zorundadır.
 
-## Güncel geliştirme checkpoint'i — Issue #123 r60 player-triggered power-test preflight Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Güncel geliştirme checkpoint'i — Issue #125 r61 safe power-state interlock Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+
+Issue #125 technical head `01b89e21e4329489b9a3c666edf5391710eb9c2f`, tree `bc1e5a8ec2e9852dd6d0b32c08b514bbd2c224a4` üzerindedir; draft PR #126 açıktır. Exact current Issue #123 preflight receipt'i ve canonical Assembly instance'ına reference-bound ayrı `PcPowerStateAuthority`, stable operation/revision ve immutable same-instance replay receipt'leriyle deterministic `Off → Energized → Off` döngüsünü yönetir.
+
+Energized durumda motherboard/component/fastener removal/unretain/unsecure ve ATX24/EPS12V/PCIe-GPU unroute girişimleri central Assembly maintenance interlock'ta domain/world mutation öncesinde `ElectricalPowerOnMaintenanceBlocked` olur. Historical exact replay korunur; distinct bakım command'ı çalışmaz. Native smoke routed PCIe/GPU cable pickup'ını gerçek `PlayerCarryController` yolundan deneyerek item ownership, route ve revision zincirinin değişmediğini kanıtlar.
+
+Existing Workbench focus/status ve normal Interact yolu reused. Keyboard/mouse ile Input System virtual-gamepad aynı single-consumer path'te preflight, `GÜCÜ AÇ` ve `GÜCÜ KAPAT • POST BEKLİYOR` akışını çalıştırır; concurrent same-frame input tek transition, pause fail-closed'dur. Prompt/readiness/gate optional authority yaratmaz. İki bounded independent review turundaki supported-failure, presentation side-effect/state, player-path proof ve coroutine cleanup P1/P2 bulguları final kapılardan önce düzeltildi; son review yeni somut P0/P1/P2 bulmadı.
+
+Mac targeted `6/6 + 4/4`, full EditMode `778/778`, PlayMode `164/164`; failed/skipped/inconclusive `0`. Universal Mac report `330540613` bayt, app `302` dosya ve deep/strict-valid `x86_64 + arm64`; Apple M1/Metal exact r61 player smoke ve Repository Guard `33361533350` geçti. ProBuilder user-setting diff'i commit dışındadır.
+
+Bu dilim connector pinout/polarity/short-circuit/rail/transient fiziği, fault/damage, POST, BIOS/UEFI, OS, driver, benchmark, packaging veya delivery üretmez. Fiziksel Windows clean exact-commit x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #126 draft, Issue/Roadmap `In Progress`, claim `human=false`; Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
+
+## Önceki geliştirme checkpoint'i — Issue #123 r60 player-triggered power-test preflight Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #123 technical head `3c26ce0d6de80c975b064f2dff68d96fbd4378bc`, tree `58dd983e314ecb78d94b3871dc672641e0a87b5d` üzerindedir; draft PR #124 açıktır. Exact electrical readiness ve `380 W / 500 W / 550 W` budget lineage, ayrı reference-bound `PowerTestAttemptAuthority` üzerinden oyuncunun existing Assembly Workbench'te normal Interact action'ıyla istediği tek immutable preflight receipt'ine bağlandı. Receipt exact build/chassis, component/cable items, retain/route operations, revisions, products ve policy kimliğini taşır.
 
@@ -17,7 +29,7 @@ Mac targeted `6/6 + 3/3`, full EditMode `773/773`, PlayMode `161/161`; failed/sk
 
 Bu dilim power-on, connector pinout/polarity/short-circuit/rail/transient fiziği, fault/damage, POST, BIOS/UEFI, OS, driver, benchmark, packaging veya delivery üretmez. Fiziksel Windows clean exact-commit x64 IL2CPP/only-D3D11 Intel Iris Xe gate ve USB checkpoint/readback cihazlar dönene kadar ertelenmiştir; UTM yerine geçmez. PR #124 draft, Issue/Roadmap `In Progress`, claim `human=false`; Mac tek authoritative write/Git lane olarak Steam 1.0 Goal'ı sürdürür.
 
-## Önceki geliştirme checkpoint'i — Issue #121 r59 exact power budget Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
+## Daha önceki geliştirme checkpoint'i — Issue #121 r59 exact power budget Mac teknik kapıları tamamlandı; fiziksel Windows ve USB bekliyor
 
 Issue #121 technical head `57e6b54883ef6756c5522d1de9c17479e7cda481`, tree `8652882bb5e791c969b9c8648cfe7e242a5a92d7` üzerindedir; draft PR #122 açıktır. Canonical component catalog'a exact bağlanan immutable electrical metadata, mevcut exact electrical-readiness lineage'ını salt-okunur PSU budget assessment'ına taşır. Legacy-v1 policy `35 W` platform + `4 W` chassis + CPU/GPU/DDR5/NVMe/cooler yüklerinden `380 W` draw, yüzde 30 headroom ve 50 W ceiling ile `500 W` minimum PSU üretir; installed `550 W` PSU margin'i `+50 W`dır.
 
