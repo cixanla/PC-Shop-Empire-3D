@@ -21,7 +21,7 @@ namespace PCShopEmpire3D.Presentation
     {
         public const string ScenePath = "Assets/Scenes/Prototypes/GarageGraybox.unity";
         public const string Version =
-            "garage-validation-bound-quality-release-r67-v1";
+            "garage-quality-bound-physical-packaging-r68-v1";
         public const string ProcessorCoolerR27Marker =
             ProcessorCoolerRuntimeGeometry.RuntimeMarker;
         public const string PowerSupplyR29Marker =
@@ -1336,6 +1336,7 @@ namespace PCShopEmpire3D.Presentation
                 $"fictional-driver-installation={(HasFictionalDriverInstallationR65Runtime ? "ready" : "missing")} " +
                 $"validation={(HasValidationR66Runtime ? "ready" : "missing")} " +
                 $"quality-release={(HasQualityReleaseR67Runtime ? "ready" : "missing")} " +
+                $"custom-pc-packaging={(HasCustomPcPackagingR68Runtime ? "ready" : "missing")} " +
                 $"retail-checkout-hero={(hasRetailCheckoutHeroReadability ? "ready" : "missing")} " +
                 $"lookdev={(hasLookdevCorner && hasLookdevVolume && hasTaskLight ? "ok" : "missing")}");
 
@@ -1434,6 +1435,8 @@ namespace PCShopEmpire3D.Presentation
                 HasCommandLineArgument("-pse-validation-smoke");
             bool runQualityReleaseSmoke =
                 HasCommandLineArgument("-pse-quality-release-smoke");
+            bool runCustomPcPackagingSmoke =
+                HasCommandLineArgument("-pse-custom-pc-packaging-smoke");
             bool runAssemblyWorkbenchHeroReadabilitySmoke =
                 HasCommandLineArgument(
                     "-pse-assembly-workbench-hero-readability-smoke");
@@ -1484,6 +1487,7 @@ namespace PCShopEmpire3D.Presentation
                              (runFictionalDriverInstallationSmoke ? 1 : 0) +
                              (runValidationSmoke ? 1 : 0) +
                              (runQualityReleaseSmoke ? 1 : 0) +
+                             (runCustomPcPackagingSmoke ? 1 : 0) +
                              (runAssemblyWorkbenchHeroReadabilitySmoke ? 1 : 0) +
                              (runRetailCheckoutHeroReadabilitySmoke ? 1 : 0);
             if (smokeCount > 1)
@@ -1527,13 +1531,19 @@ namespace PCShopEmpire3D.Presentation
                      !runFictionalDriverInstallationSmoke &&
                      !runValidationSmoke &&
                      !runQualityReleaseSmoke &&
+                     !runCustomPcPackagingSmoke &&
                      !runAssemblyWorkbenchHeroReadabilitySmoke &&
                      !runRetailCheckoutHeroReadabilitySmoke) ||
                     !IsRequiredWindowsD3D11Runtime(
                         Application.platform,
                         SystemInfo.graphicsDeviceType))
                 {
-                    if (runQualityReleaseSmoke)
+                    if (runCustomPcPackagingSmoke)
+                    {
+                        LogCustomPcPackagingSmokeFailure(
+                            "smoke.graphics-api-mismatch");
+                    }
+                    else if (runQualityReleaseSmoke)
                     {
                         LogQualityReleaseSmokeFailure(
                             "smoke.graphics-api-mismatch");
@@ -2008,6 +2018,13 @@ namespace PCShopEmpire3D.Presentation
                 return;
             }
 
+            if (runCustomPcPackagingSmoke && !Debug.isDebugBuild)
+            {
+                LogCustomPcPackagingSmokeFailure(
+                    "smoke.custom-pc-packaging-requires-development-build");
+                return;
+            }
+
             if (runAssemblyWorkbenchHeroReadabilitySmoke && !Debug.isDebugBuild)
             {
                 LogAssemblyWorkbenchHeroReadabilitySmokeFailure(
@@ -2271,6 +2288,12 @@ namespace PCShopEmpire3D.Presentation
             {
                 Application.runInBackground = true;
                 StartCoroutine(RunQualityReleaseSmoke());
+            }
+
+            if (runCustomPcPackagingSmoke)
+            {
+                Application.runInBackground = true;
+                StartCoroutine(RunCustomPcPackagingSmoke());
             }
 
             if (runAssemblyWorkbenchHeroReadabilitySmoke)

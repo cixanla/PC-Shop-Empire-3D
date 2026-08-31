@@ -147,7 +147,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(motor.ViewSettings.MotionReduced, Is.True);
                 Assert.That(hands.childCount, Is.EqualTo(2));
                 Assert.That(handsPresenter, Is.Not.Null);
-                Assert.That(physicalItems.Length, Is.EqualTo(14));
+                Assert.That(physicalItems.Length, Is.EqualTo(15));
                 Assert.That(
                     physicalItems.Select(item => item.ItemIdValue).Distinct(StringComparer.Ordinal).Count(),
                     Is.EqualTo(physicalItems.Length));
@@ -159,7 +159,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PhysicalItemProjection stackBase = smallBoxes.Single(
                     item => item.ItemIdValue == "prototype.garage-box-002");
                 PhysicalItemProjection largeBox = physicalItems.Single(
-                    item => item.CarryProfile == PhysicalCarryProfile.LargeBox);
+                    item => item.ItemIdValue == "prototype.garage-large-box-001");
                 PhysicalItemProjection deliveryItem = physicalItems.Single(
                     item => item.ItemIdValue == GarageStockFlowSession.ItemInstanceIdValue);
                 PhysicalItemProjection motherboard = physicalItems.Single(
@@ -1367,7 +1367,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 PowerSupplyRuntimeGeometry geometry = marker.PowerSupplyGeometry;
 
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(marker.HasPowerSupplyR29Runtime, Is.True);
                 Assert.That(marker.HasPowerSupplyBuildKitR41Runtime,
                     Is.True, "power-supply BuildKit runtime");
@@ -1525,7 +1525,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(marker.HasAtx24PowerCableR30Runtime, Is.True);
 
                 Atx24PowerCableRouteProjection route = marker.Atx24PowerCableRoute;
@@ -1681,7 +1681,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(marker.HasEps12vPowerCableR31Runtime, Is.True);
 
                 Eps12vPowerCableRouteProjection route =
@@ -1842,7 +1842,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     FindInScene<GaragePrototypeMarker>(scene);
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(marker.HasPcieGpuPowerCableR32Runtime, Is.True);
 
                 PcieGpuPowerCableRouteProjection route =
@@ -2047,7 +2047,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(4));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2243,7 +2243,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                     sceneRenderers.Count(renderer =>
                         retailHeroRoot == null ||
                         !renderer.transform.IsChildOf(retailHeroRoot)),
-                    Is.EqualTo(479));
+                    Is.EqualTo(493));
                 Assert.That(
                     sceneLights.Count(light =>
                         light.name != "RetailCheckoutFillLight"),
@@ -2397,6 +2397,135 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
         }
 
         [Test]
+        public void GarageSceneContainsQualityBoundPhysicalPackagingAndDispatchContract()
+        {
+            Scene scene = EditorSceneManager.OpenScene(
+                GaragePrototypeMarker.ScenePath,
+                OpenSceneMode.Additive);
+            try
+            {
+                GaragePrototypeMarker marker = FindInScene<GaragePrototypeMarker>(
+                    scene);
+                CustomPcPackagingStationProjection[] packagingStations = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        CustomPcPackagingStationProjection>(true))
+                    .ToArray();
+                CustomPcPackageDispatchProjection[] dispatchStations = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        CustomPcPackageDispatchProjection>(true))
+                    .ToArray();
+                CustomPcPackagePhysicalBinding[] packageBindings = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<
+                        CustomPcPackagePhysicalBinding>(true))
+                    .ToArray();
+
+                Assert.That(marker, Is.Not.Null);
+                Assert.That(GaragePrototypeMarker.Version,
+                    Is.EqualTo(
+                        "garage-quality-bound-physical-packaging-r68-v1"));
+                Assert.That(marker.HasCustomPcPackagingR68Runtime, Is.True);
+                Assert.That(packagingStations.Length, Is.EqualTo(1));
+                Assert.That(dispatchStations.Length, Is.EqualTo(1));
+                Assert.That(packageBindings.Length, Is.EqualTo(1));
+
+                CustomPcPackagingStationProjection packaging =
+                    packagingStations[0];
+                CustomPcPackageDispatchProjection dispatch =
+                    dispatchStations[0];
+                CustomPcPackagePhysicalBinding binding = packageBindings[0];
+                PhysicalItemProjection package = marker.CustomPcPackage;
+                Assert.That(marker.CustomPcPackagingStation,
+                    Is.SameAs(packaging));
+                Assert.That(marker.CustomPcPackageDispatch,
+                    Is.SameAs(dispatch));
+                Assert.That(marker.CustomPcPackageBinding, Is.SameAs(binding));
+                Assert.That(binding.ValidateContract().IsSuccess, Is.True);
+                Assert.That(binding.PackageItem, Is.SameAs(package));
+                Assert.That(binding.SourceProjections.Count,
+                    Is.EqualTo(
+                        CustomPcPackagePhysicalBinding
+                            .RequiredSourceProjectionCount));
+                Assert.That(binding.SourceProjections.Distinct().Count(),
+                    Is.EqualTo(binding.SourceProjections.Count));
+                Assert.That(binding.SourceProjections.All(source =>
+                    source != null &&
+                    source.gameObject.activeSelf &&
+                    source.CarryProfile == PhysicalCarryProfile.PcComponent),
+                    Is.True);
+                Assert.That(binding.PackagingAnchor.name,
+                    Is.EqualTo("CustomPcPackageWorkbenchAnchor"));
+                Assert.That(binding.DispatchAnchor.name,
+                    Is.EqualTo("CustomPcDispatchPackageAnchor"));
+                Assert.That(binding.PackageLabel.text,
+                    Does.Contain("CUSTOM PC")
+                        .And.Contain("KALİTE MÜHRÜ BEKLENİYOR"));
+
+                Assert.That(package, Is.Not.Null);
+                Assert.That(package.ItemIdValue,
+                    Is.EqualTo(
+                        GarageStockFlowSession
+                            .PrototypeCustomPcPackageIdValue));
+                Assert.That(package.DisplayName,
+                    Is.EqualTo("Mühürlü Custom PC Paketi"));
+                Assert.That(package.CarryProfile,
+                    Is.EqualTo(PhysicalCarryProfile.LargeBox));
+                Assert.That(package.Ownership,
+                    Is.EqualTo(PhysicalItemOwnership.World));
+                Assert.That(package.gameObject.activeSelf, Is.False);
+                Assert.That(package.Body, Is.Not.Null);
+                Assert.That(package.Body.mass, Is.EqualTo(12f).Within(0.001f));
+                Assert.That(package.Body.isKinematic, Is.True);
+                Assert.That(package.Body.useGravity, Is.False);
+
+                Assert.That(packaging.PackageBinding, Is.SameAs(binding));
+                Assert.That(packaging.StockFlow, Is.SameAs(marker.StockFlow));
+                Assert.That(packaging.PlayerInput, Is.SameAs(marker.PlayerInput));
+                Assert.That(packaging.PlayerMotor, Is.SameAs(marker.PlayerMotor));
+                Assert.That(packaging.PlayerCarry, Is.SameAs(marker.PlayerCarry));
+                Assert.That(Vector3.Distance(
+                    packaging.transform.localPosition,
+                    new Vector3(-3.28f, 0f, 0.50f)), Is.LessThan(0.0001f));
+                Assert.That(packaging.InteractionCollider.isTrigger, Is.True);
+                Assert.That(packaging.InteractionCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(packaging.StatusText.text,
+                    Does.Contain("PAKETLEME İSTASYONU")
+                        .And.Contain("KALİTE ONAYI BEKLENİYOR"));
+
+                Assert.That(dispatch.PackageBinding, Is.SameAs(binding));
+                Assert.That(dispatch.PlayerInput, Is.SameAs(marker.PlayerInput));
+                Assert.That(dispatch.PlayerMotor, Is.SameAs(marker.PlayerMotor));
+                Assert.That(dispatch.PlayerCarry, Is.SameAs(marker.PlayerCarry));
+                Assert.That(dispatch.InteractionCollider.isTrigger, Is.True);
+                Assert.That(dispatch.InteractionCollider.gameObject.layer,
+                    Is.EqualTo(LayerMask.NameToLayer("Interactable")));
+                Assert.That(dispatch.StatusText.text,
+                    Does.Contain("SEVK SAHNESİ")
+                        .And.Contain("MÜHÜRLÜ CUSTOM PC BEKLENİYOR"));
+
+                GaragePrototypeHud hud = FindInScene<GaragePrototypeHud>(scene);
+                Assert.That(hud.CustomPcPackagingStation,
+                    Is.SameAs(packaging));
+                Assert.That(hud.CustomPcPackageDispatch, Is.SameAs(dispatch));
+
+                GarageStockFlowSession session = marker.StockFlow
+                    .EnsureInitialized();
+                Assert.That(session.TryGetCustomPcPackageAuthority(out _),
+                    Is.False);
+                Assert.That(session.TryGetPrototypeCustomPcPackage(out _),
+                    Is.False);
+                Assert.That(session.ValidateInvariants().IsSuccess, Is.True);
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void GarageSceneContainsRetailCheckoutHeroReadabilityContract()
         {
             Scene scene = EditorSceneManager.OpenScene(
@@ -2413,7 +2542,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
 
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
                 Assert.That(heroRenderers.Length, Is.EqualTo(9));
                 Assert.That(heroRoot.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(heroRoot.GetComponentsInChildren<Light>(true), Is.Empty);
@@ -2690,7 +2819,7 @@ namespace PCShopEmpire3D.Tests.EditMode.Gameplay
                 Assert.That(marker, Is.Not.Null);
                 Assert.That(
                     GaragePrototypeMarker.Version,
-                    Is.EqualTo("garage-validation-bound-quality-release-r67-v1"));
+                    Is.EqualTo("garage-quality-bound-physical-packaging-r68-v1"));
 
                 Transform benchmark = scene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<Transform>(true))

@@ -24,6 +24,9 @@ namespace PCShopEmpire3D.Presentation
             "receipt=immutable replay=ok history=preserved " +
             "upstream=unchanged invariants=ok";
 
+        private string _nestedQualityReleaseSmokeFailureCode;
+        private bool _suppressQualityReleaseSmokeSuccessMarker;
+
         public bool HasQualityReleaseR67Runtime =>
             HasValidationR66Runtime &&
             stockFlow != null &&
@@ -294,11 +297,14 @@ namespace PCShopEmpire3D.Presentation
                 }
             }
 
-            Debug.Log(QualityReleaseSmokeSuccessMarker);
-            yield return new WaitForEndOfFrame();
-            if (!Application.isEditor)
+            if (!_suppressQualityReleaseSmokeSuccessMarker)
             {
-                Application.Quit(0);
+                Debug.Log(QualityReleaseSmokeSuccessMarker);
+                yield return new WaitForEndOfFrame();
+                if (!Application.isEditor)
+                {
+                    Application.Quit(0);
+                }
             }
         }
 
@@ -360,8 +366,14 @@ namespace PCShopEmpire3D.Presentation
             }
         }
 
-        private static void LogQualityReleaseSmokeFailure(string code)
+        private void LogQualityReleaseSmokeFailure(string code)
         {
+            if (_suppressQualityReleaseSmokeSuccessMarker)
+            {
+                _nestedQualityReleaseSmokeFailureCode = code;
+                return;
+            }
+
             Debug.LogError(
                 "GARAGE_QUALITY_RELEASE_RUNTIME_SMOKE " +
                 "quality-release-flow=failed code=" + code);

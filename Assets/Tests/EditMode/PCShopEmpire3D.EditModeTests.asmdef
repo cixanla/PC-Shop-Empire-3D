@@ -6,6 +6,7 @@
     "PSE.Catalog",
     "PSE.Assembly",
     "PSE.Quality",
+    "PSE.Fulfillment",
     "PSE.Actors",
     "PSE.Inventory",
     "PSE.Orders",

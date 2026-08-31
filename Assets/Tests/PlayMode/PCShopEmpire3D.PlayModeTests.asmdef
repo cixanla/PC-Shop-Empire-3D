@@ -11,6 +11,7 @@
     "PSE.Economy",
     "PSE.Assembly",
     "PSE.Quality",
+    "PSE.Fulfillment",
     "PSE.Presentation",
     "PSE.World",
     "Unity.InputSystem",
